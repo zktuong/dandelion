@@ -1,8 +1,6 @@
 from setuptools import setup, find_packages
 import pkg_resources
 
-# path = pkg_resources.resource_filename('dandelion', 'foo.bin')
-
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
@@ -18,8 +16,8 @@ setup(
     url="https://github.com/zktuong/dandelion/",
     packages=find_packages(),
     install_requires=REQUIREMENTS,
-    include_package_data=True,
-    package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
+    # include_package_data=True,
+    # package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
     # scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
     classifiers=[
         "Programming Language :: Python :: 3.7",
