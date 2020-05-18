@@ -18,9 +18,9 @@ setup(
     setup_requires=['setuptools_scm'],
     scripts = ['dandelion/utilities/_blastn.py', 'dandelion/utilities/_igblastn.py', 'dandelion/utilities/_makeblastdb.py', 'dandelion/utilities/_tigger-genotype.py'],
     install_requires=REQUIREMENTS,
-    # package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R', 'database/blast', 'databast/germlines', 'database/igblast']},
-    # data_files=[('bin', ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']),
-                # ('database', ['database/blast', 'databast/germlines', 'database/igblast'])],
+    package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R', 'database/blast/human/*', 'database/blast/mouse/*', 'database/igblast/database/*', 'database/igblast/fasta/*', 'database/igblast/optional_file/*', 'database/igblast/internal_data/human/*','database/igblast/internal_data/human/*', 'database/igblast/internal_data/mouse/*', 'database/igblast/internal_data/rabbit/*', 'database/igblast/internal_data/rat/*', 'database/igblast/internal_data/rhesus_monkey/*','database/germlines/imgt/IMGT.yaml','database/germlines/imgt/human/constant/*.fasta', 'database/germlines/imgt/human/leader/*.fasta', 'database/germlines/imgt/human/vdj/*.fasta', 'database/germlines/imgt/human/vdj_aa/*.fasta', 'database/germlines/imgt/mouse/constant/*.fasta', 'database/germlines/imgt/mouse/leader/*.fasta', 'database/germlines/imgt/mouse/vdj/*.fasta', 'database/germlines/imgt/mouse/vdj_aa/*.fasta',]},
+    data_files=[('bin', ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']),
+                ('database', ['database/blast', 'databast/germlines', 'database/igblast'])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3.7",
