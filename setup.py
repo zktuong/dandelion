@@ -16,8 +16,10 @@ setup(
     url="https://github.com/zktuong/dandelion/",
     packages=find_packages(),
     setup_requires=['setuptools_scm'],
-    scripts = ['dandelion/utilities/_blastn.py', 'dandelion/utilities/_igblastn.py', 'dandelion/utilities/_makeblastby.py', 'dandelion/utilities/_tigger-genotype.py'],
+    scripts = ['utilities/_blastn.py', 'utilities/_igblastn.py', 'utilities/_makeblastby.py', 'utilities/_tigger-genotype.py'],
     install_requires=REQUIREMENTS,
+    package_data={'awesomepkg': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
+    # data_files={'bin': ['blastn', 'igblastn', 'makeblastdb', 'tigger-genotype.R']},
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3.7",
