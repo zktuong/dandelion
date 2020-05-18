@@ -20,7 +20,7 @@ setup(
     include_package_data=True,
     # package_dir={'dandelion':'src/dandelion'},
     # package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
-    data_files={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'tbin/igger-genotype.R']},
+    data_files={'bin': ['blastn', 'igblastn', 'makeblastdb', 'tigger-genotype.R']},
     # scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
     classifiers=[
         "Programming Language :: Python :: 3.7",
