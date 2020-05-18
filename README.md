@@ -5,6 +5,50 @@
 ## Intro
 Hi there! I've put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization.
 
+## Installation instructions
+
+Try this first
+```bash
+# create a conda environment with specific modules
+conda create --name dandelion python=3.7
+conda activate dandelion
+
+pip install git+https://github.com/zktuong/dandelion.git
+```
+
+If it fails, try installing the dependencies first.
+
+I would reccomend instaling this in order
+```bash
+# create a conda environment with specific modules
+conda create --name dandelion python=3.7
+conda activate dandelion
+
+# the following two are what's required by scanpy
+conda install seaborn scikit-learn statsmodels numba pytables
+conda install -c conda-forge python-igraph leidenalg 
+# these are required by dandelion
+conda install distance python-Levenshtein joblib jupyter
+
+# Use pip to install the following with --no-cache-dir if necessary
+pip install scanpy
+pip install scrublet
+pip install changeo
+
+# and then lastly install this
+pip install git+https://github.com/zktuong/dandelion.git
+````
+In case you need to link up kernel with jupyter notebook
+```bash
+python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
+```
+
+dandelion also requires some R packages intalled for base R.
+```R
+install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
+```
+I will not try and see if dandelion works with anaconda r-essentials/r-base nor RStudio.
+
 ## Requirements
 Python packages
 ```python
@@ -38,46 +82,7 @@ shazam_1.0.0
 ggplot2
 ```
 
-## Installation instructions
-
-Try this first
-```bash
-# create a conda environment with specific modules
-conda create --name dandelion python=3.7
-conda activate dandelion
-
-pip install git+https://github.com/zktuong/dandelion.git
-```
-
-If it fails, try installing the dependencies first.
-
-I would reccomend instaling this in order
-```bash
-# create a conda environment with specific modules
-conda create --name dandelion python=3.7
-conda activate dandelion
-
-# the following two are what's required by scanpy
-conda install seaborn scikit-learn statsmodels numba pytables
-conda install -c conda-forge python-igraph leidenalg 
-# these are required by dandelion
-conda install distance python-Levenshtein joblib jupyter
-
-# I use pip to install the following. use --no-cache-dir if necessary
-pip install scanpy
-pip install scrublet
-pip install changeo
-
-# and then lastly install this
-pip install git+https://github.com/zktuong/dandelion.git
-````
-
-In case you need to link up kernel with jupyter notebook
-```bash
-python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
-```
-
-I have included in this repository the binaries for the various blast executables but you can also download them yourselfs and store them somewhere more accessible.
+I have included in this repository the binaries for the various blast executables but you can also download them yourself and store them somewhere more accessible if you like. Just make sure to set the path to them appropriately.
 ```bash
 # download igblast and blast+ from
 https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
@@ -88,27 +93,16 @@ echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
-Last but not least, you will need to set up some environmental variables in your `~/.bash_profile` so that dandelion can see the default databases that is included here.
+Last but not least, you will need download the database folder in this repository manually and place them somewhere accessible and export them as environmental variables in your `~/.bash_profile` so that dandelion and the blast programs can access them properly.
 
-The easiest way is to check in python like the following:
-```console
-import dandelion
-import os
-path = dandelion.__path__[0]
-path
-'/Users/kt16/.local/lib/python3.7/site-packages/dandelion'
-
-os.listdir(path)
-```
-
-then copy the path
+So for example, clone this repository into `~/Documents`
 ```bash
 # set up environmental variables
-export GERMLINE=/path/to/dandelion/database/germlines/
-export IGDATA=/path/to/dandelion/database/igblast/
-export BLASTDB=/path/to/dandelion/database/blast/
+export GERMLINE=~/Documents/dandelion/database/germlines/
+export IGDATA=~/Documents/dandelion/database/igblast/
+export BLASTDB=~/Documents/dandelion/database/blast/
 
-# and now youd should be good to go!
+# and now youd should be good to go! You can remove the rest of the cloned folder (other then the database folder) in ~/Documents as the package is installed.
 ``` 
 
 ## Acknowledgements
