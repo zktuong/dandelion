@@ -1,0 +1,37 @@
+#!/bin/bash
+if [[ -z "$@" ]]
+then
+	echo "Usage: quick_merge <folder1 folder2 ... foldern> <outfolder>"; exit
+else
+	START_TIME=$(date +%s)
+	ARGS=("$@")
+	# Get the last argument
+	outputfile=${ARGS[${#ARGS[@]}-1]}
+	# Drop it from the array
+	unset ARGS["${#ARGS[@]}-1"]
+
+	echo "Creating output in "${outputfile}""
+	
+	# fasta
+	declare -a fasta_array
+	declare -a parsedtab_array
+	declare -a ambiguoustab_array	
+
+	for A in "${ARGS[@]}"
+	do
+		fasta_array+=("${A}"/dandelion/data/filtered_contig_annotated.fasta)		
+		parsedtab_array+=("${A}"/dandelion/data/filtered_contig_annotated_igblast_db_filtered.tab)
+		ambiguoustab_array+=("${A}"/dandelion/data/filtered_contig_annotated_igblast_db_filtered-ambiguous.tab)
+	done
+
+	mkdir -p "$outputfile"/dandelion/data
+	cat "${fasta_array[@]}" > "${outputfile}"/dandelion/data/filtered_contig_annotated.fasta
+
+	export parsedtab_to_merge="${parsedtab_array[*]}"
+	merge.py "${outputfile}"/dandelion/data/filtered_contig_annotated_igblast_db_filtered.tab "$parsedtab_to_merge" 2
+
+	export ambiguoustab_to_merge="${ambiguoustab_array[*]}"
+	merge.py "${outputfile}"/dandelion/data/filtered_contig_annotated_igblast_db_filtered-ambiguous.tab "$ambiguoustab_to_merge" 2
+	END_TIME=$(date +%s)
+	echo "Time elapsed: $(($END_TIME - $START_TIME)) seconds"
+fi
