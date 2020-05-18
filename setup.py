@@ -16,7 +16,7 @@ setup(
     url="https://github.com/zktuong/dandelion/",
     packages=find_packages(),
     install_requires=REQUIREMENTS,
-    # include_package_data=True,
+    include_package_data=True,
     # package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
     # scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
     classifiers=[

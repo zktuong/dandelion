@@ -1,4 +1,4 @@
-include igblastn
-include blastn
-include makeblastdb
-include tigger-genotype.R
+include bin/igblastn
+include bin/blastn
+include bin/makeblastdb
+include bin/tigger-genotype.R
