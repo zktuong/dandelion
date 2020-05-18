@@ -43,11 +43,39 @@ In case you need to link up kernel with jupyter notebook
 python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
 ```
 
-dandelion also requires some R packages intalled for base R.
+
+dandelion also requires some R packages intalled.
 ```R
 install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
 ```
-I will not try and see if dandelion works with anaconda r-essentials/r-base nor RStudio.
+
+
+## Required database
+Last but not least, you will need download the database folder in this repository manually and place them somewhere accessible and export them as environmental variables in your `~/.bash_profile` so that dandelion and the blast programs can access them properly.
+
+So for example, clone this repository into `~/Documents`
+```bash
+# set up environmental variables
+export GERMLINE=~/Documents/dandelion/database/germlines/
+export IGDATA=~/Documents/dandelion/database/igblast/
+export BLASTDB=~/Documents/dandelion/database/blast/
+
+# and now youd should be good to go! You can remove the rest of the cloned folder (other then the database folder) in ~/Documents as the package is installed.
+``` 
+
+
+## External softwares
+I have already included in this repository the binaries for the various blast executables and pip should pull them and install prorperl. However, you can also download them yourself and store the softwares somewhere more accessible if you like. Just make sure to set the path to them appropriately.
+```bash
+# download igblast and blast+ from
+https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
+https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+
+# unpack where relevant and export the path to the softwares, e.g. ~/Documents/
+echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
 
 ## Requirements
 Python packages
@@ -81,29 +109,6 @@ airr_1.2.0
 shazam_1.0.0
 ggplot2
 ```
-
-I have included in this repository the binaries for the various blast executables but you can also download them yourself and store them somewhere more accessible if you like. Just make sure to set the path to them appropriately.
-```bash
-# download igblast and blast+ from
-https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
-https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
-
-# unpack where relevant and export the path to the softwares, e.g. ~/Documents/
-echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
-source ~/.bash_profile
-```
-
-Last but not least, you will need download the database folder in this repository manually and place them somewhere accessible and export them as environmental variables in your `~/.bash_profile` so that dandelion and the blast programs can access them properly.
-
-So for example, clone this repository into `~/Documents`
-```bash
-# set up environmental variables
-export GERMLINE=~/Documents/dandelion/database/germlines/
-export IGDATA=~/Documents/dandelion/database/igblast/
-export BLASTDB=~/Documents/dandelion/database/blast/
-
-# and now youd should be good to go! You can remove the rest of the cloned folder (other then the database folder) in ~/Documents as the package is installed.
-``` 
 
 ## Acknowledgements
 I would like to acknowledge the contributions from Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna Clatworthy who helped with the initial conception of the project and for all discussions. 
