@@ -16,7 +16,7 @@ setup(
     packages=find_packages(),
     install_requires=REQUIREMENTS,
     include_package_data=True,
-    scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
+    # scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
