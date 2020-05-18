@@ -16,7 +16,7 @@ setup(
     url="https://github.com/zktuong/dandelion/",
     packages=find_packages(),
     setup_requires=['setuptools_scm'],
-    scripts = ['dandelion/utilities/_pathing.py'],
+    scripts = ['dandelion/utilities/_blastn.py', 'dandelion/utilities/_igblastn.py', 'dandelion/utilities/_makeblastby.py', 'dandelion/utilities/_tigger-genotype.py'],
     install_requires=REQUIREMENTS,
     include_package_data=True,
     classifiers=[
