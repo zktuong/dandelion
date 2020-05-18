@@ -14,7 +14,7 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/zktuong/dandelion/",
-    # packages=['dandelion'],
+    packages=find_packages(),
     setup_requires=['setuptools_scm'],
     install_requires=REQUIREMENTS,
     include_package_data=True,
