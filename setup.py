@@ -18,9 +18,9 @@ setup(
     setup_requires=['setuptools_scm'],
     scripts = ['dandelion/utilities/_blastn.py', 'dandelion/utilities/_igblastn.py', 'dandelion/utilities/_makeblastdb.py', 'dandelion/utilities/_tigger-genotype.py'],
     install_requires=REQUIREMENTS,
-    package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R', 'database/blast', 'databast/germlines', 'database/igblast']},
-    data_files=[('bin', ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']),
-                ('database', ['database/blast', 'databast/germlines', 'database/igblast'])],
+    # package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R', 'database/blast', 'databast/germlines', 'database/igblast']},
+    # data_files=[('bin', ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']),
+                # ('database', ['database/blast', 'databast/germlines', 'database/igblast'])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3.7",
