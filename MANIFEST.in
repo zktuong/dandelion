@@ -1,4 +1,4 @@
-global-include igblastn
-global-include blastn
-global-include makeblastdb
-global-include tigger-genotype.R
+recursive-include bin/igblastn
+recursive-include bin/blastn
+recursive-include bin/makeblastdb
+recursive-include bin/tigger-genotype.R
