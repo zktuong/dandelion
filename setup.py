@@ -16,6 +16,7 @@ setup(
     packages=find_packages(),
     install_requires=REQUIREMENTS,
     include_package_data=True,
+    package_data={'packagename': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
     # scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
     classifiers=[
         "Programming Language :: Python :: 3.7",
