@@ -1,1 +1,4 @@
-graft bin
+include igblastn
+include blastn
+include makeblastdb
+include tigger-genotype.R
