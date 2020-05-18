@@ -18,10 +18,6 @@ setup(
     setup_requires=['setuptools_scm'],
     install_requires=REQUIREMENTS,
     include_package_data=True,
-    # package_dir={'dandelion':'src/dandelion'},
-    # package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
-    # data_files={'': ['blastn', 'igblastn', 'makeblastdb', 'tigger-genotype.R']},
-    # scripts=['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'],
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
