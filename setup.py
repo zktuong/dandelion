@@ -16,6 +16,7 @@ setup(
     url="https://github.com/zktuong/dandelion/",
     packages=find_packages(),
     setup_requires=['setuptools_scm'],
+    scripts = ['dandelion/utilities/_pathing.py'],
     install_requires=REQUIREMENTS,
     include_package_data=True,
     classifiers=[
