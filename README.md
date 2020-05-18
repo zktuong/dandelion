@@ -39,6 +39,18 @@ ggplot2
 ```
 
 ## Installation instructions
+
+Try this first
+```bash
+# create a conda environment with specific modules
+conda create --name dandelion python=3.7
+conda activate dandelion
+
+pip install git+https://github.com/zktuong/dandelion.git
+```
+
+If it fails, try installing the dependencies first.
+
 I would reccomend instaling this in order
 ```bash
 # create a conda environment with specific modules
@@ -56,9 +68,17 @@ pip install scanpy
 pip install scrublet
 pip install changeo
 
-#  in case you need to link up kernel with jupyter notebook
-python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
+# and then lastly install this
+pip install git+https://github.com/zktuong/dandelion.git
+````
 
+In case you need to link up kernel with jupyter notebook
+```bash
+python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
+```
+
+I have included in this repository the binaries for the various blast executables but you can also download them yourselfs and store them somewhere more accessible.
+```bash
 # download igblast and blast+ from
 https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
@@ -66,12 +86,27 @@ https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
 # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
 echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
 source ~/.bash_profile
+```
 
+Last but not least, you will need to set up some environmental variables in your `~/.bash_profile` so that dandelion can see the default databases that is included here.
+
+The easiest way is to check in python like the following:
+```console
+import dandelion
+import os
+path = dandelion.__path__[0]
+path
+'/Users/kt16/.local/lib/python3.7/site-packages/dandelion'
+
+os.listdir(path)
+```
+
+then copy the path
+```bash
 # set up environmental variables
 export GERMLINE=/path/to/dandelion/database/germlines/
 export IGDATA=/path/to/dandelion/database/igblast/
 export BLASTDB=/path/to/dandelion/database/blast/
-export PATH=/path/to/dandelion/bin:$PATH
 
 # and now youd should be good to go!
 ``` 
