@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-16 14:45:03
+# @Last Modified time: 2020-05-19 22:38:00
 
 import sys
 import os
@@ -334,26 +334,6 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     dat = _transfer_c_call(_file, c_call)
     dat = _add_cell(dat)
     dat.to_csv(_file, sep = '\t', index=False)
-
-# def filter_parse_failures(data):
-#     dat = pd.read_csv(data, sep = '\t', dtype = 'object')
-#     v_dict = dict(zip(dat['sequence_id'], dat['v_call']))
-#     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
-#     contig = list(set(dat['sequence_id']))
-#     contig_remove = []
-#     for c in contig:
-#         vc = dat[(dat['sequence_id'].isin([c]))]['v_call']
-#         jc = dat[(dat['sequence_id'].isin([c]))]['j_call']
-#         junc = dat[(dat['sequence_id'].isin([c]))]['junction']
-#         if vc.isnull().values.any():
-#             contig_remove.append(c)
-#         if jc.isnull().values.any():
-#             contig_remove.append(c)
-#         if junc.isnull().values.any():
-#             contig_remove.append(c)
-#     filter_ids = list(set(contig_remove))
-#     _dat = dat[~(dat['sequence_id'].isin(filter_ids))]
-#     _dat.to_csv(data, sep = '\t', index = False)
 
 def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, verbose = False, *args):
     """
