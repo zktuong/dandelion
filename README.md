@@ -7,7 +7,8 @@ Hi there! I've put together a python package for analyzing single cell BCR/V(D)J
 
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/).
-The unprocessed raw files for parts of the example can be accessed via [here](example_data/).
+
+The unprocessed raw files for parts of the notebook can be accessed via [here](example_data/).
 
 ## Installation instructions
 
