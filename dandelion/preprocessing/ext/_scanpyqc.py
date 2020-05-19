@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 21:46:25
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-14 16:15:53
+# @Last Modified time: 2020-05-19 13:00:34
 
 import scanpy as sc
 import numpy as np
@@ -11,7 +11,7 @@ import scipy.stats
 import scrublet as scr
 from ...utilities._misc import *
 
-def run_scanpy_qc(adata, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
+def run_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
     """
     Parameters
     ----------
@@ -35,7 +35,7 @@ def run_scanpy_qc(adata, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_c
         The (annotated) data matrix of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
 
     """
-    _adata = adata.copy()
+    _adata = self.copy()
     # run scrublet
     scrub = scr.Scrublet(_adata.X)
     doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
@@ -78,5 +78,4 @@ def run_scanpy_qc(adata, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_c
 
     # removing columns that probably don't need anymore
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
-    adata.obs = _adata.obs.copy()
-    return(adata)
+    self.obs = _adata.obs.copy()
