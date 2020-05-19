@@ -63,7 +63,7 @@ export GERMLINE=~/Documents/dandelion/database/germlines/
 export IGDATA=~/Documents/dandelion/database/igblast/
 export BLASTDB=~/Documents/dandelion/database/blast/
 
-# and now youd should be good to go! You can remove the rest of the cloned folder (other then the database folder) in ~/Documents as the package is installed.
+# and now you should be good to go! You can remove the rest of the cloned folder (other then the database folder) in ~/Documents as the package is installed.
 ``` 
 
 
