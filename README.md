@@ -3,10 +3,10 @@
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
 ## Intro
-Hi there! I've put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization.
+Hi there! I've put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
 
 ## Example
-Please see notebooks folder for a step-by-step [example](notebooks/).
+Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
 
 The unprocessed raw files for parts of the notebook can be accessed via [here](example_data/).
 
@@ -70,7 +70,7 @@ export BLASTDB=~/Documents/dandelion/database/blast/
 
 
 ## External softwares
-I have already included in this repository the binaries for the various blast executables and pip should pull them and install prorperly. However, you can also download them yourself and store the softwares somewhere more accessible if you like. Just make sure to set the paths to them appropriately.
+I have already included in this repository the binaries for the various blast executables and pip should pull them and install properly. However, you can also download them yourself and store the softwares somewhere more accessible if you prefer. Just make sure to set the paths to them appropriately.
 ```bash
 # download igblast and blast+ from
 https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
