@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-18 20:37:55
+# @Last Modified time: 2020-05-19 22:18:59
 
 import scanpy as sc
 import pandas as pd
@@ -20,6 +20,7 @@ import Levenshtein
 import networkx as nx
 import igraph
 from time import sleep
+import copy
 try:
     from scanpy import logging as logg
 except ImportError:
@@ -879,6 +880,7 @@ def transfer_network(self, network, neighbors_key = None):
         neighbors_key = "neighbors"
     if neighbors_key not in self.uns:
         raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
+    self.raw.uns = copy.deepcopy(self.uns)
     self.uns['neighbors']['connectivities'] = df_connectivities_
     self.uns['neighbors']['distances'] = df_distances_
     self.uns['neighbors']['params'] = {'method':'bcr'}
@@ -896,5 +898,6 @@ def transfer_network(self, network, neighbors_key = None):
     logg.info(' finished', time=start,
         deep=('added to `.uns[\'neighbors\']`\n'
         '   \'distances\', cluster-weighted adjacency matrix\n'
-        '   \'connectivities\', cluster-weighted adjacency matrix'))
+        '   \'connectivities\', cluster-weighted adjacency matrix\n'
+        'stored original .uns in .raw'))
     
