@@ -49,14 +49,11 @@ Last but not least, you will need download the database folder in this repositor
 
 So for example, if I unpack into `~/Documents`
 ```bash
-# set up environmental variables
+# set up environmental variables in ~/.bash_profile
 export GERMLINE=~/Documents/dandelion/database/germlines/
 export IGDATA=~/Documents/dandelion/database/igblast/
 export BLASTDB=~/Documents/dandelion/database/blast/
-
-# and now you should be good to go! You can remove the rest of the cloned folder (other then the database folder) in ~/Documents as the package is installed.
-``` 
-
+```
 
 ## External softwares
 I have already included in this repository the binaries for the various blast executables and pip should pull them and install properly. However, you can also download them yourself and store the softwares somewhere more accessible if you prefer. Just make sure to set the paths to them appropriately.
