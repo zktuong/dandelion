@@ -3,25 +3,14 @@
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
 ## Intro
-Hi there! I've put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
+Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
 
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
 
-The unprocessed raw files for parts of the notebook can be accessed via [here](example_data/).
+The un-processed raw files for parts of the notebook can be accessed via [here](example_data/).
 
 ## Installation instructions
-
-Try this first
-```bash
-# create a conda environment with specific modules
-conda create --name dandelion python=3.7
-conda activate dandelion
-
-pip install git+https://github.com/zktuong/dandelion.git
-```
-
-If it fails, try installing the dependencies first.
 
 I would reccomend instaling this in order
 ```bash
@@ -56,9 +45,9 @@ install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
 
 
 ## Required database
-Last but not least, you will need download the database folder in this repository manually and place them somewhere accessible and export them as environmental variables in your `~/.bash_profile` so that dandelion and the blast programs can access them properly.
+Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation) and the other two were curated by me. I've uploaded a compressed version in [here](database) that you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
 
-So for example, clone this repository into `~/Documents`
+So for example, if I unpack into `~/Documents`
 ```bash
 # set up environmental variables
 export GERMLINE=~/Documents/dandelion/database/germlines/
@@ -118,6 +107,6 @@ ggplot2
 ## Acknowledgements
 I would like to acknowledge the contributions from Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna Clatworthy who helped with the initial conception of the project and for all discussions. 
 
-I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi, Dr. Peng He who have had useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
+I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi, Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
 
-If there is any ideas, comments, suggestions, thing you would like to know more, please feel free to email me at kt16@sanger.ac.uk or post in the issue tracker and we can work something out.
+If there are any ideas, comments, suggestions, thing you would like to know more etc., please feel free to email me at kt16@sanger.ac.uk or post in the issue tracker and I will get back to you.
