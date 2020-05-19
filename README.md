@@ -68,7 +68,7 @@ export BLASTDB=~/Documents/dandelion/database/blast/
 
 
 ## External softwares
-I have already included in this repository the binaries for the various blast executables and pip should pull them and install prorperl. However, you can also download them yourself and store the softwares somewhere more accessible if you like. Just make sure to set the path to them appropriately.
+I have already included in this repository the binaries for the various blast executables and pip should pull them and install prorperly. However, you can also download them yourself and store the softwares somewhere more accessible if you like. Just make sure to set the paths to them appropriately.
 ```bash
 # download igblast and blast+ from
 https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
