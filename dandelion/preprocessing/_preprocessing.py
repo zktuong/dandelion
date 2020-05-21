@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-21 15:19:06
+# @Last Modified time: 2020-05-21 15:35:35
 
 import sys
 import os
@@ -374,24 +374,28 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
                 filePath = s+'/'+path+'all_contig.fasta'
 
         assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, fileformat = fileformat, outputfolder = dirs, verbose = verbose, *args)
-        if fileformat == 'airr':
-            env = os.environ.copy()
-            if germline is None:
-                try:
-                    gml = env['GERMLINE']            
-                except:
-                    raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
-                gml = gml+'imgt/'+org+'/vdj/'
-            else:
-                env['GERMLINE'] = germline
-                gml = germline
+        if loci == 'ig':
+            if fileformat == 'airr':
+                env = os.environ.copy()
+                if germline is None:
+                    try:
+                        gml = env['GERMLINE']
+                    except:
+                        raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+                    gml = gml+'imgt/'+org+'/vdj/'
+                else:
+                    env['GERMLINE'] = germline
+                    gml = germline
 
-            insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
-            tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
-            if not os.path.exists(tmpFolder):
-                os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
-        elif fileformat == 'changeo':            
+                insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
+                tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
+                if not os.path.exists(tmpFolder):
+                    os.makedirs(tmpFolder)
+                os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
+            elif fileformat == 'changeo':
+                makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
+        else:
+            if fileformat == 'changeo':
             makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
 
 def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False, *args):
