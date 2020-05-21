@@ -12,7 +12,7 @@ The un-processed raw files for parts of the notebook can be accessed via [here](
 
 ## Installation instructions
 
-I would reccomend instaling this in order
+I would reccomend instaling this in order:
 ```bash
 # create a conda environment with specific modules
 conda create --name dandelion python=3.7
@@ -56,12 +56,8 @@ export BLASTDB=~/Documents/dandelion/database/blast/
 ```
 
 ## External softwares
-I have already included in this repository the binaries for the various blast executables and pip should pull them and install properly. However, you can also download them yourself and store the softwares somewhere more accessible if you prefer. Just make sure to set the paths to them appropriately.
+I have already included in this repository the macosx binaries for the various blast executables and pip should pull them and install properly. However, you can also download [igblast](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/) and [blast+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), especially so if you are using a different OS, and store the softwares somewhere more accessible. Just make sure to set the paths to them appropriately.
 ```bash
-# download igblast and blast+ from
-https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
-https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
-
 # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
 echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
 source ~/.bash_profile
