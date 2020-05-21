@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-19 22:38:00
+# @Last Modified time: 2020-05-21 15:19:06
 
 import sys
 import os
@@ -316,7 +316,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
 
     def _add_cell(data):
         _data = load_data(data)
-        _data['cell'] = [c.split('_contig')[0].split('-')[0] for c in _data['sequence_id']]
+        _data['cell_id'] = [c.split('_contig')[0].split('-')[0] for c in _data['sequence_id']]
         return(_data)
 
     format_dict = {'changeo':'_igblast_db-pass', 'airr':'_igblast_gap'}
@@ -452,9 +452,9 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
         dat = pd.read_csv(filePath, sep = '\t', dtype = 'object')
 
         if sample_dict is not None:
-            dat['sample'] = sample_dict[s]
+            dat['sample_id'] = sample_dict[s]
         else:
-            dat['sample'] = str(s)
+            dat['sample_id'] = str(s)
         data_list.append(dat)
 
     # concatenate
@@ -513,9 +513,9 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
 
     for s in tqdm(data, desc = 'Writing out to individual folders '):
         if sample_dict is not None:
-            out_ = out[out['sample'] == sample_dict[s]]
+            out_ = out[out['sample_id'] == sample_dict[s]]
         else:
-            out_ = out[out['sample'] == s]
+            out_ = out[out['sample_id'] == s]
         if os.path.isfile(str(s)):
             out_.to_csv(s.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
         else:

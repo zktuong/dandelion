@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-19 22:18:59
+# @Last Modified time: 2020-05-21 15:17:54
 
 import scanpy as sc
 import pandas as pd
@@ -44,7 +44,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
     l_doublet = []
 
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
-    barcode = list(set(dat['cell']))
+    barcode = list(set(dat['cell_id']))
 
     bcr_check = Tree()
     for c in adata.obs_names:
@@ -62,8 +62,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
     for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
-        hc_id = list(dat[(dat['cell'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
-        lc_id = list(dat[(dat['cell'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         h[b] = hc_id
         l[b] = lc_id
         # marking doublets defined by heavy chains
@@ -130,11 +130,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
             filter_ids = list(set(filter_ids))
 
         if filter_missing:
-            for c in dat['cell']:
+            for c in dat['cell_id']:
                 if c not in adata.obs_names:
                     filter_ids.append(c)
 
-        _dat = dat[~(dat['cell'].isin(filter_ids))]
+        _dat = dat[~(dat['cell_id'].isin(filter_ids))]
 
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)
@@ -283,7 +283,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
             # SeqB is 2 sequences different from SeqC
             # SeqC can only be 2 sequences different from SeqA otherwise it will violate the pair-wise distance matrix calculation
             # Because the distance between SeqA and SeqB is below the threshold, and is essentially the smallest value, they will be grouped in cm1
-            # While SeqC is below the acceptable threshold, really it's more different than SeqA/B 'clone'. Hence i'm splitting up here.
+            # While SeqC is below the acceptable threshold, really it's more different than SeqA/B 'clone_id'. Hence i'm splitting up here.
             # If there's more than 3 sequences in a particular distance matrix, it gets slightly complicated.
             # so i repeat the calculation to only catch those with more than 3 sequences
             if len(dist) > 3:
@@ -383,15 +383,15 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
                     # instead of converting to another tree, i will just make it a dictionary
                     clone_dict[v] = str(first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
     # add it to the original dataframes
-    dat_heavy['clone'] = pd.Series(clone_dict)
-    hclone = dict(zip(dat_heavy['cell'], dat_heavy['clone']))
-    hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell']]))
-    dat['clone'] = pd.Series(hlclone)
+    dat_heavy['clone_id'] = pd.Series(clone_dict)
+    hclone = dict(zip(dat_heavy['cell_id'], dat_heavy['clone_id']))
+    hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell_id']]))
+    dat['clone_id'] = pd.Series(hlclone)
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
     dat_light = dat[~(dat['locus'] == 'IGH')]
     # retrieve the J genes and J genes
-    for c in tqdm(list(set(dat_light['clone'])), desc = 'Refining clone assignment based on light chain pairing '):
-        dat_light_c = dat_light[dat_light['clone'] == c]
+    for c in tqdm(list(set(dat_light['clone_id'])), desc = 'Refining clone assignment based on light chain pairing '):
+        dat_light_c = dat_light[dat_light['clone_id'] == c]
         if dat_light_c.shape[0] > 1:
             if by_alleles is None or ~by_alleles:
                 if 'v_call_genotyped' in dat_light_c.columns:
@@ -581,7 +581,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
                 renamed_clone_dict_light = {}
                 for key, value in clone_dict_light.items():
                     renamed_clone_dict_light[key] = lclones_dict[value]
-                dat.loc[renamed_clone_dict_light.keys(), 'clone'] = dat.loc[renamed_clone_dict_light.keys(), 'clone'] + '_' + pd.Series(renamed_clone_dict_light)
+                dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] = dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] + '_' + pd.Series(renamed_clone_dict_light)
 
     if os.path.isfile(str(data)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = False)
@@ -614,23 +614,23 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     """
     start = logg.info('Generating network')
     dat = load_data(data)
-    if 'clone' not in dat.columns:
+    if 'clone_id' not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[~(dat['locus'] == 'IGH')]
     if distance_mode is None or distance_mode is 'aa':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell'], dat_h['sequence_alignment_aa'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell'], dat_l['sequence_alignment_aa'])))
+        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
+        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
     elif distance_mode == 'nt':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell'], dat_h['sequence_alignment'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell'], dat_l['sequence_alignment'])))
+        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
+        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
     else:
         raise ValueError("distance_mode only excepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
-    dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell', 'heavy'])
-    dat_seq.set_index('cell', inplace = True)
+    dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
+    dat_seq.set_index('cell_id', inplace = True)
     light_seq_tree = Tree()
     for key, value in seq_l.items():
         k, v = value
@@ -663,10 +663,10 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
 
     # Now, retrieve some 'meta data' for each cell that i can feed into obs lot in scanpy later
     # 1) clone
-    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell'], dat_h['clone'])))
-    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell'], dat_l['clone'])))
-    metadata = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell', 'heavy'])
-    metadata.set_index('cell', inplace = True)
+    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
+    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))
+    metadata = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
+    metadata.set_index('cell_id', inplace = True)
     light_clone_tree = Tree()
     for key, value in clone_l.items():
         k, v = value
@@ -692,7 +692,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         if len(cl) > 1:
             cl = cl[1:]
         clones_list[x] = ','.join(cl)
-    metadata['clone'] = pd.Series(clones_list)    
+    metadata['clone_id'] = pd.Series(clones_list)    
     # 3) clone_group
     if clones_sep is None:
         scb = (0, '_')
@@ -700,7 +700,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         scb = (clones_sep[0], clones_sep[1])
     group = []
     
-    for x in metadata['clone']:
+    for x in metadata['clone_id']:
         if scb[1] not in x:
             warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
             group.append(x)
@@ -708,30 +708,30 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
             group.append(x.split(scb[1])[scb[0]])
     metadata['clone_group'] = group
     # 4) Heavy chain V, J and Isotype (C)
-    iso_dict = dict(zip(dat_h['cell'], dat_h['c_call']))
+    iso_dict = dict(zip(dat_h['cell_id'], dat_h['c_call']))
     if 'v_call_genotyped' in dat_h.columns:
-        v_dict = dict(zip(dat_h['cell'], dat_h['v_call_genotyped']))
+        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call_genotyped']))
     else:
-        v_dict = dict(zip(dat_h['cell'], dat_h['v_call']))
-    j_dict = dict(zip(dat_h['cell'], dat_h['j_call']))
+        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call']))
+    j_dict = dict(zip(dat_h['cell_id'], dat_h['j_call']))
     metadata['isotype'] = pd.Series(iso_dict)
     metadata['heavychain_v'] = pd.Series(v_dict)
     metadata['heavychain_j'] = pd.Series(j_dict)
     # 5) light chain V, J and C
-    lc_dict = dict(zip(dat_l['cell'], dat_l['c_call']))
+    lc_dict = dict(zip(dat_l['cell_id'], dat_l['c_call']))
     if 'v_call_genotyped' in dat_l.columns:
-        vl_dict = dict(zip(dat_l['cell'], dat_l['v_call_genotyped']))
+        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call_genotyped']))
     else:
-        vl_dict = dict(zip(dat_l['cell'], dat_l['v_call']))
-    jl_dict = dict(zip(dat_l['cell'], dat_l['j_call']))
+        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call']))
+    jl_dict = dict(zip(dat_l['cell_id'], dat_l['j_call']))
     metadata['lightchain'] = pd.Series(lc_dict)
     metadata['lightchain_v'] = pd.Series(vl_dict)
     metadata['lightchain_j'] = pd.Series(jl_dict)
     # 2) whether or not chains are productive
-    productive_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell'], dat_h['productive'])))
-    productive_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell'], dat_l['productive'])))
-    metadata_pro = pd.DataFrame.from_dict(productive_h, orient = 'index', columns = ['cell', 'heavy_pro'])
-    metadata_pro.set_index('cell', inplace = True)
+    productive_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['productive'])))
+    productive_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['productive'])))
+    metadata_pro = pd.DataFrame.from_dict(productive_h, orient = 'index', columns = ['cell_id', 'heavy_pro'])
+    metadata_pro.set_index('cell_id', inplace = True)
     light_productive_tree = Tree()
     for key, value in productive_l.items():
         k, v = value
@@ -760,7 +760,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     metadata['productive'] = pd.Series(productive_list)
 
     # will return this object
-    metadata = metadata[['clone', 'clone_group', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
+    metadata = metadata[['clone_id', 'clone_group', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
 
     # generate edge list
     tmp_totaldist = pd.DataFrame(total_dist, index = metadata.index, columns = metadata.index)
@@ -787,7 +787,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
-    clone_ref = dict(metadata['clone'])
+    clone_ref = dict(metadata['clone_id'])
     tmp_clone_tree = Tree()
     for x in metadata.index:
         tmp_clone_tree[clone_ref[x]][x].value = 1
@@ -830,7 +830,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     edges = [tuple(e) for e in edge_list_final.values]
     edges_network = [tuple((e[0], e[1])) for e in edges]
     graph = igraph.Graph.Formula()
-    graph.add_vertices(vertices['cell'])
+    graph.add_vertices(vertices['cell_id'])
     graph.add_edges(edges_network) # may take a very long time if there's too many
 
     if layout_option is not None:
