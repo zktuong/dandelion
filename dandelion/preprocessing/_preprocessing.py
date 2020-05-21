@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-21 15:35:35
+# @Last Modified time: 2020-05-21 15:38:21
 
 import sys
 import os
@@ -396,7 +396,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
                 makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
         else:
             if fileformat == 'changeo':
-            makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
+                makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
 
 def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False, *args):
     """
