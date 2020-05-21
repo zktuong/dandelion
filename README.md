@@ -56,7 +56,7 @@ export BLASTDB=~/Documents/dandelion/database/blast/
 ```
 
 ## External softwares
-I have already included in this repository the macosx binaries for the various blast executables and pip should pull them and install properly. However, you can also download [igblast](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/) and [blast+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), especially so if you are using a different OS, and store the softwares somewhere more accessible. Just make sure to set the paths to them appropriately.
+I have already included in this repository the macosx binaries for the various blast executables and pip should pull them and install properly. However, you can also download [igblast](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/) and [blast+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) manually, especially so if you are using a different OS, and store the softwares somewhere accessible. Just make sure to set the paths to them appropriately.
 ```bash
 # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
 echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
