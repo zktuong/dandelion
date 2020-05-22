@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 14:58:08
+# @Last Modified time: 2020-05-22 15:19:51
 
 import sys
 import os
@@ -195,7 +195,8 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
                 ddl_annot.loc[i, 'locus'] = 'IGL'
             if len(j_) > 1:
                 ddl_annot.loc[i, 'locus'] = 'Multi'
-    ddl_annot['cell_id'] = [c.split('_contig')[0].split('-')[0] for c in ddl_annot['sequence_id']]
+    
+        ddl_annot.loc[i, 'cell_id'] = [c.split('_contig')[0].split('-')[0] for c in ddl_annot.loc[i, 'sequence_id']]
 
     cellrangermap = {
         'cell_id':'barcode',
