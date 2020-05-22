@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 14:41:11
+# @Last Modified time: 2020-05-22 14:45:32
 
 import sys
 import os
@@ -10,6 +10,8 @@ from collections import defaultdict, Iterable
 import pandas as pd
 import numpy as np
 from subprocess import run
+from tqdm import tqdm
+import re
 
 class Tree(defaultdict):
     def __init__(self, value=None):
