@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 14:47:21
+# @Last Modified time: 2020-05-22 14:58:08
 
 import sys
 import os
@@ -146,7 +146,7 @@ def load_data(obj):
         
     return(obj_)
 
-def parse_processed_tcr_10x(file, prefix = None, save = None):
+def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
         
     cr_annot = pd.read_csv(file)
     if prefix is not None:
@@ -158,7 +158,7 @@ def parse_processed_tcr_10x(file, prefix = None, save = None):
     ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t')
     ddl_annot.set_index('sequence_id', inplace = True, drop = False)
     
-    for i in tqdm(ddl_annot.index, desc = 'adjusting Processing TCR data '):
+    for i in tqdm(ddl_annot.index, desc = 'Processing data '):
         v = ddl_annot.loc[i, 'v_call']
         d = ddl_annot.loc[i, 'd_call']
         j = ddl_annot.loc[i, 'j_call']
@@ -195,8 +195,10 @@ def parse_processed_tcr_10x(file, prefix = None, save = None):
                 ddl_annot.loc[i, 'locus'] = 'IGL'
             if len(j_) > 1:
                 ddl_annot.loc[i, 'locus'] = 'Multi'
-    
-    cellrangermap = {'sequence_id':'barcode',
+    ddl_annot['cell_id'] = [c.split('_contig')[0].split('-')[0] for c in ddl_annot['sequence_id']]
+
+    cellrangermap = {
+        'cell_id':'barcode',
         'sequence_id':'contig_id',
         'locus':'chain',
         'v_call_igblast':'v_gene',
@@ -206,7 +208,7 @@ def parse_processed_tcr_10x(file, prefix = None, save = None):
         'junction_aa':'cdr3',
         'junction':'cdr3_nt'}
 
-    for i in tqdm(cr_annot.index, desc = 'Transferring processed TCR V(D)J calls'):
+    for i in tqdm(cr_annot.index, desc = 'Updating data'):
         for key, value in cellrangermap.items():        
             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
                 cr_annot.loc[i, value] = ddl_annot.loc[i, key]
