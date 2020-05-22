@@ -2,13 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-18 20:42:16
+# @Last Modified time: 2020-05-22 15:55:35
 
 import igraph
 import seaborn as sns
 import numpy as np
-from ..tools._tools import dandelion_network
-
+from ..utilities._misc import *
 
 def igraph_network(self, colorby = None, layout = None, col_option = 'husl', visual_style = None, *args):
     """

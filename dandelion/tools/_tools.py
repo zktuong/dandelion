@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-21 15:17:54
+# @Last Modified time: 2020-05-22 15:55:39
 
 import scanpy as sc
 import pandas as pd
@@ -25,15 +25,6 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
-
-class dandelion_network:
-    def __init__(self, data, metadata, distance, edges, layout, graph):
-        self.data = data
-        self.metadata = metadata
-        self.distance = distance        
-        self.edges = edges
-        self.layout = layout
-        self.graph = graph
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains=True, filter_missing = True, outdir=None, outFilePrefix=None, filtered=False):
     dat = load_data(data)

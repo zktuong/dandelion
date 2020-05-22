@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 15:19:51
+# @Last Modified time: 2020-05-22 15:56:49
 
 import sys
 import os
@@ -146,16 +146,25 @@ def load_data(obj):
         
     return(obj_)
 
+class dandelion_network:
+    def __init__(self, data, metadata, distance, edges, layout, graph):
+        self.data = data
+        self.metadata = metadata
+        self.distance = distance        
+        self.edges = edges
+        self.layout = layout
+        self.graph = graph
+
 def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
         
-    cr_annot = pd.read_csv(file)
+    cr_annot = pd.read_csv(file, dtype = 'object')
     if prefix is not None:
         cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
     else:
         cr_annot['index']=[i for i in cr_annot['contig_id']]
     cr_annot.set_index('index', inplace = True)
     
-    ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t')
+    ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
     ddl_annot.set_index('sequence_id', inplace = True, drop = False)
     
     for i in tqdm(ddl_annot.index, desc = 'Processing data '):
@@ -195,11 +204,8 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
                 ddl_annot.loc[i, 'locus'] = 'IGL'
             if len(j_) > 1:
                 ddl_annot.loc[i, 'locus'] = 'Multi'
-    
-        ddl_annot.loc[i, 'cell_id'] = [c.split('_contig')[0].split('-')[0] for c in ddl_annot.loc[i, 'sequence_id']]
 
     cellrangermap = {
-        'cell_id':'barcode',
         'sequence_id':'contig_id',
         'locus':'chain',
         'v_call_igblast':'v_gene',
@@ -209,11 +215,23 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
         'junction_aa':'cdr3',
         'junction':'cdr3_nt'}
 
-    for i in tqdm(cr_annot.index, desc = 'Updating data'):
+    for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
         for key, value in cellrangermap.items():        
             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
                 cr_annot.loc[i, value] = ddl_annot.loc[i, key]
+            else:
+                cr_annot.loc[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
+        
+        if cr_annot.loc[i, 'cdr3'] is np.nan:
+            cr_annot.loc[i, 'productive'] = None
+        else:
+            if cr_annot.loc[i, 'productive'] == 'T':
+                cr_annot.loc[i, 'productive'] = 'True'
+            else:
+                cr_annot.loc[i, 'productive'] = 'False'
+
+    cr_annot['barcode'] = [c.split('_contig')[0].split('-')[0] for c in cr_annot['contig_id']]
     if save is not None:
-        cr_annot.to_csv(save, index = False)
+        cr_annot.to_csv(save, index = False, na_rep = 'None')
     else:
-        cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False)
+        cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False, na_rep = 'None')
