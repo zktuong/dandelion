@@ -2,17 +2,35 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 15:55:35
+# @Last Modified time: 2020-05-22 17:07:08
 
 import igraph
 import seaborn as sns
 import numpy as np
 from ..utilities._misc import *
+from scanpy.plotting._tools.scatterplots import embedding
 
 def igraph_network(self, colorby = None, layout = None, col_option = 'husl', visual_style = None, *args):
     """
     Using igraph to plot the network. There are some default plotting options. according to the metadata that returned by generate_network.
-    para
+    
+    Parameters
+    ----------
+    self
+        dandelion_network class object
+    colorby
+        column in metadata to colour
+    layout
+        style of layout
+    col_option
+        color scheme
+    visual_style
+        additional igraph visual options
+    args
+        passed to [igraph.plot()](https://igraph.org/python/doc/tutorial/tutorial.html#layouts-and-plotting)
+    Returns
+    -------
+        new fasta file with new headers containing prefix
     """
 
     g = self.graph
@@ -86,7 +104,6 @@ def igraph_network(self, colorby = None, layout = None, col_option = 'husl', vis
 
     return(p)
 
-from scanpy.plotting._tools.scatterplots import embedding
 def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
     using scanpy's plotting module to plot the network. Only thing i'm changing is the dfault options: basis = 'bcr' and edges = True
