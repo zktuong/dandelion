@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 14:45:32
+# @Last Modified time: 2020-05-22 14:47:21
 
 import sys
 import os
@@ -206,7 +206,7 @@ def parse_processed_tcr_10x(file, prefix = None, save = None):
         'junction_aa':'cdr3',
         'junction':'cdr3_nt'}
 
-    for i in tqdm(cr_annot.index, desc = ''):
+    for i in tqdm(cr_annot.index, desc = 'Transferring processed TCR V(D)J calls'):
         for key, value in cellrangermap.items():        
             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
                 cr_annot.loc[i, value] = ddl_annot.loc[i, key]
