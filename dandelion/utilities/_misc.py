@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 15:56:49
+# @Last Modified time: 2020-05-22 16:56:12
 
 import sys
 import os
@@ -87,6 +87,15 @@ def clean_nan_dict(d):
     }
 
 def flatten(l):
+    """
+    Parameters
+    ----------
+    l
+        list
+    Returns
+    -------
+        a flattened list.
+    """
     for el in l:
         if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
             yield from flatten(el)
@@ -156,7 +165,17 @@ class dandelion_network:
         self.graph = graph
 
 def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
-        
+    """
+    Parameters
+    ----------
+    file
+        dandelion processed file
+    prefix
+        prefix to add to barcodes
+    save
+        save to specified location. Defaults to 'dandelion/data/'.    
+    """
+
     cr_annot = pd.read_csv(file, dtype = 'object')
     if prefix is not None:
         cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]

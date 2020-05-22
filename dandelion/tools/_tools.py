@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 15:55:39
+# @Last Modified time: 2020-05-22 17:04:06
 
 import scanpy as sc
 import pandas as pd
@@ -27,6 +27,31 @@ except ImportError:
     pass
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains=True, filter_missing = True, outdir=None, outFilePrefix=None, filtered=False):
+    """
+    Parameters
+    ----------
+    data
+        BCR data to filter
+    adata
+        AnnData object to filter
+    filter_bcr
+        Filters BCR object
+    filter_rna
+        Filter out cells in AnnData object with 'filter_rna' == True
+    filter_lightchains
+        Filter out cells with multiple light chains
+    filter_missing
+        Filter out cells in BCR file not found in AnnData object
+    outdir
+        If specified, outfile will be in this location
+    outFilePrefix
+        If specified, the outfile name will have this prefix
+    filtered
+        If True, will create filenames with filtered prefixe, Else all prefix.
+    Returns
+    -------
+        filtered BCR data and AnnData objects
+    """
     dat = load_data(data)
     h = Tree()
     l = Tree()
@@ -149,6 +174,29 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
     return(_dat, _adata)
 
 def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_alleles = None, outFilePrefix=None):
+    """
+    Find clones based on junctional hamming distance.
+
+    Parameters
+    ----------
+    data
+        BCR data to find clone
+    identity
+        Junction similarity parameter. Default 0.85
+    outdir
+        If specified, outfile will be in this location. Non defaults to 'dandelion/data'.
+    clustering_by
+        modes for clustering: 'nt' or 'aa'. None defaults to 'aa'.
+    by_alleles
+        Whether or not to collapse alleles to genes. None defaults to True.
+    filtered
+        If True, will create filenames with filtered prefixe, Else all prefix.
+    ourFilePrefix
+        If specified, the outfile name will have this prefix
+    Returns
+    -------
+        BCR file with clones annotated
+    """
     dat = load_data(data)
     dat_heavy = dat[dat['locus'] == 'IGH']
     pd.set_option('mode.chained_assignment', None)
@@ -597,11 +645,16 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     """
     Extracting the necessary objects required for generating and plotting network.
 
-    Arguments:
+    Parameters
+    ----------
     data
         Dataframe in changeo/airr format after clones have been determined.
     clones_sep: tuple(int, str)
         A tuple containing how the clone groups should be extracted. None defaults to (0, '_')
+
+    Returns
+    ----------
+        A dandelion_network class object
     """
     start = logg.info('Generating network')
     dat = load_data(data)
@@ -850,6 +903,21 @@ def mst(mat):
     return(mst_tree)
 
 def transfer_network(self, network, neighbors_key = None):
+    """
+    Transferring network to AnnData object and modify in place.
+
+    Parameters
+    ----------
+    self
+        AnnData object
+    network
+        dandelion_network class object
+
+    Returns
+    ----------
+        AnnData object with dandelion network
+
+    """
     start = logg.info('Transferring network')
     G = nx.from_pandas_edgelist(network.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
     distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
