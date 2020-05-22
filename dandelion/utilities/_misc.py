@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-18 02:32:39
+# @Last Modified time: 2020-05-22 14:41:11
 
 import sys
 import os
@@ -143,3 +143,72 @@ def load_data(obj):
         raise KeyError("'sequence_id' not found in columns of input")
         
     return(obj_)
+
+def parse_processed_tcr_10x(file, prefix = None, save = None):
+        
+    cr_annot = pd.read_csv(file)
+    if prefix is not None:
+        cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
+    else:
+        cr_annot['index']=[i for i in cr_annot['contig_id']]
+    cr_annot.set_index('index', inplace = True)
+    
+    ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t')
+    ddl_annot.set_index('sequence_id', inplace = True, drop = False)
+    
+    for i in tqdm(ddl_annot.index, desc = 'adjusting Processing TCR data '):
+        v = ddl_annot.loc[i, 'v_call']
+        d = ddl_annot.loc[i, 'd_call']
+        j = ddl_annot.loc[i, 'j_call']
+        if v is not np.nan:
+            ddl_annot.loc[i, 'v_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', v).split(','))))
+            v_ = list(set(re.sub('[*][0-9][0-9]', '', v).split(',')))
+            if re.match('IGH', ','.join(v_)):
+                ddl_annot.loc[i, 'locus'] = 'IGH'
+            if re.match('IGK', ','.join(v_)):
+                ddl_annot.loc[i, 'locus'] = 'IGK'
+            if re.match('IGL', ','.join(v_)):
+                ddl_annot.loc[i, 'locus'] = 'IGL'
+            if len(v_) > 1:
+                ddl_annot.loc[i, 'locus'] = 'Multi'
+        if d is not np.nan:
+            ddl_annot.loc[i, 'd_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', d).split(','))))
+            d_ = list(set(re.sub('[*][0-9][0-9]', '', d).split(',')))
+            if re.match('IGH', ','.join(d_)):
+                ddl_annot.loc[i, 'locus'] = 'IGH'
+            if re.match('IGK', ','.join(d_)):
+                ddl_annot.loc[i, 'locus'] = 'IGK'
+            if re.match('IGL', ','.join(d_)):
+                ddl_annot.loc[i, 'locus'] = 'IGL'
+            if len(d_) > 1:
+                ddl_annot.loc[i, 'locus'] = 'Multi'
+        if j is not np.nan:
+            ddl_annot.loc[i, 'j_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', j).split(','))))
+            j_ = list(set(re.sub('[*][0-9][0-9]', '', j).split(',')))
+            if re.match('IGH', ','.join(j_)):
+                ddl_annot.loc[i, 'locus'] = 'IGH'
+            if re.match('IGK', ','.join(j_)):
+                ddl_annot.loc[i, 'locus'] = 'IGK'
+            if re.match('IGL', ','.join(j_)):
+                ddl_annot.loc[i, 'locus'] = 'IGL'
+            if len(j_) > 1:
+                ddl_annot.loc[i, 'locus'] = 'Multi'
+    
+    cellrangermap = {'sequence_id':'barcode',
+        'sequence_id':'contig_id',
+        'locus':'chain',
+        'v_call_igblast':'v_gene',
+        'd_call_igblast':'d_gene',
+        'j_call_igblast':'j_gene',
+        'productive':'productive',
+        'junction_aa':'cdr3',
+        'junction':'cdr3_nt'}
+
+    for i in tqdm(cr_annot.index, desc = ''):
+        for key, value in cellrangermap.items():        
+            if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
+                cr_annot.loc[i, value] = ddl_annot.loc[i, key]
+    if save is not None:
+        cr_annot.to_csv(save, index = False)
+    else:
+        cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False)
