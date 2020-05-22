@@ -5,3 +5,5 @@ dist/
 *.DS_Store
 *-checkpoint.ipynb
 dandelion/plotting/__pycache__/_plotting.cpython-37.pyc
+dandelion/utilities/__pycache__/_misc.cpython-37.pyc
+dandelion/tools/__pycache__/_tools.cpython-37.pyc
