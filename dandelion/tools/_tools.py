@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 17:04:06
+# @Last Modified time: 2020-05-22 23:41:35
 
 import scanpy as sc
 import pandas as pd
@@ -960,3 +960,68 @@ def transfer_network(self, network, neighbors_key = None):
         '   \'connectivities\', cluster-weighted adjacency matrix\n'
         'stored original .uns in .raw'))
     
+def reconstruct_germline(file, fileformat = 'airr', germline = None, org = 'human', outfile= None, verbose = False, *args):
+    env = os.environ.copy()
+    if germline is None:
+        try:
+            gml = env['GERMLINE']            
+        except:
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+        gml = gml+'imgt/'+org+'/vdj/'
+    else:
+        env['GERMLINE'] = germline
+        gml = germline
+
+    if outfile is None:
+        outfile = "{}".format(file)
+    else:
+        outfile = outfile
+
+    cmd = ['CreateGermlines.py', 
+        '-d', file,
+        '-g', 'dmask',
+        '--format', fileformat,
+        '-r', gml,
+        '--cloned',
+        '--vf', 'v_call',
+        '--df', 'd_call',
+        '--jf', 'j_call',
+        '--cf', 'clone_id',
+        '-o', outfile,
+        *args]
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    run(cmd, env=env) # logs are printed to terminal
+
+def quantify_mutations(file, region=None, mutation=None, frequency=True, combine=True, out=None, verbose = False):
+    if region is None:
+        reg = 'NULL'
+    else:
+        reg = region
+    if mutation is None:
+        mut = 'NULL'
+    else:
+        mut = mutation
+    if frequency is True:
+        freq = 'TRUE'
+    else:
+        freq = 'FALSE'
+    if combine is True:
+        comb = 'TRUE'
+    else:
+        comb = 'FALSE'
+    if out is None:
+        ot = "{}/{}".format(os.path.dirname(file),os.path.basename(file).replace('.tsv', '_mutation.tsv')) 
+    else:
+        ot = out
+
+    cmd = ['quant-mutations.R', 
+        '-d', file,
+        '-r', reg,
+        '-m', mut,
+        '-f', freq,
+        '-c', comb,
+        '-o', ot]
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))    
+    run(cmd)
