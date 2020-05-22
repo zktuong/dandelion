@@ -1,7 +1,7 @@
 dist/
 *.egg
-__pycache__/
+!**/__pycache__/
 *.pyc
 *.DS_Store
 *-checkpoint.ipynb
-*.pyc
+dandelion/plotting/__pycache__/_plotting.cpython-37.pyc
