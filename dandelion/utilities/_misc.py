@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-23 23:17:52
+# @Last Modified time: 2020-05-24 00:04:21
 
 import sys
 import os
@@ -12,6 +12,8 @@ import numpy as np
 from subprocess import run
 from tqdm import tqdm
 import re
+import gzip
+import pickle as pickle
 
 class Tree(defaultdict):
     def __init__(self, value=None):
@@ -266,7 +268,7 @@ def initialize_metadata(self, clones_sep = None):
         for x in metadata.columns:
             self.metadata[x] = pd.Series(metadata[x])
 
-class dandelion:
+class Dandelion:
     def __init__(self, data=None, metadata=None, distance=None, edges=None, layout=None, graph=None):
         self.data = data
         self.metadata = metadata
@@ -280,6 +282,34 @@ class dandelion:
     @classmethod
     def copy(self):
         return deepcopy(self)
+
+    @staticmethod
+    def isGZIP(filename):
+        if filename.split('.')[-1] == 'gz':
+            return True
+        return False
+
+    # Using HIGHEST_PROTOCOL is almost 2X faster and creates a file that
+    # is ~10% smaller.  Load times go down by a factor of about 3X.
+    def save(self, filename='dandelion_data.pkl'):
+        if self.isGZIP(filename):
+            f = gzip.open(filename, 'wb')
+        else:
+            f = open(filename, 'wb')
+        pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+        f.close()
+
+    # Note that loading to a string with pickle.loads is about 10% faster
+    # but probaly comsumes a lot more memory so we'll skip that for now.
+    @classmethod
+    def load(cls, filename='dandelion_data.pkl'):
+        if cls.isGZIP(filename):
+            f = gzip.open(filename, 'rb')
+        else:
+            f = open(filename, 'rb')
+        n = pickle.load(f)
+        f.close()
+        return n
 
 def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     """

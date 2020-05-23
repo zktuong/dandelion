@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-23 23:36:11
+# @Last Modified time: 2020-05-24 00:09:34
 
 import os
 import scanpy as sc
@@ -663,15 +663,15 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
 
     Returns
     ----------
-        A dandelion class object
+        A Dandelion class object
     """
     start = logg.info('Generating network')
     dat = load_data(data)
     if 'clone_id' not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
-    # initiate a dandelion class object
-    network = dandelion(dat)
+    # initiate a Dandelion class object
+    network = Dandelion(dat)
 
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
@@ -797,9 +797,9 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         graph.vs[x] = network.metadata[x]
     graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
 
-    network = dandelion(data = dat, distance = d_mat, edges = edge_list_final, layout = layout, graph = graph)
+    network = Dandelion(data = dat, distance = d_mat, edges = edge_list_final, layout = layout, graph = graph)
     logg.info(' finished', time=start,
-        deep=('added to dandelion class object: \n'
+        deep=('added to Dandelion class object: \n'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'
         '   \'distance\', heavy and light chain distance matrices\n'
@@ -823,7 +823,7 @@ def transfer_network(self, network, neighbors_key = None):
     self
         AnnData object
     network
-        dandelion class object
+        Dandelion class object
 
     Returns
     ----------
@@ -979,59 +979,61 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
 
         required = ['v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length', 'np2_length']
 
-        if isinstance(self.data, pd.DataFrame):
-            # Check for required columns
-            try:
-                checkFields(required, self.data.columns, schema=schema)
-            except LookupError as e:
-                print(e)
-
-            # Count input
-            total_count = len(self.data)
-
-            # Check for existence of fields
-            for f in [v_field, d_field, j_field, seq_field]:
-                if f not in self.data.columns:
-                    raise UserError('%s field does not exist in input database file.' % f)
-            # Translate to Receptor attribute names
-            v_field = schema.toReceptor(v_field)
-            d_field = schema.toReceptor(d_field)
-            j_field = schema.toReceptor(j_field)
-            seq_field = schema.toReceptor(seq_field)
-            clone_field = schema.toReceptor(clone_field)
-
-            # Define Receptor iterator
-            receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
-
+        if self.__class__ == Dandelion:
+            if isinstance(self.data, pd.DataFrame):
+                # Check for required columns
+                try:
+                    checkFields(required, self.data.columns, schema=schema)
+                except LookupError as e:
+                    print(e)
+    
+                # Count input
+                total_count = len(self.data)
+    
+                # Check for existence of fields
+                for f in [v_field, d_field, j_field, seq_field]:
+                    if f not in self.data.columns:
+                        raise NameError('%s field does not exist in input database file.' % f)
+                # Translate to Receptor attribute names
+                v_field = schema.toReceptor(v_field)
+                d_field = schema.toReceptor(d_field)
+                j_field = schema.toReceptor(j_field)
+                seq_field = schema.toReceptor(seq_field)
+                clone_field = schema.toReceptor(clone_field)
+    
+                # Define Receptor iterator
+                receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
+    
+            else:
+                # Get repertoire and open Db reader
+                db_handle = open(self.data, 'rt')
+                db_iter = reader(db_handle)
+    
+                # Check for required columns
+                try:
+                    checkFields(required, db_iter.fields, schema=schema)
+                except LookupError as e:
+                    print(e)
+    
+                # Count input
+                total_count = countDbFile(self.data)
+    
+                # Check for existence of fields
+                for f in [v_field, d_field, j_field, seq_field]:
+                    if f not in db_iter.fields:
+                        raise NameError('%s field does not exist in input database file.' % f)
+    
+                # Translate to Receptor attribute names
+                v_field = schema.toReceptor(v_field)
+                d_field = schema.toReceptor(d_field)
+                j_field = schema.toReceptor(j_field)
+                seq_field = schema.toReceptor(seq_field)
+                clone_field = schema.toReceptor(clone_field)
+    
+                # Define Receptor iterator
+                receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
         else:
-            # Get repertoire and open Db reader
-            db_handle = open(self.data, 'rt')
-            db_iter = reader(db_handle)
-
-            # Check for required columns
-            try:
-                checkFields(required, db_iter.fields, schema=schema)
-            except LookupError as e:
-                print(e)
-
-            # Count input
-            total_count = countDbFile(self.data)
-
-            # Check for existence of fields
-            for f in [v_field, d_field, j_field, seq_field]:
-                if f not in db_iter.fields:
-                    raise UserError('%s field does not exist in input database file.' % f)
-
-            # Translate to Receptor attribute names
-            v_field = schema.toReceptor(v_field)
-            d_field = schema.toReceptor(d_field)
-            j_field = schema.toReceptor(j_field)
-            seq_field = schema.toReceptor(seq_field)
-            clone_field = schema.toReceptor(clone_field)
-
-            # Define Receptor iterator
-            receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
-
+            raise AttributeError('Please provide a Dandelion class object instead of class <%s>.' % self.__class__)
         out = {}
         # Iterate over rows
         for key, records in tqdm(receptor_iter, desc = 'Building germline sequences '):
@@ -1046,7 +1048,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 elif fileformat == 'changeo':
                     germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
                 else:
-                    raise UserError('%s not acceptable file format' % fileformat)
+                    raise AttributeError('%s not acceptable file format' % fileformat)
             if glines is not None:
                 # Add glines to Receptor record
                 annotations = {}
