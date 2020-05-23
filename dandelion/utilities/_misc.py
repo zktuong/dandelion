@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 16:56:12
+# @Last Modified time: 2020-05-23 23:17:52
 
 import sys
 import os
@@ -147,22 +147,139 @@ def load_data(obj):
             obj_ = obj.copy()
     else:
         raise TypeError("Input is not of <class 'pandas.core.frame.DataFrame'>")
-        
+
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop = False, inplace = True)
     else:
         raise KeyError("'sequence_id' not found in columns of input")
-        
+
     return(obj_)
 
-class dandelion_network:
-    def __init__(self, data, metadata, distance, edges, layout, graph):
+def initialize_metadata(self, clones_sep = None):
+    # a quick way to retrieve the 'meta data' for each cell that transfer into obs lot in scanpy later
+    dat = load_data(self.data)
+    for x in ['cell_id', 'locus', 'cell_id', 'clone_id']:
+        if x not in dat.columns:
+            raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
+    dat_h = dat[dat['locus'] == 'IGH']
+    dat_l = dat[~(dat['locus'] == 'IGH')]
+    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
+    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))
+    metadata = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
+    metadata.set_index('cell_id', inplace = True)
+    light_clone_tree = Tree()
+    for key, value in clone_l.items():
+        k, v = value
+        light_clone_tree[k][key] = v
+    light_clone_tree2 = Tree()
+    for g in light_clone_tree:
+        second_key = []
+        for k2 in light_clone_tree[g].keys():
+            second_key.append(k2)
+        second_key = list(set(second_key))
+        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+        for key, value in light_clone_tree[g].items():
+            light_clone_tree2[g][second_key_dict[key]] = value
+    metadata['light'] = pd.Series(light_clone_tree2)
+    tmp_dat = metadata['light'].apply(pd.Series)
+    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+    metadata = metadata.merge(tmp_dat, left_index = True, right_index = True)
+    metadata = metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
+    clones_list = {}
+    for x in metadata.index:
+        cl = list(set(list(metadata.loc[x, :])))
+        cl = sorted([y for y in cl if str(y) != 'nan'])
+        if len(cl) > 1:
+            cl = cl[1:]
+        clones_list[x] = ','.join(cl)
+    metadata['clone_id'] = pd.Series(clones_list)
+    metadata = metadata[['clone_id']]
+    if clones_sep is None:
+        scb = (0, '_')
+    else:
+        scb = (clones_sep[0], clones_sep[1])
+    group = []
+    for x in metadata['clone_id']:
+        if scb[1] not in x:
+            warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
+            group.append(x)
+        else:
+            group.append(x.split(scb[1])[scb[0]])
+    metadata['clone_group_id'] = group
+    # 4) Heavy chain V, J and Isotype (C)
+    iso_dict = dict(zip(dat_h['cell_id'], dat_h['c_call']))
+    if 'v_call_genotyped' in dat_h.columns:
+        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call_genotyped']))
+    else:
+        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call']))
+    j_dict = dict(zip(dat_h['cell_id'], dat_h['j_call']))
+    metadata['isotype'] = pd.Series(iso_dict)
+    metadata['heavychain_v'] = pd.Series(v_dict)
+    metadata['heavychain_j'] = pd.Series(j_dict)
+    # 5) light chain V, J and C
+    lc_dict = dict(zip(dat_l['cell_id'], dat_l['c_call']))
+    if 'v_call_genotyped' in dat_l.columns:
+        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call_genotyped']))
+    else:
+        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call']))
+    jl_dict = dict(zip(dat_l['cell_id'], dat_l['j_call']))
+    metadata['lightchain'] = pd.Series(lc_dict)
+    metadata['lightchain_v'] = pd.Series(vl_dict)
+    metadata['lightchain_j'] = pd.Series(jl_dict)
+    # 2) whether or not chains are productive
+    productive_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['productive'])))
+    productive_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['productive'])))
+    metadata_pro = pd.DataFrame.from_dict(productive_h, orient = 'index', columns = ['cell_id', 'heavy_pro'])
+    metadata_pro.set_index('cell_id', inplace = True)
+    light_productive_tree = Tree()
+    for key, value in productive_l.items():
+        k, v = value
+        light_productive_tree[k][key] = v
+    light_productive_tree2 = Tree()
+    for g in light_productive_tree:
+        second_key = []
+        for k2 in light_productive_tree[g].keys():
+            second_key.append(k2)
+        second_key = list(set(second_key))
+        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+        for key, value in light_productive_tree[g].items():
+            light_productive_tree2[g][second_key_dict[key]] = value
+    metadata_pro['light_pro'] = pd.Series(light_productive_tree2)
+    tmp_dat = metadata_pro['light_pro'].apply(pd.Series)
+    tmp_dat.columns = ['light_pro_' + str(c) for c in tmp_dat.columns]
+    metadata_pro = metadata_pro.merge(tmp_dat, left_index = True, right_index = True)
+    metadata_pro = metadata_pro[['heavy_pro'] + [str(c) for c in tmp_dat.columns]]
+    productive_list = {}
+    for x in metadata_pro.index:
+        cl = list(set(list(metadata_pro.loc[x, :])))
+        cl = sorted([y for y in cl if str(y) != 'nan'])
+        if len(cl) > 1:
+            cl = cl[1:]
+        productive_list[x] = ','.join(cl)
+    metadata['productive'] = pd.Series(productive_list)
+
+    # return this in this order
+    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
+    if self.metadata is None:
+        self.metadata = metadata
+    else:
+        for x in metadata.columns:
+            self.metadata[x] = pd.Series(metadata[x])
+
+class dandelion:
+    def __init__(self, data=None, metadata=None, distance=None, edges=None, layout=None, graph=None):
         self.data = data
         self.metadata = metadata
-        self.distance = distance        
+        self.distance = distance
         self.edges = edges
         self.layout = layout
         self.graph = graph
+        if self.data is not None:
+            initialize_metadata(self)
+
+    @classmethod
+    def copy(self):
+        return deepcopy(self)
 
 def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     """
@@ -173,7 +290,7 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     prefix
         prefix to add to barcodes
     save
-        save to specified location. Defaults to 'dandelion/data/'.    
+        save to specified location. Defaults to 'dandelion/data/'.
     """
 
     cr_annot = pd.read_csv(file, dtype = 'object')
@@ -182,10 +299,10 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     else:
         cr_annot['index']=[i for i in cr_annot['contig_id']]
     cr_annot.set_index('index', inplace = True)
-    
+
     ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
     ddl_annot.set_index('sequence_id', inplace = True, drop = False)
-    
+
     for i in tqdm(ddl_annot.index, desc = 'Processing data '):
         v = ddl_annot.loc[i, 'v_call']
         d = ddl_annot.loc[i, 'd_call']
@@ -235,12 +352,12 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
         'junction':'cdr3_nt'}
 
     for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
-        for key, value in cellrangermap.items():        
+        for key, value in cellrangermap.items():
             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
                 cr_annot.loc[i, value] = ddl_annot.loc[i, key]
             else:
                 cr_annot.loc[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
-        
+
         if cr_annot.loc[i, 'cdr3'] is np.nan:
             cr_annot.loc[i, 'productive'] = None
         else:
