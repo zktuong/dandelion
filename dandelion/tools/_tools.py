@@ -2,14 +2,16 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-23 12:08:17
+# @Last Modified time: 2020-05-23 23:36:11
 
+import os
 import scanpy as sc
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from ..utilities._misc import *
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
 from distance import hamming
 import re
@@ -25,6 +27,13 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
+from changeo.Gene import buildGermline
+from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
+from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
+from rpy2.robjects.packages import importr
+from rpy2.rinterface import NULL
+from rpy2.robjects import pandas2ri
+import warnings
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains=True, filter_missing = True, outdir=None, outFilePrefix=None, filtered=False):
     """
@@ -215,7 +224,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
             V = [v for v in dat_heavy['v_call']]
         J = [j for j in dat_heavy['j_call']]
     else:
-        raise ValueError("by_alleles only excepts boolean values or None, with None defaulting to False.")
+        raise ValueError("by_alleles only accepts boolean values or None, with None defaulting to False.")
 
     # collapse the alleles to just genes
     V = [','.join(list(set(v.split(',')))) for v in V]
@@ -236,7 +245,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
             junction_length = [l for l in dat_heavy['junction_length']]
         junction_length_dict = dict(zip(dat_heavy.index, junction_length))
     else:
-        raise ValueError("clustering_by only excepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+        raise ValueError("clustering_by only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
     # Create a dictionary and group sequence ids with same V and J genes
     V_J = dict(zip(dat_heavy.index, zip(V,J)))
     vj_grp = defaultdict(list)
@@ -445,7 +454,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
                     Vlight = [v for v in dat_light_c['v_call']]
                 Jlight = [j for j in dat_light_c['j_call']]
             else:
-                raise ValueError("by_alleles only excepts boolean values or None, with None defaulting to False.")
+                raise ValueError("by_alleles only accepts boolean values or None, with None defaulting to False.")
             # collapse the alleles to just genes
             Vlight = [','.join(list(set(v.split(',')))) for v in Vlight]
             Jlight = [','.join(list(set(j.split(',')))) for j in Jlight]
@@ -464,7 +473,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
                     junction_length = [l for l in dat_light_c['junction_length']]
                 junction_length_dict = dict(zip(dat_light_c.index, junction_length))
             else:
-                raise ValueError("clustering_by only excepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+                raise ValueError("clustering_by only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
             # Create a dictionary and group sequence ids with same V and J genes
             V_Jlight = dict(zip(dat_light_c.index, zip(Vlight,Jlight)))
@@ -654,13 +663,17 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
 
     Returns
     ----------
-        A dandelion_network class object
+        A dandelion class object
     """
     start = logg.info('Generating network')
     dat = load_data(data)
     if 'clone_id' not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
+    # initiate a dandelion class object
+    network = dandelion(dat)
+
+    # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[~(dat['locus'] == 'IGH')]
     if distance_mode is None or distance_mode is 'aa':
@@ -670,7 +683,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
         seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
     else:
-        raise ValueError("distance_mode only excepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+        raise ValueError("distance_mode only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
     dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
@@ -705,112 +718,11 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
     total_dist = np.sum(dist_mat_list,axis=0)
 
-    # Now, retrieve some 'meta data' for each cell that i can feed into obs lot in scanpy later
-    # 1) clone
-    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
-    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))
-    metadata = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
-    metadata.set_index('cell_id', inplace = True)
-    light_clone_tree = Tree()
-    for key, value in clone_l.items():
-        k, v = value
-        light_clone_tree[k][key] = v
-    light_clone_tree2 = Tree()
-    for g in light_clone_tree:
-        second_key = []
-        for k2 in light_clone_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_clone_tree[g].items():
-            light_clone_tree2[g][second_key_dict[key]] = value
-    metadata['light'] = pd.Series(light_clone_tree2)
-    tmp_dat = metadata['light'].apply(pd.Series)
-    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-    metadata = metadata.merge(tmp_dat, left_index = True, right_index = True)
-    metadata = metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
-    clones_list = {}
-    for x in metadata.index:
-        cl = list(set(list(metadata.loc[x, :])))
-        cl = sorted([y for y in cl if str(y) != 'nan'])
-        if len(cl) > 1:
-            cl = cl[1:]
-        clones_list[x] = ','.join(cl)
-    metadata['clone_id'] = pd.Series(clones_list)    
-    # 3) clone_group
-    if clones_sep is None:
-        scb = (0, '_')
-    else:
-        scb = (clones_sep[0], clones_sep[1])
-    group = []
-    
-    for x in metadata['clone_id']:
-        if scb[1] not in x:
-            warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
-            group.append(x)
-        else:
-            group.append(x.split(scb[1])[scb[0]])
-    metadata['clone_group_id'] = group
-    # 4) Heavy chain V, J and Isotype (C)
-    iso_dict = dict(zip(dat_h['cell_id'], dat_h['c_call']))
-    if 'v_call_genotyped' in dat_h.columns:
-        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call_genotyped']))
-    else:
-        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call']))
-    j_dict = dict(zip(dat_h['cell_id'], dat_h['j_call']))
-    metadata['isotype'] = pd.Series(iso_dict)
-    metadata['heavychain_v'] = pd.Series(v_dict)
-    metadata['heavychain_j'] = pd.Series(j_dict)
-    # 5) light chain V, J and C
-    lc_dict = dict(zip(dat_l['cell_id'], dat_l['c_call']))
-    if 'v_call_genotyped' in dat_l.columns:
-        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call_genotyped']))
-    else:
-        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call']))
-    jl_dict = dict(zip(dat_l['cell_id'], dat_l['j_call']))
-    metadata['lightchain'] = pd.Series(lc_dict)
-    metadata['lightchain_v'] = pd.Series(vl_dict)
-    metadata['lightchain_j'] = pd.Series(jl_dict)
-    # 2) whether or not chains are productive
-    productive_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['productive'])))
-    productive_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['productive'])))
-    metadata_pro = pd.DataFrame.from_dict(productive_h, orient = 'index', columns = ['cell_id', 'heavy_pro'])
-    metadata_pro.set_index('cell_id', inplace = True)
-    light_productive_tree = Tree()
-    for key, value in productive_l.items():
-        k, v = value
-        light_productive_tree[k][key] = v
-    light_productive_tree2 = Tree()
-    for g in light_productive_tree:
-        second_key = []
-        for k2 in light_productive_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_productive_tree[g].items():
-            light_productive_tree2[g][second_key_dict[key]] = value
-    metadata_pro['light_pro'] = pd.Series(light_productive_tree2)
-    tmp_dat = metadata_pro['light_pro'].apply(pd.Series)
-    tmp_dat.columns = ['light_pro_' + str(c) for c in tmp_dat.columns]
-    metadata_pro = metadata_pro.merge(tmp_dat, left_index = True, right_index = True)
-    metadata_pro = metadata_pro[['heavy_pro'] + [str(c) for c in tmp_dat.columns]]
-    productive_list = {}
-    for x in metadata_pro.index:
-        cl = list(set(list(metadata_pro.loc[x, :])))
-        cl = sorted([y for y in cl if str(y) != 'nan'])
-        if len(cl) > 1:
-            cl = cl[1:]
-        productive_list[x] = ','.join(cl)
-    metadata['productive'] = pd.Series(productive_list)
-
-    # will return this object
-    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
-
     # generate edge list
-    tmp_totaldist = pd.DataFrame(total_dist, index = metadata.index, columns = metadata.index)
+    tmp_totaldist = pd.DataFrame(total_dist, index = network.metadata.index, columns = network.metadata.index)
     tmp_clusterdist = Tree()
-    for i in metadata.index:
-        cx = metadata.loc[i,'clone_group_id']
+    for i in network.metadata.index:
+        cx = network.metadata.loc[i,'clone_group_id']
         tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
@@ -831,9 +743,9 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
-    clone_ref = dict(metadata['clone_id'])
+    clone_ref = dict(network.metadata['clone_id'])
     tmp_clone_tree = Tree()
-    for x in metadata.index:
+    for x in network.metadata.index:
         tmp_clone_tree[clone_ref[x]][x].value = 1
     tmp_clone_tree2 = Tree()
     for x in tmp_clone_tree:
@@ -868,7 +780,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     edge_list_final.reset_index(drop = True, inplace = True)
 
     # and finally the vertex list which is super easy
-    vertices = pd.DataFrame(metadata.index)
+    vertices = pd.DataFrame(network.metadata.index)
 
     # and now to actually generate the network
     edges = [tuple(e) for e in edge_list_final.values]
@@ -881,19 +793,19 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         layout = graph.layout_fruchterman_reingold()
     else:
         layout = graph.layout(layout_option, *args)
-    for x in metadata.columns:
-        graph.vs[x] = metadata[x]
+    for x in network.metadata.columns:
+        graph.vs[x] = network.metadata[x]
     graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
 
-    network = dandelion_network(data = dat, metadata = metadata, distance = d_mat, edges = edge_list_final, layout = layout, graph = graph)    
+    network = dandelion(data = dat, distance = d_mat, edges = edge_list_final, layout = layout, graph = graph)
     logg.info(' finished', time=start,
-        deep=('added to dandelion_network class object: \n'
+        deep=('added to dandelion class object: \n'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'
         '   \'distance\', heavy and light chain distance matrices\n'
         '   \'edges\', network edges\n'
         '   \'layout\', network layout\n'
-        '   \'graph\', network'))    
+        '   \'graph\', network'))
     return(network)
 
 def mst(mat):
@@ -911,7 +823,7 @@ def transfer_network(self, network, neighbors_key = None):
     self
         AnnData object
     network
-        dandelion_network class object
+        dandelion class object
 
     Returns
     ----------
@@ -934,7 +846,7 @@ def transfer_network(self, network, neighbors_key = None):
     df_distances.fillna(0, inplace = True)
     df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
     df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
-    
+
     if neighbors_key is None:
         neighbors_key = "neighbors"
     if neighbors_key not in self.uns:
@@ -959,12 +871,12 @@ def transfer_network(self, network, neighbors_key = None):
         '   \'distances\', cluster-weighted adjacency matrix\n'
         '   \'connectivities\', cluster-weighted adjacency matrix\n'
         'stored original .uns in .raw'))
-    
-def reconstruct_germline(file, fileformat = 'airr', germline = None, org = 'human', outfile= None, verbose = False, *args):
+
+def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):
     env = os.environ.copy()
     if germline is None:
         try:
-            gml = env['GERMLINE']            
+            gml = env['GERMLINE']
         except:
             raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
         gml = gml+'imgt/'+org+'/vdj/'
@@ -972,56 +884,222 @@ def reconstruct_germline(file, fileformat = 'airr', germline = None, org = 'huma
         env['GERMLINE'] = germline
         gml = germline
 
-    if outfile is None:
-        outfile = "{}/{}".format(os.path.dirname(file), os.path.basename(file).replace('.tsv', 'dmask.tsv'))
-    else:
-        outfile = outfile
+    def _parseChangeO(record):
+        """
+        Parses a dictionary to a Receptor object
 
-    cmd = ['CreateGermlines.py', 
-        '-d', file,
-        '-g', 'dmask',
-        '--format', fileformat,
-        '-r', gml,
-        '--cloned',
-        '--vf', 'v_call',
-        '--df', 'd_call',
-        '--jf', 'j_call',
-        '--cf', 'clone_id',
-        '-o', outfile,
-        *args]
-    if verbose:
-        print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd, env=env) # logs are printed to terminal
+        Arguments:
+          record : dict with fields and values in the Change-O format
 
-def quantify_mutations(file, region=None, mutation=None, frequency=True, combine=True, out=None, verbose = False):
-    if region is None:
-        reg = 'NULL'
-    else:
-        reg = region
-    if mutation is None:
-        mut = 'NULL'
-    else:
-        mut = mutation
-    if frequency is True:
-        freq = 'TRUE'
-    else:
-        freq = 'FALSE'
-    if combine is True:
-        comb = 'TRUE'
-    else:
-        comb = 'FALSE'
-    if out is None:
-        ot = "{}/{}".format(os.path.dirname(file),os.path.basename(file).replace('.tsv', '_mutation.tsv')) 
-    else:
-        ot = out
+        Returns:
+          changeo.Receptor.Receptor : parsed Receptor object.
+        """
+        # Parse fields
+        result = {}
+        for k, v in record.items():
+            k = ChangeoSchema.toReceptor(k)
+            result[k] = v
 
-    cmd = ['quant-mutations.R', 
-        '-d', file,
-        '-r', reg,
-        '-m', mut,
-        '-f', freq,
-        '-c', comb,
-        '-o', ot]
-    if verbose:
-        print('Running command: %s\n' % (' '.join(cmd)))    
-    run(cmd)
+        return Receptor(result)
+
+    def _parseAIRR(record):
+        """
+        Parses a dictionary of AIRR records to a Receptor object
+
+        Arguments:
+          record : dict with fields and values in the AIRR format.
+
+        Returns:
+          changeo.Receptor.Receptor : parsed Receptor object.
+        """
+        # Parse fields
+        result = {}
+        for k, v in record.items():
+            # Rename fields
+            k = AIRRSchema.toReceptor(k)
+            # Convert start positions to 0-based
+            # if k in ReceptorData.start_fields and v is not None and v != '':
+            #     v = str(int(v) + 1)
+            # Assign new field
+            result[k] = v
+
+        for end, (start, length) in ReceptorData.end_fields.items():
+            if end in result and result[end] is not None:
+                try:
+                    result[length] = int(result[end]) - int(result[start]) + 1
+                except:
+                    pass
+
+        return Receptor(result)
+
+    def _create_germlines(self, references, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat):
+        """
+        Write germline sequences to tab-delimited database file
+
+        Arguments:
+        self : dandelion_class object
+        references : folders and/or files containing germline repertoire data in FASTA format.
+        seq_field : field in which to look for sequence.
+        v_field : field in which to look for V call.
+        d_field : field in which to look for D call.
+        j_field : field in which to look for J call.
+        cloned : if True build germlines by clone, otherwise build individual germlines.
+        clone_field : field containing clone identifiers; ignored if cloned=False.
+        germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
+        fileformat : input and output format.
+
+        Returns:
+        """
+        # Define format operators
+        try:
+            reader, writer, schema = getFormatOperators(fileformat)
+        except:
+            raise ValueError('Invalid format %s' % fileformat)
+
+        # Define output germline fields
+        germline_fields = OrderedDict()
+        seq_type = seq_field.split('_')[-1]
+        if 'full' in germ_types:
+            germline_fields['full'] = 'germline_' + seq_type
+        if 'dmask' in germ_types:
+            germline_fields['dmask'] = 'germline_' + seq_type + '_d_mask'
+        if 'vonly' in germ_types:
+            germline_fields['vonly'] = 'germline_' + seq_type + '_v_region'
+        if 'regions' in germ_types:
+            germline_fields['regions'] = 'germline_regions'
+
+        if type(references) is not list:
+            ref = [references]
+        else:
+            ref = ref
+        reference_dict = readGermlines(ref)
+        # Check for IMGT-gaps in germlines
+        if all('...' not in x for x in reference_dict.values()):
+            warnings.warn(UserWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
+
+        required = ['v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length', 'np2_length']
+
+        if isinstance(self.data, pd.DataFrame):
+            # Check for required columns
+            try:
+                checkFields(required, self.data.columns, schema=schema)
+            except LookupError as e:
+                print(e)
+
+            # Count input
+            total_count = len(self.data)
+
+            # Check for existence of fields
+            for f in [v_field, d_field, j_field, seq_field]:
+                if f not in self.data.columns:
+                    raise UserError('%s field does not exist in input database file.' % f)
+            # Translate to Receptor attribute names
+            v_field = schema.toReceptor(v_field)
+            d_field = schema.toReceptor(d_field)
+            j_field = schema.toReceptor(j_field)
+            seq_field = schema.toReceptor(seq_field)
+            clone_field = schema.toReceptor(clone_field)
+
+            # Define Receptor iterator
+            receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
+
+        else:
+            # Get repertoire and open Db reader
+            db_handle = open(self.data, 'rt')
+            db_iter = reader(db_handle)
+
+            # Check for required columns
+            try:
+                checkFields(required, db_iter.fields, schema=schema)
+            except LookupError as e:
+                print(e)
+
+            # Count input
+            total_count = countDbFile(self.data)
+
+            # Check for existence of fields
+            for f in [v_field, d_field, j_field, seq_field]:
+                if f not in db_iter.fields:
+                    raise UserError('%s field does not exist in input database file.' % f)
+
+            # Translate to Receptor attribute names
+            v_field = schema.toReceptor(v_field)
+            d_field = schema.toReceptor(d_field)
+            j_field = schema.toReceptor(j_field)
+            seq_field = schema.toReceptor(seq_field)
+            clone_field = schema.toReceptor(clone_field)
+
+            # Define Receptor iterator
+            receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
+
+        out = {}
+        # Iterate over rows
+        for key, records in tqdm(receptor_iter, desc = 'Building germline sequences '):
+            # Define iteration variables
+            # Build germline for records
+            if not isinstance(self.data, pd.DataFrame):
+                records = list(records)
+                germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+            else:
+                if fileformat == 'airr':
+                    germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+                elif fileformat == 'changeo':
+                    germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+                else:
+                    raise UserError('%s not acceptable file format' % fileformat)
+            if glines is not None:
+                # Add glines to Receptor record
+                annotations = {}
+                if 'full' in germ_types:
+                    annotations[germline_fields['full']] = glines['full']
+                if 'dmask' in germ_types:
+                    annotations[germline_fields['dmask']] = glines['dmask']
+                if 'vonly' in germ_types:
+                    annotations[germline_fields['vonly']] = glines['vonly']
+                if 'regions' in germ_types:
+                    annotations[germline_fields['regions']] = glines['regions']
+                out.update({key:annotations})
+        germline_df = pd.DataFrame.from_dict(out, orient = 'index')
+
+        self.data = load_data(self.data)
+        for x in germline_df.columns:
+            self.data[x] = pd.Series(germline_df[x])
+
+    _create_germlines(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat)
+
+def quantify_mutations(self, region_definition=None, mutation_definition=None, frequency=True, combine=True):
+    sh = importr('shazam')
+    dat = load_data(self.data)
+    warnings.filterwarnings("ignore")
+    try:
+        dat_r = pandas2ri.py2rpy(dat)
+    except:
+        dat = dat.fillna('')
+        dat_r = pandas2ri.py2rpy(dat)
+    if region_definition is None:
+        reg_d = NULL
+    else:
+        reg_d = region_definition
+
+    if mutation_definition is None:
+        mut_d = NULL
+    else:
+        mut_d = mutation_definition
+    results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+    pd_df = pandas2ri.rpy2py_dataframe(results)
+    pd_df.set_index('sequence_id', inplace = True, drop = False)
+    cols_to_return = pd_df.columns.difference(dat.columns)
+    res = {}
+    for x in cols_to_return:
+        res[x] = list(pd_df[x])
+        self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
+    metadata_ = self.data[['cell_id']+list(cols_to_return)]
+    for x in cols_to_return:
+        metadata_[x] = metadata_[x].astype(np.float32)
+    metadata_ = metadata_.groupby('cell_id').sum()
+    metadata_.index.name = None
+    if self.metadata is None:
+        self.metadata = metadata_
+    else:
+        for x in metadata_.columns:
+            self.metadata[x] = pd.Series(metadata_[x])
