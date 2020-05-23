@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:09:34
+# @Last Modified time: 2020-05-24 00:12:24
 
 import os
 import scanpy as sc
@@ -1033,7 +1033,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 # Define Receptor iterator
                 receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
         else:
-            raise AttributeError('Please provide a Dandelion class object instead of class <%s>.' % self.__class__)
+            raise AttributeError("Please provide a <class 'Dandelion'> class object instead of %s." % self.__class__)
         out = {}
         # Iterate over rows
         for key, records in tqdm(receptor_iter, desc = 'Building germline sequences '):
