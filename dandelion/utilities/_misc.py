@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:40:16
+# @Last Modified time: 2020-05-24 00:49:30
 
 import sys
 import os
@@ -14,7 +14,7 @@ from tqdm import tqdm
 import re
 import gzip
 import pickle as pickle
-from copy import deepcopy
+import copy
 
 class Tree(defaultdict):
     def __init__(self, value=None):
@@ -280,9 +280,8 @@ class Dandelion:
         if self.data is not None:
             initialize_metadata(self)
 
-    @classmethod
     def copy(self):
-        return deepcopy(self)
+        return copy.deepcopy(self)
 
     @staticmethod
     def isGZIP(filename):
