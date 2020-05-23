@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:04:21
+# @Last Modified time: 2020-05-24 00:40:16
 
 import sys
 import os
@@ -14,6 +14,7 @@ from tqdm import tqdm
 import re
 import gzip
 import pickle as pickle
+from copy import deepcopy
 
 class Tree(defaultdict):
     def __init__(self, value=None):
