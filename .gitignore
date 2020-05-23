@@ -1,15 +1,6 @@
 dist/
 *.egg
-!**/__pycache__/
+*./__pycache__/.*
 *.pyc
 *.DS_Store
 *-checkpoint.ipynb
-dandelion/plotting/__pycache__/_plotting.cpython-37.pyc
-dandelion/utilities/__pycache__/_misc.cpython-37.pyc
-dandelion/tools/__pycache__/_tools.cpython-37.pyc
-dandelion/plotting/__pycache__/_plotting.cpython-37.pyc
-dandelion/tools/__pycache__/__init__.cpython-37.pyc
-dandelion/tools/__pycache__/_tools.cpython-37.pyc
-dandelion/utilities/__pycache__/_misc.cpython-37.pyc
-dandelion/plotting/__pycache__/_plotting.cpython-37.pyc
-dandelion/tools/__pycache__/_tools.cpython-37.pyc
