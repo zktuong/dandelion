@@ -34,7 +34,7 @@ pip install changeo
 # which gcc-9
 # /Users/kt16/homebrew/bin/gcc-9
 # then run
-env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2
+env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because I personally don't want to use r that comes with the conda installation. This will ensure I'm using the base R.
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
