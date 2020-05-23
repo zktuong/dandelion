@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-22 23:41:35
+# @Last Modified time: 2020-05-23 12:08:17
 
 import scanpy as sc
 import pandas as pd
@@ -750,7 +750,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
             group.append(x)
         else:
             group.append(x.split(scb[1])[scb[0]])
-    metadata['clone_group'] = group
+    metadata['clone_group_id'] = group
     # 4) Heavy chain V, J and Isotype (C)
     iso_dict = dict(zip(dat_h['cell_id'], dat_h['c_call']))
     if 'v_call_genotyped' in dat_h.columns:
@@ -804,13 +804,13 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     metadata['productive'] = pd.Series(productive_list)
 
     # will return this object
-    metadata = metadata[['clone_id', 'clone_group', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
+    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
 
     # generate edge list
     tmp_totaldist = pd.DataFrame(total_dist, index = metadata.index, columns = metadata.index)
     tmp_clusterdist = Tree()
     for i in metadata.index:
-        cx = metadata.loc[i,'clone_group']
+        cx = metadata.loc[i,'clone_group_id']
         tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
@@ -973,7 +973,7 @@ def reconstruct_germline(file, fileformat = 'airr', germline = None, org = 'huma
         gml = germline
 
     if outfile is None:
-        outfile = "{}".format(file)
+        outfile = "{}/{}".format(os.path.dirname(file), os.path.basename(file).replace('.tsv', 'dmask.tsv'))
     else:
         outfile = outfile
 
