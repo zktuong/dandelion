@@ -29,6 +29,13 @@ pip install scanpy
 pip install scrublet
 pip install changeo
 
+# install rpy2
+# first, work out where the path is to your gcc compiler:
+# which gcc-9
+# /Users/kt16/homebrew/bin/gcc-9
+# then run
+env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2
+
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
 ````
