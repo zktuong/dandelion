@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 10:26:26
+# @Last Modified time: 2020-05-24 10:42:35
 
 import os
 import scanpy as sc
@@ -30,7 +30,7 @@ except ImportError:
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
-from rpy2.robjects.packages import importr
+from rpy2.robjects.packages import importr, data
 from rpy2.rinterface import NULL
 from rpy2.robjects import pandas2ri
 import warnings
@@ -1092,12 +1092,12 @@ def quantify_mutations(self, region_definition=None, mutation_definition=None, f
     if region_definition is None:
         reg_d = NULL
     else:
-        reg_d = region_definition
+        reg_d = data(sh).fetch(region_definition)
 
     if mutation_definition is None:
         mut_d = NULL
     else:
-        mut_d = mutation_definition
+        mut_d = data(sh).fetch(mutation_definition)
     results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
     pd_df = pandas2ri.rpy2py_dataframe(results)
     pd_df.set_index('sequence_id', inplace = True, drop = False)
