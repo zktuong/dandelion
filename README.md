@@ -94,6 +94,7 @@ changeo==1.0.0
 anndata==0.7.1
 scanpy==1.4.6
 scrublet==0.2.1
+rpy2==3.3.3
 ```
 R packages
 ```R
