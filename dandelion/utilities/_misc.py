@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:49:30
+# @Last Modified time: 2020-05-24 01:35:44
 
 import sys
 import os
@@ -261,8 +261,21 @@ def initialize_metadata(self, clones_sep = None):
         productive_list[x] = ','.join(cl)
     metadata['productive'] = pd.Series(productive_list)
 
+    metadata['multi'] = False
+    for i in metadata.index:
+        hv = metadata.loc[i, 'heavychain_v']
+        hj = metadata.loc[i, 'heavychain_j']
+        lv = metadata.loc[i, 'lightchain_v']
+        lj = metadata.loc[i, 'lightchain_j']
+        hv_ = list(set(re.sub('[*][0-9][0-9]', '', hv).split(',')))
+        hj_ = list(set(re.sub('[*][0-9][0-9]', '', hj).split(',')))
+        lv_ = list(set(re.sub('[*][0-9][0-9]', '', lv).split(',')))
+        lj_ = list(set(re.sub('[*][0-9][0-9]', '', lj).split(',')))
+        if any(x > 1 for x in [len(hv_), len(hj_), len(lv_), len(lj_)]):
+            metadata.loc[i, 'multi'] = True
+
     # return this in this order
-    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
+    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'multi', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
     if self.metadata is None:
         self.metadata = metadata
     else:
