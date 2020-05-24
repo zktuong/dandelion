@@ -7,7 +7,7 @@ with open("README.md", "r") as readme_file:
 requirements = ["numpy>=1.18.4", "pandas>=1.0.3", "changeo>=1.0.0", "anndata>=0.7.1", "scanpy>=1.4.6", "scrublet>=0.2.1", "python-Levenshtein>=0.12.0", "distance>=0.1.3", "joblib>=0.14.1", "scikit-learn>=0.23.0", "scipy>=1.4.1", "numba>=0.48.0", "seaborn>=0.10.1", "python-igraph>=0.8.2", "networkx>=2.4", "leidenalg>=0.8.0", "rpy2>=3.3.3"]
 setup(
     name="sc-dandelion",
-    version="0.0.1",
+    version="0.0.2",
     author="zktuong",
     author_email="kt16@sanger.ac.uk",
     description="sc-BCR analysis tool",
