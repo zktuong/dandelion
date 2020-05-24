@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:49:30
+# @Last Modified time: 2020-05-24 11:03:32
 
 import sys
 import os
@@ -229,6 +229,33 @@ def initialize_metadata(self, clones_sep = None):
     metadata['lightchain'] = pd.Series(lc_dict)
     metadata['lightchain_v'] = pd.Series(vl_dict)
     metadata['lightchain_j'] = pd.Series(jl_dict)
+
+    hv =[re.sub('[*][0-9][0-9]', '', str(v)) for v in metadata['heavychain_v']]
+    hv = [','.join(list(set(v.split(',')))) for v in hv]
+    hj =[re.sub('[*][0-9][0-9]', '', str(j)) for j in metadata['heavychain_j']]
+    hj = [','.join(list(set(j.split(',')))) for j in hj]
+    lv =[re.sub('[*][0-9][0-9]', '', str(v)) for v in metadata['lightchain_v']]
+    lv = [','.join(list(set(v.split(',')))) for v in lv]
+    lj =[re.sub('[*][0-9][0-9]', '', str(j)) for j in metadata['lightchain_j']]
+    lj = [','.join(list(set(j.split(',')))) for j in lj]
+
+    metadata['heavychain_v_gene'] = hv
+    metadata['heavychain_j_gene'] = hj
+    metadata['lightchain_v_gene'] = lv
+    metadata['lightchain_j_gene'] = lj
+
+    metadata['heavy_multi'] = False
+    metadata['light_multi'] = False
+    for i in metadata.index:
+        hv_ = metadata.loc[i, 'heavychain_v_gene'].split(',')
+        hj_ = metadata.loc[i, 'heavychain_j_gene'].split(',')
+        lv_ = metadata.loc[i, 'lightchain_v_gene'].split(',')
+        lj_ = metadata.loc[i, 'lightchain_j_gene'].split(',')
+        if any(x > 1 for x in [len(hv_), len(hj_)]):
+            metadata.loc[i, 'heavy_multi'] = True
+        if any(x > 1 for x in [len(lv_), len(lj_)]):
+            metadata.loc[i, 'light_multi'] = True
+
     # 2) whether or not chains are productive
     productive_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['productive'])))
     productive_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['productive'])))
@@ -260,9 +287,9 @@ def initialize_metadata(self, clones_sep = None):
             cl = cl[1:]
         productive_list[x] = ','.join(cl)
     metadata['productive'] = pd.Series(productive_list)
-
+    
     # return this in this order
-    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
+    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavy_multi', 'light_multi', 'heavychain_v_gene', 'lightchain_v_gene', 'heavychain_j_gene', 'lightchain_j_gene', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
     if self.metadata is None:
         self.metadata = metadata
     else:
