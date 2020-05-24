@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:12:24
+# @Last Modified time: 2020-05-24 10:26:26
 
 import os
 import scanpy as sc
@@ -814,7 +814,7 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def transfer_network(self, network, neighbors_key = None):
+def transfer_network(self, network, keep_raw = True, neighbors_key = None):
     """
     Transferring network to AnnData object and modify in place.
 
@@ -850,11 +850,16 @@ def transfer_network(self, network, neighbors_key = None):
     if neighbors_key is None:
         neighbors_key = "neighbors"
     if neighbors_key not in self.uns:
-        raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-    self.raw.uns = copy.deepcopy(self.uns)
-    self.uns['neighbors']['connectivities'] = df_connectivities_
-    self.uns['neighbors']['distances'] = df_distances_
-    self.uns['neighbors']['params'] = {'method':'bcr'}
+        raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")    
+    if keep_raw:
+        self.raw.uns = copy.deepcopy(self.uns)
+        self.uns[neighbors_key]['connectivities'] = df_connectivities_
+        self.uns[neighbors_key]['distances'] = df_distances_
+        self.uns[neighbors_key]['params'] = {'method':'bcr'}
+    else:
+        self.uns[neighbors_key]['connectivities'] = df_connectivities_
+        self.uns[neighbors_key]['distances'] = df_distances_
+        self.uns[neighbors_key]['params'] = {'method':'bcr'}
 
     for x in network.metadata.columns:
         self.obs[x] = pd.Series(network.metadata[x])
@@ -866,11 +871,17 @@ def transfer_network(self, network, neighbors_key = None):
     tmp[[1]] = tmp[[1]]*-1
     X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
     self.obsm['X_bcr'] = X_bcr
-    logg.info(' finished', time=start,
-        deep=('added to `.uns[\'neighbors\']`\n'
-        '   \'distances\', cluster-weighted adjacency matrix\n'
-        '   \'connectivities\', cluster-weighted adjacency matrix\n'
-        'stored original .uns in .raw'))
+    if keep_raw:
+        logg.info(' finished', time=start,
+            deep=('added to `.uns[\''+neighbors_key+'\']`\n'
+            '   \'distances\', cluster-weighted adjacency matrix\n'
+            '   \'connectivities\', cluster-weighted adjacency matrix\n'
+            'stored original .uns in .raw'))
+    else:
+        logg.info(' finished', time=start,
+            deep=('added to `.uns[\''+neighbors_key+'\']`\n'
+            '   \'distances\', cluster-weighted adjacency matrix\n'
+            '   \'connectivities\', cluster-weighted adjacency matrix'))
 
 def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):
     env = os.environ.copy()
