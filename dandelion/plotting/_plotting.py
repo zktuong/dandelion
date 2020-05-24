@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 21:03:26
+# @Last Modified time: 2020-05-24 23:58:42
 
 import igraph
 import seaborn as sns
@@ -154,7 +154,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     res.reset_index(drop = False, inplace = True)
 
     # Initialize the matplotlib figure
-    _, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize)
 
     # plot
     sns.barplot(x='index', y = variable, data=res, palette = palette, **kwargs)
@@ -172,7 +172,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         plt.xticks(rotation=90)
     else:
         plt.xticks(rotation=xtick_rotation)
-    return ax
+    return fig, ax
 
 def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, **kwargs):
     """
@@ -186,21 +186,20 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     groupby
         varibale to groupby for plotting
     palette
-        palette for pltting
-    
+        palette for pltting    
     figsize
-        figure size
-    
+        figure size    
     normalize
-        if True, will return as proportion out of 1, otherwise False will return counts
-    
+        if True, will return as proportion out of 1, otherwise False will return counts    
     title
         title of plot
     sort_descending
         whether or not to sort the order of the plot
     xtick_rotation
         rotation of x tick labels        
-    legend
+    hide_lgend
+        whether or not to hide the legend
+    legend_options
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
     labels
         Names of objects will be used for the legend if list of multiple dataframes supplied.
@@ -247,48 +246,48 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         n_col = len(dfall[0].columns) 
         n_ind = len(dfall[0].index)        
         # Initialize the matplotlib figure
-        _, axe = plt.subplots(figsize=figsize)        
+        fig, ax = plt.subplots(figsize=figsize)        
         for df in dfall : # for each data frame
-            axe = df.plot(kind="bar",
+            ax = df.plot(kind="bar",
                         linewidth=0,
                         stacked=True,
-                        ax=axe,
+                        ax=ax,
                         legend=False,
                         grid=False,
                         **kwargs)  # make bar plots    
-        h,l = axe.get_legend_handles_labels() # get the handles we want to modify
+        h,l = ax.get_legend_handles_labels() # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col): # len(h) = n_col * n_df
             for j, pa in enumerate(h[i:i+n_col]):
                 for rect in pa.patches: # for each index
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
                     rect.set_hatch(H * int(i / n_col)) #edited part     
                     rect.set_width(1 / float(n_df + 1))
-        axe.set_xticks((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.)
-        axe.set_xticklabels(df.index, rotation = 0)        
-        axe.set_title(title)
+        ax.set_xticks((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.)
+        ax.set_xticklabels(df.index, rotation = 0)        
+        ax.set_title(title)
         if normalize:
-            axe.set_ylabel('proportion')
+            ax.set_ylabel('proportion')
         else:
-            axe.set_ylabel('count')
+            ax.set_ylabel('count')
         # Add invisible data to add another legend
         n=[]        
         for i in range(n_df):
-            n.append(axe.bar(0, 0, color="gray", hatch=H * i))
+            n.append(ax.bar(0, 0, color="gray", hatch=H * i))
         if legend_options is None:
             Legend = ('center right', (1.15, 0.5), 1)
         else:
             Legend = legend_options
         if hide_legend is False:
-            l1 = axe.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
+            l1 = ax.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             if labels is not None:
                 l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False) 
-            axe.add_artist(l1)
+            ax.add_artist(l1)
         if xtick_rotation is None:
             plt.xticks(rotation=90)
         else:
             plt.xticks(rotation=xtick_rotation)
 
-        return axe
+        return fig, ax
     
     if title is None:
         title = "multiple stacked bar plot : " + variable.replace('_', ' ') +' usage'
@@ -382,45 +381,45 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
         else:
             wdth = width
         # Initialize the matplotlib figure
-        _, axe = plt.subplots(figsize=figsize)        
+        _, ax = plt.subplots(figsize=figsize)        
         for df in dfall : # for each data frame
-            axe = df.plot(kind="bar",
+            ax = df.plot(kind="bar",
                         linewidth=0,
                         stacked=True,
-                        ax=axe,
+                        ax=ax,
                         legend=False,
                         grid=False,
                         **kwargs)  # make bar plots    
-        h,l = axe.get_legend_handles_labels() # get the handles we want to modify
+        h,l = ax.get_legend_handles_labels() # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col): # len(h) = n_col * n_df
             for j, pa in enumerate(h[i:i+n_col]):
                 for rect in pa.patches: # for each index
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
                     rect.set_hatch(H * int(i / n_col)) #edited part     
                     rect.set_width(wdth) # need to see if there's a better way to toggle this.
-        axe.set_xticks(((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.))
+        ax.set_xticks(((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.))
         n = 5  # Keeps every 5th label visible and hides the rest
-        [l.set_visible(False) for (i,l) in enumerate(axe.xaxis.get_ticklabels()) if i % n != 0]
-        axe.set_title(title)
-        axe.set_ylabel('count')
+        [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
+        ax.set_title(title)
+        ax.set_ylabel('count')
         # Add invisible data to add another legend
         n=[]        
         for i in range(n_df):
-            n.append(axe.bar(0, 0, color="gray", hatch=H * i))
+            n.append(ax.bar(0, 0, color="gray", hatch=H * i))
         if legend_options is None:
             Legend = ('center right', (1.25, 0.5), 1)
         else:
             Legend = legend_options
         if hide_legend is False:
-            l1 = axe.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
+            l1 = ax.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             if labels is not None:
                 l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False) 
-            axe.add_artist(l1)
+            ax.add_artist(l1)
         if xtick_rotation is None:
             plt.xticks(rotation=0)
         else:
             plt.xticks(rotation=xtick_rotation)
         
-        return axe
+        return fig, ax
 
     return _plot_spectra_stacked(dat_2, labels = labels, figsize = figsize, title = title, width = width, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend =hide_legend, **kwargs)
