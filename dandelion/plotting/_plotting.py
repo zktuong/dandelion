@@ -2,10 +2,11 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 18:57:32
+# @Last Modified time: 2020-05-24 20:33:32
 
 import igraph
 import seaborn as sns
+import pandas as pd
 import numpy as np
 from ..utilities._misc import *
 from scanpy.plotting._tools.scatterplots import embedding
@@ -136,7 +137,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     title
         title of plot
     xtick_rotation
-        rotataion of x tick labels        
+        rotation of x tick labels        
     **kwargs
         other kwargs passed to sns.barplot
     Return
@@ -173,7 +174,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         plt.xticks(rotation=xtick_rotation)
     return ax
 
-def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, legend_loc=None, legend_options = None, labels=None, **kwargs):
+def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=None, legend_options = None, labels=None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -198,7 +199,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     sort_descending
         whether or not to sort the order of the plot
     xtick_rotation
-        rotataion of x tick labels        
+        rotation of x tick labels        
     legend
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
     labels
@@ -208,13 +209,13 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     
     Return
     ----------
-        a seaborn barplot
+        stacked bar plot
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
     elif self.__class__ == AnnData:
         data = self.obs.copy()
-
+    data[groupby] = [str(l) for l in data[groupby]] # quick fix to prevent dropping of nan
     dat_ = pd.DataFrame(data.groupby(variable)[groupby].value_counts(normalize=normalize).unstack(fill_value=0).stack(), columns = ['value'])
     dat_.reset_index(drop = False, inplace = True)
     dat_order = pd.DataFrame(data[variable].value_counts(normalize=normalize))
@@ -226,10 +227,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     elif sort_descending is None:
         pass
 
-    if title is not None:
-        title = "multiple stacked bar plot : " + variable.replace('_', ' ')+' usage'
-
-    def plot_clustered_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, legend_loc=None, H="/", **kwargs):
+    def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=None, H="/", **kwargs):
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot. 
         Parameters
@@ -239,8 +237,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         title
             string for the title of the plot
         H
-            is the hatch used for identification of the different dataframes
-        
+            is the hatch used for identification of the different dataframes        
         **kwargs
             other kwargs passed to matplotlib.plt
         """
@@ -248,11 +245,9 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
             dfall = [dfall]
         n_df = len(dfall)
         n_col = len(dfall[0].columns) 
-        n_ind = len(dfall[0].index)
-        
+        n_ind = len(dfall[0].index)        
         # Initialize the matplotlib figure
-        _, axe = plt.subplots(figsize=figsize)
-        
+        _, axe = plt.subplots(figsize=figsize)        
         for df in dfall : # for each data frame
             axe = df.plot(kind="bar",
                         linewidth=0,
@@ -260,8 +255,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
                         ax=axe,
                         legend=False,
                         grid=False,
-                        **kwargs)  # make bar plots
-    
+                        **kwargs)  # make bar plots    
         h,l = axe.get_legend_handles_labels() # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col): # len(h) = n_col * n_df
             for j, pa in enumerate(h[i:i+n_col]):
@@ -269,21 +263,18 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
                     rect.set_hatch(H * int(i / n_col)) #edited part     
                     rect.set_width(1 / float(n_df + 1))
-    
         axe.set_xticks((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.)
         axe.set_xticklabels(df.index, rotation = 0)        
         axe.set_title(title)
-    
         # Add invisible data to add another legend
         n=[]        
         for i in range(n_df):
             n.append(axe.bar(0, 0, color="gray", hatch=H * i))
-        
         if legend_options is None:
             Legend = ('center right', (1.15, 0.5), 1)
         else:
             Legend = legend_options
-        if legend_loc is not 'none':
+        if hide_legend is not 'none':
             l1 = axe.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             if labels is not None:
                 l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False) 
@@ -292,7 +283,122 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
             plt.xticks(rotation=90)
         else:
             plt.xticks(rotation=xtick_rotation)
-
         return axe
+        if title is None:
+            title = "multiple stacked bar plot : " + variable.replace('_', ' ') +' usage'
+        else:
+            title = title
+
+    return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
+
+def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=None, legend_options = None, labels=None, **kwargs):
+    """
+    A stackedbarplot function to plot usage of V/J genes in the data split by groups.
+    Parameters
+    ----------
+    self
+        either a Dandelion or AnnData object
+    variable
+        variable in metadata to plot the bar plot
+    groupby
+        varibale to groupby for plotting
+    locus
+        either IGH or IGL
+    figsize
+        figure size
+    width
+        width of bars.
+    normalize
+        if True, will return as proportion out of 1, otherwise False will return counts
+    title
+        title of plot
+    xtick_rotation
+        rotation of x tick labels        
+    legend_options
+        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
+    hide_legend
+        whether or not to hide the legend
+    labels
+        Names of objects will be used for the legend if list of multiple dataframes supplied.
+    **kwargs
+        other kwargs passed to matplotlib.plt
     
-    return plot_clustered_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, legend_loc = legend_loc, **kwargs)
+    Return
+    ----------
+        sectratype plot
+    """
+    if self.__class__ == Dandelion:
+        data = self.data.copy()
+    else:
+        try:
+            data = self.copy()
+        except:
+            AttributeError("Please provide a <class 'Dandelion'> class object or a pandas dataframe instead of %s." % self.__class__)
+
+    if 'locus' not in data.columns:
+        raise AttributeError("Please ensure dataframe contains 'locus' column")
+    
+    if groupby is 'isotype' or 'lightchain':
+        groupby = 'c_call'
+
+    if type(locus) is not list:
+        locus = [locus]
+    data = data[data['locus'].isin(locus)]
+    data[groupby] = [str(l) for l in data[groupby]]
+    dat_ = pd.DataFrame(data.groupby(variable)[groupby].value_counts(normalize=False).unstack(fill_value=0).stack(), columns = ['value'])
+    dat_.reset_index(drop = False, inplace = True)
+    dat_[variable] = pd.to_numeric(dat_[variable], errors='coerce')
+    dat_.sort_values(by = variable)
+    dat_2 = dat_.pivot(index=variable, columns=groupby, values='value')
+    new_index = range(0, dat_[variable].max()+1)
+    dat_2 = dat_2.reindex(new_index, fill_value=0)
+
+    def _plot_spectra_stacked(dfall, labels=None, figsize = (6, 4), title="multiple stacked bar plot", width = None, xtick_rotation=None, legend_options = None, hide_legend=None, H="/", **kwargs):
+        if type(dfall) is not list:
+            dfall = [dfall]
+        n_df = len(dfall)
+        n_col = len(dfall[0].columns) 
+        n_ind = len(dfall[0].index)
+        if width is None:
+            wdth = 0.1 * n_ind/60+0.8    
+        # Initialize the matplotlib figure
+        _, axe = plt.subplots(figsize=figsize)        
+        for df in dfall : # for each data frame
+            axe = df.plot(kind="bar",
+                        linewidth=0,
+                        stacked=True,
+                        ax=axe,
+                        legend=False,
+                        grid=False,
+                        **kwargs)  # make bar plots    
+        h,l = axe.get_legend_handles_labels() # get the handles we want to modify
+        for i in range(0, n_df * n_col, n_col): # len(h) = n_col * n_df
+            for j, pa in enumerate(h[i:i+n_col]):
+                for rect in pa.patches: # for each index
+                    rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
+                    rect.set_hatch(H * int(i / n_col)) #edited part     
+                    rect.set_width(wdth) # need to see if there's a better way to toggle this.
+        axe.set_xticks(((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.))
+        n = 5  # Keeps every 5th label visible and hides the rest
+        [l.set_visible(False) for (i,l) in enumerate(axe.xaxis.get_ticklabels()) if i % n != 0]
+        axe.set_title(title)
+        # Add invisible data to add another legend
+        n=[]        
+        for i in range(n_df):
+            n.append(axe.bar(0, 0, color="gray", hatch=H * i))
+        if legend_options is None:
+            Legend = ('center right', (1.25, 0.5), 1)
+        else:
+            Legend = legend_options
+        if hide_legend is not 'none':
+            l1 = axe.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
+            if labels is not None:
+                l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False) 
+            axe.add_artist(l1)
+        if xtick_rotation is None:
+            plt.xticks(rotation=0)
+        else:
+            plt.xticks(rotation=xtick_rotation)
+        return axe
+
+    return _plot_spectra_stacked(dat_2, labels = labels, figsize = figsize, title = title, width = width, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend =hide_legend, **kwargs)
