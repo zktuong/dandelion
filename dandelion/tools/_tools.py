@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 00:12:24
+# @Last Modified time: 2020-05-24 10:20:44
 
 import os
 import scanpy as sc
@@ -814,7 +814,7 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def transfer_network(self, network, neighbors_key = None):
+def transfer_network(self, network, keep_raw = True, neighbors_key = None):
     """
     Transferring network to AnnData object and modify in place.
 
@@ -851,10 +851,21 @@ def transfer_network(self, network, neighbors_key = None):
         neighbors_key = "neighbors"
     if neighbors_key not in self.uns:
         raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-    self.raw.uns = copy.deepcopy(self.uns)
-    self.uns['neighbors']['connectivities'] = df_connectivities_
-    self.uns['neighbors']['distances'] = df_distances_
-    self.uns['neighbors']['params'] = {'method':'bcr'}
+    if neighbors_key in self.raw.uns:
+        if keep_raw:
+            self.raw.uns = copy.deepcopy(self.uns)
+            self.uns[neighbors_key]['connectivities'] = df_connectivities_
+            self.uns[neighbors_key]['distances'] = df_distances_
+            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+        else:
+            self.uns[neighbors_key]['connectivities'] = df_connectivities_
+            self.uns[neighbors_key]['distances'] = df_distances_
+            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+    else:
+        self.raw.uns = copy.deepcopy(self.uns)
+        self.uns[neighbors_key]['connectivities'] = df_connectivities_
+        self.uns[neighbors_key]['distances'] = df_distances_
+        self.uns[neighbors_key]['params'] = {'method':'bcr'}
 
     for x in network.metadata.columns:
         self.obs[x] = pd.Series(network.metadata[x])
