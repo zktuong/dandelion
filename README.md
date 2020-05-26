@@ -30,9 +30,13 @@ pip install scrublet
 pip install changeo
 
 # install rpy2
-# first, work out where the path is to your gcc compiler:
+pip install rpy2
+# If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
+#
+# example in terminal:
 # which gcc-9
 # /Users/kt16/homebrew/bin/gcc-9
+#
 # then run
 env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because I personally don't want to use r that comes with the conda installation. This will ensure I'm using the base R.
 
