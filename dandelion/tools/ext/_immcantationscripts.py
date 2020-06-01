@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-06-01 22:31:16
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-01 22:31:23
+# @Last Modified time: 2020-06-01 22:37:59
 
 import os
 import sys
@@ -12,6 +12,156 @@ import multiprocessing
 from ...utilities._misc import *
 from subprocess import run
 from changeo.Gene import getGene
+
+from rpy2.robjects.packages import importr, data
+from rpy2.rinterface import NULL
+from rpy2.robjects import pandas2ri
+import rpy2.robjects
+from plotnine import ggplot, geom_point, options, annotate, aes, xlab, ylab, facet_grid, theme_bw, geom_histogram, geom_vline, facet_grid, theme
+import warnings
+import numpy as np
+
+def calculate_threshold(self, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None, manual_threshold=None, figsize=(4.5, 2.5), *args):
+    '''
+    Wrappers for shazam's functions for calculating nearest neighbor distances for tuning clonal assignment.
+        
+    distToNearest
+        Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
+    findThreshold
+        automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method="gmm") or kernel density fit (threshold_method="density").
+    
+    Parameters
+    ----------
+    model 
+        underlying SHM model, which must be one of c("ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat").
+    normalize_method  
+        method of normalization. The default is "len", which divides the distance by the length of the sequence group. If "none" then no normalization if performed.
+    threshold_method
+        string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
+    edge
+        upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
+    cross
+        supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
+    subsample
+        maximum number of distances to subsample to before threshold detection.
+    threshold_model
+        allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
+    cutoff
+        method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
+    sensitivity
+        sensitivity required. Applies only when method="gmm" and cutoff="user".
+    specificity
+        specificity required. Applies only when method="gmm" and cutoff="user".
+    *args
+        passed to shazam's distToNearest function
+    '''
+
+    sh = importr('shazam')
+    dat = load_data(self)
+    warnings.filterwarnings("ignore")
+
+    if 'v_call_genotyped' in dat.columns:
+        v_call = 'v_call_genotyped'
+    else:
+        v_call = 'v_call'
+    
+    if model is None:
+        model_ = 'ham'
+    else:
+        model_ = model
+    
+    if normalize_method is None:
+        norm_ = 'len'
+    else:
+        norm_ = normalize_method
+    
+    if threshold_method is None:
+        threshold_method_ = "density"
+    else:
+        threshold_method_ = threshold_method
+    
+    if subsample is None:
+        subsample_ = NULL
+    else:
+        subsample_ = subsample
+    
+    if ncpu is None:
+        ncpu_ = multiprocessing.cpu_count()
+    else:
+        ncpu_ = ncpu
+
+    dat_h = dat[dat['locus'] == 'IGH']
+    
+    try:
+        dat_h_r = pandas2ri.py2rpy(dat_h)
+    except:
+        dat_h = dat_h.fillna('')
+        dat_h_r = pandas2ri.py2rpy(dat_h)
+
+    dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
+    # Find threshold using density method
+    c = rpy2.robjects.StrVector(['dist_nearest'])
+
+    if threshold_method_ is 'density':
+        if edge is None:
+            edge_ = 0.9
+        else:
+            edge_ = edge
+            
+        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method_, subsample = subsample_, edge = edge_)
+    else:
+        if threshold_model is None:
+            threshold_model_ = "gamma-gamma"
+        else:
+            threshold_model_ = threshold_model
+        
+        if cross is None:
+            cross_ = NULL
+        else:
+            cross_ = cross
+        
+        if cutoff is None:
+            cutoff_ = 'optimal'
+        else:
+            cutoff_ = cutoff
+        
+        if sensitivity is None:
+            sen_ = NULL
+        else:
+            sen_ = sensitivity
+        
+        if specificity is None:
+            spc_ = NULL
+        else:
+            spc_ = specificity        
+        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)        
+
+    threshold=np.array(dist_threshold.slots['threshold'])[0]
+    
+    dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
+    
+    if plot:
+        options.figure_size = figsize
+        if plot_group is None:
+            plot_group = 'sample_id'
+        else:
+            plot_group = plot_group
+        if manual_threshold is None:
+            tr = threshold
+        else:
+            tr = manual_threshold            
+        p = (ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
+             + theme_bw() 
+             + xlab("Grouped Hamming distance")
+             + ylab("Count")
+             + geom_histogram(binwidth = 0.01)
+             + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
+             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
+             + facet_grid('~'+str(plot_group), scales="free_y")
+             + theme(legend_position = 'none'))        
+        return(p)            
+    else:
+        print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
 
 def define_clones(data, dist, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, verbose = False, *args):
     """    
