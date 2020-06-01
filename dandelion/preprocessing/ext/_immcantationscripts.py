@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-15 12:25:12
+# @Last Modified time: 2020-06-01 21:21:42
 
 import os
 from subprocess import run
@@ -18,7 +18,7 @@ from changeo.Defaults import default_format, default_out_args
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getFormatOperators, getOutputHandle, readGermlines, checkFields
 
-def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'airr', verbose = False, outputfolder = None, *args):
+def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'airr', verbose = False, outputfolder = None):
     """
     reannotate with IgBLASTn
 
@@ -59,8 +59,8 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
            '-b', igdb,
            '--organism', org,
            '--loci', loci,
-           '--format', file_format_dict[fileformat],
-           *args]
+           '--format', file_format_dict[fileformat]
+           ]
 
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
@@ -80,7 +80,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
         out_file = "{}/{}".format(outfolder, outfile)
         os.replace(in_file, out_file)
 
-def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', outputfolder = None, verbose = False, *args):
+def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', outputfolder = None, extended = False, verbose = False):
     """
     parses IgBLAST output to change-o format
 
@@ -100,9 +100,6 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
         if specified, the location of output files.
     verbose
         whether or not to print the files
-    *args
-        any arguments for MakeDb.py
-
     Returns
     -------
         change-o object
@@ -125,11 +122,24 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
     else:
         igbo = igblast_output
 
-    cmd = ['MakeDb.py', 'igblast',
+    cellranger_annotation = "{}/{}".format(os.path.dirname(fasta), os.path.basename(fasta).replace('.fasta', '_annotations.csv'))
+
+    if extended:
+        cmd = ['MakeDb.py', 'igblast',
             '-i', igbo,
             '-s', fasta,
             '-r', gml,
-            '--asis-id', *args]
+            '--10x', cellranger_annotation,
+            '--asis-id',
+            '--extended']
+    else:
+        cmd = ['MakeDb.py', 'igblast',
+               '-i', igbo,
+               '-s', fasta,
+               '-r', gml,
+               '--10x', cellranger_annotation,
+               '--asis-id']
+
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd, env=env) # logs are printed to terminal
