@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-21 15:19:06
+# @Last Modified time: 2020-06-01 22:12:41
 
 import sys
 import os
@@ -59,6 +59,7 @@ def format_fasta(fasta, prefix = None, outdir = None):
             os.makedirs(out_dir)
 
     out_fasta = out_dir + os.path.basename(fasta)
+
     fh1 = open(out_fasta, 'w')
     fh1.close()
     out = ''
@@ -66,6 +67,13 @@ def format_fasta(fasta, prefix = None, outdir = None):
         out = '>'+l+'\n'+seqs[l]+'\n'
         Write_output(out, out_fasta)
 
+    # format the barcode and contig_id in the corresponding annotation file too
+    anno = basedir+'/'+os.path.basename(fasta).replace('.fasta', '_annotations.csv')
+    data = pd.read_csv(anno, dtype = 'object')
+    data['contig_id'] = [prefix+'_'+str(c) for c in data['contig_id']]
+    data['barcode'] = [prefix+'_'+str(b).split('-')[0] for b in data['barcode']]
+    out_anno = out_dir + os.path.basename(fasta).replace('.fasta', '_annotations.csv')
+    data.to_csv(out_anno, index= False)    
 
 def format_fastas(fastas, prefixes = None, outdir = None):
     """
@@ -335,7 +343,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     dat = _add_cell(dat)
     dat.to_csv(_file, sep = '\t', index=False)
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, extended = False, verbose = False, *args):
     """
     reannotate genes with igblastn and parses to data output
 
@@ -384,15 +392,46 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
                 gml = gml+'imgt/'+org+'/vdj/'
             else:
                 env['GERMLINE'] = germline
-                gml = germline
-
+                gml = germline            
             insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
+            map_cellranger("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast_gap.tsv')), extended = extended)
             tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
             if not os.path.exists(tmpFolder):
                 os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
+            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))            
         elif fileformat == 'changeo':            
-            makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
+            makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
+
+def map_cellranger(data, extended = False):
+    dat = load_data(data)
+    cellranger_data = "{}/{}".format(os.path.dirname(data), os.path.basename(data).replace('_igblast_gap.tsv', '_annotations.csv'))
+    cr_data = pd.read_csv(cellranger_data, dtype = 'object')
+    cell_id = dict(zip(cr_data['contig_id'], cr_data['barcode']))
+    v_call = dict(zip(cr_data['contig_id'], cr_data['v_gene']))
+    d_call = dict(zip(cr_data['contig_id'], cr_data['d_gene']))
+    j_call = dict(zip(cr_data['contig_id'], cr_data['j_gene']))
+    c_call = dict(zip(cr_data['contig_id'], cr_data['c_gene']))
+    junction = dict(zip(cr_data['contig_id'], cr_data['cdr3_nt']))
+    junction_aa = dict(zip(cr_data['contig_id'], cr_data['cdr3']))
+    conscount = dict(zip(cr_data['contig_id'], cr_data['reads']))
+    umicount = dict(zip(cr_data['contig_id'], cr_data['umis']))
+
+    if not extended:
+        dat['cell_id'] = pd.Series(cell_id)
+        dat['c_call'] = pd.Series(c_call)
+        dat['consensus_count'] = pd.Series(conscount)
+        dat['umi_count'] = pd.Series(umicount)
+    else:
+        dat['cell_id'] = pd.Series(cell_id)
+        dat['c_call'] = pd.Series(c_call)
+        dat['consensus_count'] = pd.Series(conscount)
+        dat['umi_count'] = pd.Series(umicount)
+        dat['v_call_10x'] = pd.Series(v_call)
+        dat['d_call_10x'] = pd.Series(d_call)
+        dat['j_call_10x'] = pd.Series(j_call)
+        dat['junction_10x'] = pd.Series(junction)
+        dat['junction_10x_aa'] = pd.Series(junction_aa)
+    dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
 def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False, *args):
     """
