@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-28 23:02:18
+# @Last Modified time: 2020-06-01 22:20:18
 
 import sys
 import os
@@ -149,7 +149,7 @@ def load_data(obj):
     elif isinstance(obj, pd.DataFrame):
             obj_ = obj.copy()
     else:
-        raise TypeError("Input is not of <class 'pandas.core.frame.DataFrame'>")
+        raise TypeError("Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist.")
 
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop = False, inplace = True)
