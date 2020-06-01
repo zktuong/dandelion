@@ -15,3 +15,4 @@ python-igraph>=0.8.2
 networkx>=2.4
 leidenalg>=0.8.0
 rpy2>=3.3.2
+plotnine>=0.6.0
