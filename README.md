@@ -22,7 +22,8 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install distance python-Levenshtein joblib jupyter plotnine
+conda install distance python-Levenshtein joblib plotnine jupyter
+conda install -c bioconda blast
 
 # Use pip to install the following with --no-cache-dir if necessary
 pip install scanpy
