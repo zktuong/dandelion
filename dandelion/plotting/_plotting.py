@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-28 21:56:43
+# @Last Modified time: 2020-06-02 23:41:17
 
 import igraph
 import seaborn as sns
@@ -58,7 +58,7 @@ def igraph_network(self, colorby = None, layout = None, col_option = 'husl', vis
     clone_group_col_dict = dict(zip(list(set(g.vs['clone_group_id'])), sns.color_palette(col_option, len(list(set(g.vs['clone_group_id']))))))        
     isotype_col_dict = {'IGHA1':'#4e79a7', 'IGHA2':'#f28e2b', 'IGHD':'#e15759', 'IGHE':'#76b7b2', 'IGHG1':'#59a14f', 'IGHG2':'#edc948', 'IGHG3':'#b07aa1', 'IGHG4':'#ff9da7', 'IGHM':'#9c755f', np.nan:'#e7e7e7'}
     lightchain_col_dict = {'IGKC':'#1F77B4', 'IGLC1':'#FF7F0E', 'IGLC2':'#FF7F0E', 'IGLC3':'#FF7F0E', 'IGLC4':'#FF7F0E', 'IGLC5':'#FF7F0E', 'IGLC6':'#FF7F0E','IGLC7':'#FF7F0E', np.nan:'#e7e7e7'}
-    productive_col_dict = {'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'}
+    productive_col_dict = {'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'}
     heavychain_v_col_dict = dict(zip(list(set(g.vs['heavychain_v'])), sns.color_palette(col_option, len(list(set(g.vs['heavychain_v']))))))
     lightchain_v_col_dict = dict(zip(list(set(g.vs['lightchain_v'])), sns.color_palette(col_option, len(list(set(g.vs['lightchain_v']))))))
     heavychain_j_col_dict = dict(zip(list(set(g.vs['heavychain_j'])), sns.color_palette(col_option, len(list(set(g.vs['heavychain_j']))))))
