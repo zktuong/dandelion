@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 10:42:35
+# @Last Modified time: 2020-05-28 22:50:40
 
 import os
 import scanpy as sc
@@ -23,6 +23,7 @@ import networkx as nx
 import igraph
 from time import sleep
 import copy
+import functools
 try:
     from scanpy import logging as logg
 except ImportError:
@@ -850,7 +851,7 @@ def transfer_network(self, network, keep_raw = True, neighbors_key = None):
     if neighbors_key is None:
         neighbors_key = "neighbors"
     if neighbors_key not in self.uns:
-        raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")    
+        raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
     if keep_raw:
         self.raw.uns = copy.deepcopy(self.uns)
         self.uns[neighbors_key]['connectivities'] = df_connectivities_
@@ -997,10 +998,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                     checkFields(required, self.data.columns, schema=schema)
                 except LookupError as e:
                     print(e)
-    
+
                 # Count input
                 total_count = len(self.data)
-    
+
                 # Check for existence of fields
                 for f in [v_field, d_field, j_field, seq_field]:
                     if f not in self.data.columns:
@@ -1011,36 +1012,36 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 j_field = schema.toReceptor(j_field)
                 seq_field = schema.toReceptor(seq_field)
                 clone_field = schema.toReceptor(clone_field)
-    
+
                 # Define Receptor iterator
                 receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
-    
+
             else:
                 # Get repertoire and open Db reader
                 db_handle = open(self.data, 'rt')
                 db_iter = reader(db_handle)
-    
+
                 # Check for required columns
                 try:
                     checkFields(required, db_iter.fields, schema=schema)
                 except LookupError as e:
                     print(e)
-    
+
                 # Count input
                 total_count = countDbFile(self.data)
-    
+
                 # Check for existence of fields
                 for f in [v_field, d_field, j_field, seq_field]:
                     if f not in db_iter.fields:
                         raise NameError('%s field does not exist in input database file.' % f)
-    
+
                 # Translate to Receptor attribute names
                 v_field = schema.toReceptor(v_field)
                 d_field = schema.toReceptor(d_field)
                 j_field = schema.toReceptor(j_field)
                 seq_field = schema.toReceptor(seq_field)
                 clone_field = schema.toReceptor(clone_field)
-    
+
                 # Define Receptor iterator
                 receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
         else:
@@ -1080,15 +1081,11 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
 
     _create_germlines(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat)
 
-def quantify_mutations(self, region_definition=None, mutation_definition=None, frequency=True, combine=True):
+def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
     sh = importr('shazam')
     dat = load_data(self.data)
     warnings.filterwarnings("ignore")
-    try:
-        dat_r = pandas2ri.py2rpy(dat)
-    except:
-        dat = dat.fillna('')
-        dat_r = pandas2ri.py2rpy(dat)
+
     if region_definition is None:
         reg_d = NULL
     else:
@@ -1098,18 +1095,68 @@ def quantify_mutations(self, region_definition=None, mutation_definition=None, f
         mut_d = NULL
     else:
         mut_d = data(sh).fetch(mutation_definition)
-    results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-    pd_df = pandas2ri.rpy2py_dataframe(results)
+
+    if split_locus is False:
+        try:
+            dat_r = pandas2ri.py2rpy(dat)
+        except:
+            dat = dat.fillna('')
+            dat_r = pandas2ri.py2rpy(dat)
+
+        results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        pd_df = pandas2ri.rpy2py_dataframe(results)
+    else:
+        dat_h = dat[dat['locus'] == 'IGH']
+        dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+
+        try:
+            dat_h_r = pandas2ri.py2rpy(dat_h)
+        except:
+            dat_h = dat_h.fillna('')
+            dat_h_r = pandas2ri.py2rpy(dat_h)
+
+        try:
+            dat_l_r = pandas2ri.py2rpy(dat_l)
+        except:
+            dat_l = dat_l.fillna('')
+            dat_l_r = pandas2ri.py2rpy(dat_l)
+
+        results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
+        pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
+        pd_df = pd.concat([pd_df_h, pd_df_l])
+
     pd_df.set_index('sequence_id', inplace = True, drop = False)
-    cols_to_return = pd_df.columns.difference(dat.columns)
+    cols_to_return = pd_df.columns.difference(dat.columns) # this doesn't actually catch overwritten columns
+    if len(cols_to_return) < 1:
+        cols_to_return = list(filter(re.compile("mu_.*").match, [c for c in pd_df.columns]))
+    else:
+        cols_to_return = cols_to_return
     res = {}
     for x in cols_to_return:
         res[x] = list(pd_df[x])
         self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
-    metadata_ = self.data[['cell_id']+list(cols_to_return)]
+    if split_locus is False:
+        metadata_ = self.data[['cell_id']+list(cols_to_return)]
+    else:
+        metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
+    
     for x in cols_to_return:
         metadata_[x] = metadata_[x].astype(np.float32)
-    metadata_ = metadata_.groupby('cell_id').sum()
+
+    if split_locus is False:
+        metadata_ = metadata_.groupby('cell_id').sum()
+    else:
+        metadata_ = metadata_.groupby(['locus','cell_id']).sum()
+        metadatas = []
+        for x in list(set(self.data['locus'])):
+            tmp = metadata_.iloc[metadata_.index.isin([x], level='locus'),:]
+            tmp.index = tmp.index.droplevel()
+            tmp.columns = [c+'_'+str(x) for c in tmp.columns]
+            metadatas.append(tmp)
+        metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
+
     metadata_.index.name = None
     if self.metadata is None:
         self.metadata = metadata_

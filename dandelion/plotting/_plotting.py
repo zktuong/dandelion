@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 23:58:42
+# @Last Modified time: 2020-05-28 21:56:43
 
 import igraph
 import seaborn as sns
@@ -119,7 +119,7 @@ def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
     embedding(adata, basis = basis, edges = edges, **kwargs)
 
-def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, title = None, xtick_rotation = None, **kwargs):
+def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, sort_descending = True, title = None, xtick_rotation = None, **kwargs):
     """
     A barplot function to plot usage of V/J genes in the data.
     Parameters
@@ -151,6 +151,8 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
 
     sns.set_style('whitegrid', {'axes.grid' : False})
     res = pd.DataFrame(data[variable].value_counts(normalize=normalize))
+    if not sort_descending:
+        res = res.sort_index()
     res.reset_index(drop = False, inplace = True)
 
     # Initialize the matplotlib figure
@@ -224,7 +226,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     elif sort_descending is False:
         dat_ = dat_.reindex(dat_order.index[::-1])
     elif sort_descending is None:
-        pass
+        dat_ = dat_.sort_index()
 
     def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
         """
@@ -272,7 +274,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         # Add invisible data to add another legend
         n=[]        
         for i in range(n_df):
-            n.append(ax.bar(0, 0, color="gray", hatch=H * i))
+            n.append(ax.bar(0, 0, color="grey", hatch=H * i))
         if legend_options is None:
             Legend = ('center right', (1.15, 0.5), 1)
         else:
@@ -381,7 +383,7 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
         else:
             wdth = width
         # Initialize the matplotlib figure
-        _, ax = plt.subplots(figsize=figsize)        
+        fig, ax = plt.subplots(figsize=figsize)        
         for df in dfall : # for each data frame
             ax = df.plot(kind="bar",
                         linewidth=0,

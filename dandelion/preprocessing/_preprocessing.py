@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-21 15:19:06
+# @Last Modified time: 2020-06-02 19:15:02
 
 import sys
 import os
@@ -14,6 +14,8 @@ from joblib import Parallel, delayed
 from time import sleep
 from ..utilities._misc import *
 from .ext._immcantationscripts import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
+from plotnine import ggplot, geom_bar, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme
+import re
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -59,6 +61,7 @@ def format_fasta(fasta, prefix = None, outdir = None):
             os.makedirs(out_dir)
 
     out_fasta = out_dir + os.path.basename(fasta)
+
     fh1 = open(out_fasta, 'w')
     fh1.close()
     out = ''
@@ -66,6 +69,13 @@ def format_fasta(fasta, prefix = None, outdir = None):
         out = '>'+l+'\n'+seqs[l]+'\n'
         Write_output(out, out_fasta)
 
+    # format the barcode and contig_id in the corresponding annotation file too
+    anno = basedir+'/'+os.path.basename(fasta).replace('.fasta', '_annotations.csv')
+    data = pd.read_csv(anno, dtype = 'object')
+    data['contig_id'] = [prefix+'_'+str(c) for c in data['contig_id']]
+    data['barcode'] = [prefix+'_'+str(b).split('-')[0] for b in data['barcode']]
+    out_anno = out_dir + os.path.basename(fasta).replace('.fasta', '_annotations.csv')
+    data.to_csv(out_anno, index= False)    
 
 def format_fastas(fastas, prefixes = None, outdir = None):
     """
@@ -133,7 +143,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
             bdb = bdb+org+'/'+org+'_BCR_C.fasta'
         else:
             env['BLASTDB'] = blastdb
-            bdb = env['BLASTDB']
+            bdb = blastdb
 
         cmd = ['blastn',
                 '-db', bdb,
@@ -335,7 +345,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     dat = _add_cell(dat)
     dat.to_csv(_file, sep = '\t', index=False)
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, extended = False, verbose = False, *args):
     """
     reannotate genes with igblastn and parses to data output
 
@@ -384,17 +394,48 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
                 gml = gml+'imgt/'+org+'/vdj/'
             else:
                 env['GERMLINE'] = germline
-                gml = germline
-
+                gml = germline            
             insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
+            map_cellranger("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast_gap.tsv')), extended = extended)
             tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
             if not os.path.exists(tmpFolder):
                 os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
+            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))            
         elif fileformat == 'changeo':            
-            makedb_igblast(filePath, org = org, germline = germline, verbose = verbose, *args)
+            makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
 
-def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False, *args):
+def map_cellranger(data, extended = False):
+    dat = load_data(data)
+    cellranger_data = "{}/{}".format(os.path.dirname(data), os.path.basename(data).replace('_igblast_gap.tsv', '_annotations.csv'))
+    cr_data = pd.read_csv(cellranger_data, dtype = 'object')
+    cell_id = dict(zip(cr_data['contig_id'], cr_data['barcode']))
+    v_call = dict(zip(cr_data['contig_id'], cr_data['v_gene']))
+    d_call = dict(zip(cr_data['contig_id'], cr_data['d_gene']))
+    j_call = dict(zip(cr_data['contig_id'], cr_data['j_gene']))
+    c_call = dict(zip(cr_data['contig_id'], cr_data['c_gene']))
+    junction = dict(zip(cr_data['contig_id'], cr_data['cdr3_nt']))
+    junction_aa = dict(zip(cr_data['contig_id'], cr_data['cdr3']))
+    conscount = dict(zip(cr_data['contig_id'], cr_data['reads']))
+    umicount = dict(zip(cr_data['contig_id'], cr_data['umis']))
+
+    if not extended:
+        dat['cell_id'] = pd.Series(cell_id)
+        dat['c_call'] = pd.Series(c_call)
+        dat['consensus_count'] = pd.Series(conscount)
+        dat['umi_count'] = pd.Series(umicount)
+    else:
+        dat['cell_id'] = pd.Series(cell_id)
+        dat['c_call'] = pd.Series(c_call)
+        dat['consensus_count'] = pd.Series(conscount)
+        dat['umi_count'] = pd.Series(umicount)
+        dat['v_call_10x'] = pd.Series(v_call)
+        dat['d_call_10x'] = pd.Series(d_call)
+        dat['j_call_10x'] = pd.Series(j_call)
+        dat['junction_10x'] = pd.Series(junction)
+        dat['junction_10x_aa'] = pd.Series(junction_aa)
+    dat.to_csv(data, sep = '\t', index = False, na_rep='')
+
+def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plot = True, figsize = (4,3), dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype.
     Description
@@ -407,6 +448,8 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
         list or sequence of folders/data file locations. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
     out_folder
         name of folder for concatenated data file and genotyped files.
+    germline
+        path to germline. If None, defaults to path set as environmental variable.
     fileformat
         format of data. only invoked if all other default options are used.
     dirs
@@ -423,10 +466,11 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
         passed to ``tigger_genotype``
     """
     def _return_IGKV_IGLV(results, locus = 'IGH'):
-        for i in tqdm(results.index, desc = '   Returning light chain V calls'):
-            if ~(results.iloc[i]['locus'] == locus):
-                results.iloc[i]['v_call_genotyped'] = results.iloc[i]['v_call']
-        return(results)
+        res = results.copy()
+        for i in tqdm(res.index, desc = '   Returning light chain V calls'):
+            if res.iloc[i]['locus'] != locus:
+                res.iloc[i]['v_call_genotyped'] = res.iloc[i]['v_call']
+        return(res)
 
     if type(data) is not list:
         data = [data]
@@ -438,8 +482,13 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
         else:
             path = dirs
 
+    if out_filename is not None:
+        if not out_filename.endswith('.tsv'):
+            raise OSError('Please provide a file name that ends with .tsv')
+
     informat_dict = {'changeo':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
+    inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
     data_list = []
     for s in tqdm(data, desc = 'Processing data file(s) '):
         if os.path.isfile(str(s)):
@@ -477,45 +526,56 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
     if out_filename is None:
         if filtered:
             print('   Writing out concatenated object')
-            dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            tigger_genotype(outDir+'filtered_contig'+informat_dict[fileformat], fileformat = fileformat, verbose = verbose, *args)
+            # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
+            dat_h = dat_[dat_['locus'] == 'IGH']
+            dat_h.to_csv(outDir+'filtered_contig_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
+            tigger_genotype(outDir+'filtered_contig_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
         else:
             print('   Writing out concatenated object')
-            dat_.to_csv(outDir+'all_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            tigger_genotype(outDir+'all_contig'+informat_dict[fileformat], fileformat = fileformat, verbose = verbose, *args)
+            # dat_.to_csv(outDir+'all_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
+            dat_h = dat_[dat_['locus'] == 'IGH']
+            dat_h.to_csv(outDir+'all_contig_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
+            tigger_genotype(outDir+'all_contig_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
     else:
         print('   Writing out concatenated object')
-        dat_.to_csv(out_filename, index = False, sep = '\t', na_rep='')
-        tigger_genotype(out_filename, verbose = verbose, fileformat = fileformat,  *args)
+        # dat_.to_csv(out_filename, index = False, sep = '\t', na_rep='')
+        dat_h = dat_[dat_['locus'] == 'IGH']
+        dat_h.to_csv(outDir+'heavy_'+out_filename, index = False, sep = '\t', na_rep='')
+        tigger_genotype(outDir+'heavy_'+out_filename, germline = germline, fileformat = fileformat, verbose = verbose)
 
     # and now to add it back to the original folders
-    print('   Reading genotyped object')
     sleep(0.5)
     if out_filename is None:
         if filtered:
-            out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
-            out = _return_IGKV_IGLV(out)
+            out_h = pd.read_csv(outDir+'filtered_contig_heavy'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
+            # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
+            dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
+            dat_ = _return_IGKV_IGLV(dat_)
             print('   Saving corrected genotyped object')
             sleep(0.5)
-            out.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
+            dat_.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
         else:
-            out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
-            out = _return_IGKV_IGLV(out)
+            out_h = pd.read_csv(outDir+'all_contig_heavy'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
+            # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
+            dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
+            dat_ = _return_IGKV_IGLV(dat_)
             print('   Saving corrected genotyped object')
             sleep(0.5)
-            out.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
+            dat_.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
     else:
-        out = pd.read_csv(out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
-        out = _return_IGKV_IGLV(out)
+        out_h = pd.read_csv(outDir+'heavy_'+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
+        # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
+        dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
+        dat_ = _return_IGKV_IGLV(dat_)
         print('   Saving corrected genotyped object')
         sleep(0.5)
-        out.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
+        dat_.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
     for s in tqdm(data, desc = 'Writing out to individual folders '):
         if sample_dict is not None:
-            out_ = out[out['sample_id'] == sample_dict[s]]
+            out_ = dat_[dat_['sample_id'] == sample_dict[s]]
         else:
-            out_ = out[out['sample_id'] == s]
+            out_ = dat_[dat_['sample_id'] == s]
         if os.path.isfile(str(s)):
             out_.to_csv(s.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
         else:
@@ -524,3 +584,68 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
             else:
                 filePath = s+'/'+path+'all_contig'+fileformat_dict[fileformat]
             out_.to_csv(filePath, index = False, sep = '\t')
+    if plot:
+        print('Returning summary plot')
+        if out_filename is None:
+            if filtered:
+                inferred_genotype = outDir+'filtered_contig_heavy'+inferred_fileformat_dict[fileformat]
+            else:
+                inferred_genotype = outDir+'all_contig_heavy'+inferred_fileformat_dict[fileformat]
+        else:
+            inferred_genotype = outDir+'heavy_'+out_filename.replace('.tsv', '_inferredGenotype.txt')
+        inf_geno = pd.read_csv(inferred_genotype, sep = '\t', dtype = 'object')
+
+        s2 = set(inf_geno['gene'])
+        results = []
+        for samp in list(set(out_h['sample_id'])):
+            res = out_h[(out_h['sample_id']==samp)]
+            V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res['v_call']]
+            V_g = [re.sub('[*][0-9][0-9]', '', v) for v in res['v_call_genotyped']]
+            s1 = set(list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
+            setdiff = s1 - s2
+            ambiguous = (["," in i for i in V_].count(True)/len(V_)*100, ["," in i for i in V_g].count(True)/len(V_g)*100)
+            not_in_genotype=([i in setdiff for i in V_].count(True)/len(V_)*100, [i in setdiff for i in V_g].count(True)/len(V_g)*100)
+            stats = pd.DataFrame([ambiguous,not_in_genotype], columns = ['ambiguous', 'not_in_genotype'], index = ['before', 'after']).T
+            stats.index.set_names(['vgroup'], inplace = True)
+            stats.reset_index(drop = False, inplace = True)
+            stats['sample_id'] = samp
+            # stats['donor'] = str(out_folder)
+            results.append(stats)
+        results = pd.concat(results)
+        ambiguous_table = results[results['vgroup'] == 'ambiguous']
+        not_in_genotype_table = results[results['vgroup'] == 'not_in_genotype']
+        ambiguous_table.reset_index(inplace = True, drop = True)
+        not_in_genotype_table.reset_index(inplace = True, drop = True)
+        # melting the dataframe
+        ambiguous_table_before = ambiguous_table.drop('after', axis = 1)
+        ambiguous_table_before.rename(columns={"before": "var"}, inplace = True)
+        ambiguous_table_before['var_group'] = 'before'
+        ambiguous_table_after = ambiguous_table.drop('before', axis = 1)
+        ambiguous_table_after.rename(columns={"after": "var"}, inplace = True)
+        ambiguous_table_after['var_group'] = 'after'
+        ambiguous_table = pd.concat([ambiguous_table_before, ambiguous_table_after])
+        not_in_genotype_table_before = not_in_genotype_table.drop('after', axis = 1)
+        not_in_genotype_table_before.rename(columns={"before": "var"}, inplace = True)
+        not_in_genotype_table_before['var_group'] = 'before'
+        not_in_genotype_table_after = not_in_genotype_table.drop('before', axis = 1)
+        not_in_genotype_table_after.rename(columns={"after": "var"}, inplace = True)
+        not_in_genotype_table_after['var_group'] = 'after'
+        not_in_genotype_table = pd.concat([not_in_genotype_table_before, not_in_genotype_table_after])
+        ambiguous_table['var_group'] = ambiguous_table['var_group'].astype('category')
+        not_in_genotype_table['var_group'] = not_in_genotype_table['var_group'].astype('category')
+        ambiguous_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
+        not_in_genotype_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
+
+        options.figure_size = figsize
+        final_table = pd.concat([ambiguous_table, not_in_genotype_table])
+        p = (ggplot(final_table, aes('sample_id', y = 'var', fill='var_group'))
+            + coord_flip()
+            + theme_classic()
+            + xlab("sample_id")
+            + ylab("% allele calls")
+            + ggtitle("Genotype reassignment with TIgGER")
+            + geom_bar(stat="identity")
+            + facet_grid('~'+str('vgroup'), scales="free_y")
+            + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
+            + theme(legend_title = element_blank()))
+        return(p)

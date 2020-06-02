@@ -22,12 +22,14 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install distance python-Levenshtein joblib jupyter
+conda install distance python-Levenshtein joblib plotnine jupyter
+conda install -c bioconda igblast
+# conda update -c bioconda blast (if necessary)
 
 # Use pip to install the following with --no-cache-dir if necessary
 pip install scanpy
 pip install scrublet
-pip install changeo
+pip install changeo # Some error with the conda version as does not come with the python executables
 
 # install rpy2
 pip install rpy2
@@ -43,20 +45,19 @@ env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
 ````
+
 In case you need to link up kernel with jupyter notebook
 ```bash
 python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
 ```
-
 
 dandelion also requires some R packages intalled.
 ```R
 install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
 ```
 
-
 ## Required database
-Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation) and the other two were curated by me. I've uploaded a compressed version in [here](database) that you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
+Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation) and the other two were curated by me. I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) that you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
@@ -67,13 +68,12 @@ export BLASTDB=~/Documents/dandelion/database/blast/
 ```
 
 ## External softwares
-I have already included in this repository the macosx binaries for the various blast executables and pip should pull them and install properly. However, you can also download [igblast](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/) and [blast+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) manually, especially so if you are using a different OS, and store the softwares somewhere accessible. Just make sure to set the paths to them appropriately.
+While blast and igblast executables are managed through conda, you can also download [igblast](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/) and [blast+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) manually, and store the softwares somewhere accessible. Just make sure to set the paths to them appropriately.
 ```bash
 # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
 echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
 source ~/.bash_profile
 ```
-
 
 ## Requirements
 Python packages
@@ -92,9 +92,11 @@ pytables==3.6.1 (conda-forge)
 seaborn==0.10.1 (conda-forge)
 python-igraph==0.8.2 (conda-forge)
 leidenalg==0.8.0 (conda-forge)
+plotnine==0.6.0 (conda-forge)
 
 # pip
 changeo==1.0.0
+presto==0.6.0
 anndata==0.7.1
 scanpy==1.4.6
 scrublet==0.2.1
@@ -107,6 +109,12 @@ tigger_1.0.0
 airr_1.2.0
 shazam_1.0.0
 ggplot2
+```
+
+Other executables (through conda)
+```python
+blast>=2.5.0 (bioconda)
+igblast==1.15.0 (bioconda)
 ```
 
 ## Acknowledgements

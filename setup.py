@@ -4,7 +4,7 @@ import pkg_resources
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ["numpy>=1.18.4", "pandas>=1.0.3", "changeo>=1.0.0", "anndata>=0.7.1", "scanpy>=1.4.6", "scrublet>=0.2.1", "python-Levenshtein>=0.12.0", "distance>=0.1.3", "joblib>=0.14.1", "scikit-learn>=0.23.0", "scipy>=1.4.1", "numba>=0.48.0", "seaborn>=0.10.1", "python-igraph>=0.8.2", "networkx>=2.4", "leidenalg>=0.8.0", "rpy2>=3.3.3"]
+requirements = ["numpy>=1.18.4", "pandas>=1.0.3", "changeo>=1.0.0", "anndata>=0.7.1", "scanpy>=1.4.6", "scrublet>=0.2.1", "python-Levenshtein>=0.12.0", "distance>=0.1.3", "joblib>=0.14.1", "scikit-learn>=0.23.0", "scipy>=1.4.1", "numba>=0.48.0", "seaborn>=0.10.1", "python-igraph>=0.8.2", "networkx>=2.4", "leidenalg>=0.8.0", "rpy2>=3.3.2", "plotnine>=0.6.0"]
 setup(
     name="sc-dandelion",
     version="0.0.3",
@@ -17,8 +17,8 @@ setup(
     packages=find_packages(),
     setup_requires=['setuptools_scm'],
     install_requires=requirements,
-    package_data={'dandelion': ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R']},
-    data_files=[('bin', ['bin/blastn', 'bin/igblastn', 'bin/makeblastdb', 'bin/tigger-genotype.R'])],
+    package_data={'dandelion': ['bin/tigger-genotype.R']},
+    data_files=[('bin', ['bin/tigger-genotype.R'])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3.7",

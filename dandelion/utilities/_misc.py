@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-24 11:03:32
+# @Last Modified time: 2020-06-01 22:20:18
 
 import sys
 import os
@@ -149,7 +149,7 @@ def load_data(obj):
     elif isinstance(obj, pd.DataFrame):
             obj_ = obj.copy()
     else:
-        raise TypeError("Input is not of <class 'pandas.core.frame.DataFrame'>")
+        raise TypeError("Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist.")
 
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop = False, inplace = True)
@@ -158,10 +158,10 @@ def load_data(obj):
 
     return(obj_)
 
-def initialize_metadata(self, clones_sep = None):
+def initialize_metadata(self, retrieve = None, clones_sep = None):
     # a quick way to retrieve the 'meta data' for each cell that transfer into obs lot in scanpy later
     dat = load_data(self.data)
-    for x in ['cell_id', 'locus', 'cell_id', 'clone_id']:
+    for x in ['cell_id', 'locus', 'clone_id']:
         if x not in dat.columns:
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
     dat_h = dat[dat['locus'] == 'IGH']
@@ -219,6 +219,7 @@ def initialize_metadata(self, clones_sep = None):
     metadata['isotype'] = pd.Series(iso_dict)
     metadata['heavychain_v'] = pd.Series(v_dict)
     metadata['heavychain_j'] = pd.Series(j_dict)
+    
     # 5) light chain V, J and C
     lc_dict = dict(zip(dat_l['cell_id'], dat_l['c_call']))
     if 'v_call_genotyped' in dat_l.columns:
@@ -287,9 +288,21 @@ def initialize_metadata(self, clones_sep = None):
             cl = cl[1:]
         productive_list[x] = ','.join(cl)
     metadata['productive'] = pd.Series(productive_list)
-    
+
     # return this in this order
     metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavy_multi', 'light_multi', 'heavychain_v_gene', 'lightchain_v_gene', 'heavychain_j_gene', 'lightchain_j_gene', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
+    
+    # new function to retrieve non-standard columns
+    if retrieve is not None:
+        if retrieve in dat.columns:
+            # non-standard options to transfer to metadata
+            h_retrieve_dict = dict(zip(dat_h['cell_id'], dat_h[retrieve]))
+            l_retrieve_dict = dict(zip(dat_l['cell_id'], dat_l[retrieve]))
+            metadata[str(retrieve) + '_heavychain'] = pd.Series(h_retrieve_dict)
+            metadata[str(retrieve) + '_lightchain'] = pd.Series(l_retrieve_dict)
+        else:
+            raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
+
     if self.metadata is None:
         self.metadata = metadata
     else:

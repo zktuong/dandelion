@@ -119,6 +119,7 @@ nv <- findNovelAlleles(db, germline_db=igv, v_call=v_call, j_call=j_call,
                        nproc=opt$NPROC)
 gt <- inferGenotype(db, germline_db=igv, novel=nv,
                     v_call=v_call, seq=sequence_alignment)
+write.table(gt, file.path(opt$OUTDIR, paste0(opt$NAME, "_inferredGenotype.txt")), sep="\t",quote=FALSE,row.names = FALSE)
 # Write genotype FASTA file
 gt_seq <- genotypeFasta(gt, germline_db=igv, novel=nv)
 writeFasta(gt_seq, file.path(opt$OUTDIR, paste0(opt$NAME, "_genotype.fasta")))
