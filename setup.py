@@ -17,8 +17,8 @@ setup(
     packages=find_packages(),
     setup_requires=['setuptools_scm'],
     install_requires=requirements,
-    package_data={'dandelion': ['bin/makeblastdb', 'bin/tigger-genotype.R']},
-    data_files=[('bin', ['bin/makeblastdb', 'bin/tigger-genotype.R'])],
+    package_data={'dandelion': ['bin/tigger-genotype.R']},
+    data_files=[('bin', ['bin/tigger-genotype.R'])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3.7",
