@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-01 22:12:41
+# @Last Modified time: 2020-06-02 15:20:51
 
 import sys
 import os
@@ -141,7 +141,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
             bdb = bdb+org+'/'+org+'_BCR_C.fasta'
         else:
             env['BLASTDB'] = blastdb
-            bdb = env['BLASTDB']
+            bdb = blastdb
 
         cmd = ['blastn',
                 '-db', bdb,
@@ -433,7 +433,7 @@ def map_cellranger(data, extended = False):
         dat['junction_10x_aa'] = pd.Series(junction_aa)
     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False, *args):
+def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype.
     Description
@@ -517,15 +517,15 @@ def reassign_alleles(data, out_folder, fileformat = 'airr', dirs = None, sample_
         if filtered:
             print('   Writing out concatenated object')
             dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            tigger_genotype(outDir+'filtered_contig'+informat_dict[fileformat], fileformat = fileformat, verbose = verbose, *args)
+            tigger_genotype(outDir+'filtered_contig'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
         else:
             print('   Writing out concatenated object')
             dat_.to_csv(outDir+'all_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            tigger_genotype(outDir+'all_contig'+informat_dict[fileformat], fileformat = fileformat, verbose = verbose, *args)
+            tigger_genotype(outDir+'all_contig'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
     else:
         print('   Writing out concatenated object')
         dat_.to_csv(out_filename, index = False, sep = '\t', na_rep='')
-        tigger_genotype(out_filename, verbose = verbose, fileformat = fileformat,  *args)
+        tigger_genotype(out_filename, germline = germline, fileformat = fileformat, verbose = verbose)
 
     # and now to add it back to the original folders
     print('   Reading genotyped object')
