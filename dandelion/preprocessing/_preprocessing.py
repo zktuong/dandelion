@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-02 23:36:20
+# @Last Modified time: 2020-06-03 00:07:21
 
 import sys
 import os
@@ -468,8 +468,8 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
     def _return_IGKV_IGLV(results, locus = 'IGH'):
         res = results.copy()
         for i in tqdm(res.index, desc = '   Returning light chain V calls'):
-            if ~(res.iloc[i]['locus'] == locus):
-                res.iloc[i]['v_call_genotyped'] = res.iloc[i]['v_call']
+            if ~(res.loc[i]['locus'] == locus):
+                res.loc[i]['v_call_genotyped'] = res.loc[i]['v_call']
         return(res)
 
     if type(data) is not list:
@@ -498,7 +498,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
                 filePath = s+'/'+path+'filtered_contig'+informat_dict[fileformat]
             else:
                 filePath = s+'/'+path+'all_contig'+informat_dict[fileformat]
-        dat = pd.read_csv(filePath, sep = '\t', dtype = 'object')
+        dat = load_data(filePath)
 
         if sample_dict is not None:
             dat['sample_id'] = sample_dict[s]
@@ -513,7 +513,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
     else:
         dat_ = data_list[0]
 
-    dat_.fillna('', inplace=True)
+    # dat_.fillna('', inplace=True)
 
     # write out this file for tigger
     if not out_folder.endswith('/'):
@@ -547,7 +547,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
     sleep(0.5)
     if out_filename is None:
         if filtered:
-            out_h = pd.read_csv(outDir+'filtered_contig_heavy'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
+            out_h = load_data(outDir+'filtered_contig_heavy'+fileformat_dict[fileformat])
             # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
@@ -555,7 +555,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             sleep(0.5)
             dat_.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
         else:
-            out_h = pd.read_csv(outDir+'all_contig_heavy'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
+            out_h = load_data(outDir+'all_contig_heavy'+fileformat_dict[fileformat])
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
@@ -563,7 +563,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             sleep(0.5)
             dat_.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
     else:
-        out_h = pd.read_csv(outDir+'heavy_'+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
+        out_h = load_data(outDir+'heavy_'+out_filename.replace('.tsv', '_genotyped.tsv'))
         # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
         dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
         dat_ = _return_IGKV_IGLV(dat_)
