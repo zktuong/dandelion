@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-02 19:15:02
+# @Last Modified time: 2020-06-02 23:36:20
 
 import sys
 import os
@@ -468,7 +468,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
     def _return_IGKV_IGLV(results, locus = 'IGH'):
         res = results.copy()
         for i in tqdm(res.index, desc = '   Returning light chain V calls'):
-            if res.iloc[i]['locus'] != locus:
+            if ~(res.iloc[i]['locus'] == locus):
                 res.iloc[i]['v_call_genotyped'] = res.iloc[i]['v_call']
         return(res)
 
