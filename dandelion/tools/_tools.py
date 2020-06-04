@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-05-28 22:50:40
+# @Last Modified time: 2020-06-05 00:00:58
 
 import os
 import scanpy as sc
@@ -651,7 +651,7 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
 
     return(dat)
 
-def generate_network(data, distance_mode = None, clones_sep = None, layout_option = None, *args):
+def generate_network(data, distance_mode = None, clones_sep = None, layout_option = None, w=0.5, *args):
     """
     Extracting the necessary objects required for generating and plotting network.
 
@@ -716,8 +716,9 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         tdarray = np.array(seq_list).reshape(-1,1)
         d_mat = squareform(pdist(tdarray,lambda x,y: Levenshtein.distance(x[0],y[0])))
         dmat[x] = d_mat
-    dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
-    total_dist = np.sum(dist_mat_list,axis=0)
+    dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]    
+    # total_dist = np.sum(dist_mat_list,axis=0)
+    total_dist = (w * dist_mat_list[0]) + ((1 - w) * dist_mat_list[1])
 
     # generate edge list
     tmp_totaldist = pd.DataFrame(total_dist, index = network.metadata.index, columns = network.metadata.index)
@@ -798,7 +799,7 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         graph.vs[x] = network.metadata[x]
     graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
 
-    network = Dandelion(data = dat, distance = d_mat, edges = edge_list_final, layout = layout, graph = graph)
+    network = Dandelion(data = dat, distance = dist_mat_list, edges = edge_list_final, layout = layout, graph = graph)
     logg.info(' finished', time=start,
         deep=('added to Dandelion class object: \n'
         '   \'data\', contig-indexed clone table\n'
