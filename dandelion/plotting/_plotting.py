@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 00:05:57
+# @Last Modified time: 2020-06-07 21:32:34
 
 import igraph
 import seaborn as sns
@@ -56,6 +56,9 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     # a list of 900+colours
     cols = list(sns.xkcd_rgb.keys())
 
+    if len(list(set(g.vs['clone_id']))) > len(cols):
+        cols = cols + list(sns.colour_palette('husl', len(list(set(g.vs['clone_id'])))))
+
     # some default colours
     clone_col_dict = dict(zip(list(set(g.vs['clone_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_id'])))))))
     clone_group_col_dict = dict(zip(list(set(g.vs['clone_group_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_group_id'])))))))
@@ -82,6 +85,8 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     # because some lightchains might be missing
     v_call_light_col_dict.update({np.nan:'#e7e7e7'})
     j_call_light_col_dict.update({np.nan:'#e7e7e7'})
+    clone_col_dict.update({np.nan:'#e7e7e7'})
+    clone_group_col_dict.update({np.nan:'#e7e7e7'})
     
     # set up visual style                
     if colorby is 'clone_id':
