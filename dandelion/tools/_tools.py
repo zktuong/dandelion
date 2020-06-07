@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 21:48:39
+# @Last Modified time: 2020-06-07 23:10:49
 
 import os
 import sys
@@ -46,33 +46,38 @@ from plotnine import ggplot, geom_point, options, annotate, aes, xlab, ylab, fac
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
     """
+    Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
+    Cells with multiple IGH contigs are filtered unless rescue_igh is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
+    If there's multiple contigs that survive the 'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
+    Lastly, contigs with no corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
+
     Parameters
     ----------
-    data
-        vdj data to filter.
-    adata
+    data : DataDrame, str
+        V(D)J airr/changeo data to filter. Can be pandas `DataFrame` object or file path as string.
+    adata : AnnData
         AnnData object to filter.
-    filter_bcr
-        If True, filters vdj data.
-    filter_rna
-        If True, filters AnnData object.
-    rescue_igh
-        If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option.
-    umi_foldchange_cutoff
-        minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5.
-    filter_lightchains
-        If True, mark cells with multiple light chains to filter
-    filter_missing
-        If True, mark cells in vdj data not found in AnnData object to filter. Note, this is useful for toggling to false if integrating with bulk data.
-    outdir
-        If specified, outfile will be in this location
-    outFilePrefix
-        If specified, the outfile name will have this prefix
-    filtered
-        If True, will create filenames with filtered prefixe, Else all prefix.
+    filter_bcr : bool
+        If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
+    filter_rna : bool
+        If True, `AnnData` object returned will be filtered. Default is True.
+    rescue_igh : bool
+        If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. Default is True.
+    umi_foldchange_cutoff : int
+        related tominimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5.
+    filter_lightchains : bool
+        cells with multiple light chains will be marked to filter. Default is True.
+    filter_missing : bool
+        cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.
+    outdir : str, optional
+        If specified, out file will be in this location
+    outFilePrefix : str, optional
+        If specified, the out file name will have this prefix
+    filtered : bool
+        If True, will create filenames with 'filtered_contig' as prefix. if False, will create filenames with 'all_contig' as prefix. ignored if outFilePrefix is specified.
     Returns
     -------
-        filtered BCR data and AnnData objects
+        V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
     dat = load_data(data)
     h = Tree()
@@ -85,6 +90,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
+
+    if 'filter_rna' not in adata.obs:
+        raise TypeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
 
     bcr_check = Tree()
     for c in adata.obs_names:
@@ -217,30 +225,31 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
     return(_dat, _adata)
 
-def find_clones(self, identity=0.85, mode='dandelion', outdir=None, clustering_by = None, by_alleles = None, write_out = False, outFilePrefix=None):
+def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None):
     """
-    Find clones based on junctional hamming distance.
+    Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
     Parameters
     ----------
-    data
-        BCR data to find clone
-    identity
-        Junction similarity parameter. Default 0.85
-    outdir
-        If specified, outfile will be in this location. Non defaults to 'dandelion/data'.
-    clustering_by
+    self : Dandelion, DataFrame, str
+        BCR data to find clone. Can be Dandelion object, pandas DataFrame or file path as string.
+    identity : float
+        Junction similarity parameter. Default 0.85    
+    clustering_by : str, optional
         modes for clustering: 'nt' or 'aa'. None defaults to 'aa'.
-    by_alleles
+    by_alleles : bool, optional
         Whether or not to collapse alleles to genes. None defaults to True.
-    filtered
-        If True, will create filenames with filtered prefixe, Else all prefix.
-    ourFilePrefix
-        If specified, the outfile name will have this prefix
+    write_out : bool
+        If True, will write out airr/changeo file with clone_id column (default is False). file path and file name is determined by outdir and outFilePrefix options.
+    outdir : str, optional
+        If specified, outfile will be in this location. None defaults to 'dandelion/data'.
+    outFilePrefix : str, optional
+        If specified, the outfile name will have this prefix. None defaults to 'dandelion_find_clones'
     Returns
     -------
-        BCR file with clones annotated
+        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
+    start = logg.info('Finding clones')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     else:
@@ -310,7 +319,7 @@ def find_clones(self, identity=0.85, mode='dandelion', outdir=None, clustering_b
                         vj_len_grp[g][s][c] = junction[c]
     clones = Tree()
     # for each junction group, calculate the hamming distance matrix
-    for g in tqdm(junction_grp, desc = 'Finding clones '):
+    for g in tqdm(junction_grp, desc = 'Finding clones based on heavy chains '):
         for l in junction_grp[g]:
             junction_ = list(junction_grp[g][l])
             tdarray = np.array(junction_).reshape(-1,1)
@@ -695,18 +704,23 @@ def find_clones(self, identity=0.85, mode='dandelion', outdir=None, clustering_b
     else:
         out = Dandelion(data = dat)
 
+    logg.info(' finished', time=start,
+        deep=('added to Dandelion class object: \n'
+        '   \'data\', contig-indexed clone table\n'))
+
         return(out)
 
 def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
-    Extracting the necessary objects required for generating and plotting network.
+    Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s). 
+    The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
 
     Parameters
     ----------
-    data : str, DataFrame
-        File path to changeo/airr file, or pandas `DataFrame` in changeo/airr format after clones have been determined.
+    data : Dandelion, DataFrame, str
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     distance_mode : str
-        The mode of calculating joint distance matrix for heavy and light chains (default = 'weighted'). If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0..1 o bring the multiple layers of data into a single analysis.
+        The mode of calculating joint distance matrix for heavy and light chains. Default is 'weighted'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0..1 to bring the multiple layers of data into a single analysis.
     aa_or_nt : str, optional
         Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
     clones_sep: tuple(int, str)
@@ -719,7 +733,7 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         passed to `igraph.graph.layout <https://igraph.org/python/doc/igraph.Graph-class.html>`__.
     Returns
     ----------
-        A Dandelion class object containing `.data`, `.metadata`, `.distance`, `.edges`, `.layout`, and `.graph` slots.
+        `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
     """
     start = logg.info('Generating network')
     if self.__class__ == Dandelion:
@@ -888,6 +902,17 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
     return(out)
 
 def mst(mat):
+    """
+    Construct minimum spanning tree based on supplied matrix in dictionary.
+
+    Parameters
+    ----------
+    mat : dict
+        Dictionary containing numpy ndarrays.
+    Returns
+    ----------        
+        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
+    """
     mst_tree = Tree()
     for c in mat:
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
@@ -895,18 +920,21 @@ def mst(mat):
 
 def transfer_network(self, network, keep_raw = True, neighbors_key = None):
     """
-    Transferring network to AnnData object and modify in place.
+    Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.raw` slots with metadata and network.
 
     Parameters
     ----------
-    self
-        AnnData object
-    network
-        Dandelion class object
-
+    self : AnnData
+        `AnnData` object
+    network : Dandelion
+        `Dandelion` object
+    keep_raw : bool
+        If True, will transfer the existing `.uns` slot to `.raw.uns`.
+    neighbors_key : str, optional
+        key for 'neighbors' slot in `.uns`
     Returns
     ----------
-        AnnData object with dandelion network
+        `AnnData` object with updated `.obs` `.uns`, `.obsm` (and `.raw`) slots with data from `Dandelion` object.
 
     """
     start = logg.info('Transferring network')
@@ -963,6 +991,27 @@ def transfer_network(self, network, keep_raw = True, neighbors_key = None):
             '   \'connectivities\', cluster-weighted adjacency matrix'))
 
 def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
+    """
+    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__. 
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object
+    split_locus : bool
+        whether to return the results for heavy chain and light chain separately. Default is False.
+    region_definition : str, optional
+        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+    mutation_definition : str, optional
+        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+    frequency
+        whether to return the results a frequency or counts. Default is True (frequency).
+    combine
+        whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
+    Returns
+    ----------
+        `Dandelion` object with updated `.metadata` slot.
+    """
     sh = importr('shazam')
     dat = load_data(self.data)
     warnings.filterwarnings("ignore")
@@ -1045,10 +1094,11 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         for x in metadata_.columns:
             self.metadata[x] = pd.Series(metadata_[x])
 
-def calculate_threshold(self, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None, manual_threshold=None, figsize=(4.5, 2.5), *args):
-    '''
-    Wrappers for shazam's functions for calculating nearest neighbor distances for tuning clonal assignment.
-        
+def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
+    """
+    Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
+    
+    Runs the following:        
     distToNearest
         Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
     findThreshold
@@ -1056,29 +1106,44 @@ def calculate_threshold(self, model=None, normalize_method=None, threshold_metho
     
     Parameters
     ----------
-    model 
+    self : Dandelion, DataFrame, str
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
+    manual_threshold : float, optional
+        value to manually plot in histogram.
+    model : str, optional
         underlying SHM model, which must be one of c("ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat").
-    normalize_method  
+    normalize_method : str, optional
         method of normalization. The default is "len", which divides the distance by the length of the sequence group. If "none" then no normalization if performed.
-    threshold_method
+    threshold_method : str, optional
         string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
-    edge
+    edge : float, optional
         upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
-    cross
+    cross : list, array, optional
         supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
-    subsample
+    subsample : int, optional
         maximum number of distances to subsample to before threshold detection.
-    threshold_model
+    threshold_model : str, optional
         allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
-    cutoff
+    cutoff : str, optional
         method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
-    sensitivity
+    sensitivity : float, optional
         sensitivity required. Applies only when method="gmm" and cutoff="user".
-    specificity
+    specificity : float, optional
         specificity required. Applies only when method="gmm" and cutoff="user".
+    ncpu : int, optional
+        number of cpus for parallelization. Default is all available cpus.
+    plot : bool
+        whether or not to return plot.
+    plot_group : str, optional
+        determines the fill color and facets.
+    figsize : tuple
+        size of plot. Default is (4.5, 2.5).
     *args
-        passed to shazam's distToNearest function
-    '''
+        passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
+    Returns
+    ----------
+        plotnine plot showing histogram of length normalized ham model distance threshold.
+    """
 
     sh = importr('shazam')
     if self.__class__ == Dandelion:
@@ -1191,7 +1256,36 @@ def calculate_threshold(self, model=None, normalize_method=None, threshold_metho
         print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
 
 def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
-    """    
+    """
+    Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
+    
+    Parameters
+    ----------
+    self : Dandelion, DataFrame, str
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
+    dist : float
+        The distance threshold for clonal grouping.
+    action : str
+        Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'. The “first” action will use only the first gene listed. The “set” action will use all gene assignments and construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence by a common assignment (similar to single-linkage).
+    model : str
+        Specifies which substitution model to use for calculating distance between sequences. Default is 'ham'. The “ham” model is nucleotide Hamming distance and “aa” is amino acid Hamming distance. The “hh_s1f” and “hh_s5f” models are human specific single nucleotide and 5-mer content models, respectively, from Yaari et al, 2013. The “mk_rs1nf” and “mk_rs5nf” models are mouse specific single nucleotide and 5-mer content models, respectively, from Cui et al, 2016. The “m1n_compat” and “hs1f_compat” models are deprecated models provided backwards compatibility with the “m1n” and “hs1f” models in Change-O v0.3.3 and SHazaM v0.1.4. Both 5-mer models should be considered experimental.
+    norm : str
+        Specifies how to normalize distances. Default is 'len'. 'none' (do not normalize), 'len' (normalize by length), or 'mut' (normalize by number of mutations between sequences).
+    doublets : str
+        Option to control behaviour when dealing with heavy chain 'doublets'. Default is 'drop'. 'drop' will filter out the doublets while 'count' will retain only the highest umi count contig.
+    fileformat : str
+        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+    ncpu : int, optional
+        number of cpus for parallelization. Default is all available cpus.
+    dirs : str, optional
+        If specified, out file will be in this location.
+    outFilePrefix : str, optional
+        If specified, the out file name will have this prefix. None defaults to 'dandelion_define_clones'
+    verbose : bool
+        Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
+    Returns
+    ----------
+        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     if ncpu is None:
         nproc=multiprocessing.cpu_count()
@@ -1236,7 +1330,7 @@ def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doubl
         if outFilePrefix is not None:
             out_FilePrefix = outFilePrefix
         else:
-            out_FilePrefix = 'define_clones'
+            out_FilePrefix = 'dandelion_define_clones'
         h_file1 = "{}/{}_heavy-clone.tsv".format(tmpFolder, out_FilePrefix)
         h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, out_FilePrefix)
         l_file = "{}/{}_light.tsv".format(tmpFolder, out_FilePrefix)
@@ -1401,7 +1495,10 @@ def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doubl
         if l_df.loc[x, 'clone_id'] in clone_ref:
             l_df.loc[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
         else:
-            l_df.loc[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
+            try:
+                l_df.loc[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
+            except:
+                pass
 
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
