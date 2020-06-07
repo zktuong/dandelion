@@ -2,11 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-05 00:00:58
+# @Last Modified time: 2020-06-07 00:46:48
 
 import os
 import scanpy as sc
 import pandas as pd
+from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._misc import *
@@ -36,22 +37,26 @@ from rpy2.rinterface import NULL
 from rpy2.robjects import pandas2ri
 import warnings
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains=True, filter_missing = True, outdir=None, outFilePrefix=None, filtered=False):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
     """
     Parameters
     ----------
     data
-        BCR data to filter
+        vdj data to filter.
     adata
-        AnnData object to filter
+        AnnData object to filter.
     filter_bcr
-        Filters BCR object
+        If True, filters vdj data.
     filter_rna
-        Filter out cells in AnnData object with 'filter_rna' == True
+        If True, filters AnnData object.
+    rescue_igh
+        If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option.
+    umi_foldchange_cutoff
+        minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5.
     filter_lightchains
-        Filter out cells with multiple light chains
+        If True, mark cells with multiple light chains to filter
     filter_missing
-        Filter out cells in BCR file not found in AnnData object
+        If True, mark cells in vdj data not found in AnnData object to filter. Note, this is useful for toggling to false if integrating with bulk data.
     outdir
         If specified, outfile will be in this location
     outFilePrefix
@@ -64,11 +69,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
     """
     dat = load_data(data)
     h = Tree()
+    h_umi = Tree()
     l = Tree()
     poor_qual = []
     h_doublet = []
     l_doublet = []
-
+    drop_contig = []
+    
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
 
@@ -90,11 +97,25 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
     for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+
         h[b] = hc_id
+        h_umi[b] = hc_umi
         l[b] = lc_id
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
-            h_doublet.append(b)
+            if rescue_igh:
+                highest_umi = max(h_umi[b])
+                lowest_umi = min(h_umi[b])
+                highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
+                if len(highest_umi_idx) > 1:
+                    h_doublet.append(b)
+                if highest_umi/lowest_umi < umi_foldchange_cutoff:
+                    h_doublet.append(b)
+                if len(highest_umi_idx) == 1 and highest_umi/lowest_umi >= umi_foldchange_cutoff:
+                    drop_contig.append(h[b][~highest_umi_idx[0]])
+            else:
+                h_doublet.append(b)
         # marking doublets defined by light chains
         if (len(h[b]) == 1) & (len(l[b]) > 1):
             l_doublet.append(b)
@@ -162,6 +183,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
 
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
 
+        if rescue_igh:
+            _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
+
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)
         else:
@@ -171,15 +195,18 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_lightchains
                 outFile_prefix = 'all_contig'
 
             if (outdir is None) & (outFilePrefix is not None):
-                _dat.to_csv("{}/{}_filtered.tab".format('dandelion/data', str(outFilePrefix)), sep = '\t', index = None)
+                _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', str(outFilePrefix)), sep = '\t', index = None)
             elif (outdir is not None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tab".format(str(outdir), outFile_prefix), sep = '\t', index = None)
+                _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
             elif (outdir is None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tab".format('dandelion/data', outFile_prefix), sep = '\t', index = None)
+                _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', outFile_prefix), sep = '\t', index = None)
             elif (outdir is not None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tab".format(str(outdir), outFile_prefix), sep = '\t', index = None)
+                _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
 
+    if filter_rna:
         _adata = adata[~(adata.obs_names.isin(filter_ids))] # not saving the scanpy object because there's no need to at the moment
+    else:
+        _adata = adata.copy()
 
     return(_dat, _adata)
 
@@ -651,20 +678,29 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
 
     return(dat)
 
-def generate_network(data, distance_mode = None, clones_sep = None, layout_option = None, w=0.5, *args):
+def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
     Extracting the necessary objects required for generating and plotting network.
 
     Parameters
     ----------
-    data
-        Dataframe in changeo/airr format after clones have been determined.
+    data : str, DataFrame
+        File path to changeo/airr file, or pandas `DataFrame` in changeo/airr format after clones have been determined.
+    distance_mode : str
+        The mode of calculating joint distance matrix for heavy and light chains (default = 'weighted'). If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0..1 o bring the multiple layers of data into a single analysis.
+    aa_or_nt : str, optional
+        Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
     clones_sep: tuple(int, str)
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_')
-
+        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+    weights : tuple, optional
+        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
+    layout_option : str, optional
+        choice of layout algorithm. None defaults to fruchterman reingold layout.
+    *args and **kwds
+        passed to `igraph.graph.layout <https://igraph.org/python/doc/igraph.Graph-class.html>`__.
     Returns
     ----------
-        A Dandelion class object
+        A Dandelion class object containing `.data`, `.metadata`, `.distance`, `.edges`, `.layout`, and `.graph` slots.
     """
     start = logg.info('Generating network')
     dat = load_data(data)
@@ -676,15 +712,15 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
 
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
-    dat_l = dat[~(dat['locus'] == 'IGH')]
-    if distance_mode is None or distance_mode is 'aa':
+    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+    if aa_or_nt is None or aa_or_nt is 'aa':
         seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
         seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
-    elif distance_mode == 'nt':
+    elif aa_or_nt == 'nt':
         seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
         seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
     else:
-        raise ValueError("distance_mode only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+        raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
     dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
@@ -716,9 +752,24 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         tdarray = np.array(seq_list).reshape(-1,1)
         d_mat = squareform(pdist(tdarray,lambda x,y: Levenshtein.distance(x[0],y[0])))
         dmat[x] = d_mat
-    dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]    
-    # total_dist = np.sum(dist_mat_list,axis=0)
-    total_dist = (w * dist_mat_list[0]) + ((1 - w) * dist_mat_list[1])
+    dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
+    
+    n_ = len(dist_mat_list)
+    if distance_mode == 'simple':
+        total_dist = np.sum(dist_mat_list,axis=0)
+    if distance_mode == 'weighted':
+        weighted_matrix = []
+        if weights is None:
+            for w in range(0, n_):
+                weighted_matrix.append(1/n_ * dist_mat_list[w])
+            total_dist = sum(weighted_matrix)
+        else:
+            if len(weights) == n_:                
+                for w in range(0, n_):
+                    weighted_matrix.append(weights[w] * dist_mat_list[w])
+                total_dist = sum(weighted_matrix)
+            else:
+                raise IndexError('Length of provided weights should be %s.' % int(n_))
 
     # generate edge list
     tmp_totaldist = pd.DataFrame(total_dist, index = network.metadata.index, columns = network.metadata.index)
@@ -760,7 +811,6 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
         tmp_.fillna(0, inplace = True)
         tmp_clone_tree3[x] = tmp_
 
-
     # here I'm using a temporary edge list to catch all cells that were identified as clones to forecfully link them up if they were clipped off during the mst step
     tmp_edge_list = Tree()
     for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
@@ -794,12 +844,12 @@ def generate_network(data, distance_mode = None, clones_sep = None, layout_optio
     if layout_option is not None:
         layout = graph.layout_fruchterman_reingold()
     else:
-        layout = graph.layout(layout_option, *args)
+        layout = graph.layout(layout_option, *args, **kwds)
     for x in network.metadata.columns:
         graph.vs[x] = network.metadata[x]
     graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
 
-    network = Dandelion(data = dat, distance = dist_mat_list, edges = edge_list_final, layout = layout, graph = graph)
+    network = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
     logg.info(' finished', time=start,
         deep=('added to Dandelion class object: \n'
         '   \'data\', contig-indexed clone table\n'
