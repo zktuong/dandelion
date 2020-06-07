@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 00:20:03
+# @Last Modified time: 2020-06-07 21:47:14
 
 import sys
 import os
@@ -11,11 +11,19 @@ from subprocess import run
 from tqdm import tqdm
 import multiprocessing
 from joblib import Parallel, delayed
+from collections import OrderedDict
 from time import sleep
 from ..utilities._misc import *
 from .ext._immcantationscripts import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
 from plotnine import ggplot, geom_bar, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme
+from changeo.Gene import buildGermline
+from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
+from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 import re
+import scanpy as sc
+import numpy as np
+import scipy.stats
+import scrublet as scr
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -680,3 +688,368 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
             + theme(legend_title = element_blank()))
         return(p)
+
+def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):
+    env = os.environ.copy()
+    if germline is None:
+        try:
+            gml = env['GERMLINE']
+        except:
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+        gml = gml+'imgt/'+org+'/vdj/'
+    else:
+        env['GERMLINE'] = germline
+        gml = germline
+
+    def _parseChangeO(record):
+        """
+        Parses a dictionary to a Receptor object
+
+        Arguments:
+          record : dict with fields and values in the Change-O format
+
+        Returns:
+          changeo.Receptor.Receptor : parsed Receptor object.
+        """
+        # Parse fields
+        result = {}
+        for k, v in record.items():
+            k = ChangeoSchema.toReceptor(k)
+            result[k] = v
+
+        return Receptor(result)
+
+    def _parseAIRR(record):
+        """
+        Parses a dictionary of AIRR records to a Receptor object
+
+        Arguments:
+          record : dict with fields and values in the AIRR format.
+
+        Returns:
+          changeo.Receptor.Receptor : parsed Receptor object.
+        """
+        # Parse fields
+        result = {}
+        for k, v in record.items():
+            # Rename fields
+            k = AIRRSchema.toReceptor(k)
+            # Convert start positions to 0-based
+            # if k in ReceptorData.start_fields and v is not None and v != '':
+            #     v = str(int(v) + 1)
+            # Assign new field
+            result[k] = v
+
+        for end, (start, length) in ReceptorData.end_fields.items():
+            if end in result and result[end] is not None:
+                try:
+                    result[length] = int(result[end]) - int(result[start]) + 1
+                except:
+                    pass
+
+        return Receptor(result)
+
+    def _create_germlines_object(self, references, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat):
+        """
+        Write germline sequences to tab-delimited database file
+
+        Arguments:
+        self : dandelion_class object
+        references : folders and/or files containing germline repertoire data in FASTA format.
+        seq_field : field in which to look for sequence.
+        v_field : field in which to look for V call.
+        d_field : field in which to look for D call.
+        j_field : field in which to look for J call.
+        cloned : if True build germlines by clone, otherwise build individual germlines.
+        clone_field : field containing clone identifiers; ignored if cloned=False.
+        germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
+        fileformat : input and output format.
+
+        Returns:
+        """
+        # Define format operators
+        try:
+            reader, writer, schema = getFormatOperators(fileformat)
+        except:
+            raise ValueError('Invalid format %s' % fileformat)
+
+        # Define output germline fields
+        germline_fields = OrderedDict()
+        seq_type = seq_field.split('_')[-1]
+        if 'full' in germ_types:
+            germline_fields['full'] = 'germline_' + seq_type
+        if 'dmask' in germ_types:
+            germline_fields['dmask'] = 'germline_' + seq_type + '_d_mask'
+        if 'vonly' in germ_types:
+            germline_fields['vonly'] = 'germline_' + seq_type + '_v_region'
+        if 'regions' in germ_types:
+            germline_fields['regions'] = 'germline_regions'
+
+        if type(references) is not list:
+            ref = [references]
+        else:
+            ref = ref
+        reference_dict = readGermlines(ref)
+        # Check for IMGT-gaps in germlines
+        if all('...' not in x for x in reference_dict.values()):
+            warnings.warn(UserWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
+
+        required = ['v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length', 'np2_length']
+
+        if self.__class__ == Dandelion:
+            if isinstance(self.data, pd.DataFrame):
+                # Check for required columns
+                try:
+                    checkFields(required, self.data.columns, schema=schema)
+                except LookupError as e:
+                    print(e)
+
+                # Count input
+                total_count = len(self.data)
+
+                # Check for existence of fields
+                for f in [v_field, d_field, j_field, seq_field]:
+                    if f not in self.data.columns:
+                        raise NameError('%s field does not exist in input database file.' % f)
+                # Translate to Receptor attribute names
+                v_field = schema.toReceptor(v_field)
+                d_field = schema.toReceptor(d_field)
+                j_field = schema.toReceptor(j_field)
+                seq_field = schema.toReceptor(seq_field)
+                clone_field = schema.toReceptor(clone_field)
+
+                # Define Receptor iterator
+                receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
+            else:
+                raise LookupError('Please initialise the Dandelion object with a dataframe in data slot.')
+        elif self.__class__ == pd.DataFrame:
+            try:
+                checkFields(required, self.columns, schema=schema)
+            except LookupError as e:
+                print(e)
+
+            # Count input
+            total_count = len(self)
+            # Check for existence of fields
+            for f in [v_field, d_field, j_field, seq_field]:
+                if f not in self.columns:
+                    raise NameError('%s field does not exist in input database file.' % f)
+            # Translate to Receptor attribute names
+            v_field = schema.toReceptor(v_field)
+            d_field = schema.toReceptor(d_field)
+            j_field = schema.toReceptor(j_field)
+            seq_field = schema.toReceptor(seq_field)
+            clone_field = schema.toReceptor(clone_field)
+            # Define Receptor iterator
+            receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
+        
+        out = {}
+        # Iterate over rows
+        for key, records in tqdm(receptor_iter, desc = 'Building germline sequences '):
+            # Define iteration variables
+            # Build germline for records
+            if fileformat == 'airr':
+                germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+            elif fileformat == 'changeo':
+                germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+            else:
+                raise AttributeError('%s is not acceptable file format.' % fileformat)
+            
+            if glines is not None:
+                # Add glines to Receptor record
+                annotations = {}
+                if 'full' in germ_types:
+                    annotations[germline_fields['full']] = glines['full']
+                if 'dmask' in germ_types:
+                    annotations[germline_fields['dmask']] = glines['dmask']
+                if 'vonly' in germ_types:
+                    annotations[germline_fields['vonly']] = glines['vonly']
+                if 'regions' in germ_types:
+                    annotations[germline_fields['regions']] = glines['regions']
+                out.update({key:annotations})
+        germline_df = pd.DataFrame.from_dict(out, orient = 'index')
+
+        if self.__class__ == Dandelion:
+            self.data = load_data(self.data)
+            for x in germline_df.columns:
+                self.data[x] = pd.Series(germline_df[x])
+        elif self.__class__ == pd.DataFrame:
+            out = Dandelion(self)
+            for x in germline_df.columns:
+                out.data[x] = pd.Series(germline_df[x])
+            return(out)
+        
+    def _create_germlines_file(file, references, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat):
+        """
+        Write germline sequences to tab-delimited database file
+
+        Arguments:
+        file : airr/changeo tsv file
+        references : folders and/or files containing germline repertoire data in FASTA format.
+        seq_field : field in which to look for sequence.
+        v_field : field in which to look for V call.
+        d_field : field in which to look for D call.
+        j_field : field in which to look for J call.
+        cloned : if True build germlines by clone, otherwise build individual germlines.
+        clone_field : field containing clone identifiers; ignored if cloned=False.
+        germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
+        fileformat : input and output format.
+
+        Returns:
+        """
+        # Define format operators
+        try:
+            reader, writer, schema = getFormatOperators(fileformat)
+        except:
+            raise ValueError('Invalid format %s' % fileformat)
+
+        # Define output germline fields
+        germline_fields = OrderedDict()
+        seq_type = seq_field.split('_')[-1]
+        if 'full' in germ_types:
+            germline_fields['full'] = 'germline_' + seq_type
+        if 'dmask' in germ_types:
+            germline_fields['dmask'] = 'germline_' + seq_type + '_d_mask'
+        if 'vonly' in germ_types:
+            germline_fields['vonly'] = 'germline_' + seq_type + '_v_region'
+        if 'regions' in germ_types:
+            germline_fields['regions'] = 'germline_regions'
+
+        if type(references) is not list:
+            ref = [references]
+        else:
+            ref = ref
+        reference_dict = readGermlines(ref)
+        # Check for IMGT-gaps in germlines
+        if all('...' not in x for x in reference_dict.values()):
+            warnings.warn(UserWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
+
+        required = ['v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length', 'np2_length']
+
+        # Get repertoire and open Db reader
+        db_handle = open(file, 'rt')
+        db_iter = reader(db_handle)
+        # Check for required columns
+        try:
+            checkFields(required, db_iter.fields, schema=schema)
+        except LookupError as e:
+            print(e)
+        # Count input
+        total_count = countDbFile(file)
+        # Check for existence of fields
+        for f in [v_field, d_field, j_field, seq_field]:
+            if f not in db_iter.fields:
+                raise NameError('%s field does not exist in input database file.' % f)
+        # Translate to Receptor attribute names
+        v_field = schema.toReceptor(v_field)
+        d_field = schema.toReceptor(d_field)
+        j_field = schema.toReceptor(j_field)
+        seq_field = schema.toReceptor(seq_field)
+        clone_field = schema.toReceptor(clone_field)
+        # Define Receptor iterator
+        receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
+        
+        out = {}
+        # Iterate over rows
+        for key, records in tqdm(receptor_iter, desc = 'Building germline sequences '):
+            # Define iteration variables
+            # Build germline for records
+            # if not isinstance(self.data, pd.DataFrame):
+            records = list(records)
+            germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+            if glines is not None:
+                # Add glines to Receptor record
+                annotations = {}
+                if 'full' in germ_types:
+                    annotations[germline_fields['full']] = glines['full']
+                if 'dmask' in germ_types:
+                    annotations[germline_fields['dmask']] = glines['dmask']
+                if 'vonly' in germ_types:
+                    annotations[germline_fields['vonly']] = glines['vonly']
+                if 'regions' in germ_types:
+                    annotations[germline_fields['regions']] = glines['regions']
+                out.update({key:annotations})
+        germline_df = pd.DataFrame.from_dict(out, orient = 'index')
+
+        out = Dandelion(data = file)
+        for x in germline_df.columns:
+            out.data[x] = pd.Series(germline_df[x])
+
+        if os.path.isfile(str(file)):
+            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)
+        
+        return(out)
+
+    if self.__class__ == Dandelion or self.__class__ == pd.DataFrame:
+        _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat)
+    else:
+        return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat))
+
+def run_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
+    """
+    Parameters
+    ----------
+    adata : AnnData
+        The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
+    max_genes : int (default: 2500)
+        Maximum number of genes expressed required for a cell to pass filtering.
+    min_genes : int (default: 200)
+        Minimum number of genes expressed  required for a cell to pass filtering.
+    mito_cutoff : float (default: 0.05)
+        Maximum percentage mitochondrial content allowed for a cell to pass filtering.
+    pval_cutoff : float (default: 0.05)
+        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering.
+    min_counts : int, None (default: None)
+        Minimum number of counts required for a cell to pass filtering.
+    max_counts : int, None (default: None)
+        Maximum number of counts required for a cell to pass filtering.
+    Returns
+    -------
+    AnnData
+        The (annotated) data matrix of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
+
+    """
+    _adata = self.copy()
+    # run scrublet
+    scrub = scr.Scrublet(_adata.X)
+    doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
+    _adata.obs['scrublet_score'] = doublet_scores
+    # overcluster prep. run basic scanpy pipeline
+    sc.pp.filter_cells(_adata, min_genes = 0)
+    mito_genes = _adata.var_names.str.startswith('MT-')
+    _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)
+    _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
+    sc.pp.normalize_total(_adata)
+    sc.pp.log1p(_adata)
+    sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    _adata = _adata[:, _adata.var['highly_variable']]
+    sc.pp.scale(_adata, max_value=10)
+    sc.tl.pca(_adata, svd_solver='arpack')
+    sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
+    # overclustering proper - do basic clustering first, then cluster each cluster
+    sc.tl.leiden(_adata)
+    for clus in list(np.unique(_adata.obs['leiden']))[0]:
+        sc.tl.leiden(_adata, restrict_to=('leiden',[clus]), key_added = 'leiden_R')
+    for clus in list(np.unique(_adata.obs['leiden']))[1:]: # weird how the new anndata/scanpy is forcing this
+        sc.tl.leiden(_adata, restrict_to=('leiden_R',[clus]), key_added = 'leiden_R')
+    # compute the cluster scores - the median of Scrublet scores per overclustered cluster
+    for clus in np.unique(_adata.obs['leiden_R']):
+        _adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_cluster_score'] = \
+            np.median(_adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_score'])
+    # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
+    med = np.median(_adata.obs['scrublet_cluster_score'])
+    mask = _adata.obs['scrublet_cluster_score']>med
+    mad = np.median(_adata.obs['scrublet_cluster_score'][mask]-med)
+    # let's do a one-sided test. the Bertie write-up does not address this but it makes sense
+    pvals = 1-scipy.stats.norm.cdf(_adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
+    _adata.obs['bh_pval'] = bh(pvals)
+    # threshold the p-values to get doublet calls.
+    _adata.obs['is_doublet'] = _adata.obs['bh_pval'] < pval_cutoff
+    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
+    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
+        (_adata.obs['percent_mito'] >= mito_cutoff) | \
+            (_adata.obs['is_doublet'] == True)
+
+    # removing columns that probably don't need anymore
+    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
+    self.obs = _adata.obs.copy()
