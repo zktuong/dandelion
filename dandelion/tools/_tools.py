@@ -2,16 +2,17 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 00:46:48
+# @Last Modified time: 2020-06-07 21:48:39
 
 import os
+import sys
 import scanpy as sc
 import pandas as pd
 from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._misc import *
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
 from distance import hamming
@@ -29,13 +30,19 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
-from changeo.Gene import buildGermline
-from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
-from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 from rpy2.robjects.packages import importr, data
 from rpy2.rinterface import NULL
 from rpy2.robjects import pandas2ri
 import warnings
+from subprocess import run
+import multiprocessing
+from changeo.Gene import getGene
+from rpy2.robjects.packages import importr, data
+from rpy2.rinterface import NULL
+from rpy2.robjects import pandas2ri
+import rpy2.robjects
+from plotnine import ggplot, geom_point, options, annotate, aes, xlab, ylab, facet_grid, theme_bw, geom_histogram, geom_vline, facet_grid, theme
+
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
     """
@@ -210,7 +217,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
     return(_dat, _adata)
 
-def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_alleles = None, outFilePrefix=None):
+def find_clones(self, identity=0.85, mode='dandelion', outdir=None, clustering_by = None, by_alleles = None, write_out = False, outFilePrefix=None):
     """
     Find clones based on junctional hamming distance.
 
@@ -234,7 +241,10 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
     -------
         BCR file with clones annotated
     """
-    dat = load_data(data)
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    else:
+        dat = load_data(self)
     dat_heavy = dat[dat['locus'] == 'IGH']
     pd.set_option('mode.chained_assignment', None)
 
@@ -659,26 +669,35 @@ def find_clones(data, identity=0.85, outdir=None, clustering_by = None, by_allel
                     renamed_clone_dict_light[key] = lclones_dict[value]
                 dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] = dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] + '_' + pd.Series(renamed_clone_dict_light)
 
-    if os.path.isfile(str(data)):
-        dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = False)
+    if os.path.isfile(str(self)):
+        dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
     else:
-        if filtered:
-            outFile_prefix = 'filtered_contig'
+        if write_out:
+            if outdir is None:
+                outDir = 'dandelion/data'
+            else:
+                if outdir.endswith('/'):
+                    outDir = str(outdir).strip('/')
+                else:
+                    outDir = str(outdir)
+
+            if not os.path.exist(outDir):
+                os.makedirs(outDir)
+            if outFilePrefix is not None:
+                dat.to_csv("{}/{}_clone.tsv".format(outDir, str(outFilePrefix)), sep = '\t', index = None)
+            elif outFilePrefix is None:
+                dat.to_csv("{}/{}_clone.tsv".format(outDir, 'dandelion_find_clones'), sep = '\t', index = None)
         else:
-            outFile_prefix = 'all_contig'
+            pass
 
-        if (outdir is None) & (outFilePrefix is not None):
-            dat.to_csv("{}/{}_clone.tsv".format('dandelion/data', str(outFilePrefix)), sep = '\t', index = None)
-        elif (outdir is not None) & (outFilePrefix is None):
-            dat.to_csv("{}/{}_clone.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
-        elif (outdir is None) & (outFilePrefix is None):
-            dat.to_csv("{}/{}_clone.tsv".format('dandelion/data', outFile_prefix), sep = '\t', index = None)
-        elif (outdir is not None) & (outFilePrefix is None):
-            dat.to_csv("{}/{}_clone.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
+    if self.__class__ == Dandelion:
+        self.__init__(data = dat)
+    else:
+        out = Dandelion(data = dat)
 
-    return(dat)
+        return(out)
 
-def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
+def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
     Extracting the necessary objects required for generating and plotting network.
 
@@ -703,12 +722,15 @@ def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep =
         A Dandelion class object containing `.data`, `.metadata`, `.distance`, `.edges`, `.layout`, and `.graph` slots.
     """
     start = logg.info('Generating network')
-    dat = load_data(data)
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    else:
+        dat = load_data(self)
     if 'clone_id' not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
-    # initiate a Dandelion class object
-    network = Dandelion(dat)
+    # re-initiate a Dandelion class object
+    out = Dandelion(dat)
 
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
@@ -772,10 +794,10 @@ def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep =
                 raise IndexError('Length of provided weights should be %s.' % int(n_))
 
     # generate edge list
-    tmp_totaldist = pd.DataFrame(total_dist, index = network.metadata.index, columns = network.metadata.index)
+    tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
-    for i in network.metadata.index:
-        cx = network.metadata.loc[i,'clone_group_id']
+    for i in out.metadata.index:
+        cx = out.metadata.loc[i,'clone_group_id']
         tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
@@ -796,9 +818,9 @@ def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep =
         G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
-    clone_ref = dict(network.metadata['clone_id'])
+    clone_ref = dict(out.metadata['clone_id'])
     tmp_clone_tree = Tree()
-    for x in network.metadata.index:
+    for x in out.metadata.index:
         tmp_clone_tree[clone_ref[x]][x].value = 1
     tmp_clone_tree2 = Tree()
     for x in tmp_clone_tree:
@@ -832,7 +854,7 @@ def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep =
     edge_list_final.reset_index(drop = True, inplace = True)
 
     # and finally the vertex list which is super easy
-    vertices = pd.DataFrame(network.metadata.index)
+    vertices = pd.DataFrame(out.metadata.index)
 
     # and now to actually generate the network
     edges = [tuple(e) for e in edge_list_final.values]
@@ -845,11 +867,15 @@ def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep =
         layout = graph.layout_fruchterman_reingold()
     else:
         layout = graph.layout(layout_option, *args, **kwds)
-    for x in network.metadata.columns:
-        graph.vs[x] = network.metadata[x]
+    for x in out.metadata.columns:
+        graph.vs[x] = out.metadata[x]
     graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
 
-    network = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+    if self.__class__ == Dandelion:
+        self.__init__(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+    else:
+        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+    
     logg.info(' finished', time=start,
         deep=('added to Dandelion class object: \n'
         '   \'data\', contig-indexed clone table\n'
@@ -858,7 +884,8 @@ def generate_network(data, distance_mode='weighted', aa_or_nt=None, clones_sep =
         '   \'edges\', network edges\n'
         '   \'layout\', network layout\n'
         '   \'graph\', network'))
-    return(network)
+    
+    return(out)
 
 def mst(mat):
     mst_tree = Tree()
@@ -934,203 +961,6 @@ def transfer_network(self, network, keep_raw = True, neighbors_key = None):
             deep=('added to `.uns[\''+neighbors_key+'\']`\n'
             '   \'distances\', cluster-weighted adjacency matrix\n'
             '   \'connectivities\', cluster-weighted adjacency matrix'))
-
-def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):
-    env = os.environ.copy()
-    if germline is None:
-        try:
-            gml = env['GERMLINE']
-        except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
-        gml = gml+'imgt/'+org+'/vdj/'
-    else:
-        env['GERMLINE'] = germline
-        gml = germline
-
-    def _parseChangeO(record):
-        """
-        Parses a dictionary to a Receptor object
-
-        Arguments:
-          record : dict with fields and values in the Change-O format
-
-        Returns:
-          changeo.Receptor.Receptor : parsed Receptor object.
-        """
-        # Parse fields
-        result = {}
-        for k, v in record.items():
-            k = ChangeoSchema.toReceptor(k)
-            result[k] = v
-
-        return Receptor(result)
-
-    def _parseAIRR(record):
-        """
-        Parses a dictionary of AIRR records to a Receptor object
-
-        Arguments:
-          record : dict with fields and values in the AIRR format.
-
-        Returns:
-          changeo.Receptor.Receptor : parsed Receptor object.
-        """
-        # Parse fields
-        result = {}
-        for k, v in record.items():
-            # Rename fields
-            k = AIRRSchema.toReceptor(k)
-            # Convert start positions to 0-based
-            # if k in ReceptorData.start_fields and v is not None and v != '':
-            #     v = str(int(v) + 1)
-            # Assign new field
-            result[k] = v
-
-        for end, (start, length) in ReceptorData.end_fields.items():
-            if end in result and result[end] is not None:
-                try:
-                    result[length] = int(result[end]) - int(result[start]) + 1
-                except:
-                    pass
-
-        return Receptor(result)
-
-    def _create_germlines(self, references, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat):
-        """
-        Write germline sequences to tab-delimited database file
-
-        Arguments:
-        self : dandelion_class object
-        references : folders and/or files containing germline repertoire data in FASTA format.
-        seq_field : field in which to look for sequence.
-        v_field : field in which to look for V call.
-        d_field : field in which to look for D call.
-        j_field : field in which to look for J call.
-        cloned : if True build germlines by clone, otherwise build individual germlines.
-        clone_field : field containing clone identifiers; ignored if cloned=False.
-        germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
-        fileformat : input and output format.
-
-        Returns:
-        """
-        # Define format operators
-        try:
-            reader, writer, schema = getFormatOperators(fileformat)
-        except:
-            raise ValueError('Invalid format %s' % fileformat)
-
-        # Define output germline fields
-        germline_fields = OrderedDict()
-        seq_type = seq_field.split('_')[-1]
-        if 'full' in germ_types:
-            germline_fields['full'] = 'germline_' + seq_type
-        if 'dmask' in germ_types:
-            germline_fields['dmask'] = 'germline_' + seq_type + '_d_mask'
-        if 'vonly' in germ_types:
-            germline_fields['vonly'] = 'germline_' + seq_type + '_v_region'
-        if 'regions' in germ_types:
-            germline_fields['regions'] = 'germline_regions'
-
-        if type(references) is not list:
-            ref = [references]
-        else:
-            ref = ref
-        reference_dict = readGermlines(ref)
-        # Check for IMGT-gaps in germlines
-        if all('...' not in x for x in reference_dict.values()):
-            warnings.warn(UserWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
-
-        required = ['v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length', 'np2_length']
-
-        if self.__class__ == Dandelion:
-            if isinstance(self.data, pd.DataFrame):
-                # Check for required columns
-                try:
-                    checkFields(required, self.data.columns, schema=schema)
-                except LookupError as e:
-                    print(e)
-
-                # Count input
-                total_count = len(self.data)
-
-                # Check for existence of fields
-                for f in [v_field, d_field, j_field, seq_field]:
-                    if f not in self.data.columns:
-                        raise NameError('%s field does not exist in input database file.' % f)
-                # Translate to Receptor attribute names
-                v_field = schema.toReceptor(v_field)
-                d_field = schema.toReceptor(d_field)
-                j_field = schema.toReceptor(j_field)
-                seq_field = schema.toReceptor(seq_field)
-                clone_field = schema.toReceptor(clone_field)
-
-                # Define Receptor iterator
-                receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
-
-            else:
-                # Get repertoire and open Db reader
-                db_handle = open(self.data, 'rt')
-                db_iter = reader(db_handle)
-
-                # Check for required columns
-                try:
-                    checkFields(required, db_iter.fields, schema=schema)
-                except LookupError as e:
-                    print(e)
-
-                # Count input
-                total_count = countDbFile(self.data)
-
-                # Check for existence of fields
-                for f in [v_field, d_field, j_field, seq_field]:
-                    if f not in db_iter.fields:
-                        raise NameError('%s field does not exist in input database file.' % f)
-
-                # Translate to Receptor attribute names
-                v_field = schema.toReceptor(v_field)
-                d_field = schema.toReceptor(d_field)
-                j_field = schema.toReceptor(j_field)
-                seq_field = schema.toReceptor(seq_field)
-                clone_field = schema.toReceptor(clone_field)
-
-                # Define Receptor iterator
-                receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
-        else:
-            raise AttributeError("Please provide a <class 'Dandelion'> class object instead of %s." % self.__class__)
-        out = {}
-        # Iterate over rows
-        for key, records in tqdm(receptor_iter, desc = 'Building germline sequences '):
-            # Define iteration variables
-            # Build germline for records
-            if not isinstance(self.data, pd.DataFrame):
-                records = list(records)
-                germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
-            else:
-                if fileformat == 'airr':
-                    germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
-                elif fileformat == 'changeo':
-                    germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
-                else:
-                    raise AttributeError('%s not acceptable file format' % fileformat)
-            if glines is not None:
-                # Add glines to Receptor record
-                annotations = {}
-                if 'full' in germ_types:
-                    annotations[germline_fields['full']] = glines['full']
-                if 'dmask' in germ_types:
-                    annotations[germline_fields['dmask']] = glines['dmask']
-                if 'vonly' in germ_types:
-                    annotations[germline_fields['vonly']] = glines['vonly']
-                if 'regions' in germ_types:
-                    annotations[germline_fields['regions']] = glines['regions']
-                out.update({key:annotations})
-        germline_df = pd.DataFrame.from_dict(out, orient = 'index')
-
-        self.data = load_data(self.data)
-        for x in germline_df.columns:
-            self.data[x] = pd.Series(germline_df[x])
-
-    _create_germlines(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat)
 
 def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
     sh = importr('shazam')
@@ -1214,3 +1044,371 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
     else:
         for x in metadata_.columns:
             self.metadata[x] = pd.Series(metadata_[x])
+
+def calculate_threshold(self, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None, manual_threshold=None, figsize=(4.5, 2.5), *args):
+    '''
+    Wrappers for shazam's functions for calculating nearest neighbor distances for tuning clonal assignment.
+        
+    distToNearest
+        Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
+    findThreshold
+        automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method="gmm") or kernel density fit (threshold_method="density").
+    
+    Parameters
+    ----------
+    model 
+        underlying SHM model, which must be one of c("ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat").
+    normalize_method  
+        method of normalization. The default is "len", which divides the distance by the length of the sequence group. If "none" then no normalization if performed.
+    threshold_method
+        string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
+    edge
+        upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
+    cross
+        supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
+    subsample
+        maximum number of distances to subsample to before threshold detection.
+    threshold_model
+        allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
+    cutoff
+        method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
+    sensitivity
+        sensitivity required. Applies only when method="gmm" and cutoff="user".
+    specificity
+        specificity required. Applies only when method="gmm" and cutoff="user".
+    *args
+        passed to shazam's distToNearest function
+    '''
+
+    sh = importr('shazam')
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
+        dat = load_data(self)
+    warnings.filterwarnings("ignore")
+
+    if 'v_call_genotyped' in dat.columns:
+        v_call = 'v_call_genotyped'
+    else:
+        v_call = 'v_call'
+    
+    if model is None:
+        model_ = 'ham'
+    else:
+        model_ = model
+    
+    if normalize_method is None:
+        norm_ = 'len'
+    else:
+        norm_ = normalize_method
+    
+    if threshold_method is None:
+        threshold_method_ = "density"
+    else:
+        threshold_method_ = threshold_method
+    
+    if subsample is None:
+        subsample_ = NULL
+    else:
+        subsample_ = subsample
+    
+    if ncpu is None:
+        ncpu_ = multiprocessing.cpu_count()
+    else:
+        ncpu_ = ncpu
+
+    dat_h = dat[dat['locus'] == 'IGH']
+    
+    try:
+        dat_h_r = pandas2ri.py2rpy(dat_h)
+    except:
+        dat_h = dat_h.fillna('')
+        dat_h_r = pandas2ri.py2rpy(dat_h)
+
+    dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
+    # Find threshold using density method
+    c = rpy2.robjects.StrVector(['dist_nearest'])
+
+    if threshold_method_ is 'density':
+        if edge is None:
+            edge_ = 0.9
+        else:
+            edge_ = edge
+            
+        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method_, subsample = subsample_, edge = edge_)
+    else:
+        if threshold_model is None:
+            threshold_model_ = "gamma-gamma"
+        else:
+            threshold_model_ = threshold_model
+        
+        if cross is None:
+            cross_ = NULL
+        else:
+            cross_ = cross
+        
+        if cutoff is None:
+            cutoff_ = 'optimal'
+        else:
+            cutoff_ = cutoff
+        
+        if sensitivity is None:
+            sen_ = NULL
+        else:
+            sen_ = sensitivity
+        
+        if specificity is None:
+            spc_ = NULL
+        else:
+            spc_ = specificity        
+        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)        
+
+    threshold=np.array(dist_threshold.slots['threshold'])[0]
+    
+    dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
+    
+    if plot:
+        options.figure_size = figsize
+        if plot_group is None:
+            plot_group = 'sample_id'
+        else:
+            plot_group = plot_group
+        if manual_threshold is None:
+            tr = threshold
+        else:
+            tr = manual_threshold            
+        p = (ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
+             + theme_bw() 
+             + xlab("Grouped Hamming distance")
+             + ylab("Count")
+             + geom_histogram(binwidth = 0.01)
+             + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
+             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
+             + facet_grid('~'+str(plot_group), scales="free_y")
+             + theme(legend_position = 'none'))        
+        return(p)            
+    else:
+        print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
+
+def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
+    """    
+    """
+    if ncpu is None:
+        nproc=multiprocessing.cpu_count()
+    else:
+        nproc=ncpu
+
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    else:
+        dat = load_data(self)
+    if os.path.isfile(str(self)):
+        dat = load_data(self)
+    dat_h = dat[dat['locus'] == 'IGH']
+    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+    
+    if os.path.isfile(str(self)):
+        if dirs is None:
+            tmpFolder = "{}/tmp".format(os.path.dirname(self))
+            outFolder = "{}".format(os.path.dirname(self))
+        else:
+            tmpFolder = str(dirs).strip('/')+'/tmp'
+            outFolder = str(dirs).strip('/')
+    else:
+        if dirs is None:
+            tmpFolder = "dandelion/data/tmp"
+            outFolder = "dandelion/data"
+        else:
+            tmpFolder = str(dirs).strip('/')+'/tmp'
+            outFolder = str(dirs).strip('/')
+
+    if not os.path.exists(tmpFolder):
+        os.makedirs(tmpFolder)
+    if not os.path.exists(outFolder):
+        os.makedirs(outFolder)
+
+    if os.path.isfile(str(self)):
+        h_file1 = "{}/{}_heavy-clone.tsv".format(tmpFolder, os.path.basename(self).split('.tsv')[0])
+        h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, os.path.basename(self).split('.tsv')[0])
+        l_file = "{}/{}_light.tsv".format(tmpFolder, os.path.basename(self).split('.tsv')[0])
+        outfile = "{}/{}_clone.tsv".format(outFolder, os.path.basename(self).split('.tsv')[0])
+    else:        
+        if outFilePrefix is not None:
+            out_FilePrefix = outFilePrefix
+        else:
+            out_FilePrefix = 'define_clones'
+        h_file1 = "{}/{}_heavy-clone.tsv".format(tmpFolder, out_FilePrefix)
+        h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, out_FilePrefix)
+        l_file = "{}/{}_light.tsv".format(tmpFolder, out_FilePrefix)
+        outfile = "{}/{}_clone.tsv".format(outFolder, out_FilePrefix)
+
+    dat_h.to_csv(h_file1, sep = '\t', index = False)
+    dat_l.to_csv(l_file, sep = '\t', index = False)
+    
+    if 'germline_alignment_d_mask' not in dat.columns:
+        raise ValueError("Missing 'germline_alignment_d_mask' column in input file. Run create_germlines first.")
+
+    if 'v_call_genotyped' in dat.columns:
+        v_field = 'v_call_genotyped'
+    else:
+        v_field = 'v_call'
+
+    cmd = ['DefineClones.py',
+            '-d', h_file1,
+            '-o', h_file2,
+            '--act', action,
+            '--model', model,
+            '--norm', norm,
+            '--dist', str(dist),
+            '--nproc', str(nproc),
+            '--vf', v_field]
+    
+    def clusterLinkage(cell_series, group_series):
+        """
+        Returns a dictionary of {cell_id : cluster_id} that identifies clusters of cells by analyzing their shared
+        features (group_series) using single linkage. 
+    
+        Arguments:
+        cell_series (iter): iter of cell ids.
+        group_series (iter): iter of group ids.
+    
+        Returns:
+        dict:  dictionary of {cell_id : cluster_id}.
+        """
+    
+        # assign initial clusters
+        # initial_dict = {cluster1: [cell1], cluster2: [cell1]}
+        initial_dict = {}
+        for cell, group in zip(cell_series, group_series):
+            try:    
+                initial_dict[group].append(cell)
+            except KeyError:
+                initial_dict[group] = [cell]
+                   
+        # naive single linkage clustering (ON^2 best case, ON^3 worst case) ...ie for cells with multiple light chains
+        # cluster_dict = {cluster1: [cell1, cell2]}, 2 cells belong in same group if they share 1 light chain 
+        while True:
+            cluster_dict = {}
+            for i, group in enumerate(initial_dict.keys()):
+                cluster_dict[i] = initial_dict[group]
+                for cluster in cluster_dict:
+                    # if initial_dict[group] and cluster_dict[cluster] share common cells, add initial_dict[group] to cluster
+                    if cluster != i and any(cell in initial_dict[group] for cell in cluster_dict[cluster]):
+                        cluster_dict[cluster] = cluster_dict[cluster] + initial_dict[group]
+                        del cluster_dict[i]
+                        break
+            # break if clusters stop changing, otherwise restart 
+            if len(cluster_dict.keys()) == len(initial_dict.keys()):
+                break
+            else:
+                initial_dict = cluster_dict.copy()
+        
+        # invert cluster_dict for return
+        assign_dict = {cell:k for k,v in cluster_dict.items() for cell in set(v)}
+        
+        return assign_dict
+
+    def _lightCluster(heavy_file, light_file, out_file, doublets, fileformat):
+        """
+        Split heavy chain clones based on light chains
+    
+        Arguments:
+        heavy_file (str): heavy chain input file.
+        light_file (str): light chain input file.
+        out_file (str): heavy chain output file.
+        doublets (str): method for handling multiple heavy chains per cell. one of 'drop' or 'count'.
+        format (str): file format. one of 'changeo' or 'airr'.
+        """
+        # Set column names
+        if fileformat == 'changeo':
+            cell_id = 'cell_id'
+            clone_id = 'clone_id'
+            v_call = 'v_call'
+            j_call = 'j_call'
+            junction_length = 'junction_length'
+            umi_count = 'umicount'
+        elif fileformat == 'airr':
+            cell_id = 'cell_id'
+            clone_id = 'clone_id'
+            v_call = 'v_call'
+            j_call = 'j_call'
+            junction_length = 'junction_length'
+            umi_count = 'umi_count'
+        else:
+            sys.exit("Invalid format %s" % fileformat)
+    
+        # read in heavy and light DFs
+        heavy_df = pd.read_csv(heavy_file, dtype='object', na_values=['', 'None', 'NA'], sep='\t')
+        light_df = pd.read_csv(light_file, dtype='object', na_values=['', 'None', 'NA'], sep='\t')
+    
+        # column checking
+        expected_heavy_columns = [cell_id, clone_id, v_call, j_call, junction_length, umi_count]
+        if set(expected_heavy_columns).issubset(heavy_df.columns) is False:
+            raise ValueError("Missing one or more columns in heavy chain file: " + ", ".join(expected_heavy_columns))
+        expected_light_columns = [cell_id, v_call, j_call, junction_length, umi_count]
+        if set(expected_light_columns).issubset(light_df.columns) is False:
+            raise ValueError("Missing one or more columns in light chain file: " + ", ".join(expected_light_columns))
+    
+        # Fix types
+        heavy_df[junction_length] = heavy_df[junction_length].astype('int')
+        light_df[junction_length] = light_df[junction_length].astype('int')
+    
+        # filter multiple heavy chains
+        if doublets == 'drop':
+            heavy_df = heavy_df.drop_duplicates(cell_id, keep=False)
+            if heavy_df.empty is True:
+                raise ValueError("Empty heavy chain data, after doublets drop. Are you combining experiments in a single file? If so, split your data into multiple files.")
+        elif doublets == 'count':
+            heavy_df[umi_count] = heavy_df[umi_count].astype('int')
+            heavy_df = heavy_df.groupby(cell_id, sort=False).apply(lambda x: x.nlargest(1, umi_count))
+    
+        # transfer clone IDs from heavy chain df to light chain df
+        clone_dict = {v[cell_id]:v[clone_id] for k, v in heavy_df[[clone_id, cell_id]].T.to_dict().items()}
+        light_df = light_df.loc[light_df[cell_id].apply(lambda x: x in clone_dict.keys()), ]
+        light_df[clone_id] = light_df.apply(lambda row: clone_dict[row[cell_id]], axis = 1)
+    
+        # generate a "cluster_dict" of CELL:CLONE dictionary from light df  (TODO: use receptor object V/J gene names)
+        cluster_dict = clusterLinkage(light_df[cell_id],
+                                    light_df.apply(lambda row:
+                                                    getGene(row[v_call]) + ',' + \
+                                                    getGene(row[j_call]) + ',' + \
+                                                    str(row[junction_length]) + ',' + row[clone_id], axis=1))
+    
+        # add assignments to heavy_df
+        heavy_df = heavy_df.loc[heavy_df[cell_id].apply(lambda x: x in cluster_dict.keys()), :]
+        heavy_df[clone_id] = heavy_df[clone_id] + '_' + heavy_df.apply(lambda row: str(cluster_dict[row[cell_id]]), axis=1)
+        
+        # write heavy chains
+        heavy_df.to_csv(out_file, sep='\t', index=False)
+        return(heavy_df, light_df)
+
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    run(cmd)
+    
+    h_df, l_df = _lightCluster(h_file2, l_file, outfile, doublets=doublets, fileformat=fileformat)
+
+    h_df = load_data(h_df)
+    # create a dictionary for cell_id : clone_id from h_df
+    linked_clones = dict(zip(h_df['cell_id'], h_df['clone_id']))
+    
+    # create a clone_reference 
+    clone_ref = list(set(h_df['clone_id']))
+    clone_ref = [c.split('_')[1] if c is not np.nan else c for c in clone_ref]
+    l_df = load_data(l_df)
+
+    for x in l_df.index:
+        if l_df.loc[x, 'clone_id'] in clone_ref:
+            l_df.loc[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
+        else:
+            l_df.loc[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
+
+    cloned_ = pd.concat([h_df, l_df])
+    # transfer the new clone_id to the heavy + light file
+    dat['clone_id'] = pd.Series(cloned_['clone_id'])
+
+    if self.__class__ == Dandelion:
+        self.__init__(data = dat)
+    else:
+        out = Dandelion(data = dat)
+        return(out)
