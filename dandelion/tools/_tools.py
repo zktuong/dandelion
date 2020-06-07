@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 23:10:49
+# @Last Modified time: 2020-06-07 23:49:20
 
 import os
 import sys
@@ -232,7 +232,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
     Parameters
     ----------
     self : Dandelion, DataFrame, str
-        BCR data to find clone. Can be Dandelion object, pandas DataFrame or file path as string.
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     identity : float
         Junction similarity parameter. Default 0.85    
     clustering_by : str, optional
@@ -723,7 +723,7 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         The mode of calculating joint distance matrix for heavy and light chains. Default is 'weighted'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0..1 to bring the multiple layers of data into a single analysis.
     aa_or_nt : str, optional
         Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
-    clones_sep: tuple(int, str)
+    clones_sep: tuple[int, str]
         A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
     weights : tuple, optional
         A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
@@ -1136,7 +1136,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         whether or not to return plot.
     plot_group : str, optional
         determines the fill color and facets.
-    figsize : tuple
+    figsize : tuple[float, float]
         size of plot. Default is (4.5, 2.5).
     *args
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
