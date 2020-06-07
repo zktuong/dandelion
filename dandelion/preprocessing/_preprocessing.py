@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 21:47:14
+# @Last Modified time: 2020-06-07 23:04:35
 
 import sys
 import os
@@ -124,8 +124,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     ----------
     fastas
         list or sequence of fasta files.
-    format
-        file format of parsed vdj results
+    fileformat
+        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     blastdb
         path to blast database.
     allele
@@ -399,8 +399,8 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         whether or not the file being worked on is filtered or all (based on cellranger).
     verbose
         whether or not to print the command used in the terminal.
-    fileformat: str (Default: 'airr')
-        format of the output data. Default is 'airr'. changeo' will trigger legacy changeo format.
+    fileformat: str
+        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     *args
         passed to ``assigngenes_igblast`` and ``makedb_igblast``.
     """
@@ -489,8 +489,8 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
         name of folder for concatenated data file and genotyped files.
     germline
         path to germline. If None, defaults to path set as environmental variable.
-    fileformat
-        format of data. only invoked if all other default options are used.
+    fileformat : str
+        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     dirs
         path to input files. will also determine folder structure for outout.
     sample_dict
@@ -689,7 +689,13 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             + theme(legend_title = element_blank()))
         return(p)
 
-def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):
+def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):    
+    """
+    fileformat : str
+        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+
+    """
+
     env = os.environ.copy()
     if germline is None:
         try:
@@ -763,7 +769,8 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         cloned : if True build germlines by clone, otherwise build individual germlines.
         clone_field : field containing clone identifiers; ignored if cloned=False.
         germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
-        fileformat : input and output format.
+        fileformat : str
+            format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
 
         Returns:
         """
@@ -893,7 +900,9 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         cloned : if True build germlines by clone, otherwise build individual germlines.
         clone_field : field containing clone identifiers; ignored if cloned=False.
         germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
-        fileformat : input and output format.
+        fileformat : str
+                format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+
 
         Returns:
         """
@@ -985,7 +994,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
     else:
         return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat))
 
-def run_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
+def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
     """
     Parameters
     ----------
