@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 23:04:35
+# @Last Modified time: 2020-06-08 00:24:20
 
 import sys
 import os
@@ -27,20 +27,19 @@ import scrublet as scr
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
-    Takes in the cellranger fasta files and add a prefix to the barcodes.
-    This will generate a newly annotated fasta file that will be found in dandelion/data, unless otherwise specified in outdir
+    Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
     Parameters
     ----------
-    fasta
-        fasta file
-    prefix
-        prefix to add
-    outdir
-        out location
+    fasta : str
+        path to fasta file.
+    prefix : str, optional
+        prefix to append to the headers/contig ids.
+    outdir : str, optional
+        path to out put location. Default is None, which is 'dandelion/data'.
     Returns
     -------
-        new fasta file with new headers containing prefix
+        Formatted fasta file with new headers containing prefix
     """
     fh = open(fasta, 'r')
     seqs = {}
@@ -87,21 +86,19 @@ def format_fasta(fasta, prefix = None, outdir = None):
 
 def format_fastas(fastas, prefixes = None, outdir = None):
     """
-    Takes in the cellranger fasta files and add a prefix to the barcodes.
-    This will generate a newly annotated fasta file that will be found in dandelion/data, unless otherwise specified in outdir
+    Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
     Parameters
     ----------
-    fastas
-        list or sequence of fasta files.
-    prefixes
-        list or sequence of prefixes to append to headers in each fasta file.
-        if provided, a dictionary will be created with fasta files as keys and prefixes as values.
-    outdir
-        out location. Defaults to a subfolder called dandelion/data.
+    fastas : list
+        list or sequence of paths to fasta files.
+    prefixes : list, optional
+        list or sequence of prefixes to append to headers/contig ids in each fasta file.
+    outdir : str, optional
+        path to out put location. Default is None, which is 'dandelion/data'.
     Returns
     -------
-        new fasta files with new headers containing prefixes
+        Formatted fasta file with new headers containing prefix
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -118,27 +115,29 @@ def format_fastas(fastas, prefixes = None, outdir = None):
 
 def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
     """
-    Takes in fasta files and annotate the parsed data table with the constant region.
+    Annotate contigs with constant region call using blastn
 
     Parameters
     ----------
-    fastas
-        list or sequence of fasta files.
-    fileformat
+    fasta : str
+        path to fasta file.
+    fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    blastdb
-        path to blast database.
-    allele
-        whether or not to return allele calls
-    parallel
-        whether or not to trigger parallelization
-    dirs
-        location for input (and also output)
-    verbose
-        whether or not to print the commands in terminal
+    org : str
+        organism of reference folder. Default is 'human'.
+    blastdb : str, optional
+        path to blast database. Defaults to `$BLASTDB` environmental variable.
+    allele : bool
+        whether or not to return allele calls. Default is False.
+    parallel : bool
+        whether or not to use parallelization. Default is True.
+    dirs : str, optional
+        location of both input and output files. None defaults to dandelion/data folder.
+    verbose : bool
+        whether or not to print the blast command in terminal. Default is False.
     Returns
     -------
-        new fasta files with new headers containing prefixes
+        V(D)J tsv files with constant genes annotated.
     """
     def _run_blastn(fasta, blastdb, dirs, fileformat, org, verbose):
 
@@ -387,22 +386,35 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
 
 def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, extended = False, verbose = False, *args):
     """
-    reannotate genes with igblastn and parses to data output
+    Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
     Parameters
     ----------
-    data
+    data : list
         list or sequence of fasta file locations, or folder name containing fasta files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    dirs
-        path to input files. will also determine folder structure for outout
-    filtered
-        whether or not the file being worked on is filtered or all (based on cellranger).
-    verbose
-        whether or not to print the command used in the terminal.
+    igblast_db : str, optional
+        path to igblast database folder. Defaults to `$IGDATA` environmental variable.
+    germline : str, optional
+        path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+    org : str
+        organism of germline database. Default is 'human'.
+    loci : str
+        mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for TCRs.
     fileformat: str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+    dirs : str, optional
+        path to input files. will also determine folder structure for outout. Defaults to 'dandelion/data'.
+    filtered : bool
+        whether or not the to use 'filtered_contig' (True) or 'all_contig' (False) as prefix for output files.
+    extended : bool
+        whether or not to transfer additional 10X annotions to output file. Default is False.
+    verbose :
+        whether or not to print the igblast command used in the terminal. Default is False.    
     *args
-        passed to ``assigngenes_igblast`` and ``makedb_igblast``.
+        passed to `dandelion.preprocessing.ext.assigngenes_igblast` and `dandelion.preprocessing.ext.makedb_igblast`.
+    Returns
+    ----------
+        V(D)J data file in airr/changeo data format.
     """
     if type(data) is not list:
         data = [data]
@@ -474,36 +486,67 @@ def map_cellranger(data, extended = False):
         dat['junction_10x_aa'] = pd.Series(junction_aa)
     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plot = True, figsize = (4,3), dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False):
+def reassign_alleles(data, out_folder, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), dirs = None, sample_dict = None, filtered = False, out_filename = None, verbose = False):
     """
-    Correct allele calls based on a personalized genotype.
-    Description
-    ----------
-    reassignAlleles uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
+    Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
     Parameters
     ----------
-    data
+    data : list
         list or sequence of folders/data file locations. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    out_folder
+    out_folder : str
         name of folder for concatenated data file and genotyped files.
-    germline
-        path to germline. If None, defaults to path set as environmental variable.
+    germline : str, optional
+        path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+    org : str
+        organism of germline database. Default is 'human'.
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    dirs
-        path to input files. will also determine folder structure for outout.
-    sample_dict
-        dictionary for creating a sample column
-    filtered
-        whether or not the file being worked on is filtered or all (based on cellranger).
-    out_filename
-        if provided, will save to this filename.
-    verbose
-        whether or not to print the command used in the terminal.
-    *args
-        passed to ``tigger_genotype``
+    org : str
+        organism of germline database. Default is 'human'.
+    seq_field : str
+        name of column containing the aligned sequence. Default is 'sequence_alignment' (airr).
+    v_field : str
+        name of column containing the germline V segment call. Default is 'v_call_genotyped' (airr) after tigger.
+    d_field : str
+        name of column containing the germline d segment call. Default is 'd_call' (airr).
+    j_field : str
+        name of column containing the germline j segment call. Default is 'j_call' (airr).
+    germ_types : str
+        Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is 'dmask'.
+    plot : bool
+        whether or not to plot reassignment summary metrics. Default is True.
+    figsize : tuple[float, float]
+        size of figure. Default is (4, 3)
+    dirs : str, optional
+        path to input files. will also determine folder structure for outout. Defaults to 'dandelion/data'.
+    sample_dict : dict, optional
+        dictionary for creating a sample_id column in the concatenated file.
+    filtered : bool
+        whether or not the to use 'filtered_contig' (True) or 'all_contig' (False) as prefix for output files. Ignored if out_filename is specified.
+    out_filename : str, optional
+        if provided, will save output to this filename.
+    verbose : bool
+        Whether or not to print the command used in the terminal. Default is False.
+    Returns
+    ----------
+        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls.
     """
+    env = os.environ.copy()
+    if germline is None:
+        try:
+            gml = env['GERMLINE']
+        except:
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+        gml = gml+'imgt/'+org+'/vdj/'        
+    else:
+        gml = germline
+
+    if not gml.endswith('/'):
+        gml = gml +'/'
+    
+    nonighv_germline = [gml + 'imgt_'+org+'_IGLV.fasta', gml + 'imgt_'+org+'_IGLJ.fasta', gml + 'imgt_'+org+'_IGKV.fasta', gml + 'imgt_'+org+'_IGKJ.fasta', gml + 'imgt_'+org+'_IGHD.fasta', gml + 'imgt_'+org+'_IGHJ.fasta']
+
     def _return_IGKV_IGLV(results, locus = 'IGH'):
         res = results.copy()
         for i in tqdm(res.index, desc = '   Returning light chain V calls'):
@@ -528,6 +571,9 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
     informat_dict = {'changeo':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
     inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
+
+    germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
+
     data_list = []
     for s in tqdm(data, desc = 'Processing data file(s) '):
         if os.path.isfile(str(s)):
@@ -590,6 +636,8 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
+            new_germline = [outDir+'filtered_contig_heavy'+germline_dict[fileformat]] + nonighv_germline
+            create_germlines(dat_, germline = new_germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat, return_dataframe = True)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             dat_.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -598,6 +646,8 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
+            new_germline = [outDir+'all_contig_heavy'+germline_dict[fileformat]] + nonighv_germline
+            create_germlines(dat_, germline = new_germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat, return_dataframe = True)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             dat_.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -606,6 +656,8 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
         # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
         dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
         dat_ = _return_IGKV_IGLV(dat_)
+        new_germline = [outDir+'heavy_'+out_filename.replace('.tsv', '.fasta')] + nonighv_germline
+        create_germlines(dat_, germline = new_germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat, return_dataframe = True)
         print('   Saving corrected genotyped object')
         sleep(0.5)
         dat_.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
@@ -622,7 +674,7 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
                 filePath = s+'/'+path+'filtered_contig'+fileformat_dict[fileformat]
             else:
                 filePath = s+'/'+path+'all_contig'+fileformat_dict[fileformat]
-            out_.to_csv(filePath, index = False, sep = '\t')
+            out_.to_csv(filePath, index = False, sep = '\t')    
     if plot:
         print('Returning summary plot')
         if out_filename is None:
@@ -689,11 +741,35 @@ def reassign_alleles(data, out_folder, germline = None, fileformat = 'airr', plo
             + theme(legend_title = element_blank()))
         return(p)
 
-def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', clone_field='clone_id', germ_types='dmask', fileformat='airr'):    
+def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr', return_dataframe=False):
     """
+    Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
+
+    Parameters
+    ----------
+    self : Dandelion, DataFrame, str
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
+    germline : str, optional
+        path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+    org : str
+        organism of germline database. Default is 'human'.
+    seq_field : str
+        name of column containing the aligned sequence. Default is 'sequence_alignment' (airr).
+    v_field : str
+        name of column containing the germline V segment call. Default is 'v_call' (airr).
+    d_field : str
+        name of column containing the germline d segment call. Default is 'd_call' (airr).
+    j_field : str
+        name of column containing the germline j segment call. Default is 'j_call' (airr).
+    germ_types : str
+        Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is 'dmask'.
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-
+    return_dataframe : bool
+        whether or not to return as a `Dandelion` (False) object of pandas `DataFrame` (True). Default is False.
+    Returns
+    ----------
+        V(D)J data file with reconstructed germline sequences.
     """
 
     env = os.environ.copy()
@@ -755,7 +831,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
 
         return Receptor(result)
 
-    def _create_germlines_object(self, references, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat):
+    def _create_germlines_object(self, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
         """
         Write germline sequences to tab-delimited database file
 
@@ -766,8 +842,8 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         v_field : field in which to look for V call.
         d_field : field in which to look for D call.
         j_field : field in which to look for J call.
-        cloned : if True build germlines by clone, otherwise build individual germlines.
-        clone_field : field containing clone identifiers; ignored if cloned=False.
+        # cloned : if True build germlines by clone, otherwise build individual germlines.
+        # clone_field : field containing clone identifiers; ignored if cloned=False.
         germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
         fileformat : str
             format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
@@ -823,7 +899,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 d_field = schema.toReceptor(d_field)
                 j_field = schema.toReceptor(j_field)
                 seq_field = schema.toReceptor(seq_field)
-                clone_field = schema.toReceptor(clone_field)
+                # clone_field = schema.toReceptor(clone_field)
 
                 # Define Receptor iterator
                 receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
@@ -846,7 +922,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             d_field = schema.toReceptor(d_field)
             j_field = schema.toReceptor(j_field)
             seq_field = schema.toReceptor(seq_field)
-            clone_field = schema.toReceptor(clone_field)
+            # clone_field = schema.toReceptor(clone_field)
             # Define Receptor iterator
             receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
         
@@ -886,7 +962,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 out.data[x] = pd.Series(germline_df[x])
             return(out)
         
-    def _create_germlines_file(file, references, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat):
+    def _create_germlines_file(file, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
         """
         Write germline sequences to tab-delimited database file
 
@@ -898,12 +974,9 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         d_field : field in which to look for D call.
         j_field : field in which to look for J call.
         cloned : if True build germlines by clone, otherwise build individual germlines.
-        clone_field : field containing clone identifiers; ignored if cloned=False.
         germ_types : list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
         fileformat : str
                 format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-
-
         Returns:
         """
         # Define format operators
@@ -954,7 +1027,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         d_field = schema.toReceptor(d_field)
         j_field = schema.toReceptor(j_field)
         seq_field = schema.toReceptor(seq_field)
-        clone_field = schema.toReceptor(clone_field)
+        # clone_field = schema.toReceptor(clone_field)
         # Define Receptor iterator
         receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
         
@@ -990,32 +1063,37 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         return(out)
 
     if self.__class__ == Dandelion or self.__class__ == pd.DataFrame:
-        _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat)
+        _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+        if return_dataframe:
+            return(self.data)
     else:
-        return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, clone_field, germ_types, fileformat))
+        return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+        if return_dataframe:
+            return(self.data)
 
 def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
     """
+    Recipe for running a standard scanpy QC worflow.
+
     Parameters
     ----------
     adata : AnnData
         The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
-    max_genes : int (default: 2500)
-        Maximum number of genes expressed required for a cell to pass filtering.
-    min_genes : int (default: 200)
-        Minimum number of genes expressed  required for a cell to pass filtering.
-    mito_cutoff : float (default: 0.05)
-        Maximum percentage mitochondrial content allowed for a cell to pass filtering.
-    pval_cutoff : float (default: 0.05)
-        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering.
-    min_counts : int, None (default: None)
-        Minimum number of counts required for a cell to pass filtering.
-    max_counts : int, None (default: None)
-        Maximum number of counts required for a cell to pass filtering.
+    max_genes : int
+        Maximum number of genes expressed required for a cell to pass filtering. Default is 2500.
+    min_genes : int
+        Minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
+    mito_cutoff : float
+        Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 0.05.
+    pval_cutoff : float
+        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
+    min_counts : int
+        Minimum number of counts required for a cell to pass filtering. Default is None.
+    max_counts : int
+        Maximum number of counts required for a cell to pass filtering. Default is None.
     Returns
     -------
-    AnnData
-        The (annotated) data matrix of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
+        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
 
     """
     _adata = self.copy()
