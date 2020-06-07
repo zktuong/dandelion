@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 21:32:34
+# @Last Modified time: 2020-06-08 00:37:01
 
 import igraph
 import seaborn as sns
@@ -20,16 +20,16 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     
     Parameters
     ----------
-    self
-        dandelion_network class object
-    colorby
-        column in metadata to colour
-    layout
-        style of layout
-    visual_style
-        additional igraph visual options
-    args
-        passed to [igraph.plot()](https://igraph.org/python/doc/tutorial/tutorial.html#layouts-and-plotting)
+    self : Dandelion
+        `Dandelion` object.
+    colorby : str, optional
+        column name in metadata to color.
+    layout : str, optional
+        style of layout.
+    visual_style : dict, optional
+        additional igraph visual options in dictionary.
+    *args
+        passed to `igraph.plot <https://igraph.org/python/doc/tutorial/tutorial.html#layouts-and-plotting>`__.
     Returns
     -------
         igraph plot
@@ -144,10 +144,14 @@ def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
     using scanpy's plotting module to plot the network. Only thing i'm changing is the dfault options: basis = 'bcr' and edges = True
     Parameters
     ----------
-    adata
-        AnnData object
-    basis
-        key for embedding. Default is bcr
+    adata : AnnData
+        AnnData object.
+    basis : str
+        key for embedding. Default is 'bcr'.
+    edges : bool
+        whether or not to plot edges. Default is True.
+    **kwargs
+        passed `sc.pl.embedding`.
     """
     embedding(adata, basis = basis, edges = edges, **kwargs)
 
@@ -156,25 +160,27 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     A barplot function to plot usage of V/J genes in the data.
     Parameters
     ----------
-    self
-        either a Dandelion or AnnData object
-    variable
-        variable to plot the bar plot
-    palette
-        palette for pltting
-    figsize
-        figure size
-    normalize
-        if True, will return as proportion out of 1, otherwise False will return counts
-    title
-        title of plot
-    xtick_rotation
-        rotation of x tick labels        
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    variable : str
+        column name in metadata for plotting in bar plot.
+    palette : str
+        palette for plotting. Default is 'Set1'.
+    figsize : tuple[float, float]
+        figure size. Default is (12, 4).
+    normalize : bool
+        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
+    sort_descending : bool
+        whether or not to sort the order of the plot. Default is True.
+    title : str, optional
+        title of plot.
+    xtick_rotation : int, optional
+        rotation of x tick labels.      
     **kwargs
-        other kwargs passed to sns.barplot
+        passed to `sns.barplot`.
     Return
     ----------
-        a seaborn barplot
+        a seaborn barplot.
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
@@ -213,36 +219,33 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
     ----------
-    self
-        either a Dandelion or AnnData object
-    variable
-        variable in metadata to plot the bar plot
-    groupby
-        varibale to groupby for plotting
-    palette
-        palette for pltting    
-    figsize
-        figure size    
-    normalize
-        if True, will return as proportion out of 1, otherwise False will return counts    
-    title
-        title of plot
-    sort_descending
-        whether or not to sort the order of the plot
-    xtick_rotation
-        rotation of x tick labels        
-    hide_lgend
-        whether or not to hide the legend
-    legend_options
-        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
-    labels
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    variable : str
+        column name in metadata for plotting in bar plot.
+    groupby : str
+        column name in metadata to split by during plotting.
+    figsize : tuple[float, float]
+        figure size. Default is (12, 4).
+    normalize : bool
+        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
+    sort_descending : bool
+        whether or not to sort the order of the plot. Default is True.
+    title : str, optional
+        title of plot.
+    xtick_rotation : int, optional
+        rotation of x tick labels.      
+    hide_legend : bool
+        whether or not to hide the legend.
+    legend_options : tuple[str, tuple[float, float], int]
+        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
+    labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
     **kwargs
-        other kwargs passed to matplotlib.plt
-    
+        other kwargs passed to `matplotlib.plt`.
     Return
     ----------
-        stacked bar plot
+        stacked bar plot.
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
@@ -335,35 +338,32 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
     ----------
-    self
-        either a Dandelion or AnnData object
-    variable
-        variable in metadata to plot the bar plot
-    groupby
-        varibale to groupby for plotting
-    locus
-        either IGH or IGL
-    figsize
-        figure size
-    width
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    variable : str
+        column name in metadata for plotting in bar plot.
+    groupby : str
+        column name in metadata to split by during plotting.
+    locus : str
+        either IGH or IGL.
+    figsize : tuple[float, float]
+        figure size. Default is (6, 4).
+    width : float, optional
         width of bars.
-    normalize
-        if True, will return as proportion out of 1, otherwise False will return counts
-    title
-        title of plot
-    xtick_rotation
-        rotation of x tick labels        
-    legend_options
-        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
-    hide_legend
-        whether or not to hide the legend
-    labels
+    title : str, optional
+        title of plot.
+    xtick_rotation : int, optional
+        rotation of x tick labels.      
+    hide_legend : bool
+        whether or not to hide the legend.
+    legend_options : tuple[str, tuple[float, float], int]
+        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
+    labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    clones_sep
-        option to specify how to split up clone names.
+    clones_sep : tuple[int, str]
+        option to specify how to split up clone names. Default is (0, '_') i.e. it will split according to '_' and select the first string as the 'clone'.
     **kwargs
         other kwargs passed to matplotlib.plt
-    
     Return
     ----------
         sectratype plot
