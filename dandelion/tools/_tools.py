@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 23:49:20
+# @Last Modified time: 2020-06-08 00:44:01
 
 import os
 import sys
@@ -702,13 +702,12 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
     if self.__class__ == Dandelion:
         self.__init__(data = dat)
     else:
-        out = Dandelion(data = dat)
-
-    logg.info(' finished', time=start,
-        deep=('added to Dandelion class object: \n'
-        '   \'data\', contig-indexed clone table\n'))
-
+        out = Dandelion(data = dat)    
         return(out)
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'data\', contig-indexed clone table\n'
+        '   \'metadata\', cell-indexed clone table\n'))
 
 def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
@@ -891,7 +890,7 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
     
     logg.info(' finished', time=start,
-        deep=('added to Dandelion class object: \n'
+        deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'
         '   \'distance\', heavy and light chain distance matrices\n'
@@ -1012,6 +1011,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
     ----------
         `Dandelion` object with updated `.metadata` slot.
     """
+    start = logg.info('Quantifying mutations')
     sh = importr('shazam')
     dat = load_data(self.data)
     warnings.filterwarnings("ignore")
@@ -1093,6 +1093,10 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
     else:
         for x in metadata_.columns:
             self.metadata[x] = pd.Series(metadata_[x])
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'data\', contig-indexed clone table\n'
+        '   \'metadata\', cell-indexed clone table\n'))
 
 def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
     """
@@ -1287,6 +1291,7 @@ def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doubl
     ----------
         `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
+    start = logg.info('Finding clones')
     if ncpu is None:
         nproc=multiprocessing.cpu_count()
     else:
@@ -1509,3 +1514,7 @@ def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doubl
     else:
         out = Dandelion(data = dat)
         return(out)
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'data\', contig-indexed clone table\n'
+        '   \'metadata\', cell-indexed clone table\n'))
