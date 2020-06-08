@@ -7,7 +7,7 @@ Hi there! I have put together a python package for analyzing single cell BCR/V(D
 
 Overview:
 
-![dandelion_logo](notebooks/img/dandelion_aim.png)
+![dandelion_overview](notebooks/img/dandelion_overview.png)
 
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
