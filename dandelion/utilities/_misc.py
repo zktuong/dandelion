@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-07 21:23:40
+# @Last Modified time: 2020-06-08 12:00:11
 
 import sys
 import os
@@ -383,6 +383,7 @@ class Dandelion:
         self.edges = edges
         self.layout = layout
         self.graph = graph
+        self.threshold = None
         
         if os.path.isfile(str(self.data)):
             self.data = load_data(self.data)
@@ -408,6 +409,7 @@ class Dandelion:
                 descr += f"\n    {attr}: {str(None)}"
         descr += f"\n    layout: {str(self.layout).strip('<>')}"
         descr += f"\n    graph: {str(type(self.graph)).strip('<>')}"
+        descr += f"\n    threshold: {self.threshold}"
         return descr
 
     def __repr__(self) -> str:

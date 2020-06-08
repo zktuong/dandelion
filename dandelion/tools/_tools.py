@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 11:19:12
+# @Last Modified time: 2020-06-08 12:09:34
 
 import os
 import sys
@@ -516,16 +516,17 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
                 dat.to_csv("{}/{}_clone.tsv".format(outDir, 'dandelion_find_clones'), sep = '\t', index = None)
         else:
             pass
-
+    sleep(0.5)
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'data\', contig-indexed clone table\n'
+        '   \'metadata\', cell-indexed clone table\n'))
     if self.__class__ == Dandelion:
         self.__init__(data = dat)
     else:
         out = Dandelion(data = dat)    
         return(out)
-    logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'data\', contig-indexed clone table\n'
-        '   \'metadata\', cell-indexed clone table\n'))
+    
 
 def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
@@ -701,12 +702,6 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
     for x in out.metadata.columns:
         graph.vs[x] = out.metadata[x]
     graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
-
-    if self.__class__ == Dandelion:
-        self.__init__(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
-    else:
-        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
-    
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
@@ -715,8 +710,11 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         '   \'edges\', network edges\n'
         '   \'layout\', network layout\n'
         '   \'graph\', network'))
-    
-    return(out)
+    if self.__class__ == Dandelion:
+        self.__init__(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+    else:
+        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+        return(out)
 
 def mst(mat):
     """
@@ -966,7 +964,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
     ----------
         plotnine plot showing histogram of length normalized ham model distance threshold.
     """
-
+    start = logg.info('Calculating threshold')
     sh = importr('shazam')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
@@ -1064,7 +1062,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             tr = threshold
         else:
             tr = manual_threshold            
-        p = (ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
+        print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
              + theme_bw() 
              + xlab("Grouped Hamming distance")
              + ylab("Count")
@@ -1072,12 +1070,21 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
              + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
              + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
              + facet_grid('~'+str(plot_group), scales="free_y")
-             + theme(legend_position = 'none'))        
-        return(p)            
+             + theme(legend_position = 'none')))      
     else:
         print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
+    if self.__class__ == Dandelion:
+        self.threshold = tr
+        logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'threshold\', threshold value for tuning clonal assignment\n'))
+    else:
+        output = Dandelion(dat)
+        output.threshold = tr
+        return(output)
 
-def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
+
+def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
     
@@ -1085,8 +1092,8 @@ def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doubl
     ----------
     self : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    dist : float
-        The distance threshold for clonal grouping.
+    dist : float, optional
+        The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class .threshold slot.
     action : str
         Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'. The “first” action will use only the first gene listed. The “set” action will use all gene assignments and construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence by a common assignment (similar to single-linkage).
     model : str
@@ -1170,13 +1177,24 @@ def define_clones(self, dist, action = 'set', model = 'ham', norm = 'len', doubl
     else:
         v_field = 'v_call'
 
+    if dist is None:
+        if self.__class__ == Dandelion:
+            if self.threshold is not None:
+                dist_ = self.threshold
+            else:
+                raise ValueError('Threshold value in Dandelion object is None. Please run calculate_threshold first')
+        else:
+            raise ValueError('Distance value is None. Please provide a distance value (float)')
+    else:
+        dist_ = dist
+
     cmd = ['DefineClones.py',
             '-d', h_file1,
             '-o', h_file2,
             '--act', action,
             '--model', model,
             '--norm', norm,
-            '--dist', str(dist),
+            '--dist', str(dist_),
             '--nproc', str(nproc),
             '--vf', v_field]
     
