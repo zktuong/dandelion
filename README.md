@@ -9,6 +9,8 @@ Overview:
 
 ![dandelion_overview](notebooks/img/dandelion_overview.png)
 
+![dandelion_class](notebooks/img/dandelion_class.png)
+
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
 
