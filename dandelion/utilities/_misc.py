@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-01 22:20:18
+# @Last Modified time: 2020-06-08 12:00:11
 
 import sys
 import os
@@ -15,6 +15,7 @@ import re
 import gzip
 import pickle as pickle
 import copy
+import warnings
 
 class Tree(defaultdict):
     def __init__(self, value=None):
@@ -158,156 +159,221 @@ def load_data(obj):
 
     return(obj_)
 
-def initialize_metadata(self, retrieve = None, clones_sep = None):
+def setup_metadata(data, sep):
+        dat_h = data[data['locus'] == 'IGH']
+        dat_l = data[data['locus'].isin(['IGK', 'IGL'])]        
+        clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
+        clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))    
+        metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
+        metadata_.set_index('cell_id', inplace = True)
+        light_clone_tree = Tree()
+        for key, value in clone_l.items():
+            k, v = value
+            light_clone_tree[k][key] = v
+        light_clone_tree2 = Tree()
+        for g in light_clone_tree:
+            second_key = []
+            for k2 in light_clone_tree[g].keys():
+                second_key.append(k2)
+            second_key = list(set(second_key))
+            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+            for key, value in light_clone_tree[g].items():
+                light_clone_tree2[g][second_key_dict[key]] = value
+        metadata_['light'] = pd.Series(light_clone_tree2)
+        tmp_dat = metadata_['light'].apply(pd.Series)
+        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+        metadata_ = metadata_.merge(tmp_dat, left_index = True, right_index = True)
+        metadata_ = metadata_[['heavy'] + [str(c) for c in tmp_dat.columns]]
+        clones_list = {}
+        for x in metadata_.index:
+            cl = list(set(list(metadata_.loc[x, :])))
+            cl = sorted([y for y in cl if str(y) != 'nan'])
+            if len(cl) > 1:
+                cl = cl[1:]
+            clones_list[x] = ','.join(cl)
+        metadata_['clone_id'] = pd.Series(clones_list)
+        metadata_ = metadata_[['clone_id']]
+        if sep is None:
+            scb = (0, '_')
+        else:
+            scb = (sep[0], sep[1])
+        group = []
+        
+        # check if contain the separator
+        x = list(metadata_['clone_id'].str.contains(scb[1]))
+        cl_ = list(metadata_['clone_id'])
+        for c in range(0, len(metadata_['clone_id'])):
+            if not x[c]:
+                warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
+                group.append(cl_[c])
+            else:
+                group.append(cl_[c].split(scb[1])[scb[0]])
+        groupseries = dict(zip(metadata_.index, group))
+        metadata_['clone_group_id'] = pd.Series(groupseries)
+        return(metadata_)
+
+def retrieve_metadata(data, retrieve_id, combined):
+        dat_h = data[data['locus'] == 'IGH']
+        dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
+        
+        retrieve_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[retrieve_id])))
+        retrieve_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[retrieve_id])))
+        
+        sub_metadata = pd.DataFrame.from_dict(retrieve_h, orient = 'index', columns = ['cell_id', 'heavy'])
+        sub_metadata.set_index('cell_id', inplace = True)
+
+        light_retrieval_tree = Tree()
+        for key, value in retrieve_l.items():
+            k, v = value
+            light_retrieval_tree[k][key] = v
+        light_retrieval_tree2 = Tree()
+        for g in light_retrieval_tree:
+            second_key = []
+            for k2 in light_retrieval_tree[g].keys():
+                second_key.append(k2)
+            second_key = list(set(second_key))
+            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+            for key, value in light_retrieval_tree[g].items():
+                light_retrieval_tree2[g][second_key_dict[key]] = value
+        sub_metadata['light'] = pd.Series(light_retrieval_tree2)
+        tmp_dat = sub_metadata['light'].apply(pd.Series)
+        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+        sub_metadata = sub_metadata.merge(tmp_dat, left_index = True, right_index = True)
+        sub_metadata = sub_metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
+        if combined:
+            retrieval_list = {}
+            for x in sub_metadata.index:
+                r_l = list(set(list(sub_metadata.loc[x, :])))
+                r_l = sorted([y for y in r_l if str(y) != 'nan'])
+                if len(r_l) > 1:
+                    r_l = r_l[1:]
+                retrieval_list[x] = ','.join(r_l)
+            return(retrieval_list)
+        else:
+            heavy_retrieval_list = dict(sub_metadata['heavy'])
+            light_retrieval_list = {}
+            sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
+            for x in sub_metadata2.index:
+                r_l = list(set(list(sub_metadata2.loc[x, :])))
+                r_l = sorted([y for y in r_l if str(y) != 'nan'])
+                light_retrieval_list[x] = [','.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
+            return(heavy_retrieval_list, light_retrieval_list)
+
+def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = None):
     # a quick way to retrieve the 'meta data' for each cell that transfer into obs lot in scanpy later
+    
     dat = load_data(self.data)
-    for x in ['cell_id', 'locus', 'clone_id']:
+    for x in ['cell_id', 'locus', 'c_call', 'umi_count']:
         if x not in dat.columns:
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
-    dat_h = dat[dat['locus'] == 'IGH']
-    dat_l = dat[~(dat['locus'] == 'IGH')]
-    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
-    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))
-    metadata = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
-    metadata.set_index('cell_id', inplace = True)
-    light_clone_tree = Tree()
-    for key, value in clone_l.items():
-        k, v = value
-        light_clone_tree[k][key] = v
-    light_clone_tree2 = Tree()
-    for g in light_clone_tree:
-        second_key = []
-        for k2 in light_clone_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_clone_tree[g].items():
-            light_clone_tree2[g][second_key_dict[key]] = value
-    metadata['light'] = pd.Series(light_clone_tree2)
-    tmp_dat = metadata['light'].apply(pd.Series)
-    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-    metadata = metadata.merge(tmp_dat, left_index = True, right_index = True)
-    metadata = metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
-    clones_list = {}
-    for x in metadata.index:
-        cl = list(set(list(metadata.loc[x, :])))
-        cl = sorted([y for y in cl if str(y) != 'nan'])
-        if len(cl) > 1:
-            cl = cl[1:]
-        clones_list[x] = ','.join(cl)
-    metadata['clone_id'] = pd.Series(clones_list)
-    metadata = metadata[['clone_id']]
-    if clones_sep is None:
-        scb = (0, '_')
-    else:
-        scb = (clones_sep[0], clones_sep[1])
-    group = []
-    for x in metadata['clone_id']:
-        if scb[1] not in x:
-            warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
-            group.append(x)
-        else:
-            group.append(x.split(scb[1])[scb[0]])
-    metadata['clone_group_id'] = group
-    # 4) Heavy chain V, J and Isotype (C)
-    iso_dict = dict(zip(dat_h['cell_id'], dat_h['c_call']))
-    if 'v_call_genotyped' in dat_h.columns:
-        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call_genotyped']))
-    else:
-        v_dict = dict(zip(dat_h['cell_id'], dat_h['v_call']))
-    j_dict = dict(zip(dat_h['cell_id'], dat_h['j_call']))
-    metadata['isotype'] = pd.Series(iso_dict)
-    metadata['heavychain_v'] = pd.Series(v_dict)
-    metadata['heavychain_j'] = pd.Series(j_dict)
     
-    # 5) light chain V, J and C
-    lc_dict = dict(zip(dat_l['cell_id'], dat_l['c_call']))
-    if 'v_call_genotyped' in dat_l.columns:
-        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call_genotyped']))
-    else:
-        vl_dict = dict(zip(dat_l['cell_id'], dat_l['v_call']))
-    jl_dict = dict(zip(dat_l['cell_id'], dat_l['j_call']))
-    metadata['lightchain'] = pd.Series(lc_dict)
-    metadata['lightchain_v'] = pd.Series(vl_dict)
-    metadata['lightchain_j'] = pd.Series(jl_dict)
+    if 'clone_id' in dat. columns:
+        self.metadata = setup_metadata(dat, clones_sep)
 
-    hv =[re.sub('[*][0-9][0-9]', '', str(v)) for v in metadata['heavychain_v']]
-    hv = [','.join(list(set(v.split(',')))) for v in hv]
-    hj =[re.sub('[*][0-9][0-9]', '', str(j)) for j in metadata['heavychain_j']]
-    hj = [','.join(list(set(j.split(',')))) for j in hj]
-    lv =[re.sub('[*][0-9][0-9]', '', str(v)) for v in metadata['lightchain_v']]
-    lv = [','.join(list(set(v.split(',')))) for v in lv]
-    lj =[re.sub('[*][0-9][0-9]', '', str(j)) for j in metadata['lightchain_j']]
-    lj = [','.join(list(set(j.split(',')))) for j in lj]
+        if 'sample_id' in dat.columns:
+            samp_id = retrieve_metadata(dat, 'sample_id', True)
 
-    metadata['heavychain_v_gene'] = hv
-    metadata['heavychain_j_gene'] = hj
-    metadata['lightchain_v_gene'] = lv
-    metadata['lightchain_j_gene'] = lj
-
-    metadata['heavy_multi'] = False
-    metadata['light_multi'] = False
-    for i in metadata.index:
-        hv_ = metadata.loc[i, 'heavychain_v_gene'].split(',')
-        hj_ = metadata.loc[i, 'heavychain_j_gene'].split(',')
-        lv_ = metadata.loc[i, 'lightchain_v_gene'].split(',')
-        lj_ = metadata.loc[i, 'lightchain_j_gene'].split(',')
-        if any(x > 1 for x in [len(hv_), len(hj_)]):
-            metadata.loc[i, 'heavy_multi'] = True
-        if any(x > 1 for x in [len(lv_), len(lj_)]):
-            metadata.loc[i, 'light_multi'] = True
-
-    # 2) whether or not chains are productive
-    productive_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['productive'])))
-    productive_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['productive'])))
-    metadata_pro = pd.DataFrame.from_dict(productive_h, orient = 'index', columns = ['cell_id', 'heavy_pro'])
-    metadata_pro.set_index('cell_id', inplace = True)
-    light_productive_tree = Tree()
-    for key, value in productive_l.items():
-        k, v = value
-        light_productive_tree[k][key] = v
-    light_productive_tree2 = Tree()
-    for g in light_productive_tree:
-        second_key = []
-        for k2 in light_productive_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_productive_tree[g].items():
-            light_productive_tree2[g][second_key_dict[key]] = value
-    metadata_pro['light_pro'] = pd.Series(light_productive_tree2)
-    tmp_dat = metadata_pro['light_pro'].apply(pd.Series)
-    tmp_dat.columns = ['light_pro_' + str(c) for c in tmp_dat.columns]
-    metadata_pro = metadata_pro.merge(tmp_dat, left_index = True, right_index = True)
-    metadata_pro = metadata_pro[['heavy_pro'] + [str(c) for c in tmp_dat.columns]]
-    productive_list = {}
-    for x in metadata_pro.index:
-        cl = list(set(list(metadata_pro.loc[x, :])))
-        cl = sorted([y for y in cl if str(y) != 'nan'])
-        if len(cl) > 1:
-            cl = cl[1:]
-        productive_list[x] = ','.join(cl)
-    metadata['productive'] = pd.Series(productive_list)
-
-    # return this in this order
-    metadata = metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'heavy_multi', 'light_multi', 'heavychain_v_gene', 'lightchain_v_gene', 'heavychain_j_gene', 'lightchain_j_gene', 'heavychain_v', 'lightchain_v', 'heavychain_j', 'lightchain_j']]
-    
-    # new function to retrieve non-standard columns
-    if retrieve is not None:
-        if retrieve in dat.columns:
-            # non-standard options to transfer to metadata
-            h_retrieve_dict = dict(zip(dat_h['cell_id'], dat_h[retrieve]))
-            l_retrieve_dict = dict(zip(dat_l['cell_id'], dat_l[retrieve]))
-            metadata[str(retrieve) + '_heavychain'] = pd.Series(h_retrieve_dict)
-            metadata[str(retrieve) + '_lightchain'] = pd.Series(l_retrieve_dict)
+        if 'v_call_genotyped' in dat.columns:
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', False)
         else:
-            raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
-
-    if self.metadata is None:
-        self.metadata = metadata
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', False)
+        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False)
+        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False)
+        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False)
+    
+        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}
+        isotype = {}
+        for k in heavy_c_call:
+            if heavy_c_call[k] == heavy_c_call[k]:
+                isotype[k] = conversion_dict[heavy_c_call[k].lower()]
+            else:
+                isotype[k] = heavy_c_call[k]
+        lightchain = {}
+        for k in light_c_call:
+            if light_c_call[k] == light_c_call[k]:
+                lightchain[k] = conversion_dict[light_c_call[k].lower()]
+            else:
+                lightchain[k] = light_c_call[k]
+        
+        for k in heavy_v_call:
+            heavy_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_v_call[k]))][0].split(','))))])
+        for k in heavy_j_call:
+            heavy_j_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_j_call[k]))][0].split(','))))])
+        for k in light_v_call:
+            light_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_v_call[k]))][0].split(','))))])
+        for k in light_j_call:
+            light_j_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_j_call[k]))][0].split(','))))])
+    
+        productive = retrieve_metadata(dat, 'productive', True)
+        if 'sample_id' in dat.columns:
+            self.metadata['sample_id'] = pd.Series(samp_id)
+        self.metadata['isotype'] = pd.Series(isotype)
+        self.metadata['lightchain'] = pd.Series(lightchain)
+        
+        self.metadata['productive'] = pd.Series(productive)
+        self.metadata['umi_counts_heavy'] = pd.Series(heavy_umi)
+        self.metadata['umi_counts_light'] = pd.Series(light_umi)
+        
+        self.metadata['c_call_heavy'] = pd.Series(heavy_c_call)
+        self.metadata['c_call_light'] = pd.Series(light_c_call)
+        self.metadata['v_call_heavy'] = pd.Series(heavy_v_call)
+        self.metadata['v_call_light'] = pd.Series(light_v_call)
+        self.metadata['j_call_heavy'] = pd.Series(heavy_j_call)
+        self.metadata['j_call_light'] = pd.Series(light_j_call)
+    
+        multi = {}
+        for i in self.metadata.index:        
+            try:
+                hv_ = self.metadata.loc[i, 'v_call_heavy'].split(',')
+            except:
+                hv_ = self.metadata.loc[i, 'v_call_heavy']
+            try:
+                hj_ = self.metadata.loc[i, 'j_call_heavy'].split(',')
+            except:
+                hj_ = self.metadata.loc[i, 'j_call_heavy']
+            try:
+                lv_ = self.metadata.loc[i, 'v_call_light'].split(',')
+            except:
+                lv_ = self.metadata.loc[i, 'v_call_light']
+            try:            
+                lj_ = self.metadata.loc[i, 'v_call_light'].split(',')
+            except:
+                lv_ = self.metadata.loc[i, 'v_call_light']
+    
+            multi_ = []
+            if len(hv_) > 1:
+                multi_.append(['Multi_heavy_v'])
+            if len(hj_) > 1:
+                multi_.append(['Multi_heavy_j'])
+            if len(lv_) > 1:
+                multi_.append(['Multi_light_v'])
+            if len(lj_) > 1:
+                multi_.append(['Multi_light_j'])
+            if len(multi_) < 1:
+                multi_.append(['Single'])
+    
+            multi[i] = ','.join(list(flatten(multi_)))
+        self.metadata['multi_status'] = pd.Series(multi)
+        
+        # return this in this order
+        if 'sample_id' in dat.columns:
+            self.metadata = self.metadata[['sample_id', 'clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'umi_counts_heavy', 'umi_counts_light', 'multi_status', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+        else:
+            self.metadata = self.metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'umi_counts_heavy', 'umi_counts_light', 'multi_status', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+        # new function to retrieve non-standard columns
+        if retrieve is not None:
+            if retrieve in dat.columns:
+                if collapse:
+                    retrieve_dict = retrieve_metadata(dat, retrieve, True)
+                    self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
+                else:
+                    h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False)
+                    self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
+                    self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
+            else:
+                raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
     else:
-        for x in metadata.columns:
-            self.metadata[x] = pd.Series(metadata[x])
+        pass
 
 class Dandelion:
     def __init__(self, data=None, metadata=None, distance=None, edges=None, layout=None, graph=None):
@@ -317,8 +383,37 @@ class Dandelion:
         self.edges = edges
         self.layout = layout
         self.graph = graph
+        self.threshold = None
+        
+        if os.path.isfile(str(self.data)):
+            self.data = load_data(self.data)
+        
         if self.data is not None:
             initialize_metadata(self)
+            self.n_contigs = self.data.shape[0]
+            try:
+                self.n_obs = self.metadata.shape[0]
+            except:
+                self.n_obs = 0
+    
+    def _gen_repr(self, n_obs, n_contigs) -> str:
+        descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
+        for attr in ["data", "metadata", "distance", "edges"]:
+            try:
+                keys = getattr(self, attr).keys()
+            except:
+                keys = []
+            if len(keys) > 0:
+                descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
+            else:
+                descr += f"\n    {attr}: {str(None)}"
+        descr += f"\n    layout: {str(self.layout).strip('<>')}"
+        descr += f"\n    graph: {str(type(self.graph)).strip('<>')}"
+        descr += f"\n    threshold: {self.threshold}"
+        return descr
+
+    def __repr__(self) -> str:
+        return self._gen_repr(self.n_obs, self.n_contigs)
 
     def copy(self):
         return copy.deepcopy(self)

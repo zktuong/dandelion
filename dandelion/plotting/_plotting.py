@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-02 23:41:17
+# @Last Modified time: 2020-06-08 00:37:01
 
 import igraph
 import seaborn as sns
@@ -12,28 +12,27 @@ from ..utilities._misc import *
 from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
+import random
 
-def igraph_network(self, colorby = None, layout = None, col_option = 'husl', visual_style = None, *args):
+def igraph_network(self, colorby = None, layout = None, visual_style = None, *args):
     """
     Using igraph to plot the network. There are some default plotting options. according to the metadata that returned by generate_network.
     
     Parameters
     ----------
-    self
-        dandelion_network class object
-    colorby
-        column in metadata to colour
-    layout
-        style of layout
-    col_option
-        color scheme
-    visual_style
-        additional igraph visual options
-    args
-        passed to [igraph.plot()](https://igraph.org/python/doc/tutorial/tutorial.html#layouts-and-plotting)
+    self : Dandelion
+        `Dandelion` object.
+    colorby : str, optional
+        column name in metadata to color.
+    layout : str, optional
+        style of layout.
+    visual_style : dict, optional
+        additional igraph visual options in dictionary.
+    *args
+        passed to `igraph.plot <https://igraph.org/python/doc/tutorial/tutorial.html#layouts-and-plotting>`__.
     Returns
     -------
-        new fasta file with new headers containing prefix
+        igraph plot
     """
 
     g = self.graph
@@ -42,6 +41,7 @@ def igraph_network(self, colorby = None, layout = None, col_option = 'husl', vis
     else:
         lyt = g.layout(layout, *args)
     
+    # default visual style
     vs = {}
     vs['vertex_size'] = 2
     vs['vertex_frame_width'] = 0.1
@@ -53,18 +53,41 @@ def igraph_network(self, colorby = None, layout = None, col_option = 'husl', vis
     vs['margin'] = 20
     vs['inline'] = True
     
+    # a list of 900+colours
+    cols = list(sns.xkcd_rgb.keys())
+
+    if len(list(set(g.vs['clone_id']))) > len(cols):
+        cols = cols + list(sns.colour_palette('husl', len(list(set(g.vs['clone_id'])))))
+
     # some default colours
-    clone_col_dict = dict(zip(list(set(g.vs['clone_id'])), sns.color_palette(col_option, len(list(set(g.vs['clone_id']))))))
-    clone_group_col_dict = dict(zip(list(set(g.vs['clone_group_id'])), sns.color_palette(col_option, len(list(set(g.vs['clone_group_id']))))))        
-    isotype_col_dict = {'IGHA1':'#4e79a7', 'IGHA2':'#f28e2b', 'IGHD':'#e15759', 'IGHE':'#76b7b2', 'IGHG1':'#59a14f', 'IGHG2':'#edc948', 'IGHG3':'#b07aa1', 'IGHG4':'#ff9da7', 'IGHM':'#9c755f', np.nan:'#e7e7e7'}
-    lightchain_col_dict = {'IGKC':'#1F77B4', 'IGLC1':'#FF7F0E', 'IGLC2':'#FF7F0E', 'IGLC3':'#FF7F0E', 'IGLC4':'#FF7F0E', 'IGLC5':'#FF7F0E', 'IGLC6':'#FF7F0E','IGLC7':'#FF7F0E', np.nan:'#e7e7e7'}
-    productive_col_dict = {'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'}
-    heavychain_v_col_dict = dict(zip(list(set(g.vs['heavychain_v'])), sns.color_palette(col_option, len(list(set(g.vs['heavychain_v']))))))
-    lightchain_v_col_dict = dict(zip(list(set(g.vs['lightchain_v'])), sns.color_palette(col_option, len(list(set(g.vs['lightchain_v']))))))
-    heavychain_j_col_dict = dict(zip(list(set(g.vs['heavychain_j'])), sns.color_palette(col_option, len(list(set(g.vs['heavychain_j']))))))
-    lightchain_j_col_dict = dict(zip(list(set(g.vs['lightchain_j'])), sns.color_palette(col_option, len(list(set(g.vs['lightchain_j']))))))
-    lightchain_v_col_dict[np.nan] = '#e7e7e7'
-    lightchain_j_col_dict[np.nan] = '#e7e7e7'
+    clone_col_dict = dict(zip(list(set(g.vs['clone_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_id'])))))))
+    clone_group_col_dict = dict(zip(list(set(g.vs['clone_group_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_group_id'])))))))
+    productive_col_dict = {'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'}        
+    isotype_col_dict = {'IgA':'#4e79a7', 'IgD':'#e15759', 'IgE':'#76b7b2', 'IgG':'#59a14f', 'IgM':'#9c755f', np.nan:'#e7e7e7'}
+    heavy_c_call_col_dict = {'igha1':'#4e79a7', 'igha2':'#f28e2b', 'ighd':'#e15759', 'ighe':'#76b7b2', 'ighg1':'#59a14f', 'ighg2':'#edc948', 'ighg3':'#b07aa1', 'ighg4':'#ff9da7', 'ighm':'#9c755f', np.nan:'#e7e7e7'}
+    
+    multi_status_col_dict = dict(zip(list(set(g.vs['multi_status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['multi_status'])))))))
+    multi_status_col_dict.update({'Single':'#1f77b4'})
+    # because there's a chance of dual light chains occuring, i will be a bit careful here
+    light_c_call_custom_colours = {'igkc':'#1f77b4', 'iglc1':'#ff7f0e', 'iglc2':'#ff7f0e', 'iglc3':'#ff7f0e', 'iglc4':'#ff7f0e', 'iglc5':'#ff7f0e', 'iglc6':'#ff7f0e','iglc7':'#ff7f0e', np.nan:'#e7e7e7'}    
+    light_c_call_col_dict = dict(zip(list(set(g.vs['c_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['c_call_light'])))))))
+    light_c_call_col_dict.update(light_c_call_custom_colours)
+    light_c_call_col_dict = dict((k.lower(), v) if type(k) is str else (k, v) for k,v in light_c_call_col_dict.items())
+
+    lightchain_custom_colours = {'IgK':'#1f77b4', 'IgL':'#ff7f0e', np.nan:'#e7e7e7'}
+    lightchain_col_dict = dict(zip(list(set(g.vs['lightchain'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['lightchain'])))))))
+    lightchain_col_dict.update(lightchain_custom_colours)
+    
+    v_call_heavy_col_dict = dict(zip(list(set(g.vs['v_call_heavy'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['v_call_heavy'])))))))
+    j_call_heavy_col_dict = dict(zip(list(set(g.vs['j_call_heavy'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['j_call_heavy'])))))))
+    v_call_light_col_dict = dict(zip(list(set(g.vs['v_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['v_call_light'])))))))    
+    j_call_light_col_dict = dict(zip(list(set(g.vs['j_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['j_call_light'])))))))
+    # because some lightchains might be missing
+    v_call_light_col_dict.update({np.nan:'#e7e7e7'})
+    j_call_light_col_dict.update({np.nan:'#e7e7e7'})
+    clone_col_dict.update({np.nan:'#e7e7e7'})
+    clone_group_col_dict.update({np.nan:'#e7e7e7'})
+    
     # set up visual style                
     if colorby is 'clone_id':
         vs['vertex_color'] = [clone_col_dict[i] for i in g.vs['clone_id']]
@@ -72,27 +95,36 @@ def igraph_network(self, colorby = None, layout = None, col_option = 'husl', vis
     elif colorby is 'clone_group_id':
         vs['vertex_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]
         vs['vertex_frame_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]    
+    elif colorby is 'multi_status':
+        vs['vertex_color'] = [multi_status_col_dict[i] for i in g.vs['multi_status']]
+        vs['vertex_frame_color'] = [multi_status_col_dict[i] for i in g.vs['multi_status']]
     elif colorby is 'isotype':
         vs['vertex_color'] = [isotype_col_dict[i] for i in g.vs['isotype']]
         vs['vertex_frame_color'] = [isotype_col_dict[i] for i in g.vs['isotype']]
     elif colorby is 'lightchain':
         vs['vertex_color'] = [lightchain_col_dict[i] for i in g.vs['lightchain']]
-        vs['vertex_frame_color'] = [lightchain_col_dict[i] for i in g.vs['lightchain']]
+        vs['vertex_frame_color'] = [lightchain_col_dict[i] for i in g.vs['lightchain']]    
+    elif colorby is 'c_call_heavy':
+        vs['vertex_color'] = [heavy_c_call_col_dict[i.lower()] if type(i) is str else heavy_c_call_col_dict[i] for i in g.vs['c_call_heavy']]
+        vs['vertex_frame_color'] = [heavy_c_call_col_dict[i.lower()] if type(i) is str else heavy_c_call_col_dict[i] for i in g.vs['c_call_heavy']]
+    elif colorby is 'c_call_light':
+        vs['vertex_color'] = [light_c_call_col_dict[i.lower()] if type(i) is str else light_c_call_col_dict[i] for i in g.vs['c_call_light']]
+        vs['vertex_frame_color'] = [light_c_call_col_dict[i.lower()] if type(i) is str else light_c_call_col_dict[i] for i in g.vs['c_call_light']]
     elif colorby is 'productive':
         vs['vertex_color'] = [productive_col_dict[i] for i in g.vs['productive']]
         vs['vertex_frame_color'] = [productive_col_dict[i] for i in g.vs['productive']]
-    elif colorby is 'heavychain_v':
-        vs['vertex_color'] = [heavychain_v_col_dict[i] for i in g.vs['heavychain_v']]
-        vs['vertex_frame_color'] = [heavychain_v_col_dict[i] for i in g.vs['heavychain_v']]
-    elif colorby is 'heavychain_j':
-        vs['vertex_color'] = [heavychain_j_col_dict[i] for i in g.vs['heavychain_j']]
-        vs['vertex_frame_color'] = [heavychain_j_col_dict[i] for i in g.vs['heavychain_j']]
-    elif colorby is 'lightchain_v':
-        vs['vertex_color'] = [lightchain_v_col_dict[i] for i in g.vs['lightchain_v']]
-        vs['vertex_frame_color'] = [lightchain_v_col_dict[i] for i in g.vs['lightchain_v']]
-    elif colorby is 'lightchain_j':
-        vs['vertex_color'] = [lightchain_j_col_dict[i] for i in g.vs['lightchain_j']]
-        vs['vertex_frame_color'] = [lightchain_j_col_dict[i] for i in g.vs['lightchain_j']]
+    elif colorby is 'v_call_heavy':
+        vs['vertex_color'] = [v_call_heavy_col_dict[i] for i in g.vs['v_call_heavy']]
+        vs['vertex_frame_color'] = [v_call_heavy_col_dict[i] for i in g.vs['v_call_heavy']]
+    elif colorby is 'j_call_heavy':
+        vs['vertex_color'] = [j_call_heavy_col_dict[i] for i in g.vs['j_call_heavy']]
+        vs['vertex_frame_color'] = [j_call_heavy_col_dict[i] for i in g.vs['j_call_heavy']]
+    elif colorby is 'v_call_light':
+        vs['vertex_color'] = [v_call_light_col_dict[i] for i in g.vs['v_call_light']]
+        vs['vertex_frame_color'] = [v_call_light_col_dict[i] for i in g.vs['v_call_light']]
+    elif colorby is 'j_call_light':
+        vs['vertex_color'] = [j_call_light_col_dict[i] for i in g.vs['j_call_light']]
+        vs['vertex_frame_color'] = [j_call_light_col_dict[i] for i in g.vs['j_call_light']]
     elif colorby is None:
         vs['vertex_color'] = '#D7D7D7'
         vs['vertex_frame_color'] = '#000000'
@@ -104,7 +136,7 @@ def igraph_network(self, colorby = None, layout = None, col_option = 'husl', vis
             raise TypeError('Error of visual style needs to be a dictionary')
     
     p = igraph.plot(g, **vs)
-
+    
     return(p)
 
 def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
@@ -112,10 +144,14 @@ def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
     using scanpy's plotting module to plot the network. Only thing i'm changing is the dfault options: basis = 'bcr' and edges = True
     Parameters
     ----------
-    adata
-        AnnData object
-    basis
-        key for embedding. Default is bcr
+    adata : AnnData
+        AnnData object.
+    basis : str
+        key for embedding. Default is 'bcr'.
+    edges : bool
+        whether or not to plot edges. Default is True.
+    **kwargs
+        passed `sc.pl.embedding`.
     """
     embedding(adata, basis = basis, edges = edges, **kwargs)
 
@@ -124,25 +160,27 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     A barplot function to plot usage of V/J genes in the data.
     Parameters
     ----------
-    self
-        either a Dandelion or AnnData object
-    variable
-        variable to plot the bar plot
-    palette
-        palette for pltting
-    figsize
-        figure size
-    normalize
-        if True, will return as proportion out of 1, otherwise False will return counts
-    title
-        title of plot
-    xtick_rotation
-        rotation of x tick labels        
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    variable : str
+        column name in metadata for plotting in bar plot.
+    palette : str
+        palette for plotting. Default is 'Set1'.
+    figsize : tuple[float, float]
+        figure size. Default is (12, 4).
+    normalize : bool
+        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
+    sort_descending : bool
+        whether or not to sort the order of the plot. Default is True.
+    title : str, optional
+        title of plot.
+    xtick_rotation : int, optional
+        rotation of x tick labels.      
     **kwargs
-        other kwargs passed to sns.barplot
+        passed to `sns.barplot`.
     Return
     ----------
-        a seaborn barplot
+        a seaborn barplot.
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
@@ -181,36 +219,33 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
     ----------
-    self
-        either a Dandelion or AnnData object
-    variable
-        variable in metadata to plot the bar plot
-    groupby
-        varibale to groupby for plotting
-    palette
-        palette for pltting    
-    figsize
-        figure size    
-    normalize
-        if True, will return as proportion out of 1, otherwise False will return counts    
-    title
-        title of plot
-    sort_descending
-        whether or not to sort the order of the plot
-    xtick_rotation
-        rotation of x tick labels        
-    hide_lgend
-        whether or not to hide the legend
-    legend_options
-        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
-    labels
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    variable : str
+        column name in metadata for plotting in bar plot.
+    groupby : str
+        column name in metadata to split by during plotting.
+    figsize : tuple[float, float]
+        figure size. Default is (12, 4).
+    normalize : bool
+        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
+    sort_descending : bool
+        whether or not to sort the order of the plot. Default is True.
+    title : str, optional
+        title of plot.
+    xtick_rotation : int, optional
+        rotation of x tick labels.      
+    hide_legend : bool
+        whether or not to hide the legend.
+    legend_options : tuple[str, tuple[float, float], int]
+        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
+    labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
     **kwargs
-        other kwargs passed to matplotlib.plt
-    
+        other kwargs passed to `matplotlib.plt`.
     Return
     ----------
-        stacked bar plot
+        stacked bar plot.
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
@@ -303,35 +338,32 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
     ----------
-    self
-        either a Dandelion or AnnData object
-    variable
-        variable in metadata to plot the bar plot
-    groupby
-        varibale to groupby for plotting
-    locus
-        either IGH or IGL
-    figsize
-        figure size
-    width
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    variable : str
+        column name in metadata for plotting in bar plot.
+    groupby : str
+        column name in metadata to split by during plotting.
+    locus : str
+        either IGH or IGL.
+    figsize : tuple[float, float]
+        figure size. Default is (6, 4).
+    width : float, optional
         width of bars.
-    normalize
-        if True, will return as proportion out of 1, otherwise False will return counts
-    title
-        title of plot
-    xtick_rotation
-        rotation of x tick labels        
-    legend_options
-        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int)
-    hide_legend
-        whether or not to hide the legend
-    labels
+    title : str, optional
+        title of plot.
+    xtick_rotation : int, optional
+        rotation of x tick labels.      
+    hide_legend : bool
+        whether or not to hide the legend.
+    legend_options : tuple[str, tuple[float, float], int]
+        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
+    labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    clones_sep
-        option to specify how to split up clone names.
+    clones_sep : tuple[int, str]
+        option to specify how to split up clone names. Default is (0, '_') i.e. it will split according to '_' and select the first string as the 'clone'.
     **kwargs
         other kwargs passed to matplotlib.plt
-    
     Return
     ----------
         sectratype plot

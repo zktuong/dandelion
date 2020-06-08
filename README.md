@@ -5,8 +5,16 @@
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
 
+Overview
+
+![dandelion_overview](notebooks/img/dandelion_overview.png)
+
+Illustration of the `Dandelion` class slots
+
+<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="494.5" height="435">
+
 ## Example
-Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
+Please see notebooks folder for a step-by-step [example](notebooks/).
 
 The un-processed raw files for parts of the notebook can be accessed via [here](example_data/).
 
@@ -44,6 +52,9 @@ env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
+
+# for the development branch, run this:
+pip install git+https://github.com/zktuong/dandelion.git@devel
 ````
 
 In case you need to link up kernel with jupyter notebook
@@ -98,9 +109,9 @@ plotnine==0.6.0 (conda-forge)
 changeo==1.0.0
 presto==0.6.0
 anndata==0.7.1
-scanpy==1.4.6
+scanpy>=1.4.6
 scrublet==0.2.1
-rpy2==3.3.3
+rpy2>=3.3.2
 ```
 R packages
 ```R
