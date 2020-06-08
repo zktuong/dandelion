@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 12:09:34
+# @Last Modified time: 2020-06-08 20:56:39
 
 import os
 import sys
@@ -32,15 +32,11 @@ except ImportError:
     pass
 from rpy2.robjects.packages import importr, data
 from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri
+from rpy2.robjects import pandas2ri, StrVector
 import warnings
 from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
-from rpy2.robjects.packages import importr, data
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri
-import rpy2.robjects
 from plotnine import ggplot, geom_point, options, annotate, aes, xlab, ylab, facet_grid, theme_bw, geom_histogram, geom_vline, facet_grid, theme
 
 def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None):
@@ -1012,7 +1008,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
 
     dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
     # Find threshold using density method
-    c = rpy2.robjects.StrVector(['dist_nearest'])
+    c = StrVector(['dist_nearest'])
 
     if threshold_method_ is 'density':
         if edge is None:
