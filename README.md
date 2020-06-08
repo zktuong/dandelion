@@ -9,7 +9,7 @@ Overview:
 
 ![dandelion_overview](notebooks/img/dandelion_overview.png)
 
-<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="100" height="100">
+<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="600" height="600">
 
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
