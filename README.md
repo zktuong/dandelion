@@ -5,6 +5,9 @@
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
 
+Overview:
+![dandelion_logo](notebooks/img/dandelion_aim.png)
+
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
 
