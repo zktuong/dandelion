@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 20:56:39
+# @Last Modified time: 2020-06-08 21:00:28
 
 import os
 import sys
@@ -30,9 +30,12 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
-from rpy2.robjects.packages import importr, data
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, StrVector
+try:
+    from rpy2.robjects.packages import importr, data
+    from rpy2.rinterface import NULL
+    from rpy2.robjects import pandas2ri, StrVector
+except:
+    pass
 import warnings
 from subprocess import run
 import multiprocessing
