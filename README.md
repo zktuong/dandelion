@@ -52,6 +52,9 @@ env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
+
+# for the development branch, run this:
+pip install git+https://github.com/zktuong/dandelion.git@devel
 ````
 
 In case you need to link up kernel with jupyter notebook
