@@ -14,7 +14,7 @@ Illustration of the `Dandelion` class slots
 <img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="494.5" height="435">
 
 ## Example
-Please see notebooks folder for a step-by-step [example](notebooks/). I have included an example on how to use this through R as well.
+Please see notebooks folder for a step-by-step [example](notebooks/).
 
 The un-processed raw files for parts of the notebook can be accessed via [here](example_data/).
 
@@ -109,7 +109,7 @@ plotnine==0.6.0 (conda-forge)
 changeo==1.0.0
 presto==0.6.0
 anndata==0.7.1
-scanpy==1.4.6
+scanpy>=1.4.6
 scrublet==0.2.1
 rpy2>=3.3.2
 ```
