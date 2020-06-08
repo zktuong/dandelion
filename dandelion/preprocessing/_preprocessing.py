@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 10:48:58
+# @Last Modified time: 2020-06-08 11:11:03
 
 import sys
 import os
@@ -493,7 +493,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
     Parameters
     ----------
     data : list
-        list or sequence of folders/data file locations. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
+        list or sequence of data folders/file locations. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
     out_folder : str
         name of folder for concatenated data file and genotyped files.
     dirs : str, optional
@@ -544,8 +544,6 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
 
     if not gml.endswith('/'):
         gml = gml +'/'
-    
-    nonighv_germline = [gml + 'imgt_'+org+'_IGLV.fasta', gml + 'imgt_'+org+'_IGLJ.fasta', gml + 'imgt_'+org+'_IGKV.fasta', gml + 'imgt_'+org+'_IGKJ.fasta', gml + 'imgt_'+org+'_IGHD.fasta', gml + 'imgt_'+org+'_IGHJ.fasta']
 
     def _return_IGKV_IGLV(results, locus = 'IGH'):
         res = results.copy()
@@ -628,6 +626,9 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         dat_h.to_csv(outDir+'heavy_'+out_filename, index = False, sep = '\t', na_rep='')
         tigger_genotype(outDir+'heavy_'+out_filename, germline = germline, fileformat = fileformat, verbose = verbose)
 
+    # initialise the germline references
+    germline_ref = readGermlines([gml])
+
     # and now to add it back to the original folders
     sleep(0.5)
     if out_filename is None:
@@ -636,8 +637,10 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            new_germline = [outDir+'filtered_contig_heavy'+germline_dict[fileformat]] + nonighv_germline
-            res = create_germlines(dat_, germline = new_germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+            personalized_ref_dict = readGermlines([outDir+'filtered_contig_heavy'+germline_dict[fileformat]])
+            # update with the personalized germline database
+            germline_ref.update(personalized_ref_dict)
+            res = create_germlines(dat_, germline = germline_ref, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             res.data.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -646,8 +649,10 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            new_germline = [outDir+'all_contig_heavy'+germline_dict[fileformat]] + nonighv_germline
-            res = create_germlines(dat_, germline = new_germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+            personalized_ref_dict = readGermlines([outDir+'all_contig_heavy'+germline_dict[fileformat]])
+            # update with the personalized germline database
+            germline_ref.update(personalized_ref_dict)
+            res = create_germlines(dat_, germline = germline_ref, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             res.data.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -656,8 +661,10 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
         dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
         dat_ = _return_IGKV_IGLV(dat_)
-        new_germline = [outDir+'heavy_'+out_filename.replace('.tsv', '.fasta')] + nonighv_germline
-        res = create_germlines(dat_, germline = new_germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+        personalized_ref_dict = readGermlines([outDir+'heavy_'+out_filename.replace('.tsv', '.fasta')])
+        # update with the personalized germline database
+        germline_ref.update(personalized_ref_dict)
+        res = create_germlines(dat_, germline = germline_ref, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
         print('   Saving corrected genotyped object')
         sleep(0.5)
         res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
@@ -869,11 +876,14 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         if 'regions' in germ_types:
             germline_fields['regions'] = 'germline_regions'
 
-        if type(references) is not list:
-            ref = [references]
+        if type(references) is dict:
+            reference_dict = references
         else:
-            ref = references
-        reference_dict = readGermlines(ref)
+            if type(references) is not list:
+                ref = [references]
+            else:
+                ref = references
+            reference_dict = readGermlines(ref)
         # Check for IMGT-gaps in germlines
         if all('...' not in x for x in reference_dict.values()):
             warnings.warn(UserWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
@@ -1000,11 +1010,14 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         if 'regions' in germ_types:
             germline_fields['regions'] = 'germline_regions'
 
-        if type(references) is not list:
-            ref = [references]
+        if type(references) is dict:
+            reference_dict = references
         else:
-            ref = ref
-        reference_dict = readGermlines(ref)
+            if type(references) is not list:
+                ref = [references]
+            else:
+                ref = references
+            reference_dict = readGermlines(ref)
         # Check for IMGT-gaps in germlines
         if all('...' not in x for x in reference_dict.values()):
             warnings.warn(UserWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
@@ -1064,13 +1077,20 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)
         
         return(out)
-
-    if self.__class__ == Dandelion:
-        _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
-    elif self.__class__ == pd.DataFrame:
-        return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+    if type(germline) is dict:
+        if self.__class__ == Dandelion:
+            _create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+        elif self.__class__ == pd.DataFrame:
+            return(_create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+        else:
+            return(_create_germlines_file(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
     else:
-        return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+        if self.__class__ == Dandelion:
+            _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+        elif self.__class__ == pd.DataFrame:
+            return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+        else:
+            return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
 def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
     """
