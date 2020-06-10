@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 12:03:11
+# @Last Modified time: 2020-06-10 21:59:47
 
 import sys
 import os
@@ -212,7 +212,7 @@ def setup_metadata(data, sep):
         metadata_['clone_group_id'] = pd.Series(groupseries)
         return(metadata_)
 
-def retrieve_metadata(data, retrieve_id, combined):
+def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
         dat_h = data[data['locus'] == 'IGH']
         dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
         
@@ -240,26 +240,32 @@ def retrieve_metadata(data, retrieve_id, combined):
         tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
         sub_metadata = sub_metadata.merge(tmp_dat, left_index = True, right_index = True)
         sub_metadata = sub_metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
-        if combined:
+        if split_heavy_light:
             retrieval_list = {}
             for x in sub_metadata.index:
-                r_l = list(set(list(sub_metadata.loc[x, :])))
+                if collapse:
+                    r_l = list(set(list(sub_metadata.loc[x, :])))
+                else:
+                    r_l = list(sub_metadata.loc[x, :])
                 r_l = sorted([y for y in r_l if str(y) != 'nan'])
                 if len(r_l) > 1:
                     r_l = r_l[1:]
-                retrieval_list[x] = ','.join(r_l)
+                retrieval_list[x] = '|'.join(r_l)
             return(retrieval_list)
         else:
             heavy_retrieval_list = dict(sub_metadata['heavy'])
             light_retrieval_list = {}
             sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
-            for x in sub_metadata2.index:
-                r_l = list(set(list(sub_metadata2.loc[x, :])))
+            for x in sub_metadata2.index:                
+                if collapse:
+                    r_l = list(set(list(sub_metadata2.loc[x, :])))
+                else:
+                    r_l = list(sub_metadata2.loc[x, :])
                 r_l = sorted([y for y in r_l if str(y) != 'nan'])
-                light_retrieval_list[x] = [','.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
+                light_retrieval_list[x] = ['|'.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
             return(heavy_retrieval_list, light_retrieval_list)
 
-def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = None):
+def initialize_metadata(self, retrieve = None, split_heavy_light = False, collapse = False, clones_sep = None):
     # a quick way to retrieve the 'meta data' for each cell that transfer into obs lot in scanpy later
     
     dat = load_data(self.data)
@@ -271,17 +277,17 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         self.metadata = setup_metadata(dat, clones_sep)
 
         if 'sample_id' in dat.columns:
-            samp_id = retrieve_metadata(dat, 'sample_id', True)
+            samp_id = retrieve_metadata(dat, 'sample_id', True, True)
 
         if 'v_call_genotyped' in dat.columns:
-            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', False)
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', False, False)
         else:
-            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', False)
-        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False)
-        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False)
-        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False)
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', False, False)
+        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False, False)
+        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False, False)
+        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False, False)
         
-        heavy_status, light_status = retrieve_metadata(dat, 'locus', False)
+        heavy_status, light_status = retrieve_metadata(dat, 'locus', False, False)
         status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
         for i in status.index:
             try:
@@ -289,7 +295,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
             except:
                 status.loc[i, 'status'] = status.loc[i,'heavy'] + '_only'
 
-        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}
+        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}        
         isotype = {}
         for k in heavy_c_call:
             if heavy_c_call[k] == heavy_c_call[k]:
@@ -299,7 +305,10 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         lightchain = {}
         for k in light_c_call:
             if light_c_call[k] == light_c_call[k]:
-                lightchain[k] = conversion_dict[light_c_call[k].lower()]
+                if '|' in light_c_call[k]:
+                    lightchain[k] = '|'.join([conversion_dict[x] for x in light_c_call[k].lower().split('|')])
+                else:
+                    lightchain[k] = conversion_dict[light_c_call[k].lower()]
             else:
                 lightchain[k] = light_c_call[k]
         
@@ -312,7 +321,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         for k in light_j_call:
             light_j_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_j_call[k]))][0].split(','))))])
     
-        productive = retrieve_metadata(dat, 'productive', True)
+        productive = retrieve_metadata(dat, 'productive', True, False)
         if 'sample_id' in dat.columns:
             self.metadata['sample_id'] = pd.Series(samp_id)
         self.metadata['isotype'] = pd.Series(isotype)
@@ -371,11 +380,17 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         # new function to retrieve non-standard columns
         if retrieve is not None:
             if retrieve in dat.columns:
-                if collapse:
-                    retrieve_dict = retrieve_metadata(dat, retrieve, True)
+                if split_heavy_light:
+                    if collapse:
+                        retrieve_dict = retrieve_metadata(dat, retrieve, True, True)
+                    else:
+                        retrieve_dict = retrieve_metadata(dat, retrieve, True, False)
                     self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
                 else:
-                    h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False)
+                    if collapse:
+                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
+                    else:
+                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False, False)
                     self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
                     self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
             else:
