@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 12:00:04
+# @Last Modified time: 2020-06-10 12:02:37
 
 import sys
 import os
@@ -282,7 +282,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False)
         
         heavy_status, light_status = retrieve_metadata(dat, 'locus', False)
-        status = pd.DataFrame([heavy_locus, light_locus], index = ['heavy', 'light']).T
+        status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
         for i in test.index:
             try:
                 status.loc[i, 'status'] = status.loc[i,'heavy']+' + '+status.loc[i,'light']
