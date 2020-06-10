@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 22:46:01
+# @Last Modified time: 2020-06-10 23:35:41
 
 import sys
 import os
@@ -1171,7 +1171,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
-    Cells with multiple IGH contigs are filtered unless rescue_igh is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
+    If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
     If there's multiple contigs that survive the 'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
     Lastly, contigs with no corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
@@ -1205,12 +1205,12 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     """
     dat = load_data(data)
     h = Tree()
-    h_umi = Tree()
     l = Tree()
-    poor_qual = []
-    h_doublet = []
-    l_doublet = []
-    drop_contig = []
+    h_umi = Tree()
+    l_umi = Tree()
+    h_seq = Tree()
+    l_seq = Tree()
+    poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
     
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
@@ -1233,28 +1233,68 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         v_dict = dict(zip(dat['sequence_id'], dat['v_call']))
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
+    # rather than leaving a nan cell, i will create a 0 column for now
+    dat['duplicate_count'] = 0
     for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
-        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])        
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+        hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
 
+        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+        lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+        
         h[b] = hc_id
         h_umi[b] = hc_umi
+        h_seq[b] = hc_seq
+
         l[b] = lc_id
+        l_umi[b] = lc_umi
+        l_seq[b] = lc_seq
+        
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
-            if rescue_igh:
-                highest_umi = max(h_umi[b])
-                lowest_umi = min(h_umi[b])
-                highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
-                if len(highest_umi_idx) > 1:
+            if len(list(set(h_seq[b]))) == 1:          
+                highest_umi_h = max(h_umi[b])
+                highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+                drop_contig.append(h[b][~highest_umi_h_idx[0]])                    
+                keep_hc_contig = h[b][highest_umi_h_idx[0]]
+                dat.loc[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][~highest_umi_h_idx[0]]))
+                    
+                hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+                hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+
+                h[b] = hc_id
+                h_umi[b] = hc_umi
+                h_conscount[b] = hc_conscount
+                h_seq[b] = hc_seq
+            if len(h[b]) > 1:
+                if rescue_igh:
+                    highest_umi = max(h_umi[b])
+                    lowest_umi = min(h_umi[b])
+                    highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
+                    if len(highest_umi_idx) > 1:
+                        h_doublet.append(b)
+                    if highest_umi/lowest_umi < umi_foldchange_cutoff:
+                        h_doublet.append(b)
+                    if len(highest_umi_idx) == 1 and highest_umi/lowest_umi >= umi_foldchange_cutoff:
+                        drop_contig.append(h[b][~highest_umi_idx[0]])
+                else:
                     h_doublet.append(b)
-                if highest_umi/lowest_umi < umi_foldchange_cutoff:
-                    h_doublet.append(b)
-                if len(highest_umi_idx) == 1 and highest_umi/lowest_umi >= umi_foldchange_cutoff:
-                    drop_contig.append(h[b][~highest_umi_idx[0]])
-            else:
-                h_doublet.append(b)
+
+        if len(l[b]) > 1:
+            if len(list(set(l_seq[b]))) == 1:
+                highest_umi_l = max(l_umi[b])
+                highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+                drop_contig.append(l[b][~highest_umi_l_idx[0]])
+                keep_lc_contig = l[b][highest_umi_l_idx[0]]
+                dat.loc[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][~highest_umi_l_idx[0]]))
+                lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]                
+                l[b] = lc_id
+                l_umi[b] = lc_umi
+                l_seq[b] = lc_seq
+        
         # marking doublets defined by light chains
         if (len(h[b]) == 1) & (len(l[b]) > 1):
             l_doublet.append(b)
@@ -1321,9 +1361,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                     filter_ids.append(c)
 
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
-
-        if rescue_igh:
-            _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
+        _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
 
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)
