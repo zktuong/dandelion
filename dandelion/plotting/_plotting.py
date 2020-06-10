@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 12:07:46
+# @Last Modified time: 2020-06-10 12:49:17
 
 import igraph
 import seaborn as sns
@@ -67,7 +67,7 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     heavy_c_call_col_dict = {'igha1':'#4e79a7', 'igha2':'#f28e2b', 'ighd':'#e15759', 'ighe':'#76b7b2', 'ighg1':'#59a14f', 'ighg2':'#edc948', 'ighg3':'#b07aa1', 'ighg4':'#ff9da7', 'ighm':'#9c755f', np.nan:'#e7e7e7'}
     
     status_col_dict = dict(zip(list(set(g.vs['status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['status'])))))))
-    status_col_dict.update({'IGH_only':'#7f7f7f'})
+    status_col_dict.update({'IGH_only':'#7f7f7f','IGH + IGK':'#1f77b4','IGH + IGL':'#ff7f0e'})
 
     vdj_status_col_dict = dict(zip(list(set(g.vs['vdj_status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['vdj_status'])))))))
     vdj_status_col_dict.update({'Single':'#1f77b4'})
