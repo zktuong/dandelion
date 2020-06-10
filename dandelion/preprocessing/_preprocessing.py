@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 23:35:41
+# @Last Modified time: 2020-06-11 00:55:22
 
 import sys
 import os
@@ -1266,7 +1266,6 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
                 h[b] = hc_id
                 h_umi[b] = hc_umi
-                h_conscount[b] = hc_conscount
                 h_seq[b] = hc_seq
             if len(h[b]) > 1:
                 if rescue_igh:
