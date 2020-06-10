@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 00:37:01
+# @Last Modified time: 2020-06-10 12:07:46
 
 import igraph
 import seaborn as sns
@@ -66,8 +66,11 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     isotype_col_dict = {'IgA':'#4e79a7', 'IgD':'#e15759', 'IgE':'#76b7b2', 'IgG':'#59a14f', 'IgM':'#9c755f', np.nan:'#e7e7e7'}
     heavy_c_call_col_dict = {'igha1':'#4e79a7', 'igha2':'#f28e2b', 'ighd':'#e15759', 'ighe':'#76b7b2', 'ighg1':'#59a14f', 'ighg2':'#edc948', 'ighg3':'#b07aa1', 'ighg4':'#ff9da7', 'ighm':'#9c755f', np.nan:'#e7e7e7'}
     
-    multi_status_col_dict = dict(zip(list(set(g.vs['multi_status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['multi_status'])))))))
-    multi_status_col_dict.update({'Single':'#1f77b4'})
+    status_col_dict = dict(zip(list(set(g.vs['status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['status'])))))))
+    status_col_dict.update({'IGH_only':'#7f7f7f'})
+
+    vdj_status_col_dict = dict(zip(list(set(g.vs['vdj_status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['vdj_status'])))))))
+    vdj_status_col_dict.update({'Single':'#1f77b4'})
     # because there's a chance of dual light chains occuring, i will be a bit careful here
     light_c_call_custom_colours = {'igkc':'#1f77b4', 'iglc1':'#ff7f0e', 'iglc2':'#ff7f0e', 'iglc3':'#ff7f0e', 'iglc4':'#ff7f0e', 'iglc5':'#ff7f0e', 'iglc6':'#ff7f0e','iglc7':'#ff7f0e', np.nan:'#e7e7e7'}    
     light_c_call_col_dict = dict(zip(list(set(g.vs['c_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['c_call_light'])))))))
@@ -95,9 +98,12 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     elif colorby is 'clone_group_id':
         vs['vertex_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]
         vs['vertex_frame_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]    
-    elif colorby is 'multi_status':
-        vs['vertex_color'] = [multi_status_col_dict[i] for i in g.vs['multi_status']]
-        vs['vertex_frame_color'] = [multi_status_col_dict[i] for i in g.vs['multi_status']]
+    elif colorby is 'status':
+        vs['vertex_color'] = [status_col_dict[i] for i in g.vs['status']]
+        vs['vertex_frame_color'] = [status_col_dict[i] for i in g.vs['status']]
+    elif colorby is 'vdj_status':
+        vs['vertex_color'] = [vdj_status_col_dict[i] for i in g.vs['vdj_status']]
+        vs['vertex_frame_color'] = [vdj_status_col_dict[i] for i in g.vs['vdj_status']]
     elif colorby is 'isotype':
         vs['vertex_color'] = [isotype_col_dict[i] for i in g.vs['isotype']]
         vs['vertex_frame_color'] = [isotype_col_dict[i] for i in g.vs['isotype']]
