@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 21:04:35
+# @Last Modified time: 2020-06-10 12:45:21
 
 import os
 import sys
@@ -729,7 +729,7 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def transfer_network(self, network, keep_raw = True, neighbors_key = None):
+def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.raw` slots with metadata and network.
 
@@ -737,7 +737,7 @@ def transfer_network(self, network, keep_raw = True, neighbors_key = None):
     ----------
     self : AnnData
         `AnnData` object
-    network : Dandelion
+    dandelion : Dandelion
         `Dandelion` object
     keep_raw : bool
         If True, will transfer the existing `.uns` slot to `.raw.uns`.
@@ -749,57 +749,68 @@ def transfer_network(self, network, keep_raw = True, neighbors_key = None):
 
     """
     start = logg.info('Transferring network')
-    G = nx.from_pandas_edgelist(network.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
-    distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
-    connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
-    df_connectivities = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
-    df_distances = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
-    for x in connectivities.columns:
-        df_connectivities[x] = pd.Series(connectivities[x])
-    for x in distances.columns:
-        df_distances[x] = pd.Series(distances[x])
-    for x in df_distances.columns:
-        df_distances[x] = df_distances[x].apply(lambda x: 5/(x + 1))
-    df_connectivities.fillna(0, inplace = True)
-    df_distances.fillna(0, inplace = True)
-    df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
-    df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
+    if dandelion.edges is not None:
+        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
+        distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
+        connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
+        df_connectivities = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
+        df_distances = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
+        for x in connectivities.columns:
+            df_connectivities[x] = pd.Series(connectivities[x])
+        for x in distances.columns:
+            df_distances[x] = pd.Series(distances[x])
+        for x in df_distances.columns:
+            df_distances[x] = df_distances[x].apply(lambda x: 5/(x + 1))
+        df_connectivities.fillna(0, inplace = True)
+        df_distances.fillna(0, inplace = True)
+        df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
+        df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
 
-    if neighbors_key is None:
-        neighbors_key = "neighbors"
-    if neighbors_key not in self.uns:
-        raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-    if keep_raw:
-        self.raw.uns = copy.deepcopy(self.uns)
-        self.uns[neighbors_key]['connectivities'] = df_connectivities_
-        self.uns[neighbors_key]['distances'] = df_distances_
-        self.uns[neighbors_key]['params'] = {'method':'bcr'}
-    else:
-        self.uns[neighbors_key]['connectivities'] = df_connectivities_
-        self.uns[neighbors_key]['distances'] = df_distances_
-        self.uns[neighbors_key]['params'] = {'method':'bcr'}
+        if neighbors_key is None:
+            neighbors_key = "neighbors"
+        if neighbors_key not in self.uns:
+            raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
+    
+        if keep_raw:
+            self.raw.uns = copy.deepcopy(self.uns)
+            self.uns[neighbors_key]['connectivities'] = df_connectivities_
+            self.uns[neighbors_key]['distances'] = df_distances_
+            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+        else:
+            self.uns[neighbors_key]['connectivities'] = df_connectivities_
+            self.uns[neighbors_key]['distances'] = df_distances_
+            self.uns[neighbors_key]['params'] = {'method':'bcr'}
 
-    for x in network.metadata.columns:
-        self.obs[x] = pd.Series(network.metadata[x])
+    for x in dandelion.metadata.columns:
+        self.obs[x] = pd.Series(dandelion.metadata[x])
 
     tmp = self.obs.copy()
-    coord = pd.DataFrame(np.array(network.layout), index = network.metadata.index)
-    for x in coord.columns:
-        tmp[x] = coord[x]
-    tmp[[1]] = tmp[[1]]*-1
-    X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
-    self.obsm['X_bcr'] = X_bcr
-    if keep_raw:
-        logg.info(' finished', time=start,
-            deep=('added to `.uns[\''+neighbors_key+'\']`\n'
-            '   \'distances\', cluster-weighted adjacency matrix\n'
-            '   \'connectivities\', cluster-weighted adjacency matrix\n'
-            'stored original .uns in .raw'))
+    if dandelion.layout is not None:
+        coord = pd.DataFrame(np.array(dandelion.layout), index = dandelion.metadata.index)
+        for x in coord.columns:
+            tmp[x] = coord[x]
+        tmp[[1]] = tmp[[1]]*-1
+        X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
+        self.obsm['X_bcr'] = X_bcr
+    
+    if (dandelion.edges is not None) and (dandelion.edges is not None):
+        if keep_raw:
+            logg.info(' finished', time=start,
+                deep=(
+                'updated `.obs` with `.metadata`\n'
+                'added to `.uns[\''+neighbors_key+'\']`\n'
+                '   \'distances\', cluster-weighted adjacency matrix\n'
+                '   \'connectivities\', cluster-weighted adjacency matrix\n'
+                'stored original .uns in .raw'))
+        else:
+            logg.info(' finished', time=start,
+                deep=('updated `.obs` with `.metadata`\n'
+                      'added to `.uns[\''+neighbors_key+'\']`\n'
+                '   \'distances\', cluster-weighted adjacency matrix\n'
+                '   \'connectivities\', cluster-weighted adjacency matrix'))
     else:
         logg.info(' finished', time=start,
-            deep=('added to `.uns[\''+neighbors_key+'\']`\n'
-            '   \'distances\', cluster-weighted adjacency matrix\n'
-            '   \'connectivities\', cluster-weighted adjacency matrix'))
+                deep=('updated `.obs` with `.metadata`\n'))
 
 def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
     """
