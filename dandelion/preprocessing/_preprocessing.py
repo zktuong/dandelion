@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 11:19:10
+# @Last Modified time: 2020-06-10 22:46:01
 
 import sys
 import os
@@ -248,6 +248,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                             identity = extract_blast_info(line_x)
                         elif line_x.startswith("<Hsp_qseq>"):
                             c_qseq = extract_blast_info(line_x)
+                        elif line_x.startswith("<Hsp_hseq>"):
+                            c_hseq = extract_blast_info(line_x)
                         elif line_x.startswith("<Iteration_message>No hits found"):
                             message = True
                             out_string = "##{blast_query_name}##\nNo C segment found\n\n".format(
@@ -272,11 +274,11 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                             header_string = ("Segment\tquery_id\tsubject_id\t% identity\talignment length\t"
                                             "mismatches\tgap opens\tgaps\tq start\tq end\ts start\ts end\t"
                                             "evalue\tbit score\n")
-                            out_string = ("C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t{evalue}\t{bit_score}\t{q_seq}\n\n").format(
+                            out_string = ("C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t{evalue}\t{bit_score}\t{q_seq}\t{h_seq}\n\n").format(
                                             blast_query_name=blast_query_name,
                                             C_segment=C_segment, identity_pro=identity_pro, align_length=align_length,
                                             evalue=evalue, mismatches=mismatches, gaps=gaps, q_start=q_start,
-                                            q_end=q_end, s_start=s_start, s_end=s_end, bit_score=bit_score, q_seq = c_qseq)
+                                            q_end=q_end, s_start=s_start, s_end=s_end, bit_score=bit_score, q_seq = c_qseq, h_seq = c_hseq)
                             string_to_write = intro_string + header_string + out_string
                             outfile.write(string_to_write)
 
@@ -289,7 +291,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
             else:
                 blast_summary_file = "{}/{}.blastsummary.txt".format(dirs, os.path.basename(fasta).split('.fasta')[0]+fileformat)
 
-            C_seq, C_gene, C_ident, C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None, None, None, None
+            C_seq,C_germ, C_gene, C_ident, C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None, None, None, None, None
             with open(blast_summary_file, 'r') as input:
                 for line in input:
                     if line.startswith("C\t{contig_name}".format(
@@ -297,6 +299,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                         C_gene = line.split("\t")[2]
                         C_ident = line.split("\t")[3]
                         C_seq = line.split("\t")[14]
+                        C_germ = line.split("\t")[15]
                         C_eval = line.split("\t")[12]
                         C_bitscore = line.split("\t")[13]
                         C_qstart = line.split("\t")[8]
@@ -310,16 +313,17 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                 except:
                     pass
             
-            C_call, C_identity, C_sequence, C_support, C_score, C_start, C_end, = {}, {}, {}, {}, {}, {}, {}
+            C_call, C_identity, C_sequence, C_germline, C_support, C_score, C_start, C_end, = {}, {}, {}, {}, {}, {}, {}, {}
             C_call[contig_name] = C_gene
             C_identity[contig_name] = C_ident
             C_sequence[contig_name] = C_seq
+            C_germline[contig_name] = C_germ
             C_support[contig_name] = C_eval
             C_score[contig_name] = C_bitscore
             C_start[contig_name] = C_qstart
             C_end[contig_name] = C_qend
 
-            return(C_sequence, C_call, C_identity, C_support, C_score, C_start, C_end)
+            return(C_sequence, C_germline, C_call, C_identity, C_support, C_score, C_start, C_end)
 
         fh = open(fasta, 'r')
         contigs = []
@@ -332,10 +336,11 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
             results = ()
             results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))                                    
             # transform list of dicts to dict
-            seq, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}
+            seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for r in range(0, len(results)):                
-                _seq, _call, _ident, _support, _score, _start, _end = results[r]
+                _seq, _germ, _call, _ident, _support, _score, _start, _end = results[r]
                 seq.update(_seq)
+                germ.update(_germ)
                 call.update(_call)
                 ident.update(_ident)
                 support.update(_support)
@@ -343,10 +348,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                 start.update(_start)
                 end.update(_end)
         else:
-            seq, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}
+            seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for c in tqdm(contigs, desc = 'Retrieving contant region calls '):
-                seq[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(fasta, c, dirs, fileformat, allele)[c]
-        return(seq, call, ident, support, score, start, end)
+                seq[c], germ[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(fasta, c, dirs, fileformat, allele)[c]
+        return(seq, germ, call, ident, support, score, start, end)
 
     def _transfer_c(data, c_dict, colname):
         _data = load_data(data)
@@ -368,14 +373,15 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     # parsing output into a summary.txt file
     _parse_BLAST(fasta, dirs, format_dict[fileformat])
     # Add the c_calls to the data file
-    c_seq, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}
-    c_seq, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(fasta, dirs, format_dict[fileformat], allele, parallel)
+    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}, {}
+    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(fasta, dirs, format_dict[fileformat], allele, parallel)
     if dirs is None:
         _file = "{}/{}.tsv".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+format_dict[fileformat])
     else:
         _file = "{}/{}.tsv".format(dirs, os.path.basename(fasta).split('.fasta')[0]+ format_dict[fileformat])
     dat = _transfer_c(_file, c_call, 'c_call')
     dat = _transfer_c(dat, c_seq, 'c_sequence_alignment')
+    dat = _transfer_c(dat, c_germ, 'c_germline_alignment')
     dat = _transfer_c(dat, c_st, 'c_sequence_start')
     dat = _transfer_c(dat, c_en, 'c_sequence_end')
     dat = _transfer_c(dat, c_scr, 'c_score')
