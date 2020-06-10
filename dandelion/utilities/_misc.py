@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 12:00:11
+# @Last Modified time: 2020-06-10 12:03:11
 
 import sys
 import os
@@ -280,7 +280,15 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False)
         heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False)
         heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False)
-    
+        
+        heavy_status, light_status = retrieve_metadata(dat, 'locus', False)
+        status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
+        for i in status.index:
+            try:
+                status.loc[i, 'status'] = status.loc[i,'heavy']+' + '+status.loc[i,'light']
+            except:
+                status.loc[i, 'status'] = status.loc[i,'heavy'] + '_only'
+
         conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}
         isotype = {}
         for k in heavy_c_call:
@@ -309,7 +317,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
             self.metadata['sample_id'] = pd.Series(samp_id)
         self.metadata['isotype'] = pd.Series(isotype)
         self.metadata['lightchain'] = pd.Series(lightchain)
-        
+        self.metadata['status'] = pd.Series(status['status'])
         self.metadata['productive'] = pd.Series(productive)
         self.metadata['umi_counts_heavy'] = pd.Series(heavy_umi)
         self.metadata['umi_counts_light'] = pd.Series(light_umi)
@@ -322,7 +330,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         self.metadata['j_call_light'] = pd.Series(light_j_call)
     
         multi = {}
-        for i in self.metadata.index:        
+        for i in self.metadata.index:
             try:
                 hv_ = self.metadata.loc[i, 'v_call_heavy'].split(',')
             except:
@@ -353,13 +361,13 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
                 multi_.append(['Single'])
     
             multi[i] = ','.join(list(flatten(multi_)))
-        self.metadata['multi_status'] = pd.Series(multi)
+        self.metadata['vdj_status'] = pd.Series(multi)
         
         # return this in this order
         if 'sample_id' in dat.columns:
-            self.metadata = self.metadata[['sample_id', 'clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'umi_counts_heavy', 'umi_counts_light', 'multi_status', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+            self.metadata = self.metadata[['sample_id', 'clone_id', 'clone_group_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
         else:
-            self.metadata = self.metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'umi_counts_heavy', 'umi_counts_light', 'multi_status', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+            self.metadata = self.metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
         # new function to retrieve non-standard columns
         if retrieve is not None:
             if retrieve in dat.columns:
