@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-08 11:19:10
+# @Last Modified time: 2020-06-10 23:35:41
 
 import sys
 import os
@@ -248,6 +248,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                             identity = extract_blast_info(line_x)
                         elif line_x.startswith("<Hsp_qseq>"):
                             c_qseq = extract_blast_info(line_x)
+                        elif line_x.startswith("<Hsp_hseq>"):
+                            c_hseq = extract_blast_info(line_x)
                         elif line_x.startswith("<Iteration_message>No hits found"):
                             message = True
                             out_string = "##{blast_query_name}##\nNo C segment found\n\n".format(
@@ -272,11 +274,11 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                             header_string = ("Segment\tquery_id\tsubject_id\t% identity\talignment length\t"
                                             "mismatches\tgap opens\tgaps\tq start\tq end\ts start\ts end\t"
                                             "evalue\tbit score\n")
-                            out_string = ("C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t{evalue}\t{bit_score}\t{q_seq}\n\n").format(
+                            out_string = ("C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t{evalue}\t{bit_score}\t{q_seq}\t{h_seq}\n\n").format(
                                             blast_query_name=blast_query_name,
                                             C_segment=C_segment, identity_pro=identity_pro, align_length=align_length,
                                             evalue=evalue, mismatches=mismatches, gaps=gaps, q_start=q_start,
-                                            q_end=q_end, s_start=s_start, s_end=s_end, bit_score=bit_score, q_seq = c_qseq)
+                                            q_end=q_end, s_start=s_start, s_end=s_end, bit_score=bit_score, q_seq = c_qseq, h_seq = c_hseq)
                             string_to_write = intro_string + header_string + out_string
                             outfile.write(string_to_write)
 
@@ -289,7 +291,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
             else:
                 blast_summary_file = "{}/{}.blastsummary.txt".format(dirs, os.path.basename(fasta).split('.fasta')[0]+fileformat)
 
-            C_seq, C_gene, C_ident, C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None, None, None, None
+            C_seq,C_germ, C_gene, C_ident, C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None, None, None, None, None
             with open(blast_summary_file, 'r') as input:
                 for line in input:
                     if line.startswith("C\t{contig_name}".format(
@@ -297,6 +299,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                         C_gene = line.split("\t")[2]
                         C_ident = line.split("\t")[3]
                         C_seq = line.split("\t")[14]
+                        C_germ = line.split("\t")[15]
                         C_eval = line.split("\t")[12]
                         C_bitscore = line.split("\t")[13]
                         C_qstart = line.split("\t")[8]
@@ -310,16 +313,17 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                 except:
                     pass
             
-            C_call, C_identity, C_sequence, C_support, C_score, C_start, C_end, = {}, {}, {}, {}, {}, {}, {}
+            C_call, C_identity, C_sequence, C_germline, C_support, C_score, C_start, C_end, = {}, {}, {}, {}, {}, {}, {}, {}
             C_call[contig_name] = C_gene
             C_identity[contig_name] = C_ident
             C_sequence[contig_name] = C_seq
+            C_germline[contig_name] = C_germ
             C_support[contig_name] = C_eval
             C_score[contig_name] = C_bitscore
             C_start[contig_name] = C_qstart
             C_end[contig_name] = C_qend
 
-            return(C_sequence, C_call, C_identity, C_support, C_score, C_start, C_end)
+            return(C_sequence, C_germline, C_call, C_identity, C_support, C_score, C_start, C_end)
 
         fh = open(fasta, 'r')
         contigs = []
@@ -332,10 +336,11 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
             results = ()
             results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))                                    
             # transform list of dicts to dict
-            seq, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}
+            seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for r in range(0, len(results)):                
-                _seq, _call, _ident, _support, _score, _start, _end = results[r]
+                _seq, _germ, _call, _ident, _support, _score, _start, _end = results[r]
                 seq.update(_seq)
+                germ.update(_germ)
                 call.update(_call)
                 ident.update(_ident)
                 support.update(_support)
@@ -343,10 +348,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
                 start.update(_start)
                 end.update(_end)
         else:
-            seq, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}
+            seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for c in tqdm(contigs, desc = 'Retrieving contant region calls '):
-                seq[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(fasta, c, dirs, fileformat, allele)[c]
-        return(seq, call, ident, support, score, start, end)
+                seq[c], germ[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(fasta, c, dirs, fileformat, allele)[c]
+        return(seq, germ, call, ident, support, score, start, end)
 
     def _transfer_c(data, c_dict, colname):
         _data = load_data(data)
@@ -368,14 +373,15 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     # parsing output into a summary.txt file
     _parse_BLAST(fasta, dirs, format_dict[fileformat])
     # Add the c_calls to the data file
-    c_seq, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}
-    c_seq, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(fasta, dirs, format_dict[fileformat], allele, parallel)
+    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}, {}
+    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(fasta, dirs, format_dict[fileformat], allele, parallel)
     if dirs is None:
         _file = "{}/{}.tsv".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+format_dict[fileformat])
     else:
         _file = "{}/{}.tsv".format(dirs, os.path.basename(fasta).split('.fasta')[0]+ format_dict[fileformat])
     dat = _transfer_c(_file, c_call, 'c_call')
     dat = _transfer_c(dat, c_seq, 'c_sequence_alignment')
+    dat = _transfer_c(dat, c_germ, 'c_germline_alignment')
     dat = _transfer_c(dat, c_st, 'c_sequence_start')
     dat = _transfer_c(dat, c_en, 'c_sequence_end')
     dat = _transfer_c(dat, c_scr, 'c_score')
@@ -1165,7 +1171,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
-    Cells with multiple IGH contigs are filtered unless rescue_igh is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
+    If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
     If there's multiple contigs that survive the 'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
     Lastly, contigs with no corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
@@ -1199,12 +1205,12 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     """
     dat = load_data(data)
     h = Tree()
-    h_umi = Tree()
     l = Tree()
-    poor_qual = []
-    h_doublet = []
-    l_doublet = []
-    drop_contig = []
+    h_umi = Tree()
+    l_umi = Tree()
+    h_seq = Tree()
+    l_seq = Tree()
+    poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
     
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
@@ -1227,28 +1233,68 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         v_dict = dict(zip(dat['sequence_id'], dat['v_call']))
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
+    # rather than leaving a nan cell, i will create a 0 column for now
+    dat['duplicate_count'] = 0
     for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
-        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])        
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+        hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
 
+        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+        lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+        
         h[b] = hc_id
         h_umi[b] = hc_umi
+        h_seq[b] = hc_seq
+
         l[b] = lc_id
+        l_umi[b] = lc_umi
+        l_seq[b] = lc_seq
+        
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
-            if rescue_igh:
-                highest_umi = max(h_umi[b])
-                lowest_umi = min(h_umi[b])
-                highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
-                if len(highest_umi_idx) > 1:
+            if len(list(set(h_seq[b]))) == 1:          
+                highest_umi_h = max(h_umi[b])
+                highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+                drop_contig.append(h[b][~highest_umi_h_idx[0]])                    
+                keep_hc_contig = h[b][highest_umi_h_idx[0]]
+                dat.loc[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][~highest_umi_h_idx[0]]))
+                    
+                hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+                hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+
+                h[b] = hc_id
+                h_umi[b] = hc_umi
+                h_conscount[b] = hc_conscount
+                h_seq[b] = hc_seq
+            if len(h[b]) > 1:
+                if rescue_igh:
+                    highest_umi = max(h_umi[b])
+                    lowest_umi = min(h_umi[b])
+                    highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
+                    if len(highest_umi_idx) > 1:
+                        h_doublet.append(b)
+                    if highest_umi/lowest_umi < umi_foldchange_cutoff:
+                        h_doublet.append(b)
+                    if len(highest_umi_idx) == 1 and highest_umi/lowest_umi >= umi_foldchange_cutoff:
+                        drop_contig.append(h[b][~highest_umi_idx[0]])
+                else:
                     h_doublet.append(b)
-                if highest_umi/lowest_umi < umi_foldchange_cutoff:
-                    h_doublet.append(b)
-                if len(highest_umi_idx) == 1 and highest_umi/lowest_umi >= umi_foldchange_cutoff:
-                    drop_contig.append(h[b][~highest_umi_idx[0]])
-            else:
-                h_doublet.append(b)
+
+        if len(l[b]) > 1:
+            if len(list(set(l_seq[b]))) == 1:
+                highest_umi_l = max(l_umi[b])
+                highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+                drop_contig.append(l[b][~highest_umi_l_idx[0]])
+                keep_lc_contig = l[b][highest_umi_l_idx[0]]
+                dat.loc[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][~highest_umi_l_idx[0]]))
+                lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]                
+                l[b] = lc_id
+                l_umi[b] = lc_umi
+                l_seq[b] = lc_seq
+        
         # marking doublets defined by light chains
         if (len(h[b]) == 1) & (len(l[b]) > 1):
             l_doublet.append(b)
@@ -1315,9 +1361,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                     filter_ids.append(c)
 
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
-
-        if rescue_igh:
-            _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
+        _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
 
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)

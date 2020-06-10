@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 12:03:11
+# @Last Modified time: 2020-06-10 23:54:32
 
 import sys
 import os
@@ -142,6 +142,17 @@ def extract(d, keys):
     return(dict((k, d[k]) for k in keys if k in d))
 
 def load_data(obj):
+    """
+    Reads in or copy dataframe object and set sequence_id as index without dropping.
+
+    Parameters
+    ----------
+    obj : DataFrame, str
+        file path to .tsv file or pandas DataFrame object.
+    Returns
+    -------
+        pandas DataFrame object.
+    """
     if os.path.isfile(str(obj)):
         try:
             obj_ = pd.read_csv(obj, sep = '\t', dtype = 'object')
@@ -160,108 +171,155 @@ def load_data(obj):
     return(obj_)
 
 def setup_metadata(data, sep):
-        dat_h = data[data['locus'] == 'IGH']
-        dat_l = data[data['locus'].isin(['IGK', 'IGL'])]        
-        clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
-        clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))    
-        metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
-        metadata_.set_index('cell_id', inplace = True)
-        light_clone_tree = Tree()
-        for key, value in clone_l.items():
-            k, v = value
-            light_clone_tree[k][key] = v
-        light_clone_tree2 = Tree()
-        for g in light_clone_tree:
-            second_key = []
-            for k2 in light_clone_tree[g].keys():
-                second_key.append(k2)
-            second_key = list(set(second_key))
-            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-            for key, value in light_clone_tree[g].items():
-                light_clone_tree2[g][second_key_dict[key]] = value
-        metadata_['light'] = pd.Series(light_clone_tree2)
-        tmp_dat = metadata_['light'].apply(pd.Series)
-        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-        metadata_ = metadata_.merge(tmp_dat, left_index = True, right_index = True)
-        metadata_ = metadata_[['heavy'] + [str(c) for c in tmp_dat.columns]]
-        clones_list = {}
-        for x in metadata_.index:
-            cl = list(set(list(metadata_.loc[x, :])))
-            cl = sorted([y for y in cl if str(y) != 'nan'])
-            if len(cl) > 1:
-                cl = cl[1:]
-            clones_list[x] = ','.join(cl)
-        metadata_['clone_id'] = pd.Series(clones_list)
-        metadata_ = metadata_[['clone_id']]
-        if sep is None:
-            scb = (0, '_')
+    """
+    A Dandelion class subfunction to initialize the `.metadata` slot.
+    Parameters
+    ----------
+    data : DataFrame
+        pandas DataFrame object.
+    sep : tuple[int, str]
+        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+    Returns
+    -------
+        pandas DataFrame object.
+    """
+    dat_h = data[data['locus'] == 'IGH']
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]        
+    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
+    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))    
+    metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
+    metadata_.set_index('cell_id', inplace = True)
+    light_clone_tree = Tree()
+    for key, value in clone_l.items():
+        k, v = value
+        light_clone_tree[k][key] = v
+    light_clone_tree2 = Tree()
+    for g in light_clone_tree:
+        second_key = []
+        for k2 in light_clone_tree[g].keys():
+            second_key.append(k2)
+        second_key = list(set(second_key))
+        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+        for key, value in light_clone_tree[g].items():
+            light_clone_tree2[g][second_key_dict[key]] = value
+    metadata_['light'] = pd.Series(light_clone_tree2)
+    tmp_dat = metadata_['light'].apply(pd.Series)
+    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+    metadata_ = metadata_.merge(tmp_dat, left_index = True, right_index = True)
+    metadata_ = metadata_[['heavy'] + [str(c) for c in tmp_dat.columns]]
+    clones_list = {}
+    for x in metadata_.index:
+        cl = list(set(list(metadata_.loc[x, :])))
+        cl = sorted([y for y in cl if str(y) != 'nan'])
+        if len(cl) > 1:
+            cl = cl[1:]
+        clones_list[x] = ','.join(cl)
+    metadata_['clone_id'] = pd.Series(clones_list)
+    metadata_ = metadata_[['clone_id']]
+    if sep is None:
+        scb = (0, '_')
+    else:
+        scb = (sep[0], sep[1])
+    group = []        
+    # check if contain the separator
+    x = list(metadata_['clone_id'].str.contains(scb[1]))
+    cl_ = list(metadata_['clone_id'])
+    for c in range(0, len(metadata_['clone_id'])):
+        if not x[c]:
+            warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
+            group.append(cl_[c])
         else:
-            scb = (sep[0], sep[1])
-        group = []
-        
-        # check if contain the separator
-        x = list(metadata_['clone_id'].str.contains(scb[1]))
-        cl_ = list(metadata_['clone_id'])
-        for c in range(0, len(metadata_['clone_id'])):
-            if not x[c]:
-                warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
-                group.append(cl_[c])
-            else:
-                group.append(cl_[c].split(scb[1])[scb[0]])
-        groupseries = dict(zip(metadata_.index, group))
-        metadata_['clone_group_id'] = pd.Series(groupseries)
-        return(metadata_)
+            group.append(cl_[c].split(scb[1])[scb[0]])
+    groupseries = dict(zip(metadata_.index, group))
+    metadata_['clone_group_id'] = pd.Series(groupseries)
+    return(metadata_)
 
-def retrieve_metadata(data, retrieve_id, combined):
-        dat_h = data[data['locus'] == 'IGH']
-        dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
-        
-        retrieve_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[retrieve_id])))
-        retrieve_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[retrieve_id])))
-        
-        sub_metadata = pd.DataFrame.from_dict(retrieve_h, orient = 'index', columns = ['cell_id', 'heavy'])
-        sub_metadata.set_index('cell_id', inplace = True)
-
-        light_retrieval_tree = Tree()
-        for key, value in retrieve_l.items():
-            k, v = value
-            light_retrieval_tree[k][key] = v
-        light_retrieval_tree2 = Tree()
-        for g in light_retrieval_tree:
-            second_key = []
-            for k2 in light_retrieval_tree[g].keys():
-                second_key.append(k2)
-            second_key = list(set(second_key))
-            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-            for key, value in light_retrieval_tree[g].items():
-                light_retrieval_tree2[g][second_key_dict[key]] = value
-        sub_metadata['light'] = pd.Series(light_retrieval_tree2)
-        tmp_dat = sub_metadata['light'].apply(pd.Series)
-        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-        sub_metadata = sub_metadata.merge(tmp_dat, left_index = True, right_index = True)
-        sub_metadata = sub_metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
-        if combined:
-            retrieval_list = {}
-            for x in sub_metadata.index:
+def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
+    """
+    A Dandelion class subfunction to populate the `.metadata` slot.
+    Parameters
+    ----------
+    data : DataFrame
+        pandas DataFrame object.
+    retrieve_id : str
+        column name in `.data` slot.
+    split_heavy_light : bool
+        Returns the retrieval splitted into two column for heavy and light. Default is True. False combines the retrieval into a single column.
+    collapse : bool
+        Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.
+    Returns
+    -------
+        A dictionary with keys as cell_ids and records as retrieved value.
+    """
+    dat_h = data[data['locus'] == 'IGH']
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]        
+    retrieve_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[retrieve_id])))
+    retrieve_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[retrieve_id])))        
+    sub_metadata = pd.DataFrame.from_dict(retrieve_h, orient = 'index', columns = ['cell_id', 'heavy'])
+    sub_metadata.set_index('cell_id', inplace = True)
+    light_retrieval_tree = Tree()
+    for key, value in retrieve_l.items():
+        k, v = value
+        light_retrieval_tree[k][key] = v
+    light_retrieval_tree2 = Tree()
+    for g in light_retrieval_tree:
+        second_key = []
+        for k2 in light_retrieval_tree[g].keys():
+            second_key.append(k2)
+        second_key = list(set(second_key))
+        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+        for key, value in light_retrieval_tree[g].items():
+            light_retrieval_tree2[g][second_key_dict[key]] = value
+    sub_metadata['light'] = pd.Series(light_retrieval_tree2)
+    tmp_dat = sub_metadata['light'].apply(pd.Series)
+    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+    sub_metadata = sub_metadata.merge(tmp_dat, left_index = True, right_index = True)
+    sub_metadata = sub_metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
+    if split_heavy_light:
+        retrieval_list = {}
+        for x in sub_metadata.index:
+            if collapse:
                 r_l = list(set(list(sub_metadata.loc[x, :])))
-                r_l = sorted([y for y in r_l if str(y) != 'nan'])
-                if len(r_l) > 1:
-                    r_l = r_l[1:]
-                retrieval_list[x] = ','.join(r_l)
-            return(retrieval_list)
-        else:
-            heavy_retrieval_list = dict(sub_metadata['heavy'])
-            light_retrieval_list = {}
-            sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
-            for x in sub_metadata2.index:
+            else:
+                r_l = list(sub_metadata.loc[x, :])
+            r_l = sorted([y for y in r_l if str(y) != 'nan'])
+            if len(r_l) > 1:
+                r_l = r_l[1:]
+            retrieval_list[x] = '|'.join(r_l)
+        return(retrieval_list)
+    else:
+        heavy_retrieval_list = dict(sub_metadata['heavy'])
+        light_retrieval_list = {}
+        sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
+        for x in sub_metadata2.index:                
+            if collapse:
                 r_l = list(set(list(sub_metadata2.loc[x, :])))
-                r_l = sorted([y for y in r_l if str(y) != 'nan'])
-                light_retrieval_list[x] = [','.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
-            return(heavy_retrieval_list, light_retrieval_list)
+            else:
+                r_l = list(sub_metadata2.loc[x, :])
+            r_l = sorted([y for y in r_l if str(y) != 'nan'])
+            light_retrieval_list[x] = ['|'.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
+        return(heavy_retrieval_list, light_retrieval_list)
 
-def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = None):
-    # a quick way to retrieve the 'meta data' for each cell that transfer into obs lot in scanpy later
-    
+def initialize_metadata(self, retrieve = None, split_heavy_light = True, collapse = False, clones_sep = None):
+    """
+    A Dandelion function to update and populate the `.metadata` slot.
+
+    Parameters
+    ----------
+    self : Dandelion
+        Dandelion object
+    retrieve : str
+        column name in `.data` slot.
+    split_heavy_light : bool
+        Returns the retrieval splitted into two column for heavy and light. Default is True. False combines the retrieval into a single column.
+    collapse : bool
+        Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.
+    clones_sep : tuple[int, str]
+        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+    Returns
+    -------
+        Dandelion object with `.metadata` slot initialized.
+    """
     dat = load_data(self.data)
     for x in ['cell_id', 'locus', 'c_call', 'umi_count']:
         if x not in dat.columns:
@@ -271,17 +329,17 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         self.metadata = setup_metadata(dat, clones_sep)
 
         if 'sample_id' in dat.columns:
-            samp_id = retrieve_metadata(dat, 'sample_id', True)
+            samp_id = retrieve_metadata(dat, 'sample_id', True, True)
 
         if 'v_call_genotyped' in dat.columns:
-            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', False)
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', False, False)
         else:
-            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', False)
-        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False)
-        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False)
-        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False)
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', False, False)
+        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False, False)
+        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False, False)
+        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False, False)
         
-        heavy_status, light_status = retrieve_metadata(dat, 'locus', False)
+        heavy_status, light_status = retrieve_metadata(dat, 'locus', False, False)
         status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
         for i in status.index:
             try:
@@ -289,7 +347,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
             except:
                 status.loc[i, 'status'] = status.loc[i,'heavy'] + '_only'
 
-        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}
+        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}        
         isotype = {}
         for k in heavy_c_call:
             if heavy_c_call[k] == heavy_c_call[k]:
@@ -299,7 +357,10 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         lightchain = {}
         for k in light_c_call:
             if light_c_call[k] == light_c_call[k]:
-                lightchain[k] = conversion_dict[light_c_call[k].lower()]
+                if '|' in light_c_call[k]:
+                    lightchain[k] = '|'.join([conversion_dict[x] for x in light_c_call[k].lower().split('|')])
+                else:
+                    lightchain[k] = conversion_dict[light_c_call[k].lower()]
             else:
                 lightchain[k] = light_c_call[k]
         
@@ -312,7 +373,7 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         for k in light_j_call:
             light_j_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_j_call[k]))][0].split(','))))])
     
-        productive = retrieve_metadata(dat, 'productive', True)
+        productive = retrieve_metadata(dat, 'productive', True, False)
         if 'sample_id' in dat.columns:
             self.metadata['sample_id'] = pd.Series(samp_id)
         self.metadata['isotype'] = pd.Series(isotype)
@@ -371,11 +432,17 @@ def initialize_metadata(self, retrieve = None, collapse = False, clones_sep = No
         # new function to retrieve non-standard columns
         if retrieve is not None:
             if retrieve in dat.columns:
-                if collapse:
-                    retrieve_dict = retrieve_metadata(dat, retrieve, True)
+                if split_heavy_light:
+                    if collapse:
+                        retrieve_dict = retrieve_metadata(dat, retrieve, True, True)
+                    else:
+                        retrieve_dict = retrieve_metadata(dat, retrieve, True, False)
                     self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
                 else:
-                    h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False)
+                    if collapse:
+                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
+                    else:
+                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False, False)
                     self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
                     self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
             else:
@@ -458,15 +525,15 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     """
     Parameters
     ----------
-    file
-        dandelion processed file
-    prefix
-        prefix to add to barcodes
-    save
-        save to specified location. Defaults to 'dandelion/data/'.
+    file : str
+        file path to .tsv file.
+    prefix : str
+        prefix to add to barcodes. Ignored if left as None.
+    save : str
+        file path to save location. Defaults to 'dandelion/data/' if left as None.
     """
 
-    cr_annot = pd.read_csv(file, dtype = 'object')
+    cr_annot = load_data(file)
     if prefix is not None:
         cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
     else:
