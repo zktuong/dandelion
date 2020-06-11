@@ -31,13 +31,11 @@ conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
 conda install distance python-Levenshtein joblib plotnine jupyter
-conda install -c bioconda igblast
-# conda update -c bioconda blast (if necessary)
+conda install -c bioconda igblast blast changeo presto
 
 # Use pip to install the following with --no-cache-dir if necessary
 pip install scanpy
 pip install scrublet
-pip install changeo # Some error with the conda version as does not come with the python executables
 
 # install rpy2
 pip install rpy2
