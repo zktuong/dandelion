@@ -38,8 +38,8 @@ pip install scanpy
 pip install scrublet
 
 # install rpy2
-# If you prefer to use conda to manage R, then use it
-# then use conda install rpy2
+# If you prefer to use conda to manage R, then use:
+# conda install rpy2
 pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 #
@@ -63,7 +63,7 @@ install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
 ```
 
 ## Required database
-Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation) and the other two were curated by me. I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) that you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
+Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation). I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) which you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
@@ -99,10 +99,10 @@ seaborn==0.10.1 (conda-forge)
 python-igraph==0.8.2 (conda-forge)
 leidenalg==0.8.0 (conda-forge)
 plotnine==0.6.0 (conda-forge)
+changeo==1.0.0 (bioconda)
+presto==0.6.0 (bioconda)
 
 # pip
-changeo==1.0.0
-presto==0.6.0
 anndata==0.7.1
 scanpy>=1.4.6
 scrublet==0.2.1
