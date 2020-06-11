@@ -31,15 +31,15 @@ conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
 conda install distance python-Levenshtein joblib plotnine jupyter
-conda install -c bioconda igblast
-# conda update -c bioconda blast (if necessary)
+conda install -c bioconda igblast blast changeo presto
 
 # Use pip to install the following with --no-cache-dir if necessary
 pip install scanpy
 pip install scrublet
-pip install changeo # Some error with the conda version as does not come with the python executables
 
 # install rpy2
+# If you prefer to use conda to manage R, then use it
+# then use conda install rpy2
 pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 #
@@ -48,7 +48,7 @@ pip install rpy2
 # /Users/kt16/homebrew/bin/gcc-9
 #
 # then run
-env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because I personally don't want to use r that comes with the conda installation. This will ensure I'm using the base R.
+env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because I personally don't want to use r that comes with the conda installation. This will ensure I'm using the base R. 
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
