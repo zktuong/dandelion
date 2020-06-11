@@ -57,11 +57,6 @@ pip install git+https://github.com/zktuong/dandelion.git
 pip install git+https://github.com/zktuong/dandelion.git@devel
 ````
 
-In case you need to link up kernel with jupyter notebook
-```bash
-python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
-```
-
 dandelion also requires some R packages intalled.
 ```R
 install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
