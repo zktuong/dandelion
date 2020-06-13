@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 20:41:02
+# @Last Modified time: 2020-06-13 20:42:44
 
 import sys
 import os
@@ -13,7 +13,7 @@ import multiprocessing
 from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
-from ..utilities._misc import *
+from ..utilities._utilities import *
 from .ext._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
 from plotnine import ggplot, geom_bar, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme
 from changeo.Gene import buildGermline
