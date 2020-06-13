@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 17:12:54
+# @Last Modified time: 2020-06-13 18:15:35
 
 import sys
 import os
@@ -114,7 +114,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(6,4), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,3), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -133,7 +133,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     figsize : tuple[float, float]
-        size of figure. Default is (6, 4).
+        size of figure. Default is (4, 3).
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
@@ -555,7 +555,6 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + xlab("c_call")
                 + ylab("% c calls")
                 + geom_bar(stat="identity", position = 'identity')
-                + facet_grid('~'+str('group'), scales="free_y")
                 + scale_fill_manual(values=('#e7e7e7','#86bcb6', '#F28e2b'))
                 + theme(legend_title = element_blank()))
         else:
@@ -565,7 +564,6 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + xlab("c_call")
                 + ylab("% c calls")
                 + geom_bar(stat="identity", position = 'identity')
-                + facet_grid('~'+str('group'), scales="free_y")
                 + scale_fill_manual(values=('#e7e7e7','#86bcb6'))
                 + theme(legend_title = element_blank()))
         print(p)
@@ -935,7 +933,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             + facet_grid('~'+str('vgroup'), scales="free_y")
             + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
             + theme(legend_title = element_blank()))
-        return(p)
+        print(p)
 
 def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr'):
     """
