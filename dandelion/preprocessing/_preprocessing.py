@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 20:42:44
+# @Last Modified time: 2020-06-13 22:03:11
 
 import sys
 import os
@@ -963,7 +963,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
     ----------
         V(D)J data file with reconstructed germline sequences.
     """
-
+    start = logg.info('Reconstructing germline sequences')
     env = os.environ.copy()
     if germline is None:
         try:
@@ -1159,7 +1159,12 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 datx[x] = pd.Series(germline_df[x])
             output = Dandelion(data = datx, germline = reference_dict)
             return(output)
-        
+        logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'data\', updated germline alignment in contig-indexed clone table\n'
+        '   \'germline\', updated germline reference\n'))
+
+
     def _create_germlines_file(file, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
         """
         Write germline sequences to tab-delimited database file

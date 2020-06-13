@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 14:30:10
+# @Last Modified time: 2020-06-13 22:01:06
 
 import sys
 import os
@@ -17,6 +17,10 @@ import pickle as pickle
 import copy
 from changeo.IO import readGermlines
 import warnings
+try:
+    from scanpy import logging as logg
+except ImportError:
+    pass
 
 class Tree(defaultdict):
     def __init__(self, value=None):
@@ -327,6 +331,7 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
 
     if 'clone_id' in dat. columns:
+        start = logg.info('Initializing')
         self.metadata = setup_metadata(dat, clones_sep)
 
         if 'sample_id' in dat.columns:
@@ -473,6 +478,10 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
                     self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
             else:
                 raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
+        logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'data\', contig-indexed clone table\n'
+        '   \'metadata\', cell-indexed clone table\n'))
     else:
         pass
 
@@ -540,6 +549,7 @@ class Dandelion:
         -------
             updated germline reference diciontary in `.germline` slot.
         """
+        start = logg.info('Updating germline reference')
         env = os.environ.copy()
         if germline is None:
             try:
@@ -565,6 +575,9 @@ class Dandelion:
             pass
 
         self.germline.update(germline_ref)
+        logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'germline\', updated germline reference\n'))
 
     @staticmethod
     def isGZIP(filename):
