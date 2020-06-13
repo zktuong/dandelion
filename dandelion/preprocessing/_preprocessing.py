@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 17:05:45
+# @Last Modified time: 2020-06-13 17:12:54
 
 import sys
 import os
@@ -568,7 +568,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + facet_grid('~'+str('group'), scales="free_y")
                 + scale_fill_manual(values=('#e7e7e7','#86bcb6'))
                 + theme(legend_title = element_blank()))
-        return(p)
+        print(p)
 
 
 def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, extended = False, verbose = False, *args):
