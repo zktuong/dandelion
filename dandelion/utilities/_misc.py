@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 13:56:46
+# @Last Modified time: 2020-06-13 14:30:10
 
 import sys
 import os
@@ -15,6 +15,7 @@ import re
 import gzip
 import pickle as pickle
 import copy
+from changeo.IO import readGermlines
 import warnings
 
 class Tree(defaultdict):
