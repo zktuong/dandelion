@@ -2,13 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-11 01:03:47
+# @Last Modified time: 2020-06-13 20:42:59
 
 import igraph
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from ..utilities._misc import *
+from ..utilities._utilities import *
 from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
