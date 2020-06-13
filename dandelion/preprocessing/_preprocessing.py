@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 16:22:07
+# @Last Modified time: 2020-06-13 17:05:45
 
 import sys
 import os
@@ -548,7 +548,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     dat.to_csv(_file, sep = '\t', index=False)
     if plot:
         options.figure_size = figsize
-        if corrected:
+        if correct_c_call:
             p = (ggplot(res, aes(x='c_call', y = 'counts', fill='group'))
                 + coord_flip()
                 + theme_classic()
