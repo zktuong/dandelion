@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-10 23:54:32
+# @Last Modified time: 2020-06-13 13:56:46
 
 import sys
 import os
@@ -184,9 +184,9 @@ def setup_metadata(data, sep):
         pandas DataFrame object.
     """
     dat_h = data[data['locus'] == 'IGH']
-    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]        
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
     clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
-    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))    
+    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))
     metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
     metadata_.set_index('cell_id', inplace = True)
     light_clone_tree = Tree()
@@ -220,7 +220,7 @@ def setup_metadata(data, sep):
         scb = (0, '_')
     else:
         scb = (sep[0], sep[1])
-    group = []        
+    group = []
     # check if contain the separator
     x = list(metadata_['clone_id'].str.contains(scb[1]))
     cl_ = list(metadata_['clone_id'])
@@ -252,9 +252,9 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
         A dictionary with keys as cell_ids and records as retrieved value.
     """
     dat_h = data[data['locus'] == 'IGH']
-    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]        
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
     retrieve_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[retrieve_id])))
-    retrieve_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[retrieve_id])))        
+    retrieve_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[retrieve_id])))
     sub_metadata = pd.DataFrame.from_dict(retrieve_h, orient = 'index', columns = ['cell_id', 'heavy'])
     sub_metadata.set_index('cell_id', inplace = True)
     light_retrieval_tree = Tree()
@@ -291,7 +291,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
         heavy_retrieval_list = dict(sub_metadata['heavy'])
         light_retrieval_list = {}
         sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
-        for x in sub_metadata2.index:                
+        for x in sub_metadata2.index:
             if collapse:
                 r_l = list(set(list(sub_metadata2.loc[x, :])))
             else:
@@ -300,7 +300,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
             light_retrieval_list[x] = ['|'.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
         return(heavy_retrieval_list, light_retrieval_list)
 
-def initialize_metadata(self, retrieve = None, split_heavy_light = True, collapse = False, clones_sep = None):
+def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_light = True, collapse = False, clones_sep = None):
     """
     A Dandelion function to update and populate the `.metadata` slot.
 
@@ -324,7 +324,7 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
     for x in ['cell_id', 'locus', 'c_call', 'umi_count']:
         if x not in dat.columns:
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
-    
+
     if 'clone_id' in dat. columns:
         self.metadata = setup_metadata(dat, clones_sep)
 
@@ -338,7 +338,7 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
         heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False, False)
         heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False, False)
         heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False, False)
-        
+
         heavy_status, light_status = retrieve_metadata(dat, 'locus', False, False)
         status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
         for i in status.index:
@@ -347,23 +347,48 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
             except:
                 status.loc[i, 'status'] = status.loc[i,'heavy'] + '_only'
 
-        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL'}        
+        if isotype_dict is None:
+            conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'igh':'IgG', 'iglc':'IgL'} # the key for IgG being igh is on purpose because of how the counter works
+        else:
+            conversion_dict = isotype_dict
+
         isotype = {}
         for k in heavy_c_call:
             if heavy_c_call[k] == heavy_c_call[k]:
-                isotype[k] = conversion_dict[heavy_c_call[k].lower()]
+                if ',' in heavy_c_call[k]:
+                    iso_d = defaultdict(int)
+                    for c in heavy_c_call[k].lower():
+                        iso_d[c] += 1
+                    isotype[k] = conversion_dict[re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ >= 2]))]
+                else:
+                    isotype[k] = conversion_dict[heavy_c_call[k].lower()]
             else:
                 isotype[k] = heavy_c_call[k]
         lightchain = {}
         for k in light_c_call:
             if light_c_call[k] == light_c_call[k]:
                 if '|' in light_c_call[k]:
-                    lightchain[k] = '|'.join([conversion_dict[x] for x in light_c_call[k].lower().split('|')])
+                    if ',' in light_c_call[k]:
+                        lc_y = []
+                        for x in light_c_call[k].lower().split('|'):
+                            iso_d = defaultdict(int)
+                            for c in x:
+                                iso_d[c] += 1
+                            lc_y.append(re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ >= 2])))
+                        lightchain[k] = [conversion_dict[y] for y in lc_y]
+                    else:
+                        lightchain[k] = '|'.join([conversion_dict[x] for x in light_c_call[k].lower().split('|')])
                 else:
-                    lightchain[k] = conversion_dict[light_c_call[k].lower()]
+                    if ',' in light_c_call[k]:
+                        iso_d = defaultdict(int)
+                        for c in light_c_call[k].lower():
+                            iso_d[c] += 1
+                        lightchain[k] = conversion_dict[re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ >= 2]))]
+                    else:
+                        lightchain[k] = conversion_dict[light_c_call[k].lower()]
             else:
                 lightchain[k] = light_c_call[k]
-        
+
         for k in heavy_v_call:
             heavy_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_v_call[k]))][0].split(','))))])
         for k in heavy_j_call:
@@ -372,7 +397,7 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
             light_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_v_call[k]))][0].split(','))))])
         for k in light_j_call:
             light_j_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_j_call[k]))][0].split(','))))])
-    
+
         productive = retrieve_metadata(dat, 'productive', True, False)
         if 'sample_id' in dat.columns:
             self.metadata['sample_id'] = pd.Series(samp_id)
@@ -382,14 +407,14 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
         self.metadata['productive'] = pd.Series(productive)
         self.metadata['umi_counts_heavy'] = pd.Series(heavy_umi)
         self.metadata['umi_counts_light'] = pd.Series(light_umi)
-        
+
         self.metadata['c_call_heavy'] = pd.Series(heavy_c_call)
         self.metadata['c_call_light'] = pd.Series(light_c_call)
         self.metadata['v_call_heavy'] = pd.Series(heavy_v_call)
         self.metadata['v_call_light'] = pd.Series(light_v_call)
         self.metadata['j_call_heavy'] = pd.Series(heavy_j_call)
         self.metadata['j_call_light'] = pd.Series(light_j_call)
-    
+
         multi = {}
         for i in self.metadata.index:
             try:
@@ -404,11 +429,11 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
                 lv_ = self.metadata.loc[i, 'v_call_light'].split(',')
             except:
                 lv_ = self.metadata.loc[i, 'v_call_light']
-            try:            
+            try:
                 lj_ = self.metadata.loc[i, 'v_call_light'].split(',')
             except:
                 lv_ = self.metadata.loc[i, 'v_call_light']
-    
+
             multi_ = []
             if len(hv_) > 1:
                 multi_.append(['Multi_heavy_v'])
@@ -420,10 +445,10 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
                 multi_.append(['Multi_light_j'])
             if len(multi_) < 1:
                 multi_.append(['Single'])
-    
+
             multi[i] = ','.join(list(flatten(multi_)))
         self.metadata['vdj_status'] = pd.Series(multi)
-        
+
         # return this in this order
         if 'sample_id' in dat.columns:
             self.metadata = self.metadata[['sample_id', 'clone_id', 'clone_group_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
@@ -451,18 +476,21 @@ def initialize_metadata(self, retrieve = None, split_heavy_light = True, collaps
         pass
 
 class Dandelion:
-    def __init__(self, data=None, metadata=None, distance=None, edges=None, layout=None, graph=None):
+    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None):
         self.data = data
-        self.metadata = metadata
+        self.metadata = metadata        
         self.distance = distance
         self.edges = edges
         self.layout = layout
         self.graph = graph
         self.threshold = None
-        
+        self.germline = {}
+        if germline is not None:
+            self.germline.update(germline)
+
         if os.path.isfile(str(self.data)):
             self.data = load_data(self.data)
-        
+
         if self.data is not None:
             initialize_metadata(self)
             self.n_contigs = self.data.shape[0]
@@ -470,7 +498,7 @@ class Dandelion:
                 self.n_obs = self.metadata.shape[0]
             except:
                 self.n_obs = 0
-    
+
     def _gen_repr(self, n_obs, n_contigs) -> str:
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
         for attr in ["data", "metadata", "distance", "edges"]:
@@ -492,6 +520,50 @@ class Dandelion:
 
     def copy(self):
         return copy.deepcopy(self)
+
+    def update_germline(self, corrected = None, germline = None, org = 'human'):
+        """
+        Update germline reference with corrected sequences and store in Dandelion object.
+
+        Parameters
+        ----------
+        self : Dandelion
+            Dandelion object.
+        corrected : dict, str, optional
+            dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
+        germline : str, optional
+            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+        org : str
+            organism of reference folder. Default is 'human'.
+        Returns
+        -------
+            updated germline reference diciontary in `.germline` slot.
+        """
+        env = os.environ.copy()
+        if germline is None:
+            try:
+                gml = env['GERMLINE']
+            except:
+                raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+            gml = gml+'imgt/'+org+'/vdj/'
+        else:
+            gml = germline
+
+        if not gml.endswith('/'):
+            gml = gml +'/'
+
+        germline_ref = readGermlines([gml])
+        if corrected is not None:
+            if type(corrected) is dict:
+                personalized_ref_dict = corrected
+            elif os.path.isfile(str(corrected)):
+                personalized_ref_dict = readGermlines([corrected])
+            # update with the personalized germline database
+            germline_ref.update(personalized_ref_dict)
+        else:
+            pass
+
+        self.germline.update(germline_ref)
 
     @staticmethod
     def isGZIP(filename):
