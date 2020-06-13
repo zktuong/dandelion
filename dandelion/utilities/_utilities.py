@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 22:01:06
+# @Last Modified time: 2020-06-13 22:08:50
 
 import sys
 import os
@@ -331,7 +331,6 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
 
     if 'clone_id' in dat. columns:
-        start = logg.info('Initializing')
         self.metadata = setup_metadata(dat, clones_sep)
 
         if 'sample_id' in dat.columns:
@@ -478,10 +477,6 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
                     self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
             else:
                 raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
-        logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'data\', contig-indexed clone table\n'
-        '   \'metadata\', cell-indexed clone table\n'))
     else:
         pass
 
