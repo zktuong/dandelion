@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 12:17:46
+# @Last Modified time: 2020-06-13 16:22:07
 
 import sys
 import os
@@ -114,7 +114,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(6,4), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -130,6 +130,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option. Default is True.
     correction_dict : dict[dict], optional
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
+    plot : bool
+        whether or not to plot reassignment summary metrics. Default is True.
+    figsize : tuple[float, float]
+        size of figure. Default is (6, 4).
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
@@ -502,6 +506,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         _file = "{}/{}.tsv".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+format_dict[fileformat])
     else:
         _file = "{}/{}.tsv".format(dirs, os.path.basename(fasta).split('.fasta')[0]+ format_dict[fileformat])
+    dat_10x = load_data(_file)
+    res_10x = pd.DataFrame(dat_10x['c_call'])
     dat = _transfer_c(_file, c_call, 'c_call')
     dat = _transfer_c(dat, c_seq, 'c_sequence_alignment')
     dat = _transfer_c(dat, c_germ, 'c_germline_alignment')
@@ -510,10 +516,60 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     dat = _transfer_c(dat, c_scr, 'c_score')
     dat = _transfer_c(dat, c_ident, 'c_identity')
     dat = _transfer_c(dat, c_supp, 'c_support')
+    res_blast = pd.DataFrame(dat['c_call'])  
+
+    res_10x_sum = pd.DataFrame(res_10x['c_call'].value_counts(normalize=True)*100)
+    res_blast_sum = pd.DataFrame(res_blast['c_call'].value_counts(normalize=True)*100)
+    res_10x_sum['group'] = '10X'
+    res_blast_sum['group'] = 'blast'
+    res_10x_sum.columns = ['counts', 'group']
+    res_blast_sum.columns = ['counts', 'group']
+    res_10x_sum.index = res_10x_sum.index.set_names(['c_call'])
+    res_blast_sum.index = res_blast_sum.index.set_names(['c_call'])
+    res_10x_sum.reset_index(drop = False, inplace = True)
+    res_blast_sum.reset_index(drop = False, inplace = True)
+
     if correct_c_call:
         dat = _correct_c_call(dat, primers_dict=correction_dict)
+        res_corrected = pd.DataFrame(dat['c_call'])
+        res_corrected_sum = pd.DataFrame(res_corrected['c_call'].value_counts(normalize=True)*100)
+        res_corrected_sum['group'] = 'corrected'
+        res_corrected_sum.columns = ['counts', 'group']
+        res_corrected_sum.index = res_corrected_sum.index.set_names(['c_call'])
+        res_corrected_sum.reset_index(drop = False, inplace = True)
+        res = pd.concat([res_10x_sum, res_blast_sum, res_corrected_sum])
+    else:
+        res = pd.concat([res_10x_sum, res_blast_sum])
+    res = res.reset_index(drop = True)
+    res['c_call'] = res['c_call'].astype('category')
+    res['c_call'] = res['c_call'].cat.reorder_categories(sorted(list(set(res['c_call'])), reverse=True))
+
     dat = _add_cell(dat)
     dat.to_csv(_file, sep = '\t', index=False)
+    if plot:
+        options.figure_size = figsize
+        if corrected:
+            p = (ggplot(res, aes(x='c_call', y = 'counts', fill='group'))
+                + coord_flip()
+                + theme_classic()
+                + xlab("c_call")
+                + ylab("% c calls")
+                + geom_bar(stat="identity", position = 'identity')
+                + facet_grid('~'+str('group'), scales="free_y")
+                + scale_fill_manual(values=('#e7e7e7','#86bcb6', '#F28e2b'))
+                + theme(legend_title = element_blank()))
+        else:
+            p = (ggplot(res, aes(x='c_call', y = 'counts', fill='group'))
+                + coord_flip()
+                + theme_classic()
+                + xlab("c_call")
+                + ylab("% c calls")
+                + geom_bar(stat="identity", position = 'identity')
+                + facet_grid('~'+str('group'), scales="free_y")
+                + scale_fill_manual(values=('#e7e7e7','#86bcb6'))
+                + theme(legend_title = element_blank()))
+        return(p)
+
 
 def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, extended = False, verbose = False, *args):
     """
@@ -650,7 +706,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     figsize : tuple[float, float]
-        size of figure. Default is (4, 3)
+        size of figure. Default is (4, 3).
     sample_dict : dict, optional
         dictionary for creating a sample_id column in the concatenated file.
     filtered : bool
@@ -869,7 +925,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
 
         options.figure_size = figsize
         final_table = pd.concat([ambiguous_table, not_in_genotype_table])
-        p = (ggplot(final_table, aes('sample_id', y = 'var', fill='var_group'))
+        p = (ggplot(final_table, aes(x='sample_id', y = 'var', fill='var_group'))
             + coord_flip()
             + theme_classic()
             + xlab("sample_id")
