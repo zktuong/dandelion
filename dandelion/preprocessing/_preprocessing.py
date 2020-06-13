@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 18:15:35
+# @Last Modified time: 2020-06-13 20:41:02
 
 import sys
 import os
@@ -837,7 +837,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             res = Dandelion(dat_)
             # update with the personalized germline database
             res.update_germline(outDir+'all_contig_heavy'+germline_dict[fileformat], germline, org)
-            create_germlines(dat_, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+            create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             res.data.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -848,7 +848,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         dat_ = _return_IGKV_IGLV(dat_)
         res = Dandelion(dat_)
         res.update_germline(outDir+'heavy_'+out_filename.replace('.tsv', '.fasta'), germline, org)
-        create_germlines(dat_, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+        create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
         print('   Saving corrected genotyped object')
         sleep(0.5)
         res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
