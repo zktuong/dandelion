@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-11 00:55:22
+# @Last Modified time: 2020-06-13 12:17:46
 
 import sys
 import os
@@ -24,6 +24,7 @@ import scanpy as sc
 import numpy as np
 import scipy.stats
 import scrublet as scr
+from Bio import Align
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -113,7 +114,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -125,6 +126,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     org : str
         organism of reference folder. Default is 'human'.
+    correct_c_call : bool
+        whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option. Default is True.
+    correction_dict : dict[dict], optional
+        a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
@@ -366,6 +371,124 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
         _data['cell_id'] = [c.split('_contig')[0].split('-')[0] for c in _data['sequence_id']]
         return(_data)
 
+    aligner = Align.PairwiseAligner()
+
+    def two_gene_correction(self, i, dictionary):    
+        key1, key2 = dictionary.keys()
+        seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
+        alignments1 = aligner.align(dictionary[key1], seq)
+        alignments2 = aligner.align(dictionary[key2], seq)
+        score1 = alignments1.score
+        score2 = alignments2.score
+        if score1 == score2:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)
+        if score1 > score2:
+            self.loc[i, 'c_call'] = str(key1)
+        if score1 < score2:
+            self.loc[i, 'c_call'] = str(key2)
+
+    def three_gene_correction(self, i, dictionary):
+        key1, key2, key3 = dictionary.keys()
+        seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
+        alignments1 = aligner.align(dictionary[key1], seq)
+        alignments2 = aligner.align(dictionary[key2], seq)
+        alignments3 = aligner.align(dictionary[key3], seq)
+        score1 = alignments1.score
+        score2 = alignments2.score
+        score3 = alignments3.score
+        if score1 == score2 == score3:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)
+        elif score1 > score2 and score1 > score3:
+            self.loc[i, 'c_call'] = str(key1)
+        elif score2 > score1 and score2 > score3:
+            self.loc[i, 'c_call'] = str(key2)
+        elif score3 > score1 and score3 > score2:
+            self.loc[i, 'c_call'] = str(key3)
+        elif score1 == score2 and score1 > score3:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)
+        elif score1 > score2 and score1 == score3:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key3)
+        elif score2 > score1 and score2 == score3:
+            self.loc[i, 'c_call'] = str(key2)+','+str(key3)
+                
+    def four_gene_correction(self, i, dictionary):    
+        key1, key2, key3, key4 = dictionary.keys()
+        seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
+        alignments1 = aligner.align(dictionary[key1], seq)
+        alignments2 = aligner.align(dictionary[key2], seq)
+        alignments3 = aligner.align(dictionary[key3], seq)
+        alignments4 = aligner.align(dictionary[key4], seq)
+        score1 = alignments1.score
+        score2 = alignments2.score
+        score3 = alignments3.score
+        score4 = alignments4.score
+        if score1 == score2 == score3 == score4:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)+','+str(key4)
+        elif score1 > score2 and score1 > score3 and score1 > score4:
+            self.loc[i, 'c_call'] = str(key1)
+        elif score2 > score1 and score2 > score3 and score2 > score4:
+            self.loc[i, 'c_call'] = str(key2)
+        elif score3 > score1 and score3 > score2 and score3 > score4:
+            self.loc[i, 'c_call'] = str(key3)
+        elif score4 > score1 and score4 > score2 and score4 > score3:
+            self.loc[i, 'c_call'] = str(key4)
+        elif score1 == score2 and score1 > score3 and score1 > score4:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)
+        elif score1 > score2 and score1 == score3 and score1 > score4:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key3)
+        elif score1 > score2 and score1 > score3 and score1 == score4:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key4)
+        elif score2 == score3 and score2 > score1 and score2 > score4:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key3)
+        elif score2 == score4 and score2 > score1 and score2 > score3:
+            self.loc[i, 'c_call'] = str(key2)+','+str(key4)
+        elif score3 == score4 and score3 > score1 and score3 > score2:
+            self.loc[i, 'c_call'] = str(key3)+','+str(key4)
+        elif score1 == score2 == score3 and score1 > score4:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)
+        elif score1 == score2 == score4 and score1 > score3:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key4)
+        elif score1 == score3 == score4 and score1 > score2:
+            self.loc[i, 'c_call'] = str(key1)+','+str(key3)+','+str(key4)
+        elif score2 == score3 == score4 and score2 > score1:
+            self.loc[i, 'c_call'] = str(key2)+','+str(key3)+','+str(key4)
+            
+    def _correct_c_call(data, primers_dict=None):
+        dat = data.copy()
+        if primers_dict is None:
+            primer_dict = {
+                'IGHG':{
+                    'IGHG1':'GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCCTCCAAGAGCACCTCTGGGGGCACAGCGGCCCTGGGC',
+                    'IGHG2':'GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCGGCCCTGGGC',
+                    'IGHG3':'GCTTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCTGGGGGCACAGCGGCCCTGGGC',
+                    'IGHG4':'GCTTCCACCAAGGGCCCATCCGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCCGCCCTGGGC'},
+                'IGHA':{
+                    'IGHA1':'GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCTGCAGCACCCAGCCAGATGGGAACGTGGTCATCGCCTGC',
+                    'IGHA2':'GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC'},
+                'IGLC7':{
+                    'IGLC':'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA',
+                    'IGLC7':'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCGTAA'},
+                'IGLC3':{
+                    'IGLC':'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA',
+                    'IGLC3':'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA'},
+                'IGLC6':{
+                    'IGLC': 'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA',
+                    'IGLC6':'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA'}}
+        else:
+            primer_dict = primers_dict
+        
+        for i in dat.index:
+            if (dat.loc[i, 'c_call'] is not np.nan) & (dat.loc[i, 'c_call'] is not None):
+                for k in primer_dict:
+                    if k in dat.loc[i, 'c_call']:
+                        if len(primer_dict[k]) == 2:
+                            two_gene_correction(dat, i, primer_dict[k])
+                        elif len(primer_dict[k]) == 3:
+                            three_gene_correction(dat, i, primer_dict[k])                        
+                        elif len(primer_dict[k]) == 4:
+                            four_gene_correction(dat, i, primer_dict[k])
+        return(dat)
+
     format_dict = {'changeo':'_igblast_db-pass', 'airr':'_igblast_gap'}
 
     # running blast using blast
@@ -387,6 +510,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', blastdb = None, al
     dat = _transfer_c(dat, c_scr, 'c_score')
     dat = _transfer_c(dat, c_ident, 'c_identity')
     dat = _transfer_c(dat, c_supp, 'c_support')
+    if correct_c_call:
+        dat = _correct_c_call(dat, primers_dict=correction_dict)
     dat = _add_cell(dat)
     dat.to_csv(_file, sep = '\t', index=False)
 
@@ -633,7 +758,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         tigger_genotype(outDir+'heavy_'+out_filename, germline = germline, fileformat = fileformat, verbose = verbose)
 
     # initialise the germline references
-    germline_ref = readGermlines([gml])
+    # germline_ref = readGermlines([gml])
 
     # and now to add it back to the original folders
     sleep(0.5)
@@ -643,10 +768,10 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            personalized_ref_dict = readGermlines([outDir+'filtered_contig_heavy'+germline_dict[fileformat]])
+            res = Dandelion(dat_)
             # update with the personalized germline database
-            germline_ref.update(personalized_ref_dict)
-            res = create_germlines(dat_, germline = germline_ref, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+            res.update_germline(outDir+'filtered_contig_heavy'+germline_dict[fileformat], germline, org)
+            create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             res.data.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -655,10 +780,10 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            personalized_ref_dict = readGermlines([outDir+'all_contig_heavy'+germline_dict[fileformat]])
+            res = Dandelion(dat_)
             # update with the personalized germline database
-            germline_ref.update(personalized_ref_dict)
-            res = create_germlines(dat_, germline = germline_ref, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+            res.update_germline(outDir+'all_contig_heavy'+germline_dict[fileformat], germline, org)
+            create_germlines(dat_, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
             print('   Saving corrected genotyped object')
             sleep(0.5)
             res.data.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -667,10 +792,9 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
         dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
         dat_ = _return_IGKV_IGLV(dat_)
-        personalized_ref_dict = readGermlines([outDir+'heavy_'+out_filename.replace('.tsv', '.fasta')])
-        # update with the personalized germline database
-        germline_ref.update(personalized_ref_dict)
-        res = create_germlines(dat_, germline = germline_ref, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+        res = Dandelion(dat_)
+        res.update_germline(outDir+'heavy_'+out_filename.replace('.tsv', '.fasta'), germline, org)
+        create_germlines(dat_, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
         print('   Saving corrected genotyped object')
         sleep(0.5)
         res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
@@ -920,6 +1044,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
 
                 # Define Receptor iterator
                 receptor_iter = ((self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
+
             else:
                 raise LookupError('Please initialise the Dandelion object with a dataframe in data slot.')
         elif self.__class__ == pd.DataFrame:
@@ -973,12 +1098,12 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             datx = load_data(self.data)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
-            self.__init__(data = datx)
+            self.__init__(data = datx, germline = reference_dict)
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
-            output = Dandelion(data = datx)
+            output = Dandelion(data = datx, germline = reference_dict)
             return(output)
         
     def _create_germlines_file(file, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
@@ -1075,14 +1200,14 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 out.update({key:annotations})
         germline_df = pd.DataFrame.from_dict(out, orient = 'index')
 
-        out = Dandelion(data = file)
+        out = Dandelion(data = file, germline = reference_dict)
         for x in germline_df.columns:
             out.data[x] = pd.Series(germline_df[x])
 
         if os.path.isfile(str(file)):
-            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)
-        
+            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)        
         return(out)
+
     if type(germline) is dict:
         if self.__class__ == Dandelion:
             _create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
@@ -1092,7 +1217,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             return(_create_germlines_file(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
     else:
         if self.__class__ == Dandelion:
-            _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+            if len(self.germline) is not 0:
+                _create_germlines_object(self, self.germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+            else:
+                _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
         elif self.__class__ == pd.DataFrame:
             return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
         else:
@@ -1168,7 +1296,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1186,9 +1314,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     filter_rna : bool
         If True, `AnnData` object returned will be filtered. Default is True.
     rescue_igh : bool
-        If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. Default is True.
+        If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
-        related tominimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5.
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold. 
     filter_lightchains : bool
         cells with multiple light chains will be marked to filter. Default is True.
     filter_missing : bool
@@ -1207,6 +1335,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     h = Tree()
     l = Tree()
     h_umi = Tree()
+    h_dup = Tree()
     l_umi = Tree()
     h_seq = Tree()
     l_seq = Tree()
@@ -1239,6 +1368,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])        
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
         hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
+        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
 
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
@@ -1247,6 +1377,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         h[b] = hc_id
         h_umi[b] = hc_umi
         h_seq[b] = hc_seq
+        h_dup[b] = hc_dup
 
         l[b] = lc_id
         l_umi[b] = lc_umi
@@ -1263,16 +1394,20 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                     
                 hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
                 hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
-
+                hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
                 h[b] = hc_id
                 h_umi[b] = hc_umi
+                h_dup[b] = hc_dup
                 h_seq[b] = hc_seq
             if len(h[b]) > 1:
                 if rescue_igh:
                     highest_umi = max(h_umi[b])
                     lowest_umi = min(h_umi[b])
+                    sum_umi = sum(h_umi[b]+h_dup[b])
                     highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
                     if len(highest_umi_idx) > 1:
+                        h_doublet.append(b)
+                    if sum_umi < 4:
                         h_doublet.append(b)
                     if highest_umi/lowest_umi < umi_foldchange_cutoff:
                         h_doublet.append(b)
