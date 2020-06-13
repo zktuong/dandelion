@@ -102,12 +102,17 @@ plotnine==0.6.0 (conda-forge)
 changeo==1.0.0 (bioconda)
 presto==0.6.0 (bioconda)
 
+# Other executables (through conda)
+blast>=2.5.0 (bioconda)
+igblast==1.15.0 (bioconda)
+
 # pip
 anndata==0.7.1
 scanpy>=1.4.6
 scrublet==0.2.1
 rpy2>=3.3.2
 ```
+
 R packages
 ```R
 alakazam_1.0.1
@@ -115,12 +120,6 @@ tigger_1.0.0
 airr_1.2.0
 shazam_1.0.0
 ggplot2
-```
-
-Other executables (through conda)
-```python
-blast>=2.5.0 (bioconda)
-igblast==1.15.0 (bioconda)
 ```
 
 ## Acknowledgements
