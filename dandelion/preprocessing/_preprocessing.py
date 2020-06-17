@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 22:03:11
+# @Last Modified time: 2020-06-17 13:08:20
 
 import sys
 import os
@@ -114,7 +114,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,3), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -133,7 +133,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     figsize : tuple[float, float]
-        size of figure. Default is (4, 3).
+        size of figure. Default is (4, 4).
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
@@ -554,7 +554,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme_classic()
                 + xlab("c_call")
                 + ylab("% c calls")
-                + geom_bar(stat="identity", position = 'identity')
+                + geom_bar(stat="identity", position = 'dodge')
                 + scale_fill_manual(values=('#e7e7e7','#86bcb6', '#F28e2b'))
                 + theme(legend_title = element_blank()))
         else:
@@ -563,7 +563,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme_classic()
                 + xlab("c_call")
                 + ylab("% c calls")
-                + geom_bar(stat="identity", position = 'identity')
+                + geom_bar(stat="identity", position = 'dodge')
                 + scale_fill_manual(values=('#e7e7e7','#86bcb6'))
                 + theme(legend_title = element_blank()))
         print(p)
@@ -671,7 +671,7 @@ def map_cellranger(data, extended = False):
         dat['junction_10x_aa'] = pd.Series(junction_aa)
     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_dict = None, filtered = False, out_filename = None, verbose = False):
+def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_dict = None, split_write_out = True, filtered = False, out_filename = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -707,6 +707,8 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         size of figure. Default is (4, 3).
     sample_dict : dict, optional
         dictionary for creating a sample_id column in the concatenated file.
+    split_write_out : bool
+        whether or not to write out the processed file. Default is True. If False, it will return a `Dandelion` object instead.
     filtered : bool
         whether or not the to use 'filtered_contig' (True) or 'all_contig' (False) as prefix for output files. Ignored if out_filename is specified.
     out_filename : str, optional
@@ -715,7 +717,8 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         Whether or not to print the command used in the terminal. Default is False.
     Returns
     ----------
-        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls.
+        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+        Dandelion object holding updated `.data` slot if split_write_out is False.
     """
     env = os.environ.copy()
     if germline is None:
@@ -854,21 +857,8 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
     # reset dat_
-    dat_ = res.data.copy()
+    dat_ = res.data.copy()    
 
-    for s in tqdm(data, desc = 'Writing out to individual folders '):
-        if sample_dict is not None:
-            out_ = dat_[dat_['sample_id'] == sample_dict[s]]
-        else:
-            out_ = dat_[dat_['sample_id'] == s]
-        if os.path.isfile(str(s)):
-            out_.to_csv(s.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
-        else:
-            if filtered:
-                filePath = s+'/'+path+'filtered_contig'+fileformat_dict[fileformat]
-            else:
-                filePath = s+'/'+path+'all_contig'+fileformat_dict[fileformat]
-            out_.to_csv(filePath, index = False, sep = '\t')    
     if plot:
         print('Returning summary plot')
         if out_filename is None:
@@ -934,6 +924,25 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
             + theme(legend_title = element_blank()))
         print(p)
+
+    if split_write_out:
+        for s in tqdm(data, desc = 'Writing out to individual folders '):
+            if sample_dict is not None:
+                out_ = dat_[dat_['sample_id'] == sample_dict[s]]
+            else:
+                out_ = dat_[dat_['sample_id'] == s]
+            if os.path.isfile(str(s)):
+                out_.to_csv(s.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
+            else:
+                if filtered:
+                    filePath = s+'/'+path+'filtered_contig'+fileformat_dict[fileformat]
+                else:
+                    filePath = s+'/'+path+'all_contig'+fileformat_dict[fileformat]
+                out_.to_csv(filePath, index = False, sep = '\t')
+    else:
+        return(res)
+
+    
 
 def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr'):
     """
