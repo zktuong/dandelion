@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 22:08:50
+# @Last Modified time: 2020-06-17 15:08:26
 
 import sys
 import os
@@ -554,9 +554,6 @@ class Dandelion:
             gml = gml+'imgt/'+org+'/vdj/'
         else:
             gml = germline
-
-        if not gml.endswith('/'):
-            gml = gml +'/'
 
         germline_ref = readGermlines([gml])
         if corrected is not None:
