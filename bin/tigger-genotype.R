@@ -112,16 +112,18 @@ if (opt$FORMAT == "changeo") {
 }
 igv <- readIgFasta(opt$REF)
 # Identify polymorphisms and genotype
-nv <- findNovelAlleles(db, germline_db=igv, v_call=v_call, j_call=j_call,
-                       seq=sequence_alignment, junction=junction,
-                       junction_length=junction_length,
-                       min_seqs=opt$MIN_SEQS, germline_min=opt$GERMLINE_MIN,
-                       nproc=opt$NPROC)
-gt <- inferGenotype(db, germline_db=igv, novel=nv,
-                    v_call=v_call, seq=sequence_alignment)
+# nv <- findNovelAlleles(db, germline_db=igv, v_call=v_call, j_call=j_call,
+#                        seq=sequence_alignment, junction=junction,
+#                        junction_length=junction_length,
+#                        min_seqs=opt$MIN_SEQS, germline_min=opt$GERMLINE_MIN,
+#                        nproc=opt$NPROC)
+# gt <- inferGenotype(db, germline_db=igv, novel=nv,
+#                     v_call=v_call, seq=sequence_alignment)
+gt <- inferGenotype(db, germline_db=igv, v_call=v_call, seq=sequence_alignment)
 write.table(gt, file.path(opt$OUTDIR, paste0(opt$NAME, "_inferredGenotype.txt")), sep="\t",quote=FALSE,row.names = FALSE)
 # Write genotype FASTA file
-gt_seq <- genotypeFasta(gt, germline_db=igv, novel=nv)
+# gt_seq <- genotypeFasta(gt, germline_db=igv, novel=nv)
+gt_seq <- genotypeFasta(gt, germline_db=igv)
 writeFasta(gt_seq, file.path(opt$OUTDIR, paste0(opt$NAME, "_genotype.fasta")))
 # Modify allele calls
 db <- reassignAlleles(db, gt_seq, v_call=v_call, seq=sequence_alignment)

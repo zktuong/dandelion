@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 22:08:50
+# @Last Modified time: 2020-06-17 17:12:58
 
 import sys
 import os
@@ -550,15 +550,35 @@ class Dandelion:
             try:
                 gml = env['GERMLINE']
             except:
-                raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+                raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.')
             gml = gml+'imgt/'+org+'/vdj/'
         else:
-            gml = germline
+            if os.path.isdir(germline):
+                gml = germline
+            elif type(germline) is not list:
+                germline_ = [germline]
+                if len(germline_) < 3:
+                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                else:
+                    gml = []
+                    for x in germline_:
+                        if not x.endswith('.fasta'):
+                            raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                        gml.append(x)
+            elif type(germline) is list:
+                if len(germline) < 3:
+                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                else:
+                    gml = []
+                    for x in germline:
+                        if not x.endswith('.fasta'):
+                            raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                        gml.append(x)
+            
+        if type(gml) is not list:
+            gml = [gml]
 
-        if not gml.endswith('/'):
-            gml = gml +'/'
-
-        germline_ref = readGermlines([gml])
+        germline_ref = readGermlines(gml)
         if corrected is not None:
             if type(corrected) is dict:
                 personalized_ref_dict = corrected
