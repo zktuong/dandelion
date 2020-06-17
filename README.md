@@ -59,7 +59,12 @@ pip install git+https://github.com/zktuong/dandelion.git@devel
 
 dandelion also requires some R packages intalled.
 ```R
-install.packages(c("alakazam", "tigger", "airr", "shazam", "ggplot2"))
+install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam", "ggplot2"))
+```
+or the following if using conda to manage R:
+```bash
+conda install -c bioconda r-optparse
+conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam 
 ```
 
 ## Required database
