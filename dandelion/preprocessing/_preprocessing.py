@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 14:32:57
+# @Last Modified time: 2020-06-17 14:44:32
 
 import sys
 import os
@@ -720,19 +720,6 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
         Dandelion object holding updated `.data` slot if split_write_out is False.
     """
-    env = os.environ.copy()
-    if germline is None:
-        try:
-            gml = env['GERMLINE']
-        except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
-        gml = gml+'imgt/'+org+'/vdj/'        
-    else:
-        gml = germline
-
-    if not gml.endswith('/'):
-        gml = gml +'/'
-
     def _return_IGKV_IGLV(results, locus = 'IGH'):
         res = results.copy()
         for i in tqdm(res.index, desc = '   Returning light chain V calls'):
