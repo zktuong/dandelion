@@ -119,7 +119,7 @@ igv <- readIgFasta(opt$REF)
 #                        nproc=opt$NPROC)
 # gt <- inferGenotype(db, germline_db=igv, novel=nv,
 #                     v_call=v_call, seq=sequence_alignment)
-gt <- inferGenotype(db, germline_db=igv, v_call=v_call, seq=sequence_alignment)
+gt <- inferGenotype(db, germline_db=igv, v_call=v_call, seq=sequence_alignment, find_unmutated = FALSE)
 write.table(gt, file.path(opt$OUTDIR, paste0(opt$NAME, "_inferredGenotype.txt")), sep="\t",quote=FALSE,row.names = FALSE)
 # Write genotype FASTA file
 # gt_seq <- genotypeFasta(gt, germline_db=igv, novel=nv)
