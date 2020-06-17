@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 17:21:15
+# @Last Modified time: 2020-06-17 17:28:55
 
 import sys
 import os
@@ -555,7 +555,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + xlab("c_call")
                 + ylab("% c calls")
                 + geom_bar(stat="identity", position = 'dodge')
-                + scale_fill_manual(values=('#e7e7e7','#86bcb6', '#F28e2b'))
+                + scale_fill_manual(values=('#79706e','#86bcb6', '#F28e2b'))
                 + theme(legend_title = element_blank()))
         else:
             p = (ggplot(res, aes(x='c_call', y = 'counts', fill='group'))
@@ -564,7 +564,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + xlab("c_call")
                 + ylab("% c calls")
                 + geom_bar(stat="identity", position = 'dodge')
-                + scale_fill_manual(values=('#e7e7e7','#86bcb6'))
+                + scale_fill_manual(values=('#79706e','#86bcb6'))
                 + theme(legend_title = element_blank()))
         print(p)
 
