@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 17:31:24
+# @Last Modified time: 2020-06-17 20:17:37
 
 import sys
 import os
@@ -911,7 +911,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
             + theme(legend_title = element_blank()))
         print(p)
-
+    sleep(0.5)
     if split_write_out:
         for s in tqdm(data, desc = 'Writing out to individual folders '):
             if sample_dict is not None:
