@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 14:44:32
+# @Last Modified time: 2020-06-17 17:21:15
 
 import sys
 import os
@@ -626,7 +626,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
                 try:
                     gml = env['GERMLINE']            
                 except:
-                    raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+                    raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
                 gml = gml+'imgt/'+org+'/vdj/'
             else:
                 env['GERMLINE'] = germline
@@ -929,8 +929,6 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
     else:
         return(res)
 
-    
-
 def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr'):
     """
     Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
@@ -965,11 +963,12 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
         gml = gml+'imgt/'+org+'/vdj/'
     else:
-        env['GERMLINE'] = germline
-        gml = germline
+        if os.path.isdir(germline):
+            env['GERMLINE'] = germline
+            gml = germline
 
     def _parseChangeO(record):
         """
@@ -1263,7 +1262,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)        
         return(out)
 
-    if type(germline) is dict:
+    if (type(germline) is dict) or (type(germline) is list):
         if self.__class__ == Dandelion:
             _create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
         elif self.__class__ == pd.DataFrame:

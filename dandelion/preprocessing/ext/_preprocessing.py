@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 13:42:50
+# @Last Modified time: 2020-06-17 17:27:37
 
 import os
 from subprocess import run
@@ -107,9 +107,9 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
     env = os.environ.copy()
     if germline is None:
         try:
-            gml = env['GERMLINE']            
+            gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
         gml = gml+'imgt/'+org+'/vdj/'
     else:
         env['GERMLINE'] = germline
@@ -177,14 +177,32 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files.')
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.')
         gml = gml+'imgt/'+org+'/vdj/imgt_'+org+'_IGHV.fasta'
     else:
-        env['GERMLINE'] = germline
-        gml = germline
-
-    if not gml.endswith('.fasta'):
-        raise OSError('Input for germline is incorrect. Please provide path to germline IGHV fasta file.')
+        if os.path.isdir(germline):
+            gml = germline.strip('/') + 'imgt_'+org+'_IGHV.fasta'
+            if not os.path.isfile(gml):
+                raise OSError("Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.".format(gml))
+        elif type(germline) is not list:
+            germline_ = [germline]
+            if len(germline_) < 3:
+                raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+            else:
+                for x in germline_:
+                    if not x.endswith('.fasta'):
+                        raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                    if (os.path.isfile(x)) & ('ighv' in x.lower()):
+                        gml = x
+        else:
+            if len(germline) < 3:
+                raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+            else:
+                for x in germline:
+                    if not x.endswith('.fasta'):
+                        raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                    if (os.path.isfile(x)) & ('ighv' in x.lower()):
+                        gml = x
 
     if outdir is not None:
         out_dir = outdir + '/'
