@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 13:08:20
+# @Last Modified time: 2020-06-17 14:32:57
 
 import sys
 import os
@@ -873,9 +873,9 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         s2 = set(inf_geno['gene'])
         results = []
         for samp in list(set(out_h['sample_id'])):
-            res = out_h[(out_h['sample_id']==samp)]
-            V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res['v_call']]
-            V_g = [re.sub('[*][0-9][0-9]', '', v) for v in res['v_call_genotyped']]
+            res_x = out_h[(out_h['sample_id']==samp)]
+            V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call']]
+            V_g = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call_genotyped']]
             s1 = set(list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
             setdiff = s1 - s2
             ambiguous = (["," in i for i in V_].count(True)/len(V_)*100, ["," in i for i in V_g].count(True)/len(V_g)*100)
