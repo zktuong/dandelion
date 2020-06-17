@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 17:28:55
+# @Last Modified time: 2020-06-17 17:31:24
 
 import sys
 import os
@@ -15,7 +15,7 @@ from collections import OrderedDict
 from time import sleep
 from ..utilities._utilities import *
 from .ext._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
-from plotnine import ggplot, geom_bar, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme
+from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
@@ -554,7 +554,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme_classic()
                 + xlab("c_call")
                 + ylab("% c calls")
-                + geom_bar(stat="identity", position = 'dodge')
+                + geom_col(stat="identity", position = 'dodge')
                 + scale_fill_manual(values=('#79706e','#86bcb6', '#F28e2b'))
                 + theme(legend_title = element_blank()))
         else:
@@ -563,7 +563,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme_classic()
                 + xlab("c_call")
                 + ylab("% c calls")
-                + geom_bar(stat="identity", position = 'dodge')
+                + geom_col(stat="identity", position = 'dodge')
                 + scale_fill_manual(values=('#79706e','#86bcb6'))
                 + theme(legend_title = element_blank()))
         print(p)
