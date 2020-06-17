@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-02 15:18:11
+# @Last Modified time: 2020-06-17 13:42:50
 
 import os
 from subprocess import run
@@ -177,11 +177,14 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files')
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to germline fasta files.')
         gml = gml+'imgt/'+org+'/vdj/imgt_'+org+'_IGHV.fasta'
     else:
         env['GERMLINE'] = germline
         gml = germline
+
+    if not gml.endswith('.fasta'):
+        raise OSError('Input for germline is incorrect. Please provide path to germline IGHV fasta file.')
 
     if outdir is not None:
         out_dir = outdir + '/'
