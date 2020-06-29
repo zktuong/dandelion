@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 17:12:58
+# @Last Modified time: 2020-06-29 17:21:21
 
 import sys
 import os
@@ -280,7 +280,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
     tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
     sub_metadata = sub_metadata.merge(tmp_dat, left_index = True, right_index = True)
     sub_metadata = sub_metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
-    if split_heavy_light:
+    if not split_heavy_light:
         retrieval_list = {}
         for x in sub_metadata.index:
             if collapse:
@@ -334,17 +334,17 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
         self.metadata = setup_metadata(dat, clones_sep)
 
         if 'sample_id' in dat.columns:
-            samp_id = retrieve_metadata(dat, 'sample_id', True, True)
+            samp_id = retrieve_metadata(dat, 'sample_id', False, True)
 
         if 'v_call_genotyped' in dat.columns:
-            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', False, False)
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', True, False)
         else:
-            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', False, False)
-        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', False, False)
-        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', False, False)
-        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', False, False)
+            heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call', True, False)
+        heavy_j_call, light_j_call = retrieve_metadata(dat, 'j_call', True, False)
+        heavy_c_call, light_c_call = retrieve_metadata(dat, 'c_call', True, False)
+        heavy_umi, light_umi = retrieve_metadata(dat, 'umi_count', True, False)
 
-        heavy_status, light_status = retrieve_metadata(dat, 'locus', False, False)
+        heavy_status, light_status = retrieve_metadata(dat, 'locus', True, False)
         status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
         for i in status.index:
             try:
@@ -403,7 +403,7 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
         for k in light_j_call:
             light_j_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(light_j_call[k]))][0].split(','))))])
 
-        productive = retrieve_metadata(dat, 'productive', True, False)
+        productive = retrieve_metadata(dat, 'productive', False, False)
         if 'sample_id' in dat.columns:
             self.metadata['sample_id'] = pd.Series(samp_id)
         self.metadata['isotype'] = pd.Series(isotype)
@@ -464,15 +464,15 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
             if retrieve in dat.columns:
                 if split_heavy_light:
                     if collapse:
-                        retrieve_dict = retrieve_metadata(dat, retrieve, True, True)
+                        retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
                     else:
-                        retrieve_dict = retrieve_metadata(dat, retrieve, True, False)
+                        retrieve_dict = retrieve_metadata(dat, retrieve, False, False)
                     self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
                 else:
                     if collapse:
-                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
+                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, True, True)
                     else:
-                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, False, False)
+                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, True, False)
                     self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
                     self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
             else:
