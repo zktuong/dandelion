@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 20:42:38
+# @Last Modified time: 2020-07-01 17:59:15
 
 import os
 import sys
@@ -836,7 +836,11 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
     """
     start = logg.info('Quantifying mutations')
     sh = importr('shazam')
-    dat = load_data(self.data)
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    elif self.__class__ == pd.DataFrame or os.path.isfile(self):
+        dat = load_data(self)        
+
     warnings.filterwarnings("ignore")
 
     if region_definition is None:
@@ -886,40 +890,54 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         cols_to_return = list(filter(re.compile("mu_.*").match, [c for c in pd_df.columns]))
     else:
         cols_to_return = cols_to_return
-    res = {}
-    for x in cols_to_return:
-        res[x] = list(pd_df[x])
-        self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
-    if split_locus is False:
-        metadata_ = self.data[['cell_id']+list(cols_to_return)]
-    else:
-        metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
     
-    for x in cols_to_return:
-        metadata_[x] = metadata_[x].astype(np.float32)
+    res = {}
+    if self.__class__ == Dandelion:        
+        for x in cols_to_return:
+            res[x] = list(pd_df[x])
+            self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
+        if split_locus is False:
+            metadata_ = self.data[['cell_id']+list(cols_to_return)]
+        else:
+            metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
+    
+        for x in cols_to_return:
+            metadata_[x] = metadata_[x].astype(np.float32)
 
-    if split_locus is False:
-        metadata_ = metadata_.groupby('cell_id').sum()
-    else:
-        metadata_ = metadata_.groupby(['locus','cell_id']).sum()
-        metadatas = []
-        for x in list(set(self.data['locus'])):
-            tmp = metadata_.iloc[metadata_.index.isin([x], level='locus'),:]
-            tmp.index = tmp.index.droplevel()
-            tmp.columns = [c+'_'+str(x) for c in tmp.columns]
-            metadatas.append(tmp)
-        metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
+        if split_locus is False:
+            metadata_ = metadata_.groupby('cell_id').sum()
+        else:
+            metadata_ = metadata_.groupby(['locus','cell_id']).sum()
+            metadatas = []
+            for x in list(set(self.data['locus'])):
+                tmp = metadata_.iloc[metadata_.index.isin([x], level='locus'),:]
+                tmp.index = tmp.index.droplevel()
+                tmp.columns = [c+'_'+str(x) for c in tmp.columns]
+                metadatas.append(tmp)
+            metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
 
-    metadata_.index.name = None
-    if self.metadata is None:
-        self.metadata = metadata_
-    else:
-        for x in metadata_.columns:
-            self.metadata[x] = pd.Series(metadata_[x])
-    logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'data\', contig-indexed clone table\n'
-        '   \'metadata\', cell-indexed clone table\n'))
+        metadata_.index.name = None
+    
+        if self.metadata is None:
+            self.metadata = metadata_
+        else:
+            for x in metadata_.columns:
+                self.metadata[x] = pd.Series(metadata_[x])
+        logg.info(' finished', time=start,
+            deep=('Updated Dandelion object: \n'
+            '   \'data\', contig-indexed clone table\n'
+            '   \'metadata\', cell-indexed clone table\n'))
+    else: 
+        for x in cols_to_return:
+            res[x] = list(pd_df[x])
+            dat[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
+                
+        if self.__class__ == pd.DataFrame:
+            logg.info(' finished', time=start, deep=('Returning DataFrame\n'))
+            return(dat)
+        elif os.path.isfile(self):
+            logg.info(' finished', time=start, deep=('saving DataFrame at {}\n'.format(str(self))))
+            dat.to_csv(self, sep = '\t')
 
 def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
     """
