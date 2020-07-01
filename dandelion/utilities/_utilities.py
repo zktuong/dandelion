@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-29 17:21:21
+# @Last Modified time: 2020-07-01 14:26:04
 
 import sys
 import os
@@ -462,7 +462,7 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
         # new function to retrieve non-standard columns
         if retrieve is not None:
             if retrieve in dat.columns:
-                if split_heavy_light:
+                if not split_heavy_light:
                     if collapse:
                         retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
                     else:
