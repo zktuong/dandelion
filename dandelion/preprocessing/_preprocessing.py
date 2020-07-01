@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 20:17:37
+# @Last Modified time: 2020-07-01 14:38:43
 
 import sys
 import os
@@ -1147,7 +1147,28 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             datx = load_data(self.data)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
-            self.__init__(data = datx, germline = reference_dict)
+            if self.distance is not None:
+                dist_ = self.distance
+            else:
+                dist_ = None
+            if self.edges is not None:
+                edge_ = self.edges
+            else:
+                edge_ = None
+            if self.layout is not None:
+                layout_ = self.layout
+            else:
+                layout_ = None
+            if self.graph is not None:
+                graph_ = self.graph
+            else:
+                graph_ = None
+            if self.threshold is not None:
+                threshold_ = self.threshold
+            else:
+                threshold_ = None
+            self.__init__(data = datx, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_)
+            self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
@@ -1558,6 +1579,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                 outFile_prefix = 'filtered_contig'
             else:
                 outFile_prefix = 'all_contig'
+
+            if outdir is None:
+                outDir = 'dandelion/data'
+            else:
+                if outdir.endswith('/'):
+                    outDir = str(outdir).strip('/')
+                else:
+                    outDir = str(outdir)
+
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
 
             if (outdir is None) & (outFilePrefix is not None):
                 _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', str(outFilePrefix)), sep = '\t', index = None)
