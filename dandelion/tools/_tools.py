@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-01 17:59:15
+# @Last Modified time: 2020-07-22 17:30:07
 
 import os
 import sys
@@ -30,14 +30,10 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
-from rpy2.robjects.packages import importr, data
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, StrVector
 import warnings
 from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
-from plotnine import ggplot, geom_point, options, annotate, aes, xlab, ylab, facet_grid, theme_bw, geom_histogram, geom_vline, facet_grid, theme
 
 def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None):
     """
@@ -54,7 +50,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
     by_alleles : bool, optional
         Whether or not to collapse alleles to genes. None defaults to True.
     write_out : bool
-        If True, will write out airr/changeo file with clone_id column (default is False). file path and file name is determined by outdir and outFilePrefix options.
+        If True, will write out airr/changeo file with clone_id column (default is False). file path and file name is determined by outdir and outFilePrefix options..
     outdir : str, optional
         If specified, outfile will be in this location. None defaults to 'dandelion/data'.
     outFilePrefix : str, optional
@@ -811,303 +807,6 @@ def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
     else:
         logg.info(' finished', time=start,
                 deep=('updated `.obs` with `.metadata`\n'))
-
-def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
-    """
-    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__. 
-
-    Parameters
-    ----------
-    self : Dandelion
-        `Dandelion` object
-    split_locus : bool
-        whether to return the results for heavy chain and light chain separately. Default is False.
-    region_definition : str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
-    mutation_definition : str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
-    frequency
-        whether to return the results a frequency or counts. Default is True (frequency).
-    combine
-        whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
-    Returns
-    ----------
-        `Dandelion` object with updated `.metadata` slot.
-    """
-    start = logg.info('Quantifying mutations')
-    sh = importr('shazam')
-    if self.__class__ == Dandelion:
-        dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(self):
-        dat = load_data(self)        
-
-    warnings.filterwarnings("ignore")
-
-    if region_definition is None:
-        reg_d = NULL
-    else:
-        reg_d = data(sh).fetch(region_definition)
-
-    if mutation_definition is None:
-        mut_d = NULL
-    else:
-        mut_d = data(sh).fetch(mutation_definition)
-
-    if split_locus is False:
-        try:
-            dat_r = pandas2ri.py2rpy(dat)
-        except:
-            dat = dat.fillna('')
-            dat_r = pandas2ri.py2rpy(dat)
-
-        results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        pd_df = pandas2ri.rpy2py_dataframe(results)
-    else:
-        dat_h = dat[dat['locus'] == 'IGH']
-        dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-
-        try:
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-        except:
-            dat_h = dat_h.fillna('')
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-
-        try:
-            dat_l_r = pandas2ri.py2rpy(dat_l)
-        except:
-            dat_l = dat_l.fillna('')
-            dat_l_r = pandas2ri.py2rpy(dat_l)
-
-        results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
-        pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
-        pd_df = pd.concat([pd_df_h, pd_df_l])
-
-    pd_df.set_index('sequence_id', inplace = True, drop = False)
-    cols_to_return = pd_df.columns.difference(dat.columns) # this doesn't actually catch overwritten columns
-    if len(cols_to_return) < 1:
-        cols_to_return = list(filter(re.compile("mu_.*").match, [c for c in pd_df.columns]))
-    else:
-        cols_to_return = cols_to_return
-    
-    res = {}
-    if self.__class__ == Dandelion:        
-        for x in cols_to_return:
-            res[x] = list(pd_df[x])
-            self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
-        if split_locus is False:
-            metadata_ = self.data[['cell_id']+list(cols_to_return)]
-        else:
-            metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
-    
-        for x in cols_to_return:
-            metadata_[x] = metadata_[x].astype(np.float32)
-
-        if split_locus is False:
-            metadata_ = metadata_.groupby('cell_id').sum()
-        else:
-            metadata_ = metadata_.groupby(['locus','cell_id']).sum()
-            metadatas = []
-            for x in list(set(self.data['locus'])):
-                tmp = metadata_.iloc[metadata_.index.isin([x], level='locus'),:]
-                tmp.index = tmp.index.droplevel()
-                tmp.columns = [c+'_'+str(x) for c in tmp.columns]
-                metadatas.append(tmp)
-            metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
-
-        metadata_.index.name = None
-    
-        if self.metadata is None:
-            self.metadata = metadata_
-        else:
-            for x in metadata_.columns:
-                self.metadata[x] = pd.Series(metadata_[x])
-        logg.info(' finished', time=start,
-            deep=('Updated Dandelion object: \n'
-            '   \'data\', contig-indexed clone table\n'
-            '   \'metadata\', cell-indexed clone table\n'))
-    else: 
-        for x in cols_to_return:
-            res[x] = list(pd_df[x])
-            dat[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
-                
-        if self.__class__ == pd.DataFrame:
-            logg.info(' finished', time=start, deep=('Returning DataFrame\n'))
-            return(dat)
-        elif os.path.isfile(self):
-            logg.info(' finished', time=start, deep=('saving DataFrame at {}\n'.format(str(self))))
-            dat.to_csv(self, sep = '\t')
-
-def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
-    """
-    Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
-    
-    Runs the following:        
-    distToNearest
-        Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
-    findThreshold
-        automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method="gmm") or kernel density fit (threshold_method="density").
-    
-    Parameters
-    ----------
-    self : Dandelion, DataFrame, str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    manual_threshold : float, optional
-        value to manually plot in histogram.
-    model : str, optional
-        underlying SHM model, which must be one of c("ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat").
-    normalize_method : str, optional
-        method of normalization. The default is "len", which divides the distance by the length of the sequence group. If "none" then no normalization if performed.
-    threshold_method : str, optional
-        string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
-    edge : float, optional
-        upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
-    cross : list, array, optional
-        supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
-    subsample : int, optional
-        maximum number of distances to subsample to before threshold detection.
-    threshold_model : str, optional
-        allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
-    cutoff : str, optional
-        method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
-    sensitivity : float, optional
-        sensitivity required. Applies only when method="gmm" and cutoff="user".
-    specificity : float, optional
-        specificity required. Applies only when method="gmm" and cutoff="user".
-    ncpu : int, optional
-        number of cpus for parallelization. Default is all available cpus.
-    plot : bool
-        whether or not to return plot.
-    plot_group : str, optional
-        determines the fill color and facets.
-    figsize : tuple[float, float]
-        size of plot. Default is (4.5, 2.5).
-    *args
-        passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
-    Returns
-    ----------
-        plotnine plot showing histogram of length normalized ham model distance threshold.
-    """
-    start = logg.info('Calculating threshold')
-    sh = importr('shazam')
-    if self.__class__ == Dandelion:
-        dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
-        dat = load_data(self)
-    warnings.filterwarnings("ignore")
-
-    if 'v_call_genotyped' in dat.columns:
-        v_call = 'v_call_genotyped'
-    else:
-        v_call = 'v_call'
-    
-    if model is None:
-        model_ = 'ham'
-    else:
-        model_ = model
-    
-    if normalize_method is None:
-        norm_ = 'len'
-    else:
-        norm_ = normalize_method
-    
-    if threshold_method is None:
-        threshold_method_ = "density"
-    else:
-        threshold_method_ = threshold_method
-    
-    if subsample is None:
-        subsample_ = NULL
-    else:
-        subsample_ = subsample
-    
-    if ncpu is None:
-        ncpu_ = multiprocessing.cpu_count()
-    else:
-        ncpu_ = ncpu
-
-    dat_h = dat[dat['locus'] == 'IGH']
-    
-    try:
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-    except:
-        dat_h = dat_h.fillna('')
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-
-    dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
-    # Find threshold using density method
-    c = StrVector(['dist_nearest'])
-
-    if threshold_method_ is 'density':
-        if edge is None:
-            edge_ = 0.9
-        else:
-            edge_ = edge
-            
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method_, subsample = subsample_, edge = edge_)
-    else:
-        if threshold_model is None:
-            threshold_model_ = "gamma-gamma"
-        else:
-            threshold_model_ = threshold_model
-        
-        if cross is None:
-            cross_ = NULL
-        else:
-            cross_ = cross
-        
-        if cutoff is None:
-            cutoff_ = 'optimal'
-        else:
-            cutoff_ = cutoff
-        
-        if sensitivity is None:
-            sen_ = NULL
-        else:
-            sen_ = sensitivity
-        
-        if specificity is None:
-            spc_ = NULL
-        else:
-            spc_ = specificity        
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)        
-
-    threshold=np.array(dist_threshold.slots['threshold'])[0]
-    
-    dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
-    
-    if plot:
-        options.figure_size = figsize
-        if plot_group is None:
-            plot_group = 'sample_id'
-        else:
-            plot_group = plot_group
-        if manual_threshold is None:
-            tr = threshold
-        else:
-            tr = manual_threshold            
-        print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
-             + theme_bw() 
-             + xlab("Grouped Hamming distance")
-             + ylab("Count")
-             + geom_histogram(binwidth = 0.01)
-             + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
-             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
-             + facet_grid('~'+str(plot_group), scales="free_y")
-             + theme(legend_position = 'none')))      
-    else:
-        print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
-    if self.__class__ == Dandelion:
-        self.threshold = tr
-        logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'threshold\', threshold value for tuning clonal assignment\n'))
-    else:
-        output = Dandelion(dat)
-        output.threshold = tr
-        return(output)
-
 
 def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
     """
