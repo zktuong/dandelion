@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 16:49:26
+# @Last Modified time: 2020-07-22 16:54:26
 
 import sys
 import os
@@ -824,7 +824,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_ initialize = False)
+            res = Dandelion(dat_, initialize = False)
             # update with the personalized germline database
             res.update_germline(outDir+'all_contig_heavy'+germline_dict[fileformat], germline, org)
             create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
