@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 16:54:26
+# @Last Modified time: 2020-07-22 16:56:47
 
 import sys
 import os
@@ -1275,7 +1275,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 out.update({key:annotations})
         germline_df = pd.DataFrame.from_dict(out, orient = 'index')
 
-        out = Dandelion(data = file, germline = reference_dict)
+        out = Dandelion(data = file, germline = reference_dict, initialize = initialize_metadata)
         for x in germline_df.columns:
             out.data[x] = pd.Series(germline_df[x])
 
@@ -1285,21 +1285,21 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
 
     if (type(germline) is dict) or (type(germline) is list):
         if self.__class__ == Dandelion:
-            _create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+            _create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata)
         elif self.__class__ == pd.DataFrame:
-            return(_create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return(_create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata))
         else:
-            return(_create_germlines_file(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return(_create_germlines_file(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata))
     else:
         if self.__class__ == Dandelion:
             if len(self.germline) is not 0:
-                _create_germlines_object(self, self.germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+                _create_germlines_object(self, self.germline, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata)
             else:
-                _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+                _create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata)
         elif self.__class__ == pd.DataFrame:
-            return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata))
         else:
-            return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata))
 
 def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
     """
