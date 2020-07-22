@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 17:30:07
+# @Last Modified time: 2020-07-22 22:20:21
 
 import os
 import sys
@@ -725,7 +725,7 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
+def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors_key = False):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.raw` slots with metadata and network.
 
@@ -735,13 +735,13 @@ def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
         `AnnData` object
     dandelion : Dandelion
         `Dandelion` object
-    keep_raw : bool
-        If True, will transfer the existing `.uns` slot to `.raw.uns`.
     neighbors_key : str, optional
         key for 'neighbors' slot in `.uns`
+    update_rna_neighbors_key : bool
+        If True, will transfer the existing `.uns[neighbors_key]` slot to `.uns['rna_neighbors_key']`.
     Returns
     ----------
-        `AnnData` object with updated `.obs` `.uns`, `.obsm` (and `.raw`) slots with data from `Dandelion` object.
+        `AnnData` object with updated `.obs` `.uns`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
 
     """
     start = logg.info('Transferring network')
@@ -764,18 +764,25 @@ def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
 
         if neighbors_key is None:
             neighbors_key = "neighbors"
+            rna_neighbors_key = 'rna_'+neighbors_key
+            bcr_neighbors_key = 'bcr_'+neighbors_key
+            if rna_neighbors_key not in self.uns:
+                self.uns[rna_neighbors_key] = {}
+            self.uns[bcr_neighbors_key] = {}
         if neighbors_key not in self.uns:
             raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-    
-        if keep_raw:
-            self.raw.uns = copy.deepcopy(self.uns)
-            self.uns[neighbors_key]['connectivities'] = df_connectivities_
-            self.uns[neighbors_key]['distances'] = df_distances_
-            self.uns[neighbors_key]['params'] = {'method':'bcr'}
-        else:
-            self.uns[neighbors_key]['connectivities'] = df_connectivities_
-            self.uns[neighbors_key]['distances'] = df_distances_
-            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+                
+        # self.raw.uns = copy.deepcopy(self.uns)
+        if (len(self.uns[rna_neighbors_key]) == 0) or (update_rna_neighbors_key):
+            self.uns[rna_neighbors_key] = copy.deepcopy(self.uns[neighbors_key])
+        
+        self.uns[bcr_neighbors_key]['connectivities'] = df_connectivities_.copy()
+        self.uns[bcr_neighbors_key]['distances'] = df_distances_.copy()
+        self.uns[bcr_neighbors_key]['params'] = {'method':'bcr'}
+        self.uns[neighbors_key] = copy.deepcopy(self.uns[bcr_neighbors_key])
+
+        self.obsp["rna_connectivities"] = self.uns[rna_neighbors_key]['connectivities'].copy()
+        self.obsp["bcr_connectivities"] = self.uns[bcr_neighbors_key]['connectivities'].copy()
 
     for x in dandelion.metadata.columns:
         self.obs[x] = pd.Series(dandelion.metadata[x])
@@ -790,20 +797,11 @@ def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
         self.obsm['X_bcr'] = X_bcr
     
     if (dandelion.edges is not None) and (dandelion.edges is not None):
-        if keep_raw:
-            logg.info(' finished', time=start,
-                deep=(
-                'updated `.obs` with `.metadata`\n'
-                'added to `.uns[\''+neighbors_key+'\']`\n'
-                '   \'distances\', cluster-weighted adjacency matrix\n'
-                '   \'connectivities\', cluster-weighted adjacency matrix\n'
-                'stored original .uns in .raw'))
-        else:
-            logg.info(' finished', time=start,
-                deep=('updated `.obs` with `.metadata`\n'
-                      'added to `.uns[\''+neighbors_key+'\']`\n'
-                '   \'distances\', cluster-weighted adjacency matrix\n'
-                '   \'connectivities\', cluster-weighted adjacency matrix'))
+        logg.info(' finished', time=start,
+            deep=('updated `.obs` with `.metadata`\n'
+                  'added to `.uns[\''+neighbors_key+'\']`\n'
+                  '   \'distances\', cluster-weighted adjacency matrix\n'
+                  '   \'connectivities\', cluster-weighted adjacency matrix'))
     else:
         logg.info(' finished', time=start,
                 deep=('updated `.obs` with `.metadata`\n'))
@@ -1078,3 +1076,33 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
+
+def quantify_clone_size(self, max_size = None):
+    start = logg.info('Quantifying clone sizes')
+    metadata_ = self.metadata.copy()
+    clone_size = metadata_['clone_id'].value_counts()
+    clone_group_size = metadata_['clone_group_id'].value_counts()
+    
+    if max_size is not None:        
+        clone_size_ = clone_size.astype('object')
+        clone_group_size_ = clone_group_size.astype('object')
+        for i in clone_size.index:
+            if clone_size.loc[i] >= max_size:
+                clone_size_.at[i] = '>= '+ str(max_size)
+        for i in clone_group_size.index:
+            if clone_group_size.loc[i] >= max_size:
+                clone_group_size_.at[i] = '>= '+ str(max_size)
+        clone_size_ = clone_size_.astype('category')
+        clone_group_size_ = clone_group_size_.astype('category')
+    else:
+        clone_size_ = clone_size.copy()
+        clone_group_size_ = clone_group_size.copy()
+
+    clone_size_dict = dict(clone_size_)
+    clone_group_size_dict = dict(clone_group_size_)
+
+    self.metadata['clone_id_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_['clone_id']])))
+    self.metadata['clone_group_id_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_['clone_group_id']])))
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'metadata\', cell-indexed clone table'))
