@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 15:17:00
+# @Last Modified time: 2020-07-22 16:49:26
 
 import sys
 import os
@@ -812,7 +812,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_)
+            res = Dandelion(dat_, initialize = False)
             # update with the personalized germline database
             res.update_germline(outDir+'filtered_contig_heavy'+germline_dict[fileformat], germline, org)
             create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
@@ -824,7 +824,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_)
+            res = Dandelion(dat_ initialize = False)
             # update with the personalized germline database
             res.update_germline(outDir+'all_contig_heavy'+germline_dict[fileformat], germline, org)
             create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
@@ -836,7 +836,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
         dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
         dat_ = _return_IGKV_IGLV(dat_)
-        res = Dandelion(dat_)
+        res = Dandelion(dat_, initialize = False)
         res.update_germline(outDir+'heavy_'+out_filename.replace('.tsv', '.fasta'), germline, org)
         create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
         print('   Saving corrected genotyped object')
@@ -929,7 +929,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
     else:
         return(res)
 
-def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr'):
+def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr', initialize_metadata = False):
     """
     Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
 
@@ -1018,7 +1018,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
 
         return Receptor(result)
 
-    def _create_germlines_object(self, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
+    def _create_germlines_object(self, references, seq_field, v_field, d_field, j_field, germ_types, fileformat, initialize_metadata):
         """
         Write germline sequences to tab-delimited database file
 
@@ -1167,13 +1167,13 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 threshold_ = self.threshold
             else:
                 threshold_ = None
-            self.__init__(data = datx, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_)
+            self.__init__(data = datx, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = initialize_metadata)
             self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
-            output = Dandelion(data = datx, germline = reference_dict)
+            output = Dandelion(data = datx, germline = reference_dict, initialize = initialize_metadata)
             return(output)
         logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'

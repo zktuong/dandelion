@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 16:22:21
+# @Last Modified time: 2020-07-22 16:44:43
 
 import sys
 import os
@@ -499,7 +499,7 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
             raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
 
 class Dandelion:
-    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None):
+    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True):
         self.data = data
         self.metadata = metadata        
         self.distance = distance
@@ -515,12 +515,13 @@ class Dandelion:
             self.data = load_data(self.data)
 
         if self.data is not None:
-            initialize_metadata(self)
-            self.n_contigs = self.data.shape[0]
-            try:
-                self.n_obs = self.metadata.shape[0]
-            except:
-                self.n_obs = 0
+            if initialize is True:
+                initialize_metadata(self)            
+                self.n_contigs = self.data.shape[0]
+                try:
+                    self.n_obs = self.metadata.shape[0]
+                except:
+                    self.n_obs = 0
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
