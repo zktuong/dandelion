@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 20:42:59
+# @Last Modified time: 2020-07-22 20:26:27
 
 import igraph
 import seaborn as sns
@@ -147,7 +147,7 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     
     return(p)
 
-def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
+def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
     using scanpy's plotting module to plot the network. Only thing i'm changing is the dfault options: basis = 'bcr' and edges = True
     Parameters
