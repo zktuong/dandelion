@@ -2,6 +2,8 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
+Version = 0.0.7
+
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
 
@@ -67,7 +69,7 @@ conda install -c bioconda r-optparse
 conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam 
 ```
 
-The package should now be properly installed and when starting up jupyter notebook in the virtual environment, the kernel `python3`should work. Otherwise, you might need to add it manually:
+The package should now be properly installed and when starting up jupyter notebook in the virtual environment, the kernel `python3` should work. Otherwise, you might need to add it manually:
 ```R
 python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
 ```
@@ -113,7 +115,7 @@ changeo==1.0.0 (bioconda)
 presto==0.6.0 (bioconda)
 
 # Other executables (through conda)
-blast>=2.5.0 (bioconda)
+blast>=2.10.0 (bioconda) # depends on the database version as well
 igblast==1.15.0 (bioconda)
 
 # pip
