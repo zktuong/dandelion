@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 17:30:08
+# @Last Modified time: 2020-07-22 20:32:39
 
 import sys
 import os
@@ -21,6 +21,7 @@ from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlin
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 import re
 import scanpy as sc
+import functools
 try:
     from scanpy import logging as logg
 except ImportError:
