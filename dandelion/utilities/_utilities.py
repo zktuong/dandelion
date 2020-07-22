@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 15:32:50
+# @Last Modified time: 2020-07-22 16:22:21
 
 import sys
 import os
@@ -313,6 +313,9 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
         return(retrieval_list)
     else:
         heavy_retrieval_list = dict(sub_metadata['heavy'])
+        for k, r in heavy_retrieval_list.items():
+            if isinstance(r, pd.Series):
+                heavy_retrieval_list[k] = ','.join([str(x) for x in flatten(r.to_list())])
         light_retrieval_list = {}
         sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
         for x in sub_metadata2.index:
@@ -371,17 +374,17 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
         except:
             status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
     if isotype_dict is None:
-        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'igh':'IgG', 'iglc':'IgL'} # the key for IgG being igh is on purpose because of how the counter works
+        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':np.nan, np.nan:np.nan} # the key for IgG being igh is on purpose because of how the counter works
     else:
         conversion_dict = isotype_dict
     isotype = {}
     for k in heavy_c_call:
         if heavy_c_call[k] == heavy_c_call[k]:
             if ',' in heavy_c_call[k]:
-                iso_d = defaultdict(int)
-                for c in heavy_c_call[k].lower():
-                    iso_d[c] += 1
-                isotype[k] = conversion_dict[re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ >= 2]))]
+                # iso_d = defaultdict(int)
+                # for c in heavy_c_call[k].lower():
+                #     iso_d[c] += 1
+                isotype[k] = ','.join([str(z) for z in [conversion_dict[y.lower()] for y in set([re.sub('[0-9]', '', x) for x in heavy_c_call[k].split(',')])]])
             else:
                 isotype[k] = conversion_dict[heavy_c_call[k].lower()]
         else:
