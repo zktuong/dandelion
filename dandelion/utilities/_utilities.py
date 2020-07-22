@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 16:44:43
+# @Last Modified time: 2020-07-22 22:01:39
 
 import sys
 import os
@@ -256,6 +256,7 @@ def setup_metadata(data, sep):
             group.append(cl_[c].split(scb[1])[scb[0]])
     groupseries = dict(zip(metadata_.index, group))
     metadata_['clone_group_id'] = pd.Series(groupseries)
+
     return(metadata_)
 
 def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
