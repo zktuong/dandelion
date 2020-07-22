@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 16:56:47
+# @Last Modified time: 2020-07-22 17:20:14
 
 import sys
 import os
@@ -1406,7 +1406,10 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     -------
         V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
-    dat = load_data(data)
+    if data.__class__ == Dandelion:
+        dat = load_data(data.data, initialize = False)
+    else:
+        dat = load_data(data)
     h = Tree()
     l = Tree()
     h_umi = Tree()
@@ -1599,10 +1602,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                 _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', outFile_prefix), sep = '\t', index = None)
             elif (outdir is not None) & (outFilePrefix is None):
                 _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
+    else:
+        _dat = dat.copy()
+
+    if data.__class__ == Dandelion:
+        out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
+    else:
+        out_dat = Dandelion(data = _dat, initialize = True)
 
     if filter_rna:
-        _adata = adata[~(adata.obs_names.isin(filter_ids))] # not saving the scanpy object because there's no need to at the moment
+        out_adata = adata[~(adata.obs_names.isin(filter_ids))] # not saving the scanpy object because there's no need to at the moment
     else:
-        _adata = adata.copy()
+        out_adata = adata.copy()
 
-    return(_dat, _adata)
+    return(out_dat, out_adata)
