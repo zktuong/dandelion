@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 22:20:21
+# @Last Modified time: 2020-07-23 14:22:52
 
 import os
 import sys
@@ -35,7 +35,7 @@ from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
 
-def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None):
+def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None, key_added = None):
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -55,6 +55,8 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         If specified, outfile will be in this location. None defaults to 'dandelion/data'.
     outFilePrefix : str, optional
         If specified, the outfile name will have this prefix. None defaults to 'dandelion_find_clones'
+    key_added : str, optional
+        If specified, this will be the column name for clones. None defaults to 'clone_id'
     Returns
     -------
         `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
@@ -66,6 +68,11 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         dat = load_data(self)
     dat_heavy = dat[dat['locus'] == 'IGH']
     pd.set_option('mode.chained_assignment', None)
+
+    if key_added is None:
+        clone_key = 'clone_id'
+    else:
+        clone_key = key_added
 
     # retrieve the J genes and J genes
     if by_alleles is None or ~by_alleles:
@@ -288,15 +295,15 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
                     # instead of converting to another tree, i will just make it a dictionary
                     clone_dict[v] = str(first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
     # add it to the original dataframes
-    dat_heavy['clone_id'] = pd.Series(clone_dict)
-    hclone = dict(zip(dat_heavy['cell_id'], dat_heavy['clone_id']))
+    dat_heavy[clone_key] = pd.Series(clone_dict)
+    hclone = dict(zip(dat_heavy['cell_id'], dat_heavy[clone_key]))
     hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell_id']]))
-    dat['clone_id'] = pd.Series(hlclone)
+    dat[clone_key] = pd.Series(hlclone)
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
     dat_light = dat[~(dat['locus'] == 'IGH')]
     # retrieve the J genes and J genes
-    for c in tqdm(list(set(dat_light['clone_id'])), desc = 'Refining clone assignment based on light chain pairing '):
-        dat_light_c = dat_light[dat_light['clone_id'] == c]
+    for c in tqdm(list(set(dat_light[clone_key])), desc = 'Refining clone assignment based on light chain pairing '):
+        dat_light_c = dat_light[dat_light[clone_key] == c]
         if dat_light_c.shape[0] > 1:
             if by_alleles is None or ~by_alleles:
                 if 'v_call_genotyped' in dat_light_c.columns:
@@ -486,7 +493,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
                 renamed_clone_dict_light = {}
                 for key, value in clone_dict_light.items():
                     renamed_clone_dict_light[key] = lclones_dict[value]
-                dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] = dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] + '_' + pd.Series(renamed_clone_dict_light)
+                dat.loc[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
@@ -514,13 +521,42 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
     if self.__class__ == Dandelion:
-        self.__init__(data = dat)
+        if self.germline is not None:
+            germline_ = self.germline
+        else:
+            germline_ = None
+        if self.distance is not None:
+            dist_ = self.distance
+        else:
+            dist_ = None
+        if self.edges is not None:
+            edge_ = self.edges
+        else:
+            edge_ = None
+        if self.layout is not None:
+            layout_ = self.layout
+        else:
+            layout_ = None
+        if self.graph is not None:
+            graph_ = self.graph
+        else:
+            graph_ = None
+        if self.threshold is not None:
+            threshold_ = self.threshold
+        else:
+            threshold_ = None
+        if ('clone_id' in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split_heavy_light = False)
+        elif ('clone_id' not in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+        else:
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key)
+        self.threshold = threshold_
     else:
-        out = Dandelion(data = dat)    
+        out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
         return(out)
-    
 
-def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
+def generate_network(self, distance_mode='weighted', aa_or_nt=None, clone_key = None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
     Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s). 
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
@@ -550,7 +586,11 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         dat = load_data(self.data)
     else:
         dat = load_data(self)
-    if 'clone_id' not in dat.columns:
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+    if clonekey not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
     # re-initiate a Dandelion class object
@@ -621,7 +661,7 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
     for i in out.metadata.index:
-        cx = out.metadata.loc[i,'clone_group_id']
+        cx = out.metadata.loc[i, str(clonekey)+'_group']
         tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
@@ -642,7 +682,7 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
-    clone_ref = dict(out.metadata['clone_id'])
+    clone_ref = dict(out.metadata[clonekey])
     tmp_clone_tree = Tree()
     for x in out.metadata.index:
         tmp_clone_tree[clone_ref[x]][x].value = 1
@@ -703,9 +743,18 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep =
         '   \'layout\', network layout\n'
         '   \'graph\', network'))
     if self.__class__ == Dandelion:
-        self.__init__(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+        if self.germline is not None:
+            germline_ = self.germline
+        else:
+            germline_ = None
+        if self.threshold is not None:
+            threshold_ = self.threshold
+        else:
+            threshold_ = None
+        self.__init__(data = self.data, metadata = self.metadata, distance = dmat, edges = edge_list_final, layout = layout, graph = graph, germline = germline_, initialize = False)
+        self.threshold = threshold_
     else:
-        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph, clone_key = clone_key)
         return(out)
 
 def mst(mat):
@@ -806,7 +855,7 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
         logg.info(' finished', time=start,
                 deep=('updated `.obs` with `.metadata`\n'))
 
-def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
+def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, key_added = None, verbose = False):
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
     
@@ -843,6 +892,11 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         nproc=multiprocessing.cpu_count()
     else:
         nproc=ncpu
+
+    if key_added is None:
+        clone_key = 'clone_id'
+    else:
+        clone_key = key_added
 
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
@@ -1065,23 +1119,65 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
 
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
-    dat['clone_id'] = pd.Series(cloned_['clone_id'])
+    dat[str(clone_key)] = pd.Series(cloned_['clone_id'])
 
     if self.__class__ == Dandelion:
-        self.__init__(data = dat)
+        if self.germline is not None:
+            germline_ = self.germline
+        else:
+            germline_ = None
+        if self.distance is not None:
+            dist_ = self.distance
+        else:
+            dist_ = None
+        if self.edges is not None:
+            edge_ = self.edges
+        else:
+            edge_ = None
+        if self.layout is not None:
+            layout_ = self.layout
+        else:
+            layout_ = None
+        if self.graph is not None:
+            graph_ = self.graph
+        else:
+            graph_ = None
+        if self.threshold is not None:
+            threshold_ = self.threshold
+        else:
+            threshold_ = None
+
+        if ('clone_id' in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split_heavy_light = False)
+        elif ('clone_id' not in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+        else:
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key)
+        self.threshold = threshold_
     else:
-        out = Dandelion(data = dat)
+        if ('clone_id' in dat.columns) and (clone_key is not None):
+            out = Dandelion(data = dat, retrieve = clonekey, split_heavy_light = False)
+        elif ('clone_id' not in dat.columns) and (clone_key is not None):
+            out = Dandelion(data = dat, clone_key = clone_key)
+        else:
+            out = Dandelion(data = dat)
         return(out)
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
 
-def quantify_clone_size(self, max_size = None):
+def quantify_clone_size(self, max_size = None, clone_key = None):
     start = logg.info('Quantifying clone sizes')
     metadata_ = self.metadata.copy()
-    clone_size = metadata_['clone_id'].value_counts()
-    clone_group_size = metadata_['clone_group_id'].value_counts()
+
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+
+    clone_size = metadata_[str(clonekey)].value_counts()
+    clone_group_size = metadata_[str(clonekey)+'_group'].value_counts()
     
     if max_size is not None:        
         clone_size_ = clone_size.astype('object')
@@ -1101,8 +1197,8 @@ def quantify_clone_size(self, max_size = None):
     clone_size_dict = dict(clone_size_)
     clone_group_size_dict = dict(clone_group_size_)
 
-    self.metadata['clone_id_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_['clone_id']])))
-    self.metadata['clone_group_id_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_['clone_group_id']])))
+    self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
+    self.metadata[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'metadata\', cell-indexed clone table'))

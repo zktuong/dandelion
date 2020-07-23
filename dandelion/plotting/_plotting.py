@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 20:26:27
+# @Last Modified time: 2020-07-23 12:36:45
 
 import igraph
 import seaborn as sns
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
 
-def igraph_network(self, colorby = None, layout = None, visual_style = None, *args):
+def igraph_network(self, colorby = None, clone_key = None, layout = None, visual_style = None, *args):
     """
     Using igraph to plot the network. There are some default plotting options. according to the metadata that returned by generate_network.
     
@@ -34,6 +34,11 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     -------
         igraph plot
     """
+
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
 
     g = self.graph
     if layout is None:
@@ -56,12 +61,12 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     # a list of 900+colours
     cols = list(sns.xkcd_rgb.keys())
 
-    if len(list(set(g.vs['clone_id']))) > len(cols):
-        cols = cols + list(sns.colour_palette('husl', len(list(set(g.vs['clone_id'])))))
+    if len(list(set(g.vs[str(clonekey)]))) > len(cols):
+        cols = cols + list(sns.colour_palette('husl', len(list(set(g.vs[str(clonekey)])))))
 
     # some default colours
-    clone_col_dict = dict(zip(list(set(g.vs['clone_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_id'])))))))
-    clone_group_col_dict = dict(zip(list(set(g.vs['clone_group_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_group_id'])))))))
+    clone_col_dict = dict(zip(list(set(g.vs[str(clonekey)])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs[str(clonekey)])))))))
+    clone_group_col_dict = dict(zip(list(set(g.vs[str(clonekey)+'_group'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs[str(clonekey)+'_group'])))))))
     productive_col_dict = dict(zip(list(set(g.vs['productive'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['productive'])))))))
     productive_col_dict.update({'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'})
     
@@ -94,12 +99,12 @@ def igraph_network(self, colorby = None, layout = None, visual_style = None, *ar
     clone_group_col_dict.update({np.nan:'#e7e7e7'})
     
     # set up visual style                
-    if colorby is 'clone_id':
-        vs['vertex_color'] = [clone_col_dict[i] for i in g.vs['clone_id']]
-        vs['vertex_frame_color'] = [clone_col_dict[i] for i in g.vs['clone_id']]
-    elif colorby is 'clone_group_id':
-        vs['vertex_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]
-        vs['vertex_frame_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]    
+    if colorby is str(clonekey):
+        vs['vertex_color'] = [clone_col_dict[i] for i in g.vs[str(clonekey)]]
+        vs['vertex_frame_color'] = [clone_col_dict[i] for i in g.vs[str(clonekey)]]
+    elif colorby is str(clonekey)+'_group':
+        vs['vertex_color'] = [clone_group_col_dict[i] for i in g.vs[str(clonekey)+'_group']]
+        vs['vertex_frame_color'] = [clone_group_col_dict[i] for i in g.vs[str(clonekey)+'_group']]    
     elif colorby is 'status':
         vs['vertex_color'] = [status_col_dict[i] for i in g.vs['status']]
         vs['vertex_frame_color'] = [status_col_dict[i] for i in g.vs['status']]
@@ -341,7 +346,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
 
-def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
+def spectratypeplot(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -376,6 +381,12 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
     ----------
         sectratype plot
     """
+
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+
     if self.__class__ == Dandelion:
         data = self.data.copy()
     else:
@@ -386,19 +397,19 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
 
     if 'locus' not in data.columns:
         raise AttributeError("Please ensure dataframe contains 'locus' column")
-    if 'clone_id' in data.columns:
+    if clonekey in data.columns:
         if clones_sep is None:
             scb = (0, '_')
         else:
             scb = (clones_sep[0], clones_sep[1])
         group = []
-        for x in data['clone_id']:
+        for x in data[str(clonekey)]:
             if scb[1] not in x:
                 warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
                 group.append(x)
             else:
                 group.append(x.split(scb[1])[scb[0]])
-        data['clone_group_id'] = group
+        data[str(clonekey)+'_group'] = group
 
     if type(locus) is not list:
         locus = [locus]

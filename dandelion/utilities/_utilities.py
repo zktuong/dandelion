@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 22:01:39
+# @Last Modified time: 2020-07-23 14:32:02
 
 import sys
 import os
@@ -194,7 +194,7 @@ def setup_metadata_(data):
     metadata_.set_index('cell_id', inplace = True)    
     return(metadata_)
 
-def setup_metadata(data, sep):
+def setup_metadata(data, sep, clone_key = None):
     """
     A Dandelion class subfunction to initialize the `.metadata` slot.
     Parameters
@@ -207,10 +207,15 @@ def setup_metadata(data, sep):
     -------
         pandas DataFrame object.
     """
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+
     dat_h = data[data['locus'] == 'IGH']
     dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
-    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['clone_id'])))
-    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['clone_id'])))
+    clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[clonekey])))
+    clone_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[clonekey])))
     metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
     metadata_.set_index('cell_id', inplace = True)
     light_clone_tree = Tree()
@@ -238,24 +243,24 @@ def setup_metadata(data, sep):
         if len(cl) > 1:
             cl = cl[1:]
         clones_list[x] = ','.join(cl)
-    metadata_['clone_id'] = pd.Series(clones_list)
-    metadata_ = metadata_[['clone_id']]
+    metadata_[clonekey] = pd.Series(clones_list)
+    metadata_ = metadata_[[clonekey]]
     if sep is None:
         scb = (0, '_')
     else:
         scb = (sep[0], sep[1])
     group = []
     # check if contain the separator
-    x = list(metadata_['clone_id'].str.contains(scb[1]))
-    cl_ = list(metadata_['clone_id'])
-    for c in range(0, len(metadata_['clone_id'])):
+    x = list(metadata_[clonekey].str.contains(scb[1]))
+    cl_ = list(metadata_[clonekey])
+    for c in range(0, len(metadata_[clonekey])):
         if not x[c]:
             warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
             group.append(cl_[c])
         else:
             group.append(cl_[c].split(scb[1])[scb[0]])
     groupseries = dict(zip(metadata_.index, group))
-    metadata_['clone_group_id'] = pd.Series(groupseries)
+    metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
 
     return(metadata_)
 
@@ -328,7 +333,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
             light_retrieval_list[x] = ['|'.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
         return(heavy_retrieval_list, light_retrieval_list)
 
-def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_light = True, collapse = False, clones_sep = None):
+def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_light = True, collapse = False, clones_sep = None, clone_key = None):
     """
     A Dandelion function to update and populate the `.metadata` slot.
 
@@ -352,11 +357,20 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
     for x in ['cell_id', 'locus', 'c_call', 'umi_count']:
         if x not in dat.columns:
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
-
-    if 'clone_id' in dat.columns:
-        self.metadata = setup_metadata(dat, clones_sep)
+    
+    if clone_key is None:
+        clonekey = 'clone_id'
     else:
-        self.metadata = setup_metadata_(dat)
+        clonekey = clone_key
+
+    metadata_status = self.metadata
+    if metadata_status is None:
+        if clonekey in dat.columns:
+            self.metadata = setup_metadata(dat, clones_sep, clonekey)
+        else:
+            self.metadata = setup_metadata_(dat)
+    else:
+        self.metadata = self.metadata
 
     if 'sample_id' in dat.columns:
         samp_id = retrieve_metadata(dat, 'sample_id', False, True)
@@ -469,16 +483,17 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
         multi[i] = ','.join(list(flatten(multi_)))
     self.metadata['vdj_status'] = pd.Series(multi)
     # return this in this order
-    if 'clone_id' in dat.columns:
-        if 'sample_id' in dat.columns:
-            self.metadata = self.metadata[['sample_id', 'clone_id', 'clone_group_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+    if metadata_status is None:
+        if clonekey in self.data.columns:
+            if 'sample_id' in self.data.columns:
+                self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+            else:
+                self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
         else:
-            self.metadata = self.metadata[['clone_id', 'clone_group_id', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
-    else:
-        if 'sample_id' in dat.columns:
-            self.metadata = self.metadata[['sample_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
-        else:
-            self.metadata = self.metadata[['isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+            if 'sample_id' in self.data.columns:
+                self.metadata = self.metadata[['sample_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+            else:
+                self.metadata = self.metadata[['isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
 
     # new function to retrieve non-standard columns
     if retrieve is not None:
@@ -500,7 +515,7 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
             raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
 
 class Dandelion:
-    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True):
+    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
         self.data = data
         self.metadata = metadata        
         self.distance = distance
@@ -517,7 +532,7 @@ class Dandelion:
 
         if self.data is not None:
             if initialize is True:
-                initialize_metadata(self)            
+                initialize_metadata(self, **kwargs) 
                 self.n_contigs = self.data.shape[0]
                 try:
                     self.n_obs = self.metadata.shape[0]

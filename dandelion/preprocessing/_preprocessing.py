@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-23 10:05:35
+# @Last Modified time: 2020-07-23 14:38:50
 
 import sys
 import os
@@ -1176,10 +1176,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 threshold_ = self.threshold
             else:
                 threshold_ = None
-            try:
-                self.__init__(data = datx, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True)
-            except:
-                self.__init__(data = datx, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
+            self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)            
             self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
