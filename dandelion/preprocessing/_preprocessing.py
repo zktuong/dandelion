@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-23 14:38:50
+# @Last Modified time: 2020-07-23 15:11:17
 
 import sys
 import os
@@ -1187,6 +1187,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             except:
                 output = Dandelion(data = datx, germline = reference_dict, initialize = False)
             return(output)
+        sleep(0.5)
         logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', updated germline alignment in contig-indexed clone table\n'
