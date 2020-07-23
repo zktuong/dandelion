@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-22 21:15:14
+# @Last Modified time: 2020-07-23 10:05:35
 
 import sys
 import os
@@ -1354,7 +1354,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     mito_genes = _adata.var_names.str.startswith('MT-')
     _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)
     _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
-    sc.pp.normalize_total(_adata)
+    sc.pp.normalize_total(_adata, target_sum = 1e4)
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
     _adata = _adata[:, _adata.var['highly_variable']]
