@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-30 16:42:26
+# @Last Modified time: 2020-07-30 17:01:53
 
 import sys
 import os
@@ -1460,9 +1460,6 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
     _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
         (_adata.obs['percent_mito'] >= mito_cutoff) | \
             (_adata.obs['is_doublet'] == True)
-
-    # removing columns that probably don't need anymore
-    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
