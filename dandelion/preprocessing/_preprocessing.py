@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 19:43:45
+# @Last Modified time: 2020-08-07 19:54:37
 
 import sys
 import os
@@ -1482,6 +1482,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
+            ccall = []
             if len(list(set(h_seq[b]))) == 1:
                 highest_umi_h = max(h_umi[b])
                 highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
@@ -1497,7 +1498,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                 h_umi[b] = hc_umi
                 h_dup[b] = hc_dup
                 h_seq[b] = hc_seq
-            if len(h[b]) > 1:
+            if len(h[b]) > 1:                
                 if rescue_igh:
                     highest_umi_h = max(h_umi[b])
                     lowest_umi_h = min(h_umi[b])
