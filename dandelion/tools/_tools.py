@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 22:16:57
+# @Last Modified time: 2020-08-07 22:23:41
 
 import os
 import sys
@@ -1166,6 +1166,24 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         '   \'metadata\', cell-indexed clone table\n'))
 
 def quantify_clone_size(self, max_size = None, clone_key = None, key_added = None):
+    """
+    Quantifies size of clones
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object
+    max_size : int, optional
+        The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
+    clone_key : str, optional
+        Column name specifying the clone_id column in metadata.
+    key_added : str, optional
+        Suffix to add to end of the output column.    
+    Returns
+    ----------
+        `Dandelion` object with clone size columns annotated in `.metadata` slot.
+    """
+
     start = logg.info('Quantifying clone sizes')
     metadata_ = self.metadata.copy()
 
@@ -1199,8 +1217,8 @@ def quantify_clone_size(self, max_size = None, clone_key = None, key_added = Non
         self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
         self.metadata[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
     else:
-        self.metadata[str(key_added)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
-        self.metadata[str(key_added)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
+        self.metadata[str(clonekey)+'_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
+        self.metadata[str(clonekey)+'_group_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'metadata\', cell-indexed clone table'))
