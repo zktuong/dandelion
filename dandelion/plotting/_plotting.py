@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-23 12:36:45
+# @Last Modified time: 2020-08-07 19:43:20
 
 import igraph
 import seaborn as sns
@@ -70,8 +70,8 @@ def igraph_network(self, colorby = None, clone_key = None, layout = None, visual
     productive_col_dict = dict(zip(list(set(g.vs['productive'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['productive'])))))))
     productive_col_dict.update({'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'})
     
-    isotype_col_dict = {'IgA':'#4e79a7', 'IgD':'#e15759', 'IgE':'#76b7b2', 'IgG':'#59a14f', 'IgM':'#9c755f', np.nan:'#e7e7e7'}
-    heavy_c_call_col_dict = {'igha1':'#4e79a7', 'igha2':'#f28e2b', 'ighd':'#e15759', 'ighe':'#76b7b2', 'ighg1':'#59a14f', 'ighg2':'#edc948', 'ighg3':'#b07aa1', 'ighg4':'#ff9da7', 'ighm':'#9c755f', np.nan:'#e7e7e7'}
+    isotype_col_dict = {'IgA':'#4e79a7', 'IgD':'#e15759', 'IgE':'#76b7b2', 'IgG':'#59a14f', 'IgM':'#9c755f', 'IgM|IgD':'#d37295', np.nan:'#e7e7e7'}
+    heavy_c_call_col_dict = {'igha1':'#4e79a7', 'igha2':'#f28e2b', 'ighd':'#e15759', 'ighm|ighd':'#d37295', 'ighe':'#76b7b2', 'ighg1':'#59a14f', 'ighg2':'#edc948', 'ighg3':'#b07aa1', 'ighg4':'#ff9da7', 'ighm':'#9c755f', np.nan:'#e7e7e7'}
     
     status_col_dict = dict(zip(list(set(g.vs['status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['status'])))))))
     status_col_dict.update({'IGH_only':'#7f7f7f','IGH + IGK':'#1f77b4','IGH + IGL':'#ff7f0e'})
