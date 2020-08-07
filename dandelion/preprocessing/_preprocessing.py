@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-30 17:01:53
+# @Last Modified time: 2020-08-07 13:23:19
 
 import sys
 import os
@@ -91,7 +91,7 @@ def format_fasta(fasta, prefix = None, outdir = None):
     data['contig_id'] = [prefix+'_'+str(c) for c in data['contig_id']]
     data['barcode'] = [prefix+'_'+str(b).split('-')[0] for b in data['barcode']]
     out_anno = out_dir + os.path.basename(fasta).replace('.fasta', '_annotations.csv')
-    data.to_csv(out_anno, index= False)    
+    data.to_csv(out_anno, index= False)
 
 def format_fastas(fastas, prefixes = None, outdir = None):
     """
@@ -329,7 +329,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                     C_gene = C_gene.split('*')[0]
                 except:
                     pass
-            
+
             C_call, C_identity, C_sequence, C_germline, C_support, C_score, C_start, C_end, = {}, {}, {}, {}, {}, {}, {}, {}
             C_call[contig_name] = C_gene
             C_identity[contig_name] = C_ident
@@ -351,10 +351,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         if parallel:
             num_cores = multiprocessing.cpu_count()
             results = ()
-            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))                                    
+            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
             # transform list of dicts to dict
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
-            for r in range(0, len(results)):                
+            for r in range(0, len(results)):
                 _seq, _germ, _call, _ident, _support, _score, _start, _end = results[r]
                 seq.update(_seq)
                 germ.update(_germ)
@@ -385,7 +385,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
 
     aligner = Align.PairwiseAligner()
 
-    def two_gene_correction(self, i, dictionary):    
+    def two_gene_correction(self, i, dictionary):
         key1, key2 = dictionary.keys()
         seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -422,8 +422,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
             self.loc[i, 'c_call'] = str(key1)+','+str(key3)
         elif score2 > score1 and score2 == score3:
             self.loc[i, 'c_call'] = str(key2)+','+str(key3)
-                
-    def four_gene_correction(self, i, dictionary):    
+
+    def four_gene_correction(self, i, dictionary):
         key1, key2, key3, key4 = dictionary.keys()
         seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -464,7 +464,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
             self.loc[i, 'c_call'] = str(key1)+','+str(key3)+','+str(key4)
         elif score2 == score3 == score4 and score2 > score1:
             self.loc[i, 'c_call'] = str(key2)+','+str(key3)+','+str(key4)
-            
+
     def _correct_c_call(data, primers_dict=None):
         dat = data.copy()
         if primers_dict is None:
@@ -488,7 +488,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                     'IGLC6':'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA'}}
         else:
             primer_dict = primers_dict
-        
+
         for i in dat.index:
             if (dat.loc[i, 'c_call'] is not np.nan) & (dat.loc[i, 'c_call'] is not None):
                 for k in primer_dict:
@@ -496,7 +496,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                         if len(primer_dict[k]) == 2:
                             two_gene_correction(dat, i, primer_dict[k])
                         elif len(primer_dict[k]) == 3:
-                            three_gene_correction(dat, i, primer_dict[k])                        
+                            three_gene_correction(dat, i, primer_dict[k])
                         elif len(primer_dict[k]) == 4:
                             four_gene_correction(dat, i, primer_dict[k])
         return(dat)
@@ -524,7 +524,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     dat = _transfer_c(dat, c_scr, 'c_score')
     dat = _transfer_c(dat, c_ident, 'c_identity')
     dat = _transfer_c(dat, c_supp, 'c_support')
-    res_blast = pd.DataFrame(dat['c_call'])  
+    res_blast = pd.DataFrame(dat['c_call'])
 
     res_10x_sum = pd.DataFrame(res_10x['c_call'].value_counts(normalize=True)*100)
     res_blast_sum = pd.DataFrame(res_blast['c_call'].value_counts(normalize=True)*100)
@@ -602,7 +602,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
     extended : bool
         whether or not to transfer additional 10X annotions to output file. Default is False.
     verbose :
-        whether or not to print the igblast command used in the terminal. Default is False.    
+        whether or not to print the igblast command used in the terminal. Default is False.
     *args
         passed to `dandelion.preprocessing.ext.assigngenes_igblast` and `dandelion.preprocessing.ext.makedb_igblast`.
     Returns
@@ -632,20 +632,20 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
             env = os.environ.copy()
             if germline is None:
                 try:
-                    gml = env['GERMLINE']            
+                    gml = env['GERMLINE']
                 except:
                     raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
                 gml = gml+'imgt/'+org+'/vdj/'
             else:
                 env['GERMLINE'] = germline
-                gml = germline            
+                gml = germline
             insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
             map_cellranger("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast_gap.tsv')), extended = extended)
             tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
             if not os.path.exists(tmpFolder):
                 os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))            
-        elif fileformat == 'changeo':            
+            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
+        elif fileformat == 'changeo':
             makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
 
 def map_cellranger(data, extended = False):
@@ -852,7 +852,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
     # reset dat_
-    dat_ = res.data.copy()    
+    dat_ = res.data.copy()
 
     if plot:
         print('Returning summary plot')
@@ -1124,7 +1124,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             # clone_field = schema.toReceptor(clone_field)
             # Define Receptor iterator
             receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
-        
+
         out = {}
         # Iterate over rows
         for key, records in tqdm(receptor_iter, desc = "   Building {} germline sequences".format(germ_types)):
@@ -1136,7 +1136,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
             else:
                 raise AttributeError('%s is not acceptable file format.' % fileformat)
-            
+
             if glines is not None:
                 # Add glines to Receptor record
                 annotations = {}
@@ -1176,7 +1176,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 threshold_ = self.threshold
             else:
                 threshold_ = None
-            self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)            
+            self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
             self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
@@ -1265,7 +1265,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         # clone_field = schema.toReceptor(clone_field)
         # Define Receptor iterator
         receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
-        
+
         out = {}
         # Iterate over rows
         for key, records in tqdm(receptor_iter, desc = "   Building {} germline sequences".format(germ_types)):
@@ -1296,7 +1296,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             out.data[x] = pd.Series(germline_df[x])
 
         if os.path.isfile(str(file)):
-            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)        
+            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)
         return(out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -1421,7 +1421,7 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
     _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
         (_adata.obs['percent_mito'] >= mito_cutoff)
     _adata2 = _adata[_adata.obs['filter_rna'] != True]
-    
+
     # run scrublet
     scrub = scr.Scrublet(_adata2.X)
     doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
@@ -1455,14 +1455,14 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
     # threshold the p-values to get doublet calls.
     _adata2.obs['is_doublet'] = _adata2.obs['bh_pval'] < pval_cutoff
     _adata2.obs['is_doublet'] = _adata2.obs['is_doublet'].astype('category')
-    
+
     _adata.obs['is_doublet'] = pd.Series(_adata2.obs['is_doublet'])
     _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
         (_adata.obs['percent_mito'] >= mito_cutoff) | \
             (_adata.obs['is_doublet'] == True)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, filtered=True, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1482,17 +1482,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     rescue_igh : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
-        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold. 
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.
     filter_lightchains : bool
         cells with multiple light chains will be marked to filter. Default is True.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.
-    outdir : str, optional
-        If specified, out file will be in this location
-    outFilePrefix : str, optional
-        If specified, the out file name will have this prefix
-    filtered : bool
-        If True, will create filenames with 'filtered_contig' as prefix. if False, will create filenames with 'all_contig' as prefix. ignored if outFilePrefix is specified.
+    save : str, optional
+        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     Returns
     -------
         V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
@@ -1509,7 +1505,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     h_seq = Tree()
     l_seq = Tree()
     poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-    
+
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
 
@@ -1534,7 +1530,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     # rather than leaving a nan cell, i will create a 0 column for now
     dat['duplicate_count'] = 0
     for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])        
+        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
         hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
@@ -1542,7 +1538,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
         lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-        
+
         h[b] = hc_id
         h_umi[b] = hc_umi
         h_seq[b] = hc_seq
@@ -1551,16 +1547,16 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         l[b] = lc_id
         l_umi[b] = lc_umi
         l_seq[b] = lc_seq
-        
+
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
-            if len(list(set(h_seq[b]))) == 1:          
+            if len(list(set(h_seq[b]))) == 1:
                 highest_umi_h = max(h_umi[b])
                 highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
-                drop_contig.append(h[b][~highest_umi_h_idx[0]])                    
+                drop_contig.append(h[b][~highest_umi_h_idx[0]])
                 keep_hc_contig = h[b][highest_umi_h_idx[0]]
                 dat.loc[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][~highest_umi_h_idx[0]]))
-                    
+
                 hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
                 hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
                 hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
@@ -1593,11 +1589,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                 keep_lc_contig = l[b][highest_umi_l_idx[0]]
                 dat.loc[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][~highest_umi_l_idx[0]]))
                 lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]                
+                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
                 l[b] = lc_id
                 l_umi[b] = lc_umi
                 l_seq[b] = lc_seq
-        
+
         # marking doublets defined by light chains
         if (len(h[b]) == 1) & (len(l[b]) > 1):
             l_doublet.append(b)
@@ -1669,30 +1665,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)
         else:
-            if filtered:
-                outFile_prefix = 'filtered_contig'
-            else:
-                outFile_prefix = 'all_contig'
-
-            if outdir is None:
-                outDir = 'dandelion/data'
-            else:
-                if outdir.endswith('/'):
-                    outDir = str(outdir).strip('/')
+            if save is not None:
+                if save.endswith('.tsv'):
+                    _dat.to_csv(str(save), sep = '\t', index = None)
                 else:
-                    outDir = str(outdir)
-
-            if not os.path.exists(out_dir):
-                os.makedirs(out_dir)
-
-            if (outdir is None) & (outFilePrefix is not None):
-                _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', str(outFilePrefix)), sep = '\t', index = None)
-            elif (outdir is not None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
-            elif (outdir is None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', outFile_prefix), sep = '\t', index = None)
-            elif (outdir is not None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
+                    raise OSError('Please provide a file name that ends with .tsv')
     else:
         _dat = dat.copy()
 
@@ -1710,7 +1687,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
 def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
     """
-    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__. 
+    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
 
     Parameters
     ----------
@@ -1735,7 +1712,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(self):
-        dat = load_data(self)        
+        dat = load_data(self)
 
     warnings.filterwarnings("ignore")
 
@@ -1786,9 +1763,9 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         cols_to_return = list(filter(re.compile("mu_.*").match, [c for c in pd_df.columns]))
     else:
         cols_to_return = cols_to_return
-    
+
     res = {}
-    if self.__class__ == Dandelion:        
+    if self.__class__ == Dandelion:
         for x in cols_to_return:
             res[x] = list(pd_df[x])
             self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
@@ -1796,7 +1773,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             metadata_ = self.data[['cell_id']+list(cols_to_return)]
         else:
             metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
-    
+
         for x in cols_to_return:
             metadata_[x] = metadata_[x].astype(np.float32)
 
@@ -1813,7 +1790,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
 
         metadata_.index.name = None
-    
+
         if self.metadata is None:
             self.metadata = metadata_
         else:
@@ -1823,11 +1800,11 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             deep=('Updated Dandelion object: \n'
             '   \'data\', contig-indexed clone table\n'
             '   \'metadata\', cell-indexed clone table\n'))
-    else: 
+    else:
         for x in cols_to_return:
             res[x] = list(pd_df[x])
             dat[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
-                
+
         if self.__class__ == pd.DataFrame:
             logg.info(' finished', time=start, deep=('Returning DataFrame\n'))
             return(dat)
@@ -1838,13 +1815,13 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
 def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
-    
-    Runs the following:        
+
+    Runs the following:
     distToNearest
         Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
     findThreshold
         automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method="gmm") or kernel density fit (threshold_method="density").
-    
+
     Parameters
     ----------
     self : Dandelion, DataFrame, str
@@ -1897,34 +1874,34 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         v_call = 'v_call_genotyped'
     else:
         v_call = 'v_call'
-    
+
     if model is None:
         model_ = 'ham'
     else:
         model_ = model
-    
+
     if normalize_method is None:
         norm_ = 'len'
     else:
         norm_ = normalize_method
-    
+
     if threshold_method is None:
         threshold_method_ = "density"
     else:
         threshold_method_ = threshold_method
-    
+
     if subsample is None:
         subsample_ = NULL
     else:
         subsample_ = subsample
-    
+
     if ncpu is None:
         ncpu_ = multiprocessing.cpu_count()
     else:
         ncpu_ = ncpu
 
     dat_h = dat[dat['locus'] == 'IGH']
-    
+
     try:
         dat_h_r = pandas2ri.py2rpy(dat_h)
     except:
@@ -1940,39 +1917,39 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             edge_ = 0.9
         else:
             edge_ = edge
-            
+
         dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method_, subsample = subsample_, edge = edge_)
     else:
         if threshold_model is None:
             threshold_model_ = "gamma-gamma"
         else:
             threshold_model_ = threshold_model
-        
+
         if cross is None:
             cross_ = NULL
         else:
             cross_ = cross
-        
+
         if cutoff is None:
             cutoff_ = 'optimal'
         else:
             cutoff_ = cutoff
-        
+
         if sensitivity is None:
             sen_ = NULL
         else:
             sen_ = sensitivity
-        
+
         if specificity is None:
             spc_ = NULL
         else:
-            spc_ = specificity        
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)        
+            spc_ = specificity
+        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
 
     threshold=np.array(dist_threshold.slots['threshold'])[0]
-    
+
     dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
-    
+
     if plot:
         options.figure_size = figsize
         if plot_group is None:
@@ -1982,16 +1959,16 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         if manual_threshold is None:
             tr = threshold
         else:
-            tr = manual_threshold            
+            tr = manual_threshold
         print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
-             + theme_bw() 
+             + theme_bw()
              + xlab("Grouped Hamming distance")
              + ylab("Count")
              + geom_histogram(binwidth = 0.01)
              + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
              + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
              + facet_grid('~'+str(plot_group), scales="free_y")
-             + theme(legend_position = 'none')))      
+             + theme(legend_position = 'none')))
     else:
         print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
     if self.__class__ == Dandelion:
