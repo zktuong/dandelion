@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 23:46:06
+# @Last Modified time: 2020-08-08 00:10:03
 
 import os
 import sys
@@ -758,6 +758,7 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
         return(out)
 
 def generate_layout(self, layout_option = None, *args, **kwds):
+    start = logg.info('Generating layout')
     if layout_option is not None:
         layout = self.graph.layout_fruchterman_reingold()
     else:
