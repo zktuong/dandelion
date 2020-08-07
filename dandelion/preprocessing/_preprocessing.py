@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 13:23:19
+# @Last Modified time: 2020-08-07 13:24:15
 
 import sys
 import os
@@ -1385,81 +1385,6 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
 
     # removing columns that probably don't need anymore
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
-    self.obs = _adata.obs.copy()
-
-def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
-    """
-    Recipe for running a standard scanpy QC worflow. An alternate way to run the recipe; scrublet is run after cells are filtered based on cutoffs.
-
-    Parameters
-    ----------
-    adata : AnnData
-        The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
-    max_genes : int
-        Maximum number of genes expressed required for a cell to pass filtering. Default is 2500.
-    min_genes : int
-        Minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
-    mito_cutoff : float
-        Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 0.05.
-    pval_cutoff : float
-        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
-    min_counts : int
-        Minimum number of counts required for a cell to pass filtering. Default is None.
-    max_counts : int
-        Maximum number of counts required for a cell to pass filtering. Default is None.
-    Returns
-    -------
-        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
-
-    """
-    _adata = self.copy()
-    # overcluster prep. run basic scanpy pipeline
-    sc.pp.filter_cells(_adata, min_genes = 0)
-    mito_genes = _adata.var_names.str.startswith('MT-')
-    _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)
-    _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
-        (_adata.obs['percent_mito'] >= mito_cutoff)
-    _adata2 = _adata[_adata.obs['filter_rna'] != True]
-
-    # run scrublet
-    scrub = scr.Scrublet(_adata2.X)
-    doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
-    _adata2.obs['scrublet_score'] = doublet_scores
-
-    # run through rest
-    sc.pp.normalize_total(_adata2, target_sum = 1e4)
-    sc.pp.log1p(_adata2)
-    sc.pp.highly_variable_genes(_adata2, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    _adata2 = _adata2[:, _adata2.var['highly_variable']]
-    sc.pp.scale(_adata2, max_value=10)
-    sc.tl.pca(_adata2, svd_solver='arpack')
-    sc.pp.neighbors(_adata2, n_neighbors=10, n_pcs=50)
-    # overclustering proper - do basic clustering first, then cluster each cluster
-    sc.tl.leiden(_adata2)
-    for clus in list(np.unique(_adata2.obs['leiden']))[0]:
-        sc.tl.leiden(_adata2, restrict_to=('leiden',[clus]), key_added = 'leiden_R')
-    for clus in list(np.unique(_adata2.obs['leiden']))[1:]: # weird how the new anndata/scanpy is forcing this
-        sc.tl.leiden(_adata2, restrict_to=('leiden_R',[clus]), key_added = 'leiden_R')
-    # compute the cluster scores - the median of Scrublet scores per overclustered cluster
-    for clus in np.unique(_adata2.obs['leiden_R']):
-        _adata2.obs.loc[_adata2.obs['leiden_R']==clus, 'scrublet_cluster_score'] = \
-            np.median(_adata2.obs.loc[_adata2.obs['leiden_R']==clus, 'scrublet_score'])
-    # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
-    med = np.median(_adata2.obs['scrublet_cluster_score'])
-    mask = _adata2.obs['scrublet_cluster_score']>med
-    mad = np.median(_adata2.obs['scrublet_cluster_score'][mask]-med)
-    # let's do a one-sided test. the Bertie write-up does not address this but it makes sense
-    pvals = 1-scipy.stats.norm.cdf(_adata2.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
-    _adata2.obs['bh_pval'] = bh(pvals)
-    # threshold the p-values to get doublet calls.
-    _adata2.obs['is_doublet'] = _adata2.obs['bh_pval'] < pval_cutoff
-    _adata2.obs['is_doublet'] = _adata2.obs['is_doublet'].astype('category')
-
-    _adata.obs['is_doublet'] = pd.Series(_adata2.obs['is_doublet'])
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
-        (_adata.obs['percent_mito'] >= mito_cutoff) | \
-            (_adata.obs['is_doublet'] == True)
     self.obs = _adata.obs.copy()
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, filtered=True, save=None):
