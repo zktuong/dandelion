@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 19:11:17
+# @Last Modified time: 2020-08-07 21:54:08
 
 import os
 import sys
@@ -795,8 +795,11 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
     """
     start = logg.info('Transferring network')
     if dandelion.edges is not None:
+        print('Formatting edges')
         G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
+        print('Extracting distances')
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
+        print('Extracting connectivities')
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
         df_connectivities = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
         df_distances = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
@@ -811,6 +814,7 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
         df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
         df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
 
+        print('Updating anndata slots')
         if neighbors_key is None:
             neighbors_key = "neighbors"
             rna_neighbors_key = 'rna_'+neighbors_key
