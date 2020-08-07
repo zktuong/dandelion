@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 16:43:59
+# @Last Modified time: 2020-08-07 19:09:19
 
 import sys
 import os
@@ -323,8 +323,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
             if isinstance(r, pd.Series):
                 heavy_retrieval_list[k] = ','.join([str(x) for x in flatten(r.to_list())])
         light_retrieval_list = {}
-        sub_metadata2 = sub_metadata.drop('heavy', axis = 1) # TODO: need to work out if i need to adjust this when there is a situation that it can't remove non duplicates?
-        sub_metadata2 = sub_metadata2.loc[sub_metadata2.index.drop_duplicates()]
+        sub_metadata2 = sub_metadata.drop('heavy', axis = 1) # TODO: this will come back with issue if some heavy chain comes back with multiple indices that wasn't filtered
         for x in sub_metadata2.index:
             if collapse:
                 r_l = list(set(list(sub_metadata2.loc[x, :])))
@@ -685,38 +684,38 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
         d = ddl_annot.loc[i, 'd_call']
         j = ddl_annot.loc[i, 'j_call']
         if v is not np.nan:
-            ddl_annot.loc[i, 'v_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', v).split(','))))
+            ddl_annot.at[i, 'v_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', v).split(','))))
             v_ = list(set(re.sub('[*][0-9][0-9]', '', v).split(',')))
             if re.match('IGH', ','.join(v_)):
-                ddl_annot.loc[i, 'locus'] = 'IGH'
+                ddl_annot.at[i, 'locus'] = 'IGH'
             if re.match('IGK', ','.join(v_)):
-                ddl_annot.loc[i, 'locus'] = 'IGK'
+                ddl_annot.at[i, 'locus'] = 'IGK'
             if re.match('IGL', ','.join(v_)):
-                ddl_annot.loc[i, 'locus'] = 'IGL'
+                ddl_annot.at[i, 'locus'] = 'IGL'
             if len(v_) > 1:
-                ddl_annot.loc[i, 'locus'] = 'Multi'
+                ddl_annot.at[i, 'locus'] = 'Multi'
         if d is not np.nan:
-            ddl_annot.loc[i, 'd_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', d).split(','))))
+            ddl_annot.at[i, 'd_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', d).split(','))))
             d_ = list(set(re.sub('[*][0-9][0-9]', '', d).split(',')))
             if re.match('IGH', ','.join(d_)):
-                ddl_annot.loc[i, 'locus'] = 'IGH'
+                ddl_annot.at[i, 'locus'] = 'IGH'
             if re.match('IGK', ','.join(d_)):
-                ddl_annot.loc[i, 'locus'] = 'IGK'
+                ddl_annot.at[i, 'locus'] = 'IGK'
             if re.match('IGL', ','.join(d_)):
-                ddl_annot.loc[i, 'locus'] = 'IGL'
+                ddl_annot.at[i, 'locus'] = 'IGL'
             if len(d_) > 1:
-                ddl_annot.loc[i, 'locus'] = 'Multi'
+                ddl_annot.at[i, 'locus'] = 'Multi'
         if j is not np.nan:
-            ddl_annot.loc[i, 'j_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', j).split(','))))
+            ddl_annot.at[i, 'j_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', j).split(','))))
             j_ = list(set(re.sub('[*][0-9][0-9]', '', j).split(',')))
             if re.match('IGH', ','.join(j_)):
-                ddl_annot.loc[i, 'locus'] = 'IGH'
+                ddl_annot.at[i, 'locus'] = 'IGH'
             if re.match('IGK', ','.join(j_)):
-                ddl_annot.loc[i, 'locus'] = 'IGK'
+                ddl_annot.at[i, 'locus'] = 'IGK'
             if re.match('IGL', ','.join(j_)):
-                ddl_annot.loc[i, 'locus'] = 'IGL'
+                ddl_annot.at[i, 'locus'] = 'IGL'
             if len(j_) > 1:
-                ddl_annot.loc[i, 'locus'] = 'Multi'
+                ddl_annot.at[i, 'locus'] = 'Multi'
 
     cellrangermap = {
         'sequence_id':'contig_id',
@@ -731,17 +730,17 @@ def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
         for key, value in cellrangermap.items():
             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
-                cr_annot.loc[i, value] = ddl_annot.loc[i, key]
+                cr_annot.at[i, value] = ddl_annot.loc[i, key]
             else:
-                cr_annot.loc[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
+                cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
 
         if cr_annot.loc[i, 'cdr3'] is np.nan:
-            cr_annot.loc[i, 'productive'] = None
+            cr_annot.at[i, 'productive'] = None
         else:
             if cr_annot.loc[i, 'productive'] == 'T':
-                cr_annot.loc[i, 'productive'] = 'True'
+                cr_annot.at[i, 'productive'] = 'True'
             else:
-                cr_annot.loc[i, 'productive'] = 'False'
+                cr_annot.at[i, 'productive'] = 'False'
 
     cr_annot['barcode'] = [c.split('_contig')[0].split('-')[0] for c in cr_annot['contig_id']]
     if save is not None:
