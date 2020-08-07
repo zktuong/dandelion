@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 23:25:15
+# @Last Modified time: 2020-08-07 23:46:06
 
 import os
 import sys
@@ -756,6 +756,26 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
     else:
         out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph, clone_key = clone_key)
         return(out)
+
+def generate_layout(self, layout_option = None, *args, **kwds):
+    if layout_option is not None:
+        layout = self.graph.layout_fruchterman_reingold()
+    else:
+        layout = self.graph.layout(layout_option, *args, **kwds)
+    if self.__class__ == Dandelion:
+        if self.germline is not None:
+            germline_ = self.germline
+        else:
+            germline_ = None
+        if self.threshold is not None:
+            threshold_ = self.threshold
+        else:
+            threshold_ = None
+        self.__init__(data = self.data, metadata = self.metadata, distance = self.distance, edges = self.edges, layout = layout, graph = self.graph, germline = germline_, initialize = False)
+        self.threshold = threshold_
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'layout\', network layout\n'))
 
 def mst(mat):
     """
