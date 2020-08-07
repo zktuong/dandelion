@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-23 14:32:02
+# @Last Modified time: 2020-08-07 15:23:43
 
 import sys
 import os
@@ -323,7 +323,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
             if isinstance(r, pd.Series):
                 heavy_retrieval_list[k] = ','.join([str(x) for x in flatten(r.to_list())])
         light_retrieval_list = {}
-        sub_metadata2 = sub_metadata.drop('heavy', axis = 1)
+        sub_metadata2 = sub_metadata.drop('heavy', axis = 1).drop_duplicates()
         for x in sub_metadata2.index:
             if collapse:
                 r_l = list(set(list(sub_metadata2.loc[x, :])))
