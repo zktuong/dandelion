@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 20:18:09
+# @Last Modified time: 2020-08-07 20:43:18
 
 import sys
 import os
@@ -1645,6 +1645,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     else:
         out_dat = Dandelion(data = _dat, initialize = True)
 
+    adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
     if filter_rna:
         out_adata = adata[~(adata.obs_names.isin(filter_ids))] # not saving the scanpy object because there's no need to at the moment
     else:
