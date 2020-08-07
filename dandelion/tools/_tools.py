@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 22:23:41
+# @Last Modified time: 2020-08-07 23:17:57
 
 import os
 import sys
@@ -774,7 +774,7 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors_key = False):
+def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_key = None):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.raw` slots with metadata and network.
 
@@ -786,11 +786,13 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
         `Dandelion` object
     neighbors_key : str, optional
         key for 'neighbors' slot in `.uns`
-    update_rna_neighbors_key : bool
-        If True, will transfer the existing `.uns[neighbors_key]` slot to `.uns['rna_neighbors_key']`.
+    rna_key : str, optional
+        prefix for stashed RNA connectivities and distances.
+    bcr_key : str, optional
+        prefix for stashed BCR connectivities and distances.
     Returns
     ----------
-        `AnnData` object with updated `.obs` `.uns`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
+        `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
 
     """
     start = logg.info('Transferring network')
@@ -810,26 +812,42 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
 
         print('Updating anndata slots')
         if neighbors_key is None:
-            neighbors_key = "neighbors"
+            neighbors_key = "neighbors"            
             rna_neighbors_key = 'rna_'+neighbors_key
-            bcr_neighbors_key = 'bcr_'+neighbors_key
             if rna_neighbors_key not in self.uns:
-                self.uns[rna_neighbors_key] = {}
-            self.uns[bcr_neighbors_key] = {}
+                self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()            
         if neighbors_key not in self.uns:
             raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
                 
         # self.raw.uns = copy.deepcopy(self.uns)
-        if (len(self.uns[rna_neighbors_key]) == 0) or (update_rna_neighbors_key):
-            self.uns[rna_neighbors_key] = copy.deepcopy(self.uns[neighbors_key])
+        if rna_key is None:
+            r_connectivities_key = 'rna_connectivities'
+            r_distances_key = 'rna_distances'
+        else:
+            r_connectivities_key = rna_key +'_connectivitites'
+            r_distances_key = rna_key +'_distances'
         
-        self.uns[bcr_neighbors_key]['connectivities'] = df_connectivities_.copy()
-        self.uns[bcr_neighbors_key]['distances'] = df_distances_.copy()
-        self.uns[bcr_neighbors_key]['params'] = {'method':'bcr'}
-        self.uns[neighbors_key] = copy.deepcopy(self.uns[bcr_neighbors_key])
+        if bcr_key is None:
+            b_connectivities_key = 'bcr_connectivities'
+            b_distances_key = 'bcr_distances'
+        else:
+            b_connectivities_key = bcr_key +'_connectivitites'
+            b_distances_key = bcr_key +'_distances'
+            # stash_rna_connectivities:
+        
+        if not r_connectivities_key in self.obsp:
+            self.obsp[r_connectivities_key] = self.obsp["connectivities"].copy()
+            self.obsp[r_distances_key] = self.obsp["distances"].copy()
+            self.uns[]
+        
+        # always overwrite the bcr slots
+        self.obsp['connectivities'] = df_connectivities_.copy()
+        self.obsp['distances'] = df_distances_.copy()
+        self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
+        self.obsp[b_distances_key] = self.obsp["distances"].copy()
 
-        self.obsp["rna_connectivities"] = self.uns[rna_neighbors_key]['connectivities'].copy()
-        self.obsp["bcr_connectivities"] = self.uns[bcr_neighbors_key]['connectivities'].copy()
+        self.uns[neighbors_key]['params'] = {'method':'bcr'}
+        self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()        
 
     for x in dandelion.metadata.columns:
         self.obs[x] = pd.Series(dandelion.metadata[x])
@@ -846,7 +864,7 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
     if (dandelion.edges is not None) and (dandelion.edges is not None):
         logg.info(' finished', time=start,
             deep=('updated `.obs` with `.metadata`\n'
-                  'added to `.uns[\''+neighbors_key+'\']`\n'
+                  'added to `.uns[\''+neighbors_key+'\']` and `.obsp`\n'
                   '   \'distances\', cluster-weighted adjacency matrix\n'
                   '   \'connectivities\', cluster-weighted adjacency matrix'))
     else:
