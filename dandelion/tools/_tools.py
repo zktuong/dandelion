@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 21:54:08
+# @Last Modified time: 2020-08-07 22:07:03
 
 import os
 import sys
@@ -795,22 +795,16 @@ def transfer_network(self, dandelion, neighbors_key = None, update_rna_neighbors
     """
     start = logg.info('Transferring network')
     if dandelion.edges is not None:
-        print('Formatting edges')
-        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
-        print('Extracting distances')
+        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')        
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
-        print('Extracting connectivities')
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
-        df_connectivities = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
-        df_distances = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
-        for x in connectivities.columns:
-            df_connectivities[x] = pd.Series(connectivities[x])
-        for x in distances.columns:
-            df_distances[x] = pd.Series(distances[x])
-        for x in df_distances.columns:
-            df_distances[x] = df_distances[x].apply(lambda x: 5/(x + 1))
-        df_connectivities.fillna(0, inplace = True)
-        df_distances.fillna(0, inplace = True)
+        A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
+        df_connectivities = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
+        df_distances = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
+        print('converting matrices')
+        df_connectivities.update(connectivities)
+        df_distances.update(distances)                
+        
         df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
         df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
 
