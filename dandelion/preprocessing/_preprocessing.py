@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 19:10:10
+# @Last Modified time: 2020-08-07 19:43:45
 
 import sys
 import os
@@ -1430,6 +1430,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     # l_dup = Tree()
     h_seq = Tree()
     l_seq = Tree()
+    h_ccall = Tree()
+
     poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
 
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
@@ -1460,6 +1462,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
         hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
+        hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
 
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
@@ -1470,6 +1473,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         h_umi[b] = hc_umi
         h_seq[b] = hc_seq
         h_dup[b] = hc_dup
+        h_ccall[b] = hc_ccall
 
         l[b] = lc_id
         l_umi[b] = lc_umi
@@ -1515,6 +1519,14 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                         for otherindex in umi_test_dict:
                             if umi_test_dict[otherindex]:
                                 drop_contig.append(h[b][otherindex])
+                                ccall.append(h_ccall[b][otherindex])
+                        if len(ccall) == 1: # experimental: see if this can pick up any naive IgM+IgD+ cells?
+                            try:
+                                call_list = list(h_ccall[b][keep_index_h])+ccall
+                                if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
+                                    dat.at[keep_hc_contig, 'c_call'] = 'IGHM|IGHD'
+                            except:
+                                pass
                 else:
                     h_doublet.append(b)
 
