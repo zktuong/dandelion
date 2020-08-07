@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 00:04:28
+# @Last Modified time: 2020-08-08 00:06:36
 
 import igraph
 import seaborn as sns
@@ -59,7 +59,7 @@ def igraph_network(self, colorby = None, clone_key = None, layout = None, visual
     vs['inline'] = True
     
     # a list of 900+colours
-    cols1 = list(sns.xkcd_rgb.keys())
+    cols = list(sns.xkcd_rgb.keys())
 
     max_colors_needed1 = len(list(set(g.vs[str(clonekey)])))
     max_colors_needed2 = len(list(set(g.vs[str(clonekey)+'_group'])))
@@ -68,8 +68,8 @@ def igraph_network(self, colorby = None, clone_key = None, layout = None, visual
 
     # some default colours
     len(cols1)
-    clone_col_dict = dict(zip(list(set(g.vs[str(clonekey)])), random.sample(sns.xkcd_palette(cols1) + cols2, max_colors_needed1)))
-    clone_group_col_dict = dict(zip(list(set(g.vs[str(clonekey)+'_group'])), random.sample(sns.xkcd_palette(cols1) + cols2, max_colors_needed2)))
+    clone_col_dict = dict(zip(list(set(g.vs[str(clonekey)])), random.sample(sns.xkcd_palette(cols) + cols2, max_colors_needed1)))
+    clone_group_col_dict = dict(zip(list(set(g.vs[str(clonekey)+'_group'])), random.sample(sns.xkcd_palette(cols) + cols2, max_colors_needed2)))
     productive_col_dict = dict(zip(list(set(g.vs['productive'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['productive'])))))))
     productive_col_dict.update({'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'})
     
