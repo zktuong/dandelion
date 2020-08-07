@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 19:09:19
+# @Last Modified time: 2020-08-07 19:41:04
 
 import sys
 import os
@@ -389,7 +389,7 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
         except:
             status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
     if isotype_dict is None:
-        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':np.nan, np.nan:np.nan} # the key for IgG being igh is on purpose because of how the counter works
+        conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':np.nan, np.nan:np.nan} # the key for IgG being igh is on purpose because of how the counter works
     else:
         conversion_dict = isotype_dict
     isotype = {}
