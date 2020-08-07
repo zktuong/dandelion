@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 23:23:02
+# @Last Modified time: 2020-08-07 23:25:15
 
 import os
 import sys
@@ -44,7 +44,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
     self : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     identity : float
-        Junction similarity parameter. Default 0.85    
+        Junction similarity parameter. Default 0.85
     clustering_by : str, optional
         modes for clustering: 'nt' or 'aa'. None defaults to 'aa'.
     by_alleles : bool, optional
@@ -558,7 +558,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
 
 def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
-    Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s). 
+    Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
 
     Parameters
@@ -639,7 +639,7 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
         d_mat = squareform(pdist(tdarray,lambda x,y: Levenshtein.distance(x[0],y[0])))
         dmat[x] = d_mat
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
-    
+
     n_ = len(dist_mat_list)
     if distance_mode == 'simple':
         total_dist = np.sum(dist_mat_list,axis=0)
@@ -650,7 +650,7 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
                 weighted_matrix.append(1/n_ * dist_mat_list[w])
             total_dist = sum(weighted_matrix)
         else:
-            if len(weights) == n_:                
+            if len(weights) == n_:
                 for w in range(0, n_):
                     weighted_matrix.append(weights[w] * dist_mat_list[w])
                 total_dist = sum(weighted_matrix)
@@ -766,7 +766,7 @@ def mst(mat):
     mat : dict
         Dictionary containing numpy ndarrays.
     Returns
-    ----------        
+    ----------
         Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
@@ -797,7 +797,7 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
     """
     start = logg.info('Transferring network')
     if dandelion.edges is not None:
-        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')        
+        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
         A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
@@ -805,39 +805,41 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
         df_distances = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
         print('converting matrices')
         df_connectivities.update(connectivities)
-        df_distances.update(distances)                
-        
+        df_distances.update(distances)
+
         df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
         df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
 
         print('Updating anndata slots')
         if neighbors_key is None:
-            neighbors_key = "neighbors"            
+            neighbors_key = "neighbors"
             rna_neighbors_key = 'rna_'+neighbors_key
+            bcr_neighbors_key = 'rna_'+neighbors_key
             if rna_neighbors_key not in self.uns:
-                self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()            
+                self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
+            self.uns[bcr_neighbors_key] = {}
         if neighbors_key not in self.uns:
             raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-                    
+
         if rna_key is None:
             r_connectivities_key = 'rna_connectivities'
             r_distances_key = 'rna_distances'
         else:
             r_connectivities_key = rna_key +'_connectivitites'
             r_distances_key = rna_key +'_distances'
-        
+
         if bcr_key is None:
             b_connectivities_key = 'bcr_connectivities'
             b_distances_key = 'bcr_distances'
         else:
             b_connectivities_key = bcr_key +'_connectivitites'
             b_distances_key = bcr_key +'_distances'
-            # stash_rna_connectivities:
-        
-        if not r_connectivities_key in self.obsp:
+
+        # stash_rna_connectivities:
+        if r_connectivities_key not in self.obsp:
             self.obsp[r_connectivities_key] = self.obsp["connectivities"].copy()
             self.obsp[r_distances_key] = self.obsp["distances"].copy()
-        
+
         # always overwrite the bcr slots
         self.obsp['connectivities'] = df_connectivities_.copy()
         self.obsp['distances'] = df_distances_.copy()
@@ -845,7 +847,7 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
 
         self.uns[neighbors_key]['params'] = {'method':'bcr'}
-        self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()        
+        self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()
 
     for x in dandelion.metadata.columns:
         self.obs[x] = pd.Series(dandelion.metadata[x])
@@ -858,7 +860,7 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
         tmp[[1]] = tmp[[1]]*-1
         X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
         self.obsm['X_bcr'] = X_bcr
-    
+
     if (dandelion.edges is not None) and (dandelion.edges is not None):
         logg.info(' finished', time=start,
             deep=('updated `.obs` with `.metadata`\n'
@@ -872,7 +874,7 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
 def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, key_added = None, verbose = False):
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
-    
+
     Parameters
     ----------
     self : Dandelion, DataFrame, str
@@ -920,7 +922,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         dat = load_data(self)
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-    
+
     if os.path.isfile(str(self)):
         if dirs is None:
             tmpFolder = "{}/tmp".format(os.path.dirname(self))
@@ -946,7 +948,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, os.path.basename(self).split('.tsv')[0])
         l_file = "{}/{}_light.tsv".format(tmpFolder, os.path.basename(self).split('.tsv')[0])
         outfile = "{}/{}_clone.tsv".format(outFolder, os.path.basename(self).split('.tsv')[0])
-    else:        
+    else:
         if outFilePrefix is not None:
             out_FilePrefix = outFilePrefix
         else:
@@ -958,7 +960,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
 
     dat_h.to_csv(h_file1, sep = '\t', index = False)
     dat_l.to_csv(l_file, sep = '\t', index = False)
-    
+
     if 'germline_alignment_d_mask' not in dat.columns:
         raise ValueError("Missing 'germline_alignment_d_mask' column in input file. Run create_germlines first.")
 
@@ -987,31 +989,31 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
             '--dist', str(dist_),
             '--nproc', str(nproc),
             '--vf', v_field]
-    
+
     def clusterLinkage(cell_series, group_series):
         """
         Returns a dictionary of {cell_id : cluster_id} that identifies clusters of cells by analyzing their shared
-        features (group_series) using single linkage. 
-    
+        features (group_series) using single linkage.
+
         Arguments:
         cell_series (iter): iter of cell ids.
         group_series (iter): iter of group ids.
-    
+
         Returns:
         dict:  dictionary of {cell_id : cluster_id}.
         """
-    
+
         # assign initial clusters
         # initial_dict = {cluster1: [cell1], cluster2: [cell1]}
         initial_dict = {}
         for cell, group in zip(cell_series, group_series):
-            try:    
+            try:
                 initial_dict[group].append(cell)
             except KeyError:
                 initial_dict[group] = [cell]
-                   
+
         # naive single linkage clustering (ON^2 best case, ON^3 worst case) ...ie for cells with multiple light chains
-        # cluster_dict = {cluster1: [cell1, cell2]}, 2 cells belong in same group if they share 1 light chain 
+        # cluster_dict = {cluster1: [cell1, cell2]}, 2 cells belong in same group if they share 1 light chain
         while True:
             cluster_dict = {}
             for i, group in enumerate(initial_dict.keys()):
@@ -1022,21 +1024,21 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
                         cluster_dict[cluster] = cluster_dict[cluster] + initial_dict[group]
                         del cluster_dict[i]
                         break
-            # break if clusters stop changing, otherwise restart 
+            # break if clusters stop changing, otherwise restart
             if len(cluster_dict.keys()) == len(initial_dict.keys()):
                 break
             else:
                 initial_dict = cluster_dict.copy()
-        
+
         # invert cluster_dict for return
         assign_dict = {cell:k for k,v in cluster_dict.items() for cell in set(v)}
-        
+
         return assign_dict
 
     def _lightCluster(heavy_file, light_file, out_file, doublets, fileformat):
         """
         Split heavy chain clones based on light chains
-    
+
         Arguments:
         heavy_file (str): heavy chain input file.
         light_file (str): light chain input file.
@@ -1061,11 +1063,11 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
             umi_count = 'umi_count'
         else:
             sys.exit("Invalid format %s" % fileformat)
-    
+
         # read in heavy and light DFs
         heavy_df = pd.read_csv(heavy_file, dtype='object', na_values=['', 'None', 'NA'], sep='\t')
         light_df = pd.read_csv(light_file, dtype='object', na_values=['', 'None', 'NA'], sep='\t')
-    
+
         # column checking
         expected_heavy_columns = [cell_id, clone_id, v_call, j_call, junction_length, umi_count]
         if set(expected_heavy_columns).issubset(heavy_df.columns) is False:
@@ -1073,11 +1075,11 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         expected_light_columns = [cell_id, v_call, j_call, junction_length, umi_count]
         if set(expected_light_columns).issubset(light_df.columns) is False:
             raise ValueError("Missing one or more columns in light chain file: " + ", ".join(expected_light_columns))
-    
+
         # Fix types
         heavy_df[junction_length] = heavy_df[junction_length].astype('int')
         light_df[junction_length] = light_df[junction_length].astype('int')
-    
+
         # filter multiple heavy chains
         if doublets == 'drop':
             heavy_df = heavy_df.drop_duplicates(cell_id, keep=False)
@@ -1086,23 +1088,23 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         elif doublets == 'count':
             heavy_df[umi_count] = heavy_df[umi_count].astype('int')
             heavy_df = heavy_df.groupby(cell_id, sort=False).apply(lambda x: x.nlargest(1, umi_count))
-    
+
         # transfer clone IDs from heavy chain df to light chain df
         clone_dict = {v[cell_id]:v[clone_id] for k, v in heavy_df[[clone_id, cell_id]].T.to_dict().items()}
         light_df = light_df.loc[light_df[cell_id].apply(lambda x: x in clone_dict.keys()), ]
         light_df[clone_id] = light_df.apply(lambda row: clone_dict[row[cell_id]], axis = 1)
-    
+
         # generate a "cluster_dict" of CELL:CLONE dictionary from light df  (TODO: use receptor object V/J gene names)
         cluster_dict = clusterLinkage(light_df[cell_id],
                                     light_df.apply(lambda row:
                                                     getGene(row[v_call]) + ',' + \
                                                     getGene(row[j_call]) + ',' + \
                                                     str(row[junction_length]) + ',' + row[clone_id], axis=1))
-    
+
         # add assignments to heavy_df
         heavy_df = heavy_df.loc[heavy_df[cell_id].apply(lambda x: x in cluster_dict.keys()), :]
         heavy_df[clone_id] = heavy_df[clone_id] + '_' + heavy_df.apply(lambda row: str(cluster_dict[row[cell_id]]), axis=1)
-        
+
         # write heavy chains
         heavy_df.to_csv(out_file, sep='\t', index=False)
         return(heavy_df, light_df)
@@ -1110,14 +1112,14 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd)
-    
+
     h_df, l_df = _lightCluster(h_file2, l_file, outfile, doublets=doublets, fileformat=fileformat)
 
     h_df = load_data(h_df)
     # create a dictionary for cell_id : clone_id from h_df
     linked_clones = dict(zip(h_df['cell_id'], h_df['clone_id']))
-    
-    # create a clone_reference 
+
+    # create a clone_reference
     clone_ref = list(set(h_df['clone_id']))
     clone_ref = [c.split('_')[1] if c is not np.nan else c for c in clone_ref]
     l_df = load_data(l_df)
@@ -1194,7 +1196,7 @@ def quantify_clone_size(self, max_size = None, clone_key = None, key_added = Non
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     key_added : str, optional
-        Suffix to add to end of the output column.    
+        Suffix to add to end of the output column.
     Returns
     ----------
         `Dandelion` object with clone size columns annotated in `.metadata` slot.
@@ -1210,8 +1212,8 @@ def quantify_clone_size(self, max_size = None, clone_key = None, key_added = Non
 
     clone_size = metadata_[str(clonekey)].value_counts()
     clone_group_size = metadata_[str(clonekey)+'_group'].value_counts()
-    
-    if max_size is not None:        
+
+    if max_size is not None:
         clone_size_ = clone_size.astype('object')
         clone_group_size_ = clone_group_size.astype('object')
         for i in clone_size.index:
