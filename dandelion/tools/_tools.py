@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-07-23 14:22:52
+# @Last Modified time: 2020-08-07 19:11:17
 
 import os
 import sys
@@ -493,7 +493,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
                 renamed_clone_dict_light = {}
                 for key, value in clone_dict_light.items():
                     renamed_clone_dict_light[key] = lclones_dict[value]
-                dat.loc[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
+                dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
@@ -713,7 +713,7 @@ def generate_network(self, distance_mode='weighted', aa_or_nt=None, clone_key = 
     edge_list_final = edge_listx.combine_first(tmp_edge_listx)
 
     for idx in edge_list_final.index:
-        edge_list_final.loc[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
+        edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
     # return the edge list
     edge_list_final.reset_index(drop = True, inplace = True)
 
@@ -1110,10 +1110,10 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
 
     for x in l_df.index:
         if l_df.loc[x, 'clone_id'] in clone_ref:
-            l_df.loc[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
+            l_df.at[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
         else:
             try:
-                l_df.loc[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
+                l_df.at[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
             except:
                 pass
 
