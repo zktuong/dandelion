@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 19:54:37
+# @Last Modified time: 2020-08-07 20:18:09
 
 import sys
 import os
@@ -1630,11 +1630,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
             raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching? Make sure that the transcriptome data does not contain any "-#" at the suffix.')
 
         if os.path.isfile(str(data)):
-            _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)
+            _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
-                    _dat.to_csv(str(save), sep = '\t', index = None)
+                    _dat.to_csv(str(save), sep = '\t', index = False)
                 else:
                     raise OSError('Please provide a file name that ends with .tsv')
     else:
@@ -1777,7 +1777,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             return(dat)
         elif os.path.isfile(self):
             logg.info(' finished', time=start, deep=('saving DataFrame at {}\n'.format(str(self))))
-            dat.to_csv(self, sep = '\t')
+            dat.to_csv(self, sep = '\t', index=False)
 
 def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
     """
