@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 22:13:31
+# @Last Modified time: 2020-08-07 22:16:57
 
 import os
 import sys
@@ -1165,7 +1165,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
 
-def quantify_clone_size(self, max_size = None, clone_key = None):
+def quantify_clone_size(self, max_size = None, clone_key = None, key_added = None):
     start = logg.info('Quantifying clone sizes')
     metadata_ = self.metadata.copy()
 
@@ -1195,8 +1195,12 @@ def quantify_clone_size(self, max_size = None, clone_key = None):
     clone_size_dict = dict(clone_size_)
     clone_group_size_dict = dict(clone_group_size_)
 
-    self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
-    self.metadata[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
+    if key_added is None:
+        self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
+        self.metadata[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
+    else:
+        self.metadata[str(key_added)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
+        self.metadata[str(key_added)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'metadata\', cell-indexed clone table'))
