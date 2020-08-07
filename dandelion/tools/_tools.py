@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 23:17:57
+# @Last Modified time: 2020-08-07 23:23:02
 
 import os
 import sys
@@ -818,8 +818,7 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
                 self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()            
         if neighbors_key not in self.uns:
             raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-                
-        # self.raw.uns = copy.deepcopy(self.uns)
+                    
         if rna_key is None:
             r_connectivities_key = 'rna_connectivities'
             r_distances_key = 'rna_distances'
@@ -838,7 +837,6 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
         if not r_connectivities_key in self.obsp:
             self.obsp[r_connectivities_key] = self.obsp["connectivities"].copy()
             self.obsp[r_distances_key] = self.obsp["distances"].copy()
-            self.uns[]
         
         # always overwrite the bcr slots
         self.obsp['connectivities'] = df_connectivities_.copy()
