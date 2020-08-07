@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 00:10:03
+# @Last Modified time: 2020-08-08 00:54:16
 
 import os
 import sys
@@ -556,7 +556,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
         return(out)
 
-def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
+def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
     """
     Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
@@ -569,6 +569,10 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
         The mode of calculating joint distance matrix for heavy and light chains. Default is 'simple'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.
     aa_or_nt : str, optional
         Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
+    clone_key: str, optional
+        column name to build network on.
+    constructbygroup: bool
+        whether to link up by clone_group id. Default is False.
     clones_sep: tuple[int, str]
         A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
     weights : tuple, optional
@@ -661,7 +665,10 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
     for i in out.metadata.index:
-        cx = out.metadata.loc[i, str(clonekey)+'_group']
+        if constructbygroup:
+            cx = out.metadata.loc[i, str(clonekey)+'_group']
+        else:
+            cx = out.metadata.loc[i, str(clonekey)]
         tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
