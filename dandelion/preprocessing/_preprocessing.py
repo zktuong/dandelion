@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 20:43:18
+# @Last Modified time: 2020-08-07 21:05:19
 
 import sys
 import os
@@ -1457,6 +1457,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
     # rather than leaving a nan cell, i will create a 0 column for now
     dat['duplicate_count'] = 0
+
     for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
@@ -1610,6 +1611,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
     filter_ids = []
     if filter_bcr:
+        print('Finishing up filtering')
         if not filter_lightchains:
             filter_ids = list(set(h_doublet + poor_qual))
         else:
@@ -1640,14 +1642,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     else:
         _dat = dat.copy()
 
-    if data.__class__ == Dandelion:
+    print('Initializing Dandelion object')
+    if data.__class__ == Dandelion:        
         out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
     else:
         out_dat = Dandelion(data = _dat, initialize = True)
 
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
-    if filter_rna:
-        out_adata = adata[~(adata.obs_names.isin(filter_ids))] # not saving the scanpy object because there's no need to at the moment
+    adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
+
+    if filter_rna:        
+        out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
     else:
         out_adata = adata.copy()
 
