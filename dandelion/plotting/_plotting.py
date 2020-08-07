@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 00:06:36
+# @Last Modified time: 2020-08-08 00:07:40
 
 import igraph
 import seaborn as sns
@@ -63,11 +63,10 @@ def igraph_network(self, colorby = None, clone_key = None, layout = None, visual
 
     max_colors_needed1 = len(list(set(g.vs[str(clonekey)])))
     max_colors_needed2 = len(list(set(g.vs[str(clonekey)+'_group'])))
-    # if max_colors_needed1 > len(cols1):
+    # if max_colors_needed1 > len(cols):
     cols2 = list(sns.color_palette('husl', max_colors_needed1))
 
-    # some default colours
-    len(cols1)
+    # some default colours    
     clone_col_dict = dict(zip(list(set(g.vs[str(clonekey)])), random.sample(sns.xkcd_palette(cols) + cols2, max_colors_needed1)))
     clone_group_col_dict = dict(zip(list(set(g.vs[str(clonekey)+'_group'])), random.sample(sns.xkcd_palette(cols) + cols2, max_colors_needed2)))
     productive_col_dict = dict(zip(list(set(g.vs['productive'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['productive'])))))))
