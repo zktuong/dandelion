@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 09:38:41
+# @Last Modified time: 2020-08-08 09:51:23
 
 import os
 import sys
@@ -740,6 +740,68 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
 
     if layout_option is not None:
         layout = graph.layout_fruchterman_reingold()
+    elif layout_option == "auto":
+        layout = graph.layout_auto(*args, **kwds)
+    elif layout_option == "automatic":
+        layout = graph.layout_auto(*args, **kwds)
+    elif layout_option == "bipartite":
+        layout = graph.layout_bipartite(*args, **kwds)
+    elif layout_option == "circle":
+        layout = graph.layout_circle(*args, **kwds)
+    elif layout_option == "circular":
+        layout = graph.layout_circle(*args, **kwds)
+    elif layout_option == "davidson_harel":
+        layout = graph.layout_davidson_harel(*args, **kwds)
+    elif layout_option == "dh":
+        layout = graph.layout_davidson_harel(*args, **kwds)
+    elif layout_option == "drl":
+        layout = graph.layout_drl(*args, **kwds)
+    elif layout_option == "fr":
+        layout = graph.layout_fruchterman_reingold(*args, **kwds)
+    elif layout_option == "fruchterman_reingold":
+        layout = graph.layout_fruchterman_reingold(*args, **kwds)
+    elif layout_option == "gfr":
+        layout = graph.layout_grid_fruchterman_reingold(*args, **kwds)
+    elif layout_option == "graphopt":
+        layout = graph.layout_graphopt(*args, **kwds)
+    elif layout_option == "grid":
+        layout = graph.layout_grid(*args, **kwds)
+    elif layout_option == "grid_fr":
+        layout = graph.layout_grid_fruchterman_reingold(*args, **kwds)
+    elif layout_option == "grid_fruchterman_reingold":
+        layout = graph.layout_grid_fruchterman_reingold(*args, **kwds)
+    elif layout_option == "kk":
+        layout = graph.layout_kamada_kawai(*args, **kwds)
+    elif layout_option == "kamada_kawai":
+        layout = graph.layout_kamada_kawai(*args, **kwds)
+    elif layout_option == "lgl":
+        layout = graph.layout_lgl(*args, **kwds)
+    elif layout_option == "large":
+        layout = graph.layout_lgl(*args, **kwds)
+    elif layout_option == "large_graph":
+        layout = graph.layout_lgl(*args, **kwds)
+    elif layout_option == "mds":
+        layout = graph.layout_mds(*args, **kwds)
+    elif layout_option == "random":
+        layout = graph.layout_random(*args, **kwds)
+    elif layout_option == "rt":
+        layout = graph.layout_reingold_tilford(*args, **kwds)
+    elif layout_option == "tree":
+        layout = graph.layout_reingold_tilford(*args, **kwds)
+    elif layout_option == "reingold_tilford":
+        layout = graph.layout_reingold_tilford(*args, **kwds)
+    elif layout_option == "rt_circular":
+        layout = graph.layout_reingold_tilford_circular(*args, **kwds)
+    elif layout_option == "reingold_tilford_circular":
+        layout = graph.layout_reingold_tilford_circular(*args, **kwds)
+    elif layout_option == "sphere":
+        layout = graph.layout_sphere(*args, **kwds)
+    elif layout_option == "spherical":
+        layout = graph.layout_sphere(*args, **kwds)
+    elif layout_option == "star":
+        layout = graph.layout_star(*args, **kwds)
+    elif layout_option == "sugiyama":
+        layout = graph.layout_sugiya(*args, **kwds)
     else:
         layout = graph.layout(layout_option, *args, **kwds)
     for x in out.metadata.columns:

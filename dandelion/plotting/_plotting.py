@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 00:07:40
+# @Last Modified time: 2020-08-08 09:50:50
 
 import igraph
 import seaborn as sns
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
 
-def igraph_network(self, colorby = None, clone_key = None, layout = None, visual_style = None, *args):
+def igraph_network(self, colorby = None, clone_key = None, layout = None, visual_style = None, *args, **kwds):
     """
     Using igraph to plot the network. There are some default plotting options. according to the metadata that returned by generate_network.
     
@@ -42,9 +42,71 @@ def igraph_network(self, colorby = None, clone_key = None, layout = None, visual
 
     g = self.graph
     if layout is None:
-        lyt = self.layout
+        lyt = self.layout    
+    elif layout == "auto":
+        lyt = g.layout_auto(*args, **kwds)
+    elif layout == "automatic":
+        lyt = g.layout_auto(*args, **kwds)
+    elif layout == "bipartite":
+        lyt = g.layout_bipartite(*args, **kwds)
+    elif layout == "circle":
+        lyt = g.layout_circle(*args, **kwds)
+    elif layout == "circular":
+        lyt = g.layout_circle(*args, **kwds)
+    elif layout == "davidson_harel":
+        lyt = g.layout_davidson_harel(*args, **kwds)
+    elif layout == "dh":
+        lyt = g.layout_davidson_harel(*args, **kwds)
+    elif layout == "drl":
+        lyt = g.layout_drl(*args, **kwds)
+    elif layout == "fr":
+        lyt = g.layout_fruchterman_reingold(*args, **kwds)
+    elif layout == "fruchterman_reingold":
+        lyt = g.layout_fruchterman_reingold(*args, **kwds)
+    elif layout == "gfr":
+        lyt = g.layout_grid_fruchterman_reingold(*args, **kwds)
+    elif layout == "graphopt":
+        lyt = g.layout_graphopt(*args, **kwds)
+    elif layout == "grid":
+        lyt = g.layout_grid(*args, **kwds)
+    elif layout == "grid_fr":
+        lyt = g.layout_grid_fruchterman_reingold(*args, **kwds)
+    elif layout == "grid_fruchterman_reingold":
+        lyt = g.layout_grid_fruchterman_reingold(*args, **kwds)
+    elif layout == "kk":
+        lyt = g.layout_kamada_kawai(*args, **kwds)
+    elif layout == "kamada_kawai":
+        lyt = g.layout_kamada_kawai(*args, **kwds)
+    elif layout == "lgl":
+        lyt = g.layout_lgl(*args, **kwds)
+    elif layout == "large":
+        lyt = g.layout_lgl(*args, **kwds)
+    elif layout == "large_graph":
+        lyt = g.layout_lgl(*args, **kwds)
+    elif layout == "mds":
+        lyt = g.layout_mds(*args, **kwds)
+    elif layout == "random":
+        lyt = g.layout_random(*args, **kwds)
+    elif layout == "rt":
+        lyt = g.layout_reingold_tilford(*args, **kwds)
+    elif layout == "tree":
+        lyt = g.layout_reingold_tilford(*args, **kwds)
+    elif layout == "reingold_tilford":
+        lyt = g.layout_reingold_tilford(*args, **kwds)
+    elif layout == "rt_circular":
+        lyt = g.layout_reingold_tilford_circular(*args, **kwds)
+    elif layout == "reingold_tilford_circular":
+        lyt = g.layout_reingold_tilford_circular(*args, **kwds)
+    elif layout == "sphere":
+        lyt = g.layout_sphere(*args, **kwds)
+    elif layout == "spherical":
+        lyt = g.layout_sphere(*args, **kwds)
+    elif layout == "star":
+        lyt = g.layout_star(*args, **kwds)
+    elif layout == "sugiyama":
+        lyt = g.layout_sugiya(*args, **kwds)
     else:
-        lyt = g.layout(layout, *args)
+        lyt = g.layout(layout, *args, **kwds)
     
     # default visual style
     vs = {}
