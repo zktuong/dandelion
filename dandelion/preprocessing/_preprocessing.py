@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 21:05:19
+# @Last Modified time: 2020-08-08 10:37:50
 
 import sys
 import os
@@ -1441,13 +1441,6 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         raise TypeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
 
     bcr_check = Tree()
-    for c in adata.obs_names:
-        if c in barcode:
-            bcr_check[c] = True
-        else:
-            bcr_check[c] = False
-    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
-    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
@@ -1647,9 +1640,18 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
     else:
         out_dat = Dandelion(data = _dat, initialize = True)
-
+    
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
+
+    barcodex = list(set(_dat['cell_id']))
+    for c in adata.obs_names:
+        if c in barcodex:
+            bcr_check[c] = True
+        else:
+            bcr_check[c] = False
+    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
+    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if filter_rna:        
         out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
