@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 00:54:16
+# @Last Modified time: 2020-08-08 09:38:41
 
 import os
 import sys
@@ -597,9 +597,6 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
     if clonekey not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
-    # re-initiate a Dandelion class object
-    out = Dandelion(dat)
-
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
@@ -629,7 +626,9 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
         for key, value in light_seq_tree[g].items():
             light_seq_tree2[g][second_key_dict[key]] = value
     dat_seq['light'] = pd.Series(light_seq_tree2)
-    tmp_dat = dat_seq['light'].apply(pd.Series)
+    tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
+    tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
+
     tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
     dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
     dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
@@ -661,7 +660,12 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
             else:
                 raise IndexError('Length of provided weights should be %s.' % int(n_))
 
-    # generate edge list
+    # generate edge list    
+    if self.__class__ == Dandelion:
+        out = self.copy()
+    else: # re-initiate a Dandelion class object
+        out = Dandelion(dat)
+
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
     for i in out.metadata.index:

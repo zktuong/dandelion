@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 09:34:44
+# @Last Modified time: 2020-08-08 09:39:27
 
 import sys
 import os
@@ -232,7 +232,8 @@ def setup_metadata(data, sep, clone_key = None):
         for key, value in light_clone_tree[g].items():
             light_clone_tree2[g][second_key_dict[key]] = value
     metadata_['light'] = pd.Series(light_clone_tree2)
-    tmp_dat = metadata_['light'].apply(pd.Series)
+    tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in metadata['light']])
+    tmp_dat = pd.DataFrame(tmp.tolist(), index = metadata.index)
     tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
     metadata_ = metadata_.merge(tmp_dat, left_index = True, right_index = True)
     metadata_ = metadata_[['heavy'] + [str(c) for c in tmp_dat.columns]]
