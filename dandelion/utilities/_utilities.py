@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-07 19:41:04
+# @Last Modified time: 2020-08-08 09:34:44
 
 import sys
 import os
@@ -301,7 +301,8 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
         for key, value in light_retrieval_tree[g].items():
             light_retrieval_tree2[g][second_key_dict[key]] = value
     sub_metadata['light'] = pd.Series(light_retrieval_tree2)
-    tmp_dat = sub_metadata['light'].apply(pd.Series)
+    tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in sub_metadata['light']])
+    tmp_dat = pd.DataFrame(tmp.tolist(), index = sub_metadata.index)
     tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
     sub_metadata = sub_metadata.merge(tmp_dat, left_index = True, right_index = True)
     sub_metadata = sub_metadata[['heavy'] + [str(c) for c in tmp_dat.columns]]
@@ -454,21 +455,21 @@ def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_
     multi = {}
     for i in self.metadata.index:
         try:
-            hv_ = self.metadata.loc[i, 'v_call_heavy'].split(',')
+            hv_ = self.metadata.at[i, 'v_call_heavy'].split(',')
         except:
-            hv_ = self.metadata.loc[i, 'v_call_heavy']
+            hv_ = self.metadata.at[i, 'v_call_heavy']
         try:
-            hj_ = self.metadata.loc[i, 'j_call_heavy'].split(',')
+            hj_ = self.metadata.at[i, 'j_call_heavy'].split(',')
         except:
-            hj_ = self.metadata.loc[i, 'j_call_heavy']
+            hj_ = self.metadata.at[i, 'j_call_heavy']
         try:
-            lv_ = self.metadata.loc[i, 'v_call_light'].split(',')
+            lv_ = self.metadata.at[i, 'v_call_light'].split(',')
         except:
-            lv_ = self.metadata.loc[i, 'v_call_light']
+            lv_ = self.metadata.at[i, 'v_call_light']
         try:
-            lj_ = self.metadata.loc[i, 'v_call_light'].split(',')
+            lj_ = self.metadata.at[i, 'v_call_light'].split(',')
         except:
-            lv_ = self.metadata.loc[i, 'v_call_light']
+            lv_ = self.metadata.at[i, 'v_call_light']
         multi_ = []
         if len(hv_) > 1:
             multi_.append(['Multi_heavy_v'])
