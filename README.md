@@ -41,7 +41,7 @@ pip install scrublet
 
 # install rpy2
 # If you prefer to use conda to manage R, then use:
-# conda install rpy2
+# conda install -c conda-forge rpy2
 pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 #
