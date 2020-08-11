@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 09:51:23
+# @Last Modified time: 2020-08-11 19:36:46
 
 import os
 import sys
@@ -931,8 +931,12 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
 
         # stash_rna_connectivities:
         if r_connectivities_key not in self.obsp:
-            self.obsp[r_connectivities_key] = self.obsp["connectivities"].copy()
-            self.obsp[r_distances_key] = self.obsp["distances"].copy()
+            try:
+                self.obsp[r_connectivities_key] = self.obsp["connectivities"].copy()
+                self.obsp[r_distances_key] = self.obsp["distances"].copy()
+            except:
+                self.obsp[r_connectivities_key] = self.uns[neighbors_key]["connectivities"]
+                self.obsp[r_distances_key] = self.uns[neighbors_key]["distances"]
 
         # always overwrite the bcr slots
         self.obsp['connectivities'] = df_connectivities_.copy()
@@ -940,6 +944,8 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
         self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
 
+        self.uns[neighbors_key]['connectivities'] = df_connectivities_.copy()
+        self.uns[neighbors_key]['distances'] = df_distances_.copy()
         self.uns[neighbors_key]['params'] = {'method':'bcr'}
         self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()
 
