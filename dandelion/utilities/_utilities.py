@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 10:22:50
+# @Last Modified time: 2020-08-11 19:12:43
 
 import sys
 import os
@@ -647,6 +647,14 @@ class Dandelion:
         pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
         f.close()
 
+    def write(self, filename='dandelion_data.pkl'):
+        if self.isGZIP(filename):
+            f = gzip.open(filename, 'wb')
+        else:
+            f = open(filename, 'wb')
+        pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+        f.close()
+
     # Note that loading to a string with pickle.loads is about 10% faster
     # but probaly comsumes a lot more memory so we'll skip that for now.
     @classmethod
@@ -658,6 +666,21 @@ class Dandelion:
         n = pickle.load(f)
         f.close()
         return n
+    
+def isGZIP(filename):
+    if filename.split('.')[-1] == 'gz':
+        return True
+    return False    
+
+def read_pkl(filename):
+    if isGZIP(filename):
+        f = gzip.open(filename, 'rb')
+    else:
+        f = open(filename, 'rb')
+    n = pickle.load(f)
+    f.close()
+    return n
+
 
 def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     """
