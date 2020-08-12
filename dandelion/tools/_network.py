@@ -2,14 +2,14 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-12 18:08:40
+# @Last Modified time: 2020-08-13 00:35:36
 
 import numpy as np
 from ..utilities._utilities import *
 import networkx as nx
 from networkx.utils import random_state
 
-def _generate_layout(vertices, edges, min_size = 2, weight = None):
+def generate_layout(vertices, edges, min_size = 2, weight = None):
     G = nx.Graph()
     G.add_nodes_from(vertices)
     G.add_weighted_edges_from([(x,y,z) for x,y,z in zip(edges['source'], edges['target'], edges['weight'])])
@@ -22,8 +22,8 @@ def _generate_layout(vertices, edges, min_size = 2, weight = None):
         G_.remove_nodes_from(remove)
     edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
     print('generating network layout')
-    pos = fruchterman_reingold_layout(G, weight = weight)
-    pos_ = fruchterman_reingold_layout(G_, weight = weight)
+    pos = _fruchterman_reingold_layout(G, weight = weight)
+    pos_ = _fruchterman_reingold_layout(G_, weight = weight)
     return(G, G_, pos, pos_)
 
 # when dealing with a lot of unconnected vertices, the pieces fly out to infinity and the original fr layout can't be used
@@ -176,7 +176,7 @@ def _fruchterman_reingold_layout(
             A, k, pos_arr, fixed, iterations, threshold, dim, seed
         )
     if fixed is None and scale is not None:
-        pos = rescale_layout(pos, scale=scale) + center
+        pos = _rescale_layout(pos, scale=scale) + center
     pos = dict(zip(G, pos))
     return pos
 
@@ -319,7 +319,7 @@ def _sparse_fruchterman_reingold(
             break
     return pos
 
-def rescale_layout(pos, scale=1):
+def _rescale_layout(pos, scale=1):
     """Returns scaled position array to (-scale, scale) in all axes.
     The function acts on NumPy arrays which hold position information.
     Each position is one row of the array. The dimension of the space

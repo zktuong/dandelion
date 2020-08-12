@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 00:09:54
+# @Last Modified time: 2020-08-13 00:35:45
 
 import os
 import sys
@@ -12,7 +12,7 @@ from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._utilities import *
-from ..tools._network import *
+from ._network import *
 from collections import defaultdict
 from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
