@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-12 23:09:47
+# @Last Modified time: 2020-08-13 00:39:54
 
 import sys
 import os
@@ -142,8 +142,8 @@ def bh(pvalues):
         new_pvalues[index] = new_values[i]
     return new_pvalues
 
-def extract(d, keys):
-    return(dict((k, d[k]) for k in keys if k in d))
+# def extract(d, keys):
+#    return(dict((k, d[k]) for k in keys if k in d))
 
 def load_data(obj):
     """
