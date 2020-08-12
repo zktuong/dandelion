@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-12 23:37:29
+# @Last Modified time: 2020-08-13 00:09:54
 
 import os
 import sys
@@ -12,7 +12,7 @@ from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._utilities import *
-from ._network import *
+from ..tools._network import *
 from collections import defaultdict
 from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
@@ -23,7 +23,6 @@ import scipy
 from scipy.sparse.csgraph import minimum_spanning_tree
 import Levenshtein
 import networkx as nx
-import igraph
 from time import sleep
 import copy
 import functools
@@ -557,7 +556,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
         return(out)
 
-def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout = None, *args, **kwds):
+def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout = None):
     """
     Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
@@ -582,8 +581,6 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
     layout_option : str, optional
         choice of layout algorithm. None defaults to fruchterman reingold layout.
-    *args and **kwds
-        passed to `igraph.graph.layout <https://igraph.org/python/doc/igraph.Graph-class.html>`__.
     Returns
     ----------
         `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.

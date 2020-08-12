@@ -11,7 +11,6 @@ scikit-learn>=0.23.0
 scipy>=1.4.1
 numba>=0.48.0
 seaborn>=0.10.1
-python-igraph>=0.8.2
 networkx>=2.4
 leidenalg>=0.8.0
 rpy2>=3.3.2
