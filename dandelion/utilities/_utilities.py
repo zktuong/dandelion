@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-11 19:12:43
+# @Last Modified time: 2020-08-12 23:09:47
 
 import sys
 import os
@@ -12,8 +12,7 @@ import numpy as np
 from subprocess import run
 from tqdm import tqdm
 import re
-import gzip
-import pickle as pickle
+import hickle as hkl
 import copy
 from changeo.IO import readGermlines
 import warnings
@@ -335,7 +334,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
             light_retrieval_list[x] = ['|'.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
         return(heavy_retrieval_list, light_retrieval_list)
 
-def initialize_metadata(self, retrieve = None, isotype_dict = None, split_heavy_light = True, collapse = False, clones_sep = None, clone_key = None):
+def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_light = True, collapse = False, clones_sep = None, clone_key = None):
     """
     A Dandelion function to update and populate the `.metadata` slot.
 
@@ -534,12 +533,17 @@ class Dandelion:
 
         if self.data is not None:
             if initialize is True:
-                initialize_metadata(self, **kwargs) 
+                update_metadata(self, **kwargs) 
                 self.n_contigs = self.data.shape[0]
-                try:
-                    self.n_obs = self.metadata.shape[0]
-                except:
-                    self.n_obs = 0
+            else:
+                self.n_contigs = 0
+            try:
+                self.n_obs = self.metadata.shape[0]
+            except:
+                self.n_obs = 0
+        else:
+            self.n_contigs = 0
+            self.n_obs = 0
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
@@ -552,9 +556,18 @@ class Dandelion:
                 descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
             else:
                 descr += f"\n    {attr}: {str(None)}"
-        descr += f"\n    layout: {str(self.layout).strip('<>')}"
-        descr += f"\n    graph: {str(type(self.graph)).strip('<>')}"
-        descr += f"\n    threshold: {self.threshold}"
+        if self.layout is not None:
+            descr += f"\n    layout: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (g, g_)])}"
+        else:
+            descr += f"\n    layout: {str(None)}"
+        if self.graph is not None:
+            descr += f"\n    graph: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (lyt, lyt_)])} "
+        else:
+            descr += f"\n    graph: {str(None)}"
+        if self.threshold is not None:
+            descr += f"\n    threshold: {self.threshold}"
+        else:
+            descr += f"\n    threshold: {str(None)}"
         return descr
 
     def __repr__(self) -> str:
@@ -562,7 +575,7 @@ class Dandelion:
 
     def copy(self):
         return copy.deepcopy(self)
-    
+
     def update_germline(self, corrected = None, germline = None, org = 'human'):
         """
         Update germline reference with corrected sequences and store in Dandelion object.
@@ -630,57 +643,25 @@ class Dandelion:
         logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'germline\', updated germline reference\n'))
+   
+    def write(self, filename='dandelion_data.h5', compression='gzip'):
+        hkl.dump(self, filename, mode='w', compression=compression)
 
-    @staticmethod
-    def isGZIP(filename):
-        if filename.split('.')[-1] == 'gz':
-            return True
-        return False
+def read(filename='dandelion_data.h5'):
+    return(hkl.load(filename))
 
-    # Using HIGHEST_PROTOCOL is almost 2X faster and creates a file that
-    # is ~10% smaller.  Load times go down by a factor of about 3X.
-    def save(self, filename='dandelion_data.pkl'):
-        if self.isGZIP(filename):
-            f = gzip.open(filename, 'wb')
-        else:
-            f = open(filename, 'wb')
-        pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
-        f.close()
-
-    def write(self, filename='dandelion_data.pkl'):
-        if self.isGZIP(filename):
-            f = gzip.open(filename, 'wb')
-        else:
-            f = open(filename, 'wb')
-        pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
-        f.close()
-
-    # Note that loading to a string with pickle.loads is about 10% faster
-    # but probaly comsumes a lot more memory so we'll skip that for now.
-    @classmethod
-    def load(cls, filename='dandelion_data.pkl'):
-        if cls.isGZIP(filename):
-            f = gzip.open(filename, 'rb')
-        else:
-            f = open(filename, 'rb')
-        n = pickle.load(f)
-        f.close()
-        return n
-    
-def isGZIP(filename):
-    if filename.split('.')[-1] == 'gz':
-        return True
-    return False    
-
-def read_pkl(filename):
-    if isGZIP(filename):
-        f = gzip.open(filename, 'rb')
+def concat(arrays, check_unique = False):    
+    arrays = list(arrays)
+    arrays_ = [x.data for x in arrays]
+    if check_unique:
+        df = pd.concat(arrays_, verify_integrity=True)
     else:
-        f = open(filename, 'rb')
-    n = pickle.load(f)
-    f.close()
-    return n
-
+        df = pd.concat(arrays_)
+    try:
+        out = Dandelion(df)
+    except:
+        out = Dandelion(df, initialize = False)
+    return(out) 
 
 def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
     """
