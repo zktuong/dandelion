@@ -13,7 +13,7 @@ Overview
 
 Illustration of the `Dandelion` class slots
 
-<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="494.5" height="435">
+<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="471.0648" height="341.3572">
 
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/).
