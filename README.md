@@ -32,10 +32,10 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install distance python-Levenshtein joblib plotnine jupyter
+conda install distance python-Levenshtein joblib plotnine hickle jupyter
 conda install -c bioconda igblast blast changeo presto
 
-# Use pip to install the following with --no-cache-dir if necessary
+# Use pip to install the following with --no-cache-dir --upgrade if necessary
 pip install scanpy
 pip install scrublet
 
@@ -111,6 +111,7 @@ seaborn==0.10.1 (conda-forge)
 python-igraph==0.8.2 (conda-forge)
 leidenalg==0.8.0 (conda-forge)
 plotnine==0.6.0 (conda-forge)
+hickle==3.4.5 (conda-forge)
 changeo==1.0.0 (bioconda)
 presto==0.6.0 (bioconda)
 
@@ -119,7 +120,7 @@ blast>=2.10.0 (bioconda) # depends on the database version as well
 igblast==1.15.0 (bioconda)
 
 # pip
-anndata==0.7.1
+anndata>=0.7.1
 scanpy>=1.4.6
 scrublet==0.2.1
 rpy2>=3.3.2
