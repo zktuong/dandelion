@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-11 19:36:46
+# @Last Modified time: 2020-08-12 22:56:46
 
 import os
 import sys
@@ -12,6 +12,7 @@ from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._utilities import *
+from ._network import _generate_layout
 from collections import defaultdict
 from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
@@ -556,7 +557,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
         return(out)
 
-def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
+def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout = None, *args, **kwds):
     """
     Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
@@ -567,6 +568,8 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     distance_mode : str
         The mode of calculating joint distance matrix for heavy and light chains. Default is 'simple'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.
+    min_size : int
+        For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
     aa_or_nt : str, optional
         Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
     clone_key: str, optional
@@ -729,84 +732,11 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
     edge_list_final.reset_index(drop = True, inplace = True)
 
     # and finally the vertex list which is super easy
-    vertices = pd.DataFrame(out.metadata.index)
+    vertice_list = list(out.metadata.index)
 
     # and now to actually generate the network
-    edges = [tuple(e) for e in edge_list_final.values]
-    edges_network = [tuple((e[0], e[1])) for e in edges]
-    graph = igraph.Graph.Formula()
-    graph.add_vertices(vertices['cell_id'])
-    graph.add_edges(edges_network) # may take a very long time if there's too many
+    g, g_, lyt, lyt_ = _generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None)
 
-    if layout_option is not None:
-        layout = graph.layout_fruchterman_reingold()
-    elif layout_option == "auto":
-        layout = graph.layout_auto(*args, **kwds)
-    elif layout_option == "automatic":
-        layout = graph.layout_auto(*args, **kwds)
-    elif layout_option == "bipartite":
-        layout = graph.layout_bipartite(*args, **kwds)
-    elif layout_option == "circle":
-        layout = graph.layout_circle(*args, **kwds)
-    elif layout_option == "circular":
-        layout = graph.layout_circle(*args, **kwds)
-    elif layout_option == "davidson_harel":
-        layout = graph.layout_davidson_harel(*args, **kwds)
-    elif layout_option == "dh":
-        layout = graph.layout_davidson_harel(*args, **kwds)
-    elif layout_option == "drl":
-        layout = graph.layout_drl(*args, **kwds)
-    elif layout_option == "fr":
-        layout = graph.layout_fruchterman_reingold(*args, **kwds)
-    elif layout_option == "fruchterman_reingold":
-        layout = graph.layout_fruchterman_reingold(*args, **kwds)
-    elif layout_option == "gfr":
-        layout = graph.layout_grid_fruchterman_reingold(*args, **kwds)
-    elif layout_option == "graphopt":
-        layout = graph.layout_graphopt(*args, **kwds)
-    elif layout_option == "grid":
-        layout = graph.layout_grid(*args, **kwds)
-    elif layout_option == "grid_fr":
-        layout = graph.layout_grid_fruchterman_reingold(*args, **kwds)
-    elif layout_option == "grid_fruchterman_reingold":
-        layout = graph.layout_grid_fruchterman_reingold(*args, **kwds)
-    elif layout_option == "kk":
-        layout = graph.layout_kamada_kawai(*args, **kwds)
-    elif layout_option == "kamada_kawai":
-        layout = graph.layout_kamada_kawai(*args, **kwds)
-    elif layout_option == "lgl":
-        layout = graph.layout_lgl(*args, **kwds)
-    elif layout_option == "large":
-        layout = graph.layout_lgl(*args, **kwds)
-    elif layout_option == "large_graph":
-        layout = graph.layout_lgl(*args, **kwds)
-    elif layout_option == "mds":
-        layout = graph.layout_mds(*args, **kwds)
-    elif layout_option == "random":
-        layout = graph.layout_random(*args, **kwds)
-    elif layout_option == "rt":
-        layout = graph.layout_reingold_tilford(*args, **kwds)
-    elif layout_option == "tree":
-        layout = graph.layout_reingold_tilford(*args, **kwds)
-    elif layout_option == "reingold_tilford":
-        layout = graph.layout_reingold_tilford(*args, **kwds)
-    elif layout_option == "rt_circular":
-        layout = graph.layout_reingold_tilford_circular(*args, **kwds)
-    elif layout_option == "reingold_tilford_circular":
-        layout = graph.layout_reingold_tilford_circular(*args, **kwds)
-    elif layout_option == "sphere":
-        layout = graph.layout_sphere(*args, **kwds)
-    elif layout_option == "spherical":
-        layout = graph.layout_sphere(*args, **kwds)
-    elif layout_option == "star":
-        layout = graph.layout_star(*args, **kwds)
-    elif layout_option == "sugiyama":
-        layout = graph.layout_sugiya(*args, **kwds)
-    else:
-        layout = graph.layout(layout_option, *args, **kwds)
-    for x in out.metadata.columns:
-        graph.vs[x] = out.metadata[x]
-    graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
@@ -824,32 +754,11 @@ def generate_network(self, distance_mode='simple', aa_or_nt=None, clone_key = No
             threshold_ = self.threshold
         else:
             threshold_ = None
-        self.__init__(data = self.data, metadata = self.metadata, distance = dmat, edges = edge_list_final, layout = layout, graph = graph, germline = germline_, initialize = False)
+        self.__init__(data = self.data, metadata = self.metadata, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_, initialize = False)
         self.threshold = threshold_
     else:
-        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph, clone_key = clone_key)
+        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
         return(out)
-
-def generate_layout(self, layout_option = None, *args, **kwds):
-    start = logg.info('Generating layout')
-    if layout_option is not None:
-        layout = self.graph.layout_fruchterman_reingold()
-    else:
-        layout = self.graph.layout(layout_option, *args, **kwds)
-    if self.__class__ == Dandelion:
-        if self.germline is not None:
-            germline_ = self.germline
-        else:
-            germline_ = None
-        if self.threshold is not None:
-            threshold_ = self.threshold
-        else:
-            threshold_ = None
-        self.__init__(data = self.data, metadata = self.metadata, distance = self.distance, edges = self.edges, layout = layout, graph = self.graph, germline = germline_, initialize = False)
-        self.threshold = threshold_
-    logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'layout\', network layout\n'))
 
 def mst(mat):
     """
@@ -868,18 +777,20 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_key = None):
+def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = None, bcr_key = None):
     """
-    Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.raw` slots with metadata and network.
+    Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
     Parameters
     ----------
     self : AnnData
-        `AnnData` object
+        `AnnData` object.
     dandelion : Dandelion
-        `Dandelion` object
+        `Dandelion` object.
+    full_graph : bool
+        Whether or not to transfer the full graph (True) or trimmed graph (False).
     neighbors_key : str, optional
-        key for 'neighbors' slot in `.uns`
+        key for 'neighbors' slot in `.uns`.
     rna_key : str, optional
         prefix for stashed RNA connectivities and distances.
     bcr_key : str, optional
@@ -890,8 +801,11 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
 
     """
     start = logg.info('Transferring network')
-    if dandelion.edges is not None:
-        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
+    if dandelion.edges is not None:        
+        if full_graph:
+            G = dandelion.graph[0]
+        else:
+            G = dandelion.graph[1]
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
         A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
@@ -954,7 +868,10 @@ def transfer_network(self, dandelion, neighbors_key = None, rna_key = None, bcr_
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
-        coord = pd.DataFrame(np.array(dandelion.layout), index = dandelion.metadata.index)
+        if full_graph:
+            coord = pd.DataFrame(np.array(dandelion.layout[0]), index = dandelion.metadata.index)
+        else:
+            coord = pd.DataFrame(np.array(dandelion.layout[1]), index = dandelion.metadata.index)
         for x in coord.columns:
             tmp[x] = coord[x]
         tmp[[1]] = tmp[[1]]*-1
