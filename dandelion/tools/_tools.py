@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 00:35:45
+# @Last Modified time: 2020-08-13 09:29:01
 
 import os
 import sys
@@ -732,7 +732,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     vertice_list = list(out.metadata.index)
 
     # and now to actually generate the network
-    g, g_, lyt, lyt_ = _generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None)
+    g, g_, lyt, lyt_ = generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None)
 
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
