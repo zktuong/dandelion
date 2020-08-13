@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 00:09:13
+# @Last Modified time: 2020-08-13 15:13:55
 
 import seaborn as sns
 import pandas as pd
@@ -12,6 +12,15 @@ from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
+
+
+def random_palette(n):
+    # a list of 900+colours
+    cols = list(sns.xkcd_rgb.keys())
+    # if max_colors_needed1 > len(cols):
+    cols2 = list(sns.color_palette('husl', n))
+    palette = random.sample(sns.xkcd_palette(cols) + cols2, n)
+    return(palette)
 
 def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
