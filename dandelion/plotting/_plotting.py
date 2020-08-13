@@ -2,17 +2,75 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 15:13:55
+# @Last Modified time: 2020-08-14 00:14:29
 
 import seaborn as sns
 import pandas as pd
 import numpy as np
 from ..utilities._utilities import *
+from ..tools._diversity import rareCurve_Func
 from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
+from scipy.special import comb
+import matplotlib.pyplot as plt
+from adjustText import adjust_text
 
+def rarefaction(self, groupby, clone_key = None):
+    """
+    Plots rarefaction curve for cell numbers vs clone size.
+    Parameters
+    ----------
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    groupby : str
+        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
+    clone_key : str, optional
+        Column name specifying the clone_id column in metadata/obs.
+    """
+    if self.__class__ == AnnData:
+        metadata = self.obs.copy()
+    elif self.__class__ == Dandelion:
+        metadata = self.metadata.copy()
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+
+    groups = list(set(metadata[groupby]))
+    res = {}
+    for g in groups:
+        _dat = metadata[metadata[groupby]==g]
+        res[g] = _metadata[clonekey].value_counts()
+    res_ = pd.DataFrame.from_dict(res, orient = 'index')
+    res_.fillna(0, inplace = True)
+    res_.reset_index(inplace = True)    
+    xpos, ypos, label = [], [], []
+    res_.apply(rarefactionCurvePlot, args=(xpos, ypos, label), axis=1)
+    plt.xlabel('Number of cells')
+    plt.ylabel('Number of clones')
+    texts = []
+    for x, y, s in zip(xpos, ypos, label):
+        texts.append(plt.text(x, y, s))
+    adjust_text(texts, force_points=0, force_text=0.2,expand_points=(1, 1), expand_text=(4, 4),
+            arrowprops=dict(arrowstyle="-", color='black', lw=0.5))
+    plt.show()
+
+def rarefactionCurvePlot(x, xpos, ypos, label):
+    # modified from ecopy: https://github.com/Auerilas/ecopy/blob/master/ecopy/diversity/rarefy.py
+    ix = x['index']
+    x_ = x.drop('index').astype('float')
+    notabs = ~np.isnan(x_)
+    y = x_[notabs]
+    n = np.sum(y)
+    Sn = len(x_)
+    cell_Pred = np.linspace(0, n, 1000)
+    clone_yHat = [rareCurve_Func(i, Sn, n, y) for i in cell_Pred]
+    plt.plot(cell_Pred, clone_yHat)
+    xpos.append(cell_Pred[-1])
+    ypos.append(clone_yHat[-1])
+    label.append(str(ix))
 
 def random_palette(n):
     # a list of 900+colours
@@ -216,7 +274,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
 
-def spectratypeplot(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
+def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
