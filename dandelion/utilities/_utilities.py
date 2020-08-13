@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 15:25:39
+# @Last Modified time: 2020-08-13 15:55:04
 
 import sys
 import os
@@ -261,7 +261,13 @@ def setup_metadata(data, sep, clone_key = None):
             group.append(cl_[c].split(scb[1])[scb[0]])
     groupseries = dict(zip(metadata_.index, group))
     metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
-
+    
+    size_of_clone = pd.DataFrame(metadata_[str(clonekey)].value_counts())
+    size_of_clone.reset_index(drop = False, inplace = True)
+    size_of_clone.columns = [str(clonekey), 'clone_size']    
+    size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
+    size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
+    metadata_[str(clonekey)+'_by_size'] = [size_dict[c] for c in metadata_[str(clonekey)]]
     return(metadata_)
 
 def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
@@ -368,10 +374,6 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     if metadata_status is None:
         if clonekey in dat.columns:
             self.metadata = setup_metadata(dat, clones_sep, clonekey)
-            size_of_clone = pd.DataFrame(self.metadata[str(clonekey)].value_counts())
-            size_of_clone.reset_index(drop = False, inplace = True)
-            size_of_clone.columns = [str(clonekey), 'clone_size']
-            self.metadata[str(clonekey)+'_by_size'] = size_of_clone.index+1
         else:
             self.metadata = setup_metadata_(dat)
     else:
