@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 21:38:23
+# @Last Modified time: 2020-08-14 00:54:09
 
 import pandas as pd
 import numpy as np
@@ -239,6 +239,7 @@ def mst(mat):
     return(mst_tree)
 
 def clone_degree(self, weight='weight'):
+    start = logg.info('Calculating clone degree')
     if self.__class__ == Dandelion:
         dist = np.sum([self.distance[x] for x in self.distance if type(self.distance[x]) is np.ndarray], axis = 0)
         A = csr_matrix(dist)
@@ -249,6 +250,8 @@ def clone_degree(self, weight='weight'):
         self.metadata['clone_degree'] = pd.Series(cd[1])
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion metadata\n'))
 
 def generate_layout(vertices, edges, min_size = 2, weight = None):
     G = nx.Graph()
