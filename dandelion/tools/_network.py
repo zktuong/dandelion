@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 00:35:36
+# @Last Modified time: 2020-08-13 15:42:48
 
 import numpy as np
 from ..utilities._utilities import *
@@ -349,3 +349,10 @@ def _rescale_layout(pos, scale=1):
         for i in range(pos.shape[1]):
             pos[:, i] *= scale / lim
     return pos
+
+def extract_edge_weights(self, full_graph = False):
+    if full_graph:
+        edges,weights = zip(*nx.get_edge_attributes(self.graph[0],'weight').items())
+    else:
+        edges,weights = zip(*nx.get_edge_attributes(self.graph[1],'weight').items())
+    return(weights)
