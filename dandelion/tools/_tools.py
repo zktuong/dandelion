@@ -2,13 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 14:40:27
+# @Last Modified time: 2020-08-13 21:37:32
 
 import os
 import sys
 import scanpy as sc
 import pandas as pd
-from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._utilities import *
@@ -16,12 +15,10 @@ from ._network import *
 from collections import defaultdict
 from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
+from scipy.sparse import csr_matrix
 from distance import hamming
 import re
 import math
-import scipy
-from scipy.sparse.csgraph import minimum_spanning_tree
-import Levenshtein
 import networkx as nx
 from time import sleep
 import copy
@@ -556,223 +553,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
         return(out)
 
-def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout = None):
-    """
-    Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
-    The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
 
-    Parameters
-    ----------
-    data : Dandelion, DataFrame, str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    distance_mode : str
-        The mode of calculating joint distance matrix for heavy and light chains. Default is 'simple'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.
-    min_size : int
-        For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    aa_or_nt : str, optional
-        Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
-    clone_key: str, optional
-        column name to build network on.
-    constructbygroup: bool
-        whether to link up by clone_group id. Default is False.
-    clones_sep: tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
-    weights : tuple, optional
-        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
-    layout_option : str, optional
-        choice of layout algorithm. None defaults to fruchterman reingold layout.
-    Returns
-    ----------
-        `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
-    """
-    start = logg.info('Generating network')
-    if self.__class__ == Dandelion:
-        dat = load_data(self.data)
-    else:
-        dat = load_data(self)
-    if clone_key is None:
-        clonekey = 'clone_id'
-    else:
-        clonekey = clone_key
-    if clonekey not in dat.columns:
-        raise TypeError('Data does not contain clone information. Please run find_clones.')
-
-    # calculate distance
-    dat_h = dat[dat['locus'] == 'IGH']
-    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-    if aa_or_nt is None or aa_or_nt is 'aa':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
-    elif aa_or_nt == 'nt':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
-    else:
-        raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
-
-    # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
-    dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
-    dat_seq.set_index('cell_id', inplace = True)
-    light_seq_tree = Tree()
-    for key, value in seq_l.items():
-        k, v = value
-        light_seq_tree[k][key] = v
-    light_seq_tree2 = Tree()
-    for g in light_seq_tree:
-        second_key = []
-        for k2 in light_seq_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_seq_tree[g].items():
-            light_seq_tree2[g][second_key_dict[key]] = value
-    dat_seq['light'] = pd.Series(light_seq_tree2)
-    tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
-    tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
-
-    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-    dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
-    dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
-
-    # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
-    dmat = Tree()
-    for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):
-        seq_list = []
-        seq_list = [y for y in dat_seq[x]]
-        tdarray = np.array(seq_list).reshape(-1,1)
-        d_mat = squareform(pdist(tdarray,lambda x,y: Levenshtein.distance(x[0],y[0])))
-        dmat[x] = d_mat
-    dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
-
-    n_ = len(dist_mat_list)
-    if distance_mode == 'simple':
-        total_dist = np.sum(dist_mat_list,axis=0)
-    if distance_mode == 'weighted':
-        weighted_matrix = []
-        if weights is None:
-            for w in range(0, n_):
-                weighted_matrix.append(1/n_ * dist_mat_list[w])
-            total_dist = sum(weighted_matrix)
-        else:
-            if len(weights) == n_:
-                for w in range(0, n_):
-                    weighted_matrix.append(weights[w] * dist_mat_list[w])
-                total_dist = sum(weighted_matrix)
-            else:
-                raise IndexError('Length of provided weights should be %s.' % int(n_))
-
-    # generate edge list    
-    if self.__class__ == Dandelion:
-        out = self.copy()
-    else: # re-initiate a Dandelion class object
-        out = Dandelion(dat)
-
-    tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
-    tmp_clusterdist = Tree()
-    for i in out.metadata.index:
-        if constructbygroup:
-            cx = out.metadata.loc[i, str(clonekey)+'_group']
-        else:
-            cx = out.metadata.loc[i, str(clonekey)]
-        tmp_clusterdist[cx][i].value = 1
-    tmp_clusterdist2 = {}
-    for x in tmp_clusterdist:
-        tmp_clusterdist2[x] = list(tmp_clusterdist[x])
-    cluster_dist = {}
-    for x in tmp_clusterdist2:
-        dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[x], tmp_clusterdist2[x]]
-        s1, s2 = dist_mat_.shape
-        if s1 > 1 and s2 >1:
-            cluster_dist[x] = dist_mat_
-    # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for each group/clone to connect the shortest path
-    mst_tree = mst(cluster_dist)
-    sleep(0.5)
-
-    edge_list = Tree()
-    for c in tqdm(mst_tree, desc = 'Generating edge list '):
-        G = nx.from_pandas_adjacency(mst_tree[c], create_using=nx.MultiDiGraph())
-        G.edges(data=True)
-        edge_list[c] = nx.to_pandas_edgelist(G)
-    sleep(0.5)
-    clone_ref = dict(out.metadata[clonekey])
-    tmp_clone_tree = Tree()
-    for x in out.metadata.index:
-        tmp_clone_tree[clone_ref[x]][x].value = 1
-    tmp_clone_tree2 = Tree()
-    for x in tmp_clone_tree:
-        tmp_clone_tree2[x] = list(tmp_clone_tree[x])
-
-    tmp_clone_tree3 = Tree()
-    for x in tmp_clone_tree2:
-        tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
-        tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
-        tmp_.fillna(0, inplace = True)
-        tmp_clone_tree3[x] = tmp_
-
-    # here I'm using a temporary edge list to catch all cells that were identified as clones to forecfully link them up if they were clipped off during the mst step
-    tmp_edge_list = Tree()
-    for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
-        G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
-        G.edges(data=True)
-        tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-
-    edge_listx = pd.concat([edge_list[x] for x in edge_list])
-    edge_listx.index = [(s, t) for s, t in zip(edge_listx['source'],edge_listx['target'])]
-
-    tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
-    tmp_edge_listx.index = [(s, t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
-
-    edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-
-    for idx in edge_list_final.index:
-        edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
-    # return the edge list
-    edge_list_final.reset_index(drop = True, inplace = True)
-
-    # and finally the vertex list which is super easy
-    vertice_list = list(out.metadata.index)
-
-    # and now to actually generate the network
-    g, g_, lyt, lyt_ = generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None)
-
-    logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'data\', contig-indexed clone table\n'
-        '   \'metadata\', cell-indexed clone table\n'
-        '   \'distance\', heavy and light chain distance matrices\n'
-        '   \'edges\', network edges\n'
-        '   \'layout\', network layout\n'
-        '   \'graph\', network'))
-    if self.__class__ == Dandelion:
-        if self.germline is not None:
-            germline_ = self.germline
-        else:
-            germline_ = None
-        if self.threshold is not None:
-            threshold_ = self.threshold
-        else:
-            threshold_ = None
-        self.__init__(data = self.data, metadata = self.metadata, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_, initialize = False)
-        self.threshold = threshold_
-    else:
-        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
-        return(out)
-
-def mst(mat):
-    """
-    Construct minimum spanning tree based on supplied matrix in dictionary.
-
-    Parameters
-    ----------
-    mat : dict
-        Dictionary containing numpy ndarrays.
-    Returns
-    ----------
-        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
-    """
-    mst_tree = Tree()
-    for c in mat:
-        mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
-    return(mst_tree)
 
 def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = None, bcr_key = None):
     """
@@ -812,8 +593,8 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         df_connectivities.update(connectivities)
         df_distances.update(distances)
 
-        df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
-        df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
+        df_connectivities_ = csr_matrix(df_connectivities.values, dtype = np.float32)
+        df_distances_ = csr_matrix(df_distances.values, dtype = np.float32)
 
         print('Updating anndata slots')
         if neighbors_key is None:
@@ -1197,7 +978,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
 
-def quantify_clone_size(self, max_size = None, clone_key = None, key_added = None):
+def clone_size(self, max_size = None, clone_key = None, key_added = None):
     """
     Quantifies size of clones
 
