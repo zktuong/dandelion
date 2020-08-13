@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 13:42:09
+# @Last Modified time: 2020-08-13 15:25:39
 
 import sys
 import os
@@ -368,6 +368,10 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     if metadata_status is None:
         if clonekey in dat.columns:
             self.metadata = setup_metadata(dat, clones_sep, clonekey)
+            size_of_clone = pd.DataFrame(self.metadata[str(clonekey)].value_counts())
+            size_of_clone.reset_index(drop = False, inplace = True)
+            size_of_clone.columns = [str(clonekey), 'clone_size']
+            self.metadata[str(clonekey)+'_by_size'] = size_of_clone.index+1
         else:
             self.metadata = setup_metadata_(dat)
     else:
@@ -487,9 +491,9 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     if metadata_status is None:
         if clonekey in self.data.columns:
             if 'sample_id' in self.data.columns:
-                self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+                self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
             else:
-                self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+                self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
         else:
             if 'sample_id' in self.data.columns:
                 self.metadata = self.metadata[['sample_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
