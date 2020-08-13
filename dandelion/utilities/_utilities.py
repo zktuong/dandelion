@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 15:55:04
+# @Last Modified time: 2020-08-14 00:26:09
 
 import sys
 import os
@@ -522,7 +522,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
 
 class Dandelion:
-    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
+    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, uns=None, initialize = True, **kwargs):
         self.data = data
         self.metadata = metadata        
         self.distance = distance
@@ -531,6 +531,7 @@ class Dandelion:
         self.graph = graph
         self.threshold = None
         self.germline = {}
+        self.uns = uns
         if germline is not None:
             self.germline.update(germline)
 
@@ -568,6 +569,10 @@ class Dandelion:
             descr += f"\n    layout: {str(None)}"
         if self.graph is not None:
             descr += f"\n    graph: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
+        else:
+            descr += f"\n    graph: {str(None)}"
+        if self.uns is not None:
+            descr += f"\n    uns: {', '.join([k for k in self.uns.keys()])} "
         else:
             descr += f"\n    graph: {str(None)}"
         if self.threshold is not None:
@@ -650,10 +655,10 @@ class Dandelion:
         deep=('Updated Dandelion object: \n'
         '   \'germline\', updated germline reference\n'))
    
-    def write(self, filename='dandelion_data.h5', compression='gzip'):
+    def write(self, filename='dandelion_data.hkl', compression='gzip'):
         hkl.dump(self, filename, mode='w', compression=compression)
 
-def read(filename='dandelion_data.h5'):
+def read(filename='dandelion_data.hkl'):
     return(hkl.load(filename))
 
 def concat(arrays, check_unique = False):    
