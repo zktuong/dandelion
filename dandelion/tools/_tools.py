@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 09:29:01
+# @Last Modified time: 2020-08-13 14:40:27
 
 import os
 import sys
@@ -866,12 +866,12 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
         if full_graph:
-            coord = pd.DataFrame(np.array(dandelion.layout[0]), index = dandelion.metadata.index)
+            coord = pd.DataFrame.from_dict(dandelion.layout[0], orient = 'index')
         else:
-            coord = pd.DataFrame(np.array(dandelion.layout[1]), index = dandelion.metadata.index)
+            coord = pd.DataFrame.from_dict(dandelion.layout[1], orient = 'index')
         for x in coord.columns:
             tmp[x] = coord[x]
-        tmp[[1]] = tmp[[1]]*-1
+        # tmp[[1]] = tmp[[1]]*-1
         X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
         self.obsm['X_bcr'] = X_bcr
 
