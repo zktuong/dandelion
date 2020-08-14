@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 18:26:11
+# @Last Modified time: 2020-08-14 18:53:25
 
 import sys
 import os
@@ -12,7 +12,8 @@ import numpy as np
 from subprocess import run
 from tqdm import tqdm
 import re
-import hickle as hkl
+import gzip
+import pickle as pickle
 import copy
 from changeo.IO import readGermlines
 import warnings
@@ -652,14 +653,30 @@ class Dandelion:
         logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'germline\', updated germline reference\n'))
-   
-    def write(self, filename='dandelion_data.hkl'):
-        f = open(filename, 'w')
-        hkl.dump(self, f, compression='gzip')
-        f.close()
 
-def read(filename='dandelion_data.hkl'):
-    return(hkl.load(filename))
+    # Using HIGHEST_PROTOCOL is almost 2X faster and creates a file that
+    # is ~10% smaller.  Load times go down by a factor of about 3X.
+    def write(self, filename='dandelion_data.pkl'):
+        if isGZIP(filename):
+            f = gzip.open(filename, 'wb')
+        else:
+            f = open(filename, 'wb')
+        pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+        f.close()
+    
+def isGZIP(filename):
+    if filename.split('.')[-1] == 'gz':
+        return True
+    return False    
+
+def read(filename='dandelion_data.pkl'):
+    if isGZIP(filename):
+        f = gzip.open(filename, 'rb')
+    else:
+        f = open(filename, 'rb')
+    n = pickle.load(f)
+    f.close()
+    return n
 
 def concat(arrays, check_unique = False):    
     arrays = list(arrays)
