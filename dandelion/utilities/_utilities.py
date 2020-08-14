@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 16:54:54
+# @Last Modified time: 2020-08-14 17:27:15
 
 import sys
 import os
@@ -539,11 +539,9 @@ class Dandelion:
             self.data = load_data(self.data)
 
         if self.data is not None:
+            self.n_contigs = self.data.shape[0]
             if initialize is True:
-                update_metadata(self, **kwargs) 
-                self.n_contigs = self.data.shape[0]
-            else:
-                self.n_contigs = 0
+                update_metadata(self, **kwargs)
             try:
                 self.n_obs = self.metadata.shape[0]
             except:
