@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 00:26:09
+# @Last Modified time: 2020-08-14 16:54:54
 
 import sys
 import os
@@ -574,7 +574,7 @@ class Dandelion:
         if self.uns is not None:
             descr += f"\n    uns: {', '.join([k for k in self.uns.keys()])} "
         else:
-            descr += f"\n    graph: {str(None)}"
+            descr += f"\n    uns: {str(None)}"
         if self.threshold is not None:
             descr += f"\n    threshold: {self.threshold}"
         else:
