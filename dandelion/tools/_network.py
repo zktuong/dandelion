@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 00:54:09
+# @Last Modified time: 2020-08-14 17:39:34
 
 import pandas as pd
 import numpy as np
@@ -198,6 +198,11 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     # and now to actually generate the network
     g, g_, lyt, lyt_ = generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None)
 
+    # convert distance matrices to sparse
+    for x in dmat:
+        if type(dmat[x]) is np.ndarray:
+            dmat[x] = csr_matrix(dmat[x])
+
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
@@ -241,7 +246,7 @@ def mst(mat):
 def clone_degree(self, weight='weight'):
     start = logg.info('Calculating clone degree')
     if self.__class__ == Dandelion:
-        dist = np.sum([self.distance[x] for x in self.distance if type(self.distance[x]) is np.ndarray], axis = 0)
+        dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
         A = csr_matrix(dist)
         G = nx.Graph()
         G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
