@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 17:27:15
+# @Last Modified time: 2020-08-14 18:26:11
 
 import sys
 import os
@@ -653,8 +653,10 @@ class Dandelion:
         deep=('Updated Dandelion object: \n'
         '   \'germline\', updated germline reference\n'))
    
-    def write(self, filename='dandelion_data.hkl', compression='gzip'):
-        hkl.dump(self, filename, mode='w', compression=compression)
+    def write(self, filename='dandelion_data.hkl'):
+        f = open(filename, 'w')
+        hkl.dump(self, f, compression='gzip')
+        f.close()
 
 def read(filename='dandelion_data.hkl'):
     return(hkl.load(filename))
