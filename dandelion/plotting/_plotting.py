@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 00:14:29
+# @Last Modified time: 2020-08-14 16:26:23
 
 import seaborn as sns
 import pandas as pd
@@ -41,7 +41,7 @@ def rarefaction(self, groupby, clone_key = None):
     groups = list(set(metadata[groupby]))
     res = {}
     for g in groups:
-        _dat = metadata[metadata[groupby]==g]
+        _metadata = metadata[metadata[groupby]==g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient = 'index')
     res_.fillna(0, inplace = True)
