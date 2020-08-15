@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-08 10:37:50
+# @Last Modified time: 2020-08-15 02:18:21
 
 import sys
 import os
@@ -15,7 +15,7 @@ from collections import OrderedDict
 from time import sleep
 from ..utilities._utilities import *
 from .ext._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
-from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
+from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
@@ -32,7 +32,7 @@ import scrublet as scr
 from Bio import Align
 from rpy2.robjects.packages import importr, data
 from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, StrVector
+from rpy2.robjects import pandas2ri, StrVector, FloatVector
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -1688,7 +1688,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(self):
         dat = load_data(self)
-
+    pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
     if region_definition is None:
@@ -1709,7 +1709,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             dat_r = pandas2ri.py2rpy(dat)
 
         results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        pd_df = pandas2ri.rpy2py_dataframe(results)
+        # pd_df = pandas2ri.rpy2py_dataframe(results)
+        pd_df = results.copy()
     else:
         dat_h = dat[dat['locus'] == 'IGH']
         dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
@@ -1728,9 +1729,9 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
 
         results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
         results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
-        pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
-        pd_df = pd.concat([pd_df_h, pd_df_l])
+        # pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
+        # pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
+        pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace = True, drop = False)
     cols_to_return = pd_df.columns.difference(dat.columns) # this doesn't actually catch overwritten columns
@@ -1844,7 +1845,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
     warnings.filterwarnings("ignore")
-
+    pandas2ri.activate()
     if 'v_call_genotyped' in dat.columns:
         v_call = 'v_call_genotyped'
     else:
@@ -1885,7 +1886,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
 
     dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
     # Find threshold using density method
-    c = StrVector(['dist_nearest'])
+    dist = np.array(dist_ham['dist_nearest'])
 
     if threshold_method_ is 'density':
         if edge is None:
@@ -1893,7 +1894,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         else:
             edge_ = edge
 
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method_, subsample = subsample_, edge = edge_)
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, subsample = subsample_, edge = edge_)        
     else:
         if threshold_model is None:
             threshold_model_ = "gamma-gamma"
@@ -1919,11 +1920,11 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             spc_ = NULL
         else:
             spc_ = specificity
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
 
     threshold=np.array(dist_threshold.slots['threshold'])[0]
 
-    dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
+    # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
 
     if plot:
         options.figure_size = figsize
@@ -1942,7 +1943,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
              + geom_histogram(binwidth = 0.01)
              + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
              + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
-             + facet_grid('~'+str(plot_group), scales="free_y")
+             + facet_wrap('~'+str(plot_group), scales="free_y")
              + theme(legend_position = 'none')))
     else:
         print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
