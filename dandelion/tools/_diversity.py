@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 16:26:37
+# @Last Modified time: 2020-08-17 18:21:33
 
 import pandas as pd
 import numpy as np
@@ -11,8 +11,10 @@ from ..utilities._utilities import *
 from scipy.special import comb
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
+from rpy2.robjects.packages import importr
+from rpy2.robjects import pandas2ri
 
-def rarefaction(self, groupby, clone_key = None, diversity_key = None):
+def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     """
     Returns rarefaction predictions for cell numbers vs clone size.
     Parameters
@@ -29,30 +31,35 @@ def rarefaction(self, groupby, clone_key = None, diversity_key = None):
     ----------
         `Dandelion` object with updated `.uns` slot or `AnnData` object with updated `.uns` slot with 'rarefaction` dictionary.
     """
-    start = logg.info('Constructing rarefaction curves')
-
+    start = logg.info('Constructing rarefaction curve')
+    veg = importr('vegan')
+    pandas2ri.activate()
+    
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
-    elif self.__class__ == Dandelion:
-        metadata = self.metadata.copy()
     if clone_key is None:
         clonekey = 'clone_id'
     else:
         clonekey = clone_key
-
+    
     groups = list(set(metadata[groupby]))
+    metadata = metadata[metadata['has_bcr'] == 'True']
+    metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
         _metadata = metadata[metadata[groupby]==g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient = 'index')
-    res_.fillna(0, inplace = True)
-    res_.reset_index(inplace = True)    
     
-    pred, yhat, label = [], [], []
-    _ = res_.apply(rarefactionCurve, args=(pred, yhat, label), axis=1)
-    cells_pred = pd.DataFrame(pred, index = label)
-    clones_yhat = pd.DataFrame(yhat, index = label)
+    # remove those with no counts
+    rowsum = res_.sum(axis = 1)
+    print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
+    res_ = res_[~(res_.sum(axis = 1) == 0)]    
+
+    dat = pandas2ri.py2rpy(res_)
+    out = veg.rarecurve(dat, step = 10, sample = 1000, label = False)
+    y = pd.DataFrame([o for o in out], index = res_.index)
+    pred = pd.DataFrame([np.append(np.arange(1, s, 10),s) for s in res_.sum(axis = 1)], index = res_.index)
     if diversity_key is None:
         diversitykey = 'diversity'
     else:
@@ -60,29 +67,9 @@ def rarefaction(self, groupby, clone_key = None, diversity_key = None):
 
     if diversitykey not in self.uns:
         self.uns[diversitykey] = {}
-    self.uns[diversitykey] = {'rarefaction_cells_x':cells_pred, 'rarefaction_clones_y':clones_yhat}
+    self.uns[diversitykey] = {'rarefaction_cells_x':pred, 'rarefaction_clones_y':y}
     logg.info(' finished', time=start,
             deep=('updated `.uns` with rarefaction curves.\n'))
-
-def rarefactionCurve(x, pred, yhat, label):
-    # modified from ecopy: https://github.com/Auerilas/ecopy/blob/master/ecopy/diversity/rarefy.py
-    ix = x['index']
-    x_ = x.drop('index').astype('float')
-    notabs = ~np.isnan(x_)
-    y = x_[notabs]
-    n = np.sum(y)
-    Sn = len(x_)
-    cell_Pred = np.linspace(0, n, 1000)
-    clone_yHat = [rareCurve_Func(i, Sn, n, y) for i in cell_Pred]
-    pred.append(cell_Pred)
-    yhat.append(clone_yHat)
-    label.append(str(ix))
-    
-def rareCurve_Func(i, Sn, n, x):
-    # from ecopy: https://github.com/Auerilas/ecopy/blob/master/ecopy/diversity/rarefy.py
-    sBar = Sn -  np.sum(comb(n-x, i))/comb(n, i) 
-    return sBar
-
 
 def clone_diversity(self, groupby, method = 'gini', splitby = None, clone_key = None, update_obs_meta = True, diversity_key = None):
     """

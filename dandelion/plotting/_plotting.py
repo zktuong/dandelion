@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 16:26:23
+# @Last Modified time: 2020-08-17 18:21:48
 
 import seaborn as sns
 import pandas as pd
@@ -14,10 +14,13 @@ import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
 from scipy.special import comb
-import matplotlib.pyplot as plt
 from adjustText import adjust_text
+from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
+from scanpy.plotting import palettes
+from rpy2.robjects.packages import importr
+from rpy2.robjects import pandas2ri
 
-def rarefaction(self, groupby, clone_key = None):
+def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4), save=None):
     """
     Plots rarefaction curve for cell numbers vs clone size.
     Parameters
@@ -28,49 +31,119 @@ def rarefaction(self, groupby, clone_key = None):
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata/obs.
+    palette : sequence, optional
+        Color mapping for unique elements in groupby. Will try to retrieve from AnnData `.uns` slot if present.
+    figsize :  tuple[float, float]
+        Size of plot.
+    save : str, optional
+        Save path. 
+    Returns
+    ----------
+        rarefaction curve plot.
     """
+    veg = importr('vegan')
+    pandas2ri.activate()
+    
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
-    elif self.__class__ == Dandelion:
-        metadata = self.metadata.copy()
     if clone_key is None:
         clonekey = 'clone_id'
     else:
         clonekey = clone_key
-
+    
     groups = list(set(metadata[groupby]))
+    metadata = metadata[metadata['has_bcr'] == 'True']
+    metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
         _metadata = metadata[metadata[groupby]==g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient = 'index')
-    res_.fillna(0, inplace = True)
-    res_.reset_index(inplace = True)    
-    xpos, ypos, label = [], [], []
-    res_.apply(rarefactionCurvePlot, args=(xpos, ypos, label), axis=1)
-    plt.xlabel('Number of cells')
-    plt.ylabel('Number of clones')
-    texts = []
-    for x, y, s in zip(xpos, ypos, label):
-        texts.append(plt.text(x, y, s))
-    adjust_text(texts, force_points=0, force_text=0.2,expand_points=(1, 1), expand_text=(4, 4),
-            arrowprops=dict(arrowstyle="-", color='black', lw=0.5))
-    plt.show()
+    
+    # remove those with no counts
+    rowsum = res_.sum(axis = 1)
+    print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
+    res_ = res_[~(res_.sum(axis = 1) == 0)]    
 
-def rarefactionCurvePlot(x, xpos, ypos, label):
-    # modified from ecopy: https://github.com/Auerilas/ecopy/blob/master/ecopy/diversity/rarefy.py
-    ix = x['index']
-    x_ = x.drop('index').astype('float')
-    notabs = ~np.isnan(x_)
-    y = x_[notabs]
-    n = np.sum(y)
-    Sn = len(x_)
-    cell_Pred = np.linspace(0, n, 1000)
-    clone_yHat = [rareCurve_Func(i, Sn, n, y) for i in cell_Pred]
-    plt.plot(cell_Pred, clone_yHat)
-    xpos.append(cell_Pred[-1])
-    ypos.append(clone_yHat[-1])
-    label.append(str(ix))
+    dat = pandas2ri.py2rpy(res_)
+    out = veg.rarecurve(dat, step = 10, sample = 1000, label = False)
+    y = pd.DataFrame([o for o in out], index = res_.index).T
+    pred = pd.DataFrame([np.append(np.arange(1, s, 10),s) for s in res_.sum(axis = 1)], index = res_.index).T
+    y = y.melt()
+    pred = pred.melt()
+    pred['yhat'] = y['value']
+
+    options.figure_size = figsize
+    if palette is None:
+        if self.__class__ == AnnData:
+            try:
+                pal = self.uns[str(groupby)+'_colors']
+            except:
+                if len(list(set((pred.variable)))) <= 20:
+                    pal = palettes.default_20
+                elif len(list(set((pred.variable)))) <= 28:
+                    pal = palettes.default_28
+                elif len(list(set((pred.variable)))) <= 102:
+                    pal = palettes.default_102
+                else:
+                    pal = None
+            
+            if pal is not None:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + scale_color_manual(values=(pal))
+                    + geom_line())
+            else:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + geom_line())
+        else:
+            if len(list(set((pred.variable)))) <= 20:
+                pal = palettes.default_20
+            elif len(list(set((pred.variable)))) <= 28:
+                pal = palettes.default_28
+            elif len(list(set((pred.variable)))) <= 102:
+                pal = palettes.default_102
+            else:
+                pal = None
+            
+            if pal is not None:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + scale_color_manual(values=(pal))
+                    + geom_line())
+            else:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + geom_line())
+    else:
+        p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+             + theme_classic()
+             + xlab('number of cells')
+             + ylab('number of clones')
+             + ggtitle('rarefaction curve')
+             + labs(color = groupby)
+             + geom_line())
+    if save:
+        p.save(filename = 'figures/rarefaction'+str(save), height= plt.rcParams['figure.figsize'][0], width= plt.rcParams['figure.figsize'][1], units = 'in', dpi= plt.rcParams["savefig.dpi"])
+
+    return(p)
 
 def random_palette(n):
     # a list of 900+colours
