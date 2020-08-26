@@ -2,13 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-17 18:21:48
+# @Last Modified time: 2020-08-26 11:12:02
 
 import seaborn as sns
 import pandas as pd
 import numpy as np
 from ..utilities._utilities import *
-from ..tools._diversity import rareCurve_Func
 from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
