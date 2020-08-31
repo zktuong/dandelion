@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-17 18:21:33
+# @Last Modified time: 2020-08-31 16:19:07
 
 import pandas as pd
 import numpy as np
@@ -84,7 +84,7 @@ def clone_diversity(self, groupby, method = 'gini', splitby = None, clone_key = 
     method : str
         Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
     splitby : str, optional
-        Column name to split by when calculating gini indices. None does not results in splitting.
+        Column name to split by when calculating gini indices. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -96,12 +96,20 @@ def clone_diversity(self, groupby, method = 'gini', splitby = None, clone_key = 
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     if method == 'gini':
-        diversity_gini(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+        if update_obs_meta:
+            diversity_gini(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+        else:
+            return(diversity_gini(self, groupby, splitby, clone_key, update_obs_meta, diversity_key))
     if method == 'chao1':
-        diversity_chao1(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+        if update_obs_meta:
+            diversity_chao1(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+        else:
+            return(diversity_chao1(self, groupby, splitby, clone_key, update_obs_meta, diversity_key))
     if method == 'shannon':
-        diversity_shannon(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
-
+        if update_obs_meta:
+            diversity_shannon(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+        else:
+            return(diversity_shannon(self, groupby, splitby, clone_key, update_obs_meta, diversity_key))
 
 def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_meta = False, diversity_key = None):
     """
@@ -114,7 +122,7 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
     splitby : str, optional
-        Column name to split by when calculating Gini indices. None does not results in splitting.
+        Column name to split by when calculating Gini indices. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -250,6 +258,11 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Gini indices.\n'))
     else:
+        if splitby is None:
+            res_ = res.copy()
+        else:
+            res_ = [res1, res2]
+        return(res_)
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Gini indices.\n'))
 
@@ -264,7 +277,7 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
     groupby : str
         Column name to calculate the Chao1 estimates on, for e.g. sample, patient etc.
     splitby : str, optional
-        Column name to split by when calculating Chao1 estimates. None does not results in splitting.
+        Column name to split by when calculating Chao1 estimates. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -400,6 +413,11 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Chao1 estimates.\n'))
     else:
+        if splitby is None:
+            res_ = res.copy()
+        else:
+            res_ = [res1, res2]
+        return(res_)
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Chao1 estimates.\n'))
 
@@ -414,7 +432,7 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
     groupby : str
         Column name to calculate the Shannon entropy on, for e.g. sample, patient etc.
     splitby : str, optional
-        Column name to split by when calculating Shannon entropy. None does not results in splitting.
+        Column name to split by when calculating Shannon entropy. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -550,5 +568,10 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Shannon entropy.\n'))
     else:
+        if splitby is None:
+            res_ = res.copy()
+        else:
+            res_ = [res1, res2]
+        return(res_)
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Shannon entropy.\n'))
