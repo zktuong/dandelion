@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-31 16:19:07
+# @Last Modified time: 2020-08-31 21:26:26
 
 import pandas as pd
 import numpy as np
@@ -13,7 +13,8 @@ from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri
-
+from tqdm import tqdm
+import warnings
 def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     """
     Returns rarefaction predictions for cell numbers vs clone size.
@@ -71,7 +72,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     logg.info(' finished', time=start,
             deep=('updated `.uns` with rarefaction curves.\n'))
 
-def clone_diversity(self, groupby, method = 'gini', splitby = None, clone_key = None, update_obs_meta = True, diversity_key = None):
+def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -82,36 +83,38 @@ def clone_diversity(self, groupby, method = 'gini', splitby = None, clone_key = 
     groupby : str
         Column name to calculate the gini indices on, for e.g. sample, patient etc.
     method : str
-        Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
-    splitby : str, optional
-        Column name to split by when calculating gini indices. None does not result in splitting.
+        Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].    
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
+    resample : bool
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+    n_resample : int
+        Number of times to perform resampling. Default is 50.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     if method == 'gini':
         if update_obs_meta:
-            diversity_gini(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+            diversity_gini(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
         else:
-            return(diversity_gini(self, groupby, splitby, clone_key, update_obs_meta, diversity_key))
+            return(diversity_gini(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
     if method == 'chao1':
         if update_obs_meta:
-            diversity_chao1(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+            diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
         else:
-            return(diversity_chao1(self, groupby, splitby, clone_key, update_obs_meta, diversity_key))
+            return(diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
     if method == 'shannon':
         if update_obs_meta:
-            diversity_shannon(self, groupby, splitby, clone_key, update_obs_meta, diversity_key)
+            diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
         else:
-            return(diversity_shannon(self, groupby, splitby, clone_key, update_obs_meta, diversity_key))
+            return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
 
-def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_meta = False, diversity_key = None):
+def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
     Compute B cell clones Gini indices.
 
@@ -121,21 +124,23 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
-    splitby : str, optional
-        Column name to split by when calculating Gini indices. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str, optional
-        key for 'diversity' results in `.uns`.
+        Key for 'diversity' results in `.uns`.
+    resample : bool
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+    n_resample : int
+        Number of times to perform resampling. Default is 50.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, splitby = None, clone_key = None):
+    def gini_indices(self, groupby, clone_key = None, resample = True, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -149,19 +154,59 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
             raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
-        if splitby is None:
-            res1 = {}
-            res2 = {}
-            for g in groups:
-                # clone size distribution
-                _dat = metadata[metadata[groupby] == g]
-                clonesizecounts = np.array(_dat[clonekey].value_counts())
+            
+        minsize = metadata[groupby].value_counts().min()
+        if minsize < 100:
+            warnings.warn('The minimum cell numbers when grouped by {} is {}. Practise caution when interpreting diversity measures.'.format(groupby, minsize))
+
+        res1 = {}
+        res2 = {}
+        for g in groups:
+            # clone size distribution
+            _dat = metadata[metadata[groupby] == g]
+            if resample:                
+                sizelist = []
+                graphlist = []
+                for i in range(0, n_resample):
+                    _dat = _dat.sample(minsize)
+                    _tab = _dat[clonekey].value_counts()
+                    _tab.drop('nan', inplace = True)
+                    clonesizecounts = np.array(_tab)
+                    clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                    if len(clonesizecounts) > 0:
+                        g_c = gini_index(clonesizecounts)
+                    else:
+                        g_c = np.nan
+                    sizelist.append(g_c)
+                
+                    # vertex weighted degree distribution
+                    graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    if len(graphcounts) > 0:
+                        g_c = gini_index(graphcounts)
+                    else:
+                        g_c = np.nan
+                    graphlist.append(g_c)                
+                try:
+                    g_c = sum(sizelist)/len(sizelist)
+                except:
+                    g_c = np.nan
+                res1.update({g:g_c})
+                g_c = sum(graphlist)/len(graphlist)
+                try:
+                    g_c = sum(graphlist)/len(graphlist)
+                except:
+                    g_c = np.nan
+                res2.update({g:g_c})
+            else:
+                _tab = _dat[clonekey].value_counts()
+                _tab.drop('nan', inplace = True)
+                clonesizecounts = np.array(_tab)
+                clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
                     g_c = gini_index(clonesizecounts)
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-
                 # vertex weighted degree distribution
                 graphcounts = np.array(_dat['clone_degree'].value_counts())
                 if len(graphcounts) > 0:
@@ -169,63 +214,24 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
                 else:
                     g_c = np.nan
                 res2.update({g:g_c})
-            res_df = pd.DataFrame.from_dict([res1,res2]).T
-            res_df.columns = ['clone_size_gini', 'clone_degree_gini']
-            return(res_df)
-        else:
-            splits = list(set(metadata[splitby]))
-            res1 = Tree()
-            res2 = Tree()
-            for g in groups:
-                for s in splits:
-                    # clone size distribution
-                    _dat = metadata[(metadata[groupby] == g) & (metadata[splitby] == s)]
-                    clonesizecounts = np.array(_dat[clonekey].value_counts())
-                    if len(clonesizecounts) > 0:
-                        g_c = gini_index(clonesizecounts)
-                    else:
-                        g_c = np.nan
-                    res1[g][s] = g_c
 
-                    # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    if len(graphcounts) > 0:
-                        g_c = gini_index(graphcounts)
-                    else:
-                        g_c = np.nan
-                    res2[g][s] = g_c
-            res_df1 = pd.DataFrame([dict(res1[r]) for r in res1], index = res1.keys())
-            res_df2 = pd.DataFrame([dict(res2[r]) for r in res2], index = res2.keys())
-            res_df1.columns = ['clone_size_gini' + x for x in res_df1.columns]
-            res_df2.columns = ['clone_degree_gini' + x for x in res_df2.columns]            
-            return(res_df1,res_df2)
+        res_df = pd.DataFrame.from_dict([res1,res2]).T
+        res_df.columns = ['clone_size_gini', 'clone_degree_gini']
+        return(res_df)
 
-    def transfer_gini_indices(self, gini_results, groupby, splitby = None):
+    def transfer_gini_indices(self, gini_results, groupby):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
-        if splitby is None:
-            if not isinstance(gini_results, list):
-                for c in gini_results.columns:
-                    metadata[c] = np.nan
-                    for g in groups:
-                        for i in metadata.index:
-                            if metadata.at[i, groupby] == g:
-                                metadata.at[i, c] = gini_results[c][g]
-        else:            
-            splits = list(set(metadata[splitby]))
-            for r in gini_results:
-                for c in r.columns:
-                    metadata[c] = np.nan
-                    for g in groups:
-                        for s in splits:
-                            for i in metadata.index:
-                                if metadata.at[i, groupby] == g:
-                                    if metadata.at[i, splitby] == s:
-                                        metadata.at[i, c] = r[c][g]
+        for c in gini_results.columns:
+            metadata[c] = np.nan
+            for g in groups:
+                for i in metadata.index:
+                    if metadata.at[i, groupby] == g:
+                        metadata.at[i, c] = gini_results[c][g]        
         if self.__class__ == AnnData:
             self.obs = metadata.copy()
         elif self.__class__ == Dandelion:
@@ -238,19 +244,13 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
 
     if diversitykey not in self.uns:
         self.uns[diversitykey] = {}
-    if splitby is None:
-        res  = gini_indices(self, groupby, splitby, clone_key)
-    else:
-        res1, res2  = gini_indices(self, groupby, splitby, clone_key)
-        res = res1.join(res2)
+    res  = gini_indices(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    
     self.uns[diversitykey].update({'gini':res})
 
     if update_obs_meta:
-        if splitby is None:
-            res_ = res.copy()
-        else:
-            res_ = [res1, res2]
-        transfer_gini_indices(self, res_, groupby, splitby)
+        res_ = res.copy()
+        transfer_gini_indices(self, res_, groupby)
         if self.__class__ == Dandelion:
             logg.info(' finished', time=start,
                 deep=('updated `.metadata` and `.uns` with Gini indices.\n'))
@@ -258,15 +258,12 @@ def diversity_gini(self, groupby, splitby = None, clone_key = None, update_obs_m
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Gini indices.\n'))
     else:
-        if splitby is None:
-            res_ = res.copy()
-        else:
-            res_ = [res1, res2]
+        res_ = res.copy()        
         return(res_)
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Gini indices.\n'))
 
-def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_meta = False, diversity_key = None):
+def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
     Compute B cell clones Chao1 estimates.
 
@@ -276,21 +273,23 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Chao1 estimates on, for e.g. sample, patient etc.
-    splitby : str, optional
-        Column name to split by when calculating Chao1 estimates. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
+    resample : bool
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+    n_resample : int
+        Number of times to perform resampling. Default is 50.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Chao1 estimates')
 
-    def chao1_estimates(self, groupby, splitby = None, clone_key = None):
+    def chao1_estimates(self, groupby, clone_key = None, resample = True, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -304,19 +303,59 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
             raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
-        if splitby is None:
-            res1 = {}
-            res2 = {}
-            for g in groups:
-                # clone size distribution
-                _dat = metadata[metadata[groupby] == g]
-                clonesizecounts = np.array(_dat[clonekey].value_counts())
+            
+        minsize = metadata[groupby].value_counts().min()
+        if minsize < 100:
+            warnings.warn('The minimum cell numbers when grouped by {} is {}. Practise caution when interpreting diversity measures.'.format(groupby, minsize))
+
+        res1 = {}
+        res2 = {}
+        for g in groups:
+            # clone size distribution
+            _dat = metadata[metadata[groupby] == g]
+            if resample:                
+                sizelist = []
+                graphlist = []
+                for i in range(0, n_resample):
+                    _dat = _dat.sample(minsize)
+                    _tab = _dat[clonekey].value_counts()
+                    _tab.drop('nan', inplace = True)
+                    clonesizecounts = np.array(_tab)
+                    clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                    if len(clonesizecounts) > 0:
+                        g_c = chao1(clonesizecounts)
+                    else:
+                        g_c = np.nan
+                    sizelist.append(g_c)
+                
+                    # vertex weighted degree distribution
+                    graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    if len(graphcounts) > 0:
+                        g_c = chao1(graphcounts)
+                    else:
+                        g_c = np.nan
+                    graphlist.append(g_c)                
+                try:
+                    g_c = sum(sizelist)/len(sizelist)
+                except:
+                    g_c = np.nan
+                res1.update({g:g_c})
+                g_c = sum(graphlist)/len(graphlist)
+                try:
+                    g_c = sum(graphlist)/len(graphlist)
+                except:
+                    g_c = np.nan
+                res2.update({g:g_c})
+            else:
+                _tab = _dat[clonekey].value_counts()
+                _tab.drop('nan', inplace = True)
+                clonesizecounts = np.array(_tab)
+                clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
                     g_c = chao1(clonesizecounts)
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-
                 # vertex weighted degree distribution
                 graphcounts = np.array(_dat['clone_degree'].value_counts())
                 if len(graphcounts) > 0:
@@ -324,63 +363,24 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
                 else:
                     g_c = np.nan
                 res2.update({g:g_c})
-            res_df = pd.DataFrame.from_dict([res1,res2]).T
-            res_df.columns = ['clone_size_chao1', 'clone_degree_chao1']
-            return(res_df)
-        else:
-            splits = list(set(metadata[splitby]))
-            res1 = Tree()
-            res2 = Tree()
-            for g in groups:
-                for s in splits:
-                    # clone size distribution
-                    _dat = metadata[(metadata[groupby] == g) & (metadata[splitby] == s)]
-                    clonesizecounts = np.array(_dat[clonekey].value_counts())
-                    if len(clonesizecounts) > 0:
-                        g_c = chao1(clonesizecounts)
-                    else:
-                        g_c = np.nan
-                    res1[g][s] = g_c
 
-                    # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    if len(graphcounts) > 0:
-                        g_c = chao1(graphcounts)
-                    else:
-                        g_c = np.nan
-                    res2[g][s] = g_c
-            res_df1 = pd.DataFrame([dict(res1[r]) for r in res1], index = res1.keys())
-            res_df2 = pd.DataFrame([dict(res2[r]) for r in res2], index = res2.keys())
-            res_df1.columns = ['clone_size_chao1' + x for x in res_df1.columns]
-            res_df2.columns = ['clone_degree_chao1' + x for x in res_df2.columns]            
-            return(res_df1,res_df2)
+        res_df = pd.DataFrame.from_dict([res1,res2]).T
+        res_df.columns = ['clone_size_chao1', 'clone_degree_chao1']
+        return(res_df)
 
-    def transfer_chao1_estimates(self, chao1_results, groupby, splitby = None):
+    def transfer_chao1_estimates(self, chao1_results, groupby):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
-        if splitby is None:
-            if not isinstance(chao1_results, list):
-                for c in chao1_results.columns:
-                    metadata[c] = np.nan
-                    for g in groups:
-                        for i in metadata.index:
-                            if metadata.at[i, groupby] == g:
-                                metadata.at[i, c] = chao1_results[c][g]
-        else:            
-            splits = list(set(metadata[splitby]))
-            for r in chao1_results:
-                for c in r.columns:
-                    metadata[c] = np.nan
-                    for g in groups:
-                        for s in splits:
-                            for i in metadata.index:
-                                if metadata.at[i, groupby] == g:
-                                    if metadata.at[i, splitby] == s:
-                                        metadata.at[i, c] = r[c][g]
+        for c in chao1_results.columns:
+            metadata[c] = np.nan
+            for g in groups:
+                for i in metadata.index:
+                    if metadata.at[i, groupby] == g:
+                        metadata.at[i, c] = chao1_results[c][g]        
         if self.__class__ == AnnData:
             self.obs = metadata.copy()
         elif self.__class__ == Dandelion:
@@ -393,19 +393,13 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
 
     if diversitykey not in self.uns:
         self.uns[diversitykey] = {}
-    if splitby is None:
-        res  = chao1_estimates(self, groupby, splitby, clone_key)
-    else:
-        res1, res2  = chao1_estimates(self, groupby, splitby, clone_key)
-        res = res1.join(res2)
+    res  = chao1_estimates(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    
     self.uns[diversitykey].update({'chao1':res})
 
     if update_obs_meta:
-        if splitby is None:
-            res_ = res.copy()
-        else:
-            res_ = [res1, res2]
-        transfer_chao1_estimates(self, res_, groupby, splitby)
+        res_ = res.copy()
+        transfer_chao1_estimates(self, res_, groupby)
         if self.__class__ == Dandelion:
             logg.info(' finished', time=start,
                 deep=('updated `.metadata` and `.uns` with Chao1 estimates.\n'))
@@ -413,15 +407,12 @@ def diversity_chao1(self, groupby, splitby = None, clone_key = None, update_obs_
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Chao1 estimates.\n'))
     else:
-        if splitby is None:
-            res_ = res.copy()
-        else:
-            res_ = [res1, res2]
+        res_ = res.copy()        
         return(res_)
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Chao1 estimates.\n'))
 
-def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_obs_meta = False, diversity_key = None):
+def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
     Compute B cell clones Shannon entropy.
 
@@ -431,21 +422,23 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Shannon entropy on, for e.g. sample, patient etc.
-    splitby : str, optional
-        Column name to split by when calculating Shannon entropy. None does not result in splitting.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
+    resample : bool
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+    n_resample : int
+        Number of times to perform resampling. Default is 50.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Shannon entropy')
 
-    def shannon_entropy(self, groupby, splitby = None, clone_key = None):
+    def shannon_entropy(self, groupby, clone_key = None, resample = True, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -459,19 +452,59 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
             raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
-        if splitby is None:
-            res1 = {}
-            res2 = {}
-            for g in groups:
-                # clone size distribution
-                _dat = metadata[metadata[groupby] == g]
-                clonesizecounts = np.array(_dat[clonekey].value_counts())
+            
+        minsize = metadata[groupby].value_counts().min()
+        if minsize < 100:
+            warnings.warn('The minimum cell numbers when grouped by {} is {}. Practise caution when interpreting diversity measures.'.format(groupby, minsize))
+
+        res1 = {}
+        res2 = {}
+        for g in groups:
+            # clone size distribution
+            _dat = metadata[metadata[groupby] == g]
+            if resample:                
+                sizelist = []
+                graphlist = []
+                for i in range(0, n_resample):
+                    _dat = _dat.sample(minsize)
+                    _tab = _dat[clonekey].value_counts()
+                    _tab.drop('nan', inplace = True)
+                    clonesizecounts = np.array(_tab)
+                    clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                    if len(clonesizecounts) > 0:
+                        g_c = shannon(clonesizecounts)
+                    else:
+                        g_c = np.nan
+                    sizelist.append(g_c)
+                
+                    # vertex weighted degree distribution
+                    graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    if len(graphcounts) > 0:
+                        g_c = shannon(graphcounts)
+                    else:
+                        g_c = np.nan
+                    graphlist.append(g_c)                
+                try:
+                    g_c = sum(sizelist)/len(sizelist)
+                except:
+                    g_c = np.nan
+                res1.update({g:g_c})
+                g_c = sum(graphlist)/len(graphlist)
+                try:
+                    g_c = sum(graphlist)/len(graphlist)
+                except:
+                    g_c = np.nan
+                res2.update({g:g_c})
+            else:
+                _tab = _dat[clonekey].value_counts()
+                _tab.drop('nan', inplace = True)
+                clonesizecounts = np.array(_tab)
+                clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
                     g_c = shannon(clonesizecounts)
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-
                 # vertex weighted degree distribution
                 graphcounts = np.array(_dat['clone_degree'].value_counts())
                 if len(graphcounts) > 0:
@@ -479,63 +512,24 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
                 else:
                     g_c = np.nan
                 res2.update({g:g_c})
-            res_df = pd.DataFrame.from_dict([res1,res2]).T
-            res_df.columns = ['clone_size_shannon', 'clone_degree_shannon']
-            return(res_df)
-        else:
-            splits = list(set(metadata[splitby]))
-            res1 = Tree()
-            res2 = Tree()
-            for g in groups:
-                for s in splits:
-                    # clone size distribution
-                    _dat = metadata[(metadata[groupby] == g) & (metadata[splitby] == s)]
-                    clonesizecounts = np.array(_dat[clonekey].value_counts())
-                    if len(clonesizecounts) > 0:
-                        g_c = shannon(clonesizecounts)
-                    else:
-                        g_c = np.nan
-                    res1[g][s] = g_c
 
-                    # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    if len(graphcounts) > 0:
-                        g_c = shannon(graphcounts)
-                    else:
-                        g_c = np.nan
-                    res2[g][s] = g_c
-            res_df1 = pd.DataFrame([dict(res1[r]) for r in res1], index = res1.keys())
-            res_df2 = pd.DataFrame([dict(res2[r]) for r in res2], index = res2.keys())
-            res_df1.columns = ['clone_size_shannon' + x for x in res_df1.columns]
-            res_df2.columns = ['clone_degree_shannon' + x for x in res_df2.columns]            
-            return(res_df1,res_df2)
+        res_df = pd.DataFrame.from_dict([res1,res2]).T
+        res_df.columns = ['clone_size_shannon', 'clone_degree_shannon']
+        return(res_df)
 
-    def transfer_shannon_entropy(self, shannon_results, groupby, splitby = None):
+    def transfer_shannon_entropy(self, shannon_results, groupby):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
-        if splitby is None:
-            if not isinstance(shannon_results, list):
-                for c in shannon_results.columns:
-                    metadata[c] = np.nan
-                    for g in groups:
-                        for i in metadata.index:
-                            if metadata.at[i, groupby] == g:
-                                metadata.at[i, c] = shannon_results[c][g]
-        else:            
-            splits = list(set(metadata[splitby]))
-            for r in shannon_results:
-                for c in r.columns:
-                    metadata[c] = np.nan
-                    for g in groups:
-                        for s in splits:
-                            for i in metadata.index:
-                                if metadata.at[i, groupby] == g:
-                                    if metadata.at[i, splitby] == s:
-                                        metadata.at[i, c] = r[c][g]
+        for c in shannon_results.columns:
+            metadata[c] = np.nan
+            for g in groups:
+                for i in metadata.index:
+                    if metadata.at[i, groupby] == g:
+                        metadata.at[i, c] = shannon_results[c][g]        
         if self.__class__ == AnnData:
             self.obs = metadata.copy()
         elif self.__class__ == Dandelion:
@@ -548,19 +542,13 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
 
     if diversitykey not in self.uns:
         self.uns[diversitykey] = {}
-    if splitby is None:
-        res  = shannon_entropy(self, groupby, splitby, clone_key)
-    else:
-        res1, res2  = shannon_entropy(self, groupby, splitby, clone_key)
-        res = res1.join(res2)
+    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    
     self.uns[diversitykey].update({'shannon':res})
 
     if update_obs_meta:
-        if splitby is None:
-            res_ = res.copy()
-        else:
-            res_ = [res1, res2]
-        transfer_shannon_entropy(self, res_, groupby, splitby)
+        res_ = res.copy()
+        transfer_shannon_entropy(self, res_, groupby)
         if self.__class__ == Dandelion:
             logg.info(' finished', time=start,
                 deep=('updated `.metadata` and `.uns` with Shannon entropy.\n'))
@@ -568,10 +556,7 @@ def diversity_shannon(self, groupby, splitby = None, clone_key = None, update_ob
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Shannon entropy.\n'))
     else:
-        if splitby is None:
-            res_ = res.copy()
-        else:
-            res_ = [res1, res2]
+        res_ = res.copy()        
         return(res_)
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Shannon entropy.\n'))
