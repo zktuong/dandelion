@@ -61,12 +61,12 @@ pip install git+https://github.com/zktuong/dandelion.git@devel
 
 dandelion also requires some R packages intalled.
 ```R
-install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam", "ggplot2"))
+install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam", "ggplot2", "vegan"))
 ```
 or the following if using conda to manage R:
 ```bash
 conda install -c bioconda r-optparse
-conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam 
+conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam r-vegan
 ```
 
 The package should now be properly installed and when starting up jupyter notebook in the virtual environment, the kernel `python3` should work. Otherwise, you might need to add it manually:
