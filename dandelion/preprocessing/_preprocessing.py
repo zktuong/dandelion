@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-15 02:18:21
+# @Last Modified time: 2020-09-01 22:02:40
 
 import sys
 import os
@@ -1636,10 +1636,10 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         _dat = dat.copy()
 
     print('Initializing Dandelion object')
-    if data.__class__ == Dandelion:        
-        out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
+    if data.__class__ == Dandelion:
+        out_dat = Dandelion(data = _dat, germline = data.germline, initialize = False)
     else:
-        out_dat = Dandelion(data = _dat, initialize = True)
+        out_dat = Dandelion(data = _dat, initialize = False)
     
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
