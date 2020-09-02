@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 14:54:30
+# @Last Modified time: 2020-09-02 14:57:40
 
 import sys
 import os
@@ -1420,6 +1420,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     -------
         V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
+    start = logg.info('Filtering BCRs')
     if data.__class__ == Dandelion:
         dat = load_data(data.data)
     else:
@@ -1581,7 +1582,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     if parallel:
         print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
         with multiprocessing.Pool() as p:
-            result = p.map(parallelize_marking, iter(barcode))
+            result = p.map(parallel_marking, iter(barcode))
             pq, hd, ld ,dc = [], [], [], []
             for r in result:
                 pq = pq + r[0]
@@ -1799,6 +1800,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     else:
         out_adata = adata.copy()
 
+    logg.info(' finished', time=start,
+            deep=('Returning Dandelion and AnnData objects: \n'))
     return(out_dat, out_adata)
 
 def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
