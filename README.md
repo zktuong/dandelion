@@ -2,7 +2,7 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.10
+Version = 0.0.11
 
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
@@ -101,7 +101,6 @@ Python packages
 python==3.7.6 (conda-forge)
 numpy==1.18.4 (conda-forge)
 pandas==1.0.3 (conda-forge)
-python-Levenshtein==0.12.0 (conda-forge)
 distance==0.1.3 (conda-forge)
 joblib==0.14.1 (conda-forge)
 jupyter==1.0.0 (conda-forge)
@@ -123,6 +122,7 @@ igblast==1.15.0 (bioconda)
 anndata>=0.7.1
 scanpy>=1.4.6
 scrublet==0.2.1
+polyleven>=0.5
 rpy2>=3.3.2
 ```
 
@@ -132,6 +132,7 @@ alakazam_1.0.1
 tigger_1.0.0
 airr_1.2.0
 shazam_1.0.0
+vegan_2.5-6
 ggplot2
 ```
 
