@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 15:16:01
+# @Last Modified time: 2020-09-02 15:23:12
 
 import sys
 import os
@@ -1388,7 +1388,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def parallel_marking(b):
+def parallel_marking(b, dat = dat, h = h, h_umi = h_umi, h_seq = h_seq, h_dup = h_dup, h_ccall = h_ccall, l = l, l_umi = l_umi, l_seq = l_seq, rescue_igh = rescue_igh, umi_foldchange_cutoff = umi_foldchange_cutoff):
     poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
 
     hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
