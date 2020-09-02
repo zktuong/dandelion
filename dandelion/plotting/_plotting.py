@@ -2,9 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 20:42:59
+# @Last Modified time: 2020-09-02 16:14:18
 
-import igraph
 import seaborn as sns
 import pandas as pd
 import numpy as np
@@ -13,141 +12,147 @@ from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
+from scipy.special import comb
+from adjustText import adjust_text
+from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
+from scanpy.plotting import palettes
+from rpy2.robjects.packages import importr
+from rpy2.robjects import pandas2ri
 
-def igraph_network(self, colorby = None, layout = None, visual_style = None, *args):
+def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4), save=None):
     """
-    Using igraph to plot the network. There are some default plotting options. according to the metadata that returned by generate_network.
-    
+    Plots rarefaction curve for cell numbers vs clone size.
     Parameters
     ----------
-    self : Dandelion
-        `Dandelion` object.
-    colorby : str, optional
-        column name in metadata to color.
-    layout : str, optional
-        style of layout.
-    visual_style : dict, optional
-        additional igraph visual options in dictionary.
-    *args
-        passed to `igraph.plot <https://igraph.org/python/doc/tutorial/tutorial.html#layouts-and-plotting>`__.
+    self : AnnData
+        `AnnData` object.
+    groupby : str
+        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
+    clone_key : str, optional
+        Column name specifying the clone_id column in metadata/obs.
+    palette : sequence, optional
+        Color mapping for unique elements in groupby. Will try to retrieve from AnnData `.uns` slot if present.
+    figsize :  tuple[float, float]
+        Size of plot.
+    save : str, optional
+        Save path. 
     Returns
-    -------
-        igraph plot
+    ----------
+        rarefaction curve plot.
     """
-
-    g = self.graph
-    if layout is None:
-        lyt = self.layout
+    veg = importr('vegan')
+    pandas2ri.activate()
+    
+    if self.__class__ == AnnData:
+        metadata = self.obs.copy()
+    if clone_key is None:
+        clonekey = 'clone_id'
     else:
-        lyt = g.layout(layout, *args)
+        clonekey = clone_key
     
-    # default visual style
-    vs = {}
-    vs['vertex_size'] = 2
-    vs['vertex_frame_width'] = 0.1
-    vs['vertex_label'] = g.vs['name']
-    vs['vertex_label_size'] = 0
-    # vs['edge_width'] = 0.05
-    vs['layout'] = lyt
-    vs['bbox'] = (300, 300)
-    vs['margin'] = 20
-    vs['inline'] = True
+    groups = list(set(metadata[groupby]))
+    metadata = metadata[metadata['has_bcr'].isin([True, 'True'])]
+    metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
+    res = {}
+    for g in groups:
+        _metadata = metadata[metadata[groupby]==g]
+        res[g] = _metadata[clonekey].value_counts()
+    res_ = pd.DataFrame.from_dict(res, orient = 'index')
     
-    # a list of 900+colours
-    cols = list(sns.xkcd_rgb.keys())
+    # remove those with no counts
+    rowsum = res_.sum(axis = 1)
+    print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
+    res_ = res_[~(res_.sum(axis = 1) == 0)]    
 
-    if len(list(set(g.vs['clone_id']))) > len(cols):
-        cols = cols + list(sns.colour_palette('husl', len(list(set(g.vs['clone_id'])))))
+    dat = pandas2ri.py2rpy(res_)
+    out = veg.rarecurve(dat, step = 10, sample = 1000, label = False)
+    y = pd.DataFrame([o for o in out], index = res_.index).T
+    pred = pd.DataFrame([np.append(np.arange(1, s, 10),s) for s in res_.sum(axis = 1)], index = res_.index).T
+    y = y.melt()
+    pred = pred.melt()
+    pred['yhat'] = y['value']
 
-    # some default colours
-    clone_col_dict = dict(zip(list(set(g.vs['clone_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_id'])))))))
-    clone_group_col_dict = dict(zip(list(set(g.vs['clone_group_id'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['clone_group_id'])))))))
-    productive_col_dict = dict(zip(list(set(g.vs['productive'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['productive'])))))))
-    productive_col_dict.update({'True':'#e15759', 'TRUE':'#e15759', 'False':'#e7e7e7', 'FALSE':'#e7e7e7', "T":'#e15759', 'F':'#e7e7e7', True:'#e15759', False:'#e7e7e7', np.nan:'#e7e7e7'})
-    
-    isotype_col_dict = {'IgA':'#4e79a7', 'IgD':'#e15759', 'IgE':'#76b7b2', 'IgG':'#59a14f', 'IgM':'#9c755f', np.nan:'#e7e7e7'}
-    heavy_c_call_col_dict = {'igha1':'#4e79a7', 'igha2':'#f28e2b', 'ighd':'#e15759', 'ighe':'#76b7b2', 'ighg1':'#59a14f', 'ighg2':'#edc948', 'ighg3':'#b07aa1', 'ighg4':'#ff9da7', 'ighm':'#9c755f', np.nan:'#e7e7e7'}
-    
-    status_col_dict = dict(zip(list(set(g.vs['status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['status'])))))))
-    status_col_dict.update({'IGH_only':'#7f7f7f','IGH + IGK':'#1f77b4','IGH + IGL':'#ff7f0e'})
-
-    vdj_status_col_dict = dict(zip(list(set(g.vs['vdj_status'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['vdj_status'])))))))
-    vdj_status_col_dict.update({'Single':'#1f77b4'})
-    # because there's a chance of dual light chains occuring, i will be a bit careful here
-    light_c_call_custom_colours = {'igkc':'#1f77b4', 'iglc1':'#ff7f0e', 'iglc2':'#ff7f0e', 'iglc3':'#ff7f0e', 'iglc4':'#ff7f0e', 'iglc5':'#ff7f0e', 'iglc6':'#ff7f0e','iglc7':'#ff7f0e', np.nan:'#e7e7e7'}    
-    light_c_call_col_dict = dict(zip(list(set(g.vs['c_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['c_call_light'])))))))
-    light_c_call_col_dict.update(light_c_call_custom_colours)
-    light_c_call_col_dict = dict((k.lower(), v) if type(k) is str else (k, v) for k,v in light_c_call_col_dict.items())
-
-    lightchain_custom_colours = {'IgK':'#1f77b4', 'IgL':'#ff7f0e', np.nan:'#e7e7e7'}
-    lightchain_col_dict = dict(zip(list(set(g.vs['lightchain'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['lightchain'])))))))
-    lightchain_col_dict.update(lightchain_custom_colours)
-    
-    v_call_heavy_col_dict = dict(zip(list(set(g.vs['v_call_heavy'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['v_call_heavy'])))))))
-    j_call_heavy_col_dict = dict(zip(list(set(g.vs['j_call_heavy'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['j_call_heavy'])))))))
-    v_call_light_col_dict = dict(zip(list(set(g.vs['v_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['v_call_light'])))))))    
-    j_call_light_col_dict = dict(zip(list(set(g.vs['j_call_light'])), sns.xkcd_palette(random.sample(cols, len(list(set(g.vs['j_call_light'])))))))
-    # because some lightchains might be missing
-    v_call_light_col_dict.update({np.nan:'#e7e7e7'})
-    j_call_light_col_dict.update({np.nan:'#e7e7e7'})
-    clone_col_dict.update({np.nan:'#e7e7e7'})
-    clone_group_col_dict.update({np.nan:'#e7e7e7'})
-    
-    # set up visual style                
-    if colorby is 'clone_id':
-        vs['vertex_color'] = [clone_col_dict[i] for i in g.vs['clone_id']]
-        vs['vertex_frame_color'] = [clone_col_dict[i] for i in g.vs['clone_id']]
-    elif colorby is 'clone_group_id':
-        vs['vertex_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]
-        vs['vertex_frame_color'] = [clone_group_col_dict[i] for i in g.vs['clone_group_id']]    
-    elif colorby is 'status':
-        vs['vertex_color'] = [status_col_dict[i] for i in g.vs['status']]
-        vs['vertex_frame_color'] = [status_col_dict[i] for i in g.vs['status']]
-    elif colorby is 'vdj_status':
-        vs['vertex_color'] = [vdj_status_col_dict[i] for i in g.vs['vdj_status']]
-        vs['vertex_frame_color'] = [vdj_status_col_dict[i] for i in g.vs['vdj_status']]
-    elif colorby is 'isotype':
-        vs['vertex_color'] = [isotype_col_dict[i] for i in g.vs['isotype']]
-        vs['vertex_frame_color'] = [isotype_col_dict[i] for i in g.vs['isotype']]
-    elif colorby is 'lightchain':
-        vs['vertex_color'] = [lightchain_col_dict[i] for i in g.vs['lightchain']]
-        vs['vertex_frame_color'] = [lightchain_col_dict[i] for i in g.vs['lightchain']]    
-    elif colorby is 'c_call_heavy':
-        vs['vertex_color'] = [heavy_c_call_col_dict[i.lower()] if type(i) is str else heavy_c_call_col_dict[i] for i in g.vs['c_call_heavy']]
-        vs['vertex_frame_color'] = [heavy_c_call_col_dict[i.lower()] if type(i) is str else heavy_c_call_col_dict[i] for i in g.vs['c_call_heavy']]
-    elif colorby is 'c_call_light':
-        vs['vertex_color'] = [light_c_call_col_dict[i.lower()] if type(i) is str else light_c_call_col_dict[i] for i in g.vs['c_call_light']]
-        vs['vertex_frame_color'] = [light_c_call_col_dict[i.lower()] if type(i) is str else light_c_call_col_dict[i] for i in g.vs['c_call_light']]
-    elif colorby is 'productive':
-        vs['vertex_color'] = [productive_col_dict[i] for i in g.vs['productive']]
-        vs['vertex_frame_color'] = [productive_col_dict[i] for i in g.vs['productive']]
-    elif colorby is 'v_call_heavy':
-        vs['vertex_color'] = [v_call_heavy_col_dict[i] for i in g.vs['v_call_heavy']]
-        vs['vertex_frame_color'] = [v_call_heavy_col_dict[i] for i in g.vs['v_call_heavy']]
-    elif colorby is 'j_call_heavy':
-        vs['vertex_color'] = [j_call_heavy_col_dict[i] for i in g.vs['j_call_heavy']]
-        vs['vertex_frame_color'] = [j_call_heavy_col_dict[i] for i in g.vs['j_call_heavy']]
-    elif colorby is 'v_call_light':
-        vs['vertex_color'] = [v_call_light_col_dict[i] for i in g.vs['v_call_light']]
-        vs['vertex_frame_color'] = [v_call_light_col_dict[i] for i in g.vs['v_call_light']]
-    elif colorby is 'j_call_light':
-        vs['vertex_color'] = [j_call_light_col_dict[i] for i in g.vs['j_call_light']]
-        vs['vertex_frame_color'] = [j_call_light_col_dict[i] for i in g.vs['j_call_light']]
-    elif colorby is None:
-        vs['vertex_color'] = '#D7D7D7'
-        vs['vertex_frame_color'] = '#000000'
-    
-    if visual_style is not None:
-        if type(visual_style) is dict:
-            vs.update(visual_style)
+    options.figure_size = figsize
+    if palette is None:
+        if self.__class__ == AnnData:
+            try:
+                pal = self.uns[str(groupby)+'_colors']
+            except:
+                if len(list(set((pred.variable)))) <= 20:
+                    pal = palettes.default_20
+                elif len(list(set((pred.variable)))) <= 28:
+                    pal = palettes.default_28
+                elif len(list(set((pred.variable)))) <= 102:
+                    pal = palettes.default_102
+                else:
+                    pal = None
+            
+            if pal is not None:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + scale_color_manual(values=(pal))
+                    + geom_line())
+            else:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + geom_line())
         else:
-            raise TypeError('Error of visual style needs to be a dictionary')
-    
-    p = igraph.plot(g, **vs)
-    
+            if len(list(set((pred.variable)))) <= 20:
+                pal = palettes.default_20
+            elif len(list(set((pred.variable)))) <= 28:
+                pal = palettes.default_28
+            elif len(list(set((pred.variable)))) <= 102:
+                pal = palettes.default_102
+            else:
+                pal = None
+            
+            if pal is not None:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + scale_color_manual(values=(pal))
+                    + geom_line())
+            else:
+                p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+                    + theme_classic()
+                    + xlab('number of cells')
+                    + ylab('number of clones')
+                    + ggtitle('rarefaction curve')
+                    + labs(color = groupby)
+                    + geom_line())
+    else:
+        p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
+             + theme_classic()
+             + xlab('number of cells')
+             + ylab('number of clones')
+             + ggtitle('rarefaction curve')
+             + labs(color = groupby)
+             + geom_line())
+    if save:
+        p.save(filename = 'figures/rarefaction'+str(save), height= plt.rcParams['figure.figsize'][0], width= plt.rcParams['figure.figsize'][1], units = 'in', dpi= plt.rcParams["savefig.dpi"])
+
     return(p)
 
-def plot_network(adata, basis = 'bcr', edges = True, **kwargs):
+def random_palette(n):
+    # a list of 900+colours
+    cols = list(sns.xkcd_rgb.keys())
+    # if max_colors_needed1 > len(cols):
+    cols2 = list(sns.color_palette('husl', n))
+    palette = random.sample(sns.xkcd_palette(cols) + cols2, n)
+    return(palette)
+
+def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
     using scanpy's plotting module to plot the network. Only thing i'm changing is the dfault options: basis = 'bcr' and edges = True
     Parameters
@@ -341,7 +346,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
 
-def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
+def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -376,6 +381,12 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
     ----------
         sectratype plot
     """
+
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+
     if self.__class__ == Dandelion:
         data = self.data.copy()
     else:
@@ -386,19 +397,19 @@ def spectratypeplot(self, variable, groupby, locus, figsize = (6, 4), width = No
 
     if 'locus' not in data.columns:
         raise AttributeError("Please ensure dataframe contains 'locus' column")
-    if 'clone_id' in data.columns:
+    if clonekey in data.columns:
         if clones_sep is None:
             scb = (0, '_')
         else:
             scb = (clones_sep[0], clones_sep[1])
         group = []
-        for x in data['clone_id']:
+        for x in data[str(clonekey)]:
             if scb[1] not in x:
                 warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
                 group.append(x)
             else:
                 group.append(x.split(scb[1])[scb[0]])
-        data['clone_group_id'] = group
+        data[str(clonekey)+'_group'] = group
 
     if type(locus) is not list:
         locus = [locus]

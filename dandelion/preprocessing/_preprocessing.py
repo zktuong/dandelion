@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 20:17:37
+# @Last Modified time: 2020-09-02 15:34:33
 
 import sys
 import os
@@ -10,21 +10,30 @@ import pandas as pd
 from subprocess import run
 from tqdm import tqdm
 import multiprocessing
+from multiprocessing import Pool
 from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
 from ..utilities._utilities import *
 from .ext._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
-from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_grid, theme_classic, theme
+from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 import re
 import scanpy as sc
+import functools
+try:
+    from scanpy import logging as logg
+except ImportError:
+    pass
 import numpy as np
 import scipy.stats
 import scrublet as scr
 from Bio import Align
+from rpy2.robjects.packages import importr, data
+from rpy2.rinterface import NULL
+from rpy2.robjects import pandas2ri, StrVector, FloatVector
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -83,7 +92,7 @@ def format_fasta(fasta, prefix = None, outdir = None):
     data['contig_id'] = [prefix+'_'+str(c) for c in data['contig_id']]
     data['barcode'] = [prefix+'_'+str(b).split('-')[0] for b in data['barcode']]
     out_anno = out_dir + os.path.basename(fasta).replace('.fasta', '_annotations.csv')
-    data.to_csv(out_anno, index= False)    
+    data.to_csv(out_anno, index= False)
 
 def format_fastas(fastas, prefixes = None, outdir = None):
     """
@@ -321,7 +330,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                     C_gene = C_gene.split('*')[0]
                 except:
                     pass
-            
+
             C_call, C_identity, C_sequence, C_germline, C_support, C_score, C_start, C_end, = {}, {}, {}, {}, {}, {}, {}, {}
             C_call[contig_name] = C_gene
             C_identity[contig_name] = C_ident
@@ -343,10 +352,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         if parallel:
             num_cores = multiprocessing.cpu_count()
             results = ()
-            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))                                    
+            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
             # transform list of dicts to dict
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
-            for r in range(0, len(results)):                
+            for r in range(0, len(results)):
                 _seq, _germ, _call, _ident, _support, _score, _start, _end = results[r]
                 seq.update(_seq)
                 germ.update(_germ)
@@ -377,7 +386,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
 
     aligner = Align.PairwiseAligner()
 
-    def two_gene_correction(self, i, dictionary):    
+    def two_gene_correction(self, i, dictionary):
         key1, key2 = dictionary.keys()
         seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -385,11 +394,11 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         score1 = alignments1.score
         score2 = alignments2.score
         if score1 == score2:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)
         if score1 > score2:
-            self.loc[i, 'c_call'] = str(key1)
+            self.at[i, 'c_call'] = str(key1)
         if score1 < score2:
-            self.loc[i, 'c_call'] = str(key2)
+            self.at[i, 'c_call'] = str(key2)
 
     def three_gene_correction(self, i, dictionary):
         key1, key2, key3 = dictionary.keys()
@@ -401,21 +410,21 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         score2 = alignments2.score
         score3 = alignments3.score
         if score1 == score2 == score3:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)
         elif score1 > score2 and score1 > score3:
-            self.loc[i, 'c_call'] = str(key1)
+            self.at[i, 'c_call'] = str(key1)
         elif score2 > score1 and score2 > score3:
-            self.loc[i, 'c_call'] = str(key2)
+            self.at[i, 'c_call'] = str(key2)
         elif score3 > score1 and score3 > score2:
-            self.loc[i, 'c_call'] = str(key3)
+            self.at[i, 'c_call'] = str(key3)
         elif score1 == score2 and score1 > score3:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)
         elif score1 > score2 and score1 == score3:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key3)
+            self.at[i, 'c_call'] = str(key1)+','+str(key3)
         elif score2 > score1 and score2 == score3:
-            self.loc[i, 'c_call'] = str(key2)+','+str(key3)
-                
-    def four_gene_correction(self, i, dictionary):    
+            self.at[i, 'c_call'] = str(key2)+','+str(key3)
+
+    def four_gene_correction(self, i, dictionary):
         key1, key2, key3, key4 = dictionary.keys()
         seq = self.loc[i, 'c_sequence_alignment'].replace('-', '')
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -427,36 +436,36 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         score3 = alignments3.score
         score4 = alignments4.score
         if score1 == score2 == score3 == score4:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)+','+str(key4)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)+','+str(key4)
         elif score1 > score2 and score1 > score3 and score1 > score4:
-            self.loc[i, 'c_call'] = str(key1)
+            self.at[i, 'c_call'] = str(key1)
         elif score2 > score1 and score2 > score3 and score2 > score4:
-            self.loc[i, 'c_call'] = str(key2)
+            self.at[i, 'c_call'] = str(key2)
         elif score3 > score1 and score3 > score2 and score3 > score4:
-            self.loc[i, 'c_call'] = str(key3)
+            self.at[i, 'c_call'] = str(key3)
         elif score4 > score1 and score4 > score2 and score4 > score3:
-            self.loc[i, 'c_call'] = str(key4)
+            self.at[i, 'c_call'] = str(key4)
         elif score1 == score2 and score1 > score3 and score1 > score4:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)
         elif score1 > score2 and score1 == score3 and score1 > score4:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key3)
+            self.at[i, 'c_call'] = str(key1)+','+str(key3)
         elif score1 > score2 and score1 > score3 and score1 == score4:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key4)
+            self.at[i, 'c_call'] = str(key1)+','+str(key4)
         elif score2 == score3 and score2 > score1 and score2 > score4:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key3)
+            self.at[i, 'c_call'] = str(key1)+','+str(key3)
         elif score2 == score4 and score2 > score1 and score2 > score3:
-            self.loc[i, 'c_call'] = str(key2)+','+str(key4)
+            self.at[i, 'c_call'] = str(key2)+','+str(key4)
         elif score3 == score4 and score3 > score1 and score3 > score2:
-            self.loc[i, 'c_call'] = str(key3)+','+str(key4)
+            self.at[i, 'c_call'] = str(key3)+','+str(key4)
         elif score1 == score2 == score3 and score1 > score4:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key3)
         elif score1 == score2 == score4 and score1 > score3:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key4)
+            self.at[i, 'c_call'] = str(key1)+','+str(key2)+','+str(key4)
         elif score1 == score3 == score4 and score1 > score2:
-            self.loc[i, 'c_call'] = str(key1)+','+str(key3)+','+str(key4)
+            self.at[i, 'c_call'] = str(key1)+','+str(key3)+','+str(key4)
         elif score2 == score3 == score4 and score2 > score1:
-            self.loc[i, 'c_call'] = str(key2)+','+str(key3)+','+str(key4)
-            
+            self.at[i, 'c_call'] = str(key2)+','+str(key3)+','+str(key4)
+
     def _correct_c_call(data, primers_dict=None):
         dat = data.copy()
         if primers_dict is None:
@@ -480,7 +489,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                     'IGLC6':'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA'}}
         else:
             primer_dict = primers_dict
-        
+
         for i in dat.index:
             if (dat.loc[i, 'c_call'] is not np.nan) & (dat.loc[i, 'c_call'] is not None):
                 for k in primer_dict:
@@ -488,7 +497,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                         if len(primer_dict[k]) == 2:
                             two_gene_correction(dat, i, primer_dict[k])
                         elif len(primer_dict[k]) == 3:
-                            three_gene_correction(dat, i, primer_dict[k])                        
+                            three_gene_correction(dat, i, primer_dict[k])
                         elif len(primer_dict[k]) == 4:
                             four_gene_correction(dat, i, primer_dict[k])
         return(dat)
@@ -516,7 +525,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     dat = _transfer_c(dat, c_scr, 'c_score')
     dat = _transfer_c(dat, c_ident, 'c_identity')
     dat = _transfer_c(dat, c_supp, 'c_support')
-    res_blast = pd.DataFrame(dat['c_call'])  
+    res_blast = pd.DataFrame(dat['c_call'])
 
     res_10x_sum = pd.DataFrame(res_10x['c_call'].value_counts(normalize=True)*100)
     res_blast_sum = pd.DataFrame(res_blast['c_call'].value_counts(normalize=True)*100)
@@ -569,7 +578,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         print(p)
 
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = False, extended = False, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = True, extended = False, verbose = False, *args):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -594,7 +603,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
     extended : bool
         whether or not to transfer additional 10X annotions to output file. Default is False.
     verbose :
-        whether or not to print the igblast command used in the terminal. Default is False.    
+        whether or not to print the igblast command used in the terminal. Default is False.
     *args
         passed to `dandelion.preprocessing.ext.assigngenes_igblast` and `dandelion.preprocessing.ext.makedb_igblast`.
     Returns
@@ -624,20 +633,20 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
             env = os.environ.copy()
             if germline is None:
                 try:
-                    gml = env['GERMLINE']            
+                    gml = env['GERMLINE']
                 except:
                     raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
                 gml = gml+'imgt/'+org+'/vdj/'
             else:
                 env['GERMLINE'] = germline
-                gml = germline            
+                gml = germline
             insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
             map_cellranger("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast_gap.tsv')), extended = extended)
             tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
             if not os.path.exists(tmpFolder):
                 os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))            
-        elif fileformat == 'changeo':            
+            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
+        elif fileformat == 'changeo':
             makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
 
 def map_cellranger(data, extended = False):
@@ -671,7 +680,7 @@ def map_cellranger(data, extended = False):
         dat['junction_10x_aa'] = pd.Series(junction_aa)
     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_dict = None, split_write_out = True, filtered = False, out_filename = None, verbose = False):
+def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_dict = None, split_write_out = True, filtered = True, out_filename = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -812,7 +821,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_)
+            res = Dandelion(dat_, initialize = False)
             # update with the personalized germline database
             res.update_germline(outDir+'filtered_contig_heavy'+germline_dict[fileformat], germline, org)
             create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
@@ -824,7 +833,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
             dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
             dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_)
+            res = Dandelion(dat_, initialize = False)
             # update with the personalized germline database
             res.update_germline(outDir+'all_contig_heavy'+germline_dict[fileformat], germline, org)
             create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
@@ -836,7 +845,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
         dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
         dat_ = _return_IGKV_IGLV(dat_)
-        res = Dandelion(dat_)
+        res = Dandelion(dat_, initialize = False)
         res.update_germline(outDir+'heavy_'+out_filename.replace('.tsv', '.fasta'), germline, org)
         create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
         print('   Saving corrected genotyped object')
@@ -844,7 +853,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
     # reset dat_
-    dat_ = res.data.copy()    
+    dat_ = res.data.copy()
 
     if plot:
         print('Returning summary plot')
@@ -929,7 +938,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
     else:
         return(res)
 
-def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr'):
+def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr', initialize_metadata = False):
     """
     Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
 
@@ -1116,7 +1125,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             # clone_field = schema.toReceptor(clone_field)
             # Define Receptor iterator
             receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
-        
+
         out = {}
         # Iterate over rows
         for key, records in tqdm(receptor_iter, desc = "   Building {} germline sequences".format(germ_types)):
@@ -1128,7 +1137,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
             else:
                 raise AttributeError('%s is not acceptable file format.' % fileformat)
-            
+
             if glines is not None:
                 # Add glines to Receptor record
                 annotations = {}
@@ -1147,13 +1156,39 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             datx = load_data(self.data)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
-            self.__init__(data = datx, germline = reference_dict)
+
+            if self.distance is not None:
+                dist_ = self.distance
+            else:
+                dist_ = None
+            if self.edges is not None:
+                edge_ = self.edges
+            else:
+                edge_ = None
+            if self.layout is not None:
+                layout_ = self.layout
+            else:
+                layout_ = None
+            if self.graph is not None:
+                graph_ = self.graph
+            else:
+                graph_ = None
+            if self.threshold is not None:
+                threshold_ = self.threshold
+            else:
+                threshold_ = None
+            self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
+            self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
-            output = Dandelion(data = datx, germline = reference_dict)
+            try:
+                output = Dandelion(data = datx, germline = reference_dict, initialize = True)
+            except:
+                output = Dandelion(data = datx, germline = reference_dict, initialize = False)
             return(output)
+        sleep(0.5)
         logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', updated germline alignment in contig-indexed clone table\n'
@@ -1231,7 +1266,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         # clone_field = schema.toReceptor(clone_field)
         # Define Receptor iterator
         receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
-        
+
         out = {}
         # Iterate over rows
         for key, records in tqdm(receptor_iter, desc = "   Building {} germline sequences".format(germ_types)):
@@ -1254,12 +1289,15 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 out.update({key:annotations})
         germline_df = pd.DataFrame.from_dict(out, orient = 'index')
 
-        out = Dandelion(data = file, germline = reference_dict)
+        try:
+            out = Dandelion(data = file, germline = reference_dict, initialize = True)
+        except:
+            out = Dandelion(data = file, germline = reference_dict, initialize = False)
         for x in germline_df.columns:
             out.data[x] = pd.Series(germline_df[x])
 
         if os.path.isfile(str(file)):
-            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)        
+            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file), os.path.basename(file).split('.tsv')[0], germ_types), sep = '\t', index = False)
         return(out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -1315,7 +1353,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     mito_genes = _adata.var_names.str.startswith('MT-')
     _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)
     _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
-    sc.pp.normalize_total(_adata)
+    sc.pp.normalize_total(_adata, target_sum = 1e4)
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
     _adata = _adata[:, _adata.var['highly_variable']]
@@ -1350,7 +1388,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, outdir=None, outFilePrefix=None, filtered=False):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1370,31 +1408,34 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     rescue_igh : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
-        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold. 
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.
     filter_lightchains : bool
         cells with multiple light chains will be marked to filter. Default is True.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.
-    outdir : str, optional
-        If specified, out file will be in this location
-    outFilePrefix : str, optional
-        If specified, the out file name will have this prefix
-    filtered : bool
-        If True, will create filenames with 'filtered_contig' as prefix. if False, will create filenames with 'all_contig' as prefix. ignored if outFilePrefix is specified.
+    parallel : bool
+        whether or not to use parallelization. Default is True.
+    save : str, optional
+        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     Returns
     -------
         V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
-    dat = load_data(data)
+    start = logg.info('Filtering BCRs')
+    if data.__class__ == Dandelion:
+        dat = load_data(data.data)
+    else:
+        dat = load_data(data)
     h = Tree()
     l = Tree()
     h_umi = Tree()
     h_dup = Tree()
     l_umi = Tree()
+    # l_dup = Tree()
     h_seq = Tree()
     l_seq = Tree()
-    poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-    
+    h_ccall = Tree()
+
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
 
@@ -1402,13 +1443,6 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         raise TypeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
 
     bcr_check = Tree()
-    for c in adata.obs_names:
-        if c in barcode:
-            bcr_check[c] = True
-        else:
-            bcr_check[c] = False
-    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
-    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
@@ -1417,13 +1451,19 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
-    dat['duplicate_count'] = 0
-    for b in tqdm(barcode, desc = 'Marking barcodes with poor quality BCRs and BCR doublets'):
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])        
+    dat['duplicate_count'] = 0    
+
+    global parallel_marking
+
+    def parallel_marking(b):
+        poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+    
+        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
         hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
-
+        hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
+    
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
         lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
@@ -1432,20 +1472,22 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         h_umi[b] = hc_umi
         h_seq[b] = hc_seq
         h_dup[b] = hc_dup
-
+        h_ccall[b] = hc_ccall
+    
         l[b] = lc_id
         l_umi[b] = lc_umi
         l_seq[b] = lc_seq
-        
+    
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
-            if len(list(set(h_seq[b]))) == 1:          
+            ccall = []
+            if len(list(set(h_seq[b]))) == 1:
                 highest_umi_h = max(h_umi[b])
                 highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
-                drop_contig.append(h[b][~highest_umi_h_idx[0]])                    
-                keep_hc_contig = h[b][highest_umi_h_idx[0]]
-                dat.loc[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][~highest_umi_h_idx[0]]))
-                    
+                keep_index_h = highest_umi_h_idx[0]
+                drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h+1 :])
+                keep_hc_contig = h[b][keep_index_h]
+                dat.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]))
                 hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
                 hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
                 hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
@@ -1455,34 +1497,59 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                 h_seq[b] = hc_seq
             if len(h[b]) > 1:
                 if rescue_igh:
-                    highest_umi = max(h_umi[b])
-                    lowest_umi = min(h_umi[b])
+                    highest_umi_h = max(h_umi[b])
+                    lowest_umi_h = min(h_umi[b])
+                    highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+                    keep_index_h = highest_umi_idx[0]
+                    umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
                     sum_umi = sum(h_umi[b]+h_dup[b])
-                    highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi]
                     if len(highest_umi_idx) > 1:
                         h_doublet.append(b)
                     if sum_umi < 4:
                         h_doublet.append(b)
-                    if highest_umi/lowest_umi < umi_foldchange_cutoff:
+                    if any(umi_test):
                         h_doublet.append(b)
-                    if len(highest_umi_idx) == 1 and highest_umi/lowest_umi >= umi_foldchange_cutoff:
-                        drop_contig.append(h[b][~highest_umi_idx[0]])
+                    if len(highest_umi_idx) == 1:
+                        other_umi_idx = [i for i, j in enumerate(h_umi[b]) if j != highest_umi_h]
+                        umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
+                        umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                        for otherindex in umi_test_dict:
+                            if umi_test_dict[otherindex]:
+                                drop_contig.append(h[b][otherindex])
+                                ccall.append(h_ccall[b][otherindex])
+                        if len(ccall) == 1: # experimental: see if this can pick up any naive IgM+IgD+ cells?
+                            try:
+                                call_list = list(h_ccall[b][keep_index_h])+ccall
+                                if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
+                                    dat.at[keep_hc_contig, 'c_call'] = 'IGHM|IGHD'
+                            except:
+                                pass
                 else:
                     h_doublet.append(b)
-
         if len(l[b]) > 1:
             if len(list(set(l_seq[b]))) == 1:
                 highest_umi_l = max(l_umi[b])
                 highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
-                drop_contig.append(l[b][~highest_umi_l_idx[0]])
-                keep_lc_contig = l[b][highest_umi_l_idx[0]]
-                dat.loc[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][~highest_umi_l_idx[0]]))
+                keep_index_l = highest_umi_l_idx[0]
+                drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l+1 :])
+                keep_lc_contig = l[b][keep_index_l]
+                dat.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]))
                 lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]                
+                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
                 l[b] = lc_id
                 l_umi[b] = lc_umi
                 l_seq[b] = lc_seq
-        
+            if len(list(set(l_seq[b]))) > 1:
+                # also apply the same cut off to multiple light chains
+                highest_umi_l = max(l_umi[b])
+                highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+                keep_index_l = highest_umi_l_idx[0]
+                other_umi_idx_l = [i for i, j in enumerate(l_umi[b]) if j != highest_umi_l]
+                umi_test_l = [highest_umi_l/x < umi_foldchange_cutoff for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]]
+                umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+                for otherindex in umi_test_dict_l:
+                    if umi_test_dict_l[otherindex]:
+                        drop_contig.append(l[b][otherindex])
         # marking doublets defined by light chains
         if (len(h[b]) == 1) & (len(l[b]) > 1):
             l_doublet.append(b)
@@ -1505,6 +1572,148 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
             j = j_dict[lc_id[0]]
             if 'IGH' in j:
                 poor_qual.append(b)
+        poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
+        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)    
+
+    if parallel: 
+        print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
+        with multiprocessing.Pool() as p:
+            result = p.map(parallel_marking, iter(barcode))
+        
+        pq, hd, ld ,dc = [], [], [], []
+        for r in result:
+            pq = pq + r[0]
+            hd = hd + r[1]
+            ld = ld + r[2]
+            dc = dc + r[3]
+    
+        poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
+
+    else:
+        poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+        
+        for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
+            hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+            hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
+            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
+            hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
+
+            lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+            lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+            # lc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['duplicate_count']]
+
+            h[b] = hc_id
+            h_umi[b] = hc_umi
+            h_seq[b] = hc_seq
+            h_dup[b] = hc_dup
+            h_ccall[b] = hc_ccall
+
+            l[b] = lc_id
+            l_umi[b] = lc_umi
+            l_seq[b] = lc_seq
+            # l_dup[b] = lc_dup
+
+            # marking doublets defined by heavy chains
+            if len(h[b]) > 1:
+                ccall = []
+                if len(list(set(h_seq[b]))) == 1:
+                    highest_umi_h = max(h_umi[b])
+                    highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+                    keep_index_h = highest_umi_h_idx[0]
+                    drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h+1 :])
+                    keep_hc_contig = h[b][keep_index_h]
+                    dat.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]))
+
+                    hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
+                    h[b] = hc_id
+                    h_umi[b] = hc_umi
+                    h_dup[b] = hc_dup
+                    h_seq[b] = hc_seq
+                if len(h[b]) > 1:
+                    if rescue_igh:
+                        highest_umi_h = max(h_umi[b])
+                        lowest_umi_h = min(h_umi[b])
+                        highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+                        keep_index_h = highest_umi_idx[0]
+
+                        umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
+                        sum_umi = sum(h_umi[b]+h_dup[b])
+                        if len(highest_umi_idx) > 1:
+                            h_doublet.append(b)
+                        if sum_umi < 4:
+                            h_doublet.append(b)
+                        if any(umi_test):
+                            h_doublet.append(b)
+                        if len(highest_umi_idx) == 1:
+                            other_umi_idx = [i for i, j in enumerate(h_umi[b]) if j != highest_umi_h]
+                            umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
+                            umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                            for otherindex in umi_test_dict:
+                                if umi_test_dict[otherindex]:
+                                    drop_contig.append(h[b][otherindex])
+                                    ccall.append(h_ccall[b][otherindex])
+                            if len(ccall) == 1: # experimental: see if this can pick up any naive IgM+IgD+ cells?
+                                try:
+                                    call_list = list(h_ccall[b][keep_index_h])+ccall
+                                    if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
+                                        dat.at[keep_hc_contig, 'c_call'] = 'IGHM|IGHD'
+                                except:
+                                    pass
+                    else:
+                        h_doublet.append(b)
+
+            if len(l[b]) > 1:
+                if len(list(set(l_seq[b]))) == 1:
+                    highest_umi_l = max(l_umi[b])
+                    highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+                    keep_index_l = highest_umi_l_idx[0]
+                    drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l+1 :])
+                    keep_lc_contig = l[b][keep_index_l]
+                    dat.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]))
+                    lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                    l[b] = lc_id
+                    l_umi[b] = lc_umi
+                    l_seq[b] = lc_seq
+                if len(list(set(l_seq[b]))) > 1:
+                    # also apply the same cut off to multiple light chains
+                    highest_umi_l = max(l_umi[b])
+                    highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+                    keep_index_l = highest_umi_l_idx[0]
+
+                    other_umi_idx_l = [i for i, j in enumerate(l_umi[b]) if j != highest_umi_l]
+                    umi_test_l = [highest_umi_l/x < umi_foldchange_cutoff for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]]
+                    umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+                    for otherindex in umi_test_dict_l:
+                        if umi_test_dict_l[otherindex]:
+                            drop_contig.append(l[b][otherindex])
+
+            # marking doublets defined by light chains
+            if (len(h[b]) == 1) & (len(l[b]) > 1):
+                l_doublet.append(b)
+            # marking poor bcr quality, defined as those with only light chains, those
+            # that were have conflicting assignment of locus and heavy/light V/J calls,
+            # and also those that are missing either v or j calls
+            if len(h[b]) < 1:
+                poor_qual.append(b)
+            if len(hc_id) > 0:
+                v = v_dict[hc_id[0]]
+                if 'IGH' not in v:
+                    poor_qual.append(b)
+                j = j_dict[hc_id[0]]
+                if 'IGH' not in j:
+                    poor_qual.append(b)
+            if len(lc_id) > 0:
+                v = v_dict[lc_id[0]]
+                if 'IGH' in v:
+                    poor_qual.append(b)
+                j = j_dict[lc_id[0]]
+                if 'IGH' in j:
+                    poor_qual.append(b)
 
     poorqual = Tree()
     hdoublet = Tree()
@@ -1532,8 +1741,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     adata.obs['filter_bcr_light'] = pd.Series(dict(ldoublet))
     adata.obs['filter_bcr_light'] = adata.obs['filter_bcr_light'].astype('category')
 
+    drop_contig = list(set(flatten(drop_contig)))
+
     filter_ids = []
     if filter_bcr:
+        print('Finishing up filtering')
         if not filter_lightchains:
             filter_ids = list(set(h_doublet + poor_qual))
         else:
@@ -1550,27 +1762,340 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
 
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
         _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
+        if _dat.shape[0] is 0:
+            raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching? Make sure that the transcriptome data does not contain any "-#" at the suffix.')
 
         if os.path.isfile(str(data)):
-            _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = None)
+            _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = False)
         else:
-            if filtered:
-                outFile_prefix = 'filtered_contig'
-            else:
-                outFile_prefix = 'all_contig'
+            if save is not None:
+                if save.endswith('.tsv'):
+                    _dat.to_csv(str(save), sep = '\t', index = False)
+                else:
+                    raise OSError('Please provide a file name that ends with .tsv')
+    else:
+        _dat = dat.copy()
 
-            if (outdir is None) & (outFilePrefix is not None):
-                _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', str(outFilePrefix)), sep = '\t', index = None)
-            elif (outdir is not None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
-            elif (outdir is None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tsv".format('dandelion/data', outFile_prefix), sep = '\t', index = None)
-            elif (outdir is not None) & (outFilePrefix is None):
-                _dat.to_csv("{}/{}_filtered.tsv".format(str(outdir), outFile_prefix), sep = '\t', index = None)
+    print('Initializing Dandelion object')
+    if data.__class__ == Dandelion:
+        out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
+    else:
+        out_dat = Dandelion(data = _dat, initialize = True)
+
+    adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
+    adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
+
+    barcodex = list(set(_dat['cell_id']))
+    for c in adata.obs_names:
+        if c in barcodex:
+            bcr_check[c] = True
+        else:
+            bcr_check[c] = False
+    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
+    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if filter_rna:
-        _adata = adata[~(adata.obs_names.isin(filter_ids))] # not saving the scanpy object because there's no need to at the moment
+        out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
     else:
-        _adata = adata.copy()
+        out_adata = adata.copy()
 
-    return(_dat, _adata)
+    logg.info(' finished', time=start,
+            deep=('Returning Dandelion and AnnData objects: \n'))
+    return(out_dat, out_adata)
+
+def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
+    """
+    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object
+    split_locus : bool
+        whether to return the results for heavy chain and light chain separately. Default is False.
+    region_definition : str, optional
+        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+    mutation_definition : str, optional
+        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+    frequency
+        whether to return the results a frequency or counts. Default is True (frequency).
+    combine
+        whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
+    Returns
+    ----------
+        `Dandelion` object with updated `.metadata` slot.
+    """
+    start = logg.info('Quantifying mutations')
+    sh = importr('shazam')
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    elif self.__class__ == pd.DataFrame or os.path.isfile(self):
+        dat = load_data(self)
+    pandas2ri.activate()
+    warnings.filterwarnings("ignore")
+
+    if region_definition is None:
+        reg_d = NULL
+    else:
+        reg_d = data(sh).fetch(region_definition)
+
+    if mutation_definition is None:
+        mut_d = NULL
+    else:
+        mut_d = data(sh).fetch(mutation_definition)
+
+    if split_locus is False:
+        try:
+            dat_r = pandas2ri.py2rpy(dat)
+        except:
+            dat = dat.fillna('')
+            dat_r = pandas2ri.py2rpy(dat)
+
+        results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        # pd_df = pandas2ri.rpy2py_dataframe(results)
+        pd_df = results.copy()
+    else:
+        dat_h = dat[dat['locus'] == 'IGH']
+        dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+
+        try:
+            dat_h_r = pandas2ri.py2rpy(dat_h)
+        except:
+            dat_h = dat_h.fillna('')
+            dat_h_r = pandas2ri.py2rpy(dat_h)
+
+        try:
+            dat_l_r = pandas2ri.py2rpy(dat_l)
+        except:
+            dat_l = dat_l.fillna('')
+            dat_l_r = pandas2ri.py2rpy(dat_l)
+
+        results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        # pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
+        # pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
+        pd_df = pd.concat([results_h, results_l])
+
+    pd_df.set_index('sequence_id', inplace = True, drop = False)
+    cols_to_return = pd_df.columns.difference(dat.columns) # this doesn't actually catch overwritten columns
+    if len(cols_to_return) < 1:
+        cols_to_return = list(filter(re.compile("mu_.*").match, [c for c in pd_df.columns]))
+    else:
+        cols_to_return = cols_to_return
+
+    res = {}
+    if self.__class__ == Dandelion:
+        for x in cols_to_return:
+            res[x] = list(pd_df[x])
+            self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
+        if split_locus is False:
+            metadata_ = self.data[['cell_id']+list(cols_to_return)]
+        else:
+            metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
+
+        for x in cols_to_return:
+            metadata_[x] = metadata_[x].astype(np.float32)
+
+        if split_locus is False:
+            metadata_ = metadata_.groupby('cell_id').sum()
+        else:
+            metadata_ = metadata_.groupby(['locus','cell_id']).sum()
+            metadatas = []
+            for x in list(set(self.data['locus'])):
+                tmp = metadata_.iloc[metadata_.index.isin([x], level='locus'),:]
+                tmp.index = tmp.index.droplevel()
+                tmp.columns = [c+'_'+str(x) for c in tmp.columns]
+                metadatas.append(tmp)
+            metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
+
+        metadata_.index.name = None
+
+        if self.metadata is None:
+            self.metadata = metadata_
+        else:
+            for x in metadata_.columns:
+                self.metadata[x] = pd.Series(metadata_[x])
+        logg.info(' finished', time=start,
+            deep=('Updated Dandelion object: \n'
+            '   \'data\', contig-indexed clone table\n'
+            '   \'metadata\', cell-indexed clone table\n'))
+    else:
+        for x in cols_to_return:
+            res[x] = list(pd_df[x])
+            dat[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
+
+        if self.__class__ == pd.DataFrame:
+            logg.info(' finished', time=start, deep=('Returning DataFrame\n'))
+            return(dat)
+        elif os.path.isfile(self):
+            logg.info(' finished', time=start, deep=('saving DataFrame at {}\n'.format(str(self))))
+            dat.to_csv(self, sep = '\t', index=False)
+
+def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
+    """
+    Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
+
+    Runs the following:
+    distToNearest
+        Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
+    findThreshold
+        automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method="gmm") or kernel density fit (threshold_method="density").
+
+    Parameters
+    ----------
+    self : Dandelion, DataFrame, str
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
+    manual_threshold : float, optional
+        value to manually plot in histogram.
+    model : str, optional
+        underlying SHM model, which must be one of c("ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat").
+    normalize_method : str, optional
+        method of normalization. The default is "len", which divides the distance by the length of the sequence group. If "none" then no normalization if performed.
+    threshold_method : str, optional
+        string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
+    edge : float, optional
+        upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
+    cross : list, array, optional
+        supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
+    subsample : int, optional
+        maximum number of distances to subsample to before threshold detection.
+    threshold_model : str, optional
+        allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
+    cutoff : str, optional
+        method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
+    sensitivity : float, optional
+        sensitivity required. Applies only when method="gmm" and cutoff="user".
+    specificity : float, optional
+        specificity required. Applies only when method="gmm" and cutoff="user".
+    ncpu : int, optional
+        number of cpus for parallelization. Default is all available cpus.
+    plot : bool
+        whether or not to return plot.
+    plot_group : str, optional
+        determines the fill color and facets.
+    figsize : tuple[float, float]
+        size of plot. Default is (4.5, 2.5).
+    *args
+        passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
+    Returns
+    ----------
+        plotnine plot showing histogram of length normalized ham model distance threshold.
+    """
+    start = logg.info('Calculating threshold')
+    sh = importr('shazam')
+    if self.__class__ == Dandelion:
+        dat = load_data(self.data)
+    elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
+        dat = load_data(self)
+    warnings.filterwarnings("ignore")
+    pandas2ri.activate()
+    if 'v_call_genotyped' in dat.columns:
+        v_call = 'v_call_genotyped'
+    else:
+        v_call = 'v_call'
+
+    if model is None:
+        model_ = 'ham'
+    else:
+        model_ = model
+
+    if normalize_method is None:
+        norm_ = 'len'
+    else:
+        norm_ = normalize_method
+
+    if threshold_method is None:
+        threshold_method_ = "density"
+    else:
+        threshold_method_ = threshold_method
+
+    if subsample is None:
+        subsample_ = NULL
+    else:
+        subsample_ = subsample
+
+    if ncpu is None:
+        ncpu_ = multiprocessing.cpu_count()
+    else:
+        ncpu_ = ncpu
+
+    dat_h = dat[dat['locus'] == 'IGH']
+
+    try:
+        dat_h_r = pandas2ri.py2rpy(dat_h)
+    except:
+        dat_h = dat_h.fillna('')
+        dat_h_r = pandas2ri.py2rpy(dat_h)
+
+    dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
+    # Find threshold using density method
+    dist = np.array(dist_ham['dist_nearest'])
+
+    if threshold_method_ is 'density':
+        if edge is None:
+            edge_ = 0.9
+        else:
+            edge_ = edge
+
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, subsample = subsample_, edge = edge_)
+    else:
+        if threshold_model is None:
+            threshold_model_ = "gamma-gamma"
+        else:
+            threshold_model_ = threshold_model
+
+        if cross is None:
+            cross_ = NULL
+        else:
+            cross_ = cross
+
+        if cutoff is None:
+            cutoff_ = 'optimal'
+        else:
+            cutoff_ = cutoff
+
+        if sensitivity is None:
+            sen_ = NULL
+        else:
+            sen_ = sensitivity
+
+        if specificity is None:
+            spc_ = NULL
+        else:
+            spc_ = specificity
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
+
+    threshold=np.array(dist_threshold.slots['threshold'])[0]
+
+    # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
+
+    if plot:
+        options.figure_size = figsize
+        if plot_group is None:
+            plot_group = 'sample_id'
+        else:
+            plot_group = plot_group
+        if manual_threshold is None:
+            tr = threshold
+        else:
+            tr = manual_threshold
+        print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
+             + theme_bw()
+             + xlab("Grouped Hamming distance")
+             + ylab("Count")
+             + geom_histogram(binwidth = 0.01)
+             + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
+             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
+             + facet_wrap('~'+str(plot_group), scales="free_y")
+             + theme(legend_position = 'none')))
+    else:
+        print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
+    if self.__class__ == Dandelion:
+        self.threshold = tr
+        logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'threshold\', threshold value for tuning clonal assignment\n'))
+    else:
+        output = Dandelion(dat)
+        output.threshold = tr
+        return(output)

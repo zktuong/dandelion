@@ -2,27 +2,24 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-13 20:42:38
+# @Last Modified time: 2020-08-13 21:37:32
 
 import os
 import sys
 import scanpy as sc
 import pandas as pd
-from pandas import DataFrame
 import numpy as np
 from tqdm import tqdm
 from ..utilities._utilities import *
+from ._network import *
 from collections import defaultdict
 from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
+from scipy.sparse import csr_matrix
 from distance import hamming
 import re
 import math
-import scipy
-from scipy.sparse.csgraph import minimum_spanning_tree
-import Levenshtein
 import networkx as nx
-import igraph
 from time import sleep
 import copy
 import functools
@@ -30,16 +27,12 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
-from rpy2.robjects.packages import importr, data
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, StrVector
 import warnings
 from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
-from plotnine import ggplot, geom_point, options, annotate, aes, xlab, ylab, facet_grid, theme_bw, geom_histogram, geom_vline, facet_grid, theme
 
-def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None):
+def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None, key_added = None):
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -48,17 +41,19 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
     self : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     identity : float
-        Junction similarity parameter. Default 0.85    
+        Junction similarity parameter. Default 0.85
     clustering_by : str, optional
         modes for clustering: 'nt' or 'aa'. None defaults to 'aa'.
     by_alleles : bool, optional
         Whether or not to collapse alleles to genes. None defaults to True.
     write_out : bool
-        If True, will write out airr/changeo file with clone_id column (default is False). file path and file name is determined by outdir and outFilePrefix options.
+        If True, will write out airr/changeo file with clone_id column (default is False). file path and file name is determined by outdir and outFilePrefix options..
     outdir : str, optional
         If specified, outfile will be in this location. None defaults to 'dandelion/data'.
     outFilePrefix : str, optional
         If specified, the outfile name will have this prefix. None defaults to 'dandelion_find_clones'
+    key_added : str, optional
+        If specified, this will be the column name for clones. None defaults to 'clone_id'
     Returns
     -------
         `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
@@ -70,6 +65,11 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         dat = load_data(self)
     dat_heavy = dat[dat['locus'] == 'IGH']
     pd.set_option('mode.chained_assignment', None)
+
+    if key_added is None:
+        clone_key = 'clone_id'
+    else:
+        clone_key = key_added
 
     # retrieve the J genes and J genes
     if by_alleles is None or ~by_alleles:
@@ -292,15 +292,15 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
                     # instead of converting to another tree, i will just make it a dictionary
                     clone_dict[v] = str(first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
     # add it to the original dataframes
-    dat_heavy['clone_id'] = pd.Series(clone_dict)
-    hclone = dict(zip(dat_heavy['cell_id'], dat_heavy['clone_id']))
+    dat_heavy[clone_key] = pd.Series(clone_dict)
+    hclone = dict(zip(dat_heavy['cell_id'], dat_heavy[clone_key]))
     hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell_id']]))
-    dat['clone_id'] = pd.Series(hlclone)
+    dat[clone_key] = pd.Series(hlclone)
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
     dat_light = dat[~(dat['locus'] == 'IGH')]
     # retrieve the J genes and J genes
-    for c in tqdm(list(set(dat_light['clone_id'])), desc = 'Refining clone assignment based on light chain pairing '):
-        dat_light_c = dat_light[dat_light['clone_id'] == c]
+    for c in tqdm(list(set(dat_light[clone_key])), desc = 'Refining clone assignment based on light chain pairing '):
+        dat_light_c = dat_light[dat_light[clone_key] == c]
         if dat_light_c.shape[0] > 1:
             if by_alleles is None or ~by_alleles:
                 if 'v_call_genotyped' in dat_light_c.columns:
@@ -490,7 +490,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
                 renamed_clone_dict_light = {}
                 for key, value in clone_dict_light.items():
                     renamed_clone_dict_light[key] = lclones_dict[value]
-                dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] = dat.loc[renamed_clone_dict_light.keys(), 'clone_id'] + '_' + pd.Series(renamed_clone_dict_light)
+                dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
@@ -518,583 +518,158 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
     if self.__class__ == Dandelion:
-        self.__init__(data = dat)
-    else:
-        out = Dandelion(data = dat)    
-        return(out)
-    
-
-def generate_network(self, distance_mode='weighted', aa_or_nt=None, clones_sep = None, weights = None, layout_option = None, *args, **kwds):
-    """
-    Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s). 
-    The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
-
-    Parameters
-    ----------
-    data : Dandelion, DataFrame, str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    distance_mode : str
-        The mode of calculating joint distance matrix for heavy and light chains. Default is 'weighted'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0..1 to bring the multiple layers of data into a single analysis.
-    aa_or_nt : str, optional
-        Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
-    clones_sep: tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
-    weights : tuple, optional
-        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
-    layout_option : str, optional
-        choice of layout algorithm. None defaults to fruchterman reingold layout.
-    *args and **kwds
-        passed to `igraph.graph.layout <https://igraph.org/python/doc/igraph.Graph-class.html>`__.
-    Returns
-    ----------
-        `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
-    """
-    start = logg.info('Generating network')
-    if self.__class__ == Dandelion:
-        dat = load_data(self.data)
-    else:
-        dat = load_data(self)
-    if 'clone_id' not in dat.columns:
-        raise TypeError('Data does not contain clone information. Please run find_clones.')
-
-    # re-initiate a Dandelion class object
-    out = Dandelion(dat)
-
-    # calculate distance
-    dat_h = dat[dat['locus'] == 'IGH']
-    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-    if aa_or_nt is None or aa_or_nt is 'aa':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
-    elif aa_or_nt == 'nt':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
-    else:
-        raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
-
-    # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
-    dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
-    dat_seq.set_index('cell_id', inplace = True)
-    light_seq_tree = Tree()
-    for key, value in seq_l.items():
-        k, v = value
-        light_seq_tree[k][key] = v
-    light_seq_tree2 = Tree()
-    for g in light_seq_tree:
-        second_key = []
-        for k2 in light_seq_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_seq_tree[g].items():
-            light_seq_tree2[g][second_key_dict[key]] = value
-    dat_seq['light'] = pd.Series(light_seq_tree2)
-    tmp_dat = dat_seq['light'].apply(pd.Series)
-    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-    dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
-    dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
-
-    # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
-    dmat = Tree()
-    for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):
-        seq_list = []
-        seq_list = [y for y in dat_seq[x]]
-        tdarray = np.array(seq_list).reshape(-1,1)
-        d_mat = squareform(pdist(tdarray,lambda x,y: Levenshtein.distance(x[0],y[0])))
-        dmat[x] = d_mat
-    dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
-    
-    n_ = len(dist_mat_list)
-    if distance_mode == 'simple':
-        total_dist = np.sum(dist_mat_list,axis=0)
-    if distance_mode == 'weighted':
-        weighted_matrix = []
-        if weights is None:
-            for w in range(0, n_):
-                weighted_matrix.append(1/n_ * dist_mat_list[w])
-            total_dist = sum(weighted_matrix)
+        if self.germline is not None:
+            germline_ = self.germline
         else:
-            if len(weights) == n_:                
-                for w in range(0, n_):
-                    weighted_matrix.append(weights[w] * dist_mat_list[w])
-                total_dist = sum(weighted_matrix)
-            else:
-                raise IndexError('Length of provided weights should be %s.' % int(n_))
-
-    # generate edge list
-    tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
-    tmp_clusterdist = Tree()
-    for i in out.metadata.index:
-        cx = out.metadata.loc[i,'clone_group_id']
-        tmp_clusterdist[cx][i].value = 1
-    tmp_clusterdist2 = {}
-    for x in tmp_clusterdist:
-        tmp_clusterdist2[x] = list(tmp_clusterdist[x])
-    cluster_dist = {}
-    for x in tmp_clusterdist2:
-        dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[x], tmp_clusterdist2[x]]
-        s1, s2 = dist_mat_.shape
-        if s1 > 1 and s2 >1:
-            cluster_dist[x] = dist_mat_
-    # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for each group/clone to connect the shortest path
-    mst_tree = mst(cluster_dist)
-    sleep(0.5)
-
-    edge_list = Tree()
-    for c in tqdm(mst_tree, desc = 'Generating edge list '):
-        G = nx.from_pandas_adjacency(mst_tree[c], create_using=nx.MultiDiGraph())
-        G.edges(data=True)
-        edge_list[c] = nx.to_pandas_edgelist(G)
-    sleep(0.5)
-    clone_ref = dict(out.metadata['clone_id'])
-    tmp_clone_tree = Tree()
-    for x in out.metadata.index:
-        tmp_clone_tree[clone_ref[x]][x].value = 1
-    tmp_clone_tree2 = Tree()
-    for x in tmp_clone_tree:
-        tmp_clone_tree2[x] = list(tmp_clone_tree[x])
-
-    tmp_clone_tree3 = Tree()
-    for x in tmp_clone_tree2:
-        tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
-        tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
-        tmp_.fillna(0, inplace = True)
-        tmp_clone_tree3[x] = tmp_
-
-    # here I'm using a temporary edge list to catch all cells that were identified as clones to forecfully link them up if they were clipped off during the mst step
-    tmp_edge_list = Tree()
-    for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
-        G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
-        G.edges(data=True)
-        tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-
-    edge_listx = pd.concat([edge_list[x] for x in edge_list])
-    edge_listx.index = [(s, t) for s, t in zip(edge_listx['source'],edge_listx['target'])]
-
-    tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
-    tmp_edge_listx.index = [(s, t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
-
-    edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-
-    for idx in edge_list_final.index:
-        edge_list_final.loc[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
-    # return the edge list
-    edge_list_final.reset_index(drop = True, inplace = True)
-
-    # and finally the vertex list which is super easy
-    vertices = pd.DataFrame(out.metadata.index)
-
-    # and now to actually generate the network
-    edges = [tuple(e) for e in edge_list_final.values]
-    edges_network = [tuple((e[0], e[1])) for e in edges]
-    graph = igraph.Graph.Formula()
-    graph.add_vertices(vertices['cell_id'])
-    graph.add_edges(edges_network) # may take a very long time if there's too many
-
-    if layout_option is not None:
-        layout = graph.layout_fruchterman_reingold()
+            germline_ = None
+        if self.distance is not None:
+            dist_ = self.distance
+        else:
+            dist_ = None
+        if self.edges is not None:
+            edge_ = self.edges
+        else:
+            edge_ = None
+        if self.layout is not None:
+            layout_ = self.layout
+        else:
+            layout_ = None
+        if self.graph is not None:
+            graph_ = self.graph
+        else:
+            graph_ = None
+        if self.threshold is not None:
+            threshold_ = self.threshold
+        else:
+            threshold_ = None
+        if ('clone_id' in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split_heavy_light = False)
+        elif ('clone_id' not in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+        else:
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key)
+        self.threshold = threshold_
     else:
-        layout = graph.layout(layout_option, *args, **kwds)
-    for x in out.metadata.columns:
-        graph.vs[x] = out.metadata[x]
-    graph.es['width'] = [0.8/(int(e[2]) + 1) for e in edges]
-    logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'data\', contig-indexed clone table\n'
-        '   \'metadata\', cell-indexed clone table\n'
-        '   \'distance\', heavy and light chain distance matrices\n'
-        '   \'edges\', network edges\n'
-        '   \'layout\', network layout\n'
-        '   \'graph\', network'))
-    if self.__class__ == Dandelion:
-        self.__init__(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
-    else:
-        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = layout, graph = graph)
+        out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
         return(out)
 
-def mst(mat):
-    """
-    Construct minimum spanning tree based on supplied matrix in dictionary.
 
-    Parameters
-    ----------
-    mat : dict
-        Dictionary containing numpy ndarrays.
-    Returns
-    ----------        
-        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
-    """
-    mst_tree = Tree()
-    for c in mat:
-        mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
-    return(mst_tree)
 
-def transfer_network(self, dandelion, keep_raw = True, neighbors_key = None):
+def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = None, bcr_key = None):
     """
-    Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.raw` slots with metadata and network.
+    Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
     Parameters
     ----------
     self : AnnData
-        `AnnData` object
+        `AnnData` object.
     dandelion : Dandelion
-        `Dandelion` object
-    keep_raw : bool
-        If True, will transfer the existing `.uns` slot to `.raw.uns`.
+        `Dandelion` object.
+    full_graph : bool
+        Whether or not to transfer the full graph (True) or trimmed graph (False).
     neighbors_key : str, optional
-        key for 'neighbors' slot in `.uns`
+        key for 'neighbors' slot in `.uns`.
+    rna_key : str, optional
+        prefix for stashed RNA connectivities and distances.
+    bcr_key : str, optional
+        prefix for stashed BCR connectivities and distances.
     Returns
     ----------
-        `AnnData` object with updated `.obs` `.uns`, `.obsm` (and `.raw`) slots with data from `Dandelion` object.
+        `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
 
     """
     start = logg.info('Transferring network')
-    if dandelion.edges is not None:
-        G = nx.from_pandas_edgelist(dandelion.edges, create_using=nx.MultiDiGraph(), edge_attr='weight')
+    if dandelion.edges is not None:        
+        if full_graph:
+            G = dandelion.graph[0]
+        else:
+            G = dandelion.graph[1]
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
-        df_connectivities = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
-        df_distances = pd.DataFrame(index = self.obs.index, columns = self.obs.index)
-        for x in connectivities.columns:
-            df_connectivities[x] = pd.Series(connectivities[x])
-        for x in distances.columns:
-            df_distances[x] = pd.Series(distances[x])
-        for x in df_distances.columns:
-            df_distances[x] = df_distances[x].apply(lambda x: 5/(x + 1))
-        df_connectivities.fillna(0, inplace = True)
-        df_distances.fillna(0, inplace = True)
-        df_connectivities_ = scipy.sparse.csr_matrix(df_connectivities.values, dtype = np.float32)
-        df_distances_ = scipy.sparse.csr_matrix(df_distances.values, dtype = np.float32)
+        A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
+        df_connectivities = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
+        df_distances = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
+        print('converting matrices')
+        df_connectivities.update(connectivities)
+        df_distances.update(distances)
 
+        df_connectivities_ = csr_matrix(df_connectivities.values, dtype = np.float32)
+        df_distances_ = csr_matrix(df_distances.values, dtype = np.float32)
+
+        print('Updating anndata slots')
         if neighbors_key is None:
             neighbors_key = "neighbors"
+            rna_neighbors_key = 'rna_'+neighbors_key
+            bcr_neighbors_key = 'rna_'+neighbors_key
+            if rna_neighbors_key not in self.uns:
+                self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
+            self.uns[bcr_neighbors_key] = {}
         if neighbors_key not in self.uns:
             raise ValueError("`edges=True` requires `pp.neighbors` to be run before.")
-    
-        if keep_raw:
-            self.raw.uns = copy.deepcopy(self.uns)
-            self.uns[neighbors_key]['connectivities'] = df_connectivities_
-            self.uns[neighbors_key]['distances'] = df_distances_
-            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+
+        if rna_key is None:
+            r_connectivities_key = 'rna_connectivities'
+            r_distances_key = 'rna_distances'
         else:
-            self.uns[neighbors_key]['connectivities'] = df_connectivities_
-            self.uns[neighbors_key]['distances'] = df_distances_
-            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+            r_connectivities_key = rna_key +'_connectivitites'
+            r_distances_key = rna_key +'_distances'
+
+        if bcr_key is None:
+            b_connectivities_key = 'bcr_connectivities'
+            b_distances_key = 'bcr_distances'
+        else:
+            b_connectivities_key = bcr_key +'_connectivitites'
+            b_distances_key = bcr_key +'_distances'
+
+        # stash_rna_connectivities:
+        if r_connectivities_key not in self.obsp:
+            try:
+                self.obsp[r_connectivities_key] = self.obsp["connectivities"].copy()
+                self.obsp[r_distances_key] = self.obsp["distances"].copy()
+            except:
+                self.obsp[r_connectivities_key] = self.uns[neighbors_key]["connectivities"]
+                self.obsp[r_distances_key] = self.uns[neighbors_key]["distances"]
+
+        # always overwrite the bcr slots
+        self.obsp['connectivities'] = df_connectivities_.copy()
+        self.obsp['distances'] = df_distances_.copy()
+        self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
+        self.obsp[b_distances_key] = self.obsp["distances"].copy()
+
+        self.uns[neighbors_key]['connectivities'] = df_connectivities_.copy()
+        self.uns[neighbors_key]['distances'] = df_distances_.copy()
+        self.uns[neighbors_key]['params'] = {'method':'bcr'}
+        self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()
 
     for x in dandelion.metadata.columns:
         self.obs[x] = pd.Series(dandelion.metadata[x])
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
-        coord = pd.DataFrame(np.array(dandelion.layout), index = dandelion.metadata.index)
+        if full_graph:
+            coord = pd.DataFrame.from_dict(dandelion.layout[0], orient = 'index')
+        else:
+            coord = pd.DataFrame.from_dict(dandelion.layout[1], orient = 'index')
         for x in coord.columns:
             tmp[x] = coord[x]
-        tmp[[1]] = tmp[[1]]*-1
+        # tmp[[1]] = tmp[[1]]*-1
         X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
         self.obsm['X_bcr'] = X_bcr
-    
+
     if (dandelion.edges is not None) and (dandelion.edges is not None):
-        if keep_raw:
-            logg.info(' finished', time=start,
-                deep=(
-                'updated `.obs` with `.metadata`\n'
-                'added to `.uns[\''+neighbors_key+'\']`\n'
-                '   \'distances\', cluster-weighted adjacency matrix\n'
-                '   \'connectivities\', cluster-weighted adjacency matrix\n'
-                'stored original .uns in .raw'))
-        else:
-            logg.info(' finished', time=start,
-                deep=('updated `.obs` with `.metadata`\n'
-                      'added to `.uns[\''+neighbors_key+'\']`\n'
-                '   \'distances\', cluster-weighted adjacency matrix\n'
-                '   \'connectivities\', cluster-weighted adjacency matrix'))
+        logg.info(' finished', time=start,
+            deep=('updated `.obs` with `.metadata`\n'
+                  'added to `.uns[\''+neighbors_key+'\']` and `.obsp`\n'
+                  '   \'distances\', cluster-weighted adjacency matrix\n'
+                  '   \'connectivities\', cluster-weighted adjacency matrix'))
     else:
         logg.info(' finished', time=start,
                 deep=('updated `.obs` with `.metadata`\n'))
 
-def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
-    """
-    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__. 
-
-    Parameters
-    ----------
-    self : Dandelion
-        `Dandelion` object
-    split_locus : bool
-        whether to return the results for heavy chain and light chain separately. Default is False.
-    region_definition : str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
-    mutation_definition : str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
-    frequency
-        whether to return the results a frequency or counts. Default is True (frequency).
-    combine
-        whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
-    Returns
-    ----------
-        `Dandelion` object with updated `.metadata` slot.
-    """
-    start = logg.info('Quantifying mutations')
-    sh = importr('shazam')
-    dat = load_data(self.data)
-    warnings.filterwarnings("ignore")
-
-    if region_definition is None:
-        reg_d = NULL
-    else:
-        reg_d = data(sh).fetch(region_definition)
-
-    if mutation_definition is None:
-        mut_d = NULL
-    else:
-        mut_d = data(sh).fetch(mutation_definition)
-
-    if split_locus is False:
-        try:
-            dat_r = pandas2ri.py2rpy(dat)
-        except:
-            dat = dat.fillna('')
-            dat_r = pandas2ri.py2rpy(dat)
-
-        results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        pd_df = pandas2ri.rpy2py_dataframe(results)
-    else:
-        dat_h = dat[dat['locus'] == 'IGH']
-        dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-
-        try:
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-        except:
-            dat_h = dat_h.fillna('')
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-
-        try:
-            dat_l_r = pandas2ri.py2rpy(dat_l)
-        except:
-            dat_l = dat_l.fillna('')
-            dat_l_r = pandas2ri.py2rpy(dat_l)
-
-        results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
-        pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
-        pd_df = pd.concat([pd_df_h, pd_df_l])
-
-    pd_df.set_index('sequence_id', inplace = True, drop = False)
-    cols_to_return = pd_df.columns.difference(dat.columns) # this doesn't actually catch overwritten columns
-    if len(cols_to_return) < 1:
-        cols_to_return = list(filter(re.compile("mu_.*").match, [c for c in pd_df.columns]))
-    else:
-        cols_to_return = cols_to_return
-    res = {}
-    for x in cols_to_return:
-        res[x] = list(pd_df[x])
-        self.data[x] = [str(r) for r in res[x]] # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option?
-    if split_locus is False:
-        metadata_ = self.data[['cell_id']+list(cols_to_return)]
-    else:
-        metadata_ = self.data[['locus', 'cell_id']+list(cols_to_return)]
-    
-    for x in cols_to_return:
-        metadata_[x] = metadata_[x].astype(np.float32)
-
-    if split_locus is False:
-        metadata_ = metadata_.groupby('cell_id').sum()
-    else:
-        metadata_ = metadata_.groupby(['locus','cell_id']).sum()
-        metadatas = []
-        for x in list(set(self.data['locus'])):
-            tmp = metadata_.iloc[metadata_.index.isin([x], level='locus'),:]
-            tmp.index = tmp.index.droplevel()
-            tmp.columns = [c+'_'+str(x) for c in tmp.columns]
-            metadatas.append(tmp)
-        metadata_ = functools.reduce(lambda x, y: pd.merge(x, y, left_index = True, right_index = True, how = 'outer'), metadatas)
-
-    metadata_.index.name = None
-    if self.metadata is None:
-        self.metadata = metadata_
-    else:
-        for x in metadata_.columns:
-            self.metadata[x] = pd.Series(metadata_[x])
-    logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'data\', contig-indexed clone table\n'
-        '   \'metadata\', cell-indexed clone table\n'))
-
-def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
-    """
-    Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
-    
-    Runs the following:        
-    distToNearest
-        Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
-    findThreshold
-        automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method="gmm") or kernel density fit (threshold_method="density").
-    
-    Parameters
-    ----------
-    self : Dandelion, DataFrame, str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    manual_threshold : float, optional
-        value to manually plot in histogram.
-    model : str, optional
-        underlying SHM model, which must be one of c("ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat").
-    normalize_method : str, optional
-        method of normalization. The default is "len", which divides the distance by the length of the sequence group. If "none" then no normalization if performed.
-    threshold_method : str, optional
-        string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
-    edge : float, optional
-        upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
-    cross : list, array, optional
-        supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
-    subsample : int, optional
-        maximum number of distances to subsample to before threshold detection.
-    threshold_model : str, optional
-        allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
-    cutoff : str, optional
-        method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
-    sensitivity : float, optional
-        sensitivity required. Applies only when method="gmm" and cutoff="user".
-    specificity : float, optional
-        specificity required. Applies only when method="gmm" and cutoff="user".
-    ncpu : int, optional
-        number of cpus for parallelization. Default is all available cpus.
-    plot : bool
-        whether or not to return plot.
-    plot_group : str, optional
-        determines the fill color and facets.
-    figsize : tuple[float, float]
-        size of plot. Default is (4.5, 2.5).
-    *args
-        passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
-    Returns
-    ----------
-        plotnine plot showing histogram of length normalized ham model distance threshold.
-    """
-    start = logg.info('Calculating threshold')
-    sh = importr('shazam')
-    if self.__class__ == Dandelion:
-        dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
-        dat = load_data(self)
-    warnings.filterwarnings("ignore")
-
-    if 'v_call_genotyped' in dat.columns:
-        v_call = 'v_call_genotyped'
-    else:
-        v_call = 'v_call'
-    
-    if model is None:
-        model_ = 'ham'
-    else:
-        model_ = model
-    
-    if normalize_method is None:
-        norm_ = 'len'
-    else:
-        norm_ = normalize_method
-    
-    if threshold_method is None:
-        threshold_method_ = "density"
-    else:
-        threshold_method_ = threshold_method
-    
-    if subsample is None:
-        subsample_ = NULL
-    else:
-        subsample_ = subsample
-    
-    if ncpu is None:
-        ncpu_ = multiprocessing.cpu_count()
-    else:
-        ncpu_ = ncpu
-
-    dat_h = dat[dat['locus'] == 'IGH']
-    
-    try:
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-    except:
-        dat_h = dat_h.fillna('')
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-
-    dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
-    # Find threshold using density method
-    c = StrVector(['dist_nearest'])
-
-    if threshold_method_ is 'density':
-        if edge is None:
-            edge_ = 0.9
-        else:
-            edge_ = edge
-            
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method_, subsample = subsample_, edge = edge_)
-    else:
-        if threshold_model is None:
-            threshold_model_ = "gamma-gamma"
-        else:
-            threshold_model_ = threshold_model
-        
-        if cross is None:
-            cross_ = NULL
-        else:
-            cross_ = cross
-        
-        if cutoff is None:
-            cutoff_ = 'optimal'
-        else:
-            cutoff_ = cutoff
-        
-        if sensitivity is None:
-            sen_ = NULL
-        else:
-            sen_ = sensitivity
-        
-        if specificity is None:
-            spc_ = NULL
-        else:
-            spc_ = specificity        
-        dist_threshold = sh.findThreshold(dist_ham.rx(True, c), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)        
-
-    threshold=np.array(dist_threshold.slots['threshold'])[0]
-    
-    dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
-    
-    if plot:
-        options.figure_size = figsize
-        if plot_group is None:
-            plot_group = 'sample_id'
-        else:
-            plot_group = plot_group
-        if manual_threshold is None:
-            tr = threshold
-        else:
-            tr = manual_threshold            
-        print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
-             + theme_bw() 
-             + xlab("Grouped Hamming distance")
-             + ylab("Count")
-             + geom_histogram(binwidth = 0.01)
-             + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
-             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
-             + facet_grid('~'+str(plot_group), scales="free_y")
-             + theme(legend_position = 'none')))      
-    else:
-        print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
-    if self.__class__ == Dandelion:
-        self.threshold = tr
-        logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'threshold\', threshold value for tuning clonal assignment\n'))
-    else:
-        output = Dandelion(dat)
-        output.threshold = tr
-        return(output)
-
-
-def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, verbose = False):
+def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, key_added = None, verbose = False):
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
-    
+
     Parameters
     ----------
     self : Dandelion, DataFrame, str
@@ -1129,6 +704,11 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
     else:
         nproc=ncpu
 
+    if key_added is None:
+        clone_key = 'clone_id'
+    else:
+        clone_key = key_added
+
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     else:
@@ -1137,7 +717,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         dat = load_data(self)
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-    
+
     if os.path.isfile(str(self)):
         if dirs is None:
             tmpFolder = "{}/tmp".format(os.path.dirname(self))
@@ -1163,7 +743,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, os.path.basename(self).split('.tsv')[0])
         l_file = "{}/{}_light.tsv".format(tmpFolder, os.path.basename(self).split('.tsv')[0])
         outfile = "{}/{}_clone.tsv".format(outFolder, os.path.basename(self).split('.tsv')[0])
-    else:        
+    else:
         if outFilePrefix is not None:
             out_FilePrefix = outFilePrefix
         else:
@@ -1175,7 +755,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
 
     dat_h.to_csv(h_file1, sep = '\t', index = False)
     dat_l.to_csv(l_file, sep = '\t', index = False)
-    
+
     if 'germline_alignment_d_mask' not in dat.columns:
         raise ValueError("Missing 'germline_alignment_d_mask' column in input file. Run create_germlines first.")
 
@@ -1204,31 +784,31 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
             '--dist', str(dist_),
             '--nproc', str(nproc),
             '--vf', v_field]
-    
+
     def clusterLinkage(cell_series, group_series):
         """
         Returns a dictionary of {cell_id : cluster_id} that identifies clusters of cells by analyzing their shared
-        features (group_series) using single linkage. 
-    
+        features (group_series) using single linkage.
+
         Arguments:
         cell_series (iter): iter of cell ids.
         group_series (iter): iter of group ids.
-    
+
         Returns:
         dict:  dictionary of {cell_id : cluster_id}.
         """
-    
+
         # assign initial clusters
         # initial_dict = {cluster1: [cell1], cluster2: [cell1]}
         initial_dict = {}
         for cell, group in zip(cell_series, group_series):
-            try:    
+            try:
                 initial_dict[group].append(cell)
             except KeyError:
                 initial_dict[group] = [cell]
-                   
+
         # naive single linkage clustering (ON^2 best case, ON^3 worst case) ...ie for cells with multiple light chains
-        # cluster_dict = {cluster1: [cell1, cell2]}, 2 cells belong in same group if they share 1 light chain 
+        # cluster_dict = {cluster1: [cell1, cell2]}, 2 cells belong in same group if they share 1 light chain
         while True:
             cluster_dict = {}
             for i, group in enumerate(initial_dict.keys()):
@@ -1239,21 +819,21 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
                         cluster_dict[cluster] = cluster_dict[cluster] + initial_dict[group]
                         del cluster_dict[i]
                         break
-            # break if clusters stop changing, otherwise restart 
+            # break if clusters stop changing, otherwise restart
             if len(cluster_dict.keys()) == len(initial_dict.keys()):
                 break
             else:
                 initial_dict = cluster_dict.copy()
-        
+
         # invert cluster_dict for return
         assign_dict = {cell:k for k,v in cluster_dict.items() for cell in set(v)}
-        
+
         return assign_dict
 
     def _lightCluster(heavy_file, light_file, out_file, doublets, fileformat):
         """
         Split heavy chain clones based on light chains
-    
+
         Arguments:
         heavy_file (str): heavy chain input file.
         light_file (str): light chain input file.
@@ -1278,11 +858,11 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
             umi_count = 'umi_count'
         else:
             sys.exit("Invalid format %s" % fileformat)
-    
+
         # read in heavy and light DFs
         heavy_df = pd.read_csv(heavy_file, dtype='object', na_values=['', 'None', 'NA'], sep='\t')
         light_df = pd.read_csv(light_file, dtype='object', na_values=['', 'None', 'NA'], sep='\t')
-    
+
         # column checking
         expected_heavy_columns = [cell_id, clone_id, v_call, j_call, junction_length, umi_count]
         if set(expected_heavy_columns).issubset(heavy_df.columns) is False:
@@ -1290,11 +870,11 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         expected_light_columns = [cell_id, v_call, j_call, junction_length, umi_count]
         if set(expected_light_columns).issubset(light_df.columns) is False:
             raise ValueError("Missing one or more columns in light chain file: " + ", ".join(expected_light_columns))
-    
+
         # Fix types
         heavy_df[junction_length] = heavy_df[junction_length].astype('int')
         light_df[junction_length] = light_df[junction_length].astype('int')
-    
+
         # filter multiple heavy chains
         if doublets == 'drop':
             heavy_df = heavy_df.drop_duplicates(cell_id, keep=False)
@@ -1303,23 +883,23 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         elif doublets == 'count':
             heavy_df[umi_count] = heavy_df[umi_count].astype('int')
             heavy_df = heavy_df.groupby(cell_id, sort=False).apply(lambda x: x.nlargest(1, umi_count))
-    
+
         # transfer clone IDs from heavy chain df to light chain df
         clone_dict = {v[cell_id]:v[clone_id] for k, v in heavy_df[[clone_id, cell_id]].T.to_dict().items()}
         light_df = light_df.loc[light_df[cell_id].apply(lambda x: x in clone_dict.keys()), ]
         light_df[clone_id] = light_df.apply(lambda row: clone_dict[row[cell_id]], axis = 1)
-    
+
         # generate a "cluster_dict" of CELL:CLONE dictionary from light df  (TODO: use receptor object V/J gene names)
         cluster_dict = clusterLinkage(light_df[cell_id],
                                     light_df.apply(lambda row:
                                                     getGene(row[v_call]) + ',' + \
                                                     getGene(row[j_call]) + ',' + \
                                                     str(row[junction_length]) + ',' + row[clone_id], axis=1))
-    
+
         # add assignments to heavy_df
         heavy_df = heavy_df.loc[heavy_df[cell_id].apply(lambda x: x in cluster_dict.keys()), :]
         heavy_df[clone_id] = heavy_df[clone_id] + '_' + heavy_df.apply(lambda row: str(cluster_dict[row[cell_id]]), axis=1)
-        
+
         # write heavy chains
         heavy_df.to_csv(out_file, sep='\t', index=False)
         return(heavy_df, light_df)
@@ -1327,37 +907,131 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd)
-    
+
     h_df, l_df = _lightCluster(h_file2, l_file, outfile, doublets=doublets, fileformat=fileformat)
 
     h_df = load_data(h_df)
     # create a dictionary for cell_id : clone_id from h_df
     linked_clones = dict(zip(h_df['cell_id'], h_df['clone_id']))
-    
-    # create a clone_reference 
+
+    # create a clone_reference
     clone_ref = list(set(h_df['clone_id']))
     clone_ref = [c.split('_')[1] if c is not np.nan else c for c in clone_ref]
     l_df = load_data(l_df)
 
     for x in l_df.index:
         if l_df.loc[x, 'clone_id'] in clone_ref:
-            l_df.loc[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
+            l_df.at[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
         else:
             try:
-                l_df.loc[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
+                l_df.at[x, 'clone_id'] = l_df.loc[x, 'cell_id']+'_notlinked'
             except:
                 pass
 
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
-    dat['clone_id'] = pd.Series(cloned_['clone_id'])
+    dat[str(clone_key)] = pd.Series(cloned_['clone_id'])
 
     if self.__class__ == Dandelion:
-        self.__init__(data = dat)
+        if self.germline is not None:
+            germline_ = self.germline
+        else:
+            germline_ = None
+        if self.distance is not None:
+            dist_ = self.distance
+        else:
+            dist_ = None
+        if self.edges is not None:
+            edge_ = self.edges
+        else:
+            edge_ = None
+        if self.layout is not None:
+            layout_ = self.layout
+        else:
+            layout_ = None
+        if self.graph is not None:
+            graph_ = self.graph
+        else:
+            graph_ = None
+        if self.threshold is not None:
+            threshold_ = self.threshold
+        else:
+            threshold_ = None
+
+        if ('clone_id' in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split_heavy_light = False)
+        elif ('clone_id' not in self.data.columns) and (clone_key is not None):
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+        else:
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key)
+        self.threshold = threshold_
     else:
-        out = Dandelion(data = dat)
+        if ('clone_id' in dat.columns) and (clone_key is not None):
+            out = Dandelion(data = dat, retrieve = clonekey, split_heavy_light = False)
+        elif ('clone_id' not in dat.columns) and (clone_key is not None):
+            out = Dandelion(data = dat, clone_key = clone_key)
+        else:
+            out = Dandelion(data = dat)
         return(out)
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'data\', contig-indexed clone table\n'
         '   \'metadata\', cell-indexed clone table\n'))
+
+def clone_size(self, max_size = None, clone_key = None, key_added = None):
+    """
+    Quantifies size of clones
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object
+    max_size : int, optional
+        The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
+    clone_key : str, optional
+        Column name specifying the clone_id column in metadata.
+    key_added : str, optional
+        Suffix to add to end of the output column.
+    Returns
+    ----------
+        `Dandelion` object with clone size columns annotated in `.metadata` slot.
+    """
+
+    start = logg.info('Quantifying clone sizes')
+    metadata_ = self.metadata.copy()
+
+    if clone_key is None:
+        clonekey = 'clone_id'
+    else:
+        clonekey = clone_key
+
+    clone_size = metadata_[str(clonekey)].value_counts()
+    clone_group_size = metadata_[str(clonekey)+'_group'].value_counts()
+
+    if max_size is not None:
+        clone_size_ = clone_size.astype('object')
+        clone_group_size_ = clone_group_size.astype('object')
+        for i in clone_size.index:
+            if clone_size.loc[i] >= max_size:
+                clone_size_.at[i] = '>= '+ str(max_size)
+        for i in clone_group_size.index:
+            if clone_group_size.loc[i] >= max_size:
+                clone_group_size_.at[i] = '>= '+ str(max_size)
+        clone_size_ = clone_size_.astype('category')
+        clone_group_size_ = clone_group_size_.astype('category')
+    else:
+        clone_size_ = clone_size.copy()
+        clone_group_size_ = clone_group_size.copy()
+
+    clone_size_dict = dict(clone_size_)
+    clone_group_size_dict = dict(clone_group_size_)
+
+    if key_added is None:
+        self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
+        self.metadata[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
+    else:
+        self.metadata[str(clonekey)+'_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [clone_size_dict[c] for c in metadata_[str(clonekey)]])))
+        self.metadata[str(clonekey)+'_group_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'metadata\', cell-indexed clone table'))

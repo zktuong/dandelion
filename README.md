@@ -2,6 +2,8 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
+Version = 0.0.11
+
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
 
@@ -11,7 +13,7 @@ Overview
 
 Illustration of the `Dandelion` class slots
 
-<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="494.5" height="435">
+<img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="471.0648" height="341.3572">
 
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/).
@@ -30,16 +32,15 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install distance python-Levenshtein joblib plotnine jupyter
+conda install distance scikit-bio joblib plotnine jupyter adjustText
 conda install -c bioconda igblast blast changeo presto
 
-# Use pip to install the following with --no-cache-dir if necessary
-pip install scanpy
-pip install scrublet
+# Use pip to install the following with --no-cache-dir --upgrade if necessary
+pip install networkx polyleven scrublet scanpy
 
 # install rpy2
 # If you prefer to use conda to manage R, then use:
-# conda install rpy2
+# conda install -c conda-forge rpy2
 pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 #
@@ -59,12 +60,17 @@ pip install git+https://github.com/zktuong/dandelion.git@devel
 
 dandelion also requires some R packages intalled.
 ```R
-install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam", "ggplot2"))
+install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam", "ggplot2", "vegan"))
 ```
 or the following if using conda to manage R:
 ```bash
 conda install -c bioconda r-optparse
-conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam 
+conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam r-vegan
+```
+
+The package should now be properly installed and when starting up jupyter notebook in the virtual environment, the kernel `python3` should work. Otherwise, you might need to add it manually:
+```R
+python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
 ```
 
 ## Required database
@@ -93,7 +99,6 @@ Python packages
 python==3.7.6 (conda-forge)
 numpy==1.18.4 (conda-forge)
 pandas==1.0.3 (conda-forge)
-python-Levenshtein==0.12.0 (conda-forge)
 distance==0.1.3 (conda-forge)
 joblib==0.14.1 (conda-forge)
 jupyter==1.0.0 (conda-forge)
@@ -101,20 +106,22 @@ scikit-learn==0.23.0 (conda-forge)
 numba==0.48.0 (conda-forge)
 pytables==3.6.1 (conda-forge)
 seaborn==0.10.1 (conda-forge)
-python-igraph==0.8.2 (conda-forge)
 leidenalg==0.8.0 (conda-forge)
 plotnine==0.6.0 (conda-forge)
+scikit-bio==0.5.6 (conda-forge)
 changeo==1.0.0 (bioconda)
 presto==0.6.0 (bioconda)
 
 # Other executables (through conda)
-blast>=2.5.0 (bioconda)
+blast>=2.10.0 (bioconda) # depends on the database version as well
 igblast==1.15.0 (bioconda)
 
 # pip
-anndata==0.7.1
+anndata>=0.7.1
 scanpy>=1.4.6
 scrublet==0.2.1
+polyleven>=0.5
+networkx>=2.4
 rpy2>=3.3.2
 ```
 
@@ -124,6 +131,7 @@ alakazam_1.0.1
 tigger_1.0.0
 airr_1.2.0
 shazam_1.0.0
+vegan_2.5-6
 ggplot2
 ```
 
