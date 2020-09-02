@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 16:32:57
+# @Last Modified time: 2020-09-02 16:34:02
 
 import sys
 import os
@@ -542,7 +542,7 @@ class Dandelion:
                 self.uns = uns
             else:
                 self.uns = {}
-                warnings.warn(UserWarning("Dictionary not provided to .uns slot. Replacing with empty dictionary.")
+                warnings.warn(UserWarning("Dictionary not provided to .uns slot. Replacing with empty dictionary."))
 
         if germline is not None:
             self.germline.update(germline)
