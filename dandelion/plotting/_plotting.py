@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 13:35:47
+# @Last Modified time: 2020-09-02 16:14:18
 
 import seaborn as sns
 import pandas as pd
@@ -51,7 +51,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
         clonekey = clone_key
     
     groups = list(set(metadata[groupby]))
-    metadata = metadata[metadata['has_bcr'] == True]
+    metadata = metadata[metadata['has_bcr'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:

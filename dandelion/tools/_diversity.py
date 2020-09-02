@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-31 21:26:26
+# @Last Modified time: 2020-09-02 16:14:25
 
 import pandas as pd
 import numpy as np
@@ -44,7 +44,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
         clonekey = clone_key
     
     groups = list(set(metadata[groupby]))
-    metadata = metadata[metadata['has_bcr'] == 'True']
+    metadata = metadata[metadata['has_bcr'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
