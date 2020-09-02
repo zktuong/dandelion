@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 18:53:25
+# @Last Modified time: 2020-09-02 11:18:07
 
 import sys
 import os
@@ -422,7 +422,10 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                         iso_d = defaultdict(int)
                         for c in x:
                             iso_d[c] += 1
+                        lc_y.append(re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ == 1])))
                         lc_y.append(re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ >= 2])))
+                    if '' in lc_y:
+                        lc_y = [x for x in lc_y if x != '']
                     lightchain[k] = [conversion_dict[y] for y in lc_y]
                 else:
                     lightchain[k] = '|'.join([conversion_dict[x] for x in light_c_call[k].lower().split('|')])
