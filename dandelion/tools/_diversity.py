@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 16:14:25
+# @Last Modified time: 2020-09-02 16:37:42
 
 import pandas as pd
 import numpy as np
@@ -170,7 +170,11 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 for i in range(0, n_resample):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
-                    _tab.drop('nan', inplace = True)
+                    if 'nan' in _tab.index or np.nan in _tab.index:
+                        try:
+                            _tab.drop('nan', inplace = True)
+                        except:
+                            _tab.drop(np.nan, inplace = True)
                     clonesizecounts = np.array(_tab)
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
@@ -199,7 +203,11 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 res2.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
-                _tab.drop('nan', inplace = True)
+                if 'nan' in _tab.index or np.nan in _tab.index:
+                    try:
+                        _tab.drop('nan', inplace = True)
+                    except:
+                        _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
@@ -319,7 +327,11 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                 for i in range(0, n_resample):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
-                    _tab.drop('nan', inplace = True)
+                    if 'nan' in _tab.index or np.nan in _tab.index:
+                        try:
+                            _tab.drop('nan', inplace = True)
+                        except:
+                            _tab.drop(np.nan, inplace = True)
                     clonesizecounts = np.array(_tab)
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
@@ -348,7 +360,11 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                 res2.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
-                _tab.drop('nan', inplace = True)
+                if 'nan' in _tab.index or np.nan in _tab.index:
+                    try:
+                        _tab.drop('nan', inplace = True)
+                    except:
+                        _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
@@ -468,7 +484,11 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                 for i in range(0, n_resample):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
-                    _tab.drop('nan', inplace = True)
+                    if 'nan' in _tab.index or np.nan in _tab.index:
+                        try:
+                            _tab.drop('nan', inplace = True)
+                        except:
+                            _tab.drop(np.nan, inplace = True)
                     clonesizecounts = np.array(_tab)
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
@@ -497,7 +517,11 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                 res2.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
-                _tab.drop('nan', inplace = True)
+                if 'nan' in _tab.index or np.nan in _tab.index:
+                    try:
+                        _tab.drop('nan', inplace = True)
+                    except:
+                        _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
