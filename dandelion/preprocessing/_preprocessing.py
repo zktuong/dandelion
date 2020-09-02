@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 11:20:22
+# @Last Modified time: 2020-09-02 12:04:57
 
 import sys
 import os
@@ -1419,7 +1419,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
     if data.__class__ == Dandelion:
-        dat = load_data(data.data, initialize = False)
+        dat = load_data(data.data)
     else:
         dat = load_data(data)
     h = Tree()

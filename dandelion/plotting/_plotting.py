@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-26 11:12:02
+# @Last Modified time: 2020-09-02 13:35:47
 
 import seaborn as sns
 import pandas as pd
@@ -24,8 +24,8 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
     Plots rarefaction curve for cell numbers vs clone size.
     Parameters
     ----------
-    self : Dandelion, AnnData
-        `Dandelion` or `AnnData` object.
+    self : AnnData
+        `AnnData` object.
     groupby : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : str, optional
@@ -51,7 +51,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
         clonekey = clone_key
     
     groups = list(set(metadata[groupby]))
-    metadata = metadata[metadata['has_bcr'] == 'True']
+    metadata = metadata[metadata['has_bcr'] == True]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
