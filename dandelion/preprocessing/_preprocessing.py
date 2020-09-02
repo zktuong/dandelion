@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 15:13:44
+# @Last Modified time: 2020-09-02 15:16:01
 
 import sys
 import os
@@ -1573,12 +1573,10 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     # rather than leaving a nan cell, i will create a 0 column for now
     dat['duplicate_count'] = 0    
 
-    if parallel:
-        print(__name__)
-        if __name__ == '__main__': 
-            print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
-            with multiprocessing.Pool() as p:
-                result = p.map(parallel_marking, iter(barcode))
+    if parallel: 
+        print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
+        with multiprocessing.Pool() as p:
+            result = p.map(parallel_marking, iter(barcode))
         
         pq, hd, ld ,dc = [], [], [], []
         for r in result:
