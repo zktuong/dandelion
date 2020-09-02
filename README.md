@@ -36,9 +36,7 @@ conda install distance scikit-bio joblib plotnine jupyter adjustText
 conda install -c bioconda igblast blast changeo presto
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
-pip install polyleven
-pip install scanpy
-pip install scrublet
+pip install networkx polyleven scrublet scanpy
 
 # install rpy2
 # If you prefer to use conda to manage R, then use:
@@ -123,6 +121,7 @@ anndata>=0.7.1
 scanpy>=1.4.6
 scrublet==0.2.1
 polyleven>=0.5
+networkx>=2.4
 rpy2>=3.3.2
 ```
 
