@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 15:04:07
+# @Last Modified time: 2020-09-02 15:08:40
 
 import sys
 import os
@@ -1388,6 +1388,126 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
+def parallel_marking(b):
+    poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+
+    hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+    hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
+    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
+    hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
+
+    lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+    lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+    
+    h[b] = hc_id
+    h_umi[b] = hc_umi
+    h_seq[b] = hc_seq
+    h_dup[b] = hc_dup
+    h_ccall[b] = hc_ccall
+
+    l[b] = lc_id
+    l_umi[b] = lc_umi
+    l_seq[b] = lc_seq
+
+    # marking doublets defined by heavy chains
+    if len(h[b]) > 1:
+        ccall = []
+        if len(list(set(h_seq[b]))) == 1:
+            highest_umi_h = max(h_umi[b])
+            highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+            keep_index_h = highest_umi_h_idx[0]
+            drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h+1 :])
+            keep_hc_contig = h[b][keep_index_h]
+            dat.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]))
+            hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
+            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
+            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
+            h[b] = hc_id
+            h_umi[b] = hc_umi
+            h_dup[b] = hc_dup
+            h_seq[b] = hc_seq
+        if len(h[b]) > 1:
+            if rescue_igh:
+                highest_umi_h = max(h_umi[b])
+                lowest_umi_h = min(h_umi[b])
+                highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
+                keep_index_h = highest_umi_idx[0]
+                umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
+                sum_umi = sum(h_umi[b]+h_dup[b])
+                if len(highest_umi_idx) > 1:
+                    h_doublet.append(b)
+                if sum_umi < 4:
+                    h_doublet.append(b)
+                if any(umi_test):
+                    h_doublet.append(b)
+                if len(highest_umi_idx) == 1:
+                    other_umi_idx = [i for i, j in enumerate(h_umi[b]) if j != highest_umi_h]
+                    umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
+                    umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                    for otherindex in umi_test_dict:
+                        if umi_test_dict[otherindex]:
+                            drop_contig.append(h[b][otherindex])
+                            ccall.append(h_ccall[b][otherindex])
+                    if len(ccall) == 1: # experimental: see if this can pick up any naive IgM+IgD+ cells?
+                        try:
+                            call_list = list(h_ccall[b][keep_index_h])+ccall
+                            if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
+                                dat.at[keep_hc_contig, 'c_call'] = 'IGHM|IGHD'
+                        except:
+                            pass
+            else:
+                h_doublet.append(b)
+    if len(l[b]) > 1:
+        if len(list(set(l_seq[b]))) == 1:
+            highest_umi_l = max(l_umi[b])
+            highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+            keep_index_l = highest_umi_l_idx[0]
+            drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l+1 :])
+            keep_lc_contig = l[b][keep_index_l]
+            dat.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]))
+            lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+            l[b] = lc_id
+            l_umi[b] = lc_umi
+            l_seq[b] = lc_seq
+        if len(list(set(l_seq[b]))) > 1:
+            # also apply the same cut off to multiple light chains
+            highest_umi_l = max(l_umi[b])
+            highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
+            keep_index_l = highest_umi_l_idx[0]
+            other_umi_idx_l = [i for i, j in enumerate(l_umi[b]) if j != highest_umi_l]
+            umi_test_l = [highest_umi_l/x < umi_foldchange_cutoff for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]]
+            umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+            for otherindex in umi_test_dict_l:
+                if umi_test_dict_l[otherindex]:
+                    drop_contig.append(l[b][otherindex])
+    # marking doublets defined by light chains
+    if (len(h[b]) == 1) & (len(l[b]) > 1):
+        l_doublet.append(b)
+    # marking poor bcr quality, defined as those with only light chains, those
+    # that were have conflicting assignment of locus and heavy/light V/J calls,
+    # and also those that are missing either v or j calls
+    if len(h[b]) < 1:
+        poor_qual.append(b)
+    if len(hc_id) > 0:
+        v = v_dict[hc_id[0]]
+        if 'IGH' not in v:
+            poor_qual.append(b)
+        j = j_dict[hc_id[0]]
+        if 'IGH' not in j:
+            poor_qual.append(b)
+    if len(lc_id) > 0:
+        v = v_dict[lc_id[0]]
+        if 'IGH' in v:
+            poor_qual.append(b)
+        j = j_dict[lc_id[0]]
+        if 'IGH' in j:
+            poor_qual.append(b)
+    poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
+    return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
+
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
@@ -1451,148 +1571,22 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
-    dat['duplicate_count'] = 0
-
-    def parallel_marking(b):
-        poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
-        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
-        hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
-        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
-        hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
-
-        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
-        lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-        # lc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['duplicate_count']]
-
-        h[b] = hc_id
-        h_umi[b] = hc_umi
-        h_seq[b] = hc_seq
-        h_dup[b] = hc_dup
-        h_ccall[b] = hc_ccall
-
-        l[b] = lc_id
-        l_umi[b] = lc_umi
-        l_seq[b] = lc_seq
-        # l_dup[b] = lc_dup
-
-        # marking doublets defined by heavy chains
-        if len(h[b]) > 1:
-            ccall = []
-            if len(list(set(h_seq[b]))) == 1:
-                highest_umi_h = max(h_umi[b])
-                highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
-                keep_index_h = highest_umi_h_idx[0]
-                drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h+1 :])
-                keep_hc_contig = h[b][keep_index_h]
-                dat.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]))
-
-                hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
-                hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
-                hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
-                h[b] = hc_id
-                h_umi[b] = hc_umi
-                h_dup[b] = hc_dup
-                h_seq[b] = hc_seq
-            if len(h[b]) > 1:
-                if rescue_igh:
-                    highest_umi_h = max(h_umi[b])
-                    lowest_umi_h = min(h_umi[b])
-                    highest_umi_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
-                    keep_index_h = highest_umi_idx[0]
-
-                    umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
-                    sum_umi = sum(h_umi[b]+h_dup[b])
-                    if len(highest_umi_idx) > 1:
-                        h_doublet.append(b)
-                    if sum_umi < 4:
-                        h_doublet.append(b)
-                    if any(umi_test):
-                        h_doublet.append(b)
-                    if len(highest_umi_idx) == 1:
-                        other_umi_idx = [i for i, j in enumerate(h_umi[b]) if j != highest_umi_h]
-                        umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1 :]]
-                        umi_test_dict = dict(zip(other_umi_idx, umi_test_))
-                        for otherindex in umi_test_dict:
-                            if umi_test_dict[otherindex]:
-                                drop_contig.append(h[b][otherindex])
-                                ccall.append(h_ccall[b][otherindex])
-                        if len(ccall) == 1: # experimental: see if this can pick up any naive IgM+IgD+ cells?
-                            try:
-                                call_list = list(h_ccall[b][keep_index_h])+ccall
-                                if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
-                                    dat.at[keep_hc_contig, 'c_call'] = 'IGHM|IGHD'
-                            except:
-                                pass
-                else:
-                    h_doublet.append(b)
-
-        if len(l[b]) > 1:
-            if len(list(set(l_seq[b]))) == 1:
-                highest_umi_l = max(l_umi[b])
-                highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
-                keep_index_l = highest_umi_l_idx[0]
-                drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l+1 :])
-                keep_lc_contig = l[b][keep_index_l]
-                dat.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]))
-                lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
-                l[b] = lc_id
-                l_umi[b] = lc_umi
-                l_seq[b] = lc_seq
-            if len(list(set(l_seq[b]))) > 1:
-                # also apply the same cut off to multiple light chains
-                highest_umi_l = max(l_umi[b])
-                highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
-                keep_index_l = highest_umi_l_idx[0]
-
-                other_umi_idx_l = [i for i, j in enumerate(l_umi[b]) if j != highest_umi_l]
-                umi_test_l = [highest_umi_l/x < umi_foldchange_cutoff for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1 :]]
-                umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
-                for otherindex in umi_test_dict_l:
-                    if umi_test_dict_l[otherindex]:
-                        drop_contig.append(l[b][otherindex])
-
-        # marking doublets defined by light chains
-        if (len(h[b]) == 1) & (len(l[b]) > 1):
-            l_doublet.append(b)
-        # marking poor bcr quality, defined as those with only light chains, those
-        # that were have conflicting assignment of locus and heavy/light V/J calls,
-        # and also those that are missing either v or j calls
-        if len(h[b]) < 1:
-            poor_qual.append(b)
-        if len(hc_id) > 0:
-            v = v_dict[hc_id[0]]
-            if 'IGH' not in v:
-                poor_qual.append(b)
-            j = j_dict[hc_id[0]]
-            if 'IGH' not in j:
-                poor_qual.append(b)
-        if len(lc_id) > 0:
-            v = v_dict[lc_id[0]]
-            if 'IGH' in v:
-                poor_qual.append(b)
-            j = j_dict[lc_id[0]]
-            if 'IGH' in j:
-                poor_qual.append(b)
-        poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
-        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
+    dat['duplicate_count'] = 0    
 
     if parallel:
-        print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
-        with multiprocessing.Pool() as p:
-            result = p.map(parallel_marking, iter(barcode))
+        if __name__ == '__main__': 
+            print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
+            with multiprocessing.Pool() as p:
+                result = p.map(parallel_marking, iter(barcode))
         
-        pq, hd, ld ,dc = [], [], [], []
-        for r in result:
-            pq = pq + r[0]
-            hd = hd + r[1]
-            ld = ld + r[2]
-            dc = dc + r[3]
+            pq, hd, ld ,dc = [], [], [], []
+            for r in result:
+                pq = pq + r[0]
+                hd = hd + r[1]
+                ld = ld + r[2]
+                dc = dc + r[3]
     
-        poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
+            poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
     else:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
         for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
