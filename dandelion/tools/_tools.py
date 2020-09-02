@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 17:24:42
+# @Last Modified time: 2020-09-02 18:08:00
 
 import os
 import sys
@@ -583,14 +583,14 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         if full_graph:
             G = dandelion.graph[0]
         else:
-            G = dandelion.graph[1]
-        edges = [(x,y,{"weight":z}) for x,y,z in zip(dandelion.edges['source'], dandelion.edges['target'], dandelion.edges['weight'])]
-        G.update(edges)
-        distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
-        connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
+            G = dandelion.graph[1]        
+        distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight', nonedge=np.nan)
+        connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight', nonedge=np.nan)
+        connectivities[~connectivities.isnull()] = 1
         A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
+        B = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
         df_connectivities = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
-        df_distances = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
+        df_distances = pd.DataFrame(B, index = self.obs_names, columns = self.obs_names)
         print('converting matrices')
         df_connectivities.update(connectivities)
         df_distances.update(distances)
