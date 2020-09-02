@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 15:08:40
+# @Last Modified time: 2020-09-02 15:13:44
 
 import sys
 import os
@@ -1574,21 +1574,24 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     dat['duplicate_count'] = 0    
 
     if parallel:
+        print(__name__)
         if __name__ == '__main__': 
             print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
             with multiprocessing.Pool() as p:
                 result = p.map(parallel_marking, iter(barcode))
         
-            pq, hd, ld ,dc = [], [], [], []
-            for r in result:
-                pq = pq + r[0]
-                hd = hd + r[1]
-                ld = ld + r[2]
-                dc = dc + r[3]
+        pq, hd, ld ,dc = [], [], [], []
+        for r in result:
+            pq = pq + r[0]
+            hd = hd + r[1]
+            ld = ld + r[2]
+            dc = dc + r[3]
     
-            poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
+        poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
+
     else:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+        
         for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
             hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
             hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
