@@ -2,12 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-14 17:39:34
+# @Last Modified time: 2020-09-02 14:21:47
 
 import pandas as pd
 import numpy as np
 import networkx as nx
-import Levenshtein
+from polyleven import levenshtein
 from ..utilities._utilities import *
 from networkx.utils import random_state
 from scipy.sparse import csr_matrix
@@ -22,7 +22,7 @@ except ImportError:
 
 def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, layout = None):
     """
-    Generates a levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
+    Generates a Levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
 
     Parameters
@@ -103,7 +103,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         seq_list = []
         seq_list = [y for y in dat_seq[x]]
         tdarray = np.array(seq_list).reshape(-1,1)
-        d_mat = squareform(pdist(tdarray,lambda x,y: Levenshtein.distance(x[0],y[0])))
+        d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
         dmat[x] = d_mat
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
