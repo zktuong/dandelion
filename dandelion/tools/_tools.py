@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-08-13 21:37:32
+# @Last Modified time: 2020-09-02 17:24:42
 
 import os
 import sys
@@ -584,6 +584,8 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
             G = dandelion.graph[0]
         else:
             G = dandelion.graph[1]
+        edges = [(x,y,{"weight":z}) for x,y,z in zip(dandelion.edges['source'], dandelion.edges['target'], dandelion.edges['weight'])]
+        G.update(edges)
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight')
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight=None)
         A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
