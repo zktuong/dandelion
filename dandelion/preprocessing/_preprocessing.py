@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 14:59:44
+# @Last Modified time: 2020-09-02 15:04:07
 
 import sys
 import os
@@ -10,6 +10,7 @@ import pandas as pd
 from subprocess import run
 from tqdm import tqdm
 import multiprocessing
+from multiprocessing import Pool
 from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
@@ -1452,7 +1453,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     # rather than leaving a nan cell, i will create a 0 column for now
     dat['duplicate_count'] = 0
 
-    def parallel_marking(b, dat = dat, h = h, h_umi = h_umi, h_seq = h_seq, h_dup = h_dup, h_ccall = h_ccall, l = l, l_umi = l_umi, l_seq = l_seq, rescue_igh = rescue_igh, umi_foldchange_cutoff = umi_foldchange_cutoff):
+    def parallel_marking(b):
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
 
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
@@ -1583,14 +1584,15 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
         with multiprocessing.Pool() as p:
             result = p.map(parallel_marking, iter(barcode))
-            pq, hd, ld ,dc = [], [], [], []
-            for r in result:
-                pq = pq + r[0]
-                hd = hd + r[1]
-                ld = ld + r[2]
-                fc = fc + r[3]
+        
+        pq, hd, ld ,dc = [], [], [], []
+        for r in result:
+            pq = pq + r[0]
+            hd = hd + r[1]
+            ld = ld + r[2]
+            dc = dc + r[3]
     
-        poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld ,dc
+        poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
     else:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
         for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
