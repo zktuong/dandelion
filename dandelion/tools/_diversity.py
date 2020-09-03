@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 12:51:50
+# @Last Modified time: 2020-09-03 13:58:42
 
 import pandas as pd
 import numpy as np
@@ -505,6 +505,8 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                             else:
                                 clonesizecounts_freqs = clonesizecounts / np.sum(clonesizecounts)
                                 g_c = -np.sum((clonesizecounts_freqs * np.log(clonesizecounts_freqs)) / np.log(len(clonesizecounts_freqs)))
+                        else:
+                            g_c = shannon(clonesizecounts)
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
@@ -546,7 +548,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                     else:
                         g_c = shannon(clonesizecounts)
                 else:
-                    g_c = 0
+                    g_c = np.nan
                 res1.update({g:g_c})
                 # vertex weighted degree distribution
                 # graphcounts = np.array(_dat['clone_degree'].value_counts())
@@ -587,7 +589,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
 
     if diversitykey not in self.uns:
         self.uns[diversitykey] = {}
-    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample, normalize = normalize)
     
     self.uns[diversitykey].update({'shannon':res})
 

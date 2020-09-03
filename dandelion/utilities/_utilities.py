@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 13:44:00
+# @Last Modified time: 2020-09-03 13:50:08
 
 import sys
 import os
@@ -679,13 +679,23 @@ class Dandelion:
     #     f.close()
     
     def write(self, filename='dandelion_data.pkl.pbz2'):
-        with bz2.BZ2File(filename, 'w') as f:
-            cPickle.dump(vdj, f)
+        if isBZIP(filename):
+            with bz2.BZ2File(filename, 'w') as f:
+                cPickle.dump(self, f)
+        else:
+            f = open(filename, 'wb')
+            cPickle.dump(self, f)
+            f.close()
 
 # def isGZIP(filename):
 #     if filename.split('.')[-1] == 'gz':
 #         return True
 #     return False    
+
+def isBZIP(filename):
+    if filename.split('.')[-1] == 'pbz2':
+        return True
+    return False    
 
 # def read(filename='dandelion_data.pkl'):
 #     if isGZIP(filename):
@@ -697,8 +707,11 @@ class Dandelion:
 #     return n
 
 def read(filename='dandelion_data.pkl.pbz2'):
-    data = bz2.BZ2File(filename, 'rb')
-    data = cPickle.load(data)
+    if isBZIP(filename):
+        data = bz2.BZ2File(filename, 'rb')
+        data = cPickle.load(data)
+    else:
+        data = cPickle.load(filename)
     return data
 
 def concat(arrays, check_unique = False):    
