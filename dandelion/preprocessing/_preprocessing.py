@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 10:11:24
+# @Last Modified time: 2020-09-03 10:57:49
 
 import sys
 import os
@@ -1560,33 +1560,33 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         # and also those that are missing either v or j calls.
         # if remove_poorqual option is true, the cells will be marked for filtering, otherwise only the BCR contigs will be dropped.
         if len(h[b]) < 1:
-            if dropcontig_over_filter:
+            if not dropcontig_over_filter:
                 poor_qual.append(b)
             else:
                 drop_contig.append(b)
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
             if 'IGH' not in v:
-                if dropcontig_over_filter:
+                if not dropcontig_over_filter:
                     poor_qual.append(b)
                 else:
                     drop_contig.append(b)
             j = j_dict[hc_id[0]]
             if 'IGH' not in j:
-                if dropcontig_over_filter:
+                if not dropcontig_over_filter:
                     poor_qual.append(b)
                 else:
                     drop_contig.append(b)
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
             if 'IGH' in v:
-                if dropcontig_over_filter:
+                if not dropcontig_over_filter:
                     poor_qual.append(b)
                 else:
                     drop_contig.append(b)
             j = j_dict[lc_id[0]]
             if 'IGH' in j:
-                if dropcontig_over_filter:
+                if not dropcontig_over_filter:
                     poor_qual.append(b)
                 else:
                     drop_contig.append(b)
@@ -1718,33 +1718,33 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
             # and also those that are missing either v or j calls.
             # if remove_poorqual option is true, the cells will be marked for filtering, otherwise only the BCR contigs will be dropped.
             if len(h[b]) < 1:
-                if dropcontig_over_filter:
+                if not dropcontig_over_filter:
                     poor_qual.append(b)
                 else:
                     drop_contig.append(b)
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
                 if 'IGH' not in v:
-                    if dropcontig_over_filter:
+                    if not dropcontig_over_filter:
                         poor_qual.append(b)
                     else:
                         drop_contig.append(b)
                 j = j_dict[hc_id[0]]
                 if 'IGH' not in j:
-                    if dropcontig_over_filter:
+                    if not dropcontig_over_filter:
                         poor_qual.append(b)
                     else:
                         drop_contig.append(b)
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
                 if 'IGH' in v:
-                    if dropcontig_over_filter:
+                    if not dropcontig_over_filter:
                         poor_qual.append(b)
                     else:
                         drop_contig.append(b)
                 j = j_dict[lc_id[0]]
                 if 'IGH' in j:
-                    if dropcontig_over_filter:
+                    if not dropcontig_over_filter:
                         poor_qual.append(b)
                     else:
                         drop_contig.append(b)
