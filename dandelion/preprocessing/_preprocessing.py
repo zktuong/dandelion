@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 15:34:33
+# @Last Modified time: 2020-09-03 10:11:24
 
 import sys
 import os
@@ -1388,7 +1388,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, dropcontig_over_filter=True, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1409,6 +1409,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
         related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.
+    dropcontig_over_filter : bool
+        related to whether or not to remove contig rather than filter the barcode. Default is True, i.e. BCR contigs will be filtered rather than cells. To be more conservative and filter any ambiguous cells, switch to False.
     filter_lightchains : bool
         cells with multiple light chains will be marked to filter. Default is True.
     filter_missing : bool
@@ -1555,23 +1557,39 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
             l_doublet.append(b)
         # marking poor bcr quality, defined as those with only light chains, those
         # that were have conflicting assignment of locus and heavy/light V/J calls,
-        # and also those that are missing either v or j calls
+        # and also those that are missing either v or j calls.
+        # if remove_poorqual option is true, the cells will be marked for filtering, otherwise only the BCR contigs will be dropped.
         if len(h[b]) < 1:
-            poor_qual.append(b)
+            if dropcontig_over_filter:
+                poor_qual.append(b)
+            else:
+                drop_contig.append(b)
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
             if 'IGH' not in v:
-                poor_qual.append(b)
+                if dropcontig_over_filter:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
             j = j_dict[hc_id[0]]
             if 'IGH' not in j:
-                poor_qual.append(b)
+                if dropcontig_over_filter:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
             if 'IGH' in v:
-                poor_qual.append(b)
+                if dropcontig_over_filter:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
             j = j_dict[lc_id[0]]
             if 'IGH' in j:
-                poor_qual.append(b)
+                if dropcontig_over_filter:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
         return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)    
 
@@ -1697,23 +1715,39 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
                 l_doublet.append(b)
             # marking poor bcr quality, defined as those with only light chains, those
             # that were have conflicting assignment of locus and heavy/light V/J calls,
-            # and also those that are missing either v or j calls
+            # and also those that are missing either v or j calls.
+            # if remove_poorqual option is true, the cells will be marked for filtering, otherwise only the BCR contigs will be dropped.
             if len(h[b]) < 1:
-                poor_qual.append(b)
+                if dropcontig_over_filter:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
                 if 'IGH' not in v:
-                    poor_qual.append(b)
+                    if dropcontig_over_filter:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
                 j = j_dict[hc_id[0]]
                 if 'IGH' not in j:
-                    poor_qual.append(b)
+                    if dropcontig_over_filter:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
                 if 'IGH' in v:
-                    poor_qual.append(b)
+                    if dropcontig_over_filter:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
                 j = j_dict[lc_id[0]]
                 if 'IGH' in j:
-                    poor_qual.append(b)
+                    if dropcontig_over_filter:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
 
     poorqual = Tree()
     hdoublet = Tree()
