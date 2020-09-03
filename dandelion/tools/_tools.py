@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 18:08:00
+# @Last Modified time: 2020-09-03 10:13:34
 
 import os
 import sys
@@ -588,7 +588,7 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight', nonedge=np.nan)
         connectivities[~connectivities.isnull()] = 1
         A = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
-        B = np.zeros(shape=(len(self.obs_names),len(self.obs_names)))
+        B = A.copy()
         df_connectivities = pd.DataFrame(A, index = self.obs_names, columns = self.obs_names)
         df_distances = pd.DataFrame(B, index = self.obs_names, columns = self.obs_names)
         print('converting matrices')

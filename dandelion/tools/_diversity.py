@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 16:37:42
+# @Last Modified time: 2020-09-03 10:13:20
 
 import pandas as pd
 import numpy as np
@@ -382,6 +382,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
 
         res_df = pd.DataFrame.from_dict([res1,res2]).T
         res_df.columns = ['clone_size_chao1', 'clone_degree_chao1']
+        res_df = pd.DataFrame(res_df['clone_size_chao1'])
         return(res_df)
 
     def transfer_chao1_estimates(self, chao1_results, groupby):
@@ -539,6 +540,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
 
         res_df = pd.DataFrame.from_dict([res1,res2]).T
         res_df.columns = ['clone_size_shannon', 'clone_degree_shannon']
+        res_df = pd.DataFrame(res_df['clone_size_shannon'])
         return(res_df)
 
     def transfer_shannon_entropy(self, shannon_results, groupby):
