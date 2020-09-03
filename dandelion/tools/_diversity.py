@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 12:02:22
+# @Last Modified time: 2020-09-03 12:24:35
 
 import pandas as pd
 import numpy as np
@@ -499,7 +499,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                     clonesizecounts = np.array(_tab)
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
-                        g_c = shannon(clonesizecounts)
+                        g_c = shannon(clonesizecounts)/np.log(len(clonesizecounts))
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
@@ -531,7 +531,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                         _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                if len(clonesizecounts) > 1:
+                if len(clonesizecounts) > 0:
                     if normalize:
                         g_c = shannon(clonesizecounts)/np.log(len(clonesizecounts))
                     else:
