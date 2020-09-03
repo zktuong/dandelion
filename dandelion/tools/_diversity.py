@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 10:13:20
+# @Last Modified time: 2020-09-03 12:02:22
 
 import pandas as pd
 import numpy as np
@@ -72,7 +72,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     logg.info(' finished', time=start,
             deep=('updated `.uns` with rarefaction curves.\n'))
 
-def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50):
+def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -94,6 +94,8 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
         Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
     n_resample : int
         Number of times to perform resampling. Default is 50.
+    normalize : bool
+        Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
@@ -110,9 +112,9 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
             return(diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
     if method == 'shannon':
         if update_obs_meta:
-            diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
+            diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize)
         else:
-            return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
+            return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize))
 
 def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
@@ -341,23 +343,23 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                     sizelist.append(g_c)
                 
                     # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    if len(graphcounts) > 0:
-                        g_c = chao1(graphcounts)
-                    else:
-                        g_c = np.nan
-                    graphlist.append(g_c)                
+                    # graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    # if len(graphcounts) > 0:
+                        # g_c = chao1(graphcounts)
+                    # else:
+                        # g_c = np.nan
+                    # graphlist.append(g_c)                
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
                     g_c = np.nan
                 res1.update({g:g_c})
-                g_c = sum(graphlist)/len(graphlist)
-                try:
-                    g_c = sum(graphlist)/len(graphlist)
-                except:
-                    g_c = np.nan
-                res2.update({g:g_c})
+                # g_c = sum(graphlist)/len(graphlist)
+                # try:
+                    # g_c = sum(graphlist)/len(graphlist)
+                # except:
+                    # g_c = np.nan
+                # res2.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
                 if 'nan' in _tab.index or np.nan in _tab.index:
@@ -373,16 +375,18 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                     g_c = np.nan
                 res1.update({g:g_c})
                 # vertex weighted degree distribution
-                graphcounts = np.array(_dat['clone_degree'].value_counts())
-                if len(graphcounts) > 0:
-                    g_c = chao1(graphcounts)
-                else:
-                    g_c = np.nan
-                res2.update({g:g_c})
+                # graphcounts = np.array(_dat['clone_degree'].value_counts())
+                # if len(graphcounts) > 0:
+                    # g_c = chao1(graphcounts)
+                # else:
+                    # g_c = np.nan
+                # res2.update({g:g_c})
 
-        res_df = pd.DataFrame.from_dict([res1,res2]).T
-        res_df.columns = ['clone_size_chao1', 'clone_degree_chao1']
-        res_df = pd.DataFrame(res_df['clone_size_chao1'])
+        # res_df = pd.DataFrame.from_dict([res1,res2]).T
+        # res_df.columns = ['clone_size_chao1', 'clone_degree_chao1']
+        res_df = pd.DataFrame.from_dict([res1]).T
+        res_df.columns = ['clone_size_chao1']
+        # res_df = pd.DataFrame(res_df['clone_size_chao1'])
         return(res_df)
 
     def transfer_chao1_estimates(self, chao1_results, groupby):
@@ -429,7 +433,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
         logg.info(' finished', time=start,
             deep=('updated `.uns` with Chao1 estimates.\n'))
 
-def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
+def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50, normalize = True):
     """
     Compute B cell clones Shannon entropy.
 
@@ -449,13 +453,15 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
     n_resample : int
         Number of times to perform resampling. Default is 50.
+    normalize : bool
+        Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Shannon entropy')
 
-    def shannon_entropy(self, groupby, clone_key = None, resample = True, n_resample = 50):
+    def shannon_entropy(self, groupby, clone_key = None, resample = True, n_resample = 50, normalize = True):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -499,23 +505,23 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                     sizelist.append(g_c)
                 
                     # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    if len(graphcounts) > 0:
-                        g_c = shannon(graphcounts)
-                    else:
-                        g_c = np.nan
-                    graphlist.append(g_c)                
+                    # graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    # if len(graphcounts) > 0:
+                        # g_c = shannon(graphcounts)
+                    # else:
+                        # g_c = np.nan
+                    # graphlist.append(g_c)                
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
                     g_c = np.nan
                 res1.update({g:g_c})
-                g_c = sum(graphlist)/len(graphlist)
-                try:
-                    g_c = sum(graphlist)/len(graphlist)
-                except:
-                    g_c = np.nan
-                res2.update({g:g_c})
+                # g_c = sum(graphlist)/len(graphlist)
+                # try:
+                    # g_c = sum(graphlist)/len(graphlist)
+                # except:
+                    # g_c = np.nan
+                # res2.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
                 if 'nan' in _tab.index or np.nan in _tab.index:
@@ -525,22 +531,26 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                         _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                if len(clonesizecounts) > 0:
-                    g_c = shannon(clonesizecounts)
+                if len(clonesizecounts) > 1:
+                    if normalize:
+                        g_c = shannon(clonesizecounts)/np.log(len(clonesizecounts))
+                    else:
+                        g_c = shannon(clonesizecounts)
                 else:
-                    g_c = np.nan
+                    g_c = 0
                 res1.update({g:g_c})
                 # vertex weighted degree distribution
-                graphcounts = np.array(_dat['clone_degree'].value_counts())
-                if len(graphcounts) > 0:
-                    g_c = shannon(graphcounts)
-                else:
-                    g_c = np.nan
-                res2.update({g:g_c})
+                # graphcounts = np.array(_dat['clone_degree'].value_counts())
+                # if len(graphcounts) > 0:
+                #     g_c = shannon(graphcounts)
+                # else:
+                #     g_c = np.nan
+                # res2.update({g:g_c})
 
-        res_df = pd.DataFrame.from_dict([res1,res2]).T
-        res_df.columns = ['clone_size_shannon', 'clone_degree_shannon']
-        res_df = pd.DataFrame(res_df['clone_size_shannon'])
+        # res_df = pd.DataFrame.from_dict([res1,res2]).T
+        # res_df.columns = ['clone_size_shannon', 'clone_degree_shannon']
+        res_df = pd.DataFrame.from_dict([res1]).T
+        res_df.columns = ['clone_size_shannon']
         return(res_df)
 
     def transfer_shannon_entropy(self, shannon_results, groupby):
@@ -576,13 +586,25 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         res_ = res.copy()
         transfer_shannon_entropy(self, res_, groupby)
         if self.__class__ == Dandelion:
-            logg.info(' finished', time=start,
-                deep=('updated `.metadata` and `.uns` with Shannon entropy.\n'))
+            if normalize:
+                logg.info(' finished', time=start,
+                    deep=('updated `.metadata` and `.uns` with normalized Shannon entropy.\n'))
+            else:
+                logg.info(' finished', time=start,
+                    deep=('updated `.metadata` and `.uns` with Shannon entropy.\n'))
         if self.__class__ == AnnData:
-            logg.info(' finished', time=start,
-                deep=('updated `.obs` and `.uns` with Shannon entropy.\n'))
+            if normalize:
+                logg.info(' finished', time=start,
+                    deep=('updated `.obs` and `.uns` with normalized Shannon entropy.\n'))
+            else:
+                logg.info(' finished', time=start,
+                    deep=('updated `.obs` and `.uns` with Shannon entropy.\n'))
     else:
         res_ = res.copy()        
         return(res_)
-        logg.info(' finished', time=start,
-            deep=('updated `.uns` with Shannon entropy.\n'))
+        if normalize:
+            logg.info(' finished', time=start,
+                deep=('updated `.uns` with normalized Shannon entropy.\n'))
+        else:
+            logg.info(' finished', time=start,
+                deep=('updated `.uns` with Shannon entropy.\n'))
