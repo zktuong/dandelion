@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 12:24:35
+# @Last Modified time: 2020-09-03 12:51:50
 
 import pandas as pd
 import numpy as np
@@ -499,7 +499,12 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                     clonesizecounts = np.array(_tab)
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
-                        g_c = shannon(clonesizecounts)/np.log(len(clonesizecounts))
+                        if normalize:
+                            if len(clonesizecounts) == 1:
+                                g_c = 0
+                            else:
+                                clonesizecounts_freqs = clonesizecounts / np.sum(clonesizecounts)
+                                g_c = -np.sum((clonesizecounts_freqs * np.log(clonesizecounts_freqs)) / np.log(len(clonesizecounts_freqs)))
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
@@ -533,7 +538,11 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
                     if normalize:
-                        g_c = shannon(clonesizecounts)/np.log(len(clonesizecounts))
+                        if len(clonesizecounts) == 1:
+                            g_c = 0
+                        else:
+                            clonesizecounts_freqs = clonesizecounts / np.sum(clonesizecounts)
+                            g_c = -np.sum((clonesizecounts_freqs * np.log(clonesizecounts_freqs)) / np.log(len(clonesizecounts_freqs)))
                     else:
                         g_c = shannon(clonesizecounts)
                 else:
