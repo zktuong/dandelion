@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 13:23:06
+# @Last Modified time: 2020-09-08 14:26:08
 
 import sys
 import os
@@ -1593,11 +1593,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 if 'IGL' in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    drop_contig.append(l[b])
-            else:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b]) # no/wrong annotations at all
+                    drop_contig.append(l[b])            
+
             if 'IGH' in j:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
@@ -1607,7 +1604,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
-            else:
+            
+            if v == np.nan or j == np.nan:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
                 drop_contig.append(l[b]) # no/wrong annotations at all
@@ -1772,11 +1770,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     if 'IGL' in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(l[b])
-                else:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b]) # no/wrong annotations at all
+                        drop_contig.append(l[b])                
 
                 if 'IGH' in j:
                     if filter_poorqualitybcr:
@@ -1787,7 +1781,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
-                else:
+                
+                if v == np.nan or j == np.nan:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b]) # no/wrong annotations at all
