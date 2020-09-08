@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 11:08:37
+# @Last Modified time: 2020-09-08 11:51:19
 
 import sys
 import os
@@ -1388,7 +1388,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr = False, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1405,6 +1405,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
     filter_rna : bool
         If True, `AnnData` object returned will be filtered. Default is True.
+    filter_poorqualitybcr : bool
+        If True, barcodes marked with poor quality BCR contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.
     rescue_igh : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
@@ -1451,33 +1453,33 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
-    dat['duplicate_count'] = 0    
+    dat['duplicate_count'] = 0
 
     global parallel_marking
 
     def parallel_marking(b):
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-    
+
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
         hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
         hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
-    
+
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
         lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-        
+
         h[b] = hc_id
         h_umi[b] = hc_umi
         h_seq[b] = hc_seq
         h_dup[b] = hc_dup
         h_ccall[b] = hc_ccall
-    
+
         l[b] = lc_id
         l_umi[b] = lc_umi
         l_seq[b] = lc_seq
-    
+
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
             ccall = []
@@ -1557,41 +1559,56 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         # that were have conflicting assignment of locus and heavy/light V/J calls,
         # and also those that are missing either v or j calls.
         if len(h[b]) < 1:
-            poor_qual.append(b)            
+            if filter_poorqualitybcr:
+                poor_qual.append(b)
+            else:
+                drop_contig.append(b)
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
             if 'IGH' not in v:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
             j = j_dict[hc_id[0]]
             if 'IGH' not in j:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
             if 'IGH' in v:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
             j = j_dict[lc_id[0]]
             if 'IGH' in j:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
-        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)    
+        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
 
-    if parallel: 
+    if parallel:
         print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
         with multiprocessing.Pool() as p:
             result = p.map(parallel_marking, iter(barcode))
-        
+
         pq, hd, ld ,dc = [], [], [], []
         for r in result:
             pq = pq + r[0]
             hd = hd + r[1]
             ld = ld + r[2]
             dc = dc + r[3]
-    
+
         poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
 
     else:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-        
+
         for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
             hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
             hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
@@ -1699,21 +1716,36 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
             # that were have conflicting assignment of locus and heavy/light V/J calls,
             # and also those that are missing either v or j calls.
             if len(h[b]) < 1:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                else:
+                    drop_contig.append(b)
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
                 if 'IGH' not in v:
-                    poor_qual.append(b)                    
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
                 j = j_dict[hc_id[0]]
                 if 'IGH' not in j:
-                    poor_qual.append(b)                    
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
                 if 'IGH' in v:
-                    poor_qual.append(b)                    
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
                 j = j_dict[lc_id[0]]
                 if 'IGH' in j:
-                    poor_qual.append(b)                    
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    else:
+                        drop_contig.append(b)
 
     poorqual = Tree()
     hdoublet = Tree()
@@ -1747,9 +1779,15 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     if filter_bcr:
         print('Finishing up filtering')
         if not filter_lightchains:
-            filter_ids = list(set(h_doublet + poor_qual))
+            if filter_poorqualitybcr:
+                filter_ids = list(set(h_doublet))
+            else:
+                filter_ids = list(set(h_doublet + poor_qual))
         else:
-            filter_ids = list(set(h_doublet + l_doublet + poor_qual))
+            if filter_poorqualitybcr:
+                filter_ids = list(set(h_doublet + l_doublet))
+            else:
+                filter_ids = list(set(h_doublet + l_doublet + poor_qual))
 
         if filter_rna:
             filter_ids = filter_ids + list(adata[adata.obs['filter_rna'] == True].obs_names)
