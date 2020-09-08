@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 13:50:08
+# @Last Modified time: 2020-09-08 14:36:37
 
 import sys
 import os
@@ -272,6 +272,7 @@ def setup_metadata(data, sep, clone_key = None):
     size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
     size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
     metadata_[str(clonekey)+'_by_size'] = [size_dict[c] for c in metadata_[str(clonekey)]]
+    metadata_[str(clonekey)+'_by_size'] = metadata_[str(clonekey)+'_by_size'].astype('category')
     return(metadata_)
 
 def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
