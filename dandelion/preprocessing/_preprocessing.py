@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 11:58:21
+# @Last Modified time: 2020-09-08 12:03:14
 
 import sys
 import os
@@ -1593,6 +1593,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
 
     if parallel:
+        poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+        
         print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
         with multiprocessing.Pool() as p:
             result = p.map(parallel_marking, iter(barcode))
