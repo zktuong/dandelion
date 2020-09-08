@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 12:49:53
+# @Last Modified time: 2020-09-08 12:54:35
 
 import sys
 import os
@@ -1568,34 +1568,29 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         if len(h[b]) < 1:
             if filter_poorqualitybcr:
                 poor_qual.append(b)
-            else:
-                drop_contig.append(b)
+            drop_contig.append(b)
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
             if 'IGH' not in v:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                else:
-                    drop_contig.append(b)
+                drop_contig.append(b)
             j = j_dict[hc_id[0]]
             if 'IGH' not in j:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                else:
-                    drop_contig.append(b)
+                drop_contig.append(b)
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
             if 'IGH' in v:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                else:
-                    drop_contig.append(b)
+                drop_contig.append(b)
             j = j_dict[lc_id[0]]
             if 'IGH' in j:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                else:
-                    drop_contig.append(b)
+                drop_contig.append(b)
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
         return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
 
@@ -1731,34 +1726,29 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             if len(h[b]) < 1:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                else:
-                    drop_contig.append(b)
+                drop_contig.append(b)
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    else:
-                        drop_contig.append(b)
+                    drop_contig.append(b)
                 j = j_dict[hc_id[0]]
                 if 'IGH' not in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    else:
-                        drop_contig.append(b)
+                    drop_contig.append(b)
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
                 if 'IGH' in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    else:
-                        drop_contig.append(b)
+                    drop_contig.append(b)
                 j = j_dict[lc_id[0]]
                 if 'IGH' in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    else:
-                        drop_contig.append(b)
+                    drop_contig.append(b)
 
     poorqual = Tree()
     hdoublet = Tree()
