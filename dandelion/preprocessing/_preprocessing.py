@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 13:02:37
+# @Last Modified time: 2020-09-08 13:21:01
 
 import sys
 import os
@@ -142,7 +142,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     figsize : tuple[float, float]
-        size of figure. Default is (4, 4).    
+        size of figure. Default is (4, 4).
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
@@ -1568,29 +1568,51 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         if len(h[b]) < 1:
             if filter_poorqualitybcr:
                 poor_qual.append(b)
-            drop_contig.append(b)
+            drop_contig.append(l[b])
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
             if 'IGH' not in v:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                drop_contig.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
             j = j_dict[hc_id[0]]
             if 'IGH' not in j:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                drop_contig.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
-            if 'IGH' in v:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(b)
-            j = j_dict[lc_id[0]]
-            if 'IGH' in j:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(b)
+                j = j_dict[lc_id[0]]
+                if 'IGH' in v:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                elif 'IGK' in v:
+                    if 'IGL' in j:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                else:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b]) # no/wrong annotations at all
+
+                if 'IGH' in j:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                elif 'IGL' in v:
+                    if 'IGK' in v:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                else:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b]) # no/wrong annotations at all
+
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
         return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
 
@@ -1726,29 +1748,50 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             if len(h[b]) < 1:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
-                drop_contig.append(b)
+                drop_contig.append(l[b])
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
+                j = j_dict[hc_id[0]]
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    drop_contig.append(b)
-                j = j_dict[hc_id[0]]
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
                 if 'IGH' not in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    drop_contig.append(b)
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
+                j = j_dict[lc_id[0]]
                 if 'IGH' in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    drop_contig.append(b)
-                j = j_dict[lc_id[0]]
+                    drop_contig.append(l[b])
+                elif 'IGK' in v:
+                    if 'IGL' in j:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                else:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b]) # no/wrong annotations at all
+
                 if 'IGH' in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    drop_contig.append(b)
+                    drop_contig.append(l[b])
+                elif 'IGL' in v:
+                    if 'IGK' in v:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                else:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b]) # no/wrong annotations at all
 
     poorqual = Tree()
     hdoublet = Tree()
