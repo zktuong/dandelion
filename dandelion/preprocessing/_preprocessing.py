@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 13:21:01
+# @Last Modified time: 2020-09-08 13:23:06
 
 import sys
 import os
@@ -1584,34 +1584,33 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 drop_contig.append(h[b])
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
-                j = j_dict[lc_id[0]]
-                if 'IGH' in v:
+            j = j_dict[lc_id[0]]
+            if 'IGH' in v:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+            elif 'IGK' in v:
+                if 'IGL' in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
-                elif 'IGK' in v:
-                    if 'IGL' in j:
-                        if filter_poorqualitybcr:
-                            poor_qual.append(b)
-                        drop_contig.append(l[b])
-                else:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b]) # no/wrong annotations at all
-
-                if 'IGH' in j:
+            else:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b]) # no/wrong annotations at all
+            if 'IGH' in j:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+            elif 'IGL' in v:
+                if 'IGK' in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
-                elif 'IGL' in v:
-                    if 'IGK' in v:
-                        if filter_poorqualitybcr:
-                            poor_qual.append(b)
-                        drop_contig.append(l[b])
-                else:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b]) # no/wrong annotations at all
+            else:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b]) # no/wrong annotations at all
 
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
         return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
