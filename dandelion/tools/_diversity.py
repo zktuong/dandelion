@@ -2,19 +2,18 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 15:02:43
+# @Last Modified time: 2020-09-08 18:30:10
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
-from scipy.special import comb
+from scipy.special import gammaln
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
-from rpy2.robjects.packages import importr
-from rpy2.robjects import pandas2ri
 from tqdm import tqdm
 import warnings
+
 def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     """
     Returns rarefaction predictions for cell numbers vs clone size.
@@ -33,8 +32,6 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
         `Dandelion` object with updated `.uns` slot or `AnnData` object with updated `.uns` slot with 'rarefaction` dictionary.
     """
     start = logg.info('Constructing rarefaction curve')
-    veg = importr('vegan')
-    pandas2ri.activate()
     
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
@@ -57,18 +54,30 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
     res_ = res_[~(res_.sum(axis = 1) == 0)]    
 
-    dat = pandas2ri.py2rpy(res_)
-    out = veg.rarecurve(dat, step = 10, sample = 1000, label = False)
-    y = pd.DataFrame([o for o in out], index = res_.index)
-    pred = pd.DataFrame([np.append(np.arange(1, s, 10),s) for s in res_.sum(axis = 1)], index = res_.index)
+    # set up for calculating rarefaction
+    tot = res_.apply(sum, axis = 1)
+    S = res_.apply(lambda x: x[x > 0].shape[0], axis = 1)
+    nr = res_.shape[0]
+
+    # append the results to a dictionary
+    rarecurve = {}
+    for i in range(0, nr):
+        n = np.arange(1, tot[i], step = 10)
+        if (n[-1:] != tot[i]):
+            n = np.append(n, tot[i])
+        rarecurve[res_.index[i]] = [rarefun(np.array(res_.iloc[i,]), z) for z in n]
+    y = pd.DataFrame([rarecurve[c] for c in rarecurve]).T
+    pred = pd.DataFrame([np.append(np.arange(1, s, 10),s) for s in res_.sum(axis = 1)], index = res_.index).T
+
     if diversity_key is None:
         diversitykey = 'diversity'
     else:
         diversitykey = diversity_key
 
-    if diversitykey not in self.uns:
-        self.uns[diversitykey] = {}
-    self.uns[diversitykey] = {'rarefaction_cells_x':pred, 'rarefaction_clones_y':y}
+    if self.__class__ == AnnData:
+        if diversitykey not in self.uns:
+            self.uns[diversitykey] = {}
+        self.uns[diversitykey] = {'rarefaction_cells_x':pred, 'rarefaction_clones_y':y}
     logg.info(' finished', time=start,
             deep=('updated `.uns` with rarefaction curves.\n'))
 
@@ -247,31 +256,35 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
+    res  = gini_indices(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+
     if diversity_key is None:
         diversitykey = 'diversity'
     else:
         diversitykey = diversity_key
 
-    if diversitykey not in self.uns:
-        self.uns[diversitykey] = {}
-    res  = gini_indices(self, groupby, clone_key, resample = resample, n_resample = n_resample)
-    
-    self.uns[diversitykey].update({'gini':res})
+    if self.__class__ == AnnData:
+        if diversitykey not in self.uns:
+            self.uns[diversitykey] = {}
+        self.uns[diversitykey].update({'gini':res})
 
     if update_obs_meta:
         res_ = res.copy()
         transfer_gini_indices(self, res_, groupby)
         if self.__class__ == Dandelion:
             logg.info(' finished', time=start,
-                deep=('updated `.metadata` and `.uns` with Gini indices.\n'))
-        if self.__class__ == AnnData:
+                deep=('updated `.metadata` with Gini indices.\n'))
+        elif self.__class__ == AnnData:
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Gini indices.\n'))
     else:
-        res_ = res.copy()        
+        res_ = res.copy()                
+        if self.__class__ == AnnData:
+            logg.info(' finished', time=start,
+                deep=('updated `.uns` with Gini indices.\n'))
+        else:
+            logg.info(' finished', time=start)
         return(res_)
-        logg.info(' finished', time=start,
-            deep=('updated `.uns` with Gini indices.\n'))
 
 def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
@@ -309,8 +322,6 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
         else:
             clonekey = clone_key
 
-        if 'clone_degree' not in metadata.columns:
-            raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
             
@@ -341,25 +352,11 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
-                
-                    # vertex weighted degree distribution
-                    # graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    # if len(graphcounts) > 0:
-                        # g_c = chao1(graphcounts)
-                    # else:
-                        # g_c = np.nan
-                    # graphlist.append(g_c)                
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
                     g_c = np.nan
-                res1.update({g:g_c})
-                # g_c = sum(graphlist)/len(graphlist)
-                # try:
-                    # g_c = sum(graphlist)/len(graphlist)
-                # except:
-                    # g_c = np.nan
-                # res2.update({g:g_c})
+                res1.update({g:g_c})                
             else:
                 _tab = _dat[clonekey].value_counts()
                 if 'nan' in _tab.index or np.nan in _tab.index:
@@ -374,19 +371,10 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-                # vertex weighted degree distribution
-                # graphcounts = np.array(_dat['clone_degree'].value_counts())
-                # if len(graphcounts) > 0:
-                    # g_c = chao1(graphcounts)
-                # else:
-                    # g_c = np.nan
-                # res2.update({g:g_c})
-
-        # res_df = pd.DataFrame.from_dict([res1,res2]).T
-        # res_df.columns = ['clone_size_chao1', 'clone_degree_chao1']
+                
         res_df = pd.DataFrame.from_dict([res1]).T
         res_df.columns = ['clone_size_chao1']
-        # res_df = pd.DataFrame(res_df['clone_size_chao1'])
+
         return(res_df)
 
     def transfer_chao1_estimates(self, chao1_results, groupby):
@@ -406,32 +394,36 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
             self.obs = metadata.copy()
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
-
+    
+    res  = chao1_estimates(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    
     if diversity_key is None:
         diversitykey = 'diversity'
     else:
         diversitykey = diversity_key
 
-    if diversitykey not in self.uns:
-        self.uns[diversitykey] = {}
-    res  = chao1_estimates(self, groupby, clone_key, resample = resample, n_resample = n_resample)
-    
-    self.uns[diversitykey].update({'chao1':res})
+    if self.__class__ == AnnData:
+        if diversitykey not in self.uns:
+            self.uns[diversitykey] = {}
+        self.uns[diversitykey].update({'chao1':res})
 
     if update_obs_meta:
         res_ = res.copy()
         transfer_chao1_estimates(self, res_, groupby)
         if self.__class__ == Dandelion:
             logg.info(' finished', time=start,
-                deep=('updated `.metadata` and `.uns` with Chao1 estimates.\n'))
-        if self.__class__ == AnnData:
+                deep=('updated `.metadata` with Chao1 estimates.\n'))
+        elif self.__class__ == AnnData:
             logg.info(' finished', time=start,
                 deep=('updated `.obs` and `.uns` with Chao1 estimates.\n'))
     else:
-        res_ = res.copy()        
+        res_ = res.copy()                
+        if self.__class__ == AnnData:
+            logg.info(' finished', time=start,
+                deep=('updated `.uns` with Chao1 estimates.\n'))
+        else:
+            logg.info(' finished', time=start)
         return(res_)
-        logg.info(' finished', time=start,
-            deep=('updated `.uns` with Chao1 estimates.\n'))
 
 def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50, normalize = True):
     """
@@ -471,8 +463,6 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         else:
             clonekey = clone_key
 
-        if 'clone_degree' not in metadata.columns:
-            raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
             
@@ -509,26 +499,12 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                             g_c = shannon(clonesizecounts)
                     else:
                         g_c = np.nan
-                    sizelist.append(g_c)
-                
-                    # vertex weighted degree distribution
-                    # graphcounts = np.array(_dat['clone_degree'].value_counts())
-                    # if len(graphcounts) > 0:
-                        # g_c = shannon(graphcounts)
-                    # else:
-                        # g_c = np.nan
-                    # graphlist.append(g_c)                
+                    sizelist.append(g_c)              
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
                     g_c = np.nan
-                res1.update({g:g_c})
-                # g_c = sum(graphlist)/len(graphlist)
-                # try:
-                    # g_c = sum(graphlist)/len(graphlist)
-                # except:
-                    # g_c = np.nan
-                # res2.update({g:g_c})
+                res1.update({g:g_c})                
             else:
                 _tab = _dat[clonekey].value_counts()
                 if 'nan' in _tab.index or np.nan in _tab.index:
@@ -550,18 +526,12 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-                # vertex weighted degree distribution
-                # graphcounts = np.array(_dat['clone_degree'].value_counts())
-                # if len(graphcounts) > 0:
-                #     g_c = shannon(graphcounts)
-                # else:
-                #     g_c = np.nan
-                # res2.update({g:g_c})
-
-        # res_df = pd.DataFrame.from_dict([res1,res2]).T
-        # res_df.columns = ['clone_size_shannon', 'clone_degree_shannon']
+                
         res_df = pd.DataFrame.from_dict([res1]).T
-        res_df.columns = ['clone_size_shannon']
+        if normalize:
+            res_df.columns = ['clone_size_normalized_shannon']
+        else:
+            res_df.columns = ['clone_size_shannon']
         return(res_df)
 
     def transfer_shannon_entropy(self, shannon_results, groupby):
@@ -582,16 +552,17 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
+    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample, normalize = normalize)
+
     if diversity_key is None:
         diversitykey = 'diversity'
     else:
         diversitykey = diversity_key
 
-    if diversitykey not in self.uns:
-        self.uns[diversitykey] = {}
-    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample, normalize = normalize)
-    
-    self.uns[diversitykey].update({'shannon':res})
+    if self.__class__ == AnnData:
+        if diversitykey not in self.uns:
+            self.uns[diversitykey] = {}
+        self.uns[diversitykey].update({'shannon':res})
 
     if update_obs_meta:
         res_ = res.copy()
@@ -599,11 +570,11 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         if self.__class__ == Dandelion:
             if normalize:
                 logg.info(' finished', time=start,
-                    deep=('updated `.metadata` and `.uns` with normalized Shannon entropy.\n'))
+                    deep=('updated `.metadata` with normalized Shannon entropy.\n'))
             else:
                 logg.info(' finished', time=start,
-                    deep=('updated `.metadata` and `.uns` with Shannon entropy.\n'))
-        if self.__class__ == AnnData:
+                    deep=('updated `.metadata` with Shannon entropy.\n'))
+        elif self.__class__ == AnnData:
             if normalize:
                 logg.info(' finished', time=start,
                     deep=('updated `.obs` and `.uns` with normalized Shannon entropy.\n'))
@@ -612,10 +583,37 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                     deep=('updated `.obs` and `.uns` with Shannon entropy.\n'))
     else:
         res_ = res.copy()        
-        return(res_)
-        if normalize:
-            logg.info(' finished', time=start,
-                deep=('updated `.uns` with normalized Shannon entropy.\n'))
+        if self.__class__ == AnnData:
+            if normalize:
+                logg.info(' finished', time=start,
+                    deep=('updated `.uns` with normalized Shannon entropy.\n'))
+            else:
+                logg.info(' finished', time=start,
+                    deep=('updated `.uns` with Shannon entropy.\n'))
         else:
-            logg.info(' finished', time=start,
-                deep=('updated `.uns` with Shannon entropy.\n'))
+            logg.info(' finished', time=start)
+        return(res_)
+
+def chooseln(N, k):
+    '''
+    R's lchoose in python
+    from https://stackoverflow.com/questions/21767690/python-log-n-choose-k
+    '''
+    return gammaln(N+1) - gammaln(N-k+1) - gammaln(k+1)
+
+def rarefun(y, sample):
+    '''
+    Adapted from rarefun from vegan:
+    https://github.com/vegandevs/vegan/blob/master/R/rarefy.R
+    '''
+    res = []
+    y = y[y > 0]
+    J = np.sum(y)
+    ldiv = chooseln(J, sample)
+    for d in J - y:        
+        if d < sample:
+            res.append(0)
+        else:
+            res.append(np.exp(chooseln(d, sample) - ldiv))
+    out = np.sum(1 - np.array(res))
+    return(out)
