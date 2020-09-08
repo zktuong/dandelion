@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 14:26:08
+# @Last Modified time: 2020-09-08 18:48:19
 
 import sys
 import os
@@ -31,9 +31,12 @@ import numpy as np
 import scipy.stats
 import scrublet as scr
 from Bio import Align
-from rpy2.robjects.packages import importr, data
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, StrVector, FloatVector
+try:
+    from rpy2.robjects.packages import importr, data
+    from rpy2.rinterface import NULL
+    from rpy2.robjects import pandas2ri, StrVector, FloatVector
+except ImportError:
+    pass
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
