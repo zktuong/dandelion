@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 12:30:41
+# @Last Modified time: 2020-09-08 12:49:53
 
 import sys
 import os
@@ -1831,7 +1831,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     if data.__class__ == Dandelion:
         out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
     else:
-        out_dat = Dandelion(data = _dat, initialize = True)
+        try:
+            out_dat = Dandelion(data = _dat, initialize = True)
+        except:
+            warnings.warn(UserWarning('Dandelion metadata cannot be initialized due to duplicate barcodes. Reccomending to run function with filter_bcr = True.'))
+            out_dat = Dandelion(data = _dat, initialize = False)
 
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
