@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 11:51:19
+# @Last Modified time: 2020-09-08 11:58:21
 
 import sys
 import os
@@ -1780,14 +1780,14 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         print('Finishing up filtering')
         if not filter_lightchains:
             if filter_poorqualitybcr:
-                filter_ids = list(set(h_doublet))
-            else:
                 filter_ids = list(set(h_doublet + poor_qual))
+            else:
+                filter_ids = list(set(h_doublet))
         else:
             if filter_poorqualitybcr:
-                filter_ids = list(set(h_doublet + l_doublet))
-            else:
                 filter_ids = list(set(h_doublet + l_doublet + poor_qual))
+            else:
+                filter_ids = list(set(h_doublet + l_doublet))
 
         if filter_rna:
             filter_ids = filter_ids + list(adata[adata.obs['filter_rna'] == True].obs_names)
