@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 12:18:59
+# @Last Modified time: 2020-09-08 12:30:41
 
 import sys
 import os
@@ -123,7 +123,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, dirs = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -142,13 +142,15 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     figsize : tuple[float, float]
-        size of figure. Default is (4, 4).
+        size of figure. Default is (4, 4).    
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
     parallel : bool
         whether or not to use parallelization. Default is True.
+    ncpu : int
+        number of cores to use if parallel is True. Default is all available - 1.
     dirs : str, optional
         location of both input and output files. None defaults to dandelion/data folder.
     verbose : bool
@@ -350,7 +352,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         fh.close()
 
         if parallel:
-            num_cores = multiprocessing.cpu_count()
+            if ncpu is None:
+                num_cores = multiprocessing.cpu_count()-1
+            else:
+                num_cores = int(ncpu)
             results = ()
             results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
             # transform list of dicts to dict
@@ -1388,7 +1393,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, ncpu = None, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1417,6 +1422,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.
     parallel : bool
         whether or not to use parallelization. Default is True.
+    ncpu : int
+        number of cores to use if parallel is True. Default is all available - 1.
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     Returns
@@ -1594,9 +1601,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
 
     if parallel:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+        if ncpu is None:
+            ncpus = multiprocessing.cpu_count()-1
+        else:
+            ncpus = int(ncpu)
 
-        print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
-        with multiprocessing.Pool() as p:
+        print('Marking barcodes with poor quality barcodes and multiplets with {} cpus'.format(ncpus))
+        with multiprocessing.Pool(ncpus) as p:
             result = p.map(parallel_marking, iter(barcode))
 
         pq, hd, ld ,dc = [], [], [], []
@@ -2055,7 +2066,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         subsample_ = subsample
 
     if ncpu is None:
-        ncpu_ = multiprocessing.cpu_count()
+        ncpu_ = multiprocessing.cpu_count()-1
     else:
         ncpu_ = ncpu
 
