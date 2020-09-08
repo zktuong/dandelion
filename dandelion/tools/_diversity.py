@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 13:58:42
+# @Last Modified time: 2020-09-08 15:02:43
 
 import pandas as pd
 import numpy as np
@@ -159,7 +159,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
             
         minsize = metadata[groupby].value_counts().min()
         if minsize < 100:
-            warnings.warn('The minimum cell numbers when grouped by {} is {}. Practise caution when interpreting diversity measures.'.format(groupby, minsize))
+            warnings.warn("The minimum cell numbers when grouped by {} is {}. Practise caution when interpreting diversity measures.".format(groupby, minsize))
 
         res1 = {}
         res2 = {}
