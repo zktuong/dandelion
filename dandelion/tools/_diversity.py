@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 18:30:10
+# @Last Modified time: 2020-09-09 10:38:10
 
 import pandas as pd
 import numpy as np
@@ -189,7 +189,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                     clonesizecounts = np.array(_tab)
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
-                        g_c = gini_index(clonesizecounts)
+                        g_c = gini_index(clonesizecounts, method = 'trapezoids')
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
@@ -229,7 +229,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 # vertex weighted degree distribution
                 graphcounts = np.array(_dat['clone_degree'].value_counts())
                 if len(graphcounts) > 0:
-                    g_c = gini_index(graphcounts)
+                    g_c = gini_index(graphcounts, method = 'trapezoids')
                 else:
                     g_c = np.nan
                 res2.update({g:g_c})
