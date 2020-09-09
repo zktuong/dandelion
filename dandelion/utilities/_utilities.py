@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 14:36:37
+# @Last Modified time: 2020-09-09 14:26:30
 
 import sys
 import os
@@ -12,10 +12,7 @@ import numpy as np
 from subprocess import run
 from tqdm import tqdm
 import re
-# import gzip
-# import pickle as pickle
 import bz2
-# import pickle
 import _pickle as cPickle
 import copy
 from changeo.IO import readGermlines
@@ -530,7 +527,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
 
 class Dandelion:
-    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, uns=None, initialize = True, **kwargs):
+    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
         self.data = data
         self.metadata = metadata        
         self.distance = distance
@@ -539,14 +536,6 @@ class Dandelion:
         self.graph = graph
         self.threshold = None
         self.germline = {}
-        if uns is None:
-            self.uns = {}
-        else:
-            if type(uns) is dict:
-                self.uns = uns
-            else:
-                self.uns = {}
-                warnings.warn(UserWarning("Dictionary not provided to .uns slot. Replacing with empty dictionary."))
 
         if germline is not None:
             self.germline.update(germline)
@@ -585,10 +574,6 @@ class Dandelion:
             descr += f"\n    graph: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
         else:
             descr += f"\n    graph: {str(None)}"
-        if self.uns is not None:
-            descr += f"\n    uns: {', '.join([k for k in self.uns.keys()])} "
-        else:
-            descr += f"\n    uns: {str(None)}"
         if self.threshold is not None:
             descr += f"\n    threshold: {self.threshold}"
         else:

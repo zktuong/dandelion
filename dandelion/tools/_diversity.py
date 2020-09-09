@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-09 10:38:10
+# @Last Modified time: 2020-09-09 14:24:53
 
 import pandas as pd
 import numpy as np
@@ -26,10 +26,10 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     clone_key : str, optional
         Column name specifying the clone_id column in metadata/obs.
     diversity_key : str, optional
-        key for 'diversity' results in `.uns`.
+        key for 'diversity' results in AnnData's `.uns`.
     Returns
     ----------
-        `Dandelion` object with updated `.uns` slot or `AnnData` object with updated `.uns` slot with 'rarefaction` dictionary.
+        Dictionary containing rarefaction results or updated `.uns` slot if `AnnData` object is used.
     """
     start = logg.info('Constructing rarefaction curve')
     
@@ -80,6 +80,8 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
         self.uns[diversitykey] = {'rarefaction_cells_x':pred, 'rarefaction_clones_y':y}
     logg.info(' finished', time=start,
             deep=('updated `.uns` with rarefaction curves.\n'))
+    if self.__class__ == Dandelion:
+        return({'rarefaction_cells_x':pred, 'rarefaction_clones_y':y})
 
 def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
     """
