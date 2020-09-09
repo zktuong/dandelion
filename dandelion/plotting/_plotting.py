@@ -2,22 +2,20 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 16:14:18
+# @Last Modified time: 2020-09-08 18:31:47
 
 import seaborn as sns
 import pandas as pd
 import numpy as np
 from ..utilities._utilities import *
+from ..tools._diversity import rarefun
 from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
-from scipy.special import comb
 from adjustText import adjust_text
 from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
 from scanpy.plotting import palettes
-from rpy2.robjects.packages import importr
-from rpy2.robjects import pandas2ri
 
 def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4), save=None):
     """
@@ -40,8 +38,6 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
     ----------
         rarefaction curve plot.
     """
-    veg = importr('vegan')
-    pandas2ri.activate()
     
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
@@ -64,10 +60,21 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
     print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
     res_ = res_[~(res_.sum(axis = 1) == 0)]    
 
-    dat = pandas2ri.py2rpy(res_)
-    out = veg.rarecurve(dat, step = 10, sample = 1000, label = False)
-    y = pd.DataFrame([o for o in out], index = res_.index).T
+    # set up for calculating rarefaction
+    tot = res_.apply(sum, axis = 1)
+    S = res_.apply(lambda x: x[x > 0].shape[0], axis = 1)
+    nr = res_.shape[0]
+
+    # append the results to a dictionary
+    rarecurve = {}
+    for i in range(0, nr):
+        n = np.arange(1, tot[i], step = 10)
+        if (n[-1:] != tot[i]):
+            n = np.append(n, tot[i])
+        rarecurve[res_.index[i]] = [rarefun(np.array(res_.iloc[i,]), z) for z in n]
+    y = pd.DataFrame([rarecurve[c] for c in rarecurve]).T
     pred = pd.DataFrame([np.append(np.arange(1, s, 10),s) for s in res_.sum(axis = 1)], index = res_.index).T
+
     y = y.melt()
     pred = pred.melt()
     pred['yhat'] = y['value']

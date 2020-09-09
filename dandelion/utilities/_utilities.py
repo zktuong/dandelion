@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 16:34:02
+# @Last Modified time: 2020-09-09 14:26:30
 
 import sys
 import os
@@ -12,8 +12,8 @@ import numpy as np
 from subprocess import run
 from tqdm import tqdm
 import re
-import gzip
-import pickle as pickle
+import bz2
+import _pickle as cPickle
 import copy
 from changeo.IO import readGermlines
 import warnings
@@ -269,6 +269,7 @@ def setup_metadata(data, sep, clone_key = None):
     size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
     size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
     metadata_[str(clonekey)+'_by_size'] = [size_dict[c] for c in metadata_[str(clonekey)]]
+    metadata_[str(clonekey)+'_by_size'] = metadata_[str(clonekey)+'_by_size'].astype('category')
     return(metadata_)
 
 def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
@@ -526,7 +527,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
 
 class Dandelion:
-    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, uns=None, initialize = True, **kwargs):
+    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
         self.data = data
         self.metadata = metadata        
         self.distance = distance
@@ -535,14 +536,6 @@ class Dandelion:
         self.graph = graph
         self.threshold = None
         self.germline = {}
-        if uns is None:
-            self.uns = {}
-        else:
-            if type(uns) is dict:
-                self.uns = uns
-            else:
-                self.uns = {}
-                warnings.warn(UserWarning("Dictionary not provided to .uns slot. Replacing with empty dictionary."))
 
         if germline is not None:
             self.germline.update(germline)
@@ -581,10 +574,6 @@ class Dandelion:
             descr += f"\n    graph: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
         else:
             descr += f"\n    graph: {str(None)}"
-        if self.uns is not None:
-            descr += f"\n    uns: {', '.join([k for k in self.uns.keys()])} "
-        else:
-            descr += f"\n    uns: {str(None)}"
         if self.threshold is not None:
             descr += f"\n    threshold: {self.threshold}"
         else:
@@ -667,27 +656,49 @@ class Dandelion:
 
     # Using HIGHEST_PROTOCOL is almost 2X faster and creates a file that
     # is ~10% smaller.  Load times go down by a factor of about 3X.
-    def write(self, filename='dandelion_data.pkl'):
-        if isGZIP(filename):
-            f = gzip.open(filename, 'wb')
+    # def write(self, filename='dandelion_data.pkl'):
+    #     if isGZIP(filename):
+    #         f = gzip.open(filename, 'wb')
+    #     else:
+    #         f = open(filename, 'wb')
+    #     pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+    #     f.close()
+    
+    def write(self, filename='dandelion_data.pkl.pbz2'):
+        if isBZIP(filename):
+            with bz2.BZ2File(filename, 'w') as f:
+                cPickle.dump(self, f)
         else:
             f = open(filename, 'wb')
-        pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
-        f.close()
-    
-def isGZIP(filename):
-    if filename.split('.')[-1] == 'gz':
+            cPickle.dump(self, f)
+            f.close()
+
+# def isGZIP(filename):
+#     if filename.split('.')[-1] == 'gz':
+#         return True
+#     return False    
+
+def isBZIP(filename):
+    if filename.split('.')[-1] == 'pbz2':
         return True
     return False    
 
-def read(filename='dandelion_data.pkl'):
-    if isGZIP(filename):
-        f = gzip.open(filename, 'rb')
+# def read(filename='dandelion_data.pkl'):
+#     if isGZIP(filename):
+#         f = gzip.open(filename, 'rb')
+#     else:
+#         f = open(filename, 'rb')
+#     n = pickle.load(f)
+#     f.close()
+#     return n
+
+def read(filename='dandelion_data.pkl.pbz2'):
+    if isBZIP(filename):
+        data = bz2.BZ2File(filename, 'rb')
+        data = cPickle.load(data)
     else:
-        f = open(filename, 'rb')
-    n = pickle.load(f)
-    f.close()
-    return n
+        data = cPickle.load(filename)
+    return data
 
 def concat(arrays, check_unique = False):    
     arrays = list(arrays)

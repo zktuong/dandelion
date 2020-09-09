@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 11:08:37
+# @Last Modified time: 2020-09-08 18:48:19
 
 import sys
 import os
@@ -31,9 +31,12 @@ import numpy as np
 import scipy.stats
 import scrublet as scr
 from Bio import Align
-from rpy2.robjects.packages import importr, data
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, StrVector, FloatVector
+try:
+    from rpy2.robjects.packages import importr, data
+    from rpy2.rinterface import NULL
+    from rpy2.robjects import pandas2ri, StrVector, FloatVector
+except ImportError:
+    pass
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -123,7 +126,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, dirs = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -149,6 +152,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         whether or not to return allele calls. Default is False.
     parallel : bool
         whether or not to use parallelization. Default is True.
+    ncpu : int
+        number of cores to use if parallel is True. Default is all available - 1.
     dirs : str, optional
         location of both input and output files. None defaults to dandelion/data folder.
     verbose : bool
@@ -350,7 +355,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         fh.close()
 
         if parallel:
-            num_cores = multiprocessing.cpu_count()
+            if ncpu is None:
+                num_cores = multiprocessing.cpu_count()-1
+            else:
+                num_cores = int(ncpu)
             results = ()
             results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
             # transform list of dicts to dict
@@ -1388,7 +1396,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, save=None):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, ncpu = None, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1405,6 +1413,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
     filter_rna : bool
         If True, `AnnData` object returned will be filtered. Default is True.
+    filter_poorqualitybcr : bool
+        If True, barcodes marked with poor quality BCR contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.
     rescue_igh : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
@@ -1415,6 +1425,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.
     parallel : bool
         whether or not to use parallelization. Default is True.
+    ncpu : int
+        number of cores to use if parallel is True. Default is all available - 1.
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     Returns
@@ -1451,33 +1463,33 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
-    dat['duplicate_count'] = 0    
+    dat['duplicate_count'] = 0
 
     global parallel_marking
 
     def parallel_marking(b):
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-    
+
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
         hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['duplicate_count']]
         hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['c_call']]
-    
+
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
         lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-        
+
         h[b] = hc_id
         h_umi[b] = hc_umi
         h_seq[b] = hc_seq
         h_dup[b] = hc_dup
         h_ccall[b] = hc_ccall
-    
+
         l[b] = lc_id
         l_umi[b] = lc_umi
         l_seq[b] = lc_seq
-    
+
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
             ccall = []
@@ -1557,41 +1569,76 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
         # that were have conflicting assignment of locus and heavy/light V/J calls,
         # and also those that are missing either v or j calls.
         if len(h[b]) < 1:
-            poor_qual.append(b)            
+            if filter_poorqualitybcr:
+                poor_qual.append(b)
+            drop_contig.append(l[b])
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
             if 'IGH' not in v:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
             j = j_dict[hc_id[0]]
             if 'IGH' not in j:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
-            if 'IGH' in v:
-                poor_qual.append(b)                
             j = j_dict[lc_id[0]]
-            if 'IGH' in j:
-                poor_qual.append(b)                
-        poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
-        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)    
+            if 'IGH' in v:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+            elif 'IGK' in v:
+                if 'IGL' in j:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])            
 
-    if parallel: 
-        print('Marking barcodes with poor quality barcodes and multiplets with parallelization')
-        with multiprocessing.Pool() as p:
+            if 'IGH' in j:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+            elif 'IGL' in v:
+                if 'IGK' in v:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+            
+            if v == np.nan or j == np.nan:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b]) # no/wrong annotations at all
+
+        poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
+        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
+
+    if parallel:
+        poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
+        if ncpu is None:
+            ncpus = multiprocessing.cpu_count()-1
+        else:
+            ncpus = int(ncpu)
+
+        print('Marking barcodes with poor quality barcodes and multiplets with {} cpus'.format(ncpus))
+        with multiprocessing.Pool(ncpus) as p:
             result = p.map(parallel_marking, iter(barcode))
-        
+
         pq, hd, ld ,dc = [], [], [], []
         for r in result:
             pq = pq + r[0]
             hd = hd + r[1]
             ld = ld + r[2]
             dc = dc + r[3]
-    
+
         poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
 
     else:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
-        
+
         for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
             hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
             hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
@@ -1699,21 +1746,49 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
             # that were have conflicting assignment of locus and heavy/light V/J calls,
             # and also those that are missing either v or j calls.
             if len(h[b]) < 1:
-                poor_qual.append(b)                
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
-                if 'IGH' not in v:
-                    poor_qual.append(b)                    
                 j = j_dict[hc_id[0]]
+                if 'IGH' not in v:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
                 if 'IGH' not in j:
-                    poor_qual.append(b)                    
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
-                if 'IGH' in v:
-                    poor_qual.append(b)                    
                 j = j_dict[lc_id[0]]
+                if 'IGH' in v:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                elif 'IGK' in v:
+                    if 'IGL' in j:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])                
+
                 if 'IGH' in j:
-                    poor_qual.append(b)                    
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                elif 'IGL' in v:
+                    if 'IGK' in v:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                
+                if v == np.nan or j == np.nan:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b]) # no/wrong annotations at all
 
     poorqual = Tree()
     hdoublet = Tree()
@@ -1747,9 +1822,15 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     if filter_bcr:
         print('Finishing up filtering')
         if not filter_lightchains:
-            filter_ids = list(set(h_doublet + poor_qual))
+            if filter_poorqualitybcr:
+                filter_ids = list(set(h_doublet + poor_qual))
+            else:
+                filter_ids = list(set(h_doublet))
         else:
-            filter_ids = list(set(h_doublet + l_doublet + poor_qual))
+            if filter_poorqualitybcr:
+                filter_ids = list(set(h_doublet + l_doublet + poor_qual))
+            else:
+                filter_ids = list(set(h_doublet + l_doublet))
 
         if filter_rna:
             filter_ids = filter_ids + list(adata[adata.obs['filter_rna'] == True].obs_names)
@@ -1780,7 +1861,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, rescue_igh=True, u
     if data.__class__ == Dandelion:
         out_dat = Dandelion(data = _dat, germline = data.germline, initialize = True)
     else:
-        out_dat = Dandelion(data = _dat, initialize = True)
+        try:
+            out_dat = Dandelion(data = _dat, initialize = True)
+        except:
+            warnings.warn(UserWarning('Dandelion metadata cannot be initialized due to duplicate barcodes. Recommending to run function with filter_bcr = True.'))
+            out_dat = Dandelion(data = _dat, initialize = False)
 
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
@@ -2015,7 +2100,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         subsample_ = subsample
 
     if ncpu is None:
-        ncpu_ = multiprocessing.cpu_count()
+        ncpu_ = multiprocessing.cpu_count()-1
     else:
         ncpu_ = ncpu
 
