@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-02 14:21:47
+# @Last Modified time: 2020-09-18 16:40:14
 
 import pandas as pd
 import numpy as np
@@ -179,18 +179,22 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         G.edges(data=True)
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
 
-    edge_listx = pd.concat([edge_list[x] for x in edge_list])
-    edge_listx.index = [(s, t) for s, t in zip(edge_listx['source'],edge_listx['target'])]
+    # try to catch situations where there's no edge (only singletons)
+    try:
+        edge_listx = pd.concat([edge_list[x] for x in edge_list])
+        edge_listx.index = [(s, t) for s, t in zip(edge_listx['source'],edge_listx['target'])]
 
-    tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
-    tmp_edge_listx.index = [(s, t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
+        tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
+        tmp_edge_listx.index = [(s, t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
 
-    edge_list_final = edge_listx.combine_first(tmp_edge_listx)
+        edge_list_final = edge_listx.combine_first(tmp_edge_listx)
 
-    for idx in edge_list_final.index:
-        edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
-    # return the edge list
-    edge_list_final.reset_index(drop = True, inplace = True)
+        for idx in edge_list_final.index:
+            edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
+        # return the edge list
+        edge_list_final.reset_index(drop = True, inplace = True)
+    except:
+        edge_list_final = pd.DataFrame(columns = ['source', 'target','weight'])
 
     # and finally the vertex list which is super easy
     vertice_list = list(out.metadata.index)
