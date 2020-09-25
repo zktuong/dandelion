@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 18:48:19
+# @Last Modified time: 2020-09-25 15:28:30
 
 import sys
 import os
@@ -1326,7 +1326,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         else:
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
-def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None):
+def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None):
     """
     Recipe for running a standard scanpy QC worflow.
 
@@ -1342,10 +1342,12 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
         Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 0.05.
     pval_cutoff : float
         Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
-    min_counts : int
+    min_counts : int, optional
         Minimum number of counts required for a cell to pass filtering. Default is None.
-    max_counts : int
+    max_counts : int, optional
         Maximum number of counts required for a cell to pass filtering. Default is None.
+    batch_term : str, optional
+        If provided, will use sc.external.pp.bbknn for neighborhood construction.
     Returns
     -------
         `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
@@ -1367,7 +1369,10 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata = _adata[:, _adata.var['highly_variable']]
     sc.pp.scale(_adata, max_value=10)
     sc.tl.pca(_adata, svd_solver='arpack')
-    sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
+    if batch_term is None:
+        sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
+    else:
+        sc.external.pp.bbknn(_adata, batch_term=batch_term)
     # overclustering proper - do basic clustering first, then cluster each cluster
     sc.tl.leiden(_adata)
     for clus in list(np.unique(_adata.obs['leiden']))[0]:
