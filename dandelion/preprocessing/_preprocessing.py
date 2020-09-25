@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-25 17:22:05
+# @Last Modified time: 2020-09-26 00:05:18
 
 import sys
 import os
@@ -1366,6 +1366,9 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     sc.pp.normalize_total(_adata, target_sum = 1e4)
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    for i in _adata.var.index:
+        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
+            _adata.var.at[i, 'highly_variable'] = False
     _adata = _adata[:, _adata.var['highly_variable']]
     sc.pp.scale(_adata, max_value=10)
     sc.tl.pca(_adata, svd_solver='arpack')
@@ -1446,6 +1449,9 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
     sc.pp.normalize_total(_adata2, target_sum = 1e4)
     sc.pp.log1p(_adata2)
     sc.pp.highly_variable_genes(_adata2, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    for i in _adata.var.index:
+        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
+            _adata.var.at[i, 'highly_variable'] = False
     _adata2 = _adata2[:, _adata2.var['highly_variable']]
     sc.pp.scale(_adata2, max_value=10)
     sc.tl.pca(_adata2, svd_solver='arpack')
