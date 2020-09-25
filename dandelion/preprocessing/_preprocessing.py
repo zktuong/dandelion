@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-25 17:08:17
+# @Last Modified time: 2020-09-25 17:22:05
 
 import sys
 import os
@@ -1477,7 +1477,7 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
     _adata.obs['is_doublet'] = pd.Series(_adata2.obs['is_doublet'])
     _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
         (_adata.obs['percent_mito'] >= mito_cutoff) | \
-            (_adata.obs['is_doublet'].isin([True, None]))
+            (_adata.obs['is_doublet'].isin([True, np.nan]))
 
     self.obs = _adata.obs.copy()
 
