@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-25 15:28:30
+# @Last Modified time: 2020-09-25 15:49:00
 
 import sys
 import os
@@ -1372,7 +1372,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     if batch_term is None:
         sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
     else:
-        sc.external.pp.bbknn(_adata, batch_term=batch_term)
+        sc.external.pp.bbknn(_adata, batch_key=batch_term)
     # overclustering proper - do basic clustering first, then cluster each cluster
     sc.tl.leiden(_adata)
     for clus in list(np.unique(_adata.obs['leiden']))[0]:
