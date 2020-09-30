@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-26 00:05:18
+# @Last Modified time: 2020-09-30 13:03:05
 
 import sys
 import os
@@ -1326,7 +1326,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         else:
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
-def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None):
+def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None, blacklist=None):
     """
     Recipe for running a standard scanpy QC worflow.
 
@@ -1348,6 +1348,8 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
         Maximum number of counts required for a cell to pass filtering. Default is None.
     batch_term : str, optional
         If provided, will use sc.external.pp.bbknn for neighborhood construction.
+    blacklist : sequence, optional
+        If provided, will exclude these genes from highly variable genes list.
     Returns
     -------
         `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
@@ -1369,6 +1371,9 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     for i in _adata.var.index:
         if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
             _adata.var.at[i, 'highly_variable'] = False
+        if blacklist is not None:
+            if i in blacklist:
+                _adata.var.at[i, 'highly_variable'] = False
     _adata = _adata[:, _adata.var['highly_variable']]
     sc.pp.scale(_adata, max_value=10)
     sc.tl.pca(_adata, svd_solver='arpack')
@@ -1404,7 +1409,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval
     _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
     self.obs = _adata.obs.copy()
 
-def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None):
+def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None, blacklist=None):
     """
     Recipe for running a standard scanpy QC worflow.
 
@@ -1426,6 +1431,8 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
         Maximum number of counts required for a cell to pass filtering. Default is None.
     batch_term : str, optional
         If provided, will use sc.external.pp.bbknn for neighborhood construction.
+    blacklist : sequence, optional
+        If provided, will exclude these genes from highly variable genes list.
     Returns
     -------
         `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
@@ -1452,6 +1459,9 @@ def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, p
     for i in _adata.var.index:
         if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
             _adata.var.at[i, 'highly_variable'] = False
+        if blacklist is not None:
+            if i in blacklist:
+                _adata.var.at[i, 'highly_variable'] = False
     _adata2 = _adata2[:, _adata2.var['highly_variable']]
     sc.pp.scale(_adata2, max_value=10)
     sc.tl.pca(_adata2, svd_solver='arpack')
