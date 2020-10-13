@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-30 13:03:05
+# @Last Modified time: 2020-10-13 16:38:59
 
 import sys
 import os
@@ -31,12 +31,12 @@ import numpy as np
 import scipy.stats
 import scrublet as scr
 from Bio import Align
-try:
-    from rpy2.robjects.packages import importr, data
-    from rpy2.rinterface import NULL
-    from rpy2.robjects import pandas2ri, StrVector, FloatVector
-except ImportError:
-    pass
+# try:
+#     from rpy2.robjects.packages import importr, data
+#     from rpy2.rinterface import NULL
+#     from rpy2.robjects import pandas2ri, StrVector, FloatVector
+# except ImportError:
+#     pass
 
 def format_fasta(fasta, prefix = None, outdir = None):
     """
@@ -2013,6 +2013,13 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         `Dandelion` object with updated `.metadata` slot.
     """
     start = logg.info('Quantifying mutations')
+    try:
+        from rpy2.robjects.packages import importr, data
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri, StrVector, FloatVector
+    except 
+        raise(ImportError('Unable to initialise R instance. Please run this separately in R.'))
+        
     sh = importr('shazam')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
@@ -2169,6 +2176,12 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         plotnine plot showing histogram of length normalized ham model distance threshold.
     """
     start = logg.info('Calculating threshold')
+    try:
+        from rpy2.robjects.packages import importr, data
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri, StrVector, FloatVector
+    except 
+        raise(ImportError('Unable to initialise R instance. Please run this separately in R.'))
     sh = importr('shazam')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
