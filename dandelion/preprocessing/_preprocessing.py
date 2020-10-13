@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-13 16:38:59
+# @Last Modified time: 2020-10-13 16:41:42
 
 import sys
 import os
@@ -2017,7 +2017,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         from rpy2.robjects.packages import importr, data
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
-    except 
+    except: 
         raise(ImportError('Unable to initialise R instance. Please run this separately in R.'))
         
     sh = importr('shazam')
@@ -2180,7 +2180,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         from rpy2.robjects.packages import importr, data
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
-    except 
+    except: 
         raise(ImportError('Unable to initialise R instance. Please run this separately in R.'))
     sh = importr('shazam')
     if self.__class__ == Dandelion:
