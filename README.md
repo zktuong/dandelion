@@ -74,7 +74,7 @@ python -m ipykernel install --user --name dandelion --display-name "Python (dand
 ```
 
 ## Required database
-Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation). I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) which you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
+Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation). I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) which you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
@@ -131,7 +131,6 @@ alakazam_1.0.1
 tigger_1.0.0
 airr_1.2.0
 shazam_1.0.0
-vegan_2.5-6
 ggplot2
 ```
 
