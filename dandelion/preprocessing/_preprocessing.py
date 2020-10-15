@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-13 16:41:42
+# @Last Modified time: 2020-10-15 15:23:20
 
 import sys
 import os
@@ -1676,39 +1676,44 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             drop_contig.append(l[b])
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
-            if 'IGH' not in v:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-            j = j_dict[hc_id[0]]
-            if 'IGH' not in j:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-        if len(lc_id) > 0:
-            v = v_dict[lc_id[0]]
-            j = j_dict[lc_id[0]]
-            if 'IGH' in v:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-            elif 'IGK' in v:
-                if 'IGL' in j:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b])            
-
-            if 'IGH' in j:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-            elif 'IGL' in v:
-                if 'IGK' in v:
+            if v is not np.nan:
+                if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
+                    drop_contig.append(h[b])
+            j = j_dict[hc_id[0]]
+            if j is not np.nan:
+                if 'IGH' not in j:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
+        if len(lc_id) > 0:
+            v = v_dict[lc_id[0]]
+            j = j_dict[lc_id[0]]
+            if v is not np.nan:
+                if j is not np.nan:
+                    if 'IGH' in v:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                    elif 'IGK' in v:
+                        if 'IGL' in j:
+                            if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                            drop_contig.append(l[b])
+            if j is not np.nan:
+                if v is not np.nan:
+                    if 'IGH' in j:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                    elif 'IGL' in v:
+                        if 'IGK' in v:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(l[b])
             
             if v == np.nan or j == np.nan:
                 if filter_poorqualitybcr:
