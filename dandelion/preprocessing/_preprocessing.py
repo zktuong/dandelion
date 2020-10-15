@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-15 15:23:20
+# @Last Modified time: 2020-10-15 15:31:30
 
 import sys
 import os
@@ -1701,7 +1701,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     elif 'IGK' in v:
                         if 'IGL' in j:
                             if filter_poorqualitybcr:
-                            poor_qual.append(b)
+                                poor_qual.append(b)
                             drop_contig.append(l[b])
             if j is not np.nan:
                 if v is not np.nan:
