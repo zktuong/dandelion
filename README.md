@@ -2,7 +2,7 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.14
+Version = 0.0.16
 
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
@@ -18,12 +18,13 @@ Illustration of the `Dandelion` class slots
 ## Example
 Please see notebooks folder for a step-by-step [example](notebooks/).
 
-The un-processed raw files for parts of the notebook can be accessed via [here](example_data/).
+The raw files for the examples can be downloaded from 10X's Single Cell Immune Profiling datasets [website](https://support.10xgenomics.com/single-cell-vdj/datasets).
 
 ## Installation instructions
 
 I would reccomend instaling this in order:
 ```bash
+# in bash/zsh terminal
 # create a conda environment with specific modules
 conda create --name dandelion python=3.7
 conda activate dandelion
@@ -34,22 +35,14 @@ conda install -c conda-forge python-igraph leidenalg
 # these are required by dandelion
 conda install distance scikit-bio joblib plotnine jupyter adjustText
 conda install -c bioconda igblast blast changeo presto
+conda install -c conda-forge rpy2
+# or pip install rpy2
+# If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
+# then run
+# env CC=/path/to/location/of/bin/gcc-9 pip install rpy2
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
 pip install networkx polyleven scrublet scanpy
-
-# install rpy2
-# If you prefer to use conda to manage R, then use:
-# conda install -c conda-forge rpy2
-pip install rpy2
-# If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
-#
-# example in terminal:
-# which gcc-9
-# /Users/kt16/homebrew/bin/gcc-9
-#
-# then run
-env CC=/Users/kt16/homebrew/bin/gcc-9 pip install rpy2 # not using conda because I personally don't want to use r that comes with the conda installation. This will ensure I'm using the base R. 
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
@@ -60,21 +53,24 @@ pip install git+https://github.com/zktuong/dandelion.git@devel
 
 dandelion also requires some R packages intalled.
 ```R
+# in R
 install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"))
 ```
 or the following if using conda to manage R:
 ```bash
+# in bash/zsh terminal
 conda install -c bioconda r-optparse
 conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam
 ```
 
 The package should now be properly installed and when starting up jupyter notebook in the virtual environment, the kernel `python3` should work. Otherwise, you might need to add it manually:
-```R
+```bash
+# in bash/zsh terminal
 python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
 ```
 
 ## Required database
-Last but not least, you will need download the database folder in this repository and place them somewhere accessible. The the igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation). I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) which you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below so that dandelion and the blast programs can access them properly.
+Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally sourced from immcantation's [docker image](https://hub.docker.com/r/kleinstein/immcantation). I've uploaded a compressed version in [here](database) or [here](https://github.com/zktuong/databases_for_vdj/raw/master/database.tar.gz) which you should be able to download easily. Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below, so that dandelion and the blast programs can access them easily. In the future, the databases will have to be updated accordingly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
@@ -131,13 +127,12 @@ alakazam_1.0.1
 tigger_1.0.0
 airr_1.2.0
 shazam_1.0.0
-vegan_2.5-6
 ggplot2
 ```
 
 ## Acknowledgements
 I would like to acknowledge the contributions from Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna Clatworthy who helped with the initial conception of the project and for all discussions. 
 
-I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi, Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
+I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi and Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
 
 If there are any ideas, comments, suggestions, thing you would like to know more etc., please feel free to email me at kt16@sanger.ac.uk or post in the issue tracker and I will get back to you.
