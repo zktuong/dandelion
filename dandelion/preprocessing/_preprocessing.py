@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-15 15:31:30
+# @Last Modified time: 2020-10-16 00:35:17
 
 import sys
 import os
@@ -15,21 +15,19 @@ from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
 from ..utilities._utilities import *
-from .ext._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
+from .external._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
 from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 import re
-import scanpy as sc
 import functools
 try:
     from scanpy import logging as logg
 except ImportError:
     pass
 import numpy as np
-import scipy.stats
-import scrublet as scr
+
 from Bio import Align
 # try:
 #     from rpy2.robjects.packages import importr, data
@@ -49,12 +47,23 @@ def format_fasta(fasta, prefix = None, outdir = None):
     prefix : str, optional
         prefix to append to the headers/contig ids.
     outdir : str, optional
-        path to out put location. Default is None, which is 'dandelion/data'.
+        path to output location. None defaults to 'dandelion/data'.
     Returns
     -------
         Formatted fasta file with new headers containing prefix
     """
-    fh = open(fasta, 'r')
+    filePath = None
+    if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
+        filePath = fasta
+    elif os.path.isdir(str(fasta)):
+        files = os.listdir(fasta)
+        for file in files:
+            if os.path.isfile(fasta.strip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
+                filePath = fasta + '/' + os.path.basename(file)
+    if filePath is None:
+        raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.')
+
+    fh = open(filePath, 'r')
     seqs = {}
     for header, sequence in fasta_iterator(fh):
         if prefix is not None:
@@ -64,23 +73,23 @@ def format_fasta(fasta, prefix = None, outdir = None):
             seqs[header] = sequence
     fh.close()
 
-    if os.path.isfile(fasta):
-        basedir = os.path.dirname(fasta)
-    elif os.path.isdir(fasta):
-        basedir = os.path.dirname(fasta)
+    if os.path.isfile(filePath):
+        basedir = os.path.dirname(filePath)
+    elif os.path.isdir(filePath):
+        basedir = os.path.dirname(filePath)
     else:
         basedir = os.getcwd()
 
     if outdir is None:
-        out_dir = basedir+'/'+'dandelion/data/'
+        out_dir = basedir.strip('/')+'/'+'dandelion/data/'
     else:
         if not outdir.endswith('/'):
-            out_dir = outdir + '/'
+            out_dir = basedir+'/'+outdir+'/'
 
     if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
-    out_fasta = out_dir + os.path.basename(fasta)
+    out_fasta = out_dir + os.path.basename(filePath)
 
     fh1 = open(out_fasta, 'w')
     fh1.close()
@@ -90,14 +99,14 @@ def format_fasta(fasta, prefix = None, outdir = None):
         Write_output(out, out_fasta)
 
     # format the barcode and contig_id in the corresponding annotation file too
-    anno = basedir+'/'+os.path.basename(fasta).replace('.fasta', '_annotations.csv')
+    anno = basedir+'/'+os.path.basename(filePath).replace('.fasta', '_annotations.csv')
     data = pd.read_csv(anno, dtype = 'object')
     data['contig_id'] = [prefix+'_'+str(c) for c in data['contig_id']]
     data['barcode'] = [prefix+'_'+str(b).split('-')[0] for b in data['barcode']]
-    out_anno = out_dir + os.path.basename(fasta).replace('.fasta', '_annotations.csv')
+    out_anno = out_dir + os.path.basename(filePath).replace('.fasta', '_annotations.csv')
     data.to_csv(out_anno, index= False)
 
-def format_fastas(fastas, prefixes = None, outdir = None):
+def format_fastas(fastas, prefix = None, outdir = None):
     """
     Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -105,7 +114,7 @@ def format_fastas(fastas, prefixes = None, outdir = None):
     ----------
     fastas : list
         list or sequence of paths to fasta files.
-    prefixes : list, optional
+    prefix : list, optional
         list or sequence of prefixes to append to headers/contig ids in each fasta file.
     outdir : str, optional
         path to out put location. Default is None, which is 'dandelion/data'.
@@ -115,18 +124,18 @@ def format_fastas(fastas, prefixes = None, outdir = None):
     """
     if type(fastas) is not list:
         fastas = [fastas]
-    if prefixes is not None:
-        if type(prefixes) is not list:
-            prefixes = [prefixes]
-        prefix_dict = dict(zip(fastas, prefixes))
+    if prefix is not None:
+        if type(prefix) is not list:
+            prefix = [prefix]
+        prefix_dict = dict(zip(fastas, prefix))
 
     for fasta in tqdm(fastas, desc = 'Formating fasta(s) '):
-        if prefixes is not None:
+        if prefix is not None:
             format_fasta(fasta, prefix_dict[fasta], outdir)
         else:
             format_fasta(fasta, None, outdir)
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, dirs = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -153,16 +162,14 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     parallel : bool
         whether or not to use parallelization. Default is True.
     ncpu : int
-        number of cores to use if parallel is True. Default is all available - 1.
-    dirs : str, optional
-        location of both input and output files. None defaults to dandelion/data folder.
+        number of cores to use if parallel is True. Default is all available minus 1.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
     Returns
     -------
         V(D)J tsv files with constant genes annotated.
     """
-    def _run_blastn(fasta, blastdb, dirs, fileformat, org, verbose):
+    def _run_blastn(fasta, blastdb, fileformat, org, verbose):
 
         env = os.environ.copy()
         if blastdb is None:
@@ -182,17 +189,15 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 '-outfmt', '5',
                 '-query', fasta]
 
-        if dirs is None:
-            blast_out = "{}/tmp/{}.xml".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
-        else:
-            blast_out = "{}/{}.xml".format(dirs, os.path.basename(fasta).split('.fasta')[0]+fileformat)
+        blast_out = "{}/tmp/{}.xml".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
+
         if verbose:
             print('Running command: %s\n' % (' '.join(cmd)))
         with open(blast_out, 'w') as out:
             run(cmd, stdout = out, env = env)
 
 
-    def _parse_BLAST(fasta, dirs, fileformat):
+    def _parse_BLAST(fasta, fileformat):
         '''
         Parses BLAST output from output files and writes formatted output to BLAST
         output summary files
@@ -225,13 +230,9 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
             info = info.split("<")[0]
             return (info)
 
-        if dirs is None:
-            input_file = "{}/tmp/{}.xml".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
-            output_file = "{}/tmp/{}.blastsummary.txt".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
-        else:
-            input_file = "{}/{}.xml".format(dirs, os.path.basename(fasta).split('.fasta')[0]+fileformat)
-            output_file = "{}/{}.blastsummary.txt".format(dirs, os.path.basename(fasta).split('.fasta')[0]+fileformat)
-
+        input_file = "{}/tmp/{}.xml".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
+        output_file = "{}/tmp/{}.blastsummary.txt".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
+        
         with open(output_file, 'w') as outfile:
             outfile.write("------------------\n##{}##\n------------------\n\n#BCR#\n\n".format(fasta))
             # Split result file into chunks corresponding to results for each query sequence.
@@ -306,13 +307,10 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                             outfile.write(string_to_write)
 
 
-    def _get_C(fasta, dirs, fileformat, allele = False, parallel = True):
+    def _get_C(fasta, fileformat, allele = False, parallel = True, ncpu = None):
 
-        def _get_C_call(fasta, contig_name, dirs, fileformat, allele = False):
-            if dirs is None:
-                blast_summary_file = "{}/tmp/{}.blastsummary.txt".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
-            else:
-                blast_summary_file = "{}/{}.blastsummary.txt".format(dirs, os.path.basename(fasta).split('.fasta')[0]+fileformat)
+        def _get_C_call(fasta, contig_name, fileformat, allele = False):
+            blast_summary_file = "{}/tmp/{}.blastsummary.txt".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
 
             C_seq,C_germ, C_gene, C_ident, C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None, None, None, None, None
             with open(blast_summary_file, 'r') as input:
@@ -360,7 +358,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
             else:
                 num_cores = int(ncpu)
             results = ()
-            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, dirs, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
+            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, fileformat, allele) for c in tqdm(contigs, desc = 'Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
             # transform list of dicts to dict
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for r in range(0, len(results)):
@@ -376,7 +374,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         else:
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for c in tqdm(contigs, desc = 'Retrieving contant region calls '):
-                seq[c], germ[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(fasta, c, dirs, fileformat, allele)[c]
+                seq[c], germ[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(fasta, c, fileformat, allele)[c]
         return(seq, germ, call, ident, support, score, start, end)
 
     def _transfer_c(data, c_dict, colname):
@@ -510,21 +508,52 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                             four_gene_correction(dat, i, primer_dict[k])
         return(dat)
 
+    # main function from here
     format_dict = {'changeo':'_igblast_db-pass', 'airr':'_igblast_gap'}
 
+    filePath = None
+    if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
+        filePath = fasta
+    elif os.path.isdir(str(fasta)):
+        files = os.listdir(fasta)
+        for file in files:
+            if os.path.isdir(fasta.strip('/') + '/' + os.path.basename(file)):
+                if file == 'dandelion':
+                    if 'data' in os.listdir(fasta.strip('/') + '/' + os.path.basename(file)):
+                        out_ = fasta.strip('/') + '/' + os.path.basename(file) + '/data/'
+                        for x in os.listdir(os.path.abspath(out_)):
+                            if x.endswith('.fasta'):
+                                filePath = out_ + x
+                else:
+                    out_ = fasta.strip('/') + '/' + os.path.basename(file)
+                    for x in os.listdir(out_):
+                        if x.endswith('.fasta'):
+                            filePath = out_ + '/' + x
+    if filePath is None:
+        raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.')
+
+    if verbose:
+        print('Processing {} \n'.format(filePath))
+
     # running blast using blast
-    _run_blastn(fasta, blastdb, dirs, format_dict[fileformat], org, verbose)
+    if verbose:
+        print('Running blastn \n')
+    _run_blastn(filePath, blastdb, format_dict[fileformat], org, verbose)
     # parsing output into a summary.txt file
-    _parse_BLAST(fasta, dirs, format_dict[fileformat])
+    if verbose:
+        print('Parsing blast output \n')
+    _parse_BLAST(filePath, format_dict[fileformat])
     # Add the c_calls to the data file
     c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}, {}
-    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(fasta, dirs, format_dict[fileformat], allele, parallel)
-    if dirs is None:
-        _file = "{}/{}.tsv".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+format_dict[fileformat])
-    else:
-        _file = "{}/{}.tsv".format(dirs, os.path.basename(fasta).split('.fasta')[0]+ format_dict[fileformat])
+    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(filePath, format_dict[fileformat], allele, parallel, ncpu)
+
+    _file = "{}/{}.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+format_dict[fileformat])
+    if verbose:
+        print('Loading 10X annotations \n')
     dat_10x = load_data(_file)
     res_10x = pd.DataFrame(dat_10x['c_call'])
+    if verbose:
+        print('Preparing new calls \n')
     dat = _transfer_c(_file, c_call, 'c_call')
     dat = _transfer_c(dat, c_seq, 'c_sequence_alignment')
     dat = _transfer_c(dat, c_germ, 'c_germline_alignment')
@@ -547,6 +576,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     res_blast_sum.reset_index(drop = False, inplace = True)
 
     if correct_c_call:
+        if verbose:
+            print('Correcting C calls \n')
         dat = _correct_c_call(dat, primers_dict=correction_dict)
         res_corrected = pd.DataFrame(dat['c_call'])
         res_corrected_sum = pd.DataFrame(res_corrected['c_call'].value_counts(normalize=True)*100)
@@ -561,6 +592,8 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     res['c_call'] = res['c_call'].astype('category')
     res['c_call'] = res['c_call'].cat.reorder_categories(sorted(list(set(res['c_call'])), reverse=True))
 
+    if verbose:
+        print('Finishing up \n')
     dat = _add_cell(dat)
     dat.to_csv(_file, sep = '\t', index=False)
     if plot:
@@ -585,8 +618,50 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme(legend_title = element_blank()))
         print(p)
 
+def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
+    """
+    Annotate contigs with constant region call using blastn
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', dirs = None, filtered = True, extended = False, verbose = False, *args):
+    Parameters
+    ----------
+    fastas : list
+        list or sequence of paths to fasta files.
+    fileformat : str
+        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+    org : str
+        organism of reference folder. Default is 'human'.
+    correct_c_call : bool
+        whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option. Default is True.
+    correction_dict : dict[dict], optional
+        a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
+    plot : bool
+        whether or not to plot reassignment summary metrics. Default is True.
+    figsize : tuple[float, float]
+        size of figure. Default is (4, 4).
+    blastdb : str, optional
+        path to blast database. Defaults to `$BLASTDB` environmental variable.
+    allele : bool
+        whether or not to return allele calls. Default is False.
+    parallel : bool
+        whether or not to use parallelization. Default is True.
+    ncpu : int
+        number of cores to use if parallel is True. Default is all available - 1.
+    verbose : bool
+        whether or not to print the blast command in terminal. Default is False.
+    Returns
+    -------
+        V(D)J tsv files with constant genes annotated.
+    """
+    if type(fastas) is not list:
+        fastas = [fastas]
+    
+    if verbose:
+        print('Assign isotypes \n')
+    for fasta in fastas:
+        assign_isotype(fasta, fileformat = fileformat, org = org, correct_c_call = correct_c_call, correction_dict = correction_dict, plot = plot, figsize=figsize, blastdb = blastdb, allele = allele, parallel = parallel, ncpu = ncpu, verbose = verbose)
+
+
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', extended = False, verbose = False, *args):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -604,10 +679,6 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for TCRs.
     fileformat: str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    dirs : str, optional
-        path to input files. will also determine folder structure for outout. Defaults to 'dandelion/data'.
-    filtered : bool
-        whether or not the to use 'filtered_contig' (True) or 'all_contig' (False) as prefix for output files.
     extended : bool
         whether or not to transfer additional 10X annotions to output file. Default is False.
     verbose :
@@ -620,23 +691,33 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
     """
     if type(data) is not list:
         data = [data]
-    if dirs is None:
-        path = 'dandelion/data/'
-    else:
-        if not dirs.endswith('/'):
-            path = dirs + '/'
-        else:
-            path = dirs
-
+    
+    filePath = None
     for s in tqdm(data, desc = 'Assigning genes '):
-        if os.path.isfile(str(s)):
+        if os.path.isfile(str(s)) and str(s).endswith(".fasta"):
             filePath = s
-        else:
-            if filtered:
-                filePath = s+'/'+path+'filtered_contig.fasta'
-            else:
-                filePath = s+'/'+path+'all_contig.fasta'
-        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, fileformat = fileformat, outputfolder = dirs, verbose = verbose, *args)
+        elif os.path.isdir(str(s)):
+            files = os.listdir(s)
+            for file in files:
+                if os.path.isdir(s.strip('/') + '/' + os.path.basename(file)):
+                    if file == 'dandelion':
+                        if 'data' in os.listdir(s.strip('/') + '/' + os.path.basename(file)):
+                            out_ = s.strip('/') + '/' + os.path.basename(file) + '/data/'
+                            for x in os.listdir(out_):
+                                if x.endswith('.fasta'):
+                                    filePath = out_ + x
+                    else:
+                        out_ = s.strip('/') + '/' + os.path.basename(file)
+                        for x in os.listdir(out_):
+                            if x.endswith('.fasta'):
+                                filePath = out_ + '/' + x
+        if filePath is None:
+            raise OSError('Path to fasta file for {} is unknown. Please specify path to fasta file or folder containing fasta file.'.format(s))
+
+        if verbose:
+            print('Processing {} \n'.format(filePath))
+    
+        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, fileformat = fileformat, verbose = verbose, *args)
         if fileformat == 'airr':
             env = os.environ.copy()
             if germline is None:
@@ -688,18 +769,16 @@ def map_cellranger(data, extended = False):
         dat['junction_10x_aa'] = pd.Series(junction_aa)
     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_dict = None, split_write_out = True, filtered = True, out_filename = None, verbose = False):
+def reassign_alleles(data, combined_folder, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
     Parameters
     ----------
     data : list
-        list or sequence of data folders/file locations. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    out_folder : str
+        list or sequence of data folders containing the .tsv files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
+    combined_folder : str
         name of folder for concatenated data file and genotyped files.
-    dirs : str, optional
-        path to input files. will also determine folder structure for outout. Defaults to 'dandelion/data'.
     germline : str, optional
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
     org : str
@@ -722,61 +801,55 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
         whether or not to plot reassignment summary metrics. Default is True.
     figsize : tuple[float, float]
         size of figure. Default is (4, 3).
-    sample_dict : dict, optional
+    sample_id_dictionary : dict, optional
         dictionary for creating a sample_id column in the concatenated file.
-    split_write_out : bool
-        whether or not to write out the processed file. Default is True. If False, it will return a `Dandelion` object instead.
-    filtered : bool
-        whether or not the to use 'filtered_contig' (True) or 'all_contig' (False) as prefix for output files. Ignored if out_filename is specified.
-    out_filename : str, optional
-        if provided, will save output to this filename.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
     Returns
     ----------
         Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
-        Dandelion object holding updated `.data` slot if split_write_out is False.
     """
     def _return_IGKV_IGLV(results, locus = 'IGH'):
         res = results.copy()
         for i in tqdm(res.index, desc = '   Returning light chain V calls'):
-            if ~(res.loc[i]['locus'] == locus):
-                res.loc[i]['v_call_genotyped'] = res.loc[i]['v_call']
+            if ~(res.at[i, 'locus'] == locus):
+                res.at[i, 'v_call_genotyped'] = str(res.at[i,'v_call'])
         return(res)
 
     if type(data) is not list:
         data = [data]
-    if dirs is None:
-        path = 'dandelion/data/'
-    else:
-        if not dirs.endswith('/'):
-            path = dirs + '/'
-        else:
-            path = dirs
-
-    if out_filename is not None:
-        if not out_filename.endswith('.tsv'):
-            raise OSError('Please provide a file name that ends with .tsv')
-
+   
     informat_dict = {'changeo':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
     inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
-
     germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
 
     data_list = []
+    filePath = None
     for s in tqdm(data, desc = 'Processing data file(s) '):
-        if os.path.isfile(str(s)):
+        if os.path.isfile(str(s)) and str(s).endswith(informat_dict[fileformat]):
             filePath = s
-        else:
-            if filtered:
-                filePath = s+'/'+path+'filtered_contig'+informat_dict[fileformat]
-            else:
-                filePath = s+'/'+path+'all_contig'+informat_dict[fileformat]
-        dat = load_data(filePath)
+        elif os.path.isdir(str(s)):
+            files = os.listdir(s)
+            for file in files:
+                if os.path.isdir(s.strip('/') + '/' + os.path.basename(file)):
+                    if file == 'dandelion':
+                        if 'data' in os.listdir(s.strip('/') + '/' + os.path.basename(file)):
+                            out_ = s + '/' + os.path.basename(file) + '/data/'
+                            for x in os.listdir(out_):
+                                if x.endswith(informat_dict[fileformat]):
+                                    filePath = out_ + x
+                    else:
+                        out_ = s.strip('/') + '/' + os.path.basename(file)
+                        for x in os.listdir(out_):
+                            if x.endswith(informat_dict[fileformat]):
+                                filePath = out_ + '/' + x
+        if filePath is None:
+            raise OSError('Path to .tsv file for {} is unknown. Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'.format(s))
 
-        if sample_dict is not None:
-            dat['sample_id'] = sample_dict[s]
+        dat = load_data(filePath)
+        if sample_id_dictionary is not None:
+            dat['sample_id'] = sample_id_dictionary[s]
         else:
             dat['sample_id'] = str(s)
         data_list.append(dat)
@@ -791,87 +864,38 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
     # dat_.fillna('', inplace=True)
 
     # write out this file for tigger
-    if not out_folder.endswith('/'):
-        outDir = out_folder + '/' + path
-    else:
-        outDir = out_folder + path
-
+    outDir = combined_folder.strip('/')
     if not os.path.exists(outDir):
         os.makedirs(outDir)
-    if out_filename is None:
-        if filtered:
-            print('   Writing out concatenated object')
-            # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            dat_h = dat_[dat_['locus'] == 'IGH']
-            dat_h.to_csv(outDir+'filtered_contig_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            tigger_genotype(outDir+'filtered_contig_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
-        else:
-            print('   Writing out concatenated object')
-            # dat_.to_csv(outDir+'all_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            dat_h = dat_[dat_['locus'] == 'IGH']
-            dat_h.to_csv(outDir+'all_contig_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-            tigger_genotype(outDir+'all_contig_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
-    else:
-        print('   Writing out concatenated object')
-        # dat_.to_csv(out_filename, index = False, sep = '\t', na_rep='')
-        dat_h = dat_[dat_['locus'] == 'IGH']
-        dat_h.to_csv(outDir+'heavy_'+out_filename, index = False, sep = '\t', na_rep='')
-        tigger_genotype(outDir+'heavy_'+out_filename, germline = germline, fileformat = fileformat, verbose = verbose)
-
+    
+    print('   Writing out concatenated object')
+    # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
+    dat_h = dat_[dat_['locus'] == 'IGH']
+    dat_h.to_csv(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
+    tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
+    
     # initialise the germline references
     # germline_ref = readGermlines([gml])
 
     # and now to add it back to the original folders
     sleep(0.5)
-    if out_filename is None:
-        if filtered:
-            out_h = load_data(outDir+'filtered_contig_heavy'+fileformat_dict[fileformat])
-            # out = pd.read_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
-            dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
-            dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_, initialize = False)
-            # update with the personalized germline database
-            res.update_germline(outDir+'filtered_contig_heavy'+germline_dict[fileformat], germline, org)
-            create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
-            print('   Saving corrected genotyped object')
-            sleep(0.5)
-            res.data.to_csv(outDir+'filtered_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
-        else:
-            out_h = load_data(outDir+'all_contig_heavy'+fileformat_dict[fileformat])
-            # out = pd.read_csv(outDir+'all_contig'+fileformat_dict[fileformat], sep = '\t', dtype = 'object')
-            dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
-            dat_ = _return_IGKV_IGLV(dat_)
-            res = Dandelion(dat_, initialize = False)
-            # update with the personalized germline database
-            res.update_germline(outDir+'all_contig_heavy'+germline_dict[fileformat], germline, org)
-            create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
-            print('   Saving corrected genotyped object')
-            sleep(0.5)
-            res.data.to_csv(outDir+'all_contig'+fileformat_dict[fileformat], index = False, sep = '\t')
-    else:
-        out_h = load_data(outDir+'heavy_'+out_filename.replace('.tsv', '_genotyped.tsv'))
-        # out = pd.read_csv(outDir+out_filename.replace('.tsv', '_genotyped.tsv'), sep = '\t', dtype = 'object')
-        dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
-        dat_ = _return_IGKV_IGLV(dat_)
-        res = Dandelion(dat_, initialize = False)
-        res.update_germline(outDir+'heavy_'+out_filename.replace('.tsv', '.fasta'), germline, org)
-        create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
-        print('   Saving corrected genotyped object')
-        sleep(0.5)
-        res.data.to_csv(out_filename.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
+    out_h = load_data(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat])
+    dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
+    dat_ = _return_IGKV_IGLV(dat_)
+    res = Dandelion(dat_, initialize = False)
+    # update with the personalized germline database
+    res.update_germline(outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline, org)
+    create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+    print('   Saving corrected genotyped object')
+    sleep(0.5)
+    res.data.to_csv(outDir+'/'+outDir+fileformat_dict[fileformat], index = False, sep = '\t')
 
     # reset dat_
     dat_ = res.data.copy()
 
     if plot:
         print('Returning summary plot')
-        if out_filename is None:
-            if filtered:
-                inferred_genotype = outDir+'filtered_contig_heavy'+inferred_fileformat_dict[fileformat]
-            else:
-                inferred_genotype = outDir+'all_contig_heavy'+inferred_fileformat_dict[fileformat]
-        else:
-            inferred_genotype = outDir+'heavy_'+out_filename.replace('.tsv', '_inferredGenotype.txt')
+        inferred_genotype = outDir+'/'+outDir+'_heavy'+inferred_fileformat_dict[fileformat]
         inf_geno = pd.read_csv(inferred_genotype, sep = '\t', dtype = 'object')
 
         s2 = set(inf_geno['gene'])
@@ -888,7 +912,7 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             stats.index.set_names(['vgroup'], inplace = True)
             stats.reset_index(drop = False, inplace = True)
             stats['sample_id'] = samp
-            # stats['donor'] = str(out_folder)
+            # stats['donor'] = str(combined_folder)
             results.append(stats)
         results = pd.concat(results)
         ambiguous_table = results[results['vgroup'] == 'ambiguous']
@@ -929,22 +953,30 @@ def reassign_alleles(data, out_folder, dirs = None, germline = None, org = 'huma
             + theme(legend_title = element_blank()))
         print(p)
     sleep(0.5)
-    if split_write_out:
-        for s in tqdm(data, desc = 'Writing out to individual folders '):
-            if sample_dict is not None:
-                out_ = dat_[dat_['sample_id'] == sample_dict[s]]
-            else:
-                out_ = dat_[dat_['sample_id'] == s]
-            if os.path.isfile(str(s)):
-                out_.to_csv(s.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
-            else:
-                if filtered:
-                    filePath = s+'/'+path+'filtered_contig'+fileformat_dict[fileformat]
-                else:
-                    filePath = s+'/'+path+'all_contig'+fileformat_dict[fileformat]
-                out_.to_csv(filePath, index = False, sep = '\t')
-    else:
-        return(res)
+    # if split_write_out:
+    for s in tqdm(data, desc = 'Writing out to individual folders '):
+        if sample_id_dictionary is not None:
+            out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
+        else:
+            out_file = dat_[dat_['sample_id'] == s]
+        if os.path.isfile(str(s)) and str(s).endswith(informat_dict[fileformat]):
+            filePath = s
+        elif os.path.isdir(str(s)):
+            files = os.listdir(s)
+            for file in files:
+                if os.path.isdir(s.strip('/') + '/' + os.path.basename(file)):
+                    if file == 'dandelion':
+                        if 'data' in os.listdir(s.strip('/') + '/' + os.path.basename(file)):
+                            out_ = s + '/' + os.path.basename(file) + '/data/'
+                            for x in os.listdir(out_):
+                                if x.endswith(informat_dict[fileformat]):
+                                    filePath = out_ + x
+                    else:
+                        out_ = s.strip('/') + '/' + os.path.basename(file)
+                        for x in os.listdir(out_):
+                            if x.endswith(informat_dict[fileformat]):
+                                filePath = out_ + '/' + x
+        out_file.to_csv(filePath.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
 def create_germlines(self, germline = None, org = 'human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr', initialize_metadata = False):
     """
@@ -1325,178 +1357,6 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
         else:
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
-
-def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None, blacklist=None):
-    """
-    Recipe for running a standard scanpy QC worflow.
-
-    Parameters
-    ----------
-    adata : AnnData
-        The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
-    max_genes : int
-        Maximum number of genes expressed required for a cell to pass filtering. Default is 2500.
-    min_genes : int
-        Minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
-    mito_cutoff : float
-        Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 0.05.
-    pval_cutoff : float
-        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
-    min_counts : int, optional
-        Minimum number of counts required for a cell to pass filtering. Default is None.
-    max_counts : int, optional
-        Maximum number of counts required for a cell to pass filtering. Default is None.
-    batch_term : str, optional
-        If provided, will use sc.external.pp.bbknn for neighborhood construction.
-    blacklist : sequence, optional
-        If provided, will exclude these genes from highly variable genes list.
-    Returns
-    -------
-        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
-
-    """
-    _adata = self.copy()
-    # run scrublet
-    scrub = scr.Scrublet(_adata.X)
-    doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
-    _adata.obs['scrublet_score'] = doublet_scores
-    # overcluster prep. run basic scanpy pipeline
-    sc.pp.filter_cells(_adata, min_genes = 0)
-    mito_genes = _adata.var_names.str.startswith('MT-')
-    _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)
-    _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
-    sc.pp.normalize_total(_adata, target_sum = 1e4)
-    sc.pp.log1p(_adata)
-    sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    for i in _adata.var.index:
-        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
-            _adata.var.at[i, 'highly_variable'] = False
-        if blacklist is not None:
-            if i in blacklist:
-                _adata.var.at[i, 'highly_variable'] = False
-    _adata = _adata[:, _adata.var['highly_variable']]
-    sc.pp.scale(_adata, max_value=10)
-    sc.tl.pca(_adata, svd_solver='arpack')
-    if batch_term is None:
-        sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
-    else:
-        sc.external.pp.bbknn(_adata, batch_key=batch_term)
-    # overclustering proper - do basic clustering first, then cluster each cluster
-    sc.tl.leiden(_adata)
-    for clus in list(np.unique(_adata.obs['leiden']))[0]:
-        sc.tl.leiden(_adata, restrict_to=('leiden',[clus]), key_added = 'leiden_R')
-    for clus in list(np.unique(_adata.obs['leiden']))[1:]: # weird how the new anndata/scanpy is forcing this
-        sc.tl.leiden(_adata, restrict_to=('leiden_R',[clus]), key_added = 'leiden_R')
-    # compute the cluster scores - the median of Scrublet scores per overclustered cluster
-    for clus in np.unique(_adata.obs['leiden_R']):
-        _adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_cluster_score'] = \
-            np.median(_adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_score'])
-    # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
-    med = np.median(_adata.obs['scrublet_cluster_score'])
-    mask = _adata.obs['scrublet_cluster_score']>med
-    mad = np.median(_adata.obs['scrublet_cluster_score'][mask]-med)
-    # let's do a one-sided test. the Bertie write-up does not address this but it makes sense
-    pvals = 1-scipy.stats.norm.cdf(_adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
-    _adata.obs['bh_pval'] = bh(pvals)
-    # threshold the p-values to get doublet calls.
-    _adata.obs['is_doublet'] = _adata.obs['bh_pval'] < pval_cutoff
-    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
-        (_adata.obs['percent_mito'] >= mito_cutoff) | \
-            (_adata.obs['is_doublet'] == True)
-
-    # removing columns that probably don't need anymore
-    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
-    self.obs = _adata.obs.copy()
-
-def recipe_scanpy_qc_v2(self, max_genes=2500, min_genes=200, mito_cutoff=0.05, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None, blacklist=None):
-    """
-    Recipe for running a standard scanpy QC worflow.
-
-    Parameters
-    ----------
-    adata : AnnData
-        The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
-    max_genes : int
-        Maximum number of genes expressed required for a cell to pass filtering. Default is 2500.
-    min_genes : int
-        Minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
-    mito_cutoff : float
-        Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 0.05.
-    pval_cutoff : float
-        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
-    min_counts : int, optional
-        Minimum number of counts required for a cell to pass filtering. Default is None.
-    max_counts : int, optional
-        Maximum number of counts required for a cell to pass filtering. Default is None.
-    batch_term : str, optional
-        If provided, will use sc.external.pp.bbknn for neighborhood construction.
-    blacklist : sequence, optional
-        If provided, will exclude these genes from highly variable genes list.
-    Returns
-    -------
-        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
-
-    """
-    _adata = self.copy()
-    # overcluster prep. run basic scanpy pipeline
-    sc.pp.filter_cells(_adata, min_genes = 0)
-    mito_genes = _adata.var_names.str.startswith('MT-')
-    _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)
-    _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
-        (_adata.obs['percent_mito'] >= mito_cutoff)
-    _adata2 = _adata[_adata.obs['filter_rna'] != True]
-
-    # run scrublet
-    scrub = scr.Scrublet(_adata2.X)
-    doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
-    _adata2.obs['scrublet_score'] = doublet_scores
-    
-    sc.pp.normalize_total(_adata2, target_sum = 1e4)
-    sc.pp.log1p(_adata2)
-    sc.pp.highly_variable_genes(_adata2, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    for i in _adata.var.index:
-        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
-            _adata.var.at[i, 'highly_variable'] = False
-        if blacklist is not None:
-            if i in blacklist:
-                _adata.var.at[i, 'highly_variable'] = False
-    _adata2 = _adata2[:, _adata2.var['highly_variable']]
-    sc.pp.scale(_adata2, max_value=10)
-    sc.tl.pca(_adata2, svd_solver='arpack')
-    if batch_term is None:
-        sc.pp.neighbors(_adata2, n_neighbors=10, n_pcs=50)
-    else:
-        sc.external.pp.bbknn(_adata2, batch_key=batch_term)
-    # overclustering proper - do basic clustering first, then cluster each cluster
-    sc.tl.leiden(_adata2)
-    for clus in list(np.unique(_adata2.obs['leiden']))[0]:
-        sc.tl.leiden(_adata2, restrict_to=('leiden',[clus]), key_added = 'leiden_R')
-    for clus in list(np.unique(_adata2.obs['leiden']))[1:]: # weird how the new anndata/scanpy is forcing this
-        sc.tl.leiden(_adata2, restrict_to=('leiden_R',[clus]), key_added = 'leiden_R')
-    # compute the cluster scores - the median of Scrublet scores per overclustered cluster
-    for clus in np.unique(_adata2.obs['leiden_R']):
-        _adata2.obs.loc[_adata2.obs['leiden_R']==clus, 'scrublet_cluster_score'] = \
-            np.median(_adata2.obs.loc[_adata2.obs['leiden_R']==clus, 'scrublet_score'])
-    # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
-    med = np.median(_adata2.obs['scrublet_cluster_score'])
-    mask = _adata2.obs['scrublet_cluster_score']>med
-    mad = np.median(_adata2.obs['scrublet_cluster_score'][mask]-med)
-    # let's do a one-sided test. the Bertie write-up does not address this but it makes sense
-    pvals = 1-scipy.stats.norm.cdf(_adata2.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
-    _adata2.obs['bh_pval'] = bh(pvals)
-    # threshold the p-values to get doublet calls.
-    _adata2.obs['is_doublet'] = _adata2.obs['bh_pval'] < pval_cutoff
-    _adata2.obs['is_doublet'] = _adata2.obs['is_doublet'].astype('category')
-    _adata.obs['scrublet_score'] = pd.Series(_adata2.obs['scrublet_score'])
-    _adata.obs['is_doublet'] = pd.Series(_adata2.obs['is_doublet'])
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
-        (_adata.obs['percent_mito'] >= mito_cutoff) | \
-            (_adata.obs['is_doublet'].isin([True, np.nan]))
-
-    self.obs = _adata.obs.copy()
-
 
 def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel = True, ncpu = None, save=None):
     """
@@ -2023,7 +1883,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
     except: 
-        raise(ImportError('Unable to initialise R instance. Please run this separately in R.'))
+        raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
         
     sh = importr('shazam')
     if self.__class__ == Dandelion:
@@ -2186,7 +2046,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
     except: 
-        raise(ImportError('Unable to initialise R instance. Please run this separately in R.'))
+        raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
     sh = importr('shazam')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)

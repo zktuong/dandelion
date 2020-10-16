@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-09 14:26:30
+# @Last Modified time: 2020-10-16 02:09:59
 
 import sys
 import os
@@ -339,7 +339,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
             else:
                 r_l = list(sub_metadata2.loc[x, :])
             r_l = sorted([y for y in r_l if str(y) != 'nan'])
-            light_retrieval_list[x] = ['|'.join(x) if len(x) > 0 else np.nan for x in [r_l]][0]
+            light_retrieval_list[x] = ['|'.join([str(zz) for zz in z]) if len(z) > 0 else np.nan for z in [r_l]][0]
         return(heavy_retrieval_list, light_retrieval_list)
 
 def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_light = True, collapse = False, clones_sep = None, clone_key = None):

@@ -2,9 +2,11 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-06-17 17:27:37
+# @Last Modified time: 2020-10-16 01:34:20
 
 import os
+import pandas as pd
+import numpy as np
 from subprocess import run
 from datetime import timedelta
 from time import time
@@ -18,7 +20,14 @@ from changeo.Defaults import default_format, default_out_args
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getFormatOperators, getOutputHandle, readGermlines, checkFields
 
-def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'airr', verbose = False, outputfolder = None):
+# scanpy recipe
+import scanpy as sc
+from ...utilities._utilities import *
+import scipy.stats
+import scrublet as scr
+import re
+
+def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'airr', verbose = False):
     """
     reannotate with IgBLASTn
 
@@ -69,10 +78,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
     informat_dict = {'changeo':'_igblast.fmt7'}
 
     if fileformat == 'changeo':
-        if outputfolder is None:
-            outfolder = os.path.dirname(fasta)+'/tmp'
-        else:
-            outfolder = str(outputfolder)
+        outfolder = os.path.abspath(os.path.dirname(fasta))+'/tmp'
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
         in_file = fasta.split('.fasta')[0] + informat_dict[fileformat]
@@ -80,7 +86,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
         out_file = "{}/{}".format(outfolder, outfile)
         os.replace(in_file, out_file)
 
-def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', outputfolder = None, extended = False, verbose = False):
+def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', extended = False, verbose = False):
     """
     parses IgBLAST output to change-o format
 
@@ -96,8 +102,6 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
         format of output file
     org
         organism.
-    outputfolder
-        if specified, the location of output files.
     verbose
         whether or not to print the files
     Returns
@@ -368,3 +372,86 @@ def correctIMGTFields(receptor, references):
     imgt_dict.update(gapped)
 
     return imgt_dict
+
+def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None, blacklist=None):
+    """
+    Recipe for running a standard scanpy QC worflow.
+
+    Parameters
+    ----------
+    adata : AnnData
+        The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
+    max_genes : int
+        Maximum number of genes expressed required for a cell to pass filtering. Default is 2500.
+    min_genes : int
+        Minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
+    mito_cutoff : float
+        Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.
+    pval_cutoff : float
+        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
+    min_counts : int, optional
+        Minimum number of counts required for a cell to pass filtering. Default is None.
+    max_counts : int, optional
+        Maximum number of counts required for a cell to pass filtering. Default is None.
+    batch_term : str, optional
+        If provided, will use sc.external.pp.bbknn for neighborhood construction.
+    blacklist : sequence, optional
+        If provided, will exclude these genes from highly variable genes list.
+    Returns
+    -------
+        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
+
+    """
+    _adata = self.copy()
+    # run scrublet
+    scrub = scr.Scrublet(_adata.X)
+    doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
+    _adata.obs['scrublet_score'] = doublet_scores
+    # overcluster prep. run basic scanpy pipeline
+    sc.pp.filter_cells(_adata, min_genes = 0)
+    mito_genes = _adata.var_names.str.startswith('MT-')
+    _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)*100
+    _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
+    sc.pp.normalize_total(_adata, target_sum = 1e4)
+    sc.pp.log1p(_adata)
+    sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    for i in _adata.var.index:
+        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
+            _adata.var.at[i, 'highly_variable'] = False
+        if blacklist is not None:
+            if i in blacklist:
+                _adata.var.at[i, 'highly_variable'] = False
+    _adata = _adata[:, _adata.var['highly_variable']]
+    sc.pp.scale(_adata, max_value=10)
+    sc.tl.pca(_adata, svd_solver='arpack')
+    if batch_term is None:
+        sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
+    else:
+        sc.external.pp.bbknn(_adata, batch_key=batch_term)
+    # overclustering proper - do basic clustering first, then cluster each cluster
+    sc.tl.leiden(_adata)
+    for clus in list(np.unique(_adata.obs['leiden']))[0]:
+        sc.tl.leiden(_adata, restrict_to=('leiden',[clus]), key_added = 'leiden_R')
+    for clus in list(np.unique(_adata.obs['leiden']))[1:]: # weird how the new anndata/scanpy is forcing this
+        sc.tl.leiden(_adata, restrict_to=('leiden_R',[clus]), key_added = 'leiden_R')
+    # compute the cluster scores - the median of Scrublet scores per overclustered cluster
+    for clus in np.unique(_adata.obs['leiden_R']):
+        _adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_cluster_score'] = \
+            np.median(_adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_score'])
+    # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
+    med = np.median(_adata.obs['scrublet_cluster_score'])
+    mask = _adata.obs['scrublet_cluster_score']>med
+    mad = np.median(_adata.obs['scrublet_cluster_score'][mask]-med)
+    # let's do a one-sided test. the Bertie write-up does not address this but it makes sense
+    pvals = 1-scipy.stats.norm.cdf(_adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
+    _adata.obs['scrublet_score_bh_pval'] = bh(pvals)
+    # threshold the p-values to get doublet calls.
+    _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
+    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
+    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
+        (_adata.obs['percent_mito'] >= mito_cutoff) | \
+            (_adata.obs['is_doublet'] == True)
+
+    # removing columns that probably don't need anymore
+    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
+    self.obs = _adata.obs.copy()
