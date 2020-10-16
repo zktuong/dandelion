@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-16 00:35:17
+# @Last Modified time: 2020-10-16 12:22:38
 
 import sys
 import os
@@ -1904,6 +1904,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         mut_d = data(sh).fetch(mutation_definition)
 
     if split_locus is False:
+        dat = dat.where(dat.isna(), dat.astype(str))
         try:
             dat_r = pandas2ri.py2rpy(dat)
         except:
@@ -1917,12 +1918,14 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat_h = dat[dat['locus'] == 'IGH']
         dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
 
+        dat_h = dat_h.where(dat_h.isna(), dat_h.astype(str))
         try:
             dat_h_r = pandas2ri.py2rpy(dat_h)
         except:
             dat_h = dat_h.fillna('')
             dat_h_r = pandas2ri.py2rpy(dat_h)
 
+        dat_l = dat_l.where(dat_l.isna(), dat_l.astype(str))
         try:
             dat_l_r = pandas2ri.py2rpy(dat_l)
         except:
@@ -2101,8 +2104,36 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             edge_ = 0.9
         else:
             edge_ = edge
-
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, subsample = subsample_, edge = edge_)
+        threshold=np.array(dist_threshold.slots['threshold'])[0]
+        if np.isnan(threshold):
+            warnings.warn(UserWarning("Threshold method 'density' did not return with any values. Switching to method = 'gmm'."))
+            if threshold_model is None:
+                threshold_model_ = "gamma-gamma"
+            else:
+                threshold_model_ = threshold_model
+
+            if cross is None:
+                cross_ = NULL
+            else:
+                cross_ = cross
+
+            if cutoff is None:
+                cutoff_ = 'optimal'
+            else:
+                cutoff_ = cutoff
+
+            if sensitivity is None:
+                sen_ = NULL
+            else:
+                sen_ = sensitivity
+
+            if specificity is None:
+                spc_ = NULL
+            else:
+                spc_ = specificity
+            dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method='gmm', model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
+            threshold=np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
             threshold_model_ = "gamma-gamma"
@@ -2128,10 +2159,11 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             spc_ = NULL
         else:
             spc_ = specificity
-        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
+        threshold=np.array(dist_threshold.slots['threshold'])[0]
 
-    threshold=np.array(dist_threshold.slots['threshold'])[0]
-
+    if np.isnan(threshold):
+        warnings.warn(UserWarning("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."))
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
 
     if plot:
