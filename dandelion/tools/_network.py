@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-18 16:40:14
+# @Last Modified time: 2020-10-22 10:39:30
 
 import pandas as pd
 import numpy as np
@@ -30,7 +30,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     data : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     distance_mode : str
-        The mode of calculating joint distance matrix for heavy and light chains. Default is 'simple'. If 'simple', a simple sum operation will be used. If 'weighted', depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.
+        The mode of calculating joint distance matrix for heavy and light chains. Default is 'simple'. If 'simple', a simple sum operation will be used. If 'scaled', depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.
     min_size : int
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
     aa_or_nt : str, optional
@@ -110,7 +110,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     n_ = len(dist_mat_list)
     if distance_mode == 'simple':
         total_dist = np.sum(dist_mat_list,axis=0)
-    if distance_mode == 'weighted':
+    if distance_mode == 'scaled':
         weighted_matrix = []
         if weights is None:
             for w in range(0, n_):
@@ -172,7 +172,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_.fillna(0, inplace = True)
         tmp_clone_tree3[x] = tmp_
 
-    # here I'm using a temporary edge list to catch all cells that were identified as clones to forecfully link them up if they were clipped off during the mst step
+    # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were clipped off during the mst step
     tmp_edge_list = Tree()
     for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
         G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
