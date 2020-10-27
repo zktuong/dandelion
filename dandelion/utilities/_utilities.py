@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-27 18:28:03
+# @Last Modified time: 2020-10-27 18:57:39
 
 import sys
 import os
@@ -567,11 +567,11 @@ class Dandelion:
             else:
                 descr += f"\n    {attr}: {str(None)}"
         if self.layout is not None:
-            descr += f"\n    layout: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1])])}"
+            descr += f"\n    layout: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1])])}"
         else:
             descr += f"\n    layout: {str(None)}"
         if self.graph is not None:
-            descr += f"\n    graph: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
+            descr += f"\n    graph: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
         else:
             descr += f"\n    graph: {str(None)}"
         return descr
