@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-18 22:03:40
+# @Last Modified time: 2020-10-27 18:25:57
 
 import os
 import sys
@@ -698,11 +698,12 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
 
     if os.path.isfile(str(self)):
-    	tmpFolder = "{}/tmp".format(os.path.dirname(self))
-    	outFolder = "{}".format(os.path.dirname(self))
+        tmpFolder = "{}/tmp".format(os.path.dirname(self))
+        outFolder = "{}".format(os.path.dirname(self))
     else:
-        tmpFolder = "{}/tmp".format(os.getcwd(self))
-        outFolder = "{}".format(os.getcwd(self))
+        import tempfile
+        tmpFolder = "{}/tmp".format(tempfile.TemporaryDirectory())
+        outFolder = "{}".format(tempfile.TemporaryDirectory())
 
     if not os.path.exists(tmpFolder):
         os.makedirs(tmpFolder)
