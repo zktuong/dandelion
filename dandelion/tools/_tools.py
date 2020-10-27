@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-03 10:13:34
+# @Last Modified time: 2020-10-27 18:25:57
 
 import os
 import sys
@@ -32,7 +32,7 @@ from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
 
-def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, write_out = False, outdir=None, outFilePrefix=None, key_added = None):
+def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, key_added = None):
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -46,12 +46,6 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
         modes for clustering: 'nt' or 'aa'. None defaults to 'aa'.
     by_alleles : bool, optional
         Whether or not to collapse alleles to genes. None defaults to True.
-    write_out : bool
-        If True, will write out airr/changeo file with clone_id column (default is False). file path and file name is determined by outdir and outFilePrefix options..
-    outdir : str, optional
-        If specified, outfile will be in this location. None defaults to 'dandelion/data'.
-    outFilePrefix : str, optional
-        If specified, the outfile name will have this prefix. None defaults to 'dandelion_find_clones'
     key_added : str, optional
         If specified, this will be the column name for clones. None defaults to 'clone_id'
     Returns
@@ -494,24 +488,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, wr
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
-    else:
-        if write_out:
-            if outdir is None:
-                outDir = 'dandelion/data'
-            else:
-                if outdir.endswith('/'):
-                    outDir = str(outdir).strip('/')
-                else:
-                    outDir = str(outdir)
-
-            if not os.path.exist(outDir):
-                os.makedirs(outDir)
-            if outFilePrefix is not None:
-                dat.to_csv("{}/{}_clone.tsv".format(outDir, str(outFilePrefix)), sep = '\t', index = None)
-            elif outFilePrefix is None:
-                dat.to_csv("{}/{}_clone.tsv".format(outDir, 'dandelion_find_clones'), sep = '\t', index = None)
-        else:
-            pass
+    
     sleep(0.5)
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
@@ -721,19 +698,12 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
 
     if os.path.isfile(str(self)):
-        if dirs is None:
-            tmpFolder = "{}/tmp".format(os.path.dirname(self))
-            outFolder = "{}".format(os.path.dirname(self))
-        else:
-            tmpFolder = str(dirs).strip('/')+'/tmp'
-            outFolder = str(dirs).strip('/')
+        tmpFolder = "{}/tmp".format(os.path.dirname(self))
+        outFolder = "{}".format(os.path.dirname(self))
     else:
-        if dirs is None:
-            tmpFolder = "dandelion/data/tmp"
-            outFolder = "dandelion/data"
-        else:
-            tmpFolder = str(dirs).strip('/')+'/tmp'
-            outFolder = str(dirs).strip('/')
+        import tempfile
+        tmpFolder = "{}/tmp".format(tempfile.TemporaryDirectory())
+        outFolder = "{}".format(tempfile.TemporaryDirectory())
 
     if not os.path.exists(tmpFolder):
         os.makedirs(tmpFolder)

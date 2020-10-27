@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-16 12:22:38
+# @Last Modified time: 2020-10-27 18:03:57
 
 import sys
 import os
@@ -36,7 +36,7 @@ from Bio import Align
 # except ImportError:
 #     pass
 
-def format_fasta(fasta, prefix = None, outdir = None):
+def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = True, outdir = None):
     """
     Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -46,6 +46,12 @@ def format_fasta(fasta, prefix = None, outdir = None):
         path to fasta file.
     prefix : str, optional
         prefix to append to the headers/contig ids.
+    suffix : str, optional
+        suffix to append to the headers/contig ids.
+    sep : str, optional
+        separator after prefix or before suffix to append to the headers/contig ids.
+    remove_trailing_hyphen_number : bool
+        whether or not to remove the trailing hyphen number e.g. '-1' from the cell barcodes. Doesn't affect contig barcodes.
     outdir : str, optional
         path to output location. None defaults to 'dandelion/data'.
     Returns
@@ -65,12 +71,28 @@ def format_fasta(fasta, prefix = None, outdir = None):
 
     fh = open(filePath, 'r')
     seqs = {}
+
+    if sep is None:
+        separator = '_'
+    else:
+        separator = str(sep)
+
     for header, sequence in fasta_iterator(fh):
-        if prefix is not None:
-            newheader = prefix+'_'+str(header)
+        if prefix is None and suffix is None:
+            seqs[header] = sequence
+        elif prefix is not None:
+            if suffix is not None:
+                newheader = str(prefix)+separator+str(header)+separator+str(suffix)
+            else:
+                newheader = str(prefix)+separator+str(header)
             seqs[newheader] = sequence
         else:
-            seqs[header] = sequence
+            if suffix is not None:
+                newheader = str(header)+separator+str(suffix)
+            else:
+                newheader = str(header)
+            seqs[newheader] = sequence
+
     fh.close()
 
     if os.path.isfile(filePath):
@@ -101,12 +123,36 @@ def format_fasta(fasta, prefix = None, outdir = None):
     # format the barcode and contig_id in the corresponding annotation file too
     anno = basedir+'/'+os.path.basename(filePath).replace('.fasta', '_annotations.csv')
     data = pd.read_csv(anno, dtype = 'object')
-    data['contig_id'] = [prefix+'_'+str(c) for c in data['contig_id']]
-    data['barcode'] = [prefix+'_'+str(b).split('-')[0] for b in data['barcode']]
+
+    if prefix is not None:
+        if suffix is not None:
+            data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
+            if remove_trailing_hyphen_number:
+                data['barcode'] = [str(prefix)+separator+str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
+            else:                
+                data['barcode'] = [str(prefix)+separator+str(b)+separator+str(suffix) for b in data['barcode']]
+        else:
+            data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
+            if remove_trailing_hyphen_number:
+                data['barcode'] = [str(prefix)+separator+str(b).split('-')[0] for b in data['barcode']]
+            else:
+                data['barcode'] = [str(prefix)+separator+str(b) for b in data['barcode']]
+    else:
+        if suffix is not None:
+            data['contig_id'] = [str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
+            if remove_trailing_hyphen_number:
+                data['barcode'] = [str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
+            else:                
+                data['barcode'] = [str(b)+separator+str(suffix) for b in data['barcode']]
+        else:
+            data['contig_id'] = [str(c) for c in data['contig_id']]
+            data['barcode'] = [str(b) for b in data['barcode']]
+
     out_anno = out_dir + os.path.basename(filePath).replace('.fasta', '_annotations.csv')
+
     data.to_csv(out_anno, index= False)
 
-def format_fastas(fastas, prefix = None, outdir = None):
+def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = True, outdir = None):
     """
     Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -116,6 +162,12 @@ def format_fastas(fastas, prefix = None, outdir = None):
         list or sequence of paths to fasta files.
     prefix : list, optional
         list or sequence of prefixes to append to headers/contig ids in each fasta file.
+    suffix : str, optional
+        list or sequence of suffixes to append to headers/contig ids in each fasta file.
+    sep : str, optional
+        separator after prefix or before suffix to append to the headers/contig ids.
+    remove_trailing_hyphen_number : bool
+        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to out put location. Default is None, which is 'dandelion/data'.
     Returns
@@ -128,12 +180,25 @@ def format_fastas(fastas, prefix = None, outdir = None):
         if type(prefix) is not list:
             prefix = [prefix]
         prefix_dict = dict(zip(fastas, prefix))
+    if suffix is not None:
+        if type(suffix) is not list:
+            suffix = [suffix]
+        suffix_dict = dict(zip(fastas, suffix))
 
     for fasta in tqdm(fastas, desc = 'Formating fasta(s) '):
-        if prefix is not None:
-            format_fasta(fasta, prefix_dict[fasta], outdir)
+        if prefix is None and suffix is None:
+            format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
+        elif prefix is not None:
+            if suffix is not None:
+                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = suffix_dict[fasta], sep = sep, outdir = outdir)
+            else:
+                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = None, sep = sep, outdir = outdir)
         else:
-            format_fasta(fasta, None, outdir)
+            if suffix is not None:
+                format_fasta(fasta, prefix = None, suffix = suffix_dict[fasta], sep = sep, outdir = outdir)
+            else:
+                format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
+
 
 def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
     """
@@ -232,7 +297,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
 
         input_file = "{}/tmp/{}.xml".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
         output_file = "{}/tmp/{}.blastsummary.txt".format(os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0]+fileformat)
-        
+
         with open(output_file, 'w') as outfile:
             outfile.write("------------------\n##{}##\n------------------\n\n#BCR#\n\n".format(fasta))
             # Split result file into chunks corresponding to results for each query sequence.
@@ -654,7 +719,7 @@ def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call =
     """
     if type(fastas) is not list:
         fastas = [fastas]
-    
+
     if verbose:
         print('Assign isotypes \n')
     for fasta in fastas:
@@ -691,7 +756,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
     """
     if type(data) is not list:
         data = [data]
-    
+
     filePath = None
     for s in tqdm(data, desc = 'Assigning genes '):
         if os.path.isfile(str(s)) and str(s).endswith(".fasta"):
@@ -716,7 +781,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
 
         if verbose:
             print('Processing {} \n'.format(filePath))
-    
+
         assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, fileformat = fileformat, verbose = verbose, *args)
         if fileformat == 'airr':
             env = os.environ.copy()
@@ -818,7 +883,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
 
     if type(data) is not list:
         data = [data]
-   
+
     informat_dict = {'changeo':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
     inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
@@ -867,13 +932,13 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     outDir = combined_folder.strip('/')
     if not os.path.exists(outDir):
         os.makedirs(outDir)
-    
+
     print('   Writing out concatenated object')
     # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
     dat_h = dat_[dat_['locus'] == 'IGH']
     dat_h.to_csv(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
     tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
-    
+
     # initialise the germline references
     # germline_ref = readGermlines([gml])
 
@@ -1574,7 +1639,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(l[b])
-            
+
             if v == np.nan or j == np.nan:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
@@ -1740,7 +1805,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     if 'IGL' in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(l[b])                
+                        drop_contig.append(l[b])
 
                 if 'IGH' in j:
                     if filter_poorqualitybcr:
@@ -1751,7 +1816,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
-                
+
                 if v == np.nan or j == np.nan:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
@@ -1882,9 +1947,9 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         from rpy2.robjects.packages import importr, data
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
-    except: 
+    except:
         raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
-        
+
     sh = importr('shazam')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
@@ -2048,7 +2113,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         from rpy2.robjects.packages import importr, data
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
-    except: 
+    except:
         raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
     sh = importr('shazam')
     if self.__class__ == Dandelion:
