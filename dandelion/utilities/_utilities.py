@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-16 14:01:06
+# @Last Modified time: 2020-10-27 18:28:03
 
 import sys
 import os
@@ -574,10 +574,6 @@ class Dandelion:
             descr += f"\n    graph: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
         else:
             descr += f"\n    graph: {str(None)}"
-        if self.threshold is not None:
-            descr += f"\n    threshold: {self.threshold}"
-        else:
-            descr += f"\n    threshold: {str(None)}"
         return descr
 
     def __repr__(self) -> str:
