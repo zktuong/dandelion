@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-22 10:39:30
+# @Last Modified time: 2020-11-01 21:13:29
 
 import pandas as pd
 import numpy as np
@@ -172,12 +172,17 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_.fillna(0, inplace = True)
         tmp_clone_tree3[x] = tmp_
 
-    # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were clipped off during the mst step
+    # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
     tmp_edge_list = Tree()
     for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
         G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
         G.edges(data=True)
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
+        tmp_edge_list[c].index = [(s, t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+        for idx in tmp_edge_list[c].index:
+            if tmp_totaldist.loc[idx[0], idx[1]] > 0:
+                tmp_edge_list[c].drop(idx, inplace = True)
+        tmp_edge_list[c].reset_index(inplace = True)
 
     # try to catch situations where there's no edge (only singletons)
     try:
