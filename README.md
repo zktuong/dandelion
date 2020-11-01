@@ -33,8 +33,8 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install distance scikit-bio joblib plotnine jupyter adjustText
-conda install -c bioconda igblast blast changeo presto
+conda install distance joblib plotnine adjustText jupyter
+conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
 conda install -c conda-forge rpy2
 # or pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
@@ -42,7 +42,7 @@ conda install -c conda-forge rpy2
 # env CC=/path/to/location/of/bin/gcc-9 pip install rpy2
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
-pip install networkx polyleven scrublet scanpy
+pip install networkx polyleven scrublet scanpy changeo presto scikit-bio 
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
@@ -88,25 +88,23 @@ echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
 source ~/.bash_profile
 ```
 
-## Requirements
+## Basic Requirements
 Python packages
 ```python
 # conda
-python==3.7.6 (conda-forge)
-numpy==1.18.4 (conda-forge)
-pandas==1.0.3 (conda-forge)
-distance==0.1.3 (conda-forge)
+python>=3.7,<3.8 (conda-forge)
+numpy>=1.18.4 (conda-forge)
+pandas>=1.0.3 (conda-forge)
+distance>=0.1.3 (conda-forge)
 joblib==0.14.1 (conda-forge)
 jupyter==1.0.0 (conda-forge)
-scikit-learn==0.23.0 (conda-forge)
-numba==0.48.0 (conda-forge)
+scikit-learn>=0.23.0 (conda-forge)
+numba>=0.48.0 (conda-forge)
 pytables==3.6.1 (conda-forge)
-seaborn==0.10.1 (conda-forge)
-leidenalg==0.8.0 (conda-forge)
-plotnine==0.6.0 (conda-forge)
-scikit-bio==0.5.6 (conda-forge)
-changeo==1.0.0 (bioconda)
-presto==0.6.0 (bioconda)
+seaborn>=0.10.1 (conda-forge)
+leidenalg>=0.8.0 (conda-forge)
+plotnine>=0.6.0 (conda-forge)
+(conda-forge)
 
 # Other executables (through conda)
 blast>=2.10.0 (bioconda) # depends on the database version as well
@@ -115,7 +113,10 @@ igblast==1.15.0 (bioconda)
 # pip
 anndata>=0.7.1
 scanpy>=1.4.6
-scrublet==0.2.1
+scrublet>=0.2.1
+scikit-bio>=0.5.6 
+changeo>=1.0.0
+presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
 rpy2>=3.3.2
