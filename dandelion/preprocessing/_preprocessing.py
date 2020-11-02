@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-02 16:07:04
+# @Last Modified time: 2020-11-02 16:15:15
 
 import sys
 import os
@@ -1876,7 +1876,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
         _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
         if _dat.shape[0] is 0:
-            raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching? Make sure that the transcriptome data does not contain any "-#" at the suffix.')
+            raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching?')
 
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = False)
