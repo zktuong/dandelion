@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-27 18:03:57
+# @Last Modified time: 2020-11-02 16:07:04
 
 import sys
 import os
@@ -1842,11 +1842,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             ldoublet[c] = False
 
     adata.obs['filter_bcr_quality'] = pd.Series(dict(poorqual))
-    adata.obs['filter_bcr_quality'] = adata.obs['filter_bcr_quality'].astype('category')
+    # adata.obs['filter_bcr_quality'] = adata.obs['filter_bcr_quality'].astype('category')
     adata.obs['filter_bcr_heavy'] = pd.Series(dict(hdoublet))
-    adata.obs['filter_bcr_heavy'] = adata.obs['filter_bcr_heavy'].astype('category')
+    # adata.obs['filter_bcr_heavy'] = adata.obs['filter_bcr_heavy'].astype('category')
     adata.obs['filter_bcr_light'] = pd.Series(dict(ldoublet))
-    adata.obs['filter_bcr_light'] = adata.obs['filter_bcr_light'].astype('category')
+    # adata.obs['filter_bcr_light'] = adata.obs['filter_bcr_light'].astype('category')
 
     drop_contig = list(set(flatten(drop_contig)))
 
@@ -1900,7 +1900,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             out_dat = Dandelion(data = _dat, initialize = False)
 
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
-    adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
+    # adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
 
     barcodex = list(set(_dat['cell_id']))
     for c in adata.obs_names:
@@ -1909,7 +1909,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         else:
             bcr_check[c] = False
     adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
-    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
+    # adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if filter_rna:
         out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
