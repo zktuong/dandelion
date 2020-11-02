@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-27 18:25:57
+# @Last Modified time: 2020-11-02 16:09:59
 
 import os
 import sys
@@ -614,11 +614,13 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         self.obsp['distances'] = df_distances_.copy()
         self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
-
-        self.uns[neighbors_key]['connectivities'] = df_connectivities_.copy()
-        self.uns[neighbors_key]['distances'] = df_distances_.copy()
-        self.uns[neighbors_key]['params'] = {'method':'bcr'}
-        self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()
+        try:
+            self.uns[neighbors_key]['connectivities'] = df_connectivities_.copy()
+            self.uns[neighbors_key]['distances'] = df_distances_.copy()
+            self.uns[neighbors_key]['params'] = {'method':'bcr'}
+            self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()
+        except:
+            pass
 
     for x in dandelion.metadata.columns:
         self.obs[x] = pd.Series(dandelion.metadata[x])
