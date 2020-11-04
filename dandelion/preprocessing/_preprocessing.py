@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-02 16:15:15
+# @Last Modified time: 2020-11-04 13:27:19
 
 import sys
 import os
@@ -67,7 +67,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
             if os.path.isfile(fasta.strip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
                 filePath = fasta + '/' + os.path.basename(file)
     if filePath is None:
-        raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.')
+        raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file. Starting folder should only contain 1 fasta file.')
 
     fh = open(filePath, 'r')
     seqs = {}
@@ -167,7 +167,7 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
     sep : str, optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
-        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
+        whether or not to remove the trailing hyphen number e.g. '-1' from the cell barcodes. Doesn't affect contig barcodes.
     outdir : str, optional
         path to out put location. Default is None, which is 'dandelion/data'.
     Returns
