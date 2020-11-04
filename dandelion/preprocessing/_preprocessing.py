@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 16:32:23
+# @Last Modified time: 2020-11-04 16:40:23
 
 import sys
 import os
@@ -672,6 +672,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     if verbose:
         print('Finishing up \n')
     dat = _add_cell(dat)
+    dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
     dat.to_csv(_file, sep = '\t', index=False)
     if plot:
         options.figure_size = figsize
