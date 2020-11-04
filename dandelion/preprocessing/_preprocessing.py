@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 13:27:19
+# @Last Modified time: 2020-11-04 15:30:53
 
 import sys
 import os
@@ -51,7 +51,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
     sep : str, optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
-        whether or not to remove the trailing hyphen number e.g. '-1' from the cell barcodes. Doesn't affect contig barcodes.
+        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to output location. None defaults to 'dandelion/data'.
     Returns
@@ -82,13 +82,22 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
             seqs[header] = sequence
         elif prefix is not None:
             if suffix is not None:
-                newheader = str(prefix)+separator+str(header)+separator+str(suffix)
+                if remove_trailing_hyphen_number:
+                    newheader = str(prefix)+separator+str(header).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(header).split('_contig')[1]
+                else:
+                    newheader = str(prefix)+separator+str(header).split('_contig')[0]+separator+str(suffix)+'_contig'+str(header).split('_contig')[1]
             else:
-                newheader = str(prefix)+separator+str(header)
+                if remove_trailing_hyphen_number:
+                    newheader = str(prefix)+separator+str(header).split('_contig')[0].split('-')[0]+'_contig'+str(header).split('_contig')[1]
+                else:
+                    newheader = str(prefix)+separator+str(header)
             seqs[newheader] = sequence
         else:
             if suffix is not None:
-                newheader = str(header)+separator+str(suffix)
+                if remove_trailing_hyphen_number:
+                    newheader = str(header).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(header).split('_contig')[1]
+                else:
+                    newheader = str(header)+separator+str(suffix)
             else:
                 newheader = str(header)
             seqs[newheader] = sequence
@@ -167,7 +176,7 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
     sep : str, optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
-        whether or not to remove the trailing hyphen number e.g. '-1' from the cell barcodes. Doesn't affect contig barcodes.
+        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to out put location. Default is None, which is 'dandelion/data'.
     Returns
