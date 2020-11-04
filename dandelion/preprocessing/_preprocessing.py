@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 16:12:33
+# @Last Modified time: 2020-11-04 16:17:45
 
 import sys
 import os
@@ -209,7 +209,7 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
                 format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
 
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -218,7 +218,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     fasta : str
         path to fasta file.
     fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
@@ -583,7 +583,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         return(dat)
 
     # main function from here
-    format_dict = {'changeo':'_igblast_db-pass', 'airr':'_igblast_gap'}
+    format_dict = {'changeo':'_igblast_db-pass', 'blast':'_igblast_db-pass', 'airr':'_igblast_gap'}
 
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
@@ -692,7 +692,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme(legend_title = element_blank()))
         print(p)
 
-def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
+def assign_isotypes(fastas, fileformat = 'blast', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -701,7 +701,7 @@ def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call =
     fastas : list
         list or sequence of paths to fasta files.
     fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
@@ -843,7 +843,7 @@ def map_cellranger(data, extended = False):
         dat['junction_10x_aa'] = pd.Series(junction_aa)
     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, combined_folder, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
+def reassign_alleles(data, combined_folder, germline = None, org = 'human', fileformat = 'blast', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -858,7 +858,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     org : str
         organism of germline database. Default is 'human'.
     fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of germline database. Default is 'human'.
     seq_field : str
@@ -893,10 +893,10 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     if type(data) is not list:
         data = [data]
 
-    informat_dict = {'changeo':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
-    fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
-    inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
-    germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
+    informat_dict = {'changeo':'_igblast_db-pass.tsv', 'blast':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
+    fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'blast':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
+    inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'blast':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
+    germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'blast':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
 
     data_list = []
     filePath = None
