@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 18:51:57
+# @Last Modified time: 2020-11-04 19:06:23
 
 import os
 import pandas as pd
@@ -153,7 +153,7 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
     out_file = "{}/{}".format(outfolder, os.path.basename(new_file))
     os.replace(new_file, out_file)
 
-def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat = 'blast', verbose = False):
+def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat = 'airr', verbose = False):
     """
     reassignAlleles with TIgGER in R.
 

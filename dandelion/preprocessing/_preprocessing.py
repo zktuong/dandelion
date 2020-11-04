@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 19:05:12
+# @Last Modified time: 2020-11-04 19:07:21
 
 import sys
 import os
@@ -951,7 +951,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
     dat_h = dat_[dat_['locus'] == 'IGH']
     dat_h.to_csv(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-    tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
+    tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germline = germline, fileformat = fform_dict[fileformat], verbose = verbose)
 
     # initialise the germline references
     # germline_ref = readGermlines([gml])
