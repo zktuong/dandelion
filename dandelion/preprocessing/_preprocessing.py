@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 16:17:45
+# @Last Modified time: 2020-11-04 16:32:23
 
 import sys
 import os
@@ -135,23 +135,26 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
 
     if prefix is not None:
         if suffix is not None:
-            data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
             if remove_trailing_hyphen_number:
+                data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
-            else:                
+            else:
+                data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b)+separator+str(suffix) for b in data['barcode']]
-        else:
-            data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
+        else:            
             if remove_trailing_hyphen_number:
+                data['contig_id'] = [str(prefix)+separator+str(c).split('-')[0] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b).split('-')[0] for b in data['barcode']]
             else:
+                data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b) for b in data['barcode']]
     else:
-        if suffix is not None:
-            data['contig_id'] = [str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
+        if suffix is not None:            
             if remove_trailing_hyphen_number:
+                data['contig_id'] = [str(c).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
-            else:                
+            else:
+                data['contig_id'] = [str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(b)+separator+str(suffix) for b in data['barcode']]
         else:
             data['contig_id'] = [str(c) for c in data['contig_id']]
