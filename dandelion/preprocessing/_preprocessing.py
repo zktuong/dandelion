@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 16:40:23
+# @Last Modified time: 2020-11-04 19:05:12
 
 import sys
 import os
@@ -901,6 +901,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'blast':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
     inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'blast':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
     germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'blast':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
+    fform_dict = {'blast':'airr', 'airr':'airr', 'changeo':'changeo'}
 
     data_list = []
     filePath = None
@@ -963,7 +964,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     res = Dandelion(dat_, initialize = False)
     # update with the personalized germline database
     res.update_germline(outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline, org)
-    create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+    create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fform_dict[fileformat])
     print('   Saving corrected genotyped object')
     sleep(0.5)
     res.data.to_csv(outDir+'/'+outDir+fileformat_dict[fileformat], index = False, sep = '\t')
