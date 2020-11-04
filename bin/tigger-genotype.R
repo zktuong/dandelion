@@ -31,7 +31,7 @@ suppressPackageStartupMessages(library("shazam"))
 suppressPackageStartupMessages(library("tigger"))
 # Set defaults
 NPROC <- parallel::detectCores()
-FORMAT <- "blast"
+FORMAT <- "airr"
 MIN_SEQS <- 50
 GERMLINE_MIN <- 200
 # Define commmandline arguments
@@ -101,7 +101,7 @@ if (opt$FORMAT == "changeo") {
     junction_length <- "junction_length"
     sequence_alignment <- "sequence_alignment"
     ext <- "tsv"
-} else if (opt$FORMAT %in% c("airr", "blast")) {
+} else if (opt$FORMAT %in% "airr") {
     db <- airr::read_rearrangement(opt$DB)
     v_call <- "v_call"
     j_call <- "j_call"
