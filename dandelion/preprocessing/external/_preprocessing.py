@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-16 01:34:20
+# @Last Modified time: 2020-11-04 16:11:02
 
 import os
 import pandas as pd
@@ -27,7 +27,7 @@ import scipy.stats
 import scrublet as scr
 import re
 
-def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'airr', verbose = False):
+def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'blast', verbose = False):
     """
     reannotate with IgBLASTn
 
@@ -41,8 +41,8 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
         organism
     loci
         ig or tr
-    fileformat: str (Default: 'airr')
-        format of the output data. Default is 'airr'. changeo' will trigger legacy changeo format.
+    fileformat: str (Default: 'blast')
+        format of the output data. can also parse 'airr'
     *args
         any arguments for ``AssignGenes.py``
 
@@ -52,7 +52,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
 
     """
 
-    file_format_dict = {'changeo':'blast', 'airr':'airr'}
+    file_format_dict = {'blast':'blast', 'changeo':'blast', 'airr':'airr'}
     env = os.environ.copy()
     if igblast_db is None:
         try:
@@ -75,9 +75,9 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd, env=env) # logs are printed to terminal
 
-    informat_dict = {'changeo':'_igblast.fmt7'}
+    informat_dict = {'changeo':'_igblast.fmt7', 'blast':'_igblast.fmt7'}
 
-    if fileformat == 'changeo':
+    if fileformat != 'airr':
         outfolder = os.path.abspath(os.path.dirname(fasta))+'/tmp'
         if not os.path.exists(outfolder):
             os.makedirs(outfolder)
@@ -86,7 +86,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fi
         out_file = "{}/{}".format(outfolder, outfile)
         os.replace(in_file, out_file)
 
-def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', extended = False, verbose = False):
+def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', extended = True, verbose = False):
     """
     parses IgBLAST output to change-o format
 
@@ -229,6 +229,7 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
     if verbose:
         print(msg)
 
+## commented out originally in ConvertDb, not sure if it works properly
 def insertGaps(db_file, references=None, format=default_format,
                out_file=None, out_args=default_out_args):
     """

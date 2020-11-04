@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 15:30:53
+# @Last Modified time: 2020-11-04 16:12:33
 
 import sys
 import os
@@ -735,7 +735,7 @@ def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call =
         assign_isotype(fasta, fileformat = fileformat, org = org, correct_c_call = correct_c_call, correction_dict = correction_dict, plot = plot, figsize=figsize, blastdb = blastdb, allele = allele, parallel = parallel, ncpu = ncpu, verbose = verbose)
 
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', extended = False, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'blast', extended = True, verbose = False, *args):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -754,7 +754,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
     fileformat: str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     extended : bool
-        whether or not to transfer additional 10X annotions to output file. Default is False.
+        whether or not to transfer additional 10X annotions to output file. Default is True.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
     *args
@@ -809,7 +809,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
             if not os.path.exists(tmpFolder):
                 os.makedirs(tmpFolder)
             os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
-        elif fileformat == 'changeo':
+        else:
             makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
 
 def map_cellranger(data, extended = False):
