@@ -33,9 +33,9 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install distance joblib plotnine adjustText jupyter
+conda install joblib plotnine adjustText jupyter
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-conda install -c conda-forge rpy2
+conda install -c conda-forge distance rpy2
 # or pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 # then run
@@ -59,8 +59,7 @@ install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"))
 or the following if using conda to manage R:
 ```bash
 # in bash/zsh terminal
-conda install -c bioconda r-optparse
-conda install -c conda-forge r-alakazam r-tigger r-airr r-shazam
+conda install -c conda-forge r-optparse r-alakazam r-tigger r-airr r-shazam
 ```
 
 The package should now be properly installed and when starting up jupyter notebook in the virtual environment, the kernel `python3` should work. Otherwise, you might need to add it manually:
