@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 19:06:23
+# @Last Modified time: 2020-11-05 15:00:13
 
 import os
 import pandas as pd
@@ -24,7 +24,6 @@ from changeo.IO import countDbFile, getFormatOperators, getOutputHandle, readGer
 import scanpy as sc
 from ...utilities._utilities import *
 import scipy.stats
-import scrublet as scr
 import re
 
 def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', fileformat = 'blast', verbose = False):
@@ -404,7 +403,12 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
 
     """
     _adata = self.copy()
-    # run scrublet
+    # run scrublet    
+    try:
+        import scrublet as scr
+    except:
+        raise ImportError('Please install scrublet with pip install scrublet.')
+
     scrub = scr.Scrublet(_adata.X)
     doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
     _adata.obs['scrublet_score'] = doublet_scores

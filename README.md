@@ -33,9 +33,9 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg 
 # these are required by dandelion
-conda install joblib plotnine adjustText jupyter
+conda install -c conda-forge distance joblib plotnine adjustText jupyter
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-conda install -c conda-forge distance rpy2
+conda install -c conda-forge rpy2
 # or pip install rpy2
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 # then run
