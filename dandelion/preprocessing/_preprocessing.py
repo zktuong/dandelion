@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-04 19:07:21
+# @Last Modified time: 2020-11-05 17:45:24
 
 import sys
 import os
@@ -464,7 +464,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
 
     def _add_cell(data):
         _data = load_data(data)
-        _data['cell_id'] = [c.split('_contig')[0].split('-')[0] for c in _data['sequence_id']]
+        _data['cell_id'] = [c.split('_contig')[0] for c in _data['sequence_id']]
         return(_data)
 
     aligner = Align.PairwiseAligner()
@@ -671,7 +671,8 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
 
     if verbose:
         print('Finishing up \n')
-    dat = _add_cell(dat)
+    if 'cell_id' not in dat.columns:
+        dat = _add_cell(dat)
     dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
     dat.to_csv(_file, sep = '\t', index=False)
     if plot:
