@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-05 22:23:52
+# @Last Modified time: 2020-11-05 23:41:11
 
 import sys
 import os
@@ -1503,6 +1503,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     else:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call']))
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
+    c_dict = dict(zip(dat['sequence_id'], dat['c_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
     dat['duplicate_count'] = 0
@@ -1629,6 +1630,12 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
+            if c is not np.nan:
+                if 'IGH' not in c:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
             j = j_dict[lc_id[0]]
@@ -1654,6 +1661,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(l[b])
+            if c is not np.nan:
+                if 'IGH' in c:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
 
             if v == np.nan or j == np.nan:
                 if filter_poorqualitybcr:
