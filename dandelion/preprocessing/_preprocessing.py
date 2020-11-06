@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 10:41:07
+# @Last Modified time: 2020-11-06 10:55:38
 
 import sys
 import os
@@ -1988,6 +1988,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(self):
         dat = load_data(self)
+    else:
+        raise ValueError("{} object/file not found.".format(self))
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
