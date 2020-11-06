@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 07:49:56
+# @Last Modified time: 2020-11-06 10:41:07
 
 import sys
 import os
@@ -143,7 +143,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
                 data['barcode'] = [str(prefix)+separator+str(b)+separator+str(suffix) for b in data['barcode']]
         else:            
             if remove_trailing_hyphen_number:
-                data['contig_id'] = [str(prefix)+separator+str(c).split('-')[0] for c in data['contig_id']]
+                data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0].split('-')[0]+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b).split('-')[0] for b in data['barcode']]
             else:
                 data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
@@ -740,7 +740,7 @@ def assign_isotypes(fastas, fileformat = 'blast', org = 'human', correct_c_call 
         assign_isotype(fasta, fileformat = fileformat, org = org, correct_c_call = correct_c_call, correction_dict = correction_dict, plot = plot, figsize=figsize, blastdb = blastdb, allele = allele, parallel = parallel, ncpu = ncpu, verbose = verbose)
 
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'blast', extended = True, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', extended = True, verbose = False, *args):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -756,8 +756,6 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         organism of germline database. Default is 'human'.
     loci : str
         mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for TCRs.
-    fileformat: str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     extended : bool
         whether or not to transfer additional 10X annotions to output file. Default is True.
     verbose :
@@ -796,57 +794,50 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, fileformat = fileformat, verbose = verbose, *args)
-        if fileformat == 'airr':
-            env = os.environ.copy()
-            if germline is None:
-                try:
-                    gml = env['GERMLINE']
-                except:
-                    raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
-                gml = gml+'imgt/'+org+'/vdj/'
-            else:
-                env['GERMLINE'] = germline
-                gml = germline
-            insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
-            map_cellranger("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast_gap.tsv')), extended = extended)
-            tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
-            if not os.path.exists(tmpFolder):
-                os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
-        else:
-            makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
+        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, verbose = verbose, *args)
+        makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
+        outfolder1 = os.path.abspath(os.path.dirname(filePath))+'/tmp'
+        outfolder2 = os.path.abspath(os.path.dirname(filePath))
+        informat_dict = {'blast':'_igblast_db-pass.tsv', 'airr':'_igblast.tsv'}
+        outfile1 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['airr']
+        outfile2 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['blast']
+        airr_output = pd.read_csv("{}/{}".format(outfolder1, outfile1), sep = '\t', index_col = 0)
+        igblast_output = pd.read_csv("{}/{}".format(outfolder1, outfile2), sep = '\t', index_col = 0)
+        airr_output = airr_output[['sequence_alignment_aa', 'germline_alignment_aa', 'v_sequence_alignment_aa', 'v_germline_alignment_aa', 'd_sequence_alignment_aa', 'd_germline_alignment_aa', 'j_sequence_alignment_aa', 'j_germline_alignment_aa', 'fwr1_aa', 'cdr1_aa', 'fwr2_aa', 'cdr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr3_aa']]
+        igblast_output = igblast_output.join(airr_output)
+        igblast_output.reset_index(inplace = True)
+        igblast_output.to_csv("{}/{}".format(outfolder2, outfile2), sep = '\t', index = False)
 
-def map_cellranger(data, extended = False):
-    dat = load_data(data)
-    cellranger_data = "{}/{}".format(os.path.dirname(data), os.path.basename(data).replace('_igblast_gap.tsv', '_annotations.csv'))
-    cr_data = pd.read_csv(cellranger_data, dtype = 'object')
-    cell_id = dict(zip(cr_data['contig_id'], cr_data['barcode']))
-    v_call = dict(zip(cr_data['contig_id'], cr_data['v_gene']))
-    d_call = dict(zip(cr_data['contig_id'], cr_data['d_gene']))
-    j_call = dict(zip(cr_data['contig_id'], cr_data['j_gene']))
-    c_call = dict(zip(cr_data['contig_id'], cr_data['c_gene']))
-    junction = dict(zip(cr_data['contig_id'], cr_data['cdr3_nt']))
-    junction_aa = dict(zip(cr_data['contig_id'], cr_data['cdr3']))
-    conscount = dict(zip(cr_data['contig_id'], cr_data['reads']))
-    umicount = dict(zip(cr_data['contig_id'], cr_data['umis']))
+# def map_cellranger(data, extended = False):
+#     dat = load_data(data)
+#     cellranger_data = "{}/{}".format(os.path.dirname(data), os.path.basename(data).replace('_igblast_gap.tsv', '_annotations.csv'))
+#     cr_data = pd.read_csv(cellranger_data, dtype = 'object')
+#     cell_id = dict(zip(cr_data['contig_id'], cr_data['barcode']))
+#     v_call = dict(zip(cr_data['contig_id'], cr_data['v_gene']))
+#     d_call = dict(zip(cr_data['contig_id'], cr_data['d_gene']))
+#     j_call = dict(zip(cr_data['contig_id'], cr_data['j_gene']))
+#     c_call = dict(zip(cr_data['contig_id'], cr_data['c_gene']))
+#     junction = dict(zip(cr_data['contig_id'], cr_data['cdr3_nt']))
+#     junction_aa = dict(zip(cr_data['contig_id'], cr_data['cdr3']))
+#     conscount = dict(zip(cr_data['contig_id'], cr_data['reads']))
+#     umicount = dict(zip(cr_data['contig_id'], cr_data['umis']))
 
-    if not extended:
-        dat['cell_id'] = pd.Series(cell_id)
-        dat['c_call'] = pd.Series(c_call)
-        dat['consensus_count'] = pd.Series(conscount)
-        dat['umi_count'] = pd.Series(umicount)
-    else:
-        dat['cell_id'] = pd.Series(cell_id)
-        dat['c_call'] = pd.Series(c_call)
-        dat['consensus_count'] = pd.Series(conscount)
-        dat['umi_count'] = pd.Series(umicount)
-        dat['v_call_10x'] = pd.Series(v_call)
-        dat['d_call_10x'] = pd.Series(d_call)
-        dat['j_call_10x'] = pd.Series(j_call)
-        dat['junction_10x'] = pd.Series(junction)
-        dat['junction_10x_aa'] = pd.Series(junction_aa)
-    dat.to_csv(data, sep = '\t', index = False, na_rep='')
+#     if not extended:
+#         dat['cell_id'] = pd.Series(cell_id)
+#         dat['c_call'] = pd.Series(c_call)
+#         dat['consensus_count'] = pd.Series(conscount)
+#         dat['umi_count'] = pd.Series(umicount)
+#     else:
+#         dat['cell_id'] = pd.Series(cell_id)
+#         dat['c_call'] = pd.Series(c_call)
+#         dat['consensus_count'] = pd.Series(conscount)
+#         dat['umi_count'] = pd.Series(umicount)
+#         dat['v_call_10x'] = pd.Series(v_call)
+#         dat['d_call_10x'] = pd.Series(d_call)
+#         dat['j_call_10x'] = pd.Series(j_call)
+#         dat['junction_10x'] = pd.Series(junction)
+#         dat['junction_10x_aa'] = pd.Series(junction_aa)
+#     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
 def reassign_alleles(data, combined_folder, germline = None, org = 'human', fileformat = 'blast', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
     """
