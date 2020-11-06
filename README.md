@@ -2,7 +2,7 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.18
+Version = 0.0.19
 
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
@@ -26,7 +26,7 @@ I would reccomend instaling this in order:
 ```bash
 # in bash/zsh terminal
 # create a conda environment with specific modules
-conda create --name dandelion python=3.7
+conda create --name dandelion python=3.7 
 conda activate dandelion
 
 # the following two are what's required by scanpy
@@ -42,7 +42,7 @@ conda install -c conda-forge rpy2
 # env CC=/path/to/location/of/bin/gcc-9 pip install rpy2
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
-pip install networkx polyleven scrublet scanpy changeo presto scikit-bio 
+pip install networkx polyleven scanpy changeo presto scikit-bio 
 
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
