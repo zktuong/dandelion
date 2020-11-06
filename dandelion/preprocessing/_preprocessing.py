@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 10:56:54
+# @Last Modified time: 2020-11-06 11:00:00
 
 import sys
 import os
@@ -652,7 +652,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     res_10x_sum.reset_index(drop = False, inplace = True)
     res_blast_sum.reset_index(drop = False, inplace = True)
 
-    if correct_c_call:
+    if correct_c_call: # TODO: figure out if i need to set up a None correction?
         if verbose:
             print('Correcting C calls \n')
         dat = _correct_c_call(dat, primers_dict=correction_dict)
