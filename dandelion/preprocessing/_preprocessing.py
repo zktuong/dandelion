@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 07:29:14
+# @Last Modified time: 2020-11-06 07:49:56
 
 import sys
 import os
@@ -1631,7 +1631,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-            if c is not np.nan or c is not None:
+            if c is not np.nan and c is not None:
                 if 'IGH' not in c:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
@@ -1824,7 +1824,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-                if c is not np.nan or c is not None:
+                if c is not np.nan and c is not None:
                     if 'IGH' not in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
