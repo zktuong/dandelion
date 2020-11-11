@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-11 13:55:14
+# @Last Modified time: 2020-11-11 14:06:11
 
 import pandas as pd
 import numpy as np
@@ -281,7 +281,7 @@ def clone_centrality(self, weight='weight'):
             G = nx.Graph()
             G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
         cc = nx.closeness_centrality(G)
-        cc = pd.DataFrame.from_dict(cc, orient = 'index', columns = 'clone_centrality')
+        cc = pd.DataFrame.from_dict(cc, orient = 'index', columns = ['clone_centrality'])
         self.metadata['clone_centrality'] = pd.Series(cc['clone_centrality'])
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))

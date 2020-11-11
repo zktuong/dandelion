@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-11 13:53:44
+# @Last Modified time: 2020-11-11 14:04:57
 
 import pandas as pd
 import numpy as np
@@ -83,7 +83,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     if self.__class__ == Dandelion:
         return({'rarefaction_cells_x':pred, 'rarefaction_clones_y':y})
 
-def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
+def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -92,9 +92,11 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
     self : Dandelion, AnnData
         `Dandelion` or `AnnData` object.    
     groupby : str
-        Column name to calculate the gini indices on, for e.g. sample, patient etc.
+        Column name to calculate the gini indices on, for e.g. sample, patient etc.    
     method : str
-        Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].    
+        Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
+    metric : str, optional
+        Metric to use for calculating Gini indices of clones. Accepts 'clone_degree' and 'clone_centrality'. Defaults to 'clone_centrality'.    
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -113,9 +115,9 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
     """
     if method == 'gini':
         if update_obs_meta:
-            diversity_gini(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
+            diversity_gini(self, groupby, metric, clone_key, update_obs_meta, diversity_key, resample, n_resample)
         else:
-            return(diversity_gini(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
+            return(diversity_gini(self, groupby, metric, clone_key, update_obs_meta, diversity_key, resample, n_resample))
     if method == 'chao1':
         if update_obs_meta:
             diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
@@ -127,7 +129,7 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
         else:
             return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize))
 
-def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
+def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
     Compute B cell clones Gini indices.
 
@@ -137,6 +139,8 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
+    metric : str, optional
+        Metric to use for calculating Gini indices of clones. Accepts 'clone_degree' and 'clone_centrality'. Defaults to 'clone_centrality'.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -169,7 +173,15 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
             met = metric
         
         if met not in metadata.columns:
-            raise ValueError("`clone_centrality` or `clone_degree` not found in provided object. Please run tl.clone_centrality or tl.clone_degree")
+            from ..tools._network import clone_centrality, clone_degree
+            if met == 'clone_centrality':                
+                print("`clone_centrality` not found in metadata. Running tl.clone_centrality")
+                clone_centrality(self)
+            elif met == 'clone_degree':
+                print("`clone_degree` not found in metadata. Running tl.clone_degree")
+                clone_degree(self)
+            else:
+                raise ValueError("`metric` not recognised. Please specify either `clone_centrality` or `clone_degree`.")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
             
