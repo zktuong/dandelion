@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-11 13:49:39
+# @Last Modified time: 2020-11-11 13:55:14
 
 import pandas as pd
 import numpy as np
@@ -257,7 +257,7 @@ def clone_degree(self, weight='weight'):
     if self.__class__ == Dandelion:
         try:
             G = self.graph[0]
-        else:
+        except:
             dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
             A = csr_matrix(dist)
             G = nx.Graph()
