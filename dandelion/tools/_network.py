@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 11:01:54
+# @Last Modified time: 2020-11-11 13:49:39
 
 import pandas as pd
 import numpy as np
@@ -255,10 +255,13 @@ def mst(mat):
 def clone_degree(self, weight='weight'):
     start = logg.info('Calculating clone degree')
     if self.__class__ == Dandelion:
-        dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
-        A = csr_matrix(dist)
-        G = nx.Graph()
-        G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
+        try:
+            G = self.graph[0]
+        else:
+            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
+            A = csr_matrix(dist)
+            G = nx.Graph()
+            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
         cd = pd.DataFrame.from_dict(G.degree(weight = weight))
         cd.set_index(0, inplace = True)
         self.metadata['clone_degree'] = pd.Series(cd[1])
@@ -267,21 +270,23 @@ def clone_degree(self, weight='weight'):
     logg.info(' finished', time=start,
         deep=('Updated Dandelion metadata\n'))
 
-# def clone_closeness_centrality(self, weight='weight'): # TODO: complete this function
-#     start = logg.info('Calculating clone closeness centrality')
-#     if self.__class__ == Dandelion:
-#         dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
-#         A = csr_matrix(dist)
-#         G = nx.Graph()
-#         G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
-#         cc = nx.closeness_centrality(G)
-        # cc = pd.DataFrame.from_dict(G.degree(weight = weight))
-        # cd.set_index(0, inplace = True)
-        # self.metadata['clone_degree'] = pd.Series(cd[1])
-    # else:
-        # raise TypeError('Input object must be of {}'.format(Dandelion))
-    # logg.info(' finished', time=start,
-        # deep=('Updated Dandelion metadata\n'))
+def clone_centrality(self, weight='weight'):
+    start = logg.info('Calculating clone closeness centrality')
+    if self.__class__ == Dandelion:
+        try:
+            G = self.graph[0]
+        except:
+            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
+            A = csr_matrix(dist)
+            G = nx.Graph()
+            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
+        cc = nx.closeness_centrality(G)
+        cc = pd.DataFrame.from_dict(cc, orient = 'index', columns = 'clone_centrality')
+        self.metadata['clone_centrality'] = pd.Series(cc['clone_centrality'])
+    else:
+        raise TypeError('Input object must be of {}'.format(Dandelion))
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion metadata\n'))
 
 def generate_layout(vertices, edges, min_size = 2, weight = None):
     G = nx.Graph()

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-09 14:24:53
+# @Last Modified time: 2020-11-11 13:53:44
 
 import pandas as pd
 import numpy as np
@@ -153,7 +153,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, clone_key = None, resample = True, n_resample = 50):
+    def gini_indices(self, groupby, metric = None, clone_key = None, resample = True, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -163,8 +163,13 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
         else:
             clonekey = clone_key
 
-        if 'clone_degree' not in metadata.columns:
-            raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
+        if metric is None:
+            met = 'clone_centrality'
+        else:
+            met = metric
+        
+        if met not in metadata.columns:
+            raise ValueError("`clone_centrality` or `clone_degree` not found in provided object. Please run tl.clone_centrality or tl.clone_degree")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
             
@@ -196,8 +201,8 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                         g_c = np.nan
                     sizelist.append(g_c)
                 
-                    # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    # vertex closeness centrality or weighted degree distribution
+                    graphcounts = np.array(_dat[met].value_counts())
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts)
                     else:
@@ -228,8 +233,8 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-                # vertex weighted degree distribution
-                graphcounts = np.array(_dat['clone_degree'].value_counts())
+                # vertex closeness centrality or weighted degree distribution
+                graphcounts = np.array(_dat[met].value_counts())
                 if len(graphcounts) > 0:
                     g_c = gini_index(graphcounts, method = 'trapezoids')
                 else:
@@ -237,7 +242,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 res2.update({g:g_c})
 
         res_df = pd.DataFrame.from_dict([res1,res2]).T
-        res_df.columns = ['clone_size_gini', 'clone_degree_gini']
+        res_df.columns = ['clone_size_gini', met + '_gini']
         return(res_df)
 
     def transfer_gini_indices(self, gini_results, groupby):
