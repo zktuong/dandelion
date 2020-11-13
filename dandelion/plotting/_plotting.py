@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 12:52:49
+# @Last Modified time: 2020-11-13 13:09:22
 
 import seaborn as sns
 import pandas as pd
@@ -212,9 +212,9 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         data = self.obs.copy()
 
     if min_clone_size is None:
-        min_size = int(min_clone_size)
-    else:
         min_size = 1
+    else:
+        min_size = int(min_clone_size)
 
     if clone_key is None:
         clone_ = 'clone_id'
@@ -296,9 +296,9 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     data[groupby] = [str(l) for l in data[groupby]] # quick fix to prevent dropping of nan
     
     if min_clone_size is None:
-        min_size = int(min_clone_size)
-    else:
         min_size = 1
+    else:
+        min_size = int(min_clone_size)
 
     if clone_key is None:
         clone_ = 'clone_id'
