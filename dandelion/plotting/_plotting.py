@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 13:09:22
+# @Last Modified time: 2020-11-13 20:11:37
 
 import seaborn as sns
 import pandas as pd
@@ -16,6 +16,10 @@ import random
 from adjustText import adjust_text
 from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
 from scanpy.plotting import palettes
+import networkx as nx
+import nxviz as nxv
+import matplotlib.pyplot as plt
+from itertools import combinations
 
 def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4), save=None):
     """
@@ -33,19 +37,19 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
     figsize :  tuple[float, float]
         Size of plot.
     save : str, optional
-        Save path. 
+        Save path.
     Returns
     ----------
         rarefaction curve plot.
     """
-    
+
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
     if clone_key is None:
         clonekey = 'clone_id'
     else:
         clonekey = clone_key
-    
+
     groups = list(set(metadata[groupby]))
     metadata = metadata[metadata['has_bcr'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
@@ -54,11 +58,11 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
         _metadata = metadata[metadata[groupby]==g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient = 'index')
-    
+
     # remove those with no counts
     rowsum = res_.sum(axis = 1)
     print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
-    res_ = res_[~(res_.sum(axis = 1) == 0)]    
+    res_ = res_[~(res_.sum(axis = 1) == 0)]
 
     # set up for calculating rarefaction
     tot = res_.apply(sum, axis = 1)
@@ -93,7 +97,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
                     pal = palettes.default_102
                 else:
                     pal = None
-            
+
             if pal is not None:
                 p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
                     + theme_classic()
@@ -120,7 +124,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
                 pal = palettes.default_102
             else:
                 pal = None
-            
+
             if pal is not None:
                 p = (ggplot(pred, aes(x = "value", y = "yhat", color = "variable"))
                     + theme_classic()
@@ -272,7 +276,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     title : str, optional
         title of plot.
     xtick_rotation : int, optional
-        rotation of x tick labels.      
+        rotation of x tick labels.
     hide_legend : bool
         whether or not to hide the legend.
     legend_options : tuple[str, tuple[float, float], int]
@@ -294,7 +298,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     elif self.__class__ == AnnData:
         data = self.obs.copy()
     data[groupby] = [str(l) for l in data[groupby]] # quick fix to prevent dropping of nan
-    
+
     if min_clone_size is None:
         min_size = 1
     else:
@@ -322,7 +326,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
         """
-        Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot. 
+        Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
         Parameters
         ----------
         labels
@@ -330,17 +334,17 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         title
             string for the title of the plot
         H
-            is the hatch used for identification of the different dataframes        
+            is the hatch used for identification of the different dataframes
         **kwargs
             other kwargs passed to matplotlib.plt
         """
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
-        n_col = len(dfall[0].columns) 
-        n_ind = len(dfall[0].index)        
+        n_col = len(dfall[0].columns)
+        n_ind = len(dfall[0].index)
         # Initialize the matplotlib figure
-        fig, ax = plt.subplots(figsize=figsize)        
+        fig, ax = plt.subplots(figsize=figsize)
         for df in dfall : # for each data frame
             ax = df.plot(kind="bar",
                         linewidth=0,
@@ -348,23 +352,23 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
                         ax=ax,
                         legend=False,
                         grid=False,
-                        **kwargs)  # make bar plots    
+                        **kwargs)  # make bar plots
         h,l = ax.get_legend_handles_labels() # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col): # len(h) = n_col * n_df
             for j, pa in enumerate(h[i:i+n_col]):
                 for rect in pa.patches: # for each index
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
-                    rect.set_hatch(H * int(i / n_col)) #edited part     
+                    rect.set_hatch(H * int(i / n_col)) #edited part
                     rect.set_width(1 / float(n_df + 1))
         ax.set_xticks((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.)
-        ax.set_xticklabels(df.index, rotation = 0)        
+        ax.set_xticklabels(df.index, rotation = 0)
         ax.set_title(title)
         if normalize:
             ax.set_ylabel('proportion')
         else:
             ax.set_ylabel('count')
         # Add invisible data to add another legend
-        n=[]        
+        n=[]
         for i in range(n_df):
             n.append(ax.bar(0, 0, color="grey", hatch=H * i))
         if legend_options is None:
@@ -374,7 +378,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         if hide_legend is False:
             l1 = ax.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             if labels is not None:
-                l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False) 
+                l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             ax.add_artist(l1)
         if xtick_rotation is None:
             plt.xticks(rotation=90)
@@ -382,7 +386,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
             plt.xticks(rotation=xtick_rotation)
 
         return fig, ax
-    
+
     if title is None:
         title = "multiple stacked bar plot : " + variable.replace('_', ' ') +' usage'
     else:
@@ -410,7 +414,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
     title : str, optional
         title of plot.
     xtick_rotation : int, optional
-        rotation of x tick labels.      
+        rotation of x tick labels.
     hide_legend : bool
         whether or not to hide the legend.
     legend_options : tuple[str, tuple[float, float], int]
@@ -420,7 +424,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
     clones_sep : tuple[int, str]
         option to specify how to split up clone names. Default is (0, '_') i.e. it will split according to '_' and select the first string as the 'clone'.
     **kwargs
-        other kwargs passed to matplotlib.plt
+        other kwargs passed to matplotlib.pyplot.plot
     Return
     ----------
         sectratype plot
@@ -457,7 +461,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
 
     if type(locus) is not list:
         locus = [locus]
-    data = data[data['locus'].isin(locus)]    
+    data = data[data['locus'].isin(locus)]
     data[groupby] = [str(l) for l in data[groupby]]
     dat_ = pd.DataFrame(data.groupby(variable)[groupby].value_counts(normalize=False).unstack(fill_value=0).stack(), columns = ['value'])
     dat_.reset_index(drop = False, inplace = True)
@@ -471,14 +475,14 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
-        n_col = len(dfall[0].columns) 
+        n_col = len(dfall[0].columns)
         n_ind = len(dfall[0].index)
         if width is None:
             wdth = 0.1 * n_ind/60+0.8
         else:
             wdth = width
         # Initialize the matplotlib figure
-        fig, ax = plt.subplots(figsize=figsize)        
+        fig, ax = plt.subplots(figsize=figsize)
         for df in dfall : # for each data frame
             ax = df.plot(kind="bar",
                         linewidth=0,
@@ -486,13 +490,13 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
                         ax=ax,
                         legend=False,
                         grid=False,
-                        **kwargs)  # make bar plots    
+                        **kwargs)  # make bar plots
         h,l = ax.get_legend_handles_labels() # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col): # len(h) = n_col * n_df
             for j, pa in enumerate(h[i:i+n_col]):
                 for rect in pa.patches: # for each index
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
-                    rect.set_hatch(H * int(i / n_col)) #edited part     
+                    rect.set_hatch(H * int(i / n_col)) #edited part
                     rect.set_width(wdth) # need to see if there's a better way to toggle this.
         ax.set_xticks(((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.))
         n = 5  # Keeps every 5th label visible and hides the rest
@@ -500,7 +504,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
         ax.set_title(title)
         ax.set_ylabel('count')
         # Add invisible data to add another legend
-        n=[]        
+        n=[]
         for i in range(n_df):
             n.append(ax.bar(0, 0, color="gray", hatch=H * i))
         if legend_options is None:
@@ -510,13 +514,128 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
         if hide_legend is False:
             l1 = ax.legend(h[:n_col], l[:n_col], loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             if labels is not None:
-                l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False) 
+                l2 = plt.legend(n, labels, loc=Legend[0], bbox_to_anchor=Legend[1], ncol = Legend[2], frameon=False)
             ax.add_artist(l1)
         if xtick_rotation is None:
             plt.xticks(rotation=0)
         else:
             plt.xticks(rotation=xtick_rotation)
-        
+
         return fig, ax
 
     return _plot_spectra_stacked(dat_2, labels = labels, figsize = figsize, title = title, width = width, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend =hide_legend, **kwargs)
+
+def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None, color_mapping = None, node_labels = True, node_label_layout = 'rotation', group_label_position = 'middle', group_label_offset = 8, figsize = (8, 8), return_graph = False, **kwargs):
+    """
+    A plot function to visualise clonal overlap as a circos-style plot.
+    Parameters
+    ----------
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    groupby : str
+        column name in obs/metadata for collapsing to nodes in circos plot.
+    colorby : str
+        column name in obs/metadata for grouping and color of nodes in circos plot.
+    min_clone_size : int, optional
+        minimum size of clone for plotting connections. Defaults to 2 if left as None.
+    clone_key : str, optional
+        column name for clones. None defaults to 'clone_id'.
+    color_maopping : dict, sequence, optional
+        custom color mapping provided as a sequence (correpsonding to order of categories or alpha-numeric order if dtype is not category), or dictionary containing custom {category:color} mapping.
+    node_labels : bool, optional
+        whether to use node objects as labels or not
+    node_label_layout : bool, optional
+        which/whether (a) node layout is used. One of 'rotation', 'numbers' or None.
+    group_label_position : str
+        The position of the group label. One of 'beginning', 'middle' or 'end'.
+    group_label_offset : int, float
+        how much to offset the group labels, so that they are not overlapping with node labels.
+    figsize : tuple[float, float]
+        figure size. Default is (8, 8).
+    return_graph : bool
+        whether or not to return the graph for fine tuning. Default is False.
+    **kwargs
+        passed to `matplotlib.pyplot.savefig`.
+    Return
+    ----------
+        a `nxviz.CircosPlot`.
+    """
+    if self.__class__ == Dandelion:
+        data = self.metadata.copy()
+    elif self.__class__ == AnnData:
+        data = self.obs.copy()
+
+    if min_clone_size is None:
+        min_size = 2
+    else:
+        min_size = int(min_clone_size)
+
+    if clone_key is None:
+        clone_ = 'clone_id'
+    else:
+        clone_ = clone_key
+
+    # prepare a summary table
+    overlap = pd.crosstab(data[clone_], data[groupby])
+
+    if min_size == 0:
+        raise ValueError('min_size must be greater than 0.')
+    elif min_size > 1:
+        overlap[overlap < min_size] = 0
+        overlap[overlap >= min_size] = 1
+    else:
+        overlap[overlap > min_size] = 1
+
+    overlap.index.name = None
+    overlap.columns.name = None
+    
+    edges = {}
+    for x in overlap.index:
+        if overlap.loc[x].sum() > 1:
+            edges[x] = [y + ({str(clone_):x},) for y in list(combinations([i for i in overlap.loc[x][overlap.loc[x] == 1].index], 2))]
+
+    # create graph    
+    G = nx.Graph()
+    # add in the nodes
+    G.add_nodes_from([(p, {str(colorby): d}) for p,d in zip(data[groupby], data[colorby])])
+
+    # unpack the edgelist and add to the graph
+    for edge in edges:
+        G.add_edges_from(edges[edge])
+    groupby_dict = dict(zip(data[groupby], data[colorby]))
+    if color_mapping is None:
+        if self.__class__ == AnnData:
+            if pd.api.types.is_categorical_dtype(self.obs[groupby]):
+                try:
+                    colorby_dict = dict(zip(list(self.obs[str(colorby)].cat.categories), self.uns[str(colorby)+'_colors']))
+                except:
+                    print("Unable to retrieve category colors. Default to 'Set1'")
+                    pass
+    else:
+        if type(color_mapping) is dict:
+            colorby_dict = color_mapping
+        else:
+            if pd.api.types.is_categorical_dtype(data[groupby]):
+                colorby_dict = dict(zip(list(data[str(colorby)].cat.categories), color_mapping))
+            else:
+                colorby_dict = dict(zip(sorted(list(set(data[str(colorby)]))), color_mapping))
+    df = data[[groupby, colorby]]
+    df = df.sort_values(colorby).drop_duplicates(subset=groupby, keep="first").reset_index(drop = True)
+    c = nxv.CircosPlot(G,
+                       node_color=colorby,
+                       node_grouping=colorby,
+                       node_labels=node_labels,
+                       node_label_layout=node_label_layout,
+                       group_label_position=group_label_position,
+                       group_label_offset=group_label_offset,
+                       figsize=figsize)
+    c.nodes = list(df[groupby])
+    if 'colorby_dict' in locals():
+        c.node_colors = [colorby_dict[groupby_dict[c]] for c in c.nodes]
+    c.compute_group_label_positions()
+    c.compute_group_colors()
+    c.draw()
+    if save is not None:
+        plt.savefig(save, bbox_inches = 'tight', **kwargs)
+    if return_graph:
+        return(c)
