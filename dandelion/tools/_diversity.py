@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-11 14:04:57
+# @Last Modified time: 2020-11-13 21:16:01
 
 import pandas as pd
 import numpy as np
@@ -175,11 +175,9 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         if met not in metadata.columns:
             from ..tools._network import clone_centrality, clone_degree
             if met == 'clone_centrality':                
-                print("`clone_centrality` not found in metadata. Running tl.clone_centrality")
-                clone_centrality(self)
+                raise ValueError("`clone_centrality` not found in metadata. Please run tl.clone_centrality")
             elif met == 'clone_degree':
-                print("`clone_degree` not found in metadata. Running tl.clone_degree")
-                clone_degree(self)
+                raise ValueError("`clone_degree` not found in metadata. Please run tl.clone_degree")
             else:
                 raise ValueError("`metric` not recognised. Please specify either `clone_centrality` or `clone_degree`.")
         # split up the table by groupby
