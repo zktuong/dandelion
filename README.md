@@ -2,10 +2,10 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.19
+Version = 0.0.20
 
 ## Intro
-Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing of immcantation tools for single-cell BCR analysis and includes a couple of functions for visualization. 
+Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
 
 Overview
 
@@ -29,9 +29,11 @@ I would reccomend instaling this in order:
 conda create --name dandelion python=3.7 
 conda activate dandelion
 
-# the following two are what's required by scanpy
+# the following are normal installation intructions for scanpy
 conda install seaborn scikit-learn statsmodels numba pytables
-conda install -c conda-forge python-igraph leidenalg 
+conda install -c conda-forge python-igraph leidenalg
+pip install scanpy 
+
 # these are required by dandelion
 conda install -c conda-forge distance joblib plotnine adjustText jupyter
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
@@ -42,8 +44,6 @@ conda install -c conda-forge rpy2
 # env CC=/path/to/location/of/bin/gcc-9 pip install rpy2
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
-pip install networkx polyleven scanpy changeo presto scikit-bio 
-
 # and then lastly install this
 pip install git+https://github.com/zktuong/dandelion.git
 
@@ -51,7 +51,7 @@ pip install git+https://github.com/zktuong/dandelion.git
 pip install git+https://github.com/zktuong/dandelion.git@devel
 ````
 
-dandelion also requires some R packages intalled.
+`dandelion` also requires some R packages intalled.
 ```R
 # in R
 install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"))
@@ -73,6 +73,7 @@ Last but not least, you will need to download the database folder in this reposi
 
 So for example, if I unpack into `~/Documents`
 ```bash
+# in bash/zsh terminal
 # set up environmental variables in ~/.bash_profile
 export GERMLINE=~/Documents/dandelion/database/germlines/
 export IGDATA=~/Documents/dandelion/database/igblast/
@@ -82,6 +83,7 @@ export BLASTDB=~/Documents/dandelion/database/blast/
 ## External softwares
 While blast and igblast executables are managed through conda, you can also download [igblast](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/) and [blast+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) manually, and store the softwares somewhere accessible. Just make sure to set the paths to them appropriately.
 ```bash
+# in bash/zsh terminal
 # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
 echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
 source ~/.bash_profile
@@ -103,7 +105,6 @@ pytables==3.6.1 (conda-forge)
 seaborn>=0.10.1 (conda-forge)
 leidenalg>=0.8.0 (conda-forge)
 plotnine>=0.6.0 (conda-forge)
-(conda-forge)
 
 # Other executables (through conda)
 blast>=2.10.0 (bioconda) # depends on the database version as well
@@ -118,6 +119,7 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
+nxviz>=0.6.2
 rpy2>=3.3.2
 ```
 
@@ -131,7 +133,7 @@ ggplot2
 ```
 
 ## Acknowledgements
-I would like to acknowledge the contributions from Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna Clatworthy who helped with the initial conception of the project and for all discussions. 
+I would like to acknowledge the contributions from Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna Clatworthy, who helped with the initial conception of the project and for all discussions. 
 
 I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi and Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
 
