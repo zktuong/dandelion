@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 20:11:37
+# @Last Modified time: 2020-11-13 23:37:07
 
 import seaborn as sns
 import pandas as pd
@@ -468,7 +468,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
     dat_[variable] = pd.to_numeric(dat_[variable], errors='coerce')
     dat_.sort_values(by = variable)
     dat_2 = dat_.pivot(index=variable, columns=groupby, values='value')
-    new_index = range(0, dat_[variable].max()+1)
+    new_index = range(0, int(dat_[variable].max())+1)
     dat_2 = dat_2.reindex(new_index, fill_value=0)
 
     def _plot_spectra_stacked(dfall, labels=None, figsize = (6, 4), title="multiple stacked bar plot", width = None, xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
@@ -525,7 +525,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
 
     return _plot_spectra_stacked(dat_2, labels = labels, figsize = figsize, title = title, width = width, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend =hide_legend, **kwargs)
 
-def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None, color_mapping = None, node_labels = True, node_label_layout = 'rotation', group_label_position = 'middle', group_label_offset = 8, figsize = (8, 8), return_graph = False, **kwargs):
+def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None, color_mapping = None, node_labels = True, node_label_layout = 'rotation', group_label_position = 'middle', group_label_offset = 8, figsize = (8, 8), return_graph = False, save = None, **kwargs):
     """
     A plot function to visualise clonal overlap as a circos-style plot.
     Parameters
