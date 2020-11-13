@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 11:00:00
+# @Last Modified time: 2020-11-13 23:03:54
 
 import sys
 import os
@@ -801,10 +801,10 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         informat_dict = {'blast':'_igblast_db-pass.tsv', 'airr':'_igblast.tsv'}
         outfile1 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['airr']
         outfile2 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['blast']
-        airr_output = pd.read_csv("{}/{}".format(outfolder1, outfile1), sep = '\t', index_col = 0)
+        airr_output = pd.read_csv("{}/{}".format(outfolder1, outfile1), sep = '\t', index_col = 0)        
         igblast_output = pd.read_csv("{}/{}".format(outfolder1, outfile2), sep = '\t', index_col = 0)
-        airr_output = airr_output[['sequence_alignment_aa', 'germline_alignment_aa', 'v_sequence_alignment_aa', 'v_germline_alignment_aa', 'd_sequence_alignment_aa', 'd_germline_alignment_aa', 'j_sequence_alignment_aa', 'j_germline_alignment_aa', 'fwr1_aa', 'cdr1_aa', 'fwr2_aa', 'cdr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr3_aa']]
-        igblast_output = igblast_output.join(airr_output)
+        cols_to_merge = airr_output.columns.difference(igblast_output.columns)
+        igblast_output = igblast_output.join(airr_output[cols_to_merge])
         igblast_output.reset_index(inplace = True)
         igblast_output.to_csv("{}/{}".format(outfolder2, outfile2), sep = '\t', index = False)
 
@@ -932,8 +932,6 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     else:
         dat_ = data_list[0]
 
-    # dat_.fillna('', inplace=True)
-
     # write out this file for tigger
     outDir = combined_folder.strip('/')
     if not os.path.exists(outDir):
@@ -955,7 +953,8 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     dat_ = _return_IGKV_IGLV(dat_)
     res = Dandelion(dat_, initialize = False)
     # update with the personalized germline database
-    res.update_germline(outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline, org)
+    res.update_germline(corrected = outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline = germline, org = org)
+
     create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fform_dict[fileformat])
     print('   Saving corrected genotyped object')
     sleep(0.5)
@@ -2007,8 +2006,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat = dat.where(dat.isna(), dat.astype(str))
         try:
             dat_r = pandas2ri.py2rpy(dat)
-        except:
-            dat = dat.fillna('')
+        except:            
+            dat = dat.astype(str) 
             dat_r = pandas2ri.py2rpy(dat)
 
         results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
@@ -2022,20 +2021,18 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         try:
             dat_h_r = pandas2ri.py2rpy(dat_h)
         except:
-            dat_h = dat_h.fillna('')
+            dat_h = dat_h.astype(str) 
             dat_h_r = pandas2ri.py2rpy(dat_h)
 
         dat_l = dat_l.where(dat_l.isna(), dat_l.astype(str))
         try:
             dat_l_r = pandas2ri.py2rpy(dat_l)
-        except:
-            dat_l = dat_l.fillna('')
+        except:            
+            dat_l = dat_l.astype(str) 
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
         results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        # pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
-        # pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
+        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)        
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace = True, drop = False)
@@ -2150,55 +2147,47 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
     except:
         raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
-    sh = importr('shazam')
+    
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
-    warnings.filterwarnings("ignore")
-    pandas2ri.activate()
+        warnings.filterwarnings("ignore")
+    sh = importr('shazam')
+    pandas2ri.activate()    
     if 'v_call_genotyped' in dat.columns:
         v_call = 'v_call_genotyped'
     else:
-        v_call = 'v_call'
-
+        v_call = 'v_call'    
     if model is None:
         model_ = 'ham'
     else:
-        model_ = model
-
+        model_ = model    
     if normalize_method is None:
         norm_ = 'len'
     else:
-        norm_ = normalize_method
-
+        norm_ = normalize_method    
     if threshold_method is None:
         threshold_method_ = "density"
     else:
-        threshold_method_ = threshold_method
-
+        threshold_method_ = threshold_method    
     if subsample is None:
         subsample_ = NULL
     else:
-        subsample_ = subsample
-
+        subsample_ = subsample    
     if ncpu is None:
         ncpu_ = multiprocessing.cpu_count()-1
     else:
-        ncpu_ = ncpu
-
-    dat_h = dat[dat['locus'] == 'IGH']
-
+        ncpu_ = ncpu    
+    dat_h = dat[dat['locus'] == 'IGH']    
     try:
         dat_h_r = pandas2ri.py2rpy(dat_h)
-    except:
-        dat_h = dat_h.fillna('')
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-
+    except:            
+        dat_h = dat_h.astype(str) 
+        dat_h_r = pandas2ri.py2rpy(dat_h)    
     dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
     # Find threshold using density method
-    dist = np.array(dist_ham['dist_nearest'])
-
+    dist = np.array(dist_ham['dist_nearest'])    
     if threshold_method_ is 'density':
         if edge is None:
             edge_ = 0.9
@@ -2211,23 +2200,19 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
             else:
-                threshold_model_ = threshold_model
-
+                threshold_model_ = threshold_model    
             if cross is None:
                 cross_ = NULL
             else:
-                cross_ = cross
-
+                cross_ = cross    
             if cutoff is None:
                 cutoff_ = 'optimal'
             else:
-                cutoff_ = cutoff
-
+                cutoff_ = cutoff    
             if sensitivity is None:
                 sen_ = NULL
             else:
-                sen_ = sensitivity
-
+                sen_ = sensitivity    
             if specificity is None:
                 spc_ = NULL
             else:
@@ -2238,30 +2223,25 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         if threshold_model is None:
             threshold_model_ = "gamma-gamma"
         else:
-            threshold_model_ = threshold_model
-
+            threshold_model_ = threshold_model    
         if cross is None:
             cross_ = NULL
         else:
-            cross_ = cross
-
+            cross_ = cross    
         if cutoff is None:
             cutoff_ = 'optimal'
         else:
-            cutoff_ = cutoff
-
+            cutoff_ = cutoff    
         if sensitivity is None:
             sen_ = NULL
         else:
-            sen_ = sensitivity
-
+            sen_ = sensitivity    
         if specificity is None:
             spc_ = NULL
         else:
             spc_ = specificity
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
-        threshold=np.array(dist_threshold.slots['threshold'])[0]
-
+        threshold=np.array(dist_threshold.slots['threshold'])[0]    
     if np.isnan(threshold):
         warnings.warn(UserWarning("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."))
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
