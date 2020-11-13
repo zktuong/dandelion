@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 12:45:02
+# @Last Modified time: 2020-11-13 12:47:33
 
 import seaborn as sns
 import pandas as pd
@@ -175,7 +175,7 @@ def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
     embedding(adata, basis = basis, edges = edges, **kwargs)
 
-def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, sort_descending = True, title = None, xtick_rotation = None, min_clone_size = None, clone_key. = None, **kwargs):
+def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, sort_descending = True, title = None, xtick_rotation = None, min_clone_size = None, clone_key = None, **kwargs):
     """
     A barplot function to plot usage of V/J genes in the data.
     Parameters
@@ -252,7 +252,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         plt.xticks(rotation=xtick_rotation)
     return fig, ax
 
-def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, min_clone_size = None, clone_key. = None, **kwargs):
+def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, min_clone_size = None, clone_key = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
