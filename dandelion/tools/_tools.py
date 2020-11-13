@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 19:51:22
+# @Last Modified time: 2020-11-13 21:05:42
 
 import os
 import sys
@@ -704,8 +704,8 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         outFolder = "{}".format(os.path.dirname(self))
     else:
         import tempfile
-        tmpFolder = "{}/tmp".format(tempfile.TemporaryDirectory())
-        outFolder = "{}".format(tempfile.TemporaryDirectory())
+        tmpFolder = "{}/tmp".format(tempfile.TemporaryDirectory().name)
+        outFolder = "{}".format(tempfile.TemporaryDirectory().name)
 
     if not os.path.exists(tmpFolder):
         os.makedirs(tmpFolder)
