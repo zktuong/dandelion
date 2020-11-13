@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 14:33:18
+# @Last Modified time: 2020-11-13 20:53:23
 
 import sys
 import os
@@ -642,8 +642,6 @@ class Dandelion:
                 personalized_ref_dict = readGermlines([corrected])
             # update with the personalized germline database
             germline_ref.update(personalized_ref_dict)
-        else:
-            pass
 
         self.germline.update(germline_ref)
         logg.info(' finished', time=start,
