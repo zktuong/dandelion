@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-08 18:31:47
+# @Last Modified time: 2020-11-13 12:45:02
 
 import seaborn as sns
 import pandas as pd
@@ -175,7 +175,7 @@ def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
     embedding(adata, basis = basis, edges = edges, **kwargs)
 
-def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, sort_descending = True, title = None, xtick_rotation = None, **kwargs):
+def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, sort_descending = True, title = None, xtick_rotation = None, min_clone_size = None, clone_key. = None, **kwargs):
     """
     A barplot function to plot usage of V/J genes in the data.
     Parameters
@@ -195,7 +195,11 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     title : str, optional
         title of plot.
     xtick_rotation : int, optional
-        rotation of x tick labels.      
+        rotation of x tick labels.
+    min_clone_size : int, optional
+        minimum clone size to keep. Defaults to 1 if left as None.
+    clone_key : str, optional
+        column name for clones. None defaults to 'clone_id'.
     **kwargs
         passed to `sns.barplot`.
     Return
@@ -207,8 +211,22 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     elif self.__class__ == AnnData:
         data = self.obs.copy()
 
+    if min_clone_size is None:
+        min_size = 2
+    else:
+        min_size = 1
+
+    if clone_key is None:
+        clone_ = 'clone_id'
+    else:
+        clone_ = clone_key
+
+    size = data[clone_].value_counts()
+    keep = list(size[size >= min_size].index)
+    data_ = data[data[clone_].isin(keep)]
+
     sns.set_style('whitegrid', {'axes.grid' : False})
-    res = pd.DataFrame(data[variable].value_counts(normalize=normalize))
+    res = pd.DataFrame(data_[variable].value_counts(normalize=normalize))
     if not sort_descending:
         res = res.sort_index()
     res.reset_index(drop = False, inplace = True)
@@ -234,7 +252,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         plt.xticks(rotation=xtick_rotation)
     return fig, ax
 
-def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, **kwargs):
+def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, min_clone_size = None, clone_key. = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -261,6 +279,10 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
     labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
+    min_clone_size : int, optional
+        minimum clone size to keep. Defaults to 1 if left as None.
+    clone_key : str, optional
+        column name for clones. None defaults to 'clone_id'.
     **kwargs
         other kwargs passed to `matplotlib.plt`.
     Return
@@ -272,7 +294,22 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     elif self.__class__ == AnnData:
         data = self.obs.copy()
     data[groupby] = [str(l) for l in data[groupby]] # quick fix to prevent dropping of nan
-    dat_ = pd.DataFrame(data.groupby(variable)[groupby].value_counts(normalize=normalize).unstack(fill_value=0).stack(), columns = ['value'])
+    
+    if min_clone_size is None:
+        min_size = 2
+    else:
+        min_size = 1
+
+    if clone_key is None:
+        clone_ = 'clone_id'
+    else:
+        clone_ = clone_key
+
+    size = data[clone_].value_counts()
+    keep = list(size[size >= min_size].index)
+    data_ = data[data[clone_].isin(keep)]
+
+    dat_ = pd.DataFrame(data_.groupby(variable)[groupby].value_counts(normalize=normalize).unstack(fill_value=0).stack(), columns = ['value'])
     dat_.reset_index(drop = False, inplace = True)
     dat_order = pd.DataFrame(data[variable].value_counts(normalize=normalize))
     dat_ = dat_.pivot(index=variable, columns=groupby, values='value')
