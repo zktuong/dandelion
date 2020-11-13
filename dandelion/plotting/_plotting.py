@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 23:37:07
+# @Last Modified time: 2020-11-13 23:51:30
 
 import seaborn as sns
 import pandas as pd
@@ -16,8 +16,6 @@ import random
 from adjustText import adjust_text
 from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
 from scanpy.plotting import palettes
-import networkx as nx
-import nxviz as nxv
 import matplotlib.pyplot as plt
 from itertools import combinations
 
@@ -560,6 +558,12 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     ----------
         a `nxviz.CircosPlot`.
     """
+    import networkx as nx
+    try:
+        import nxviz as nxv
+    except:
+        raise(ImportError("Unable to import module `nxviz`. Have you done pip install nxviz?"))
+
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
     elif self.__class__ == AnnData:

@@ -119,7 +119,6 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-nxviz>=0.6.2
 rpy2>=3.3.2
 ```
 
