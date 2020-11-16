@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-16 12:54:35
+# @Last Modified time: 2020-11-16 13:24:51
 
 import seaborn as sns
 import pandas as pd
@@ -579,6 +579,9 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     else:
         clone_ = clone_key
 
+    # get rid of problematic rows that appear because of category conversion?
+    data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
+    
     # prepare a summary table
     overlap = pd.crosstab(data[clone_], data[groupby])
 
