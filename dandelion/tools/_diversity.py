@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-09-09 14:24:53
+# @Last Modified time: 2020-11-13 21:16:01
 
 import pandas as pd
 import numpy as np
@@ -83,7 +83,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     if self.__class__ == Dandelion:
         return({'rarefaction_cells_x':pred, 'rarefaction_clones_y':y})
 
-def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
+def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -92,9 +92,11 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
     self : Dandelion, AnnData
         `Dandelion` or `AnnData` object.    
     groupby : str
-        Column name to calculate the gini indices on, for e.g. sample, patient etc.
+        Column name to calculate the gini indices on, for e.g. sample, patient etc.    
     method : str
-        Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].    
+        Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
+    metric : str, optional
+        Metric to use for calculating Gini indices of clones. Accepts 'clone_degree' and 'clone_centrality'. Defaults to 'clone_centrality'.    
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -113,9 +115,9 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
     """
     if method == 'gini':
         if update_obs_meta:
-            diversity_gini(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
+            diversity_gini(self, groupby, metric, clone_key, update_obs_meta, diversity_key, resample, n_resample)
         else:
-            return(diversity_gini(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample))
+            return(diversity_gini(self, groupby, metric, clone_key, update_obs_meta, diversity_key, resample, n_resample))
     if method == 'chao1':
         if update_obs_meta:
             diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample)
@@ -127,7 +129,7 @@ def clone_diversity(self, groupby, method = 'gini', clone_key = None, update_obs
         else:
             return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize))
 
-def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
+def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
     """
     Compute B cell clones Gini indices.
 
@@ -137,6 +139,8 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
+    metric : str, optional
+        Metric to use for calculating Gini indices of clones. Accepts 'clone_degree' and 'clone_centrality'. Defaults to 'clone_centrality'.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -153,7 +157,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, clone_key = None, resample = True, n_resample = 50):
+    def gini_indices(self, groupby, metric = None, clone_key = None, resample = True, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -163,8 +167,19 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
         else:
             clonekey = clone_key
 
-        if 'clone_degree' not in metadata.columns:
-            raise ValueError("`clone_degree` not found in provided object. Please run tl.clone_degree")
+        if metric is None:
+            met = 'clone_centrality'
+        else:
+            met = metric
+        
+        if met not in metadata.columns:
+            from ..tools._network import clone_centrality, clone_degree
+            if met == 'clone_centrality':                
+                raise ValueError("`clone_centrality` not found in metadata. Please run tl.clone_centrality")
+            elif met == 'clone_degree':
+                raise ValueError("`clone_degree` not found in metadata. Please run tl.clone_degree")
+            else:
+                raise ValueError("`metric` not recognised. Please specify either `clone_centrality` or `clone_degree`.")
         # split up the table by groupby
         groups = list(set(metadata[groupby]))
             
@@ -196,8 +211,8 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                         g_c = np.nan
                     sizelist.append(g_c)
                 
-                    # vertex weighted degree distribution
-                    graphcounts = np.array(_dat['clone_degree'].value_counts())
+                    # vertex closeness centrality or weighted degree distribution
+                    graphcounts = np.array(_dat[met].value_counts())
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts)
                     else:
@@ -228,8 +243,8 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
-                # vertex weighted degree distribution
-                graphcounts = np.array(_dat['clone_degree'].value_counts())
+                # vertex closeness centrality or weighted degree distribution
+                graphcounts = np.array(_dat[met].value_counts())
                 if len(graphcounts) > 0:
                     g_c = gini_index(graphcounts, method = 'trapezoids')
                 else:
@@ -237,7 +252,7 @@ def diversity_gini(self, groupby, clone_key = None, update_obs_meta = False, div
                 res2.update({g:g_c})
 
         res_df = pd.DataFrame.from_dict([res1,res2]).T
-        res_df.columns = ['clone_size_gini', 'clone_degree_gini']
+        res_df.columns = ['clone_size_gini', met + '_gini']
         return(res_df)
 
     def transfer_gini_indices(self, gini_results, groupby):

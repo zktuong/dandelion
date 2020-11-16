@@ -61,7 +61,7 @@ opt_list <- list(make_option(c("-d", "--db"), dest="DB",
                              help=paste("Output directory. Will be created if it does not exist.",
                                         "\n\t\tDefaults to the current working directory.")),
                  make_option(c("-f", "--format"), dest="FORMAT", default=FORMAT,
-                             help=paste("File format. One of 'airr' (default) or 'changeo'.")),                 
+                             help=paste("File format. One of 'blast' (default), 'changeo' or 'airr'.")),                 
                  make_option(c("-p", "--nproc"), dest="NPROC", default=NPROC,
                              help=paste("Number of subprocesses for multiprocessing tools.",
                                         "\n\t\tDefaults to the available processing units.")))
@@ -101,7 +101,7 @@ if (opt$FORMAT == "changeo") {
     junction_length <- "junction_length"
     sequence_alignment <- "sequence_alignment"
     ext <- "tsv"
-} else if (opt$FORMAT == "airr") {
+} else if (opt$FORMAT %in% "airr") {
     db <- airr::read_rearrangement(opt$DB)
     v_call <- "v_call"
     j_call <- "j_call"

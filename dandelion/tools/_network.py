@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-22 10:39:30
+# @Last Modified time: 2020-11-11 14:06:11
 
 import pandas as pd
 import numpy as np
@@ -172,12 +172,17 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_.fillna(0, inplace = True)
         tmp_clone_tree3[x] = tmp_
 
-    # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were clipped off during the mst step
+    # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
     tmp_edge_list = Tree()
     for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
         G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
         G.edges(data=True)
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
+        tmp_edge_list[c].index = [(s, t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+        for idx in tmp_edge_list[c].index:
+            if tmp_totaldist.loc[idx[0], idx[1]] > 0:
+                tmp_edge_list[c].drop(idx, inplace = True)
+        tmp_edge_list[c].reset_index(inplace = True)
 
     # try to catch situations where there's no edge (only singletons)
     try:
@@ -250,13 +255,34 @@ def mst(mat):
 def clone_degree(self, weight='weight'):
     start = logg.info('Calculating clone degree')
     if self.__class__ == Dandelion:
-        dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
-        A = csr_matrix(dist)
-        G = nx.Graph()
-        G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
+        try:
+            G = self.graph[0]
+        except:
+            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
+            A = csr_matrix(dist)
+            G = nx.Graph()
+            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
         cd = pd.DataFrame.from_dict(G.degree(weight = weight))
         cd.set_index(0, inplace = True)
         self.metadata['clone_degree'] = pd.Series(cd[1])
+    else:
+        raise TypeError('Input object must be of {}'.format(Dandelion))
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion metadata\n'))
+
+def clone_centrality(self, weight='weight'):
+    start = logg.info('Calculating clone closeness centrality')
+    if self.__class__ == Dandelion:
+        try:
+            G = self.graph[0]
+        except:
+            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
+            A = csr_matrix(dist)
+            G = nx.Graph()
+            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
+        cc = nx.closeness_centrality(G)
+        cc = pd.DataFrame.from_dict(cc, orient = 'index', columns = ['clone_centrality'])
+        self.metadata['clone_centrality'] = pd.Series(cc['clone_centrality'])
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
     logg.info(' finished', time=start,

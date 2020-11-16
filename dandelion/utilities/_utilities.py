@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-27 18:57:39
+# @Last Modified time: 2020-11-13 20:53:23
 
 import sys
 import os
@@ -642,8 +642,6 @@ class Dandelion:
                 personalized_ref_dict = readGermlines([corrected])
             # update with the personalized germline database
             germline_ref.update(personalized_ref_dict)
-        else:
-            pass
 
         self.germline.update(germline_ref)
         logg.info(' finished', time=start,
@@ -662,8 +660,12 @@ class Dandelion:
     
     def write(self, filename='dandelion_data.pkl.pbz2'):
         if isBZIP(filename):
-            with bz2.BZ2File(filename, 'w') as f:
-                cPickle.dump(self, f)
+            try:
+                with bz2.BZ2File(filename, 'w') as f:
+                    cPickle.dump(self, f)
+            except:
+                with bz2.BZ2File(filename, 'w') as f:
+                    cPickle.dump(self, f, protocol = 4)
         else:
             f = open(filename, 'wb')
             cPickle.dump(self, f)

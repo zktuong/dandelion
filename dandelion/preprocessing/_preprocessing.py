@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-10-27 18:03:57
+# @Last Modified time: 2020-11-13 23:03:54
 
 import sys
 import os
@@ -15,7 +15,7 @@ from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
 from ..utilities._utilities import *
-from .external._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype, insertGaps
+from .external._preprocessing import assigngenes_igblast, makedb_igblast, tigger_genotype
 from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
@@ -51,7 +51,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
     sep : str, optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
-        whether or not to remove the trailing hyphen number e.g. '-1' from the cell barcodes. Doesn't affect contig barcodes.
+        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to output location. None defaults to 'dandelion/data'.
     Returns
@@ -67,7 +67,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
             if os.path.isfile(fasta.strip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
                 filePath = fasta + '/' + os.path.basename(file)
     if filePath is None:
-        raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.')
+        raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file. Starting folder should only contain 1 fasta file.')
 
     fh = open(filePath, 'r')
     seqs = {}
@@ -82,13 +82,22 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
             seqs[header] = sequence
         elif prefix is not None:
             if suffix is not None:
-                newheader = str(prefix)+separator+str(header)+separator+str(suffix)
+                if remove_trailing_hyphen_number:
+                    newheader = str(prefix)+separator+str(header).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(header).split('_contig')[1]
+                else:
+                    newheader = str(prefix)+separator+str(header).split('_contig')[0]+separator+str(suffix)+'_contig'+str(header).split('_contig')[1]
             else:
-                newheader = str(prefix)+separator+str(header)
+                if remove_trailing_hyphen_number:
+                    newheader = str(prefix)+separator+str(header).split('_contig')[0].split('-')[0]+'_contig'+str(header).split('_contig')[1]
+                else:
+                    newheader = str(prefix)+separator+str(header)
             seqs[newheader] = sequence
         else:
             if suffix is not None:
-                newheader = str(header)+separator+str(suffix)
+                if remove_trailing_hyphen_number:
+                    newheader = str(header).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(header).split('_contig')[1]
+                else:
+                    newheader = str(header)+separator+str(suffix)
             else:
                 newheader = str(header)
             seqs[newheader] = sequence
@@ -126,23 +135,26 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
 
     if prefix is not None:
         if suffix is not None:
-            data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
             if remove_trailing_hyphen_number:
+                data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
-            else:                
+            else:
+                data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b)+separator+str(suffix) for b in data['barcode']]
-        else:
-            data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
+        else:            
             if remove_trailing_hyphen_number:
+                data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0].split('-')[0]+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b).split('-')[0] for b in data['barcode']]
             else:
+                data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b) for b in data['barcode']]
     else:
-        if suffix is not None:
-            data['contig_id'] = [str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
+        if suffix is not None:            
             if remove_trailing_hyphen_number:
+                data['contig_id'] = [str(c).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
-            else:                
+            else:
+                data['contig_id'] = [str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(b)+separator+str(suffix) for b in data['barcode']]
         else:
             data['contig_id'] = [str(c) for c in data['contig_id']]
@@ -200,7 +212,7 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
                 format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
 
 
-def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
+def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -209,7 +221,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     fasta : str
         path to fasta file.
     fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
@@ -452,7 +464,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
 
     def _add_cell(data):
         _data = load_data(data)
-        _data['cell_id'] = [c.split('_contig')[0].split('-')[0] for c in _data['sequence_id']]
+        _data['cell_id'] = [c.split('_contig')[0] for c in _data['sequence_id']]
         return(_data)
 
     aligner = Align.PairwiseAligner()
@@ -574,7 +586,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
         return(dat)
 
     # main function from here
-    format_dict = {'changeo':'_igblast_db-pass', 'airr':'_igblast_gap'}
+    format_dict = {'changeo':'_igblast_db-pass', 'blast':'_igblast_db-pass', 'airr':'_igblast_gap'}
 
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
@@ -640,7 +652,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
     res_10x_sum.reset_index(drop = False, inplace = True)
     res_blast_sum.reset_index(drop = False, inplace = True)
 
-    if correct_c_call:
+    if correct_c_call: # TODO: figure out if i need to set up a None correction?
         if verbose:
             print('Correcting C calls \n')
         dat = _correct_c_call(dat, primers_dict=correction_dict)
@@ -659,7 +671,9 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
 
     if verbose:
         print('Finishing up \n')
-    dat = _add_cell(dat)
+    if 'cell_id' not in dat.columns:
+        dat = _add_cell(dat)
+    dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
     dat.to_csv(_file, sep = '\t', index=False)
     if plot:
         options.figure_size = figsize
@@ -683,7 +697,7 @@ def assign_isotype(fasta, fileformat = 'airr', org = 'human', correct_c_call = T
                 + theme(legend_title = element_blank()))
         print(p)
 
-def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
+def assign_isotypes(fastas, fileformat = 'blast', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -692,7 +706,7 @@ def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call =
     fastas : list
         list or sequence of paths to fasta files.
     fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
@@ -726,7 +740,7 @@ def assign_isotypes(fastas, fileformat = 'airr', org = 'human', correct_c_call =
         assign_isotype(fasta, fileformat = fileformat, org = org, correct_c_call = correct_c_call, correction_dict = correction_dict, plot = plot, figsize=figsize, blastdb = blastdb, allele = allele, parallel = parallel, ncpu = ncpu, verbose = verbose)
 
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', fileformat = 'airr', extended = False, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', extended = True, verbose = False, *args):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -742,10 +756,8 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         organism of germline database. Default is 'human'.
     loci : str
         mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for TCRs.
-    fileformat: str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     extended : bool
-        whether or not to transfer additional 10X annotions to output file. Default is False.
+        whether or not to transfer additional 10X annotions to output file. Default is True.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
     *args
@@ -782,59 +794,52 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, fileformat = fileformat, verbose = verbose, *args)
-        if fileformat == 'airr':
-            env = os.environ.copy()
-            if germline is None:
-                try:
-                    gml = env['GERMLINE']
-                except:
-                    raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
-                gml = gml+'imgt/'+org+'/vdj/'
-            else:
-                env['GERMLINE'] = germline
-                gml = germline
-            insertGaps("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), [gml])
-            map_cellranger("{}/{}".format(os.path.dirname(filePath), os.path.basename(filePath).replace('.fasta', '_igblast_gap.tsv')), extended = extended)
-            tmpFolder = "{}/tmp".format(os.path.dirname(filePath))
-            if not os.path.exists(tmpFolder):
-                os.makedirs(tmpFolder)
-            os.replace("{}/{}".format(os.path.dirname(filePath),os.path.basename(filePath).replace('.fasta', '_igblast.tsv')), "{}/{}".format(tmpFolder,os.path.basename(filePath).replace('.fasta', '_igblast.tsv')))
-        elif fileformat == 'changeo':
-            makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
+        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, verbose = verbose, *args)
+        makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
+        outfolder1 = os.path.abspath(os.path.dirname(filePath))+'/tmp'
+        outfolder2 = os.path.abspath(os.path.dirname(filePath))
+        informat_dict = {'blast':'_igblast_db-pass.tsv', 'airr':'_igblast.tsv'}
+        outfile1 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['airr']
+        outfile2 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['blast']
+        airr_output = pd.read_csv("{}/{}".format(outfolder1, outfile1), sep = '\t', index_col = 0)        
+        igblast_output = pd.read_csv("{}/{}".format(outfolder1, outfile2), sep = '\t', index_col = 0)
+        cols_to_merge = airr_output.columns.difference(igblast_output.columns)
+        igblast_output = igblast_output.join(airr_output[cols_to_merge])
+        igblast_output.reset_index(inplace = True)
+        igblast_output.to_csv("{}/{}".format(outfolder2, outfile2), sep = '\t', index = False)
 
-def map_cellranger(data, extended = False):
-    dat = load_data(data)
-    cellranger_data = "{}/{}".format(os.path.dirname(data), os.path.basename(data).replace('_igblast_gap.tsv', '_annotations.csv'))
-    cr_data = pd.read_csv(cellranger_data, dtype = 'object')
-    cell_id = dict(zip(cr_data['contig_id'], cr_data['barcode']))
-    v_call = dict(zip(cr_data['contig_id'], cr_data['v_gene']))
-    d_call = dict(zip(cr_data['contig_id'], cr_data['d_gene']))
-    j_call = dict(zip(cr_data['contig_id'], cr_data['j_gene']))
-    c_call = dict(zip(cr_data['contig_id'], cr_data['c_gene']))
-    junction = dict(zip(cr_data['contig_id'], cr_data['cdr3_nt']))
-    junction_aa = dict(zip(cr_data['contig_id'], cr_data['cdr3']))
-    conscount = dict(zip(cr_data['contig_id'], cr_data['reads']))
-    umicount = dict(zip(cr_data['contig_id'], cr_data['umis']))
+# def map_cellranger(data, extended = False):
+#     dat = load_data(data)
+#     cellranger_data = "{}/{}".format(os.path.dirname(data), os.path.basename(data).replace('_igblast_gap.tsv', '_annotations.csv'))
+#     cr_data = pd.read_csv(cellranger_data, dtype = 'object')
+#     cell_id = dict(zip(cr_data['contig_id'], cr_data['barcode']))
+#     v_call = dict(zip(cr_data['contig_id'], cr_data['v_gene']))
+#     d_call = dict(zip(cr_data['contig_id'], cr_data['d_gene']))
+#     j_call = dict(zip(cr_data['contig_id'], cr_data['j_gene']))
+#     c_call = dict(zip(cr_data['contig_id'], cr_data['c_gene']))
+#     junction = dict(zip(cr_data['contig_id'], cr_data['cdr3_nt']))
+#     junction_aa = dict(zip(cr_data['contig_id'], cr_data['cdr3']))
+#     conscount = dict(zip(cr_data['contig_id'], cr_data['reads']))
+#     umicount = dict(zip(cr_data['contig_id'], cr_data['umis']))
 
-    if not extended:
-        dat['cell_id'] = pd.Series(cell_id)
-        dat['c_call'] = pd.Series(c_call)
-        dat['consensus_count'] = pd.Series(conscount)
-        dat['umi_count'] = pd.Series(umicount)
-    else:
-        dat['cell_id'] = pd.Series(cell_id)
-        dat['c_call'] = pd.Series(c_call)
-        dat['consensus_count'] = pd.Series(conscount)
-        dat['umi_count'] = pd.Series(umicount)
-        dat['v_call_10x'] = pd.Series(v_call)
-        dat['d_call_10x'] = pd.Series(d_call)
-        dat['j_call_10x'] = pd.Series(j_call)
-        dat['junction_10x'] = pd.Series(junction)
-        dat['junction_10x_aa'] = pd.Series(junction_aa)
-    dat.to_csv(data, sep = '\t', index = False, na_rep='')
+#     if not extended:
+#         dat['cell_id'] = pd.Series(cell_id)
+#         dat['c_call'] = pd.Series(c_call)
+#         dat['consensus_count'] = pd.Series(conscount)
+#         dat['umi_count'] = pd.Series(umicount)
+#     else:
+#         dat['cell_id'] = pd.Series(cell_id)
+#         dat['c_call'] = pd.Series(c_call)
+#         dat['consensus_count'] = pd.Series(conscount)
+#         dat['umi_count'] = pd.Series(umicount)
+#         dat['v_call_10x'] = pd.Series(v_call)
+#         dat['d_call_10x'] = pd.Series(d_call)
+#         dat['j_call_10x'] = pd.Series(j_call)
+#         dat['junction_10x'] = pd.Series(junction)
+#         dat['junction_10x_aa'] = pd.Series(junction_aa)
+#     dat.to_csv(data, sep = '\t', index = False, na_rep='')
 
-def reassign_alleles(data, combined_folder, germline = None, org = 'human', fileformat = 'airr', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
+def reassign_alleles(data, combined_folder, germline = None, org = 'human', fileformat = 'blast', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -849,7 +854,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     org : str
         organism of germline database. Default is 'human'.
     fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of germline database. Default is 'human'.
     seq_field : str
@@ -884,10 +889,11 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     if type(data) is not list:
         data = [data]
 
-    informat_dict = {'changeo':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
-    fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
-    inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
-    germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
+    informat_dict = {'changeo':'_igblast_db-pass.tsv', 'blast':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
+    fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'blast':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
+    inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'blast':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
+    germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'blast':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
+    fform_dict = {'blast':'airr', 'airr':'airr', 'changeo':'changeo'}
 
     data_list = []
     filePath = None
@@ -926,8 +932,6 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     else:
         dat_ = data_list[0]
 
-    # dat_.fillna('', inplace=True)
-
     # write out this file for tigger
     outDir = combined_folder.strip('/')
     if not os.path.exists(outDir):
@@ -937,7 +941,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
     dat_h = dat_[dat_['locus'] == 'IGH']
     dat_h.to_csv(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-    tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germline = germline, fileformat = fileformat, verbose = verbose)
+    tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germline = germline, fileformat = fform_dict[fileformat], verbose = verbose)
 
     # initialise the germline references
     # germline_ref = readGermlines([gml])
@@ -949,8 +953,9 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
     dat_ = _return_IGKV_IGLV(dat_)
     res = Dandelion(dat_, initialize = False)
     # update with the personalized germline database
-    res.update_germline(outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline, org)
-    create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fileformat)
+    res.update_germline(corrected = outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline = germline, org = org)
+
+    create_germlines(res, germline = germline, org = org, seq_field = seq_field, v_field = v_field, d_field = d_field, j_field = j_field, germ_types = germ_types, fileformat = fform_dict[fileformat])
     print('   Saving corrected genotyped object')
     sleep(0.5)
     res.data.to_csv(outDir+'/'+outDir+fileformat_dict[fileformat], index = False, sep = '\t')
@@ -1488,6 +1493,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     else:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call']))
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
+    c_dict = dict(zip(dat['sequence_id'], dat['c_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
     dat['duplicate_count'] = 0
@@ -1601,15 +1607,22 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             drop_contig.append(l[b])
         if len(hc_id) > 0:
             v = v_dict[hc_id[0]]
+            j = j_dict[hc_id[0]]
+            c = c_dict[hc_id[0]]
             if v is not np.nan:
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
-                    drop_contig.append(h[b])
-            j = j_dict[hc_id[0]]
+                    drop_contig.append(h[b])            
             if j is not np.nan:
                 if 'IGH' not in j:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
+                    drop_contig.append(h[b])
+            if c is not np.nan and c is not None:
+                if 'IGH' not in c:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
@@ -1617,6 +1630,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         if len(lc_id) > 0:
             v = v_dict[lc_id[0]]
             j = j_dict[lc_id[0]]
+            c = c_dict[lc_id[0]]
             if v is not np.nan:
                 if j is not np.nan:
                     if 'IGH' in v:
@@ -1639,8 +1653,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(l[b])
+            if c is not None and c is not np.nan:
+                if 'IGH' in c:
+                    if filter_poorqualitybcr:
+                        poor_qual.append(b)
+                    drop_contig.append(l[b])
 
-            if v == np.nan or j == np.nan:
+            if v == np.nan or j == np.nan or v == None or j == None:
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
                 drop_contig.append(l[b]) # no/wrong annotations at all
@@ -1784,6 +1803,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             if len(hc_id) > 0:
                 v = v_dict[hc_id[0]]
                 j = j_dict[hc_id[0]]
+                c = c_dict[hc_id[0]]
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
@@ -1794,9 +1814,16 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
+                if c is not np.nan and c is not None:
+                    if 'IGH' not in c:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                        drop_contig.append(h[b])
             if len(lc_id) > 0:
                 v = v_dict[lc_id[0]]
                 j = j_dict[lc_id[0]]
+                c = c_dict[lc_id[0]]
                 if 'IGH' in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
@@ -1816,8 +1843,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
+                if c is not None and c is not np.nan:
+                    if 'IGH' in c:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
 
-                if v == np.nan or j == np.nan:
+                if v == np.nan or j == np.nan or v == None or j == None:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b]) # no/wrong annotations at all
@@ -1872,11 +1904,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             for c in dat['cell_id']:
                 if c not in adata.obs_names:
                     filter_ids.append(c)
-
+                    
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
         _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
         if _dat.shape[0] is 0:
-            raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching? Make sure that the transcriptome data does not contain any "-#" at the suffix.')
+            raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching?')
 
         if os.path.isfile(str(data)):
             _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data), os.path.basename(data).split('.tsv')[0]), sep = '\t', index = False)
@@ -1955,6 +1987,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(self):
         dat = load_data(self)
+    else:
+        raise ValueError("{} object/file not found.".format(self))
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
@@ -1972,8 +2006,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat = dat.where(dat.isna(), dat.astype(str))
         try:
             dat_r = pandas2ri.py2rpy(dat)
-        except:
-            dat = dat.fillna('')
+        except:            
+            dat = dat.astype(str) 
             dat_r = pandas2ri.py2rpy(dat)
 
         results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
@@ -1987,20 +2021,18 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         try:
             dat_h_r = pandas2ri.py2rpy(dat_h)
         except:
-            dat_h = dat_h.fillna('')
+            dat_h = dat_h.astype(str) 
             dat_h_r = pandas2ri.py2rpy(dat_h)
 
         dat_l = dat_l.where(dat_l.isna(), dat_l.astype(str))
         try:
             dat_l_r = pandas2ri.py2rpy(dat_l)
-        except:
-            dat_l = dat_l.fillna('')
+        except:            
+            dat_l = dat_l.astype(str) 
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
         results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        # pd_df_h = pandas2ri.rpy2py_dataframe(results_h)
-        # pd_df_l = pandas2ri.rpy2py_dataframe(results_l)
+        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)        
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace = True, drop = False)
@@ -2115,55 +2147,47 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
     except:
         raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
-    sh = importr('shazam')
+    
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
-    warnings.filterwarnings("ignore")
-    pandas2ri.activate()
+        warnings.filterwarnings("ignore")
+    sh = importr('shazam')
+    pandas2ri.activate()    
     if 'v_call_genotyped' in dat.columns:
         v_call = 'v_call_genotyped'
     else:
-        v_call = 'v_call'
-
+        v_call = 'v_call'    
     if model is None:
         model_ = 'ham'
     else:
-        model_ = model
-
+        model_ = model    
     if normalize_method is None:
         norm_ = 'len'
     else:
-        norm_ = normalize_method
-
+        norm_ = normalize_method    
     if threshold_method is None:
         threshold_method_ = "density"
     else:
-        threshold_method_ = threshold_method
-
+        threshold_method_ = threshold_method    
     if subsample is None:
         subsample_ = NULL
     else:
-        subsample_ = subsample
-
+        subsample_ = subsample    
     if ncpu is None:
         ncpu_ = multiprocessing.cpu_count()-1
     else:
-        ncpu_ = ncpu
-
-    dat_h = dat[dat['locus'] == 'IGH']
-
+        ncpu_ = ncpu    
+    dat_h = dat[dat['locus'] == 'IGH']    
     try:
         dat_h_r = pandas2ri.py2rpy(dat_h)
-    except:
-        dat_h = dat_h.fillna('')
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-
+    except:            
+        dat_h = dat_h.astype(str) 
+        dat_h_r = pandas2ri.py2rpy(dat_h)    
     dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
     # Find threshold using density method
-    dist = np.array(dist_ham['dist_nearest'])
-
+    dist = np.array(dist_ham['dist_nearest'])    
     if threshold_method_ is 'density':
         if edge is None:
             edge_ = 0.9
@@ -2176,23 +2200,19 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
             else:
-                threshold_model_ = threshold_model
-
+                threshold_model_ = threshold_model    
             if cross is None:
                 cross_ = NULL
             else:
-                cross_ = cross
-
+                cross_ = cross    
             if cutoff is None:
                 cutoff_ = 'optimal'
             else:
-                cutoff_ = cutoff
-
+                cutoff_ = cutoff    
             if sensitivity is None:
                 sen_ = NULL
             else:
-                sen_ = sensitivity
-
+                sen_ = sensitivity    
             if specificity is None:
                 spc_ = NULL
             else:
@@ -2203,30 +2223,25 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         if threshold_model is None:
             threshold_model_ = "gamma-gamma"
         else:
-            threshold_model_ = threshold_model
-
+            threshold_model_ = threshold_model    
         if cross is None:
             cross_ = NULL
         else:
-            cross_ = cross
-
+            cross_ = cross    
         if cutoff is None:
             cutoff_ = 'optimal'
         else:
-            cutoff_ = cutoff
-
+            cutoff_ = cutoff    
         if sensitivity is None:
             sen_ = NULL
         else:
-            sen_ = sensitivity
-
+            sen_ = sensitivity    
         if specificity is None:
             spc_ = NULL
         else:
             spc_ = specificity
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
-        threshold=np.array(dist_threshold.slots['threshold'])[0]
-
+        threshold=np.array(dist_threshold.slots['threshold'])[0]    
     if np.isnan(threshold):
         warnings.warn(UserWarning("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."))
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
