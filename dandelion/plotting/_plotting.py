@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 23:51:30
+# @Last Modified time: 2020-11-16 12:54:35
 
 import seaborn as sns
 import pandas as pd
@@ -570,7 +570,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         data = self.obs.copy()
 
     if min_clone_size is None:
-        min_size = 2
+        min_size = 1
     else:
         min_size = int(min_clone_size)
 
