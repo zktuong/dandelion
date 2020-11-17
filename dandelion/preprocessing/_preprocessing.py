@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-17 17:36:54
+# @Last Modified time: 2020-11-17 23:28:43
 
 import sys
 import os
@@ -1204,10 +1204,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                     if f not in self.data.columns:
                         raise NameError('%s field does not exist in input database file.' % f)
                 # Translate to Receptor attribute names
-                v_field = schema.toReceptor(v_field)
-                d_field = schema.toReceptor(d_field)
-                j_field = schema.toReceptor(j_field)
-                seq_field = schema.toReceptor(seq_field)
+                v_field_ = schema.toReceptor(v_field)
+                d_field_ = schema.toReceptor(d_field)
+                j_field_ = schema.toReceptor(j_field)
+                seq_field_ = schema.toReceptor(seq_field)
                 # clone_field = schema.toReceptor(clone_field)
 
                 # Define Receptor iterator
@@ -1228,10 +1228,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 if f not in self.columns:
                     raise NameError('%s field does not exist in input database file.' % f)
             # Translate to Receptor attribute names
-            v_field = schema.toReceptor(v_field)
-            d_field = schema.toReceptor(d_field)
-            j_field = schema.toReceptor(j_field)
-            seq_field = schema.toReceptor(seq_field)
+            v_field_ = schema.toReceptor(v_field)
+            d_field_ = schema.toReceptor(d_field)
+            j_field_ = schema.toReceptor(j_field)
+            seq_field_ = schema.toReceptor(seq_field)
             # clone_field = schema.toReceptor(clone_field)
             # Define Receptor iterator
             receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
@@ -1242,9 +1242,9 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             # Define iteration variables
             # Build germline for records
             if fileformat == 'airr':
-                germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+                germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
             elif fileformat == 'changeo':
-                germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+                germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' % fileformat)
 
@@ -1369,10 +1369,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             if f not in db_iter.fields:
                 raise NameError('%s field does not exist in input database file.' % f)
         # Translate to Receptor attribute names
-        v_field = schema.toReceptor(v_field)
-        d_field = schema.toReceptor(d_field)
-        j_field = schema.toReceptor(j_field)
-        seq_field = schema.toReceptor(seq_field)
+        v_field_ = schema.toReceptor(v_field)
+        d_field_ = schema.toReceptor(d_field)
+        j_field_ = schema.toReceptor(j_field)
+        seq_field_ = schema.toReceptor(seq_field)
         # clone_field = schema.toReceptor(clone_field)
         # Define Receptor iterator
         receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
@@ -1384,7 +1384,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             # Build germline for records
             # if not isinstance(self.data, pd.DataFrame):
             records = list(records)
-            germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+            germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
             if glines is not None:
                 # Add glines to Receptor record
                 annotations = {}
