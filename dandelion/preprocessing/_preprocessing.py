@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 23:03:54
+# @Last Modified time: 2020-11-17 17:36:54
 
 import sys
 import os
@@ -199,17 +199,17 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
 
     for fasta in tqdm(fastas, desc = 'Formating fasta(s) '):
         if prefix is None and suffix is None:
-            format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
+            format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
         elif prefix is not None:
             if suffix is not None:
-                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = suffix_dict[fasta], sep = sep, outdir = outdir)
+                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = suffix_dict[fasta], sep = sep, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
             else:
-                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = None, sep = sep, outdir = outdir)
+                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = None, sep = sep, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
         else:
             if suffix is not None:
-                format_fasta(fasta, prefix = None, suffix = suffix_dict[fasta], sep = sep, outdir = outdir)
+                format_fasta(fasta, prefix = None, suffix = suffix_dict[fasta], sep = sep, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
             else:
-                format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
+                format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
 
 
 def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
