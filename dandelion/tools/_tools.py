@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-18 19:54:24
+# @Last Modified time: 2020-11-18 19:58:15
 
 import os
 import sys
@@ -31,6 +31,7 @@ import warnings
 from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
+from anndata import AnnData
 
 def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, key_added = None, calculate_junction_length = True):
     """
