@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-18 18:22:40
+# @Last Modified time: 2020-11-18 19:54:24
 
 import os
 import sys
@@ -1041,3 +1041,64 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'metadata\', cell-indexed clone table'))
+
+
+def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None):
+    """
+    A function to tabulate clonal overlap for input as a circos-style plot.
+    Parameters
+    ----------
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    groupby : str
+        column name in obs/metadata for collapsing to nodes in circos plot.
+    colorby : str
+        column name in obs/metadata for grouping and color of nodes in circos plot.
+    min_clone_size : int, optional
+        minimum size of clone for plotting connections. Defaults to 2 if left as None.
+    clone_key : str, optional
+        column name for clones. None defaults to 'clone_id'.    
+    Return
+    ----------
+        a `pandas DataFrame`.
+    """    
+    start = logg.info('Finding clones')
+    if self.__class__ == Dandelion:
+        data = self.metadata.copy()
+    elif self.__class__ == AnnData:
+        data = self.obs.copy()
+
+    if min_clone_size is None:
+        min_size = 1
+    else:
+        min_size = int(min_clone_size)
+
+    if clone_key is None:
+        clone_ = 'clone_id'
+    else:
+        clone_ = clone_key
+
+    # get rid of problematic rows that appear because of category conversion?
+    data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
+    
+    # prepare a summary table
+    overlap = pd.crosstab(data[clone_], data[groupby])
+
+    if min_size == 0:
+        raise ValueError('min_size must be greater than 0.')
+    elif min_size > 1:
+        overlap[overlap < min_size] = 0
+        overlap[overlap >= min_size] = 1
+    else:
+        overlap[overlap > min_size] = 1
+
+    overlap.index.name = None
+    overlap.columns.name = None
+
+    if self.__class__ == AnnData:
+        self.uns['clone_overlap'] = overlap.copy()
+        logg.info(' finished', time=start,
+            deep=('Updated AnnData: \n'
+            '   \'uns\', clone overlap table'))
+    else:
+        return(overlap)

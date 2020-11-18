@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-16 13:24:51
+# @Last Modified time: 2020-11-18 19:51:40
 
 import seaborn as sns
 import pandas as pd
@@ -563,38 +563,68 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         import nxviz as nxv
     except:
         raise(ImportError("Unable to import module `nxviz`. Have you done pip install nxviz?"))
-
-    if self.__class__ == Dandelion:
-        data = self.metadata.copy()
-    elif self.__class__ == AnnData:
-        data = self.obs.copy()
-
-    if min_clone_size is None:
-        min_size = 1
-    else:
-        min_size = int(min_clone_size)
-
-    if clone_key is None:
-        clone_ = 'clone_id'
-    else:
-        clone_ = clone_key
-
-    # get rid of problematic rows that appear because of category conversion?
-    data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
     
-    # prepare a summary table
-    overlap = pd.crosstab(data[clone_], data[groupby])
+    if self.__class__ == Anndata:
+        if 'clone_overlap' in self.uns:
+            overlap = self.uns['clone_overlap'].copy()
+        else:
+            data = self.obs.copy()
+    
+            if min_clone_size is None:
+                min_size = 2
+            else:
+                min_size = int(min_clone_size)
+    
+            if clone_key is None:
+                clone_ = 'clone_id'
+            else:
+                clone_ = clone_key
+    
+            # get rid of problematic rows that appear because of category conversion?
+            data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
+        
+            # prepare a summary table
+            overlap = pd.crosstab(data[clone_], data[groupby])
 
-    if min_size == 0:
-        raise ValueError('min_size must be greater than 0.')
-    elif min_size > 1:
-        overlap[overlap < min_size] = 0
-        overlap[overlap >= min_size] = 1
-    else:
-        overlap[overlap > min_size] = 1
+            if min_size == 0:
+                raise ValueError('min_size must be greater than 0.')
+            elif min_size > 1:
+                overlap[overlap < min_size] = 0
+                overlap[overlap >= min_size] = 1
+            else:
+                overlap[overlap > min_size] = 1
+    
+            overlap.index.name = None
+            overlap.columns.name = None
+    elif self.__class__ == Dandelion:    
+        data = self.metadata.copy()
+    
+        if min_clone_size is None:
+            min_size = 2
+        else:
+            min_size = int(min_clone_size)
+    
+        if clone_key is None:
+            clone_ = 'clone_id'
+        else:
+            clone_ = clone_key
+    
+        # get rid of problematic rows that appear because of category conversion?
+        data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
+        
+        # prepare a summary table
+        overlap = pd.crosstab(data[clone_], data[groupby])
 
-    overlap.index.name = None
-    overlap.columns.name = None
+        if min_size == 0:
+            raise ValueError('min_size must be greater than 0.')
+        elif min_size > 1:
+            overlap[overlap < min_size] = 0
+            overlap[overlap >= min_size] = 1
+        else:
+            overlap[overlap > min_size] = 1
+    
+        overlap.index.name = None
+        overlap.columns.name = None
     
     edges = {}
     for x in overlap.index:
