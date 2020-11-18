@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-18 20:19:16
+# @Last Modified time: 2020-11-18 20:42:56
 
 import seaborn as sns
 import pandas as pd
@@ -564,21 +564,21 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     except:
         raise(ImportError("Unable to import module `nxviz`. Have you done pip install nxviz?"))
     
+    if min_clone_size is None:
+        min_size = 1
+    else:
+        min_size = int(min_clone_size)
+    
+    if clone_key is None:
+        clone_ = 'clone_id'
+    else:
+        clone_ = clone_key
+
     if self.__class__ == AnnData:
         if 'clone_overlap' in self.uns:
             overlap = self.uns['clone_overlap'].copy()
         else:
             data = self.obs.copy()
-    
-            if min_clone_size is None:
-                min_size = 2
-            else:
-                min_size = int(min_clone_size)
-    
-            if clone_key is None:
-                clone_ = 'clone_id'
-            else:
-                clone_ = clone_key
     
             # get rid of problematic rows that appear because of category conversion?
             data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
@@ -598,16 +598,6 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
             overlap.columns.name = None
     elif self.__class__ == Dandelion:    
         data = self.metadata.copy()
-    
-        if min_clone_size is None:
-            min_size = 2
-        else:
-            min_size = int(min_clone_size)
-    
-        if clone_key is None:
-            clone_ = 'clone_id'
-        else:
-            clone_ = clone_key
     
         # get rid of problematic rows that appear because of category conversion?
         data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
