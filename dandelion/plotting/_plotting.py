@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-18 19:51:40
+# @Last Modified time: 2020-11-18 20:19:16
 
 import seaborn as sns
 import pandas as pd
@@ -564,7 +564,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     except:
         raise(ImportError("Unable to import module `nxviz`. Have you done pip install nxviz?"))
     
-    if self.__class__ == Anndata:
+    if self.__class__ == AnnData:
         if 'clone_overlap' in self.uns:
             overlap = self.uns['clone_overlap'].copy()
         else:
