@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-18 20:42:56
+# @Last Modified time: 2020-11-18 20:52:15
 
 import seaborn as sns
 import pandas as pd
@@ -575,14 +575,12 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         clone_ = clone_key
 
     if self.__class__ == AnnData:
+        data = self.obs.copy()
+        # get rid of problematic rows that appear because of category conversion?
+        data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
         if 'clone_overlap' in self.uns:
             overlap = self.uns['clone_overlap'].copy()
-        else:
-            data = self.obs.copy()
-    
-            # get rid of problematic rows that appear because of category conversion?
-            data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
-        
+        else:                        
             # prepare a summary table
             overlap = pd.crosstab(data[clone_], data[groupby])
 
@@ -598,7 +596,6 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
             overlap.columns.name = None
     elif self.__class__ == Dandelion:    
         data = self.metadata.copy()
-    
         # get rid of problematic rows that appear because of category conversion?
         data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
         
