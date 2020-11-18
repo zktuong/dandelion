@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-17 23:28:43
+# @Last Modified time: 2020-11-17 23:56:28
 
 import sys
 import os
@@ -1263,32 +1263,34 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         germline_df = pd.DataFrame.from_dict(out, orient = 'index')
 
         if self.__class__ == Dandelion:
-            datx = load_data(self.data)
+            # datx = load_data(self.data)
             for x in germline_df.columns:
-                datx[x] = pd.Series(germline_df[x])
+                self.data[x] = pd.Series(germline_df[x])
 
-            if self.distance is not None:
-                dist_ = self.distance
-            else:
-                dist_ = None
-            if self.edges is not None:
-                edge_ = self.edges
-            else:
-                edge_ = None
-            if self.layout is not None:
-                layout_ = self.layout
-            else:
-                layout_ = None
-            if self.graph is not None:
-                graph_ = self.graph
-            else:
-                graph_ = None
-            if self.threshold is not None:
-                threshold_ = self.threshold
-            else:
-                threshold_ = None
-            self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
-            self.threshold = threshold_
+            # if self.distance is not None:
+            #     dist_ = self.distance
+            # else:
+            #     dist_ = None
+            # if self.edges is not None:
+            #     edge_ = self.edges
+            # else:
+            #     edge_ = None
+            # if self.layout is not None:
+            #     layout_ = self.layout
+            # else:
+            #     layout_ = None
+            # if self.graph is not None:
+            #     graph_ = self.graph
+            # else:
+            #     graph_ = None
+            # if self.threshold is not None:
+            #     threshold_ = self.threshold
+            # else:
+            #     threshold_ = None
+            
+            # self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
+            
+            # self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
