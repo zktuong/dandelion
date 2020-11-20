@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 20:53:23
+# @Last Modified time: 2020-11-17 21:47:29
 
 import sys
 import os
@@ -641,7 +641,10 @@ class Dandelion:
             elif os.path.isfile(str(corrected)):
                 personalized_ref_dict = readGermlines([corrected])
             # update with the personalized germline database
-            germline_ref.update(personalized_ref_dict)
+            if 'personalized_ref_dict' in locals():
+                germline_ref.update(personalized_ref_dict)
+            else:
+                raise OSError('Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences.')
 
         self.germline.update(germline_ref)
         logg.info(' finished', time=start,

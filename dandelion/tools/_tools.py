@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 21:05:42
+# @Last Modified time: 2020-11-18 19:58:15
 
 import os
 import sys
@@ -31,8 +31,9 @@ import warnings
 from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
+from anndata import AnnData
 
-def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, key_added = None):
+def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, key_added = None, calculate_junction_length = True):
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -48,6 +49,8 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
         Whether or not to collapse alleles to genes. None defaults to True.
     key_added : str, optional
         If specified, this will be the column name for clones. None defaults to 'clone_id'
+    calculate_junction_length : bool
+        Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is wrong). Default is True
     Returns
     -------
         `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
@@ -86,18 +89,34 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
     J = [','.join(list(set(j.split(',')))) for j in J]
 
     if clustering_by is None or clustering_by is 'aa':
-        junction = dict(zip(dat_heavy.index, dat_heavy['junction_aa']))
-        if 'junction_aa_length' not in dat_heavy.columns:
-            junction_length = [len(str(l)) for l in dat_heavy['junction_aa']]
+        if 'junction_aa' in dat_heavy.columns:
+            junction = dict(zip(dat_heavy.index, dat_heavy['junction_aa']))
         else:
-            junction_length = [l for l in dat_heavy['junction_aa_length']]
+            raise ValueError("'junction_aa' column not found in VDJ data.")
+        
+        if calculate_junction_length:            
+            junction_length = [len(str(l)) for l in dat_heavy['junction_aa']]            
+        else:            
+            if 'junction_aa_length' not in dat_heavy.columns:
+                junction_length = [len(str(l)) for l in dat_heavy['junction_aa']]
+            else:
+                junction_length = [l for l in dat_heavy['junction_aa_length']]
+
         junction_length_dict = dict(zip(dat_heavy.index, junction_length))
     elif clustering_by == 'nt':
-        junction = dict(zip(dat_heavy.index, dat_heavy['junction']))
-        if 'junction_length' not in dat_heavy.columns:
-            junction_length = [len(str(l)) for l in dat_heavy['junction']]
+        if 'junction' in dat_heavy.columns:
+            junction = dict(zip(dat_heavy.index, dat_heavy['junction']))
         else:
-            junction_length = [l for l in dat_heavy['junction_length']]
+            raise ValueError("'junction' column not found in VDJ data.")
+        
+        if calculate_junction_length:
+            junction_length = [len(str(l)) for l in dat_heavy['junction']]            
+        else:
+            if 'junction_length' not in dat_heavy.columns:
+                junction_length = [len(str(l)) for l in dat_heavy['junction']]
+            else:
+                junction_length = [l for l in dat_heavy['junction_length']]
+                            
         junction_length_dict = dict(zip(dat_heavy.index, junction_length))
     else:
         raise ValueError("clustering_by only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
@@ -314,19 +333,33 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
             Vlight = [','.join(list(set(v.split(',')))) for v in Vlight]
             Jlight = [','.join(list(set(j.split(',')))) for j in Jlight]
             if clustering_by is None or clustering_by is 'aa':
-                junction = dict(zip(dat_light_c.index, dat_light_c['junction_aa']))
-                if 'junction_aa_length' not in dat_light.columns:
+                if 'junction_aa' in dat_light_c.columns:
+                    junction = dict(zip(dat_light_c.index, dat_light_c['junction_aa']))
+                else:
+                    raise ValueError("'junction_aa' column not found in VDJ data.")
+                if calculate_junction_length:
                     junction_length = [len(str(l)) for l in dat_light_c['junction_aa']]
                 else:
-                    junction_length = [l for l in dat_light_c['junction_aa_length']]
+                    if 'junction_aa_length' not in dat_light.columns:
+                        junction_length = [len(str(l)) for l in dat_light_c['junction_aa']]
+                    else:
+                        junction_length = [l for l in dat_light_c['junction_aa_length']]
                 junction_length_dict = dict(zip(dat_light_c.index, junction_length))
+
             elif clustering_by == 'nt':
-                junction = dict(zip(dat_light_c.index, dat_light_c['junction']))
-                if 'junction_length' not in dat_light_c.columns:
+                if 'junction' in dat_light_c.columns:
+                    junction = dict(zip(dat_light_c.index, dat_light_c['junction']))
+                else:
+                    raise ValueError("'junction' column not found in VDJ data.")
+
+                if calculate_junction_length:
                     junction_length = [len(str(l)) for l in dat_light_c['junction']]
                 else:
-                    junction_length = [l for l in dat_light_c['junction_length']]
-                junction_length_dict = dict(zip(dat_light_c.index, junction_length))
+                    if 'junction_length' not in dat_light_c.columns:
+                        junction_length = [len(str(l)) for l in dat_light_c['junction']]
+                    else:
+                        junction_length = [l for l in dat_light_c['junction_length']]
+                    junction_length_dict = dict(zip(dat_light_c.index, junction_length))            
             else:
                 raise ValueError("clustering_by only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
@@ -488,7 +521,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
-    
+
     sleep(0.5)
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
@@ -556,11 +589,11 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
 
     """
     start = logg.info('Transferring network')
-    if dandelion.edges is not None:        
+    if dandelion.edges is not None:
         if full_graph:
             G = dandelion.graph[0]
         else:
-            G = dandelion.graph[1]        
+            G = dandelion.graph[1]
         distances = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight', nonedge=np.nan)
         connectivities = nx.to_pandas_adjacency(G, dtype = np.float32, weight='weight', nonedge=np.nan)
         connectivities[~connectivities.isnull()] = 1
@@ -1009,3 +1042,64 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'metadata\', cell-indexed clone table'))
+
+
+def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None):
+    """
+    A function to tabulate clonal overlap for input as a circos-style plot.
+    Parameters
+    ----------
+    self : Dandelion, AnnData
+        `Dandelion` or `AnnData` object.
+    groupby : str
+        column name in obs/metadata for collapsing to nodes in circos plot.
+    colorby : str
+        column name in obs/metadata for grouping and color of nodes in circos plot.
+    min_clone_size : int, optional
+        minimum size of clone for plotting connections. Defaults to 2 if left as None.
+    clone_key : str, optional
+        column name for clones. None defaults to 'clone_id'.    
+    Return
+    ----------
+        a `pandas DataFrame`.
+    """    
+    start = logg.info('Finding clones')
+    if self.__class__ == Dandelion:
+        data = self.metadata.copy()
+    elif self.__class__ == AnnData:
+        data = self.obs.copy()
+
+    if min_clone_size is None:
+        min_size = 1
+    else:
+        min_size = int(min_clone_size)
+
+    if clone_key is None:
+        clone_ = 'clone_id'
+    else:
+        clone_ = clone_key
+
+    # get rid of problematic rows that appear because of category conversion?
+    data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
+    
+    # prepare a summary table
+    overlap = pd.crosstab(data[clone_], data[groupby])
+
+    if min_size == 0:
+        raise ValueError('min_size must be greater than 0.')
+    elif min_size > 1:
+        overlap[overlap < min_size] = 0
+        overlap[overlap >= min_size] = 1
+    else:
+        overlap[overlap > min_size] = 1
+
+    overlap.index.name = None
+    overlap.columns.name = None
+
+    if self.__class__ == AnnData:
+        self.uns['clone_overlap'] = overlap.copy()
+        logg.info(' finished', time=start,
+            deep=('Updated AnnData: \n'
+            '   \'uns\', clone overlap table'))
+    else:
+        return(overlap)

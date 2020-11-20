@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 23:03:54
+# @Last Modified time: 2020-11-17 23:56:28
 
 import sys
 import os
@@ -199,17 +199,17 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
 
     for fasta in tqdm(fastas, desc = 'Formating fasta(s) '):
         if prefix is None and suffix is None:
-            format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
+            format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
         elif prefix is not None:
             if suffix is not None:
-                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = suffix_dict[fasta], sep = sep, outdir = outdir)
+                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = suffix_dict[fasta], sep = sep, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
             else:
-                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = None, sep = sep, outdir = outdir)
+                format_fasta(fasta, prefix = prefix_dict[fasta], suffix = None, sep = sep, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
         else:
             if suffix is not None:
-                format_fasta(fasta, prefix = None, suffix = suffix_dict[fasta], sep = sep, outdir = outdir)
+                format_fasta(fasta, prefix = None, suffix = suffix_dict[fasta], sep = sep, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
             else:
-                format_fasta(fasta, prefix = None, suffix = None, sep = None, outdir = outdir)
+                format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = remove_trailing_hyphen_number, outdir = outdir)
 
 
 def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = True, correction_dict = None, plot = True, figsize=(4,4), blastdb = None, allele = False, parallel = True, ncpu = None, verbose = False):
@@ -1204,10 +1204,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                     if f not in self.data.columns:
                         raise NameError('%s field does not exist in input database file.' % f)
                 # Translate to Receptor attribute names
-                v_field = schema.toReceptor(v_field)
-                d_field = schema.toReceptor(d_field)
-                j_field = schema.toReceptor(j_field)
-                seq_field = schema.toReceptor(seq_field)
+                v_field_ = schema.toReceptor(v_field)
+                d_field_ = schema.toReceptor(d_field)
+                j_field_ = schema.toReceptor(j_field)
+                seq_field_ = schema.toReceptor(seq_field)
                 # clone_field = schema.toReceptor(clone_field)
 
                 # Define Receptor iterator
@@ -1228,10 +1228,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
                 if f not in self.columns:
                     raise NameError('%s field does not exist in input database file.' % f)
             # Translate to Receptor attribute names
-            v_field = schema.toReceptor(v_field)
-            d_field = schema.toReceptor(d_field)
-            j_field = schema.toReceptor(j_field)
-            seq_field = schema.toReceptor(seq_field)
+            v_field_ = schema.toReceptor(v_field)
+            d_field_ = schema.toReceptor(d_field)
+            j_field_ = schema.toReceptor(j_field)
+            seq_field_ = schema.toReceptor(seq_field)
             # clone_field = schema.toReceptor(clone_field)
             # Define Receptor iterator
             receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
@@ -1242,9 +1242,9 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             # Define iteration variables
             # Build germline for records
             if fileformat == 'airr':
-                germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+                germ_log, glines, genes = buildGermline(_parseAIRR(dict(records)), reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
             elif fileformat == 'changeo':
-                germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+                germ_log, glines, genes = buildGermline(_parseChangeO(dict(records)), reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' % fileformat)
 
@@ -1263,32 +1263,34 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         germline_df = pd.DataFrame.from_dict(out, orient = 'index')
 
         if self.__class__ == Dandelion:
-            datx = load_data(self.data)
+            # datx = load_data(self.data)
             for x in germline_df.columns:
-                datx[x] = pd.Series(germline_df[x])
+                self.data[x] = pd.Series(germline_df[x])
 
-            if self.distance is not None:
-                dist_ = self.distance
-            else:
-                dist_ = None
-            if self.edges is not None:
-                edge_ = self.edges
-            else:
-                edge_ = None
-            if self.layout is not None:
-                layout_ = self.layout
-            else:
-                layout_ = None
-            if self.graph is not None:
-                graph_ = self.graph
-            else:
-                graph_ = None
-            if self.threshold is not None:
-                threshold_ = self.threshold
-            else:
-                threshold_ = None
-            self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
-            self.threshold = threshold_
+            # if self.distance is not None:
+            #     dist_ = self.distance
+            # else:
+            #     dist_ = None
+            # if self.edges is not None:
+            #     edge_ = self.edges
+            # else:
+            #     edge_ = None
+            # if self.layout is not None:
+            #     layout_ = self.layout
+            # else:
+            #     layout_ = None
+            # if self.graph is not None:
+            #     graph_ = self.graph
+            # else:
+            #     graph_ = None
+            # if self.threshold is not None:
+            #     threshold_ = self.threshold
+            # else:
+            #     threshold_ = None
+            
+            # self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
+            
+            # self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
@@ -1369,10 +1371,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             if f not in db_iter.fields:
                 raise NameError('%s field does not exist in input database file.' % f)
         # Translate to Receptor attribute names
-        v_field = schema.toReceptor(v_field)
-        d_field = schema.toReceptor(d_field)
-        j_field = schema.toReceptor(j_field)
-        seq_field = schema.toReceptor(seq_field)
+        v_field_ = schema.toReceptor(v_field)
+        d_field_ = schema.toReceptor(d_field)
+        j_field_ = schema.toReceptor(j_field)
+        seq_field_ = schema.toReceptor(seq_field)
         # clone_field = schema.toReceptor(clone_field)
         # Define Receptor iterator
         receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
@@ -1384,7 +1386,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             # Build germline for records
             # if not isinstance(self.data, pd.DataFrame):
             records = list(records)
-            germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field, v_field=v_field, d_field=d_field, j_field=j_field)
+            germ_log, glines, genes = buildGermline(records[0], reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
             if glines is not None:
                 # Add glines to Receptor record
                 annotations = {}
