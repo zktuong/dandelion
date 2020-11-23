@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-18 20:52:15
+# @Last Modified time: 2020-11-23 15:43:39
 
 import seaborn as sns
 import pandas as pd
@@ -187,7 +187,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
     variable : str
         column name in metadata for plotting in bar plot.
     palette : str
-        palette for plotting. Default is 'Set1'.
+        Colors to use for the different levels of the variable. Should be something that can be interpreted by [color_palette](https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette), or a dictionary mapping hue levels to matplotlib colors. See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).
     figsize : tuple[float, float]
         figure size. Default is (12, 4).
     normalize : bool
