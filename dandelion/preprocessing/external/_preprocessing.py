@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-06 10:40:59
+# @Last Modified time: 2020-11-23 16:46:51
 
 import os
 import pandas as pd
@@ -163,7 +163,7 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
         gml = gml+'imgt/'+org+'/vdj/imgt_'+org+'_IGHV.fasta'
     else:
         if os.path.isdir(germline):
-            gml = germline.strip('/') + 'imgt_'+org+'_IGHV.fasta'
+            gml = germline.rstrip('/') + 'imgt_'+org+'_IGHV.fasta'
             if not os.path.isfile(gml):
                 raise OSError("Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.".format(gml))
         elif type(germline) is not list:

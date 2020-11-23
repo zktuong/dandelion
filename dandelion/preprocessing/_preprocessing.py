@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-17 23:56:28
+# @Last Modified time: 2020-11-23 16:46:35
 
 import sys
 import os
@@ -64,7 +64,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
     elif os.path.isdir(str(fasta)):
         files = os.listdir(fasta)
         for file in files:
-            if os.path.isfile(fasta.strip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
+            if os.path.isfile(fasta.rstrip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
                 filePath = fasta + '/' + os.path.basename(file)
     if filePath is None:
         raise OSError('Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file. Starting folder should only contain 1 fasta file.')
@@ -112,7 +112,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
         basedir = os.getcwd()
 
     if outdir is None:
-        out_dir = basedir.strip('/')+'/'+'dandelion/data/'
+        out_dir = basedir.rstrip('/')+'/'+'dandelion/data/'
     else:
         if not outdir.endswith('/'):
             out_dir = basedir+'/'+outdir+'/'
@@ -594,15 +594,15 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     elif os.path.isdir(str(fasta)):
         files = os.listdir(fasta)
         for file in files:
-            if os.path.isdir(fasta.strip('/') + '/' + os.path.basename(file)):
+            if os.path.isdir(fasta.rstrip('/') + '/' + os.path.basename(file)):
                 if file == 'dandelion':
-                    if 'data' in os.listdir(fasta.strip('/') + '/' + os.path.basename(file)):
-                        out_ = fasta.strip('/') + '/' + os.path.basename(file) + '/data/'
+                    if 'data' in os.listdir(fasta.rstrip('/') + '/' + os.path.basename(file)):
+                        out_ = fasta.rstrip('/') + '/' + os.path.basename(file) + '/data/'
                         for x in os.listdir(os.path.abspath(out_)):
                             if x.endswith('.fasta'):
                                 filePath = out_ + x
                 else:
-                    out_ = fasta.strip('/') + '/' + os.path.basename(file)
+                    out_ = fasta.rstrip('/') + '/' + os.path.basename(file)
                     for x in os.listdir(out_):
                         if x.endswith('.fasta'):
                             filePath = out_ + '/' + x
@@ -776,15 +776,15 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         elif os.path.isdir(str(s)):
             files = os.listdir(s)
             for file in files:
-                if os.path.isdir(s.strip('/') + '/' + os.path.basename(file)):
+                if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
                     if file == 'dandelion':
-                        if 'data' in os.listdir(s.strip('/') + '/' + os.path.basename(file)):
-                            out_ = s.strip('/') + '/' + os.path.basename(file) + '/data/'
+                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
+                            out_ = s.rstrip('/') + '/' + os.path.basename(file) + '/data/'
                             for x in os.listdir(out_):
                                 if x.endswith('.fasta'):
                                     filePath = out_ + x
                     else:
-                        out_ = s.strip('/') + '/' + os.path.basename(file)
+                        out_ = s.rstrip('/') + '/' + os.path.basename(file)
                         for x in os.listdir(out_):
                             if x.endswith('.fasta'):
                                 filePath = out_ + '/' + x
@@ -903,15 +903,15 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
         elif os.path.isdir(str(s)):
             files = os.listdir(s)
             for file in files:
-                if os.path.isdir(s.strip('/') + '/' + os.path.basename(file)):
+                if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
                     if file == 'dandelion':
-                        if 'data' in os.listdir(s.strip('/') + '/' + os.path.basename(file)):
+                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
                             out_ = s + '/' + os.path.basename(file) + '/data/'
                             for x in os.listdir(out_):
                                 if x.endswith(informat_dict[fileformat]):
                                     filePath = out_ + x
                     else:
-                        out_ = s.strip('/') + '/' + os.path.basename(file)
+                        out_ = s.rstrip('/') + '/' + os.path.basename(file)
                         for x in os.listdir(out_):
                             if x.endswith(informat_dict[fileformat]):
                                 filePath = out_ + '/' + x
@@ -933,7 +933,7 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
         dat_ = data_list[0]
 
     # write out this file for tigger
-    outDir = combined_folder.strip('/')
+    outDir = combined_folder.rstrip('/')
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
@@ -1034,15 +1034,15 @@ def reassign_alleles(data, combined_folder, germline = None, org = 'human', file
         elif os.path.isdir(str(s)):
             files = os.listdir(s)
             for file in files:
-                if os.path.isdir(s.strip('/') + '/' + os.path.basename(file)):
+                if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
                     if file == 'dandelion':
-                        if 'data' in os.listdir(s.strip('/') + '/' + os.path.basename(file)):
+                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
                             out_ = s + '/' + os.path.basename(file) + '/data/'
                             for x in os.listdir(out_):
                                 if x.endswith(informat_dict[fileformat]):
                                     filePath = out_ + x
                     else:
-                        out_ = s.strip('/') + '/' + os.path.basename(file)
+                        out_ = s.rstrip('/') + '/' + os.path.basename(file)
                         for x in os.listdir(out_):
                             if x.endswith(informat_dict[fileformat]):
                                 filePath = out_ + '/' + x
