@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-23 16:15:49
+# @Last Modified time: 2020-11-23 19:24:46
 
 import sys
 import os
@@ -16,6 +16,7 @@ import copy
 from changeo.IO import readGermlines
 import warnings
 import scipy.sparse
+import tables
 import h5py
 import networkx as nx
 import bz2
