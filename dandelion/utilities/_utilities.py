@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-17 21:47:29
+# @Last Modified time: 2020-11-23 16:15:49
 
 import sys
 import os
@@ -12,22 +12,32 @@ import numpy as np
 from subprocess import run
 from tqdm import tqdm
 import re
-import bz2
-import _pickle as cPickle
 import copy
 from changeo.IO import readGermlines
 import warnings
+import scipy.sparse
+import h5py
+import networkx as nx
+import bz2
+import gzip
+import _pickle as cPickle
 try:
     from scanpy import logging as logg
 except ImportError:
     pass
 
 class Tree(defaultdict):
+    '''
+    Create a recursive defaultdict
+    '''
     def __init__(self, value=None):
         super(Tree, self).__init__(Tree)
         self.value = value
 
 def fasta_iterator(fh):
+    '''
+    Read in a fasta file as an iterator
+    '''
     while True:
         line = fh.readline()
         if line.startswith('>'):
@@ -47,6 +57,9 @@ def fasta_iterator(fh):
             return
 
 def Write_output(out, file):
+    '''
+    general line writer
+    '''
     fh = open(file, "a")
     fh.write(out)
     fh.close()
@@ -191,7 +204,7 @@ def setup_metadata_(data):
     dat_h = data[data['locus'] == 'IGH']
     dict_h = dict(zip(dat_h['sequence_id'], dat_h['cell_id']))
     metadata_ = pd.DataFrame.from_dict(dict_h, orient = 'index', columns = ['cell_id'])
-    metadata_.set_index('cell_id', inplace = True)    
+    metadata_.set_index('cell_id', inplace = True)
     return(metadata_)
 
 def setup_metadata(data, sep, clone_key = None):
@@ -262,10 +275,10 @@ def setup_metadata(data, sep, clone_key = None):
             group.append(cl_[c].split(scb[1])[scb[0]])
     groupseries = dict(zip(metadata_.index, group))
     metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
-    
+
     size_of_clone = pd.DataFrame(metadata_[str(clonekey)].value_counts())
     size_of_clone.reset_index(drop = False, inplace = True)
-    size_of_clone.columns = [str(clonekey), 'clone_size']    
+    size_of_clone.columns = [str(clonekey), 'clone_size']
     size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
     size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
     metadata_[str(clonekey)+'_by_size'] = [size_dict[c] for c in metadata_[str(clonekey)]]
@@ -366,7 +379,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     for x in ['cell_id', 'locus', 'c_call', 'umi_count']:
         if x not in dat.columns:
             raise KeyError ("Please check your object. %s is not in the columns of input data." % x)
-    
+
     if clone_key is None:
         clonekey = 'clone_id'
     else:
@@ -529,7 +542,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
 class Dandelion:
     def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
         self.data = data
-        self.metadata = metadata        
+        self.metadata = metadata
         self.distance = distance
         self.edges = edges
         self.layout = layout
@@ -538,6 +551,7 @@ class Dandelion:
         self.germline = {}
 
         if germline is not None:
+
             self.germline.update(germline)
 
         if os.path.isfile(str(self.data)):
@@ -630,7 +644,7 @@ class Dandelion:
                         if not x.endswith('.fasta'):
                             raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
                         gml.append(x)
-            
+
         if type(gml) is not list:
             gml = [gml]
 
@@ -651,57 +665,264 @@ class Dandelion:
         deep=('Updated Dandelion object: \n'
         '   \'germline\', updated germline reference\n'))
 
-    # Using HIGHEST_PROTOCOL is almost 2X faster and creates a file that
-    # is ~10% smaller.  Load times go down by a factor of about 3X.
-    # def write(self, filename='dandelion_data.pkl'):
-    #     if isGZIP(filename):
-    #         f = gzip.open(filename, 'wb')
-    #     else:
-    #         f = open(filename, 'wb')
-    #     pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
-    #     f.close()
-    
-    def write(self, filename='dandelion_data.pkl.pbz2'):
+    def write_pkl(self, filename='dandelion_data.pkl.pbz2', **kwargs):
+        """        
+        Writes a `Dandelion` class to .pkl format.
+        Parameters
+        ----------
+        filename
+            path to Dandelion `.pkl` file.
+        **kwargs
+            passed to `_pickle`.
+        """
         if isBZIP(filename):
             try:
-                with bz2.BZ2File(filename, 'w') as f:
-                    cPickle.dump(self, f)
+                with bz2.BZ2File(filename, 'wb') as f:
+                    cPickle.dump(self, f, **kwargs)
             except:
-                with bz2.BZ2File(filename, 'w') as f:
-                    cPickle.dump(self, f, protocol = 4)
+                with bz2.BZ2File(filename, 'wb') as f:
+                    cPickle.dump(self, f, protocol = 4, **kwargs)
+        elif isGZIP(filename):
+            try:
+                with gzip.open(filename, 'wb') as f:
+                    cPickle.dump(self, f, **kwargs)
+            except:
+                with gzip.open(filename, 'wb') as f:
+                    cPickle.dump(self, f, protocol = 4, **kwargs)
         else:
             f = open(filename, 'wb')
-            cPickle.dump(self, f)
+            cPickle.dump(self, f, **kwargs)
             f.close()
 
-# def isGZIP(filename):
-#     if filename.split('.')[-1] == 'gz':
-#         return True
-#     return False    
+    def write_h5(self, filename='dandelion_data.h5', compression = None, complib = None, compression_opts = None, **kwargs):
+        """        
+        Writes a `Dandelion` class to .h5 format.
+        Parameters
+        ----------
+        filename
+            path to Dandelion `.h5` file.
+        compression : str, optional
+            method for compression for sparse matrices. Default is none (won't do any compression).
+        complib : str, optional
+            method for compression for data frames. None defaults to 'blosc'. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
+        compression_opts : {0-9}, optional
+            Specifies a compression level for data. A value of 0 disables compression.
+        **kwargs
+            passed to `h5py.create_dataset`.
+        """
+        if compression is not None:
+            compression = compression
+        else:
+            compression = None
+
+        if complib is not None:
+            complib = complib
+        else:
+            complib = 'blosc'
+
+        if compression_opts is None:
+            compression_opts = 9
+        else:
+            compression_opts = compression_opts
+
+        # a little hack to overwrite the existing file?
+        with h5py.File(filename,  "w") as hf:
+            for datasetname in hf.keys():
+                del hf[datasetname]
+
+        try:
+            self.data.to_hdf(filename, "data", complib = complib, complevel = compression_opts)
+        except:
+            self.data = self.data.astype(str)
+            self.data.to_hdf(filename, "data", complib = complib, complevel = compression_opts)
+        try:
+            self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_opts)
+        except:
+            self.metadata = self.metadata.astype(str)
+            self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_opts)
+        try:
+            self.edges.to_hdf(filename, "edges", complib = complib, complevel = compression_opts)
+        except:
+            pass
+
+        graph_counter = 0
+        try:
+            for g in self.graph:
+                G = nx.to_pandas_adjacency(g)
+                G.to_hdf(filename, "graph/"+str(graph_counter), complib = complib, complevel = compression_opts)
+                graph_counter += 1
+        except:
+            pass
+
+        with h5py.File(filename,  "a") as hf:
+            try:
+                for d in self.distance:
+                    hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_opts, **kwargs)
+                    hf.create_dataset('distance/'+d+'/indptr', data=self.distance[d].indptr, compression = compression, compression_opts = compression_opts, **kwargs)
+                    hf.create_dataset('distance/'+d+'/indices', data=self.distance[d].indices, compression = compression, compression_opts = compression_opts, **kwargs)
+                    hf['distance/'+d].attrs['shape'] = self.distance[d].shape
+            except:
+                pass
+
+            try:
+                layout_counter = 0
+                for l in self.layout:
+                    hf.create_group('layout/'+str(layout_counter))
+                    for k in l.keys():
+                        hf['layout/'+str(layout_counter)].attrs[k] = l[k]
+                    layout_counter += 1
+            except:
+                pass
+
+            if len(self.germline) > 0:
+                try:
+                    hf.create_group('germline')
+                except:
+                    pass
+                for k in self.germline.keys():
+                    hf['germline'].attrs[k] = self.germline[k]
+            if self.threshold is not None:
+                tr = self.threshold
+                hf.create_dataset('threshold', data=tr, **kwargs)
+
+def isGZIP(filename):
+    if filename.split('.')[-1] == 'gz':
+        return True
+    return False
 
 def isBZIP(filename):
     if filename.split('.')[-1] == 'pbz2':
         return True
-    return False    
+    return False
 
-# def read(filename='dandelion_data.pkl'):
-#     if isGZIP(filename):
-#         f = gzip.open(filename, 'rb')
-#     else:
-#         f = open(filename, 'rb')
-#     n = pickle.load(f)
-#     f.close()
-#     return n
-
-def read(filename='dandelion_data.pkl.pbz2'):
+def read_pkl(filename='dandelion_data.pkl.pbz2'):
+    """
+    Reads in and returns a `Dandelion` class saved using pickle format.
+    Parameters
+    ----------
+    filename
+        path to Dandelion `.pkl` file. Depending on the extension, it will try to unzip accordingly.
+    
+    Returns
+    -------
+       Dandelion object. 
+    """
     if isBZIP(filename):
         data = bz2.BZ2File(filename, 'rb')
         data = cPickle.load(data)
+    elif isGZIP(filename):
+        data = gzip.open(filename, 'rb')
+        data = cPickle.load(data)
     else:
-        data = cPickle.load(filename)
-    return data
+        data = cPickle.load(filename, 'rb')
+    return(data)
 
-def concat(arrays, check_unique = False):    
+def read_h5(filename='dandelion_data.h5'):
+    """
+    Reads in and returns a `Dandelion` class from .h5 format.
+    Parameters
+    ----------
+    filename
+        path to Dandelion `.h5` file
+    
+    Returns
+    -------
+       Dandelion object. 
+    """
+    hf = h5py.File(filename, 'r')
+    try:
+        data = pd.read_hdf(filename, 'data')
+    except:
+        raise AttributeError('{} does not contain attribute `data`'.format(filename))
+    try:
+        metadata = pd.read_hdf(filename, 'metadata')
+    except:
+        pass
+
+    try:
+        edges = pd.read_hdf(filename, 'edges')
+    except:
+        pass
+
+    try:
+        graph0 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/0'))
+        graph1 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/1'))
+        graph = (graph0, graph1)
+    except:
+        pass
+
+    try:
+        layout0 = {}
+        for k in hf['layout/0'].attrs.keys():
+            layout0.update({k:np.array(hf['layout/0'].attrs[k])})
+        layout1 = {}
+        for k in hf['layout/1'].attrs.keys():
+            layout1.update({k:np.array(hf['layout/1'].attrs[k])})
+        layout = (layout0, layout1)
+    except:
+        pass
+
+    germline = {}
+    try:
+        for g in hf['germline'].attrs:
+            germline.update({g:hf['germline'].attrs[g]})
+    except:
+        pass
+
+    distance = Tree()
+    try:
+        for d in hf['distance'].keys():
+            d_ = hf['distance'][d]
+            M1 = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
+            distance[d] = M1
+    except:
+        pass
+
+    try:
+        threshold = np.float(np.array(hf['threshold']))
+    except:
+        threshold = None
+    hf.close()
+
+    constructor = {}
+    constructor['data'] = data
+    if 'metadata' in locals():
+        constructor['metadata'] = metadata
+    if 'germline' in locals():
+        constructor['germline'] = germline
+    if 'edges' in locals():
+        constructor['edges'] = edges
+    if 'distance' in locals():
+        constructor['distance'] = distance
+    if 'layout' in locals():
+        constructor['layout'] = layout
+    if 'graph' in locals():
+        constructor['graph'] = graph
+    try:
+        res = Dandelion(**constructor)
+    except:
+        res = Dandelion(**constructor, initialize = False)
+
+    if 'treshsold' in locals():
+        res.threshold = threshold
+    else:
+        pass
+    return(res)
+
+def concat(arrays, check_unique = False):
+    """
+    Generates a dictionary from a dataframe
+    Parameters
+    ----------
+    meta
+        pandas dataframe or file path
+    columns
+        column names in dataframe
+    Returns
+    -------
+    sample_dict
+        dictionary
+    """
     arrays = list(arrays)
     arrays_ = [x.data for x in arrays]
     if check_unique:
@@ -712,95 +933,99 @@ def concat(arrays, check_unique = False):
         out = Dandelion(df)
     except:
         out = Dandelion(df, initialize = False)
-    return(out) 
+    return(out)
 
-def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
-    """
-    Parameters
-    ----------
-    file : str
-        file path to .tsv file.
-    prefix : str
-        prefix to add to barcodes. Ignored if left as None.
-    save : str
-        file path to save location. Defaults to 'dandelion/data/' if left as None.
-    """
 
-    cr_annot = load_data(file)
-    if prefix is not None:
-        cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
-    else:
-        cr_annot['index']=[i for i in cr_annot['contig_id']]
-    cr_annot.set_index('index', inplace = True)
+# def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
+#     """
+#     Parameters
+#     ----------
+#     file : str
+#         file path to .tsv file.
+#     prefix : str
+#         prefix to add to barcodes. Ignored if left as None.
+#     save : str
+#         file path to save location. Defaults to 'dandelion/data/' if left as None.
+#     """
 
-    ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
-    ddl_annot.set_index('sequence_id', inplace = True, drop = False)
+#     cr_annot = load_data(file)
+#     if prefix is not None:
+#         cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
+#     else:
+#         cr_annot['index']=[i for i in cr_annot['contig_id']]
+#     cr_annot.set_index('index', inplace = True)
 
-    for i in tqdm(ddl_annot.index, desc = 'Processing data '):
-        v = ddl_annot.loc[i, 'v_call']
-        d = ddl_annot.loc[i, 'd_call']
-        j = ddl_annot.loc[i, 'j_call']
-        if v is not np.nan:
-            ddl_annot.at[i, 'v_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', v).split(','))))
-            v_ = list(set(re.sub('[*][0-9][0-9]', '', v).split(',')))
-            if re.match('IGH', ','.join(v_)):
-                ddl_annot.at[i, 'locus'] = 'IGH'
-            if re.match('IGK', ','.join(v_)):
-                ddl_annot.at[i, 'locus'] = 'IGK'
-            if re.match('IGL', ','.join(v_)):
-                ddl_annot.at[i, 'locus'] = 'IGL'
-            if len(v_) > 1:
-                ddl_annot.at[i, 'locus'] = 'Multi'
-        if d is not np.nan:
-            ddl_annot.at[i, 'd_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', d).split(','))))
-            d_ = list(set(re.sub('[*][0-9][0-9]', '', d).split(',')))
-            if re.match('IGH', ','.join(d_)):
-                ddl_annot.at[i, 'locus'] = 'IGH'
-            if re.match('IGK', ','.join(d_)):
-                ddl_annot.at[i, 'locus'] = 'IGK'
-            if re.match('IGL', ','.join(d_)):
-                ddl_annot.at[i, 'locus'] = 'IGL'
-            if len(d_) > 1:
-                ddl_annot.at[i, 'locus'] = 'Multi'
-        if j is not np.nan:
-            ddl_annot.at[i, 'j_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', j).split(','))))
-            j_ = list(set(re.sub('[*][0-9][0-9]', '', j).split(',')))
-            if re.match('IGH', ','.join(j_)):
-                ddl_annot.at[i, 'locus'] = 'IGH'
-            if re.match('IGK', ','.join(j_)):
-                ddl_annot.at[i, 'locus'] = 'IGK'
-            if re.match('IGL', ','.join(j_)):
-                ddl_annot.at[i, 'locus'] = 'IGL'
-            if len(j_) > 1:
-                ddl_annot.at[i, 'locus'] = 'Multi'
+#     try:
+#         ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
+#     except:
+#         ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
+#     ddl_annot.set_index('sequence_id', inplace = True, drop = False)
 
-    cellrangermap = {
-        'sequence_id':'contig_id',
-        'locus':'chain',
-        'v_call_igblast':'v_gene',
-        'd_call_igblast':'d_gene',
-        'j_call_igblast':'j_gene',
-        'productive':'productive',
-        'junction_aa':'cdr3',
-        'junction':'cdr3_nt'}
+#     for i in tqdm(ddl_annot.index, desc = 'Processing data '):
+#         v = ddl_annot.loc[i, 'v_call']
+#         d = ddl_annot.loc[i, 'd_call']
+#         j = ddl_annot.loc[i, 'j_call']
+#         if v is not np.nan:
+#             ddl_annot.at[i, 'v_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', v).split(','))))
+#             v_ = list(set(re.sub('[*][0-9][0-9]', '', v).split(',')))
+#             if re.match('IGH', ','.join(v_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGH'
+#             if re.match('IGK', ','.join(v_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGK'
+#             if re.match('IGL', ','.join(v_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGL'
+#             if len(v_) > 1:
+#                 ddl_annot.at[i, 'locus'] = 'Multi'
+#         if d is not np.nan:
+#             ddl_annot.at[i, 'd_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', d).split(','))))
+#             d_ = list(set(re.sub('[*][0-9][0-9]', '', d).split(',')))
+#             if re.match('IGH', ','.join(d_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGH'
+#             if re.match('IGK', ','.join(d_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGK'
+#             if re.match('IGL', ','.join(d_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGL'
+#             if len(d_) > 1:
+#                 ddl_annot.at[i, 'locus'] = 'Multi'
+#         if j is not np.nan:
+#             ddl_annot.at[i, 'j_call_igblast'] = ','.join(list(set(re.sub('[*][0-9][0-9]', '', j).split(','))))
+#             j_ = list(set(re.sub('[*][0-9][0-9]', '', j).split(',')))
+#             if re.match('IGH', ','.join(j_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGH'
+#             if re.match('IGK', ','.join(j_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGK'
+#             if re.match('IGL', ','.join(j_)):
+#                 ddl_annot.at[i, 'locus'] = 'IGL'
+#             if len(j_) > 1:
+#                 ddl_annot.at[i, 'locus'] = 'Multi'
 
-    for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
-        for key, value in cellrangermap.items():
-            if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
-                cr_annot.at[i, value] = ddl_annot.loc[i, key]
-            else:
-                cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
+#     cellrangermap = {
+#         'sequence_id':'contig_id',
+#         'locus':'chain',
+#         'v_call_igblast':'v_gene',
+#         'd_call_igblast':'d_gene',
+#         'j_call_igblast':'j_gene',
+#         'productive':'productive',
+#         'junction_aa':'cdr3',
+#         'junction':'cdr3_nt'}
 
-        if cr_annot.loc[i, 'cdr3'] is np.nan:
-            cr_annot.at[i, 'productive'] = None
-        else:
-            if cr_annot.loc[i, 'productive'] == 'T':
-                cr_annot.at[i, 'productive'] = 'True'
-            else:
-                cr_annot.at[i, 'productive'] = 'False'
+#     for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
+#         for key, value in cellrangermap.items():
+#             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
+#                 cr_annot.at[i, value] = ddl_annot.loc[i, key]
+#             else:
+#                 cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
 
-    cr_annot['barcode'] = [c.split('_contig')[0].split('-')[0] for c in cr_annot['contig_id']]
-    if save is not None:
-        cr_annot.to_csv(save, index = False, na_rep = 'None')
-    else:
-        cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False, na_rep = 'None')
+#         if cr_annot.loc[i, 'cdr3'] is np.nan:
+#             cr_annot.at[i, 'productive'] = None
+#         else:
+#             if cr_annot.loc[i, 'productive'] == 'T':
+#                 cr_annot.at[i, 'productive'] = 'True'
+#             else:
+#                 cr_annot.at[i, 'productive'] = 'False'
+
+#     cr_annot['barcode'] = [c.split('_contig')[0].split('-')[0] for c in cr_annot['contig_id']]
+#     if save is not None:
+#         cr_annot.to_csv(save, index = False, na_rep = 'None')
+#     else:
+#         cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False, na_rep = 'None')
