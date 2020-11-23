@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-23 16:46:35
+# @Last Modified time: 2020-11-23 16:50:36
 
 import sys
 import os
@@ -115,7 +115,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
         out_dir = basedir.rstrip('/')+'/'+'dandelion/data/'
     else:
         if not outdir.endswith('/'):
-            out_dir = basedir+'/'+outdir+'/'
+            out_dir = outdir+'/'
 
     if not os.path.exists(out_dir):
             os.makedirs(out_dir)
