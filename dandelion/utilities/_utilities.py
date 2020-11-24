@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 13:51:36
+# @Last Modified time: 2020-11-24 15:24:02
 
 import sys
 import os
@@ -574,7 +574,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                             lc_y.append(re.sub(',|[0-9]', '', ''.join([k_ for k_,v_ in iso_d.items() if v_ >= 2])))
                         if '' in lc_y:
                             lc_y = [x for x in lc_y if x != '']
-                        lightchain[k] = [conversion_dict[y] for y in lc_y]
+                        lightchain[k] = '|'.join([conversion_dict[y] for y in lc_y])
                     else:
                         lightchain[k] = '|'.join([str(z) for z in [conversion_dict[x] for x in light_c_call[k].lower().split('|')]])
                 else:
@@ -613,19 +613,19 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         multi = {}
         for i in self.metadata.index:
             try:
-                hv_ = self.metadata.at[i, 'v_call_heavy'].split(',')
+                hv_ = self.metadata.at[i, 'v_call_heavy'].split('|')
             except:
                 hv_ = self.metadata.at[i, 'v_call_heavy']
             try:
-                hj_ = self.metadata.at[i, 'j_call_heavy'].split(',')
+                hj_ = self.metadata.at[i, 'j_call_heavy'].split('|')
             except:
                 hj_ = self.metadata.at[i, 'j_call_heavy']
             try:
-                lv_ = self.metadata.at[i, 'v_call_light'].split(',')
+                lv_ = self.metadata.at[i, 'v_call_light'].split('|')
             except:
                 lv_ = self.metadata.at[i, 'v_call_light']
             try:
-                lj_ = self.metadata.at[i, 'v_call_light'].split(',')
+                lj_ = self.metadata.at[i, 'v_call_light'].split('|')
             except:
                 lv_ = self.metadata.at[i, 'v_call_light']
             multi_ = []
@@ -841,11 +841,6 @@ class Dandelion:
         **kwargs
             passed to `pd.DataFrame.to_hdf`.
         """
-        if compression is not None:
-            compression = compression
-        else:
-            compression = None
-
         if compression_level is None:
             compression_level = 9
         else:
@@ -856,6 +851,7 @@ class Dandelion:
             for datasetname in hf.keys():
                 del hf[datasetname]
 
+        # now to actually saving
         try:
             for col in self.data.columns:
                 weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
@@ -863,15 +859,12 @@ class Dandelion:
                     self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
             self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
         except:
-            self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
+            raise AttributeError('Please populate the Dandelion class with at least the .data slot before saving.')
         try:
-            for col in self.metadata.columns:
-                weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
-                if len(self.metadata[weird]) > 0:
-                    self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
+            self.metadata.
             self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
         except:
-            self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
+            pass
         try:
             if 'index' in self.edges.columns:
                 self.edges.drop('index', axis = 1, inplace=True)
