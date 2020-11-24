@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 10:52:15
+# @Last Modified time: 2020-11-24 11:30:26
 
 import sys
 import os
@@ -753,7 +753,7 @@ class Dandelion:
         try:
             for g in self.graph:
                 G = nx.to_pandas_adjacency(g)
-                G.to_hdf(filename, "graph/"+str(graph_counter), complib = complib, complevel = compression_level, **kwargs)
+                G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = complib, complevel = compression_level, **kwargs)
                 graph_counter += 1
         except:
             pass
@@ -778,7 +778,7 @@ class Dandelion:
             try:
                 layout_counter = 0
                 for l in self.layout:
-                    hf.create_group('layout/'+str(layout_counter))
+                    hf.create_group('layout/layout_'+str(layout_counter))
                     for k in l.keys():
                         hf['layout/'+str(layout_counter)].attrs[k] = l[k]
                     layout_counter += 1
@@ -856,19 +856,19 @@ def read_h5(filename='dandelion_data.h5'):
         pass
 
     try:
-        graph0 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/0'))
-        graph1 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/1'))
+        graph0 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/graph_0'))
+        graph1 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/graph_1'))
         graph = (graph0, graph1)
     except:
         pass
 
     try:
         layout0 = {}
-        for k in hf['layout/0'].attrs.keys():
-            layout0.update({k:np.array(hf['layout/0'].attrs[k])})
+        for k in hf['layout/layout_0'].attrs.keys():
+            layout0.update({k:np.array(hf['layout/layout_0'].attrs[k])})
         layout1 = {}
-        for k in hf['layout/1'].attrs.keys():
-            layout1.update({k:np.array(hf['layout/1'].attrs[k])})
+        for k in hf['layout/layout_1'].attrs.keys():
+            layout1.update({k:np.array(hf['layout/layout_1'].attrs[k])})
         layout = (layout0, layout1)
     except:
         pass
