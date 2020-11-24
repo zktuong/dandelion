@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-23 16:50:36
+# @Last Modified time: 2020-11-24 17:21:37
 
 import sys
 import os
@@ -141,7 +141,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
             else:
                 data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b)+separator+str(suffix) for b in data['barcode']]
-        else:            
+        else:
             if remove_trailing_hyphen_number:
                 data['contig_id'] = [str(prefix)+separator+str(c).split('_contig')[0].split('-')[0]+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b).split('-')[0] for b in data['barcode']]
@@ -149,7 +149,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
                 data['contig_id'] = [str(prefix)+separator+str(c) for c in data['contig_id']]
                 data['barcode'] = [str(prefix)+separator+str(b) for b in data['barcode']]
     else:
-        if suffix is not None:            
+        if suffix is not None:
             if remove_trailing_hyphen_number:
                 data['contig_id'] = [str(c).split('_contig')[0].split('-')[0]+separator+str(suffix)+'_contig'+str(c).split('_contig')[1] for c in data['contig_id']]
                 data['barcode'] = [str(b).split('-')[0]+separator+str(suffix) for b in data['barcode']]
@@ -801,7 +801,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         informat_dict = {'blast':'_igblast_db-pass.tsv', 'airr':'_igblast.tsv'}
         outfile1 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['airr']
         outfile2 = os.path.basename(filePath).split('.fasta')[0] + informat_dict['blast']
-        airr_output = pd.read_csv("{}/{}".format(outfolder1, outfile1), sep = '\t', index_col = 0)        
+        airr_output = pd.read_csv("{}/{}".format(outfolder1, outfile1), sep = '\t', index_col = 0)
         igblast_output = pd.read_csv("{}/{}".format(outfolder1, outfile2), sep = '\t', index_col = 0)
         cols_to_merge = airr_output.columns.difference(igblast_output.columns)
         igblast_output = igblast_output.join(airr_output[cols_to_merge])
@@ -1287,9 +1287,9 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             #     threshold_ = self.threshold
             # else:
             #     threshold_ = None
-            
+
             # self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
-            
+
             # self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
@@ -1481,6 +1481,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     h_seq = Tree()
     l_seq = Tree()
     h_ccall = Tree()
+    # l_ccall = Tree()
 
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
     barcode = list(set(dat['cell_id']))
@@ -1514,6 +1515,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
         lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+        # lc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['c_call']]
 
         h[b] = hc_id
         h_umi[b] = hc_umi
@@ -1524,6 +1526,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         l[b] = lc_id
         l_umi[b] = lc_umi
         l_seq[b] = lc_seq
+        # l_ccall[b] = lc_ccall
 
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
@@ -1607,16 +1610,16 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             if filter_poorqualitybcr:
                 poor_qual.append(b)
             drop_contig.append(l[b])
-        if len(hc_id) > 0:
-            v = v_dict[hc_id[0]]
-            j = j_dict[hc_id[0]]
-            c = c_dict[hc_id[0]]
+        if len(hc_id) == 1:
+            v = v_dict[0]
+            j = j_dict[0]
+            c = c_dict[0]
             if v is not np.nan:
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
-                    drop_contig.append(h[b])            
+                    drop_contig.append(h[b])
             if j is not np.nan:
                 if 'IGH' not in j:
                     if filter_poorqualitybcr:
@@ -1629,42 +1632,63 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-        if len(lc_id) > 0:
-            v = v_dict[lc_id[0]]
-            j = j_dict[lc_id[0]]
-            c = c_dict[lc_id[0]]
-            if v is not np.nan:
-                if j is not np.nan:
-                    if 'IGH' in v:
-                        if filter_poorqualitybcr:
-                            poor_qual.append(b)
-                        drop_contig.append(l[b])
-                    elif 'IGK' in v:
-                        if 'IGL' in j:
-                            if filter_poorqualitybcr:
-                                poor_qual.append(b)
-                            drop_contig.append(l[b])
-            if j is not np.nan:
+        if len(hc_id) > 1:
+            for hx in hc_id:
+                v = v_dict[hx]
+                j = j_dict[hx]
+                c = c_dict[hx]
                 if v is not np.nan:
-                    if 'IGH' in j:
+                    if 'IGH' not in v:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(l[b])
-                    elif 'IGL' in v:
-                        if 'IGK' in v:
+                        drop_contig.append(hx)
+                if j is not np.nan:
+                    if 'IGH' not in j:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(hx)
+                if c is not np.nan and c is not None:
+                    if 'IGH' not in c:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(hx)
+        if len(lc_id) > 0:
+            for lx in lc_id:
+                v = v_dict[lx]
+                j = j_dict[lx]
+                c = c_dict[lx]
+                if v is not np.nan:
+                    if j is not np.nan:
+                        if 'IGH' in v:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
-                            drop_contig.append(l[b])
-            if c is not None and c is not np.nan:
-                if 'IGH' in c:
+                            drop_contig.append(lx)
+                        elif 'IGK' in v:
+                            if 'IGL' in j:
+                                if filter_poorqualitybcr:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                if j is not np.nan:
+                    if v is not np.nan:
+                        if 'IGH' in j:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                        elif 'IGL' in v:
+                            if 'IGK' in v:
+                                if filter_poorqualitybcr:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                if c is not None and c is not np.nan:
+                    if 'IGH' in c:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+
+                if v == np.nan or j == np.nan or v == None or j == None:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
-                    drop_contig.append(l[b])
-
-            if v == np.nan or j == np.nan or v == None or j == None:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b]) # no/wrong annotations at all
+                    drop_contig.append(lx) # no/wrong annotations at all
 
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
         return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
@@ -1702,7 +1726,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
             lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
             lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-            # lc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['duplicate_count']]
+            # lc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['c_call']]
 
             h[b] = hc_id
             h_umi[b] = hc_umi
@@ -1713,6 +1737,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             l[b] = lc_id
             l_umi[b] = lc_umi
             l_seq[b] = lc_seq
+            # l_ccall[b] = lc_ccall
             # l_dup[b] = lc_dup
 
             # marking doublets defined by heavy chains
@@ -1802,59 +1827,82 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 if filter_poorqualitybcr:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
-            if len(hc_id) > 0:
-                v = v_dict[hc_id[0]]
-                j = j_dict[hc_id[0]]
-                c = c_dict[hc_id[0]]
-                if 'IGH' not in v:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b])
-                    drop_contig.append(h[b])
-                if 'IGH' not in j:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b])
-                    drop_contig.append(h[b])
+            if len(hc_id) == 1:
+                v = v_dict[0]
+                j = j_dict[0]
+                c = c_dict[0]
+                if v is not np.nan:
+                    if 'IGH' not in v:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                        drop_contig.append(h[b])
+                if j is not np.nan:
+                    if 'IGH' not in j:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(l[b])
+                        drop_contig.append(h[b])
                 if c is not np.nan and c is not None:
                     if 'IGH' not in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
+            if len(hc_id) > 1:
+                for hx in hc_id:
+                    v = v_dict[hx]
+                    j = j_dict[hx]
+                    c = c_dict[hx]
+                    if v is not np.nan:
+                        if 'IGH' not in v:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(hx)
+                    if j is not np.nan:
+                        if 'IGH' not in j:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(hx)
+                    if c is not np.nan and c is not None:
+                        if 'IGH' not in c:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(hx)
             if len(lc_id) > 0:
-                v = v_dict[lc_id[0]]
-                j = j_dict[lc_id[0]]
-                c = c_dict[lc_id[0]]
-                if 'IGH' in v:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b])
-                elif 'IGK' in v:
-                    if 'IGL' in j:
+                for lx in lc_id:
+                    v = v_dict[lx]
+                    j = j_dict[lx]
+                    c = c_dict[lx]
+                    if 'IGH' in v:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(l[b])
+                        drop_contig.append(lx)
+                    elif 'IGK' in v:
+                        if 'IGL' in j:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
 
-                if 'IGH' in j:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b])
-                elif 'IGL' in v:
-                    if 'IGK' in v:
+                    if 'IGH' in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(l[b])
-                if c is not None and c is not np.nan:
-                    if 'IGH' in c:
-                        if filter_poorqualitybcr:
-                            poor_qual.append(b)
-                        drop_contig.append(l[b])
+                        drop_contig.append(lx)
+                    elif 'IGL' in v:
+                        if 'IGK' in v:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                    if c is not None and c is not np.nan:
+                        if 'IGH' in c:
+                            if filter_poorqualitybcr:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
 
-                if v == np.nan or j == np.nan or v == None or j == None:
-                    if filter_poorqualitybcr:
-                        poor_qual.append(b)
-                    drop_contig.append(l[b]) # no/wrong annotations at all
+                    if v == np.nan or j == np.nan or v == None or j == None:
+                        if filter_poorqualitybcr:
+                            poor_qual.append(b)
+                        drop_contig.append(lx) # no/wrong annotations at all
 
     poorqual = Tree()
     hdoublet = Tree()
@@ -1906,7 +1954,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             for c in dat['cell_id']:
                 if c not in adata.obs_names:
                     filter_ids.append(c)
-                    
+
         _dat = dat[~(dat['cell_id'].isin(filter_ids))]
         _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
         if _dat.shape[0] is 0:
@@ -2008,8 +2056,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         dat = dat.where(dat.isna(), dat.astype(str))
         try:
             dat_r = pandas2ri.py2rpy(dat)
-        except:            
-            dat = dat.astype(str) 
+        except:
+            dat = dat.astype(str)
             dat_r = pandas2ri.py2rpy(dat)
 
         results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
@@ -2023,18 +2071,18 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         try:
             dat_h_r = pandas2ri.py2rpy(dat_h)
         except:
-            dat_h = dat_h.astype(str) 
+            dat_h = dat_h.astype(str)
             dat_h_r = pandas2ri.py2rpy(dat_h)
 
         dat_l = dat_l.where(dat_l.isna(), dat_l.astype(str))
         try:
             dat_l_r = pandas2ri.py2rpy(dat_l)
-        except:            
-            dat_l = dat_l.astype(str) 
+        except:
+            dat_l = dat_l.astype(str)
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
         results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)        
+        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace = True, drop = False)
@@ -2149,47 +2197,47 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         from rpy2.robjects import pandas2ri, StrVector, FloatVector
     except:
         raise(ImportError("Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
-    
+
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
         warnings.filterwarnings("ignore")
     sh = importr('shazam')
-    pandas2ri.activate()    
+    pandas2ri.activate()
     if 'v_call_genotyped' in dat.columns:
         v_call = 'v_call_genotyped'
     else:
-        v_call = 'v_call'    
+        v_call = 'v_call'
     if model is None:
         model_ = 'ham'
     else:
-        model_ = model    
+        model_ = model
     if normalize_method is None:
         norm_ = 'len'
     else:
-        norm_ = normalize_method    
+        norm_ = normalize_method
     if threshold_method is None:
         threshold_method_ = "density"
     else:
-        threshold_method_ = threshold_method    
+        threshold_method_ = threshold_method
     if subsample is None:
         subsample_ = NULL
     else:
-        subsample_ = subsample    
+        subsample_ = subsample
     if ncpu is None:
         ncpu_ = multiprocessing.cpu_count()-1
     else:
-        ncpu_ = ncpu    
-    dat_h = dat[dat['locus'] == 'IGH']    
+        ncpu_ = ncpu
+    dat_h = dat[dat['locus'] == 'IGH']
     try:
         dat_h_r = pandas2ri.py2rpy(dat_h)
-    except:            
-        dat_h = dat_h.astype(str) 
-        dat_h_r = pandas2ri.py2rpy(dat_h)    
+    except:
+        dat_h = dat_h.astype(str)
+        dat_h_r = pandas2ri.py2rpy(dat_h)
     dist_ham = sh.distToNearest(dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
     # Find threshold using density method
-    dist = np.array(dist_ham['dist_nearest'])    
+    dist = np.array(dist_ham['dist_nearest'])
     if threshold_method_ is 'density':
         if edge is None:
             edge_ = 0.9
@@ -2202,19 +2250,19 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
             else:
-                threshold_model_ = threshold_model    
+                threshold_model_ = threshold_model
             if cross is None:
                 cross_ = NULL
             else:
-                cross_ = cross    
+                cross_ = cross
             if cutoff is None:
                 cutoff_ = 'optimal'
             else:
-                cutoff_ = cutoff    
+                cutoff_ = cutoff
             if sensitivity is None:
                 sen_ = NULL
             else:
-                sen_ = sensitivity    
+                sen_ = sensitivity
             if specificity is None:
                 spc_ = NULL
             else:
@@ -2225,25 +2273,25 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         if threshold_model is None:
             threshold_model_ = "gamma-gamma"
         else:
-            threshold_model_ = threshold_model    
+            threshold_model_ = threshold_model
         if cross is None:
             cross_ = NULL
         else:
-            cross_ = cross    
+            cross_ = cross
         if cutoff is None:
             cutoff_ = 'optimal'
         else:
-            cutoff_ = cutoff    
+            cutoff_ = cutoff
         if sensitivity is None:
             sen_ = NULL
         else:
-            sen_ = sensitivity    
+            sen_ = sensitivity
         if specificity is None:
             spc_ = NULL
         else:
             spc_ = specificity
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
-        threshold=np.array(dist_threshold.slots['threshold'])[0]    
+        threshold=np.array(dist_threshold.slots['threshold'])[0]
     if np.isnan(threshold):
         warnings.warn(UserWarning("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."))
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
