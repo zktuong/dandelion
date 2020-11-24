@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 13:29:31
+# @Last Modified time: 2020-11-24 14:56:34
 
 import pandas as pd
 import numpy as np
@@ -13,6 +13,7 @@ from networkx.utils import random_state
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import pdist, squareform
+from itertools import combinations
 from tqdm import tqdm
 from time import sleep
 try:
@@ -114,7 +115,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         seq_list = []
         seq_list = [y for y in dat_seq[x]]
         tdarray = np.array(seq_list).reshape(-1,1)
-        d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
+        # d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
+        d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)]) # this is a tad faster than above?
         dmat[x] = d_mat
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
