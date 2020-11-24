@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 15:24:02
+# @Last Modified time: 2020-11-24 16:12:01
 
 import sys
 import os
@@ -861,7 +861,10 @@ class Dandelion:
         except:
             raise AttributeError('Please populate the Dandelion class with at least the .data slot before saving.')
         try:
-            self.metadata.
+            for col in self.metadata.columns:
+                weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
+                if len(self.metadata[weird]) > 0:
+                    self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
             self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
         except:
             pass
