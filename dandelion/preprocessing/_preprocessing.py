@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 17:21:37
+# @Last Modified time: 2020-11-24 22:16:52
 
 import sys
 import os
@@ -1611,9 +1611,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 poor_qual.append(b)
             drop_contig.append(l[b])
         if len(hc_id) == 1:
-            v = v_dict[0]
-            j = j_dict[0]
-            c = c_dict[0]
+            v = v_dict[hc_id[0]]
+            j = j_dict[hc_id[0]]
+            c = c_dict[hc_id[0]]
             if v is not np.nan:
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
@@ -1828,9 +1828,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     poor_qual.append(b)
                 drop_contig.append(l[b])
             if len(hc_id) == 1:
-                v = v_dict[0]
-                j = j_dict[0]
-                c = c_dict[0]
+                v = v_dict[hc_id[0]]
+                j = j_dict[hc_id[0]]
+                c = c_dict[hc_id[0]]
                 if v is not np.nan:
                     if 'IGH' not in v:
                         if filter_poorqualitybcr:
