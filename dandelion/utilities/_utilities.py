@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 13:25:15
+# @Last Modified time: 2020-11-24 13:51:36
 
 import sys
 import os
@@ -827,14 +827,14 @@ class Dandelion:
             cPickle.dump(self, f, **kwargs)
             f.close()
 
-    def write_h5(self, filename='dandelion_data.h5', complib = 'blosc:lz4', compression = 'gzip', compression_level = None, **kwargs):
+    def write_h5(self, filename='dandelion_data.h5', complib = 'blosc:lz4', compression_level = None, **kwargs):
         """
         Writes a `Dandelion` class to .h5 format.
         Parameters
         ----------
         filename
             path to Dandelion `.h5` file.
-        compression : str, optional
+        complib : str, optional
             method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
         compression_opts : {0-9}, optional
             Specifies a compression level for data. A value of 0 disables compression.
@@ -863,7 +863,6 @@ class Dandelion:
                     self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
             self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
         except:
-            self.data = self.data.astype(str)
             self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
         try:
             for col in self.metadata.columns:
@@ -872,7 +871,6 @@ class Dandelion:
                     self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
             self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
         except:
-            self.metadata = self.metadata.astype(str)
             self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
         try:
             if 'index' in self.edges.columns:
@@ -890,22 +888,22 @@ class Dandelion:
         except:
             pass
 
-        # try:
-        #     for d in self.distance:
-        #         dat = pd.DataFrame(self.distance[d].toarray()) # how to make this faster?
-        #         dat.to_hdf(filename, "distance/"+d, complib = compression, complevel = compression_opts, **kwargs)
-        # except:
-        #     pass
+        try:
+            for d in self.distance:
+                dat = pd.DataFrame(self.distance[d].toarray()) # how to make this faster?
+                dat.to_hdf(filename, "distance/"+d, complib = complib, complevel = compression_level, **kwargs)
+        except:
+            pass
 
         with h5py.File(filename,  "a") as hf:
-            try:
-                for d in self.distance:
-                    hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_level)
-                    hf.create_dataset('distance/'+d+'/indptr', data=self.distance[d].indptr, compression = compression, compression_opts = compression_level)
-                    hf.create_dataset('distance/'+d+'/indices', data=self.distance[d].indices, compression = compression, compression_opts = compression_level)
-                    hf['distance/'+d].attrs['shape'] = self.distance[d].shape
-            except:
-                pass
+            # try:
+            #     for d in self.distance:
+            #         hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_level)
+            #         hf.create_dataset('distance/'+d+'/indptr', data=self.distance[d].indptr, compression = compression, compression_opts = compression_level)
+            #         hf.create_dataset('distance/'+d+'/indices', data=self.distance[d].indices, compression = compression, compression_opts = compression_level)
+            #         hf['distance/'+d].attrs['shape'] = self.distance[d].shape
+            # except:
+            #     pass
 
             try:
                 layout_counter = 0
@@ -1015,10 +1013,10 @@ def read_h5(filename='dandelion_data.h5'):
     distance = Tree()
     try:
         for d in hf['distance'].keys():
-            # d_ = pd.read_hdf(filename, 'distance/'+d)
-            # distance[d] = scipy.sparse.csr_matrix(d_.values)
-            d_ = hf['distance'][d]
-            distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
+            d_ = pd.read_hdf(filename, 'distance/'+d)
+            distance[d] = scipy.sparse.csr_matrix(d_.values)
+            # d_ = hf['distance'][d]
+            # distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
     except:
         pass
 
