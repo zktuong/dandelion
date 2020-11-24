@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 14:56:34
+# @Last Modified time: 2020-11-24 21:18:44
 
 import pandas as pd
 import numpy as np
@@ -145,21 +145,38 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
+    overlap = []
     for i in out.metadata.index:
         if constructbygroup:
             cx = out.metadata.loc[i, str(clonekey)+'_group']
         else:
-            cx = out.metadata.loc[i, str(clonekey)]
-        tmp_clusterdist[cx][i].value = 1
+            if len(out.metadata.loc[i, str(clonekey)].split('|'))>1:
+                overlap.append([c for c in out.metadata.loc[i, str(clonekey)].split('|')])
+                for c in out.metadata.loc[i, str(clonekey)].split('|'):
+                    tmp_clusterdist[c][i].value = 1
+            else:
+                cx = out.metadata.loc[i, str(clonekey)]
+                tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
         tmp_clusterdist2[x] = list(tmp_clusterdist[x])
     cluster_dist = {}
-    for x in tmp_clusterdist2:
-        dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[x], tmp_clusterdist2[x]]
-        s1, s2 = dist_mat_.shape
-        if s1 > 1 and s2 >1:
-            cluster_dist[x] = dist_mat_
+    for c_ in tmp_clusterdist2:
+        if c_ in list(flatten(overlap)):
+            for ol in overlap:
+                if c_ in ol:
+                    idx = list(flatten([tmp_clusterdist2[c_x] for c_x in ol]))
+                    if len(list(set(idx))) > 1:
+                        dist_mat_ = tmp_totaldist.loc[idx, idx]
+                        s1, s2 = dist_mat_.shape
+                        if s1 > 1 and s2 >1:
+                            cluster_dist['|'.join(ol)] = dist_mat_            
+        else:
+            dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[c_], tmp_clusterdist2[c_]]
+            s1, s2 = dist_mat_.shape
+            if s1 > 1 and s2 >1:
+                cluster_dist[c_] = dist_mat_
+
     # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for each group/clone to connect the shortest path
     mst_tree = mst(cluster_dist)
     sleep(0.5)
@@ -170,18 +187,35 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
+    
     clone_ref = dict(out.metadata[clonekey])
     tmp_clone_tree = Tree()
     for x in out.metadata.index:
-        tmp_clone_tree[clone_ref[x]][x].value = 1
+        if '|' in clone_ref[x]:
+            for x_ in clone_ref[x].split('|'):
+                tmp_clone_tree[x_][x].value = 1
+        else:
+            tmp_clone_tree[clone_ref[x]][x].value = 1
     tmp_clone_tree2 = Tree()
     for x in tmp_clone_tree:
         tmp_clone_tree2[x] = list(tmp_clone_tree[x])
 
     tmp_clone_tree3 = Tree()
+    tmp_clone_tree3_overlap = Tree()
     for x in tmp_clone_tree2:
-        tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
-        tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
+        if x in list(flatten(overlap)): # this is to catch all possible cells that may potentially match up with this clone that's joined together
+            for ol in overlap:
+                if x in ol:
+                    tmp_clone_tree3_overlap['|'.join(ol)][''.join(tmp_clone_tree2[x])].value = 1
+        else:
+            tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
+            tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
+            tmp_.fillna(0, inplace = True)
+            tmp_clone_tree3[x] = tmp_
+        
+    for x in tmp_clone_tree3_overlap: # repeat for the overlap clones
+        tmp_ = pd.DataFrame(index = tmp_clone_tree3_overlap[x], columns = tmp_clone_tree3_overlap[x])
+        tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree3_overlap[x], columns = tmp_clone_tree3_overlap[x])
         tmp_.fillna(0, inplace = True)
         tmp_clone_tree3[x] = tmp_
 
@@ -193,7 +227,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
         tmp_edge_list[c].index = [(s, t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
         for idx in tmp_edge_list[c].index:
-            if tmp_totaldist.loc[idx[0], idx[1]] > 0:
+            if tmp_totaldist.loc[idx[0], idx[1]] > 0: # remove non 100% identical
                 tmp_edge_list[c].drop(idx, inplace = True)
         tmp_edge_list[c].reset_index(inplace = True)
 

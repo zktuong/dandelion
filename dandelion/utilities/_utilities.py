@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 16:12:01
+# @Last Modified time: 2020-11-24 17:37:45
 
 import sys
 import os
@@ -258,12 +258,19 @@ def setup_metadata(data, sep, clone_key = None):
         groupseries = dict(zip(metadata_.index, group))
         metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
         
-        size_of_clone = pd.DataFrame(metadata_[str(clonekey)].value_counts())
+        tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
+        tmp = tmp.reset_index(drop = False)
+        tmp.columns = ['cell_id', 'tmp', str(clonekey)]
+        clone_size = tmp[str(clonekey)].value_counts()
+        clonesize_dict = dict(clone_size)
+
+        # size_of_clone = pd.DataFrame(metadata_[str(clonekey)].value_counts())
+        size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient = 'index')
         size_of_clone.reset_index(drop = False, inplace = True)
         size_of_clone.columns = [str(clonekey), 'clone_size']    
         size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
         size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
-        metadata_[str(clonekey)+'_by_size'] = [size_dict[c] for c in metadata_[str(clonekey)]]
+        metadata_[str(clonekey)+'_by_size'] = ['|'.join([str(size_dict[c_]) for c_ in c.split('|')]) if len(c.split('|')) > 1 else str(size_dict[c]) for c in metadata_[str(clonekey)]]
         metadata_[str(clonekey)+'_by_size'] = metadata_[str(clonekey)+'_by_size'].astype('category')
         return(metadata_)
     else:
@@ -315,13 +322,20 @@ def setup_metadata(data, sep, clone_key = None):
                 group.append(cl_[c].split(scb[1])[scb[0]])
         groupseries = dict(zip(metadata_.index, group))
         metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
+        
+        tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
+        tmp = tmp.reset_index(drop = False)
+        tmp.columns = ['cell_id', 'tmp', str(clonekey)]
+        clone_size = tmp[str(clonekey)].value_counts()
+        clonesize_dict = dict(clone_size)
 
-        size_of_clone = pd.DataFrame(metadata_[str(clonekey)].value_counts())
+        # size_of_clone = pd.DataFrame(metadata_[str(clonekey)].value_counts())
+        size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient = 'index')
         size_of_clone.reset_index(drop = False, inplace = True)
         size_of_clone.columns = [str(clonekey), 'clone_size']
         size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
         size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
-        metadata_[str(clonekey)+'_by_size'] = [size_dict[c] for c in metadata_[str(clonekey)]]
+        metadata_[str(clonekey)+'_by_size'] = ['|'.join([str(size_dict[c_]) for c_ in c.split('|')]) if len(c.split('|')) > 1 else str(size_dict[c]) for c in metadata_[str(clonekey)]]
         metadata_[str(clonekey)+'_by_size'] = metadata_[str(clonekey)+'_by_size'].astype('category')
         return(metadata_)
 
