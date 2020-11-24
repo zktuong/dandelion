@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-11 14:06:11
+# @Last Modified time: 2020-11-24 13:29:31
 
 import pandas as pd
 import numpy as np
@@ -64,38 +64,49 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-    if aa_or_nt is None or aa_or_nt is 'aa':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
-    elif aa_or_nt == 'nt':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
+    if dat_l.shape[0] == 0:
+        if aa_or_nt is None or aa_or_nt is 'aa':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))            
+        elif aa_or_nt == 'nt':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))            
+        else:
+            raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
     else:
-        raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+        if aa_or_nt is None or aa_or_nt is 'aa':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
+            seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
+        elif aa_or_nt == 'nt':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
+            seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
+        else:
+            raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
     dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
     dat_seq.set_index('cell_id', inplace = True)
-    light_seq_tree = Tree()
-    for key, value in seq_l.items():
-        k, v = value
-        light_seq_tree[k][key] = v
-    light_seq_tree2 = Tree()
-    for g in light_seq_tree:
-        second_key = []
-        for k2 in light_seq_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_seq_tree[g].items():
-            light_seq_tree2[g][second_key_dict[key]] = value
-    dat_seq['light'] = pd.Series(light_seq_tree2)
-    tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
-    tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
-
-    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-    dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
-    dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
+    if dat_l.shape[0] == 0:
+        dat_seq = dat_seq[['heavy']]
+    else:
+        light_seq_tree = Tree()
+        for key, value in seq_l.items():
+            k, v = value
+            light_seq_tree[k][key] = v
+        light_seq_tree2 = Tree()
+        for g in light_seq_tree:
+            second_key = []
+            for k2 in light_seq_tree[g].keys():
+                second_key.append(k2)
+            second_key = list(set(second_key))
+            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+            for key, value in light_seq_tree[g].items():
+                light_seq_tree2[g][second_key_dict[key]] = value
+        dat_seq['light'] = pd.Series(light_seq_tree2)
+        tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
+        tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
+    
+        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+        dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
+        dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
     dmat = Tree()
