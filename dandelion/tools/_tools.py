@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 17:29:48
+# @Last Modified time: 2020-11-24 23:34:00
 
 import os
 import sys
@@ -1115,7 +1115,15 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
     
     # prepare a summary table
-    overlap = pd.crosstab(data[clone_], data[groupby])
+    datc_ = data[clone_].str.split('|', expand = True).stack()
+    datc_ = pd.DataFrame(datc_)
+    datc_.reset_index(drop = False, inplace = True)
+    datc_.columns = ['cell_id', 'tmp', clone_]
+    datc_.drop('tmp', inplace = True, axis = 1)
+    dictg_ = dict(data[groupby])
+    datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
+    
+    overlap = pd.crosstab(datc_[clone_], datc_[groupby])
 
     if min_size == 0:
         raise ValueError('min_size must be greater than 0.')

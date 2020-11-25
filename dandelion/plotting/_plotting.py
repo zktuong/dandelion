@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-23 15:43:39
+# @Last Modified time: 2020-11-25 00:16:33
 
 import seaborn as sns
 import pandas as pd
@@ -562,7 +562,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     try:
         import nxviz as nxv
     except:
-        raise(ImportError("Unable to import module `nxviz`. Have you done pip install nxviz?"))
+        raise(ImportError("Unable to import module `nxviz`. Have you done install nxviz? Try pip install git+https://github.com/zktuong/nxviz.git"))
     
     if min_clone_size is None:
         min_size = 1
@@ -582,6 +582,14 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
             overlap = self.uns['clone_overlap'].copy()
         else:                        
             # prepare a summary table
+            datc_ = data[clone_].str.split('|', expand = True).stack()
+            datc_ = pd.DataFrame(datc_)
+            datc_.reset_index(drop = False, inplace = True)
+            datc_.columns = ['cell_id', 'tmp', clone_]
+            datc_.drop('tmp', inplace = True, axis = 1)
+            dictg_ = dict(data[groupby])
+            datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
+            
             overlap = pd.crosstab(data[clone_], data[groupby])
 
             if min_size == 0:
@@ -600,6 +608,14 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
         
         # prepare a summary table
+        datc_ = data[clone_].str.split('|', expand = True).stack()
+        datc_ = pd.DataFrame(datc_)
+        datc_.reset_index(drop = False, inplace = True)
+        datc_.columns = ['cell_id', 'tmp', clone_]
+        datc_.drop('tmp', inplace = True, axis = 1)
+        dictg_ = dict(data[groupby])
+        datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
+
         overlap = pd.crosstab(data[clone_], data[groupby])
 
         if min_size == 0:
@@ -644,7 +660,12 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
             else:
                 colorby_dict = dict(zip(sorted(list(set(data[str(colorby)]))), color_mapping))
     df = data[[groupby, colorby]]
-    df = df.sort_values(colorby).drop_duplicates(subset=groupby, keep="first").reset_index(drop = True)
+    if groupby == colorby:
+        df = data[[groupby]]
+        df = df.sort_values(groupby).drop_duplicates(subset=groupby, keep="first").reset_index(drop = True)
+    else:
+        df = df.sort_values(colorby).drop_duplicates(subset=groupby, keep="first").reset_index(drop = True)
+    
     c = nxv.CircosPlot(G,
                        node_color=colorby,
                        node_grouping=colorby,
