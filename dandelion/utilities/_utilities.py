@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 23:01:47
+# @Last Modified time: 2020-11-25 20:58:42
 
 import sys
 import os
@@ -866,14 +866,13 @@ class Dandelion:
                 del hf[datasetname]
 
         # now to actually saving
-        try:
-            for col in self.data.columns:
-                weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
-                if len(self.data[weird]) > 0:
-                    self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
-            self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
-        except:
-            raise AttributeError('Please populate the Dandelion class with at least the .data slot before saving.')
+    
+        for col in self.data.columns:
+            weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
+            if len(self.data[weird]) > 0:
+                self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
+        self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
+            
         try:
             for col in self.metadata.columns:
                 weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
