@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 16:39:55
+# @Last Modified time: 2020-11-25 19:12:21
 
 import sys
 import os
@@ -1483,15 +1483,14 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         raise AttributeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
 
     barcode = list(set(dat['cell_id']))
-    
-    print('Matching barcodes\n')
-    bcr_check = Tree()
-    for c in adata.obs_names:
-        if c in barcode:
-            bcr_check[c] = True
-        else:
-            bcr_check[c] = False
-    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
+
+    bcr_check = pd.DataFrame(index = adata.obs_names)
+    bc_ = {}
+    for b in barcode:
+        bc_.update({b:True})
+    bcr_check['has_bcr'] = pd.Series(bc_)
+    bcr_check.replace(np.nan, False, inplace = True)
+    adata.obs['has_bcr'] = pd.Series(bcr_check['has_bcr'])
     adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
