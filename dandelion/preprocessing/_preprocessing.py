@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 15:40:23
+# @Last Modified time: 2020-11-25 15:51:55
 
 import sys
 import os
@@ -1484,7 +1484,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
 
     bcr_check = Tree()
     
-    barcodex = list(set(_dat['cell_id']))
+    barcodex = list(set(dat['cell_id']))
     for c in adata.obs_names:
         if c in barcodex:
             bcr_check[c] = True
