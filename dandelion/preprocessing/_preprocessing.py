@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 22:34:52
+# @Last Modified time: 2020-11-25 15:40:23
 
 import sys
 import os
@@ -27,14 +27,7 @@ try:
 except ImportError:
     pass
 import numpy as np
-
 from Bio import Align
-# try:
-#     from rpy2.robjects.packages import importr, data
-#     from rpy2.rinterface import NULL
-#     from rpy2.robjects import pandas2ri, StrVector, FloatVector
-# except ImportError:
-#     pass
 
 def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailing_hyphen_number = True, outdir = None):
     """
@@ -1490,6 +1483,15 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         raise TypeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
 
     bcr_check = Tree()
+    
+    barcodex = list(set(_dat['cell_id']))
+    for c in adata.obs_names:
+        if c in barcodex:
+            bcr_check[c] = True
+        else:
+            bcr_check[c] = False
+    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
+    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
@@ -1983,15 +1985,6 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
 
     adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
-
-    barcodex = list(set(_dat['cell_id']))
-    for c in adata.obs_names:
-        if c in barcodex:
-            bcr_check[c] = True
-        else:
-            bcr_check[c] = False
-    adata.obs['has_bcr'] = pd.Series(dict(bcr_check))
-    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
     if filter_rna:
         out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
