@@ -2,7 +2,7 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.21
+Version = 0.0.24
 
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
@@ -28,14 +28,13 @@ I would reccomend instaling this in order:
 # create a conda environment with specific modules
 conda create --name dandelion python=3.7 
 conda activate dandelion
+```
 
-# the following are normal installation intructions for scanpy
-conda install seaborn scikit-learn statsmodels numba pytables
-conda install -c conda-forge python-igraph leidenalg
-pip install scanpy 
+First, install [scanpy](https://scanpy.readthedocs.io/en/latest/installation.html).
 
+```bash
 # these are required by dandelion
-conda install -c conda-forge distance joblib plotnine adjustText jupyter
+conda install -c conda-forge distance joblib plotnine adjustText
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
 conda install -c conda-forge rpy2
 # or pip install rpy2

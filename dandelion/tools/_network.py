@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-11 14:06:11
+# @Last Modified time: 2020-11-24 21:18:44
 
 import pandas as pd
 import numpy as np
@@ -13,6 +13,7 @@ from networkx.utils import random_state
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import pdist, squareform
+from itertools import combinations
 from tqdm import tqdm
 from time import sleep
 try:
@@ -64,38 +65,49 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
-    if aa_or_nt is None or aa_or_nt is 'aa':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
-    elif aa_or_nt == 'nt':
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
+    if dat_l.shape[0] == 0:
+        if aa_or_nt is None or aa_or_nt is 'aa':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))            
+        elif aa_or_nt == 'nt':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))            
+        else:
+            raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
     else:
-        raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+        if aa_or_nt is None or aa_or_nt is 'aa':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
+            seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
+        elif aa_or_nt == 'nt':
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
+            seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
+        else:
+            raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
     dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
     dat_seq.set_index('cell_id', inplace = True)
-    light_seq_tree = Tree()
-    for key, value in seq_l.items():
-        k, v = value
-        light_seq_tree[k][key] = v
-    light_seq_tree2 = Tree()
-    for g in light_seq_tree:
-        second_key = []
-        for k2 in light_seq_tree[g].keys():
-            second_key.append(k2)
-        second_key = list(set(second_key))
-        second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        for key, value in light_seq_tree[g].items():
-            light_seq_tree2[g][second_key_dict[key]] = value
-    dat_seq['light'] = pd.Series(light_seq_tree2)
-    tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
-    tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
-
-    tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-    dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
-    dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
+    if dat_l.shape[0] == 0:
+        dat_seq = dat_seq[['heavy']]
+    else:
+        light_seq_tree = Tree()
+        for key, value in seq_l.items():
+            k, v = value
+            light_seq_tree[k][key] = v
+        light_seq_tree2 = Tree()
+        for g in light_seq_tree:
+            second_key = []
+            for k2 in light_seq_tree[g].keys():
+                second_key.append(k2)
+            second_key = list(set(second_key))
+            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+            for key, value in light_seq_tree[g].items():
+                light_seq_tree2[g][second_key_dict[key]] = value
+        dat_seq['light'] = pd.Series(light_seq_tree2)
+        tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
+        tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
+    
+        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+        dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
+        dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
     dmat = Tree()
@@ -103,7 +115,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         seq_list = []
         seq_list = [y for y in dat_seq[x]]
         tdarray = np.array(seq_list).reshape(-1,1)
-        d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
+        # d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
+        d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)]) # this is a tad faster than above?
         dmat[x] = d_mat
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
@@ -132,21 +145,38 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
+    overlap = []
     for i in out.metadata.index:
         if constructbygroup:
             cx = out.metadata.loc[i, str(clonekey)+'_group']
         else:
-            cx = out.metadata.loc[i, str(clonekey)]
-        tmp_clusterdist[cx][i].value = 1
+            if len(out.metadata.loc[i, str(clonekey)].split('|'))>1:
+                overlap.append([c for c in out.metadata.loc[i, str(clonekey)].split('|')])
+                for c in out.metadata.loc[i, str(clonekey)].split('|'):
+                    tmp_clusterdist[c][i].value = 1
+            else:
+                cx = out.metadata.loc[i, str(clonekey)]
+                tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
         tmp_clusterdist2[x] = list(tmp_clusterdist[x])
     cluster_dist = {}
-    for x in tmp_clusterdist2:
-        dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[x], tmp_clusterdist2[x]]
-        s1, s2 = dist_mat_.shape
-        if s1 > 1 and s2 >1:
-            cluster_dist[x] = dist_mat_
+    for c_ in tmp_clusterdist2:
+        if c_ in list(flatten(overlap)):
+            for ol in overlap:
+                if c_ in ol:
+                    idx = list(flatten([tmp_clusterdist2[c_x] for c_x in ol]))
+                    if len(list(set(idx))) > 1:
+                        dist_mat_ = tmp_totaldist.loc[idx, idx]
+                        s1, s2 = dist_mat_.shape
+                        if s1 > 1 and s2 >1:
+                            cluster_dist['|'.join(ol)] = dist_mat_            
+        else:
+            dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[c_], tmp_clusterdist2[c_]]
+            s1, s2 = dist_mat_.shape
+            if s1 > 1 and s2 >1:
+                cluster_dist[c_] = dist_mat_
+
     # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for each group/clone to connect the shortest path
     mst_tree = mst(cluster_dist)
     sleep(0.5)
@@ -157,18 +187,35 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
+    
     clone_ref = dict(out.metadata[clonekey])
     tmp_clone_tree = Tree()
     for x in out.metadata.index:
-        tmp_clone_tree[clone_ref[x]][x].value = 1
+        if '|' in clone_ref[x]:
+            for x_ in clone_ref[x].split('|'):
+                tmp_clone_tree[x_][x].value = 1
+        else:
+            tmp_clone_tree[clone_ref[x]][x].value = 1
     tmp_clone_tree2 = Tree()
     for x in tmp_clone_tree:
         tmp_clone_tree2[x] = list(tmp_clone_tree[x])
 
     tmp_clone_tree3 = Tree()
+    tmp_clone_tree3_overlap = Tree()
     for x in tmp_clone_tree2:
-        tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
-        tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
+        if x in list(flatten(overlap)): # this is to catch all possible cells that may potentially match up with this clone that's joined together
+            for ol in overlap:
+                if x in ol:
+                    tmp_clone_tree3_overlap['|'.join(ol)][''.join(tmp_clone_tree2[x])].value = 1
+        else:
+            tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
+            tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
+            tmp_.fillna(0, inplace = True)
+            tmp_clone_tree3[x] = tmp_
+        
+    for x in tmp_clone_tree3_overlap: # repeat for the overlap clones
+        tmp_ = pd.DataFrame(index = tmp_clone_tree3_overlap[x], columns = tmp_clone_tree3_overlap[x])
+        tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree3_overlap[x], columns = tmp_clone_tree3_overlap[x])
         tmp_.fillna(0, inplace = True)
         tmp_clone_tree3[x] = tmp_
 
@@ -180,7 +227,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
         tmp_edge_list[c].index = [(s, t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
         for idx in tmp_edge_list[c].index:
-            if tmp_totaldist.loc[idx[0], idx[1]] > 0:
+            if tmp_totaldist.loc[idx[0], idx[1]] > 0: # remove non 100% identical
                 tmp_edge_list[c].drop(idx, inplace = True)
         tmp_edge_list[c].reset_index(inplace = True)
 
