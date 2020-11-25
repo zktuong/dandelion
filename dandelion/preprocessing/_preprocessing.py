@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 15:51:55
+# @Last Modified time: 2020-11-25 15:58:23
 
 import sys
 import os
@@ -1477,16 +1477,15 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     # l_ccall = Tree()
 
     locus_dict = dict(zip(dat['sequence_id'],dat['locus']))
-    barcode = list(set(dat['cell_id']))
-
+    if 'cell_id' not in dat.columns:
+        raise AttributeError("VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering.")
     if 'filter_rna' not in adata.obs:
-        raise TypeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
+        raise AttributeError("AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
 
+    barcode = list(set(dat['cell_id']))
     bcr_check = Tree()
-    
-    barcodex = list(set(dat['cell_id']))
     for c in adata.obs_names:
-        if c in barcodex:
+        if c in barcode:
             bcr_check[c] = True
         else:
             bcr_check[c] = False
