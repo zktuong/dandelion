@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 22:16:52
+# @Last Modified time: 2020-11-24 22:34:52
 
 import sys
 import os
@@ -2312,7 +2312,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
              + ylab("Count")
              + geom_histogram(binwidth = 0.01)
              + geom_vline(xintercept = tr, linetype = "dashed", color="blue", size=0.5)
-             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue', hjust = 'left')
+             + annotate('text', x=tr+0.02, y = 10, label='Threshold:\n' + str(np.around(tr, decimals=2)), size = 8, color = 'Blue')
              + facet_wrap('~'+str(plot_group), scales="free_y")
              + theme(legend_position = 'none')))
     else:
