@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 19:12:21
+# @Last Modified time: 2020-11-25 20:17:13
 
 import sys
 import os
@@ -1702,7 +1702,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         else:
             ncpus = int(ncpu)
 
-        print('Marking barcodes with poor quality barcodes and multiplets with {} cpus'.format(ncpus))
+        print('Scanning for poor quality/ambiguous contigs with {} cpus'.format(ncpus))
         with multiprocessing.Pool(ncpus) as p:
             result = p.map(parallel_marking, iter(barcode))
 
@@ -1718,7 +1718,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     else:
         poor_qual, h_doublet, l_doublet, drop_contig  = [], [], [], []
 
-        for b in tqdm(barcode, desc = 'Marking barcodes with poor quality barcodes and multiplets'):
+        for b in tqdm(barcode, desc = 'Scanning for poor quality/ambiguous contigs'):
             hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_id'])
             hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['umi_count']]
             hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'] == 'IGH')]['sequence_alignment']]
@@ -1972,6 +1972,15 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     raise OSError('Please provide a file name that ends with .tsv')
     else:
         _dat = dat.copy()
+
+    barcode2 = list(set(_dat['cell_id']))
+    bc_2 = {}
+    for b in barcode2:
+        bc_2.update({b:True})
+    bcr_check['bcr_QC_pass'] = pd.Series(bc_2)
+    bcr_check.replace(np.nan, False, inplace = True)
+    adata.obs['bcr_QC_pass'] = pd.Series(bcr_check['bcr_QC_pass'])
+    adata.obs['bcr_QC_pass'] = adata.obs['bcr_QC_pass'].astype('category')
 
     print('Initializing Dandelion object')
     if data.__class__ == Dandelion:
