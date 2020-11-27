@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 15:41:39
+# @Last Modified time: 2020-11-27 16:21:50
 
 import pandas as pd
 import numpy as np
@@ -234,14 +234,14 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     tmp_edge_list = Tree()
     for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
-        G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
-        # G.edges(data=True)
-        tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-        tmp_edge_list[c].index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
-        tmp_edge_list[c]['dist'] = pd.Series(tmp_totaldiststack['weight'])
-        tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['dist'] > 0]
-        tmp_edge_list[c].drop('dist', inplace = True, axis = 1)
-        tmp_edge_list[c].reset_index(inplace = True)
+        if len(tmp_clone_tree3[c]) > 1:
+            G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
+            # G.edges(data=True)
+            tmp_edge_list[c] = nx.to_pandas_edgelist(G)        
+            tmp_edge_list[c].index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+            tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
+            tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['weight'] == 0] # keep only edges when there is 100% identity, to minimise crowding
+            tmp_edge_list[c].reset_index(inplace = True)
 
     # try to catch situations where there's no edge (only singletons)
     try:
