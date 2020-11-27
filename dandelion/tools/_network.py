@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 21:18:44
+# @Last Modified time: 2020-11-27 00:36:49
 
 import pandas as pd
 import numpy as np
@@ -165,7 +165,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         if c_ in list(flatten(overlap)):
             for ol in overlap:
                 if c_ in ol:
-                    idx = list(flatten([tmp_clusterdist2[c_x] for c_x in ol]))
+                    idx = list(set(flatten([tmp_clusterdist2[c_x] for c_x in ol])))
                     if len(list(set(idx))) > 1:
                         dist_mat_ = tmp_totaldist.loc[idx, idx]
                         s1, s2 = dist_mat_.shape
