@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 20:58:42
+# @Last Modified time: 2020-11-27 09:33:48
 
 import sys
 import os
@@ -841,7 +841,7 @@ class Dandelion:
             cPickle.dump(self, f, **kwargs)
             f.close()
 
-    def write_h5(self, filename='dandelion_data.h5', complib = 'blosc:lz4', compression_level = None, **kwargs):
+    def write_h5(self, filename='dandelion_data.h5', complib = None, compression = None, compression_level = None, **kwargs):
         """
         Writes a `Dandelion` class to .h5 format.
         Parameters
@@ -850,6 +850,8 @@ class Dandelion:
             path to Dandelion `.h5` file.
         complib : str, optional
             method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
+        compression : str, optional
+            same call as complib. Just a convenience option.
         compression_opts : {0-9}, optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
@@ -865,26 +867,34 @@ class Dandelion:
             for datasetname in hf.keys():
                 del hf[datasetname]
 
+        if complib is None and compression is None:
+            comp = None
+        elif complib is not None and compression is None:
+            comp = complib
+        elif complib is None and compression is not None:
+            comp = compression
+        if complib is not None and compression is not None:
+            raise ValueError('Please specify only complib or compression. They do the same thing.')
+
         # now to actually saving
-    
         for col in self.data.columns:
             weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
             if len(self.data[weird]) > 0:
                 self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
-        self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
+        self.data.to_hdf(filename, "data", complib = comp, complevel = compression_level, **kwargs)
             
         try:
             for col in self.metadata.columns:
                 weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
                 if len(self.metadata[weird]) > 0:
                     self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
-            self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
+            self.metadata.to_hdf(filename, "metadata", complib = comp, complevel = compression_level, **kwargs)
         except:
             pass
         try:
             if 'index' in self.edges.columns:
                 self.edges.drop('index', axis = 1, inplace=True)
-            self.edges.to_hdf(filename, "edges", complib = complib, complevel = compression_level, **kwargs)
+            self.edges.to_hdf(filename, "edges", complib = comp, complevel = compression_level, **kwargs)
         except:
             pass
 
@@ -892,7 +902,7 @@ class Dandelion:
         try:
             for g in self.graph:
                 G = nx.to_pandas_adjacency(g)
-                G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = complib, complevel = compression_level, **kwargs)
+                G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = comp, complevel = compression_level, **kwargs)
                 graph_counter += 1
         except:
             pass
@@ -900,7 +910,7 @@ class Dandelion:
         try:
             for d in self.distance:
                 dat = pd.DataFrame(self.distance[d].toarray()) # how to make this faster?
-                dat.to_hdf(filename, "distance/"+d, complib = complib, complevel = compression_level, **kwargs)
+                dat.to_hdf(filename, "distance/"+d, complib = comp, complevel = compression_level, **kwargs)
         except:
             pass
 
