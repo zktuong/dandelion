@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 00:36:49
+# @Last Modified time: 2020-11-27 00:58:54
 
 import pandas as pd
 import numpy as np
@@ -206,7 +206,11 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         if x in list(flatten(overlap)): # this is to catch all possible cells that may potentially match up with this clone that's joined together
             for ol in overlap:
                 if x in ol:
-                    tmp_clone_tree3_overlap['|'.join(ol)][''.join(tmp_clone_tree2[x])].value = 1
+                    if len(tmp_clone_tree2[x]) > 1:
+                        for x_ in tmp_clone_tree2[x]:
+                            tmp_clone_tree3_overlap['|'.join(ol)][''.join(x_)].value = 1
+                    else:
+                        tmp_clone_tree3_overlap['|'.join(ol)][''.join(tmp_clone_tree2[x])].value = 1
         else:
             tmp_ = pd.DataFrame(index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
             tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
