@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 19:01:48
+# @Last Modified time: 2020-11-27 19:54:06
 
 import pandas as pd
 import numpy as np
@@ -43,7 +43,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     clones_sep: tuple[int, str]
         A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
     weights : tuple, optional
-        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.    
+        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
     downsample : int, optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     **kwargs
@@ -64,18 +64,23 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     if clonekey not in dat.columns:
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
-    if downsample is not None:
-        print('Downsampling to {} cells'.format(str(downsample)))
-        dat = dat.sample(downsample)
-
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
     dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+
+    if downsample is not None:
+        if downsample >= dat_h.shape[0]:
+            print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), dat_h.shape[0]))
+        else:
+            print('Downsampling to {} cells.'.format(str(downsample)))
+            dat_h = dat_h.sample(downsample)
+            dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))]
+
     if dat_l.shape[0] == 0:
         if aa_or_nt is None or aa_or_nt is 'aa':
-            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))            
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
         elif aa_or_nt == 'nt':
-            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))            
+            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
         else:
             raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
     else:
@@ -110,13 +115,14 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         dat_seq['light'] = pd.Series(light_seq_tree2)
         tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
         tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
-    
+
         tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
         dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
         dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
     dmat = Tree()
+    sleep(0.5)
     for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):
         seq_list = []
         seq_list = [y for y in dat_seq[x]]
@@ -143,12 +149,12 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
             else:
                 raise IndexError('Length of provided weights should be %s.' % int(n_))
 
-    # generate edge list        
+    # generate edge list
     if self.__class__ == Dandelion:
         out = self.copy()
     else: # re-initiate a Dandelion class object
         out = Dandelion(dat)
-    
+
     if downsample is not None:
         out = Dandelion(dat)
 
@@ -179,7 +185,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
                         dist_mat_ = tmp_totaldist.loc[idx, idx]
                         s1, s2 = dist_mat_.shape
                         if s1 > 1 and s2 >1:
-                            cluster_dist['|'.join(ol)] = dist_mat_            
+                            cluster_dist['|'.join(ol)] = dist_mat_
         else:
             dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[c_], tmp_clusterdist2[c_]]
             s1, s2 = dist_mat_.shape
@@ -196,7 +202,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         # G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
-    
+
     clone_ref = dict(out.metadata[clonekey])
     tmp_clone_tree = Tree()
     for x in out.metadata.index:
@@ -225,7 +231,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
             tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree2[x], columns = tmp_clone_tree2[x])
             tmp_.fillna(0, inplace = True)
             tmp_clone_tree3[x] = tmp_
-        
+
     for x in tmp_clone_tree3_overlap: # repeat for the overlap clones
         tmp_ = pd.DataFrame(index = tmp_clone_tree3_overlap[x], columns = tmp_clone_tree3_overlap[x])
         tmp_ = pd.DataFrame(np.tril(tmp_) + 1, index = tmp_clone_tree3_overlap[x], columns = tmp_clone_tree3_overlap[x])
@@ -233,7 +239,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_clone_tree3[x] = tmp_
 
     # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
-    
+
     # create a dataframe to recall the actual distance quickly
     tmp_totaldiststack = pd.DataFrame(tmp_totaldist.unstack())
     tmp_totaldiststack.index.names = [None, None]
@@ -246,7 +252,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         if len(tmp_clone_tree3[c]) > 1:
             G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
             # G.edges(data=True)
-            tmp_edge_list[c] = nx.to_pandas_edgelist(G)        
+            tmp_edge_list[c] = nx.to_pandas_edgelist(G)
             tmp_edge_list[c].index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
             tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
             tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['weight'] == 0] # keep only edges when there is 100% identity, to minimise crowding
