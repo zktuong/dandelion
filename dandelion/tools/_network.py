@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 00:58:54
+# @Last Modified time: 2020-11-27 09:29:03
 
 import pandas as pd
 import numpy as np
@@ -229,24 +229,25 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
         G.edges(data=True)
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-        tmp_edge_list[c].index = [(s, t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+        tmp_edge_list[c].index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
         for idx in tmp_edge_list[c].index:
-            if tmp_totaldist.loc[idx[0], idx[1]] > 0: # remove non 100% identical
+            if tmp_totaldist.loc[idx.split('|')[0], idx.split('|')[1]] > 0: # remove non 100% identical
                 tmp_edge_list[c].drop(idx, inplace = True)
         tmp_edge_list[c].reset_index(inplace = True)
 
     # try to catch situations where there's no edge (only singletons)
     try:
         edge_listx = pd.concat([edge_list[x] for x in edge_list])
-        edge_listx.index = [(s, t) for s, t in zip(edge_listx['source'],edge_listx['target'])]
+        edge_listx.index = [str(s)+'|'+str(t) for s, t in zip(edge_listx['source'],edge_listx['target'])]
 
         tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
-        tmp_edge_listx.index = [(s, t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
+        tmp_edge_listx.drop('index', axis = 1, inplace = True)
+        tmp_edge_listx.index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
 
         edge_list_final = edge_listx.combine_first(tmp_edge_listx)
 
         for idx in edge_list_final.index:
-            edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx[0], idx[1]]
+            edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx.split('|')[0], idx.split('|')[1]]
         # return the edge list
         edge_list_final.reset_index(drop = True, inplace = True)
     except:
