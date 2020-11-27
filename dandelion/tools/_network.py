@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 17:05:05
+# @Last Modified time: 2020-11-27 17:52:11
 
 import pandas as pd
 import numpy as np
@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 
-def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, downsample = None, layout_option = None, **kwargs):
+def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, downsample = None, **kwargs):
     """
     Generates a Levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
@@ -46,10 +46,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.    
     downsample : int, optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
-    layout_option : str, optional
-        choice of layout algorithm. None defaults to fruchterman reingold layout. Also accepts ['spectral', 'spiral', 'circular', 'random'].
     **kwargs
-        additional kwargs passed to specific networkx.draw.layout functions.
+        additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
     Returns
     ----------
         `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
@@ -361,7 +359,7 @@ def clone_centrality(self, weight='weight'):
     logg.info(' finished', time=start,
         deep=('Updated Dandelion metadata\n'))
 
-def generate_layout(vertices, edges = None, min_size = 2, weight = None, algorithm = None, **kwargs):
+def generate_layout(vertices, edges = None, min_size = 2, weight = None, **kwargs):
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
@@ -382,29 +380,8 @@ def generate_layout(vertices, edges = None, min_size = 2, weight = None, algorit
     # if edges is not None:
         # edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
     print('generating network layout')
-    if algorithm is None:
-        pos = _fruchterman_reingold_layout(G, weight = weight)
-        pos_ = _fruchterman_reingold_layout(G_, weight = weight)
-    elif algorithm == 'shell':
-        from networkx.drawing.layout import shell_layout
-        pos = shell_layout(G, weight = weight, **kwargs)
-        pos_ = shell_layout(G_, weight = weight, **kwargs)
-    elif algorithm == 'spectral':
-        from networkx.drawing.layout import spectral_layout
-        pos = spectral_layout(G, weight = weight, **kwargs)
-        pos_ = spectral_layout(G_, weight = weight, **kwargs)
-    elif algorithm == 'spiral':
-        from networkx.drawing.layout import spiral_layout
-        pos = spiral_layout(G, weight = weight, **kwargs)
-        pos_ = spiral_layout(G_, weight = weight, **kwargs)
-    elif algorithm == 'circular':
-        from networkx.drawing.layout import circular_layout
-        pos = circular_layout(G, weight = weight, **kwargs)
-        pos_ = circular_layout(G_, weight = weight, **kwargs)
-    elif algorithm == 'random':
-        from networkx.drawing.layout import random_layout
-        pos = random_layout(G, weight = weight, **kwargs)
-        pos_ = random_layout(G_, weight = weight, **kwargs)
+    pos = _fruchterman_reingold_layout(G, weight = weight, **kwargs)
+    pos_ = _fruchterman_reingold_layout(G_, weight = weight, **kwargs)
     return(G, G_, pos, pos_)
 
 # when dealing with a lot of unconnected vertices, the pieces fly out to infinity and the original fr layout can't be used
