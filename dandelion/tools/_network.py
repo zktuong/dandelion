@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 17:52:11
+# @Last Modified time: 2020-11-27 18:14:47
 
 import pandas as pd
 import numpy as np
@@ -272,7 +272,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     vertice_list = list(out.metadata.index)
 
     # and now to actually generate the network
-    g, g_, lyt, lyt_ = generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None, algorithm = layout_option, **kwargs)
+    g, g_, lyt, lyt_ = generate_layout(vertice_list, edge_list_final, min_size = min_size, weight = None, **kwargs)
 
     # convert distance matrices to sparse
     for x in dmat:
