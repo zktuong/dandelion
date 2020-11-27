@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 00:16:33
+# @Last Modified time: 2020-11-27 21:19:20
 
 import seaborn as sns
 import pandas as pd
@@ -565,7 +565,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         raise(ImportError("Unable to import module `nxviz`. Have you done install nxviz? Try pip install git+https://github.com/zktuong/nxviz.git"))
     
     if min_clone_size is None:
-        min_size = 1
+        min_size = 2
     else:
         min_size = int(min_clone_size)
     
@@ -594,11 +594,11 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
 
             if min_size == 0:
                 raise ValueError('min_size must be greater than 0.')
-            elif min_size > 1:
+            elif min_size > 2:
                 overlap[overlap < min_size] = 0
                 overlap[overlap >= min_size] = 1
-            else:
-                overlap[overlap > min_size] = 1
+            elif min_size == 2:
+                overlap[overlap >= min_size] = 1
     
             overlap.index.name = None
             overlap.columns.name = None
@@ -620,11 +620,11 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
 
         if min_size == 0:
             raise ValueError('min_size must be greater than 0.')
-        elif min_size > 1:
+        elif min_size > 2:
             overlap[overlap < min_size] = 0
             overlap[overlap >= min_size] = 1
-        else:
-            overlap[overlap > min_size] = 1
+        elif min_size == 2:
+            overlap[overlap >= min_size] = 1
     
         overlap.index.name = None
         overlap.columns.name = None

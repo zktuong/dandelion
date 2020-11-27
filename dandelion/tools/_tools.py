@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 12:03:17
+# @Last Modified time: 2020-11-27 21:19:06
 
 import os
 import sys
@@ -1101,7 +1101,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         data = self.obs.copy()
 
     if min_clone_size is None:
-        min_size = 1
+        min_size = 2
     else:
         min_size = int(min_clone_size)
 
@@ -1126,11 +1126,11 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
 
     if min_size == 0:
         raise ValueError('min_size must be greater than 0.')
-    elif min_size > 1:
+    elif min_size > 2:
         overlap[overlap < min_size] = 0
         overlap[overlap >= min_size] = 1
-    else:
-        overlap[overlap > min_size] = 1
+    elif min_size == 2:
+        overlap[overlap >= min_size] = 1
 
     overlap.index.name = None
     overlap.columns.name = None
