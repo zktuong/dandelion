@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 12:04:18
+# @Last Modified time: 2020-11-27 15:41:39
 
 import pandas as pd
 import numpy as np
@@ -183,8 +183,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     edge_list = Tree()
     for c in tqdm(mst_tree, desc = 'Generating edge list '):
-        G = nx.from_pandas_adjacency(mst_tree[c], create_using=nx.MultiDiGraph())
-        G.edges(data=True)
+        G = nx.from_pandas_adjacency(mst_tree[c])
+        # G.edges(data=True)
         edge_list[c] = nx.to_pandas_edgelist(G)
     sleep(0.5)
     
@@ -224,15 +224,23 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         tmp_clone_tree3[x] = tmp_
 
     # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
+    
+    # create a dataframe to recall the actual distance quickly
+    tmp_totaldiststack = pd.DataFrame(tmp_totaldist.unstack())
+    tmp_totaldiststack.index.names = [None, None]
+    tmp_totaldiststack = tmp_totaldiststack.reset_index(drop = False)
+    tmp_totaldiststack.columns = ['source', 'target', 'weight']
+    tmp_totaldiststack.index = [str(s)+'|'+str(t) for s, t in zip(tmp_totaldiststack['source'], tmp_totaldiststack['target'])]
+
     tmp_edge_list = Tree()
     for c in tqdm(tmp_clone_tree3, desc = 'Linking edges '):
-        G = nx.from_pandas_adjacency(tmp_clone_tree3[c], create_using=nx.MultiDiGraph())
-        G.edges(data=True)
+        G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
+        # G.edges(data=True)
         tmp_edge_list[c] = nx.to_pandas_edgelist(G)
         tmp_edge_list[c].index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
-        for idx in tmp_edge_list[c].index:
-            if tmp_totaldist.loc[idx.split('|')[0], idx.split('|')[1]] > 0: # remove non 100% identical
-                tmp_edge_list[c].drop(idx, inplace = True)
+        tmp_edge_list[c]['dist'] = pd.Series(tmp_totaldiststack['weight'])
+        tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['dist'] > 0]
+        tmp_edge_list[c].drop('dist', inplace = True, axis = 1)
         tmp_edge_list[c].reset_index(inplace = True)
 
     # try to catch situations where there's no edge (only singletons)
@@ -246,8 +254,9 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
         edge_list_final = edge_listx.combine_first(tmp_edge_listx)
 
-        for idx in edge_list_final.index:
-            edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx.split('|')[0], idx.split('|')[1]]
+        # for idx in edge_list_final.index:
+        #     edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx.split('|')[0], idx.split('|')[1]]
+        edge_list_final['weight'].update(tmp_totaldiststack['weight'])
         # return the edge list
         edge_list_final.reset_index(drop = True, inplace = True)
     except:
