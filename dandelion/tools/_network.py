@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 09:29:03
+# @Last Modified time: 2020-11-27 12:04:18
 
 import pandas as pd
 import numpy as np
@@ -251,7 +251,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         # return the edge list
         edge_list_final.reset_index(drop = True, inplace = True)
     except:
-        edge_list_final = pd.DataFrame(columns = ['source', 'target','weight'])
+        edge_list_final = None
 
     # and finally the vertex list which is super easy
     vertice_list = list(out.metadata.index)
@@ -340,18 +340,26 @@ def clone_centrality(self, weight='weight'):
     logg.info(' finished', time=start,
         deep=('Updated Dandelion metadata\n'))
 
-def generate_layout(vertices, edges, min_size = 2, weight = None):
+def generate_layout(vertices, edges = None, min_size = 2, weight = None):
     G = nx.Graph()
     G.add_nodes_from(vertices)
-    G.add_weighted_edges_from([(x,y,z) for x,y,z in zip(edges['source'], edges['target'], edges['weight'])])
+    if edges is not None:
+        G.add_weighted_edges_from([(x,y,z) for x,y,z in zip(edges['source'], edges['target'], edges['weight'])])
     degree = G.degree()
     G_ = G.copy()
     if min_size == 2:
-        G_.remove_nodes_from(nx.isolates(G))
+        if edges is not None:
+            G_.remove_nodes_from(nx.isolates(G))
+        else:
+            pass
     elif min_size > 2:
-        remove = [node for node, degree in dict(G.degree()).items() if degree > min_size]
-        G_.remove_nodes_from(remove)
-    edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
+        if edges is not None:
+            remove = [node for node, degree in dict(G.degree()).items() if degree > min_size]
+            G_.remove_nodes_from(remove)
+        else:
+            pass
+    # if edges is not None:
+        # edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
     print('generating network layout')
     pos = _fruchterman_reingold_layout(G, weight = weight)
     pos_ = _fruchterman_reingold_layout(G_, weight = weight)
@@ -683,7 +691,14 @@ def _rescale_layout(pos, scale=1):
 
 def extract_edge_weights(self, full_graph = False):
     if full_graph:
-        edges,weights = zip(*nx.get_edge_attributes(self.graph[0],'weight').items())
+        try:
+            edges,weights = zip(*nx.get_edge_attributes(self.graph[0],'weight').items())
+        except ValueError as e:
+            print('{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'.format(e))
     else:
-        edges,weights = zip(*nx.get_edge_attributes(self.graph[1],'weight').items())
-    return(weights)
+        try:
+            edges,weights = zip(*nx.get_edge_attributes(self.graph[1],'weight').items())
+        except ValueError as e:
+            print('{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'.format(e))
+    if 'weights' in locals():
+        return(weights)

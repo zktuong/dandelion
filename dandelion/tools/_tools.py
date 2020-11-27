@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 23:34:00
+# @Last Modified time: 2020-11-27 12:03:17
 
 import os
 import sys
@@ -590,7 +590,7 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
 
     """
     start = logg.info('Transferring network')
-    if dandelion.edges is not None:
+    if dandelion.graph is not None:
         if full_graph:
             G = dandelion.graph[0]
         else:
@@ -670,8 +670,7 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         # tmp[[1]] = tmp[[1]]*-1
         X_bcr = np.array(tmp[[0,1]], dtype = np.float32)
         self.obsm['X_bcr'] = X_bcr
-
-    if (dandelion.edges is not None) and (dandelion.edges is not None):
+    
         logg.info(' finished', time=start,
             deep=('updated `.obs` with `.metadata`\n'
                   'added to `.uns[\''+neighbors_key+'\']` and `.obsp`\n'
