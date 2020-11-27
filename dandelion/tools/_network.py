@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 18:14:47
+# @Last Modified time: 2020-11-27 18:23:47
 
 import pandas as pd
 import numpy as np
@@ -143,10 +143,13 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
             else:
                 raise IndexError('Length of provided weights should be %s.' % int(n_))
 
-    # generate edge list    
+    # generate edge list        
     if self.__class__ == Dandelion:
         out = self.copy()
     else: # re-initiate a Dandelion class object
+        out = Dandelion(dat)
+    
+    if downsample is not None:
         out = Dandelion(dat)
 
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
