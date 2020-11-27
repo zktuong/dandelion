@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 18:23:47
+# @Last Modified time: 2020-11-27 19:01:48
 
 import pandas as pd
 import numpy as np
@@ -300,8 +300,9 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         else:
             threshold_ = None
         if downsample is not None:
-            out = self.__init__(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
+            out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
             out.threshold = threshold_
+            return(out)
         else:
             self.__init__(data = self.data, metadata = self.metadata, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_, initialize = False)
             self.threshold = threshold_
