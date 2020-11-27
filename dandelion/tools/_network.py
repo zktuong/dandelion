@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 16:58:22
+# @Last Modified time: 2020-11-27 17:05:05
 
 import pandas as pd
 import numpy as np
@@ -67,6 +67,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         raise TypeError('Data does not contain clone information. Please run find_clones.')
 
     if downsample is not None:
+        print('Downsampling to {} cells'.format(str(downsample)))
         dat = dat.sample(downsample)
 
     # calculate distance
