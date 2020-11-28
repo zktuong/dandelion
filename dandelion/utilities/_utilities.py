@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 12:39:50
+# @Last Modified time: 2020-11-28 12:42:39
 
 import sys
 import os
@@ -947,6 +947,7 @@ class Dandelion:
             if self.threshold is not None:
                 tr = self.threshold
                 hf.create_dataset('threshold', data=tr)
+            hf.close()
 
 def isGZIP(filename):
     if filename.split('.')[-1] == 'gz':
