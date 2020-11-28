@@ -68,16 +68,16 @@ python -m ipykernel install --user --name dandelion --display-name "Python (dand
 ```
 
 ## Required database
-Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with changeo's scripts and [instructions](https://changeo.readthedocs.io/en/stable/examples/igblast.html) for configuring IgBLAST. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj)(Last update: 31/10/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
+Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with immcantation's docker image (4.1.0) (https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html). The blast database were downloaded from IMGT manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj)(Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
 # in bash/zsh terminal
 # set up environmental variables in ~/.bash_profile
-echo 'export GERMLINE=~/Documents/dandelion/database/germlines/' >> ~/.bash_profile
-echo 'export IGDATA=~/Documents/dandelion/database/igblast/' >> ~/.bash_profile
-echo 'export BLASTDB=~/Documents/dandelion/database/blast/' >> ~/.bash_profile
-source ~/.bash_profile
+echo 'export GERMLINE=~/Documents/dandelion/database/germlines/' >> ~/.bash_profile # or ~/.zshenv
+echo 'export IGDATA=~/Documents/dandelion/database/igblast/' >> ~/.bash_profile # or ~/.zshenv
+echo 'export BLASTDB=~/Documents/dandelion/database/blast/' >> ~/.bash_profile # or ~/.zshenv
+source ~/.bash_profile # or ~/.zshenv
 ```
 
 ## External softwares
@@ -85,8 +85,8 @@ While blast and igblast executables are managed through conda, you can also down
 ```bash
 # in bash/zsh terminal
 # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
-echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile
-source ~/.bash_profile
+echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile # or ~/.zshenv
+source ~/.bash_profile # or ~/.zshenv
 ```
 
 ## Basic Requirements

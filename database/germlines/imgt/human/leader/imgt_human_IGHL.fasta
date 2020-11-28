@@ -108,18 +108,6 @@ atggactggacctggagcatccttttcttggtggcagcagcaacaggtgcccactcc
 atggactggtggatcctctttttggtggcagcaccaggcgcccactcc
 >L25542|IGHV1/OR15-9*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
 atgggctggacttggaggatcctgtttttggtggtcatagctgcaggtgcccagtcc
->IMGT000069|IGHV1/OR16-1*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggactggacctgaaggatcatttttttggtggcagcagctacaggtgcccaattc
->IMGT000069|IGHV1/OR16-2*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggactggacctgaaggatcatttttttggtggcagcagctacaggtgcccaattc
->IMGT000069|IGHV1/OR16-21*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| |rev-compl|
-atggactggacctgaaggatcatttttttggtggcagcagctacaggtgcccaattc
->IMGT000069|IGHV1/OR16-22*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| |rev-compl|
-attggctggacctgcaagatcctcttcttggtggcagcagccacaggtgcccacttc
->IMGT000069|IGHV1/OR16-3*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atgggctggacctgcaagatcctcttcttggtggcagcagccacaggtgcccacttc
->IMGT000069|IGHV1/OR16-4*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-attggctggacctgcaagatcctcttcttggtggcagcagccacaggtgcccacttc
 >AF254982|IGHV1/OR21-1*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
 atggactggaattggaggatcctgtttttggtggtcatagctgcgggtgcccagtcc
 >M99647|IGHV2-10*01|Homo_sapiens|P|L-PART1+L-PART2| |54 nt|1| | | | |54+0=54| | |
@@ -432,34 +420,10 @@ atggagttgggactgagctggattttccttttggctattttaaaaggtgtccagtgt
 atggagtttgggctgagctgggttttccttgttgctattttaaaaggtgtccagtgt
 >X07449|IGHV3/OR15-7*04|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
 atggagtttgggctgagctgggttttccttgttgctattttaaaaggtgtccagtgt
->IMGT000069|IGHV3/OR16-10*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgtgctgagctgggttttccttgttgctatattaaaaggtgtccagtgt
->IMGT000069|IGHV3/OR16-11*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| |rev-compl|
-atggagtttgtgctgagctgggttttccttgttgctatattaaagggtgtccagtgt
->IMGT000069|IGHV3/OR16-12*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgagctcagctgggttttccttgttgctattttacaaggtgtccactgt
->IMGT000069|IGHV3/OR16-13*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgggctgagctgggttttccttgttgctattttaaaaggtgtccagtgt
 >L25546|IGHV3/OR16-15*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
 atggaatttgggctgagctgggtttttcttgctgctattttaaaaggtgtgcagtgt
->IMGT000069|IGHV3/OR16-16*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| |rev-compl|
-atggaatttgggctgagctgggtttttcttgctgctattttaaaaggtgtgcagtgt
->IMGT000069|IGHV3/OR16-17*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| |rev-compl|
-atggagtttgggctgaactgggttttccttgttgctattataaaaggtgcccagtgt
->IMGT000069|IGHV3/OR16-18*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggaatttgggctgagctgggtctttcttgctgctattttaaaaggtgtgcagtgt
->IMGT000069|IGHV3/OR16-19*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgtgctgagctgggttttccttgctgctattttaaaaggtgtccagtgt
->IMGT000069|IGHV3/OR16-20*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgtgctgagctgggttttccttgttgctatattaaaaggtgtccagtgt
 >L25545|IGHV3/OR16-6*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
 atggagtttgtgctgagttgggttttccttgctgctattttaaaaggtgtccagtgt
->IMGT000069|IGHV3/OR16-7*01|Homo_sapiens|P|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| |rev-compl|
-atggagtttgtgctgagctgagttttccttgctgctatttttaaaggtgtccagtgt
->IMGT000069|IGHV3/OR16-8*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgggctgaactgggttttccttgttgctattataaaaggtgcccagtgt
->IMGT000069|IGHV3/OR16-9*01|Homo_sapiens|ORF|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
-atggagtttgggctgaactgggttttccttgttgctattataaaaggtgcccagtgt
 >X05714|IGHV4-28*01|Homo_sapiens|F|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
 atgaaacacctgtggttcttcctcctgctggtggcagctcccagatgggtcctgtcc
 >M83133|IGHV4-28*02|Homo_sapiens|F|L-PART1+L-PART2| |57 nt|1| | | | |57+0=57| | |
