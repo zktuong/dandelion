@@ -2,7 +2,7 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.24
+Version = 0.0.25
 
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
@@ -22,7 +22,7 @@ The raw files for the examples can be downloaded from 10X's Single Cell Immune P
 
 ## Installation instructions
 
-I would reccomend instaling this in order:
+I would reccomend installing this in order:
 ```bash
 # in bash/zsh terminal
 # create a conda environment with specific modules
@@ -74,9 +74,10 @@ So for example, if I unpack into `~/Documents`
 ```bash
 # in bash/zsh terminal
 # set up environmental variables in ~/.bash_profile
-export GERMLINE=~/Documents/dandelion/database/germlines/
-export IGDATA=~/Documents/dandelion/database/igblast/
-export BLASTDB=~/Documents/dandelion/database/blast/
+echo 'export GERMLINE=~/Documents/dandelion/database/germlines/' >> ~/.bash_profile
+echo 'export IGDATA=~/Documents/dandelion/database/igblast/' >> ~/.bash_profile
+echo 'export BLASTDB=~/Documents/dandelion/database/blast/' >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ## External softwares

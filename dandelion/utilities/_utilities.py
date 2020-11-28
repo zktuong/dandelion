@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 12:42:39
+# @Last Modified time: 2020-11-28 13:06:42
 
 import sys
 import os
@@ -888,7 +888,7 @@ class Dandelion:
                 weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
                 if len(self.metadata[weird]) > 0:
                     self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
-            self.metadata.to_hdf(filename, "metadata", complib = comp, complevel = compression_level, **kwargs)
+            self.metadata.to_hdf(filename, "metadata", complib = comp, complevel = compression_level, format='table', **kwargs)
         except:
             pass
         try:
@@ -947,7 +947,6 @@ class Dandelion:
             if self.threshold is not None:
                 tr = self.threshold
                 hf.create_dataset('threshold', data=tr)
-            hf.close()
 
 def isGZIP(filename):
     if filename.split('.')[-1] == 'gz':
@@ -1047,7 +1046,6 @@ def read_h5(filename='dandelion_data.h5'):
             threshold = np.float(np.array(hf['threshold']))
         except:
             threshold = None
-        hf.close()
 
     constructor = {}
     constructor['data'] = data
