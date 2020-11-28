@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-23 16:46:51
+# @Last Modified time: 2020-11-28 20:54:42
 
 import os
 import pandas as pd
@@ -117,21 +117,19 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
             '-s', fasta,
             '-r', gml,
             '--10x', cellranger_annotation,
-            '--asis-id',
             '--extended']
     else:
         cmd = ['MakeDb.py', 'igblast',
                '-i', igbo,
                '-s', fasta,
                '-r', gml,
-               '--10x', cellranger_annotation,
-               '--asis-id']
+               '--10x', cellranger_annotation]
 
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd, env=env) # logs are printed to terminal
 
-def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat = 'airr', verbose = False):
+def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat = 'airr', novel_ = 'NO', verbose = False):
     """
     reassignAlleles with TIgGER in R.
 
@@ -139,15 +137,20 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
     ----------
     data
         Tabulated data, in Change-O (TAB) or AIRR (TSV) format.
-    germline
+    germline : PathLike, optional
         FASTA file containing IMGT-gapped V segment reference germlines.
         Defaults to $GERMLINE.
-    outdir
+    outdir : PathLike,  optional
         Output directory. Will be created if it does not exist.
         Defaults to the current working directory.
-    *args
-        any arguments for ``tigger-genotype.R``.
-
+    org : str
+        organsim.
+    fileformat
+        Format for running tigger. Default is 'airr'. Also accepts 'changeo'.
+    novel : str
+        Whether or not to run novel allele discovery. Default is 'NO'.
+    verbose : bool
+        Whether or not to print the command used in the terminal. Default is False.
     Returns
     -------
 
@@ -195,6 +198,7 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
            '-d', data,
            '-r', gml,
            '-n', os.path.basename(data).split('.tsv')[0],
+           '-N', novel_,
            '-o', out_dir,
            '-f', fileformat]
 
