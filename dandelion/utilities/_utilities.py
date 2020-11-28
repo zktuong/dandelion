@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 09:33:48
+# @Last Modified time: 2020-11-28 10:55:34
 
 import sys
 import os
@@ -927,9 +927,12 @@ class Dandelion:
             try:
                 layout_counter = 0
                 for l in self.layout:
-                    hf.create_group('layout/layout_'+str(layout_counter))
+                    try:
+                        hf.create_group('layout/layout_'+str(layout_counter))
+                    except:
+                        pass
                     for k in l.keys():
-                        hf['layout/'+str(layout_counter)].attrs[k] = l[k]
+                        hf['layout/layout_'+str(layout_counter)].attrs[k] = l[k]
                     layout_counter += 1
             except:
                 pass
