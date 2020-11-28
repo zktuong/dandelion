@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 10:55:34
+# @Last Modified time: 2020-11-28 11:18:40
 
 import sys
 import os
@@ -991,8 +991,7 @@ def read_h5(filename='dandelion_data.h5'):
     Returns
     -------
        Dandelion object.
-    """
-    hf = h5py.File(filename, 'r')
+    """    
     try:
         data = pd.read_hdf(filename, 'data')
     except:
@@ -1014,39 +1013,39 @@ def read_h5(filename='dandelion_data.h5'):
     except:
         pass
 
-    try:
-        layout0 = {}
-        for k in hf['layout/layout_0'].attrs.keys():
-            layout0.update({k:np.array(hf['layout/layout_0'].attrs[k])})
-        layout1 = {}
-        for k in hf['layout/layout_1'].attrs.keys():
-            layout1.update({k:np.array(hf['layout/layout_1'].attrs[k])})
-        layout = (layout0, layout1)
-    except:
-        pass
-
-    germline = {}
-    try:
-        for g in hf['germline'].attrs:
-            germline.update({g:hf['germline'].attrs[g]})
-    except:
-        pass
-
-    distance = Tree()
-    try:
-        for d in hf['distance'].keys():
-            d_ = pd.read_hdf(filename, 'distance/'+d)
-            distance[d] = scipy.sparse.csr_matrix(d_.values)
-            # d_ = hf['distance'][d]
-            # distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
-    except:
-        pass
-
-    try:
-        threshold = np.float(np.array(hf['threshold']))
-    except:
-        threshold = None
-    hf.close()
+    with h5py.File(filename, 'r') as hf:
+        try:
+            layout0 = {}
+            for k in hf['layout/layout_0'].attrs.keys():
+                layout0.update({k:np.array(hf['layout/layout_0'].attrs[k])})
+            layout1 = {}
+            for k in hf['layout/layout_1'].attrs.keys():
+                layout1.update({k:np.array(hf['layout/layout_1'].attrs[k])})
+            layout = (layout0, layout1)
+        except:
+            pass
+    
+        germline = {}
+        try:
+            for g in hf['germline'].attrs:
+                germline.update({g:hf['germline'].attrs[g]})
+        except:
+            pass
+    
+        distance = Tree()
+        try:
+            for d in hf['distance'].keys():
+                d_ = pd.read_hdf(filename, 'distance/'+d)
+                distance[d] = scipy.sparse.csr_matrix(d_.values)
+                # d_ = hf['distance'][d]
+                # distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
+        except:
+            pass
+    
+        try:
+            threshold = np.float(np.array(hf['threshold']))
+        except:
+            threshold = None
 
     constructor = {}
     constructor['data'] = data
