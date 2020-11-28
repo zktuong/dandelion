@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 10:17:32
+# @Last Modified time: 2020-11-28 10:38:20
 
 import os
 import sys
@@ -613,7 +613,7 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         if neighbors_key is None:
             neighbors_key = "neighbors"
             rna_neighbors_key = 'rna_'+neighbors_key
-            bcr_neighbors_key = 'rna_'+neighbors_key
+            bcr_neighbors_key = 'bcr_'+neighbors_key
             if rna_neighbors_key not in self.uns:
                 self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
             self.uns[bcr_neighbors_key] = {}
