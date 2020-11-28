@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 11:18:40
+# @Last Modified time: 2020-11-28 12:39:50
 
 import sys
 import os
@@ -1046,6 +1046,7 @@ def read_h5(filename='dandelion_data.h5'):
             threshold = np.float(np.array(hf['threshold']))
         except:
             threshold = None
+        hf.close()
 
     constructor = {}
     constructor['data'] = data
