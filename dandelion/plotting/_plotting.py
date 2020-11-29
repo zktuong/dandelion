@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 11:21:55
+# @Last Modified time: 2020-11-29 12:11:29
 
 import seaborn as sns
 import pandas as pd
@@ -496,7 +496,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
                     rect.set_hatch(H * int(i / n_col)) #edited part
                     rect.set_width(wdth) # need to see if there's a better way to toggle this.
-        ax.set_xticks(((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.))
+        
         n = 5  # Keeps every 5th label visible and hides the rest
         [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
         ax.set_title(title)
