@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 02:29:27
+# @Last Modified time: 2020-11-29 10:11:03
 
 import os
 import pandas as pd
@@ -23,21 +23,18 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', ve
 
     Parameters
     ----------
-    fasta
-        fasta file
-    igblast_db
-        path to igblast database
-    org
-        organism
-    loci
-        ig or tr
-    *args
-        any arguments for ``AssignGenes.py``
-
+    fasta : PathLike
+        fasta file for reannotation.
+    igblast_db : PathLike, optional
+        path to igblast database.
+    org : str
+        organism for germline sequences.
+    loci : str
+        `ig` or `tr` mode for running igblastn.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
     Returns
     -------
-        igblast annotated file
-
     """
     env = os.environ.copy()
     if igblast_db is None:
@@ -75,21 +72,20 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
 
     Parameters
     ----------
-    fasta
-        fasta file
-    igblast_output
-        igblast output file
-    germline
-        path to germline database
-    fileformat
-        format of output file
-    org
-        organism.
-    verbose
-        whether or not to print the files
+    fasta : PathLike
+        fasta file use for reannotation.
+    igblast_output : PathLike, optional
+        igblast output file.
+    germline : PathLike, optional
+        path to germline database.    
+    org : str
+        organism of germline sequences.
+    extended : bool
+        whether or not to parse extended 10x annotations. Default is True.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
     Returns
     -------
-        change-o object
     """
     env = os.environ.copy()
     if germline is None:
@@ -131,18 +127,17 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
 
 def parsedb_heavy(db_file, verbose = False):
     """
-    parses IgBLAST output to change-o format (heavy chain contigs)
+    parses AIRR table (heavy chain contigs only).
 
     Parameters
     ----------
-    db_file
-        vdj table
-    verbose
-        whether or not to print the files
+    db_file : PathLike
+        path to AIRR table.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
     Returns
     -------    
-    """
-    
+    """    
     outname = os.path.basename(db_file).split('.tsv')[0] + '_heavy'
     
     cmd = ['ParseDb.py', 'select',
@@ -160,18 +155,17 @@ def parsedb_heavy(db_file, verbose = False):
 
 def parsedb_light(db_file, verbose = False):
     """
-    parses IgBLAST output to change-o format (light chain contigs)
+    parses AIRR table (light chain contigs only).
 
     Parameters
     ----------
-    db_file
-        vdj table
-    verbose
-        whether or not to print the files
+    db_file : PathLike
+        path to AIRR table.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
     Returns
     -------    
-    """
-    
+    """    
     outname = os.path.basename(db_file).split('.tsv')[0] + '_light'
     
     cmd = ['ParseDb.py', 'select',
@@ -187,20 +181,30 @@ def parsedb_light(db_file, verbose = False):
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd) # logs are printed to terminal
 
-def creategermlines(db_file, germtypes = None, germline = None, org = 'human', genotype_fasta = None, v_field = None, cloned = False, mode = 'heavy', verbose = False):
+def creategermlines(db_file, germtypes = None, germline = None, org = 'human', genotype_fasta = None, v_field = None, cloned = False, mode = None, verbose = False):
     """
-    parses IgBLAST output to change-o format
+    Wrapper for CreateGermlines.py for reconstructing germline sequences,
 
     Parameters
     ----------
-    db_file
-        vdj table
-    germtypes
-
-    genotype_fasta
-
-    verbose
-        whether or not to print the files
+    db_file : PathLike
+        path to AIRR table.
+    germtypes : str, optional
+        germline type for reconstuction.
+    germline : PathLike, optional
+        location to germline fasta files.
+    org : str
+        organism for germline sequences.
+    genotype_fasta : PathLike, optional
+        location to corrected v germine fasta file.
+    v_field : str, optional
+        name of column for v segment to perform reconstruction.
+    cloned : bool
+        whether or not to run with cloned option.
+    mode : str, optional
+        whether to run on heavy or light mode. If left as None, heavy and light will be run together.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
     Returns
     -------    
     """
@@ -275,6 +279,42 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                     '-r', gml,
                     '--vf', v_field
                     ]
+        elif mode is None:
+            print('            Reconstructing {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            if genotype_fasta is None:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', gml,
+                        '--vf', v_field
+                        ]
+            else:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', genotype_fasta, gml,
+                        '--vf', v_field
+                        ]
     else:        
         if mode == 'heavy':
             print('            Reconstructing heavy chain {} germlines sequence with {}.'.format(germ_type, v_field))
@@ -324,6 +364,38 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                     '-r', gml,
                     '--vf', v_field
                     ]
+        elif mode is None:
+            print('            Reconstructing {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            if genotype_fasta is None:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', gml,
+                        '--vf', v_field
+                        ]
+            else:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', genotype_fasta, gml,
+                        '--vf', v_field
+                        ]
 
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
@@ -335,27 +407,23 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
 
     Parameters
     ----------
-    data
-        Tabulated data, in Change-O (TAB) or AIRR (TSV) format.
+    data : PathLike
+        vdj tabulated data, in Change-O (TAB) or AIRR (TSV) format.
     germline : PathLike, optional
-        FASTA file containing IMGT-gapped V segment reference germlines.
-        Defaults to $GERMLINE.
+        fasta file containing IMGT-gapped V segment reference germlines. Defaults to $GERMLINE.
     outdir : PathLike,  optional
-        Output directory. Will be created if it does not exist.
-        Defaults to the current working directory.
+        output directory. Will be created if it does not exist. Defaults to the current working directory.
     org : str
-        organsim.
-    fileformat
-        Format for running tigger. Default is 'airr'. Also accepts 'changeo'.
+        organism for germline sequences.
+    fileformat : str
+        format for running tigger. Default is 'airr'. Also accepts 'changeo'.
     novel : str
-        Whether or not to run novel allele discovery. Default is 'YES'.
+        whether or not to run novel allele discovery. Default is 'YES'.
     verbose : bool
-        Whether or not to print the command used in the terminal. Default is False.
+        whether or not to print the command used in terminal. Default is False.
     Returns
     -------
-
     """
-
     start_time = time()
     env = os.environ.copy()
     if v_germline is None:
@@ -542,34 +610,31 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
 
 #     return imgt_dict
 
-def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cutoff=0.1, min_counts=None, max_counts=None, batch_term=None, blacklist=None):
+def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cutoff=0.1, min_counts=None, max_counts=None, blacklist=None):
     """
     Recipe for running a standard scanpy QC worflow.
 
     Parameters
     ----------
     adata : AnnData
-        The (annotated) data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
+        annotated data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
     max_genes : int
-        Maximum number of genes expressed required for a cell to pass filtering. Default is 2500.
+        naximum number of genes expressed required for a cell to pass filtering. Default is 2500.
     min_genes : int
-        Minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
+        minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
     mito_cutoff : float
-        Maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.
+        maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.
     pval_cutoff : float
-        Maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
+        maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
     min_counts : int, optional
-        Minimum number of counts required for a cell to pass filtering. Default is None.
+        minimum number of counts required for a cell to pass filtering. Default is None.
     max_counts : int, optional
-        Maximum number of counts required for a cell to pass filtering. Default is None.
-    batch_term : str, optional
-        If provided, will use sc.external.pp.bbknn for neighborhood construction.
+        maximum number of counts required for a cell to pass filtering. Default is None.
     blacklist : sequence, optional
-        If provided, will exclude these genes from highly variable genes list.
+        if provided, will exclude these genes from highly variable genes list.
     Returns
     -------
         `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
-
     """
     _adata = self.copy()
     # run scrublet    
@@ -590,7 +655,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
     for i in _adata.var.index:
-        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJ]', i):
+        if re.search('^TR[AB][VDJ]|^IG[HKL][VDJC]', i):
             _adata.var.at[i, 'highly_variable'] = False
         if blacklist is not None:
             if i in blacklist:
@@ -598,10 +663,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
     _adata = _adata[:, _adata.var['highly_variable']]
     sc.pp.scale(_adata, max_value=10)
     sc.tl.pca(_adata, svd_solver='arpack')
-    if batch_term is None:
-        sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
-    else:
-        sc.external.pp.bbknn(_adata, batch_key=batch_term)
+    sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
     # overclustering proper - do basic clustering first, then cluster each cluster
     sc.tl.leiden(_adata)
     for clus in list(np.unique(_adata.obs['leiden']))[0]:
@@ -616,7 +678,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
     med = np.median(_adata.obs['scrublet_cluster_score'])
     mask = _adata.obs['scrublet_cluster_score']>med
     mad = np.median(_adata.obs['scrublet_cluster_score'][mask]-med)
-    # let's do a one-sided test. the Bertie write-up does not address this but it makes sense
+    # 1 sided test for catching outliers
     pvals = 1-scipy.stats.norm.cdf(_adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
     _adata.obs['scrublet_score_bh_pval'] = bh(pvals)
     # threshold the p-values to get doublet calls.
@@ -627,5 +689,5 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
             (_adata.obs['is_doublet'] == True)
 
     # removing columns that probably don't need anymore
-    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score'], axis = 1)
+    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval'], axis = 1)
     self.obs = _adata.obs.copy()
