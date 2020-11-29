@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 13:06:42
+# @Last Modified time: 2020-11-28 23:46:10
 
 import sys
 import os
@@ -174,7 +174,7 @@ def load_data(obj):
     """
     if os.path.isfile(str(obj)):
         try:
-            obj_ = pd.read_csv(obj, sep = '\t', dtype = 'object')
+            obj_ = pd.read_csv(obj, sep = '\t')
         except FileNotFoundError as e:
             print(e)
     elif isinstance(obj, pd.DataFrame):
