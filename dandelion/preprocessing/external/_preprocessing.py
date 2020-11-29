@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 10:11:03
+# @Last Modified time: 2020-11-29 14:15:54
 
 import os
 import pandas as pd
@@ -226,7 +226,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
 
     if cloned:        
         if mode == 'heavy':
-            print('            Reconstructing heavy chain {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing heavy chain {} germline sequences with {} for each clone.'.format(germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
@@ -262,7 +262,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                         '--vf', v_field
                         ]
         elif mode == 'light':
-            print('            Reconstructing light chain {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing light chain {} germline sequences with {} for each clone.'.format(germ_type, v_field))
             if germline is None:
                 cmd = ['CreateGermlines.py',
                     '-d', db_file,
@@ -280,7 +280,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                     '--vf', v_field
                     ]
         elif mode is None:
-            print('            Reconstructing {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing {} germline sequences with {} for each clone.'.format(germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
@@ -317,7 +317,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                         ]
     else:        
         if mode == 'heavy':
-            print('            Reconstructing heavy chain {} germlines sequence with {}.'.format(germ_type, v_field))
+            print('            Reconstructing heavy chain {} germline sequences with {}.'.format(germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
@@ -349,7 +349,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                         '--vf', v_field
                         ]
         elif mode == 'light':
-            print('            Reconstructing light chain {} germlines sequence with {}.'.format(germ_type, v_field))
+            print('            Reconstructing light chain {} germline sequences with {}.'.format(germ_type, v_field))
             if germline is None:
                     cmd = ['CreateGermlines.py',
                         '-d', db_file,
@@ -365,7 +365,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
                     '--vf', v_field
                     ]
         elif mode is None:
-            print('            Reconstructing {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing {} germline sequences with {} for each clone.'.format(germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
