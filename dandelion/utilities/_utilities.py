@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 23:46:10
+# @Last Modified time: 2020-11-29 13:36:45
 
 import sys
 import os
@@ -1099,30 +1099,25 @@ def concat(arrays, check_unique = False):
     return(out)
 
 
-# def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
+# def convert_preprocessed_tcr_10x(file, prefix = None):
 #     """
 #     Parameters
 #     ----------
 #     file : str
 #         file path to .tsv file.
 #     prefix : str
-#         prefix to add to barcodes. Ignored if left as None.
-#     save : str
-#         file path to save location. Defaults to 'dandelion/data/' if left as None.
+#         prefix to add to barcodes. Ignored if left as None.    
 #     """
-
-#     cr_annot = load_data(file)
+#     from tqdm import tqdm
+#     import re
+#     cr_annot = pd.read_csv(file)
 #     if prefix is not None:
 #         cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
 #     else:
 #         cr_annot['index']=[i for i in cr_annot['contig_id']]
 #     cr_annot.set_index('index', inplace = True)
 
-#     try:
-#         ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
-#     except:
-#         ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
-#     ddl_annot.set_index('sequence_id', inplace = True, drop = False)
+#     ddl_annot = load_data("{}/tmp/{}_igblast_db-pass.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]))
 
 #     for i in tqdm(ddl_annot.index, desc = 'Processing data '):
 #         v = ddl_annot.loc[i, 'v_call']
@@ -1173,22 +1168,19 @@ def concat(arrays, check_unique = False):
 #         'junction':'cdr3_nt'}
 
 #     for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
-#         for key, value in cellrangermap.items():
-#             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
-#                 cr_annot.at[i, value] = ddl_annot.loc[i, key]
-#             else:
-#                 cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
+#         if i in ddl_annot.index:
+#             for key, value in cellrangermap.items():
+#                 if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
+#                     cr_annot.at[i, value] = ddl_annot.loc[i, key]
+#                 else:
+#                     cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
 
-#         if cr_annot.loc[i, 'cdr3'] is np.nan:
-#             cr_annot.at[i, 'productive'] = None
-#         else:
-#             if cr_annot.loc[i, 'productive'] == 'T':
-#                 cr_annot.at[i, 'productive'] = 'True'
+#             if cr_annot.loc[i, 'cdr3'] is np.nan:
+#                 cr_annot.at[i, 'productive'] = None
 #             else:
-#                 cr_annot.at[i, 'productive'] = 'False'
+#                 if cr_annot.loc[i, 'productive'] == 'T':
+#                     cr_annot.at[i, 'productive'] = 'True'
+#                 else:
+#                     cr_annot.at[i, 'productive'] = 'False'
+#     cr_annot.to_csv("{}/{}_annotations_reannotated.csv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), index = False, na_rep = 'None')
 
-#     cr_annot['barcode'] = [c.split('_contig')[0].split('-')[0] for c in cr_annot['contig_id']]
-#     if save is not None:
-#         cr_annot.to_csv(save, index = False, na_rep = 'None')
-#     else:
-#         cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False, na_rep = 'None')
