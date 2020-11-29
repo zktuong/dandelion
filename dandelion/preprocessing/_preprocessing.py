@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 10:12:40
+# @Last Modified time: 2020-11-29 10:58:22
 
 import sys
 import os
@@ -674,8 +674,9 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     if 'cell_id' not in dat.columns:
         dat = _add_cell(dat)
     dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
+    # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
-    cols_to_merge = ['fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa', 'v_sequence_alignment_aa', 'd_sequence_alignment_aa', 'j_sequence_alignment_aa'] 
+    cols_to_merge = ['junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa', 'v_sequence_alignment_aa', 'd_sequence_alignment_aa', 'j_sequence_alignment_aa'] 
     for x in cols_to_merge:
         dat[x] = pd.Series(airr_output[x])
     dat.to_csv(_file2, sep = '\t', index=False)
@@ -799,7 +800,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, verbose = verbose)
         makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
 
-def reassign_alleles(data, combined_folder, v_germline = None, germline = None, org = 'human', fileformat = 'blast', v_field='v_call_genotyped', germ_types='dmask', novel = True, cloned = False, plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False, ):
+def reassign_alleles(data, combined_folder, v_germline = None, germline = None, org = 'human', v_field='v_call_genotyped', germ_types='dmask', novel = True, cloned = False, plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False, ):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -815,8 +816,6 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
     org : str
         organism of germline database. Default is 'human'.
-    fileformat : str
-        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     v_field : str
         name of column containing the germline V segment call. Default is 'v_call_genotyped' (airr) for after tigger.
     germ_types : str
@@ -837,10 +836,12 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
     ----------
         Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
     """
+    fileformat = 'blast'
     if type(data) is not list:
         data = [data]
 
     informat_dict = {'changeo':'_igblast_db-pass.tsv', 'blast':'_igblast_db-pass.tsv', 'airr':'_igblast_gap.tsv'}
+    germpass_dict = {'changeo':'_igblast_db-pass_germ-pass.tsv', 'blast':'_igblast_db-pass_germ-pass.tsv', 'airr':'_igblast_gap_germ-pass.tsv'}
     heavy_dict = {'changeo':'_igblast_db-pass_heavy_parse-select.tsv', 'blast':'_igblast_db-pass_heavy_parse-select.tsv', 'airr':'_igblast_gap_heavy_parse-select.tsv'}
     light_dict = {'changeo':'_igblast_db-pass_light_parse-select.tsv', 'blast':'_igblast_db-pass_light_parse-select.tsv', 'airr':'_igblast_gap_light_parse-select.tsv'}
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'blast':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
@@ -942,17 +943,17 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         creategermlines(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         creategermlines(outDir+'/'+outDir+'_light'+informat_dict[fileformat], germtypes = germ_types, mode = 'light', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         print('      For convenience, entries in `v_call` are copied to `v_call_genotyped`.')
-        heavy = load_data(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat])        
+        heavy = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
         heavy['v_call_genotyped'] = heavy['v_call']
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
-        light = load_data(outDir+'/'+outDir+'_light'+informat_dict[fileformat])        
+        light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])        
         light['v_call_genotyped'] = light['v_call']
     else:
         creategermlines(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline = germline, v_field = v_field, verbose = verbose, cloned = cloned)
         creategermlines(outDir+'/'+outDir+'_light'+informat_dict[fileformat], germtypes = germ_types, mode = 'light', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         heavy = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
-        light = load_data(outDir+'/'+outDir+'_light'+informat_dict[fileformat])
+        light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])
         light['v_call_genotyped'] = light['v_call']
     
     sampledict = {}
