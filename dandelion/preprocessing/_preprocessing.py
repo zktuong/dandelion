@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 14:18:32
+# @Last Modified time: 2020-11-29 15:03:31
 
 import sys
 import os
@@ -1037,7 +1037,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
     sleep(0.5)
     # if split_write_out:
     if 'tigger_failed' in locals():
-            print('Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv` extension for convenience.')
+        print('Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv` extension for convenience.')
     for s in tqdm(data, desc = 'Writing out to individual folders '):
         if sample_id_dictionary is not None:
             out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
