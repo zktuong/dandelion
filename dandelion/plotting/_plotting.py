@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 21:19:20
+# @Last Modified time: 2020-11-29 11:21:55
 
 import seaborn as sns
 import pandas as pd
@@ -254,7 +254,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         plt.xticks(rotation=xtick_rotation)
     return fig, ax
 
-def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, min_clone_size = None, clone_key = None, **kwargs):
+def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, min_clone_size = None, clone_key = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -322,7 +322,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     elif sort_descending is None:
         dat_ = dat_.sort_index()
 
-    def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
+    def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=True, H="/", **kwargs):
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
         Parameters
@@ -392,7 +392,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
 
-def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
+def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, clones_sep = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -469,7 +469,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
     new_index = range(0, int(dat_[variable].max())+1)
     dat_2 = dat_2.reindex(new_index, fill_value=0)
 
-    def _plot_spectra_stacked(dfall, labels=None, figsize = (6, 4), title="multiple stacked bar plot", width = None, xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
+    def _plot_spectra_stacked(dfall, labels=None, figsize = (6, 4), title="multiple stacked bar plot", width = None, xtick_rotation=None, legend_options = None, hide_legend=True, H="/", **kwargs):
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
