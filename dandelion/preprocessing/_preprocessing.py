@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 14:08:03
+# @Last Modified time: 2020-11-29 14:13:18
 
 import sys
 import os
@@ -945,7 +945,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
     if 'tigger_failed' in locals():
         creategermlines(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         creategermlines(outDir+'/'+outDir+'_light'+informat_dict[fileformat], germtypes = germ_types, mode = 'light', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
-        print('      For convenience, entries heavy chain in `v_call` are copied to `v_call_genotyped`.')
+        print('      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`.')
         heavy = load_data(outDir+'/'+outDir+'_heavy'+germpass_dict[fileformat])
         heavy['v_call_genotyped'] = heavy['v_call']
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
@@ -973,72 +973,77 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         dat_.sort_values(by = 'sequence_id', inplace=True)
     
     if plot:
-        print('Returning summary plot')
-        inferred_genotype = outDir+'/'+outDir+'_heavy'+inferred_fileformat_dict[fileformat]
-        inf_geno = pd.read_csv(inferred_genotype, sep = '\t', dtype = 'object')
-
-        s2 = set(inf_geno['gene'])
-        results = []
-        for samp in list(set(heavy['sample_id'])):
-            res_x = heavy[(heavy['sample_id']==samp)]
-            V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call']]
-            V_g = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call_genotyped']]
-            s1 = set(list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
-            setdiff = s1 - s2
-            ambiguous = (["," in i for i in V_].count(True)/len(V_)*100, ["," in i for i in V_g].count(True)/len(V_g)*100)
-            not_in_genotype=([i in setdiff for i in V_].count(True)/len(V_)*100, [i in setdiff for i in V_g].count(True)/len(V_g)*100)
-            stats = pd.DataFrame([ambiguous,not_in_genotype], columns = ['ambiguous', 'not_in_genotype'], index = ['before', 'after']).T
-            stats.index.set_names(['vgroup'], inplace = True)
-            stats.reset_index(drop = False, inplace = True)
-            stats['sample_id'] = samp
-            # stats['donor'] = str(combined_folder)
-            results.append(stats)
-        results = pd.concat(results)
-        ambiguous_table = results[results['vgroup'] == 'ambiguous']
-        not_in_genotype_table = results[results['vgroup'] == 'not_in_genotype']
-        ambiguous_table.reset_index(inplace = True, drop = True)
-        not_in_genotype_table.reset_index(inplace = True, drop = True)
-        # melting the dataframe
-        ambiguous_table_before = ambiguous_table.drop('after', axis = 1)
-        ambiguous_table_before.rename(columns={"before": "var"}, inplace = True)
-        ambiguous_table_before['var_group'] = 'before'
-        ambiguous_table_after = ambiguous_table.drop('before', axis = 1)
-        ambiguous_table_after.rename(columns={"after": "var"}, inplace = True)
-        ambiguous_table_after['var_group'] = 'after'
-        ambiguous_table = pd.concat([ambiguous_table_before, ambiguous_table_after])
-        not_in_genotype_table_before = not_in_genotype_table.drop('after', axis = 1)
-        not_in_genotype_table_before.rename(columns={"before": "var"}, inplace = True)
-        not_in_genotype_table_before['var_group'] = 'before'
-        not_in_genotype_table_after = not_in_genotype_table.drop('before', axis = 1)
-        not_in_genotype_table_after.rename(columns={"after": "var"}, inplace = True)
-        not_in_genotype_table_after['var_group'] = 'after'
-        not_in_genotype_table = pd.concat([not_in_genotype_table_before, not_in_genotype_table_after])
-        ambiguous_table['var_group'] = ambiguous_table['var_group'].astype('category')
-        not_in_genotype_table['var_group'] = not_in_genotype_table['var_group'].astype('category')
-        ambiguous_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
-        not_in_genotype_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
-
-        options.figure_size = figsize
-        final_table = pd.concat([ambiguous_table, not_in_genotype_table])
-        p = (ggplot(final_table, aes(x='sample_id', y = 'var', fill='var_group'))
-            + coord_flip()
-            + theme_classic()
-            + xlab("sample_id")
-            + ylab("% allele calls")
-            + ggtitle("Genotype reassignment with TIgGER")
-            + geom_bar(stat="identity")
-            + facet_grid('~'+str('vgroup'), scales="free_y")
-            + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
-            + theme(legend_title = element_blank()))
-        print(p)
+        if 'tigger_failed' not in locals():
+            print('Returning summary plot')
+            inferred_genotype = outDir+'/'+outDir+'_heavy'+inferred_fileformat_dict[fileformat]
+            inf_geno = pd.read_csv(inferred_genotype, sep = '\t', dtype = 'object')
+    
+            s2 = set(inf_geno['gene'])
+            results = []
+            for samp in list(set(heavy['sample_id'])):
+                res_x = heavy[(heavy['sample_id']==samp)]
+                V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call']]
+                V_g = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call_genotyped']]
+                s1 = set(list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
+                setdiff = s1 - s2
+                ambiguous = (["," in i for i in V_].count(True)/len(V_)*100, ["," in i for i in V_g].count(True)/len(V_g)*100)
+                not_in_genotype=([i in setdiff for i in V_].count(True)/len(V_)*100, [i in setdiff for i in V_g].count(True)/len(V_g)*100)
+                stats = pd.DataFrame([ambiguous,not_in_genotype], columns = ['ambiguous', 'not_in_genotype'], index = ['before', 'after']).T
+                stats.index.set_names(['vgroup'], inplace = True)
+                stats.reset_index(drop = False, inplace = True)
+                stats['sample_id'] = samp
+                # stats['donor'] = str(combined_folder)
+                results.append(stats)
+            results = pd.concat(results)
+            ambiguous_table = results[results['vgroup'] == 'ambiguous']
+            not_in_genotype_table = results[results['vgroup'] == 'not_in_genotype']
+            ambiguous_table.reset_index(inplace = True, drop = True)
+            not_in_genotype_table.reset_index(inplace = True, drop = True)
+            # melting the dataframe
+            ambiguous_table_before = ambiguous_table.drop('after', axis = 1)
+            ambiguous_table_before.rename(columns={"before": "var"}, inplace = True)
+            ambiguous_table_before['var_group'] = 'before'
+            ambiguous_table_after = ambiguous_table.drop('before', axis = 1)
+            ambiguous_table_after.rename(columns={"after": "var"}, inplace = True)
+            ambiguous_table_after['var_group'] = 'after'
+            ambiguous_table = pd.concat([ambiguous_table_before, ambiguous_table_after])
+            not_in_genotype_table_before = not_in_genotype_table.drop('after', axis = 1)
+            not_in_genotype_table_before.rename(columns={"before": "var"}, inplace = True)
+            not_in_genotype_table_before['var_group'] = 'before'
+            not_in_genotype_table_after = not_in_genotype_table.drop('before', axis = 1)
+            not_in_genotype_table_after.rename(columns={"after": "var"}, inplace = True)
+            not_in_genotype_table_after['var_group'] = 'after'
+            not_in_genotype_table = pd.concat([not_in_genotype_table_before, not_in_genotype_table_after])
+            ambiguous_table['var_group'] = ambiguous_table['var_group'].astype('category')
+            not_in_genotype_table['var_group'] = not_in_genotype_table['var_group'].astype('category')
+            ambiguous_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
+            not_in_genotype_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
+    
+            options.figure_size = figsize
+            final_table = pd.concat([ambiguous_table, not_in_genotype_table])
+            p = (ggplot(final_table, aes(x='sample_id', y = 'var', fill='var_group'))
+                + coord_flip()
+                + theme_classic()
+                + xlab("sample_id")
+                + ylab("% allele calls")
+                + ggtitle("Genotype reassignment with TIgGER")
+                + geom_bar(stat="identity")
+                + facet_grid('~'+str('vgroup'), scales="free_y")
+                + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
+                + theme(legend_title = element_blank()))
+            print(p)
+        else:
+            pass
     sleep(0.5)
     # if split_write_out:
+    if 'tigger_failed' in locals():
+            print('Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv` extension for convenience.')
     for s in tqdm(data, desc = 'Writing out to individual folders '):
         if sample_id_dictionary is not None:
             out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
         else:
             out_file = dat_[dat_['sample_id'] == s]
-        outfilepath = filePath_dict[s]
+        outfilepath = filePath_dict[s]=        
         out_file.to_csv(outfilepath.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
 
