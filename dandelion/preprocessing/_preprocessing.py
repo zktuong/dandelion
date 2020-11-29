@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 12:18:45
+# @Last Modified time: 2020-11-29 12:34:18
 
 import sys
 import os
@@ -921,20 +921,23 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
             print('      Running tigger-genotype with novel allele discovery.')
             tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], v_germline = v_germline, fileformat = fform_dict[fileformat], novel_ = novel_dict[novel], verbose = verbose)
             creategermlines(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline = germline, v_field = v_field, verbose = verbose, cloned = cloned)
+            _ = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
         except:
             try:
                 print('      Novel allele discovery execution halted.')
                 print('      Attempting to run tigger-genotype without novel allele discovery.')
-                tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], v_germline = germline, fileformat = fform_dict[fileformat], novel_ = novel_dict[False], verbose = verbose)
+                tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], v_germline = v_germline, fileformat = fform_dict[fileformat], novel_ = novel_dict[False], verbose = verbose)
                 creategermlines(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline = germline, v_field = v_field, verbose = verbose, cloned = cloned)
+                _ = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
             except:
                 print('      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls.')
                 tigger_failed = ''
     else:
         try:
             print('      Running tigger-genotype without novel allele discovery.')
-            tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], v_germline = germline, fileformat = fform_dict[fileformat], novel_ = novel_dict[False], verbose = verbose)
+            tigger_genotype(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], v_germline = v_germline, fileformat = fform_dict[fileformat], novel_ = novel_dict[False], verbose = verbose)
             creategermlines(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = outDir+'/'+outDir+'_heavy'+germline_dict[fileformat], germline = germline, v_field = v_field, verbose = verbose, cloned = cloned)
+            _ = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
         except:
             print('      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls.')
             tigger_failed = ''
@@ -948,7 +951,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
         light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])        
         light['v_call_genotyped'] = light['v_call']
-    else:        
+    else:    
         creategermlines(outDir+'/'+outDir+'_light'+informat_dict[fileformat], germtypes = germ_types, mode = 'light', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         heavy = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
