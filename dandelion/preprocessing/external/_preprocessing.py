@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-28 20:54:42
+# @Last Modified time: 2020-11-29 02:29:27
 
 import os
 import pandas as pd
@@ -71,7 +71,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', ve
 
 def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', extended = True, verbose = False):
     """
-    parses IgBLAST output to change-o format
+    parses IgBLAST output to airr format
 
     Parameters
     ----------
@@ -129,7 +129,207 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd, env=env) # logs are printed to terminal
 
-def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat = 'airr', novel_ = 'NO', verbose = False):
+def parsedb_heavy(db_file, verbose = False):
+    """
+    parses IgBLAST output to change-o format (heavy chain contigs)
+
+    Parameters
+    ----------
+    db_file
+        vdj table
+    verbose
+        whether or not to print the files
+    Returns
+    -------    
+    """
+    
+    outname = os.path.basename(db_file).split('.tsv')[0] + '_heavy'
+    
+    cmd = ['ParseDb.py', 'select',
+           '-d', db_file,
+           '-f', 'locus',
+           '-u', 'IGH',
+           '--logic', 'all',
+           '--regex',
+           '--outname', outname 
+           ]
+     
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    run(cmd) # logs are printed to terminal
+
+def parsedb_light(db_file, verbose = False):
+    """
+    parses IgBLAST output to change-o format (light chain contigs)
+
+    Parameters
+    ----------
+    db_file
+        vdj table
+    verbose
+        whether or not to print the files
+    Returns
+    -------    
+    """
+    
+    outname = os.path.basename(db_file).split('.tsv')[0] + '_light'
+    
+    cmd = ['ParseDb.py', 'select',
+           '-d', db_file,
+           '-f', 'locus',
+           '-u', 'IG[LK]',
+           '--logic', 'all',
+           '--regex',
+           '--outname', outname 
+           ]
+     
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    run(cmd) # logs are printed to terminal
+
+def creategermlines(db_file, germtypes = None, germline = None, org = 'human', genotype_fasta = None, v_field = None, cloned = False, mode = 'heavy', verbose = False):
+    """
+    parses IgBLAST output to change-o format
+
+    Parameters
+    ----------
+    db_file
+        vdj table
+    germtypes
+
+    genotype_fasta
+
+    verbose
+        whether or not to print the files
+    Returns
+    -------    
+    """
+    env = os.environ.copy()
+    if germline is None:
+        try:
+            gml = env['GERMLINE']
+        except:
+            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
+        gml = gml+'imgt/'+org+'/vdj/'
+    else:
+        env['GERMLINE'] = germline
+        gml = germline
+    
+    if germtypes is None:
+        germ_type = 'dmask'
+    else:
+        germ_type = germtypes
+
+    if cloned:        
+        if mode == 'heavy':
+            print('            Reconstructing heavy chain {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            if genotype_fasta is None:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file, 
+                        '-g', germ_type, 
+                        '--cloned',
+                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', gml,
+                        '--vf', v_field
+                        ]
+            else:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '--cloned',
+                        '-r', genotype_fasta, gml,
+                        '--vf', v_field
+                        ]
+        elif mode == 'light':
+            print('            Reconstructing light chain {} germlines sequence with {} for each clone.'.format(germ_type, v_field))
+            if germline is None:
+                cmd = ['CreateGermlines.py',
+                    '-d', db_file,
+                    '-g', germ_type,
+                    '--cloned',
+                    '-r', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                    '--vf', v_field
+                    ]
+            else:
+                cmd = ['CreateGermlines.py',
+                    '-d', db_file,
+                    '-g', germ_type,
+                    '--cloned',
+                    '-r', gml,
+                    '--vf', v_field
+                    ]
+    else:        
+        if mode == 'heavy':
+            print('            Reconstructing heavy chain {} germlines sequence with {}.'.format(germ_type, v_field))
+            if genotype_fasta is None:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', gml,
+                        '--vf', v_field
+                        ]
+            else:
+                if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                        '--vf', v_field
+                        ]
+                else:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', genotype_fasta, gml,
+                        '--vf', v_field
+                        ]
+        elif mode == 'light':
+            print('            Reconstructing light chain {} germlines sequence with {}.'.format(germ_type, v_field))
+            if germline is None:
+                    cmd = ['CreateGermlines.py',
+                        '-d', db_file,
+                        '-g', germ_type,
+                        '-r', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                        '--vf', v_field
+                        ]
+            else:
+                cmd = ['CreateGermlines.py',
+                    '-d', db_file,
+                    '-g', germ_type,
+                    '-r', gml,
+                    '--vf', v_field
+                    ]
+
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    run(cmd, env = env) # logs are printed to terminal
+
+def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileformat = 'airr', novel_ = 'YES', verbose = False):
     """
     reassignAlleles with TIgGER in R.
 
@@ -148,7 +348,7 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
     fileformat
         Format for running tigger. Default is 'airr'. Also accepts 'changeo'.
     novel : str
-        Whether or not to run novel allele discovery. Default is 'NO'.
+        Whether or not to run novel allele discovery. Default is 'YES'.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
     Returns
@@ -158,36 +358,22 @@ def tigger_genotype(data, germline=None, outdir=None, org = 'human', fileformat 
 
     start_time = time()
     env = os.environ.copy()
-    if germline is None:
+    if v_germline is None:
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.')
+            raise OSError('Environmental variable GERMLINE is not set. Please provide either the path to the folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.')
         gml = gml+'imgt/'+org+'/vdj/imgt_'+org+'_IGHV.fasta'
     else:
-        if os.path.isdir(germline):
-            gml = germline.rstrip('/') + 'imgt_'+org+'_IGHV.fasta'
+        if os.path.isdir(v_germline):
+            gml = v_germline.rstrip('/') + 'imgt_'+org+'_IGHV.fasta'
             if not os.path.isfile(gml):
-                raise OSError("Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.".format(gml))
-        elif type(germline) is not list:
-            germline_ = [germline]
-            if len(germline_) < 3:
-                raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-            else:
-                for x in germline_:
-                    if not x.endswith('.fasta'):
-                        raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-                    if (os.path.isfile(x)) & ('ighv' in x.lower()):
-                        gml = x
-        else:
-            if len(germline) < 3:
-                raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-            else:
-                for x in germline:
-                    if not x.endswith('.fasta'):
-                        raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-                    if (os.path.isfile(x)) & ('ighv' in x.lower()):
-                        gml = x
+                raise OSError("Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.".format(gml))        
+        else:            
+            if not v_germline.endswith('.fasta'):
+                raise OSError('Input for germline is incorrect {}. Please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.'.format(v_germline))
+            if (os.path.isfile(v_germline)) & ('ighv' in v_germline.lower()):
+                gml = v_germline
 
     if outdir is not None:
         out_dir = outdir + '/'
