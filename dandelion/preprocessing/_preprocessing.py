@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 12:34:18
+# @Last Modified time: 2020-11-29 13:06:44
 
 import sys
 import os
@@ -881,11 +881,11 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
             raise OSError('Path to .tsv file for {} is unknown. Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'.format(s))
 
         if sample_id_dictionary is not None:
-            sampleNames_dict[filePath] = sample_id_dictionary[s]
-            filePath_dict[sample_id_dictionary[s]] =  filePath
+            sampleNames_dict[filePath] = sample_id_dictionary[s]        
         else:
             sampleNames_dict[filePath] = str(s)
-            filePath_dict[str(s)] =  filePath
+        
+        filePath_dict[str(s)] =  filePath
 
         # splitting up to heavy chain and light chain files
         parsedb_heavy(filePath)
