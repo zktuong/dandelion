@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 14:13:18
+# @Last Modified time: 2020-11-29 14:18:32
 
 import sys
 import os
@@ -1043,7 +1043,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
             out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
         else:
             out_file = dat_[dat_['sample_id'] == s]
-        outfilepath = filePath_dict[s]=        
+        outfilepath = filePath_dict[s]
         out_file.to_csv(outfilepath.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
 
