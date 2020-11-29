@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 13:06:44
+# @Last Modified time: 2020-11-29 14:08:03
 
 import sys
 import os
@@ -943,10 +943,10 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
             tigger_failed = ''
 
     if 'tigger_failed' in locals():
-        creategermlines(outDir+'/'+outDir+'_heavy'+fileformat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
+        creategermlines(outDir+'/'+outDir+'_heavy'+informat_dict[fileformat], germtypes = germ_types, mode = 'heavy', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         creategermlines(outDir+'/'+outDir+'_light'+informat_dict[fileformat], germtypes = germ_types, mode = 'light', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
-        print('      For convenience, entries in `v_call` are copied to `v_call_genotyped`.')
-        heavy = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
+        print('      For convenience, entries heavy chain in `v_call` are copied to `v_call_genotyped`.')
+        heavy = load_data(outDir+'/'+outDir+'_heavy'+germpass_dict[fileformat])
         heavy['v_call_genotyped'] = heavy['v_call']
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
         light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])        
