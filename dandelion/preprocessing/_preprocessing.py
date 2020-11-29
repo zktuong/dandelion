@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 02:46:32
+# @Last Modified time: 2020-11-29 10:12:40
 
 import sys
 import os
@@ -618,14 +618,14 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(filePath, format_dict[fileformat], allele, parallel, ncpu)
     
     _file = "{}/tmp/{}_genotyped.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+format_dict[fileformat])
-    _airrfile = "{}/tmp/{}_genotyped.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+'_igblast.tsv')
+    _airrfile = "{}/tmp/{}.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+'_igblast')
     _file2 = "{}/{}_genotyped.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+format_dict[fileformat])
-    # _file = "{}/{}.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+format_dict[fileformat])
     
     if verbose:
         print('Loading 10X annotations \n')
     dat_10x = load_data(_file)
     res_10x = pd.DataFrame(dat_10x['c_call'])
+    res_10x['c_call'] = res_10x['c_call'].fillna(value='None')
     if verbose:
         print('Preparing new calls \n')
     dat = _transfer_c(_file, c_call, 'c_call')
@@ -637,6 +637,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     dat = _transfer_c(dat, c_ident, 'c_identity')
     dat = _transfer_c(dat, c_supp, 'c_support')
     res_blast = pd.DataFrame(dat['c_call'])
+    res_blast = res_blast.fillna(value='None')
 
     res_10x_sum = pd.DataFrame(res_10x['c_call'].value_counts(normalize=True)*100)
     res_blast_sum = pd.DataFrame(res_blast['c_call'].value_counts(normalize=True)*100)
@@ -654,6 +655,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
             print('Correcting C calls \n')
         dat = _correct_c_call(dat, primers_dict=correction_dict)
         res_corrected = pd.DataFrame(dat['c_call'])
+        res_corrected = res_corrected.fillna(value='None')
         res_corrected_sum = pd.DataFrame(res_corrected['c_call'].value_counts(normalize=True)*100)
         res_corrected_sum['group'] = 'corrected'
         res_corrected_sum.columns = ['counts', 'group']
@@ -662,6 +664,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
         res = pd.concat([res_10x_sum, res_blast_sum, res_corrected_sum])
     else:
         res = pd.concat([res_10x_sum, res_blast_sum])
+
     res = res.reset_index(drop = True)
     res['c_call'] = res['c_call'].astype('category')
     res['c_call'] = res['c_call'].cat.reorder_categories(sorted(list(set(res['c_call'])), reverse=True))
@@ -741,7 +744,7 @@ def assign_isotypes(fastas, fileformat = 'blast', org = 'human', correct_c_call 
     for fasta in fastas:
         assign_isotype(fasta, fileformat = fileformat, org = org, correct_c_call = correct_c_call, correction_dict = correction_dict, plot = plot, figsize=figsize, blastdb = blastdb, allele = allele, parallel = parallel, ncpu = ncpu, verbose = verbose)
 
-def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', extended = True, verbose = False, *args):
+def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loci = 'ig', extended = True, verbose = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -761,8 +764,6 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         whether or not to transfer additional 10X annotions to output file. Default is True.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
-    *args
-        passed to `dandelion.preprocessing.ext.assigngenes_igblast` and `dandelion.preprocessing.ext.makedb_igblast`.
     Returns
     ----------
         V(D)J data file in airr/changeo data format.
@@ -795,7 +796,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, verbose = verbose, *args)
+        assigngenes_igblast(filePath, igblast_db=igblast_db, org = org, loci=loci, verbose = verbose)
         makedb_igblast(filePath, org = org, germline = germline, extended = extended, verbose = verbose)
 
 def reassign_alleles(data, combined_folder, v_germline = None, germline = None, org = 'human', fileformat = 'blast', v_field='v_call_genotyped', germ_types='dmask', novel = True, cloned = False, plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False, ):
@@ -817,9 +818,9 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
     fileformat : str
         format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
     v_field : str
-        name of column containing the germline V segment call. Default is 'v_call_genotyped' (airr) after tigger.
+        name of column containing the germline V segment call. Default is 'v_call_genotyped' (airr) for after tigger.
     germ_types : str
-        Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is 'dmask'.
+        Specify type of germline for reconstruction. Accepts one of : 'full', 'dmask', 'vonly', 'region'. Default is 'dmask'.
     novel : bool
         whether or not to run novel allele discovery during tigger-genotyping. Default is True (yes).
     cloned : bool
@@ -844,7 +845,6 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
     light_dict = {'changeo':'_igblast_db-pass_light_parse-select.tsv', 'blast':'_igblast_db-pass_light_parse-select.tsv', 'airr':'_igblast_gap_light_parse-select.tsv'}
     fileformat_dict = {'changeo':'_igblast_db-pass_genotyped.tsv', 'blast':'_igblast_db-pass_genotyped.tsv', 'airr':'_igblast_gap_genotyped.tsv'}
     fileformat_passed_dict = {'changeo':'_igblast_db-pass_genotyped_germ-pass.tsv', 'blast':'_igblast_db-pass_genotyped_germ-pass.tsv', 'airr':'_igblast_gap_genotyped_germ-pass.tsv'}
-
     inferred_fileformat_dict = {'changeo':'_igblast_db-pass_inferredGenotype.txt', 'blast':'_igblast_db-pass_inferredGenotype.txt', 'airr':'_igblast_gap_inferredGenotype.txt'}
     germline_dict = {'changeo':'_igblast_db-pass_genotype.fasta', 'blast':'_igblast_db-pass_genotype.fasta', 'airr':'_igblast_gap_genotype.fasta'}
     fform_dict = {'blast':'airr', 'airr':'airr', 'changeo':'changeo'}
@@ -1039,7 +1039,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         out_file.to_csv(outfilepath.replace('.tsv', '_genotyped.tsv'), index = False, sep = '\t')
 
 
-def reassign_alleles_legacy(data, combined_folder, germline = None, org = 'human', fileformat = 'blast', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', novel = True, plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
+def reassign_alleles_(data, combined_folder, germline = None, org = 'human', fileformat = 'blast', seq_field = 'sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', novel = True, plot = True, figsize = (4,3), sample_id_dictionary = None, verbose = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -1501,30 +1501,6 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
             for x in germline_df.columns:
                 self.data[x] = pd.Series(germline_df[x])
 
-            # if self.distance is not None:
-            #     dist_ = self.distance
-            # else:
-            #     dist_ = None
-            # if self.edges is not None:
-            #     edge_ = self.edges
-            # else:
-            #     edge_ = None
-            # if self.layout is not None:
-            #     layout_ = self.layout
-            # else:
-            #     layout_ = None
-            # if self.graph is not None:
-            #     graph_ = self.graph
-            # else:
-            #     graph_ = None
-            # if self.threshold is not None:
-            #     threshold_ = self.threshold
-            # else:
-            #     threshold_ = None
-
-            # self.__init__(data = datx, metadata = self.metadata, germline = reference_dict, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = False)
-
-            # self.threshold = threshold_
         elif self.__class__ == pd.DataFrame:
             datx = load_data(self)
             for x in germline_df.columns:
