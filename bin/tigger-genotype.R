@@ -35,7 +35,7 @@ NPROC <- parallel::detectCores()
 FORMAT <- "airr"
 MIN_SEQS <- 50
 GERMLINE_MIN <- 200
-NOVEL <- 'NO'
+NOVEL <- 'YES'
 # Define commmandline arguments
 opt_list <- list(make_option(c("-d", "--db"), dest="DB",
                              help="Change-O formatted TSV (TAB) file."),
