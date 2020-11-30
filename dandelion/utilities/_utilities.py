@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 13:36:45
+# @Last Modified time: 2020-11-30 11:31:14
 
 import sys
 import os
@@ -538,11 +538,14 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     
         # new function to retrieve non-standard columns
         if retrieve is not None:
-            if retrieve in dat.columns:                                    
-                retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
-                self.metadata[str(retrieve)+'_heavy'] = pd.Series(retrieve_dict)                
-            else:
-                raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
+            if type(retrieve) is str:
+                retrieve = [retrieve]                
+            for ret in retrieve:
+                if ret in dat.columns:                                    
+                    retrieve_dict = retrieve_metadata(dat, ret, False, True)
+                    self.metadata[str(retrieve)+'_heavy'] = pd.Series(retrieve_dict)
+                else:
+                    raise KeyError('Unknown column : \'%s\' to retrieve.' % ret)
     else:
         if 'v_call_genotyped' in dat.columns:
             heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', True, False)
@@ -667,25 +670,39 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                     self.metadata = self.metadata[['sample_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
                 else:
                     self.metadata = self.metadata[['isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
-    
-        # new function to retrieve non-standard columns
         if retrieve is not None:
-            if retrieve in dat.columns:
-                if not split_heavy_light:
-                    if collapse:
-                        retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
-                    else:
-                        retrieve_dict = retrieve_metadata(dat, retrieve, False, False)
-                    self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
-                else:
-                    if collapse:
-                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, True, True)
-                    else:
-                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, True, False)
-                    self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
-                    self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
+            if type(retrieve) is str:
+                if retrieve in dat.columns:                                    
+                    retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
+                    self.metadata[str(retrieve)+'_heavy'] = pd.Series(retrieve_dict)
+            elif type(retrieve) is list:
+                for ret in retrieve:
+                    if ret in dat.columns:                                    
+                        retrieve_dict = retrieve_metadata(dat, ret, False, True)
+                        self.metadata[str(retrieve)+'_heavy'] = pd.Series(retrieve_dict)
             else:
                 raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
+        # new function to retrieve non-standard columns
+        if retrieve is not None:
+            if type(retrieve) is str:
+                retrieve = [retrieve]
+            for ret in retrieve
+                if ret in dat.columns:
+                    if not split_heavy_light:
+                        if collapse:
+                            retrieve_dict = retrieve_metadata(dat, ret, False, True)
+                        else:
+                            retrieve_dict = retrieve_metadata(dat, ret, False, False)
+                        self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
+                    else:
+                        if collapse:
+                            h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, ret, True, True)
+                        else:
+                            h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, ret, True, False)
+                        self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
+                        self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
+                else:
+                    raise KeyError('Unknown column : \'%s\' to retrieve.' % ret)
 
 class Dandelion:
     def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
