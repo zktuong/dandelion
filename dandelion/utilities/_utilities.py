@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-30 11:31:14
+# @Last Modified time: 2020-11-30 11:49:06
 
 import sys
 import os
@@ -686,7 +686,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         if retrieve is not None:
             if type(retrieve) is str:
                 retrieve = [retrieve]
-            for ret in retrieve
+            for ret in retrieve:
                 if ret in dat.columns:
                     if not split_heavy_light:
                         if collapse:
