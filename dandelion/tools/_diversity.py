@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-13 21:16:01
+# @Last Modified time: 2020-11-30 12:11:25
 
 import pandas as pd
 import numpy as np
@@ -83,7 +83,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     if self.__class__ == Dandelion:
         return({'rarefaction_cells_x':pred, 'rarefaction_clones_y':y})
 
-def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = True, n_resample = 50, normalize = True):
+def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = False, n_resample = 50, normalize = True):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -104,7 +104,7 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     normalize : bool
@@ -129,7 +129,7 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         else:
             return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize))
 
-def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
+def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50):
     """
     Compute B cell clones Gini indices.
 
@@ -148,7 +148,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
     diversity_key : str, optional
         Key for 'diversity' results in `.uns`.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     Returns
@@ -157,7 +157,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, metric = None, clone_key = None, resample = True, n_resample = 50):
+    def gini_indices(self, groupby, metric = None, clone_key = None, resample = False, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -303,7 +303,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             logg.info(' finished', time=start)
         return(res_)
 
-def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50):
+def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50):
     """
     Compute B cell clones Chao1 estimates.
 
@@ -320,7 +320,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     Returns
@@ -329,7 +329,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
     """
     start = logg.info('Calculating Chao1 estimates')
 
-    def chao1_estimates(self, groupby, clone_key = None, resample = True, n_resample = 50):
+    def chao1_estimates(self, groupby, clone_key = None, resample = False, n_resample = 50):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -442,7 +442,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
             logg.info(' finished', time=start)
         return(res_)
 
-def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = True, n_resample = 50, normalize = True):
+def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50, normalize = True):
     """
     Compute B cell clones Shannon entropy.
 
@@ -459,7 +459,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is True.
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     normalize : bool
@@ -470,7 +470,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
     """
     start = logg.info('Calculating Shannon entropy')
 
-    def shannon_entropy(self, groupby, clone_key = None, resample = True, n_resample = 50, normalize = True):
+    def shannon_entropy(self, groupby, clone_key = None, resample = False, n_resample = 50, normalize = True):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
