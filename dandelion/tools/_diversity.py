@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-30 12:11:25
+# @Last Modified time: 2020-11-30 12:53:14
 
 import pandas as pd
 import numpy as np
@@ -41,7 +41,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
         clonekey = clone_key
     
     groups = list(set(metadata[groupby]))
-    metadata = metadata[metadata['has_bcr'].isin([True, 'True'])]
+    metadata = metadata[metadata['bcr_QC_pass'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
@@ -61,7 +61,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
 
     # append the results to a dictionary
     rarecurve = {}
-    for i in range(0, nr):
+    for i in tqdm(range(0, nr), desc = 'Calculating rarefaction curve '):
         n = np.arange(1, tot[i], step = 10)
         if (n[-1:] != tot[i]):
             n = np.append(n, tot[i])
