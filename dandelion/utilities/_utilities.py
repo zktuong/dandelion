@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-30 11:58:12
+# @Last Modified time: 2020-12-01 11:52:37
 
 import sys
 import os
@@ -195,9 +195,7 @@ def setup_metadata_(data):
     Parameters
     ----------
     data : DataFrame
-        pandas DataFrame object.
-    sep : tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+        pandas DataFrame object.    
     Returns
     -------
         pandas DataFrame object.
@@ -208,15 +206,15 @@ def setup_metadata_(data):
     metadata_.set_index('cell_id', inplace = True)
     return(metadata_)
 
-def setup_metadata(data, sep, clone_key = None):
+def setup_metadata(data, clone_key = None):
     """
     A Dandelion class subfunction to initialize the `.metadata` slot.
     Parameters
     ----------
     data : DataFrame
         pandas DataFrame object.
-    sep : tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+    clone_key : str, optiona;
+        column name of clone id. None defaults to 'clone_id'.
     Returns
     -------
         pandas DataFrame object.
@@ -241,22 +239,6 @@ def setup_metadata(data, sep, clone_key = None):
             clones_list[x] = '|'.join(cl)
         metadata_[clonekey] = pd.Series(clones_list)
         metadata_ = metadata_[[clonekey]]
-        if sep is None:
-            scb = (0, '_')
-        else:
-            scb = (sep[0], sep[1])
-        group = []
-        # check if contain the separator
-        x = list(metadata_[clonekey].str.contains(scb[1]))
-        cl_ = list(metadata_[clonekey])
-        for c in range(0, len(metadata_[clonekey])):
-            if not x[c]:
-                warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
-                group.append(cl_[c])
-            else:
-                group.append(cl_[c].split(scb[1])[scb[0]])
-        groupseries = dict(zip(metadata_.index, group))
-        metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
         
         tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop = False)
@@ -306,23 +288,7 @@ def setup_metadata(data, sep, clone_key = None):
             clones_list[x] = '|'.join(cl)
         metadata_[clonekey] = pd.Series(clones_list)
         metadata_ = metadata_[[clonekey]]
-        if sep is None:
-            scb = (0, '_')
-        else:
-            scb = (sep[0], sep[1])
-        group = []
-        # check if contain the separator
-        x = list(metadata_[clonekey].str.contains(scb[1]))
-        cl_ = list(metadata_[clonekey])
-        for c in range(0, len(metadata_[clonekey])):
-            if not x[c]:
-                warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
-                group.append(cl_[c])
-            else:
-                group.append(cl_[c].split(scb[1])[scb[0]])
-        groupseries = dict(zip(metadata_.index, group))
-        metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
-        
+
         tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop = False)
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]
@@ -527,9 +493,9 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         if metadata_status is None:
             if clonekey in self.data.columns:
                 if 'sample_id' in self.data.columns:
-                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'v_call_heavy', 'j_call_heavy', 'c_call_heavy']]
+                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_by_size', 'isotype', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'v_call_heavy', 'j_call_heavy', 'c_call_heavy']]
                 else:
-                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'v_call_heavy','j_call_heavy','c_call_heavy']]
+                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_by_size', 'isotype', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'v_call_heavy','j_call_heavy','c_call_heavy']]
             else:
                 if 'sample_id' in self.data.columns:
                     self.metadata = self.metadata[['sample_id', 'isotype', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'v_call_heavy','j_call_heavy','c_call_heavy']]
@@ -662,9 +628,9 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         if metadata_status is None:
             if clonekey in self.data.columns:
                 if 'sample_id' in self.data.columns:
-                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_by_size', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
                 else:
-                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_by_size', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
             else:
                 if 'sample_id' in self.data.columns:
                     self.metadata = self.metadata[['sample_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]

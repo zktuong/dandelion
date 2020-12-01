@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-27 20:06:30
+# @Last Modified time: 2020-12-01 11:47:32
 
 import pandas as pd
 import numpy as np
@@ -21,10 +21,10 @@ try:
 except ImportError:
     pass
 
-def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, constructbygroup = False, clones_sep = None, weights = None, downsample = None, **kwargs):
+def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, weights = None, downsample = None, **kwargs):
     """
-    Generates a Levenshtein distance network based on gapped full length sequences for heavy and light chain(s).
-    The distance matrices are then combined into a singular matrix where a minimum spanning tree will be constructed per clone group specified by separator in `clones_sep` option.
+    Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
+    The distance matrices are then combined into a singular matrix.
 
     Parameters
     ----------
@@ -38,10 +38,6 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
     clone_key: str, optional
         column name to build network on.
-    constructbygroup: bool
-        whether to link up by clone_group id. Default is False.
-    clones_sep: tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
     weights : tuple, optional
         A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
     downsample : int, optional
@@ -162,17 +158,14 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
     overlap = []
-    for i in out.metadata.index:
-        if constructbygroup:
-            cx = out.metadata.loc[i, str(clonekey)+'_group']
+    for i in out.metadata.index:        
+        if len(out.metadata.loc[i, str(clonekey)].split('|'))>1:
+            overlap.append([c for c in out.metadata.loc[i, str(clonekey)].split('|')])
+            for c in out.metadata.loc[i, str(clonekey)].split('|'):
+                tmp_clusterdist[c][i].value = 1
         else:
-            if len(out.metadata.loc[i, str(clonekey)].split('|'))>1:
-                overlap.append([c for c in out.metadata.loc[i, str(clonekey)].split('|')])
-                for c in out.metadata.loc[i, str(clonekey)].split('|'):
-                    tmp_clusterdist[c][i].value = 1
-            else:
-                cx = out.metadata.loc[i, str(clonekey)]
-                tmp_clusterdist[cx][i].value = 1
+            cx = out.metadata.loc[i, str(clonekey)]
+            tmp_clusterdist[cx][i].value = 1
     tmp_clusterdist2 = {}
     for x in tmp_clusterdist:
         tmp_clusterdist2[x] = list(tmp_clusterdist[x])

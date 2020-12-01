@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 10:55:20
+# @Last Modified time: 2020-12-01 12:02:32
 
 import os
 import sys
@@ -1021,29 +1021,16 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
 
     clonesize = tmp[str(clonekey)].value_counts()
 
-    tmp_group = metadata_[str(clonekey)+'_group'].str.split('|', expand=True).stack()
-    tmp_group = tmp_group.reset_index(drop = False)
-    tmp_group.columns = ['cell_id', 'tmp_group', str(clonekey)+'_group']
-
-    clone_group_size = tmp_group[str(clonekey)+'_group'].value_counts()
-
     if max_size is not None:
         clonesize_ = clonesize.astype('object')
-        clone_group_size_ = clone_group_size.astype('object')
         for i in clonesize.index:
             if clonesize.loc[i] >= max_size:
                 clonesize_.at[i] = '>= '+ str(max_size)
-        for i in clone_group_size.index:
-            if clone_group_size.loc[i] >= max_size:
-                clone_group_size_.at[i] = '>= '+ str(max_size)
         clonesize_ = clonesize_.astype('category')
-        clone_group_size_ = clone_group_size_.astype('category')
     else:
         clonesize_ = clonesize.copy()
-        clone_group_size_ = clone_group_size.copy()
 
     clonesize_dict = dict(clonesize_)
-    clone_group_size_dict = dict(clone_group_size_)
 
     # TODO: different way of collapsing?
     # for c in metadata_[str(clonekey)]:
@@ -1058,22 +1045,17 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
     # # becomes ['|'.join([str(clonesize_dict[c_]) for c_ in c.split('|')]) if len(list(set([clonesize_dict[c_] for c_ in c.split('|')]))) > 1 else list(set([clonesize_dict[c_] for c_ in c.split('|')]))[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]
     if self.__class__ == Dandelion:
         if key_added is None:
-            self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
-            self.metadata[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clone_group_size_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
+            self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))            
         else:
             self.metadata[str(clonekey)+'_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
-            self.metadata[str(clonekey)+'_group_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clone_group_size_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
         logg.info(' finished', time=start,
             deep=('Updated Dandelion object: \n'
             '   \'metadata\', cell-indexed clone table'))
     else:
         if key_added is None:
             self[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
-            self[str(clonekey)+'_group_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clone_group_size_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
         else:
             self[str(clonekey)+'_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
-            self[str(clonekey)+'_group_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clone_group_size_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clone_group_size_dict[c] for c in metadata_[str(clonekey)+'_group']])))
-
 
 def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None):
     """

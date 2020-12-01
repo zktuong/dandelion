@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-30 12:52:55
+# @Last Modified time: 2020-12-01 11:56:02
 
 import seaborn as sns
 import pandas as pd
@@ -392,7 +392,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
 
-def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, clones_sep = None, **kwargs):
+def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -419,8 +419,6 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
     labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    clones_sep : tuple[int, str]
-        option to specify how to split up clone names. Default is (0, '_') i.e. it will split according to '_' and select the first string as the 'clone'.
     **kwargs
         other kwargs passed to matplotlib.pyplot.plot
     Return
@@ -443,19 +441,6 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
 
     if 'locus' not in data.columns:
         raise AttributeError("Please ensure dataframe contains 'locus' column")
-    if clonekey in data.columns:
-        if clones_sep is None:
-            scb = (0, '_')
-        else:
-            scb = (clones_sep[0], clones_sep[1])
-        group = []
-        for x in data[str(clonekey)]:
-            if scb[1] not in x:
-                warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
-                group.append(x)
-            else:
-                group.append(x.split(scb[1])[scb[0]])
-        data[str(clonekey)+'_group'] = group
 
     if type(locus) is not list:
         locus = [locus]
