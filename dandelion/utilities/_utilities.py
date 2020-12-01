@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 11:52:37
+# @Last Modified time: 2020-12-01 12:08:25
 
 import sys
 import os
@@ -418,7 +418,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     metadata_status = self.metadata
     if metadata_status is None:
         if clonekey in dat.columns:
-            self.metadata = setup_metadata(dat, clones_sep, clonekey)
+            self.metadata = setup_metadata(dat, clonekey)
         else:
             self.metadata = setup_metadata_(dat)
     else:
