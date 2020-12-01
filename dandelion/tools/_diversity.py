@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-30 12:53:14
+# @Last Modified time: 2020-12-01 12:02:21
 
 import pandas as pd
 import numpy as np
@@ -44,7 +44,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     metadata = metadata[metadata['bcr_QC_pass'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
-    for g in groups:
+    for g in groups:f
         _metadata = metadata[metadata[groupby]==g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient = 'index')
@@ -196,7 +196,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 sizelist = []
                 graphlist = []
                 for i in range(0, n_resample):
-                    _dat = _dat.sample(minsize)
+                    _dat = _dat.sample(minsize)                    
                     _tab = _dat[clonekey].value_counts()
                     if 'nan' in _tab.index or np.nan in _tab.index:
                         try:
@@ -207,6 +207,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
                         g_c = gini_index(clonesizecounts, method = 'trapezoids')
+                        g_c[g_c < 0] = 0
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
@@ -215,6 +216,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     graphcounts = np.array(_dat[met].value_counts())
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts)
+                        g_c[g_c < 0] = 0
                     else:
                         g_c = np.nan
                     graphlist.append(g_c)                
@@ -222,6 +224,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     g_c = sum(sizelist)/len(sizelist)
                 except:
                     g_c = np.nan
+
                 res1.update({g:g_c})
                 g_c = sum(graphlist)/len(graphlist)
                 try:
@@ -240,6 +243,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
                     g_c = gini_index(clonesizecounts)
+                    g_c[g_c < 0] = 0
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
@@ -247,6 +251,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 graphcounts = np.array(_dat[met].value_counts())
                 if len(graphcounts) > 0:
                     g_c = gini_index(graphcounts, method = 'trapezoids')
+                    g_c[g_c < 0] = 0
                 else:
                     g_c = np.nan
                 res2.update({g:g_c})
