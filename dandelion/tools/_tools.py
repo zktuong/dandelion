@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 11:01:28
+# @Last Modified time: 2020-11-29 10:55:20
 
 import os
 import sys
@@ -519,9 +519,6 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
                     for key, value in clone_dict_light.items():
                         renamed_clone_dict_light[key] = lclones_dict[value]
                     dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
-    else:        
-        # try and add a zero to the end of the heavy chain clone names for consistency?
-        dat[clone_key] = ['|'.join([str(x_) +'_0' for x_ in x.split('|')]) if '|' in x else x +'_0' for x in dat[clone_key]]
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
