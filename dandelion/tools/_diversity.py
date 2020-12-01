@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 12:02:21
+# @Last Modified time: 2020-12-01 12:05:03
 
 import pandas as pd
 import numpy as np
@@ -44,7 +44,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     metadata = metadata[metadata['bcr_QC_pass'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
-    for g in groups:f
+    for g in groups:
         _metadata = metadata[metadata[groupby]==g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient = 'index')
