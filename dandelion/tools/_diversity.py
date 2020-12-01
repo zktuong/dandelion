@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 12:05:03
+# @Last Modified time: 2020-12-01 12:54:53
 
 import pandas as pd
 import numpy as np
@@ -207,7 +207,8 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     clonesizecounts = clonesizecounts[clonesizecounts > 0]
                     if len(clonesizecounts) > 0:
                         g_c = gini_index(clonesizecounts, method = 'trapezoids')
-                        g_c[g_c < 0] = 0
+                        if g_c < 0:
+                            g_c = 0
                     else:
                         g_c = np.nan
                     sizelist.append(g_c)
@@ -216,7 +217,8 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     graphcounts = np.array(_dat[met].value_counts())
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts)
-                        g_c[g_c < 0] = 0
+                        if g_c < 0:
+                            g_c = 0
                     else:
                         g_c = np.nan
                     graphlist.append(g_c)                
@@ -243,7 +245,8 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
                 if len(clonesizecounts) > 0:
                     g_c = gini_index(clonesizecounts)
-                    g_c[g_c < 0] = 0
+                    if g_c < 0:
+                        g_c = 0
                 else:
                     g_c = np.nan
                 res1.update({g:g_c})
@@ -251,7 +254,8 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 graphcounts = np.array(_dat[met].value_counts())
                 if len(graphcounts) > 0:
                     g_c = gini_index(graphcounts, method = 'trapezoids')
-                    g_c[g_c < 0] = 0
+                    if g_c < 0:
+                        g_c = 0
                 else:
                     g_c = np.nan
                 res2.update({g:g_c})
