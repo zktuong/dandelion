@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 11:01:28
+# @Last Modified time: 2020-12-01 11:24:43
 
 import os
 import sys
@@ -515,6 +515,12 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
                 # will just update the main dat directly
                 if len(list(set(lclones))) > 1:
                     lclones_dict = dict(zip(sorted(list(set(lclones))), [str(x) for x in range(1,len(list(set(lclones)))+1)]))
+                    renamed_clone_dict_light = {}
+                    for key, value in clone_dict_light.items():
+                        renamed_clone_dict_light[key] = lclones_dict[value]
+                    dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
+                else:
+                    lclones_dict = {lclones:'1'}
                     renamed_clone_dict_light = {}
                     for key, value in clone_dict_light.items():
                         renamed_clone_dict_light[key] = lclones_dict[value]
