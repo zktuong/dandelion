@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 11:47:32
+# @Last Modified time: 2020-12-01 12:22:04
 
 import pandas as pd
 import numpy as np
@@ -150,6 +150,9 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         out = self.copy()
     else: # re-initiate a Dandelion class object
         out = Dandelion(dat)
+
+    if clone_key not in out:
+        update_metadata(out, retrieve = clone_key, split_heavy_light = False, collapse = True)
 
     if downsample is not None:
         dat_downsample = dat_h.append(dat_l)
