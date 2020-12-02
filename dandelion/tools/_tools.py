@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 12:02:32
+# @Last Modified time: 2020-12-02 19:24:24
 
 import os
 import sys
@@ -566,7 +566,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
 
 
 
-def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = None, bcr_key = None):
+def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key = None, bcr_key = None):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -576,8 +576,8 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
         `AnnData` object.
     dandelion : Dandelion
         `Dandelion` object.
-    full_graph : bool
-        Whether or not to transfer the full graph (True) or trimmed graph (False).
+    expanded_only : bool
+        Whether or not to transfer the graph with all cells (False) or only to expanded clones (True).
     neighbors_key : str, optional
         key for 'neighbors' slot in `.uns`.
     rna_key : str, optional
@@ -591,7 +591,7 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
     """
     start = logg.info('Transferring network')
     if dandelion.graph is not None:
-        if full_graph:
+        if expanded_only:
             G = dandelion.graph[0]
         else:
             G = dandelion.graph[1]
@@ -661,7 +661,7 @@ def transfer(self, dandelion, full_graph=False, neighbors_key = None, rna_key = 
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
-        if full_graph:
+        if expanded_only:
             coord = pd.DataFrame.from_dict(dandelion.layout[0], orient = 'index')
         else:
             coord = pd.DataFrame.from_dict(dandelion.layout[1], orient = 'index')
