@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 00:03:57
+# @Last Modified time: 2020-12-03 11:25:46
 
 import pandas as pd
 import numpy as np
@@ -69,7 +69,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     if downsample is not None:
         if downsample >= dat_h.shape[0]:
-            print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), dat_h.shape[0]))
+            if verbose:
+                print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), dat_h.shape[0]))
         else:
             if verbose:
                 print('Downsampling to {} cells.'.format(str(downsample)))
