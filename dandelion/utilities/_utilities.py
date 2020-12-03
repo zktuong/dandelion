@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 12:08:25
+# @Last Modified time: 2020-12-03 12:56:48
 
 import sys
 import os
@@ -200,7 +200,7 @@ def setup_metadata_(data):
     -------
         pandas DataFrame object.
     """
-    dat_h = data[data['locus'] == 'IGH']
+    dat_h = data[data['locus'] == 'IGH'].copy()
     dict_h = dict(zip(dat_h['sequence_id'], dat_h['cell_id']))
     metadata_ = pd.DataFrame.from_dict(dict_h, orient = 'index', columns = ['cell_id'])
     metadata_.set_index('cell_id', inplace = True)
@@ -224,8 +224,8 @@ def setup_metadata(data, clone_key = None):
     else:
         clonekey = clone_key
 
-    dat_h = data[data['locus'] == 'IGH']
-    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
+    dat_h = data[data['locus'] == 'IGH'].copy()
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])].copy()
     if dat_l.shape[0] == 0:
         clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[clonekey])))
         metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
@@ -322,8 +322,8 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
     -------
         A dictionary with keys as cell_ids and records as retrieved value.
     """
-    dat_h = data[data['locus'] == 'IGH']
-    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
+    dat_h = data[data['locus'] == 'IGH'].copy()
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])].copy()
     if dat_l.shape[0] == 0:
         retrieve_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[retrieve_id])))
         sub_metadata = pd.DataFrame.from_dict(retrieve_h, orient = 'index', columns = ['cell_id', 'heavy'])
@@ -422,7 +422,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         else:
             self.metadata = setup_metadata_(dat)
     else:
-        self.metadata = self.metadata
+        self.metadata = self.metadata.copy()
 
     if 'sample_id' in dat.columns:
         samp_id = retrieve_metadata(dat, 'sample_id', False, True)
