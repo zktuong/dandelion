@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 00:11:13
+# @Last Modified time: 2020-12-03 12:57:26
 
 import os
 import sys
@@ -60,7 +60,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
         dat = load_data(self.data)
     else:
         dat = load_data(self)
-    dat_heavy = dat[dat['locus'] == 'IGH']
+    dat_heavy = dat[dat['locus'] == 'IGH'].copy()
     pd.set_option('mode.chained_assignment', None)
 
     if key_added is None:
@@ -310,7 +310,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
     hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell_id']]))
     dat[clone_key] = pd.Series(hlclone)
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
-    dat_light = dat[~(dat['locus'] == 'IGH')]
+    dat_light = dat[~(dat['locus'] == 'IGH')].copy()
     if dat_light.shape[0] != 0:
         # retrieve the J genes and J genes
         for c in tqdm(list(set(dat_light[clone_key])), desc = 'Refining clone assignment based on light chain pairing '):
