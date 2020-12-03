@@ -2,12 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-02 23:17:28
+# @Last Modified time: 2020-12-03 11:13:07
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
+from ..tools._network import clone_centrality, clone_degree, generate_network
 from scipy.special import gammaln
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
@@ -167,7 +168,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
-            metadata = self.metadata.copy()
+            metadata = self.metadata.copy()            
         if clone_key is None:
             clonekey = 'clone_id'
         else:
@@ -194,27 +195,33 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             warnings.warn("The minimum cell numbers when grouped by {} is {}. Exercise caution when interpreting diversity measures.".format(groupby, minsize))
 
         res1 = {}
-        if self.__class__ == Dandelion:
+        if self.__class__ == Dandelion:            
+            print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
+            if met == 'clone_centrality':
+                clone_centrality(self, verbose = True)
+            elif met == 'clone_degree':
+                clone_degree(self, verbose = True)
+            metadata = self.metadata.copy()
+            data = self.data.copy()
             res2 = {}
-        if resample:
-            if self.__class__ == Dandelion:
-                print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
-            elif self.__class__ == AnnData:
-                print("{} provided. Only computing gini for clone size.".format(self.__class__.__name__))
+        else:
+            print("{} provided. Only computing gini for clone size.".format(self.__class__.__name__))
+        if resample:            
             print("Downsampling each group specified in `{}` to {} cells for calculating gini indices.".format(groupby, minsize))
         sleep(0.5)
         for g in groups:
             # clone size distribution
             _dat = metadata[metadata[groupby] == g]
+            if self.__class__ == Dandelion:
+                _data = data[data['cell_id'].isin(list(_dat.index))]
+                ddl_dat = Dandelion(_data, metadata = _dat)
             if resample:
                 sizelist = []
                 if self.__class__ == Dandelion:
                     graphlist = []
                 for i in tqdm(range(0, n_resample)):
                     if self.__class__ == Dandelion:
-                        from ..tools._network import clone_centrality, clone_degree, generate_network
-
-                        resampled = generate_network(self, clone_key = clone_key, downsample = minsize, verbose = False)
+                        resampled = generate_network(ddl_dat, clone_key = clone_key, downsample = minsize, verbose = False)
                         if met == 'clone_centrality':
                             clone_centrality(resampled, verbose = False)
                         elif met == 'clone_degree':
@@ -297,7 +304,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 res1.update({g:g_c})
 
                 # vertex closeness centrality or weighted degree distribution
-                if met in _dat:
+                if self.__class__ == Dandelion:                    
                     graphcounts = np.array(_dat[met].value_counts())
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts, method = 'trapezoids')
