@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-02 22:53:38
+# @Last Modified time: 2020-12-03 00:03:57
 
 import pandas as pd
 import numpy as np
@@ -312,6 +312,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     for x in dmat:
         if type(dmat[x]) is np.ndarray:
             dmat[x] = csr_matrix(dmat[x])
+
+    dmat
 
     if verbose:
         logg.info(' finished', time=start,
@@ -759,15 +761,15 @@ def _rescale_layout(pos, scale=1):
             pos[:, i] *= scale / lim
     return pos
 
-def extract_edge_weights(self, full_graph = False):
-    if full_graph:
+def extract_edge_weights(self, expanded_only = False):
+    if expanded_only:
         try:
-            edges,weights = zip(*nx.get_edge_attributes(self.graph[0],'weight').items())
+            edges,weights = zip(*nx.get_edge_attributes(self.graph[1],'weight').items())
         except ValueError as e:
             print('{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'.format(e))
     else:
         try:
-            edges,weights = zip(*nx.get_edge_attributes(self.graph[1],'weight').items())
+            edges,weights = zip(*nx.get_edge_attributes(self.graph[0],'weight').items())
         except ValueError as e:
             print('{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'.format(e))
     if 'weights' in locals():
