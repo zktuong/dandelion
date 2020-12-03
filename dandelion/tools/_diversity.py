@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 11:13:07
+# @Last Modified time: 2020-12-03 13:10:06
 
 import pandas as pd
 import numpy as np
@@ -192,7 +192,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 minsize = downsample
 
         if minsize < 100:
-            warnings.warn("The minimum cell numbers when grouped by {} is {}. Exercise caution when interpreting diversity measures.".format(groupby, minsize))
+            warnings.warn("The minimum cell numbers when grouped by {} is {} (group {}). Exercise caution when interpreting diversity measures.".format(groupby, minsize, metadata[groupby].value_counts().idxmin()))
 
         res1 = {}
         if self.__class__ == Dandelion:            
