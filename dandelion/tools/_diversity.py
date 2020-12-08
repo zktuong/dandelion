@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 13:10:06
+# @Last Modified time: 2020-12-08 15:06:34
 
 import pandas as pd
 import numpy as np
@@ -243,17 +243,18 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                             if g_c < 0:
                                 g_c = 0
                         else:
-                            g_c = np.nan
+                            g_c = 0
                         sizelist.append(g_c)
 
                         # vertex closeness centrality or weighted degree distribution
-                        graphcounts = np.array(resampled.metadata[met].value_counts())
+                        connectednodes = resampled.metadata[met][resampled.metadata[met] > 0]
+                        graphcounts = np.array(connectednodes.value_counts())                        
                         if len(graphcounts) > 0:
                             g_c = gini_index(graphcounts)
                             if g_c < 0:
                                 g_c = 0
                         else:
-                            g_c = np.nan
+                            g_c = 0
                         graphlist.append(g_c)
 
                     if self.__class__ == AnnData:
@@ -271,12 +272,12 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                             if g_c < 0:
                                 g_c = 0
                         else:
-                            g_c = np.nan
+                            g_c = 0
                         sizelist.append(g_c)
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
-                    g_c = np.nan
+                    g_c = 0
 
                 res1.update({g:g_c})
                 if 'graphlist' in locals():
@@ -284,7 +285,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     try:
                         g_c = sum(graphlist)/len(graphlist)
                     except:
-                        g_c = np.nan
+                        g_c = 0
                     res2.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
@@ -300,18 +301,19 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     if g_c < 0:
                         g_c = 0
                 else:
-                    g_c = np.nan
+                    g_c = 0
                 res1.update({g:g_c})
 
                 # vertex closeness centrality or weighted degree distribution
                 if self.__class__ == Dandelion:                    
-                    graphcounts = np.array(_dat[met].value_counts())
+                    connectednodes = _dat[met][_dat[met] > 0]
+                    graphcounts = np.array(connectednodes.value_counts())
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts, method = 'trapezoids')
                         if g_c < 0:
                             g_c = 0
                     else:
-                        g_c = np.nan
+                        g_c = 0
                     res2.update({g:g_c})
 
         if 'res2' in locals():
