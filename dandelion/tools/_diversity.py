@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-08 15:06:34
+# @Last Modified time: 2020-12-08 15:11:22
 
 import pandas as pd
 import numpy as np
@@ -450,12 +450,12 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                     if len(clonesizecounts) > 0:
                         g_c = chao1(clonesizecounts)
                     else:
-                        g_c = np.nan
+                        g_c = 0
                     sizelist.append(g_c)
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
-                    g_c = np.nan
+                    g_c = 0
                 res1.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
@@ -469,7 +469,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
                 if len(clonesizecounts) > 0:
                     g_c = chao1(clonesizecounts)
                 else:
-                    g_c = np.nan
+                    g_c = 0
                 res1.update({g:g_c})
 
         res_df = pd.DataFrame.from_dict([res1]).T
@@ -614,12 +614,15 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                         else:
                             g_c = shannon(clonesizecounts)
                     else:
-                        g_c = np.nan
+                        if normalize:
+                            g_c = 1
+                        else:
+                            g_c = 0
                     sizelist.append(g_c)
                 try:
                     g_c = sum(sizelist)/len(sizelist)
                 except:
-                    g_c = np.nan
+                    g_c = 0
                 res1.update({g:g_c})
             else:
                 _tab = _dat[clonekey].value_counts()
@@ -640,7 +643,10 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
                     else:
                         g_c = shannon(clonesizecounts)
                 else:
-                    g_c = np.nan
+                    if normalize:
+                        g_c = 1
+                    else:
+                        g_c = 0
                 res1.update({g:g_c})
 
         res_df = pd.DataFrame.from_dict([res1]).T
