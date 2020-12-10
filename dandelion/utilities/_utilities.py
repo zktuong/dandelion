@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 12:56:48
+# @Last Modified time: 2020-12-10 21:31:25
 
 import sys
 import os
@@ -872,7 +872,7 @@ class Dandelion:
         graph_counter = 0
         try:
             for g in self.graph:
-                G = nx.to_pandas_adjacency(g)
+                G = nx.to_pandas_adjacency(g, nonedge=np.nan)
                 G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = comp, complevel = compression_level, **kwargs)
                 graph_counter += 1
         except:
