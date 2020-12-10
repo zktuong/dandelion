@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-10 21:31:25
+# @Last Modified time: 2020-12-10 22:40:32
 
 import sys
 import os
@@ -978,8 +978,18 @@ def read_h5(filename='dandelion_data.h5'):
         pass
 
     try:
-        graph0 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/graph_0'))
-        graph1 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/graph_1'))
+        g_0 = pd.read_hdf(filename, 'graph/graph_0')
+        g_1 = pd.read_hdf(filename, 'graph/graph_1')
+        g_0 = g_0 + 1
+        g_0 = g_0.fillna(0)
+        g_1 = g_1 + 1
+        g_1 = g_1.fillna(0)
+        graph0 = nx.from_pandas_adjacency(g_0)
+        graph1 = nx.from_pandas_adjacency(g_1)
+        for u,v,d in graph0.edges(data=True):
+            d['weight'] = d['weight']-1
+        for u,v,d in graph1.edges(data=True):
+            d['weight'] = d['weight']-1
         graph = (graph0, graph1)
     except:
         pass
