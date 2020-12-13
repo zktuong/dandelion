@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 11:25:46
+# @Last Modified time: 2020-12-13 19:57:54
 
 import pandas as pd
 import numpy as np
@@ -362,7 +362,7 @@ def mst(mat):
         mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int), index = mat[c].index, columns = mat[c].columns)
     return(mst_tree)
 
-def clone_degree(self, weight='weight', verbose = True):
+def clone_degree(self, weight=None, verbose = True):
     if verbose:
         start = logg.info('Calculating clone degree')
     if self.__class__ == Dandelion:
