@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-01 11:56:02
+# @Last Modified time: 2020-12-13 20:47:47
 
 import seaborn as sns
 import pandas as pd
@@ -633,8 +633,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
             if pd.api.types.is_categorical_dtype(self.obs[groupby]):
                 try:
                     colorby_dict = dict(zip(list(self.obs[str(colorby)].cat.categories), self.uns[str(colorby)+'_colors']))
-                except:
-                    print("Unable to retrieve category colors. Default to 'Set1'")
+                except:                    
                     pass
     else:
         if type(color_mapping) is dict:
