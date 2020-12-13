@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-13 23:22:36
+# @Last Modified time: 2020-12-13 23:27:41
 
 import sys
 import os
@@ -677,12 +677,16 @@ class Dandelion:
 
         if self.data is not None:
             self.n_contigs = self.data.shape[0]
-            if initialize is True:
-                update_metadata(self, **kwargs)
-            try:
+            if metadata is None:
+                if initialize is True:
+                    update_metadata(self, **kwargs)
+                try:
+                    self.n_obs = self.metadata.shape[0]
+                except:
+                    self.n_obs = 0
+            else:
+                self.metadata = metadata
                 self.n_obs = self.metadata.shape[0]
-            except:
-                self.n_obs = 0
         else:
             self.n_contigs = 0
             self.n_obs = 0
@@ -1030,6 +1034,8 @@ def read_h5(filename='dandelion_data.h5'):
 
     constructor = {}
     constructor['data'] = data
+    if 'metadata' in locals():
+        constructor['metadata'] = metadata
     if 'germline' in locals():
         constructor['germline'] = germline
     if 'edges' in locals():
@@ -1041,13 +1047,11 @@ def read_h5(filename='dandelion_data.h5'):
     if 'graph' in locals():
         constructor['graph'] = graph
     try:
-        res = Dandelion(**constructor)
-        if 'metadata' in locals():
-            res.metadata = metadata.copy()
+        res = Dandelion(**constructor)        
     except:
         res = Dandelion(**constructor, initialize = False)
 
-    if 'treshsold' in locals():
+    if 'threshold' in locals():
         res.threshold = threshold
     else:
         pass
