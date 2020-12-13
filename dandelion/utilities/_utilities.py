@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-10 22:40:32
+# @Last Modified time: 2020-12-13 23:22:36
 
 import sys
 import os
@@ -1030,8 +1030,6 @@ def read_h5(filename='dandelion_data.h5'):
 
     constructor = {}
     constructor['data'] = data
-    if 'metadata' in locals():
-        constructor['metadata'] = metadata
     if 'germline' in locals():
         constructor['germline'] = germline
     if 'edges' in locals():
@@ -1044,6 +1042,8 @@ def read_h5(filename='dandelion_data.h5'):
         constructor['graph'] = graph
     try:
         res = Dandelion(**constructor)
+        if 'metadata' in locals():
+            res.metadata = metadata.copy()
     except:
         res = Dandelion(**constructor, initialize = False)
 
