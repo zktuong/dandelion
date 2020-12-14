@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-03 12:57:26
+# @Last Modified time: 2020-12-14 01:58:19
 
 import os
 import sys
@@ -999,18 +999,16 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     key_added : str, optional
-        Suffix to add to end of the output column.
+        column name where clone size is tabulated into.
     Returns
     ----------
         `Dandelion` object with clone size columns annotated in `.metadata` slot.
     """
 
     start = logg.info('Quantifying clone sizes')
-    if self.__class__ == Dandelion:
-        metadata_ = self.metadata.copy()
-    else:
-        metadata_ = metadata.copy()
-
+    
+    metadata_ = self.metadata.copy()
+    
     if clone_key is None:
         clonekey = 'clone_id'
     else:
@@ -1032,31 +1030,31 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
         clonesize_ = clonesize.copy()
 
     clonesize_dict = dict(clonesize_)
-
-    # TODO: different way of collapsing?
-    # for c in metadata_[str(clonekey)]:
-    #     if '|' in c:
-    #         if len(list(set([clonesize_dict[c_] for c_ in c.split('|')]))) > 1:
-    #             csize = '|'.join([str(clonesize_dict[c_]) for c_ in c.split('|')])
-    #         else:
-    #             csize = list(set([clonesize_dict[c_] for c_ in c.split('|')]))[0]
-    #
-    #     else:
-    #         cize = clonesize_dict[c]
-    # # becomes ['|'.join([str(clonesize_dict[c_]) for c_ in c.split('|')]) if len(list(set([clonesize_dict[c_] for c_ in c.split('|')]))) > 1 else list(set([clonesize_dict[c_] for c_ in c.split('|')]))[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]
-    if self.__class__ == Dandelion:
+    
+    if max_size is not None:
         if key_added is None:
-            self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
+            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = self.metadata[str(clonekey)+'_size_max_'+str(max_size)].astype('category')            
         else:
-            self.metadata[str(clonekey)+'_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
-        logg.info(' finished', time=start,
-            deep=('Updated Dandelion object: \n'
-            '   \'metadata\', cell-indexed clone table'))
+            self.metadata[key_added] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = self.metadata[str(clonekey)+'_size_max_'+str(max_size)].astype('category')
     else:
         if key_added is None:
-            self[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
+            self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            try:
+                self.metadata[str(clonekey)+'_size'] = [int(x) for x in self.metadata[str(clonekey)+'_size']]
+            except:
+                pass
         else:
-            self[str(clonekey)+'_size'+'_'+str(key_added)] = pd.Series(dict(zip(metadata_.index, [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]])))
+            self.metadata[key_added] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            try:
+                self.metadata[key_added] = [int(x) for x in self.metadata[str(clonekey)+'_size']]
+            except:
+                pass
+    logg.info(' finished', time=start,
+        deep=('Updated Dandelion object: \n'
+        '   \'metadata\', cell-indexed clone table'))
+    
 
 def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None):
     """
