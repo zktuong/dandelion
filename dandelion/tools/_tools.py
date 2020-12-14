@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-14 01:58:19
+# @Last Modified time: 2020-12-14 02:12:16
 
 import os
 import sys
@@ -590,7 +590,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
 
     """
     start = logg.info('Transferring network')
-    if dandelion.graph is not None:        
+    if dandelion.graph is not None:
         if expanded_only:
             G = dandelion.graph[1]
         else:
@@ -1006,9 +1006,9 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
     """
 
     start = logg.info('Quantifying clone sizes')
-    
+
     metadata_ = self.metadata.copy()
-    
+
     if clone_key is None:
         clonekey = 'clone_id'
     else:
@@ -1030,23 +1030,23 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
         clonesize_ = clonesize.copy()
 
     clonesize_dict = dict(clonesize_)
-    
+
     if max_size is not None:
         if key_added is None:
-            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
-            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = self.metadata[str(clonekey)+'_size_max_'+str(max_size)].astype('category')            
+            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = self.metadata[str(clonekey)+'_size_max_'+str(max_size)].astype('category')
         else:
-            self.metadata[key_added] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            self.metadata[key_added] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
             self.metadata[str(clonekey)+'_size_max_'+str(max_size)] = self.metadata[str(clonekey)+'_size_max_'+str(max_size)].astype('category')
     else:
         if key_added is None:
-            self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            self.metadata[str(clonekey)+'_size'] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
             try:
                 self.metadata[str(clonekey)+'_size'] = [int(x) for x in self.metadata[str(clonekey)+'_size']]
             except:
                 pass
         else:
-            self.metadata[key_added] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else str(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
+            self.metadata[key_added] = pd.Series(dict(zip(metadata_.index, [str(y) for y in [sorted(list(set([clonesize_dict[c_] for c_ in c.split('|')])), key=lambda x: int(x.split('>= ')[1]) if type(x) is str else int(x), reverse = True)[0] if '|' in c else clonesize_dict[c] for c in metadata_[str(clonekey)]]])))
             try:
                 self.metadata[key_added] = [int(x) for x in self.metadata[str(clonekey)+'_size']]
             except:
@@ -1054,7 +1054,7 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
     logg.info(' finished', time=start,
         deep=('Updated Dandelion object: \n'
         '   \'metadata\', cell-indexed clone table'))
-    
+
 
 def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None):
     """
