@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-13 23:49:37
+# @Last Modified time: 2020-12-14 02:00:18
 
 import sys
 import os
@@ -855,18 +855,18 @@ class Dandelion:
         for col in self.data.columns:
             weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
             if len(self.data[weird]) > 0:
-                self.data[col] = self.data[col].where(pd.notnull(self.data[col]), None)
+                self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
         self.data.to_hdf(filename, "data", complib = comp, complevel = compression_level, **kwargs)
             
-        try:
+        if self.metadata is not None:
             for col in self.metadata.columns:                
                 weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
                 if len(self.metadata[weird]) > 0:
-                    self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), None)
+                    self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
             self.metadata.to_hdf(filename, "metadata", complib = comp, complevel = compression_level, format='table', **kwargs)
-        except:
-            warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
-            pass
+        # except:
+        #     warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
+        #     pass
         try:
             if 'index' in self.edges.columns:
                 self.edges.drop('index', axis = 1, inplace=True)
