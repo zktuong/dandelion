@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-14 02:00:18
+# @Last Modified time: 2020-12-14 02:03:42
 
 import sys
 import os
@@ -953,7 +953,7 @@ def read_pkl(filename='dandelion_data.pkl.pbz2'):
         data = gzip.open(filename, 'rb')
         data = cPickle.load(data)
     else:
-        data = cPickle.load(filename, 'rb')
+        data = cPickle.load(filename)
     return(data)
 
 def read_h5(filename='dandelion_data.h5'):
