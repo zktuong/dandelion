@@ -2,7 +2,7 @@
 
 ![dandelion_logo](notebooks/img/dandelion_logo.png)
 
-Version = 0.0.25
+Version = 0.0.26
 
 ## Intro
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
@@ -68,7 +68,7 @@ python -m ipykernel install --user --name dandelion --display-name "Python (dand
 ```
 
 ## Required database
-Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with immcantation's docker image (4.1.0) (https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html). The blast database were downloaded from IMGT manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj)(Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
+Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with immcantation's docker image (4.1.0) (https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj)(Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
