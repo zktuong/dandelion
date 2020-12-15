@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-25 00:16:33
+# @Last Modified time: 2020-12-13 20:47:47
 
 import seaborn as sns
 import pandas as pd
@@ -49,7 +49,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
         clonekey = clone_key
 
     groups = list(set(metadata[groupby]))
-    metadata = metadata[metadata['has_bcr'].isin([True, 'True'])]
+    metadata = metadata[metadata['bcr_QC_pass'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
@@ -69,7 +69,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
 
     # append the results to a dictionary
     rarecurve = {}
-    for i in range(0, nr):
+    for i in tqdm(range(0, nr), desc = 'Calculating rarefaction curve '):
         n = np.arange(1, tot[i], step = 10)
         if (n[-1:] != tot[i]):
             n = np.append(n, tot[i])
@@ -254,7 +254,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         plt.xticks(rotation=xtick_rotation)
     return fig, ax
 
-def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, min_clone_size = None, clone_key = None, **kwargs):
+def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, min_clone_size = None, clone_key = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -322,7 +322,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     elif sort_descending is None:
         dat_ = dat_.sort_index()
 
-    def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
+    def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=True, H="/", **kwargs):
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
         Parameters
@@ -392,7 +392,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
     return _plot_bar_stacked(dat_, labels = labels, figsize = figsize, title = title, xtick_rotation = xtick_rotation, legend_options = legend_options, hide_legend = hide_legend, **kwargs)
 
-def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=False, legend_options = None, labels=None, clones_sep = None, **kwargs):
+def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
     Parameters
@@ -419,8 +419,6 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
     labels : list
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    clones_sep : tuple[int, str]
-        option to specify how to split up clone names. Default is (0, '_') i.e. it will split according to '_' and select the first string as the 'clone'.
     **kwargs
         other kwargs passed to matplotlib.pyplot.plot
     Return
@@ -443,19 +441,6 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
 
     if 'locus' not in data.columns:
         raise AttributeError("Please ensure dataframe contains 'locus' column")
-    if clonekey in data.columns:
-        if clones_sep is None:
-            scb = (0, '_')
-        else:
-            scb = (clones_sep[0], clones_sep[1])
-        group = []
-        for x in data[str(clonekey)]:
-            if scb[1] not in x:
-                warnings.warn(UserWarning("\n\nClones do not contain '{}' as separator. Will not split the clone.\n".format(scb[1])))
-                group.append(x)
-            else:
-                group.append(x.split(scb[1])[scb[0]])
-        data[str(clonekey)+'_group'] = group
 
     if type(locus) is not list:
         locus = [locus]
@@ -469,7 +454,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
     new_index = range(0, int(dat_[variable].max())+1)
     dat_2 = dat_2.reindex(new_index, fill_value=0)
 
-    def _plot_spectra_stacked(dfall, labels=None, figsize = (6, 4), title="multiple stacked bar plot", width = None, xtick_rotation=None, legend_options = None, hide_legend=False, H="/", **kwargs):
+    def _plot_spectra_stacked(dfall, labels=None, figsize = (6, 4), title="multiple stacked bar plot", width = None, xtick_rotation=None, legend_options = None, hide_legend=True, H="/", **kwargs):
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
@@ -496,7 +481,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1) * i / float(n_col))
                     rect.set_hatch(H * int(i / n_col)) #edited part
                     rect.set_width(wdth) # need to see if there's a better way to toggle this.
-        ax.set_xticks(((np.arange(0, 2 * n_ind, 2) + 1 / float(n_df + 1)) / 2.))
+        
         n = 5  # Keeps every 5th label visible and hides the rest
         [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
         ax.set_title(title)
@@ -565,7 +550,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         raise(ImportError("Unable to import module `nxviz`. Have you done install nxviz? Try pip install git+https://github.com/zktuong/nxviz.git"))
     
     if min_clone_size is None:
-        min_size = 1
+        min_size = 2
     else:
         min_size = int(min_clone_size)
     
@@ -594,11 +579,11 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
 
             if min_size == 0:
                 raise ValueError('min_size must be greater than 0.')
-            elif min_size > 1:
+            elif min_size > 2:
                 overlap[overlap < min_size] = 0
                 overlap[overlap >= min_size] = 1
-            else:
-                overlap[overlap > min_size] = 1
+            elif min_size == 2:
+                overlap[overlap >= min_size] = 1
     
             overlap.index.name = None
             overlap.columns.name = None
@@ -620,11 +605,11 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
 
         if min_size == 0:
             raise ValueError('min_size must be greater than 0.')
-        elif min_size > 1:
+        elif min_size > 2:
             overlap[overlap < min_size] = 0
             overlap[overlap >= min_size] = 1
-        else:
-            overlap[overlap > min_size] = 1
+        elif min_size == 2:
+            overlap[overlap >= min_size] = 1
     
         overlap.index.name = None
         overlap.columns.name = None
@@ -648,8 +633,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
             if pd.api.types.is_categorical_dtype(self.obs[groupby]):
                 try:
                     colorby_dict = dict(zip(list(self.obs[str(colorby)].cat.categories), self.uns[str(colorby)+'_colors']))
-                except:
-                    print("Unable to retrieve category colors. Default to 'Set1'")
+                except:                    
                     pass
     else:
         if type(color_mapping) is dict:

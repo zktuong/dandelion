@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 # Edited by: Kelvin Tuong
-# Date: 2020-05-18
+# Date: 2020-11-28
 #
+# Main changes to the script is the to allow for a run without novel allele detection. And also changed default for V_CALL_GENOTYPED to v_call_genotyped
 #
 # Super script to run TIgGER polymorphism detection and genotyping
 #
@@ -34,6 +35,7 @@ NPROC <- parallel::detectCores()
 FORMAT <- "airr"
 MIN_SEQS <- 50
 GERMLINE_MIN <- 200
+NOVEL <- 'YES'
 # Define commmandline arguments
 opt_list <- list(make_option(c("-d", "--db"), dest="DB",
                              help="Change-O formatted TSV (TAB) file."),
@@ -57,6 +59,9 @@ opt_list <- list(make_option(c("-d", "--db"), dest="DB",
                  make_option(c("-n", "--name"), dest="NAME",
                              help=paste("Sample name or run identifier which will be used as the output file prefix.",
                                         "\n\t\tDefaults to a truncated version of the input filename.")),
+                 make_option(c("-N", "--novel"), dest="NOVEL", default=NOVEL,
+                             help=paste("whether or not to run novel allele discovery.",
+                                        "\n\t\tDefault is FALSE")),
                  make_option(c("-o", "--outdir"), dest="OUTDIR", default=".",
                              help=paste("Output directory. Will be created if it does not exist.",
                                         "\n\t\tDefaults to the current working directory.")),
@@ -95,13 +100,13 @@ if (numeric_version(packageVersion("alakazam")) > numeric_version('0.3.0')) {
 # Load data
 if (opt$FORMAT == "changeo") {
     db <- as.data.frame(alakazam::readChangeoDb(opt$DB))
-    v_call <- "v_call"
-    j_call <- "j_call"
-    junction <- "junction"
-    junction_length <- "junction_length"
-    sequence_alignment <- "sequence_alignment"
-    ext <- "tsv"
-} else if (opt$FORMAT %in% "airr") {
+    v_call <- "V_CALL"
+    j_call <- "J_CALL"
+    junction <- "JUNCTION"
+    junction_length <- "JUNCTION_LENGTH"
+    sequence_alignment <- "SEQUENCE_IMGT"
+    ext <- "tab"
+} else if (opt$FORMAT == "airr") {
     db <- airr::read_rearrangement(opt$DB)
     v_call <- "v_call"
     j_call <- "j_call"
@@ -111,29 +116,42 @@ if (opt$FORMAT == "changeo") {
     ext <- "tsv"
 }
 igv <- readIgFasta(opt$REF)
+
 # Identify polymorphisms and genotype
-# nv <- findNovelAlleles(db, germline_db=igv, v_call=v_call, j_call=j_call,
-#                        seq=sequence_alignment, junction=junction,
-#                        junction_length=junction_length,
-#                        min_seqs=opt$MIN_SEQS, germline_min=opt$GERMLINE_MIN,
-#                        nproc=opt$NPROC)
-# gt <- inferGenotype(db, germline_db=igv, novel=nv,
-#                     v_call=v_call, seq=sequence_alignment)
-gt <- inferGenotype(db, germline_db=igv, v_call=v_call, seq=sequence_alignment)
+if (opt$NOVEL == "YES"){
+    nv <- findNovelAlleles(db, germline_db=igv, v_call=v_call, j_call=j_call,
+                       seq=sequence_alignment, junction=junction,
+                       junction_length=junction_length,
+                       min_seqs=opt$MIN_SEQS, germline_min=opt$GERMLINE_MIN,
+                       nproc=opt$NPROC)
+    gt <- inferGenotype(db, germline_db=igv, novel=nv, v_call=v_call, seq=sequence_alignment)
+} else if (opt$NOVEL == "NO"){
+    gt <- inferGenotype(db, germline_db=igv, v_call=v_call, seq=sequence_alignment)
+}
+
 write.table(gt, file.path(opt$OUTDIR, paste0(opt$NAME, "_inferredGenotype.txt")), sep="\t",quote=FALSE,row.names = FALSE)
+
 # Write genotype FASTA file
-# gt_seq <- genotypeFasta(gt, germline_db=igv, novel=nv)
-gt_seq <- genotypeFasta(gt, germline_db=igv)
+if (opt$NOVEL == "YES"){
+    gt_seq <- genotypeFasta(gt, germline_db=igv, novel=nv)
+} else if (opt$NOVEL == "NO"){
+    gt_seq <- genotypeFasta(gt, germline_db=igv)
+}
+
 writeFasta(gt_seq, file.path(opt$OUTDIR, paste0(opt$NAME, "_genotype.fasta")))
+
 # Modify allele calls
 db <- reassignAlleles(db, gt_seq, v_call=v_call, seq=sequence_alignment)
+
 # Rename genotyped V call column if necessary
 if (opt$VFIELD != v_call_genotyped) {
     db[[opt$VFIELD]] <- db[[v_call_genotyped]]
     db <- dplyr::select(db, -v_call_genotyped)
 }
+
 # Write genotyped data
 writeChangeoDb(db, file.path(opt$OUTDIR, paste0(opt$NAME, "_genotyped.",ext)))
+
 # Plot genotype
 plot_file <- file.path(opt$OUTDIR, paste0(opt$NAME, "_genotype.pdf"))
 pdf(plot_file, width=7, height=10, useDingbats=FALSE)

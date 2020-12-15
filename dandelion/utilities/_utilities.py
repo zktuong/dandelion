@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-24 23:01:47
+# @Last Modified time: 2020-12-14 03:22:29
 
 import sys
 import os
@@ -174,7 +174,7 @@ def load_data(obj):
     """
     if os.path.isfile(str(obj)):
         try:
-            obj_ = pd.read_csv(obj, sep = '\t', dtype = 'object')
+            obj_ = pd.read_csv(obj, sep = '\t')
         except FileNotFoundError as e:
             print(e)
     elif isinstance(obj, pd.DataFrame):
@@ -195,28 +195,26 @@ def setup_metadata_(data):
     Parameters
     ----------
     data : DataFrame
-        pandas DataFrame object.
-    sep : tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+        pandas DataFrame object.    
     Returns
     -------
         pandas DataFrame object.
     """
-    dat_h = data[data['locus'] == 'IGH']
+    dat_h = data[data['locus'] == 'IGH'].copy()
     dict_h = dict(zip(dat_h['sequence_id'], dat_h['cell_id']))
     metadata_ = pd.DataFrame.from_dict(dict_h, orient = 'index', columns = ['cell_id'])
     metadata_.set_index('cell_id', inplace = True)
     return(metadata_)
 
-def setup_metadata(data, sep, clone_key = None):
+def setup_metadata(data, clone_key = None):
     """
     A Dandelion class subfunction to initialize the `.metadata` slot.
     Parameters
     ----------
     data : DataFrame
         pandas DataFrame object.
-    sep : tuple[int, str]
-        A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+    clone_key : str, optiona;
+        column name of clone id. None defaults to 'clone_id'.
     Returns
     -------
         pandas DataFrame object.
@@ -226,8 +224,8 @@ def setup_metadata(data, sep, clone_key = None):
     else:
         clonekey = clone_key
 
-    dat_h = data[data['locus'] == 'IGH']
-    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
+    dat_h = data[data['locus'] == 'IGH'].copy()
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])].copy()
     if dat_l.shape[0] == 0:
         clone_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[clonekey])))
         metadata_ = pd.DataFrame.from_dict(clone_h, orient = 'index', columns = ['cell_id', 'heavy'])
@@ -241,22 +239,6 @@ def setup_metadata(data, sep, clone_key = None):
             clones_list[x] = '|'.join(cl)
         metadata_[clonekey] = pd.Series(clones_list)
         metadata_ = metadata_[[clonekey]]
-        if sep is None:
-            scb = (0, '_')
-        else:
-            scb = (sep[0], sep[1])
-        group = []
-        # check if contain the separator
-        x = list(metadata_[clonekey].str.contains(scb[1]))
-        cl_ = list(metadata_[clonekey])
-        for c in range(0, len(metadata_[clonekey])):
-            if not x[c]:
-                warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
-                group.append(cl_[c])
-            else:
-                group.append(cl_[c].split(scb[1])[scb[0]])
-        groupseries = dict(zip(metadata_.index, group))
-        metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
         
         tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop = False)
@@ -306,23 +288,7 @@ def setup_metadata(data, sep, clone_key = None):
             clones_list[x] = '|'.join(cl)
         metadata_[clonekey] = pd.Series(clones_list)
         metadata_ = metadata_[[clonekey]]
-        if sep is None:
-            scb = (0, '_')
-        else:
-            scb = (sep[0], sep[1])
-        group = []
-        # check if contain the separator
-        x = list(metadata_[clonekey].str.contains(scb[1]))
-        cl_ = list(metadata_[clonekey])
-        for c in range(0, len(metadata_[clonekey])):
-            if not x[c]:
-                warnings.warn(UserWarning("\n\nSome/all clones do not contain '{}' as separator. \n".format(scb[1])))
-                group.append(cl_[c])
-            else:
-                group.append(cl_[c].split(scb[1])[scb[0]])
-        groupseries = dict(zip(metadata_.index, group))
-        metadata_[str(clonekey)+'_group'] = pd.Series(groupseries)
-        
+
         tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop = False)
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]
@@ -356,8 +322,8 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
     -------
         A dictionary with keys as cell_ids and records as retrieved value.
     """
-    dat_h = data[data['locus'] == 'IGH']
-    dat_l = data[data['locus'].isin(['IGK', 'IGL'])]
+    dat_h = data[data['locus'] == 'IGH'].copy()
+    dat_l = data[data['locus'].isin(['IGK', 'IGL'])].copy()
     if dat_l.shape[0] == 0:
         retrieve_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[retrieve_id])))
         sub_metadata = pd.DataFrame.from_dict(retrieve_h, orient = 'index', columns = ['cell_id', 'heavy'])
@@ -452,11 +418,11 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     metadata_status = self.metadata
     if metadata_status is None:
         if clonekey in dat.columns:
-            self.metadata = setup_metadata(dat, clones_sep, clonekey)
+            self.metadata = setup_metadata(dat, clonekey)
         else:
             self.metadata = setup_metadata_(dat)
     else:
-        self.metadata = self.metadata
+        self.metadata = self.metadata.copy()
 
     if 'sample_id' in dat.columns:
         samp_id = retrieve_metadata(dat, 'sample_id', False, True)
@@ -527,9 +493,9 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         if metadata_status is None:
             if clonekey in self.data.columns:
                 if 'sample_id' in self.data.columns:
-                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'v_call_heavy', 'j_call_heavy', 'c_call_heavy']]
+                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_by_size', 'isotype', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'v_call_heavy', 'j_call_heavy', 'c_call_heavy']]
                 else:
-                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'v_call_heavy','j_call_heavy','c_call_heavy']]
+                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_by_size', 'isotype', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'v_call_heavy','j_call_heavy','c_call_heavy']]
             else:
                 if 'sample_id' in self.data.columns:
                     self.metadata = self.metadata[['sample_id', 'isotype', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'v_call_heavy','j_call_heavy','c_call_heavy']]
@@ -538,11 +504,14 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     
         # new function to retrieve non-standard columns
         if retrieve is not None:
-            if retrieve in dat.columns:                                    
-                retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
-                self.metadata[str(retrieve)+'_heavy'] = pd.Series(retrieve_dict)                
-            else:
-                raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
+            if type(retrieve) is str:
+                retrieve = [retrieve]                
+            for ret in retrieve:
+                if ret in dat.columns:                                    
+                    retrieve_dict = retrieve_metadata(dat, ret, False, True)
+                    self.metadata[str(ret)+'_heavy'] = pd.Series(retrieve_dict)
+                else:
+                    raise KeyError('Unknown column : \'%s\' to retrieve.' % ret)
     else:
         if 'v_call_genotyped' in dat.columns:
             heavy_v_call, light_v_call = retrieve_metadata(dat, 'v_call_genotyped', True, False)
@@ -659,33 +628,35 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         if metadata_status is None:
             if clonekey in self.data.columns:
                 if 'sample_id' in self.data.columns:
-                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+                    self.metadata = self.metadata[['sample_id', str(clonekey), str(clonekey)+'_by_size', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
                 else:
-                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_group', str(clonekey)+'_by_size', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
+                    self.metadata = self.metadata[[str(clonekey), str(clonekey)+'_by_size', 'isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
             else:
                 if 'sample_id' in self.data.columns:
                     self.metadata = self.metadata[['sample_id', 'isotype', 'lightchain', 'status', 'vdj_status', 'productive',  'umi_counts_heavy', 'umi_counts_light', 'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
                 else:
                     self.metadata = self.metadata[['isotype', 'lightchain', 'productive', 'status', 'vdj_status', 'umi_counts_heavy', 'umi_counts_light',  'v_call_heavy', 'v_call_light', 'j_call_heavy', 'j_call_light', 'c_call_heavy', 'c_call_light']]
-    
         # new function to retrieve non-standard columns
         if retrieve is not None:
-            if retrieve in dat.columns:
-                if not split_heavy_light:
-                    if collapse:
-                        retrieve_dict = retrieve_metadata(dat, retrieve, False, True)
+            if type(retrieve) is str:
+                retrieve = [retrieve]
+            for ret in retrieve:
+                if ret in dat.columns:
+                    if not split_heavy_light:
+                        if collapse:
+                            retrieve_dict = retrieve_metadata(dat, ret, False, True)
+                        else:
+                            retrieve_dict = retrieve_metadata(dat, ret, False, False)
+                        self.metadata[str(ret)] = pd.Series(retrieve_dict)
                     else:
-                        retrieve_dict = retrieve_metadata(dat, retrieve, False, False)
-                    self.metadata[str(retrieve)] = pd.Series(retrieve_dict)
+                        if collapse:
+                            h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, ret, True, True)
+                        else:
+                            h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, ret, True, False)
+                        self.metadata[str(ret)+'_heavy'] = pd.Series(h_retrieve_dict)
+                        self.metadata[str(ret)+'_light'] = pd.Series(l_retrieve_dict)
                 else:
-                    if collapse:
-                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, True, True)
-                    else:
-                        h_retrieve_dict, l_retrieve_dict = retrieve_metadata(dat, retrieve, True, False)
-                    self.metadata[str(retrieve)+'_heavy'] = pd.Series(h_retrieve_dict)
-                    self.metadata[str(retrieve)+'_light'] = pd.Series(l_retrieve_dict)
-            else:
-                raise KeyError('Unknown column : \'%s\' to retrieve.' % retrieve)
+                    raise KeyError('Unknown column : \'%s\' to retrieve.' % ret)
 
 class Dandelion:
     def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
@@ -706,12 +677,16 @@ class Dandelion:
 
         if self.data is not None:
             self.n_contigs = self.data.shape[0]
-            if initialize is True:
-                update_metadata(self, **kwargs)
-            try:
+            if metadata is None:
+                if initialize is True:
+                    update_metadata(self, **kwargs)
+                try:
+                    self.n_obs = self.metadata.shape[0]
+                except:
+                    self.n_obs = 0
+            else:
+                self.metadata = metadata
                 self.n_obs = self.metadata.shape[0]
-            except:
-                self.n_obs = 0
         else:
             self.n_contigs = 0
             self.n_obs = 0
@@ -841,7 +816,7 @@ class Dandelion:
             cPickle.dump(self, f, **kwargs)
             f.close()
 
-    def write_h5(self, filename='dandelion_data.h5', complib = 'blosc:lz4', compression_level = None, **kwargs):
+    def write_h5(self, filename='dandelion_data.h5', complib = None, compression = None, compression_level = None, **kwargs):
         """
         Writes a `Dandelion` class to .h5 format.
         Parameters
@@ -850,6 +825,8 @@ class Dandelion:
             path to Dandelion `.h5` file.
         complib : str, optional
             method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
+        compression : str, optional
+            same call as complib. Just a convenience option.
         compression_opts : {0-9}, optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
@@ -865,35 +842,43 @@ class Dandelion:
             for datasetname in hf.keys():
                 del hf[datasetname]
 
+        if complib is None and compression is None:
+            comp = None
+        elif complib is not None and compression is None:
+            comp = complib
+        elif complib is None and compression is not None:
+            comp = compression
+        if complib is not None and compression is not None:
+            raise ValueError('Please specify only complib or compression. They do the same thing.')
+
         # now to actually saving
-        try:
-            for col in self.data.columns:
-                weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
-                if len(self.data[weird]) > 0:
-                    self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
-            self.data.to_hdf(filename, "data", complib = complib, complevel = compression_level, **kwargs)
-        except:
-            raise AttributeError('Please populate the Dandelion class with at least the .data slot before saving.')
-        try:
-            for col in self.metadata.columns:
+        for col in self.data.columns:
+            weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
+            if len(self.data[weird]) > 0:
+                self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
+        self.data.to_hdf(filename, "data", complib = comp, complevel = compression_level, **kwargs)
+            
+        if self.metadata is not None:
+            for col in self.metadata.columns:                
                 weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
                 if len(self.metadata[weird]) > 0:
                     self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
-            self.metadata.to_hdf(filename, "metadata", complib = complib, complevel = compression_level, **kwargs)
-        except:
-            pass
+            self.metadata.to_hdf(filename, "metadata", complib = comp, complevel = compression_level, format='table', nan_rep=np.nan, **kwargs)
+        # except:
+        #     warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
+        #     pass
         try:
             if 'index' in self.edges.columns:
                 self.edges.drop('index', axis = 1, inplace=True)
-            self.edges.to_hdf(filename, "edges", complib = complib, complevel = compression_level, **kwargs)
+            self.edges.to_hdf(filename, "edges", complib = comp, complevel = compression_level, **kwargs)
         except:
             pass
 
         graph_counter = 0
         try:
             for g in self.graph:
-                G = nx.to_pandas_adjacency(g)
-                G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = complib, complevel = compression_level, **kwargs)
+                G = nx.to_pandas_adjacency(g, nonedge=np.nan)
+                G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = comp, complevel = compression_level, **kwargs)
                 graph_counter += 1
         except:
             pass
@@ -901,7 +886,7 @@ class Dandelion:
         try:
             for d in self.distance:
                 dat = pd.DataFrame(self.distance[d].toarray()) # how to make this faster?
-                dat.to_hdf(filename, "distance/"+d, complib = complib, complevel = compression_level, **kwargs)
+                dat.to_hdf(filename, "distance/"+d, complib = comp, complevel = compression_level, **kwargs)
         except:
             pass
 
@@ -918,9 +903,12 @@ class Dandelion:
             try:
                 layout_counter = 0
                 for l in self.layout:
-                    hf.create_group('layout/layout_'+str(layout_counter))
+                    try:
+                        hf.create_group('layout/layout_'+str(layout_counter))
+                    except:
+                        pass
                     for k in l.keys():
-                        hf['layout/'+str(layout_counter)].attrs[k] = l[k]
+                        hf['layout/layout_'+str(layout_counter)].attrs[k] = l[k]
                     layout_counter += 1
             except:
                 pass
@@ -965,7 +953,8 @@ def read_pkl(filename='dandelion_data.pkl.pbz2'):
         data = gzip.open(filename, 'rb')
         data = cPickle.load(data)
     else:
-        data = cPickle.load(filename, 'rb')
+        with open(filename, 'rb') as f:
+            data = cPickle.load(f)
     return(data)
 
 def read_h5(filename='dandelion_data.h5'):
@@ -979,8 +968,7 @@ def read_h5(filename='dandelion_data.h5'):
     Returns
     -------
        Dandelion object.
-    """
-    hf = h5py.File(filename, 'r')
+    """    
     try:
         data = pd.read_hdf(filename, 'data')
     except:
@@ -996,45 +984,55 @@ def read_h5(filename='dandelion_data.h5'):
         pass
 
     try:
-        graph0 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/graph_0'))
-        graph1 = nx.from_pandas_adjacency(pd.read_hdf(filename, 'graph/graph_1'))
+        g_0 = pd.read_hdf(filename, 'graph/graph_0')
+        g_1 = pd.read_hdf(filename, 'graph/graph_1')
+        g_0 = g_0 + 1
+        g_0 = g_0.fillna(0)
+        g_1 = g_1 + 1
+        g_1 = g_1.fillna(0)
+        graph0 = nx.from_pandas_adjacency(g_0)
+        graph1 = nx.from_pandas_adjacency(g_1)
+        for u,v,d in graph0.edges(data=True):
+            d['weight'] = d['weight']-1
+        for u,v,d in graph1.edges(data=True):
+            d['weight'] = d['weight']-1
         graph = (graph0, graph1)
     except:
         pass
 
-    try:
-        layout0 = {}
-        for k in hf['layout/layout_0'].attrs.keys():
-            layout0.update({k:np.array(hf['layout/layout_0'].attrs[k])})
-        layout1 = {}
-        for k in hf['layout/layout_1'].attrs.keys():
-            layout1.update({k:np.array(hf['layout/layout_1'].attrs[k])})
-        layout = (layout0, layout1)
-    except:
-        pass
-
-    germline = {}
-    try:
-        for g in hf['germline'].attrs:
-            germline.update({g:hf['germline'].attrs[g]})
-    except:
-        pass
-
-    distance = Tree()
-    try:
-        for d in hf['distance'].keys():
-            d_ = pd.read_hdf(filename, 'distance/'+d)
-            distance[d] = scipy.sparse.csr_matrix(d_.values)
-            # d_ = hf['distance'][d]
-            # distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
-    except:
-        pass
-
-    try:
-        threshold = np.float(np.array(hf['threshold']))
-    except:
-        threshold = None
-    hf.close()
+    with h5py.File(filename, 'r') as hf:
+        try:
+            layout0 = {}
+            for k in hf['layout/layout_0'].attrs.keys():
+                layout0.update({k:np.array(hf['layout/layout_0'].attrs[k])})
+            layout1 = {}
+            for k in hf['layout/layout_1'].attrs.keys():
+                layout1.update({k:np.array(hf['layout/layout_1'].attrs[k])})
+            layout = (layout0, layout1)
+        except:
+            pass
+    
+        germline = {}
+        try:
+            for g in hf['germline'].attrs:
+                germline.update({g:hf['germline'].attrs[g]})
+        except:
+            pass
+    
+        distance = Tree()
+        try:
+            for d in hf['distance'].keys():
+                d_ = pd.read_hdf(filename, 'distance/'+d)
+                distance[d] = scipy.sparse.csr_matrix(d_.values)
+                # d_ = hf['distance'][d]
+                # distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
+        except:
+            pass
+    
+        try:
+            threshold = np.float(np.array(hf['threshold']))
+        except:
+            threshold = None
 
     constructor = {}
     constructor['data'] = data
@@ -1051,11 +1049,11 @@ def read_h5(filename='dandelion_data.h5'):
     if 'graph' in locals():
         constructor['graph'] = graph
     try:
-        res = Dandelion(**constructor)
+        res = Dandelion(**constructor)        
     except:
         res = Dandelion(**constructor, initialize = False)
 
-    if 'treshsold' in locals():
+    if 'threshold' in locals():
         res.threshold = threshold
     else:
         pass
@@ -1088,30 +1086,25 @@ def concat(arrays, check_unique = False):
     return(out)
 
 
-# def convert_preprocessed_tcr_10x(file, prefix = None, save = None):
+# def convert_preprocessed_tcr_10x(file, prefix = None):
 #     """
 #     Parameters
 #     ----------
 #     file : str
 #         file path to .tsv file.
 #     prefix : str
-#         prefix to add to barcodes. Ignored if left as None.
-#     save : str
-#         file path to save location. Defaults to 'dandelion/data/' if left as None.
+#         prefix to add to barcodes. Ignored if left as None.    
 #     """
-
-#     cr_annot = load_data(file)
+#     from tqdm import tqdm
+#     import re
+#     cr_annot = pd.read_csv(file)
 #     if prefix is not None:
 #         cr_annot['index']=[prefix+'_'+i for i in cr_annot['contig_id']]
 #     else:
 #         cr_annot['index']=[i for i in cr_annot['contig_id']]
 #     cr_annot.set_index('index', inplace = True)
 
-#     try:
-#         ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
-#     except:
-#         ddl_annot = pd.read_csv("{}/dandelion/data/tmp/{}_igblast.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), sep = '\t', dtype = 'object')
-#     ddl_annot.set_index('sequence_id', inplace = True, drop = False)
+#     ddl_annot = load_data("{}/tmp/{}_igblast_db-pass.tsv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]))
 
 #     for i in tqdm(ddl_annot.index, desc = 'Processing data '):
 #         v = ddl_annot.loc[i, 'v_call']
@@ -1162,22 +1155,19 @@ def concat(arrays, check_unique = False):
 #         'junction':'cdr3_nt'}
 
 #     for i in tqdm(cr_annot.index, desc = 'Matching and updating contig ids'):
-#         for key, value in cellrangermap.items():
-#             if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
-#                 cr_annot.at[i, value] = ddl_annot.loc[i, key]
-#             else:
-#                 cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
+#         if i in ddl_annot.index:
+#             for key, value in cellrangermap.items():
+#                 if cr_annot.loc[i, 'chain'] not in ['IGH', 'IGK', 'IGL', None]:
+#                     cr_annot.at[i, value] = ddl_annot.loc[i, key]
+#                 else:
+#                     cr_annot.at[i, 'contig_id'] = ddl_annot.loc[i, 'sequence_id']
 
-#         if cr_annot.loc[i, 'cdr3'] is np.nan:
-#             cr_annot.at[i, 'productive'] = None
-#         else:
-#             if cr_annot.loc[i, 'productive'] == 'T':
-#                 cr_annot.at[i, 'productive'] = 'True'
+#             if cr_annot.loc[i, 'cdr3'] is np.nan:
+#                 cr_annot.at[i, 'productive'] = None
 #             else:
-#                 cr_annot.at[i, 'productive'] = 'False'
+#                 if cr_annot.loc[i, 'productive'] == 'T':
+#                     cr_annot.at[i, 'productive'] = 'True'
+#                 else:
+#                     cr_annot.at[i, 'productive'] = 'False'
+#     cr_annot.to_csv("{}/{}_annotations_reannotated.csv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), index = False, na_rep = 'None')
 
-#     cr_annot['barcode'] = [c.split('_contig')[0].split('-')[0] for c in cr_annot['contig_id']]
-#     if save is not None:
-#         cr_annot.to_csv(save, index = False, na_rep = 'None')
-#     else:
-#         cr_annot.to_csv("{}/dandelion/data/{}".format(os.path.dirname(file), os.path.basename(file)), index = False, na_rep = 'None')
