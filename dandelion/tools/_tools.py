@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-14 02:12:16
+# @Last Modified time: 2020-12-15 21:30:26
 
 import os
 import sys
@@ -658,7 +658,8 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         #     pass
 
     for x in dandelion.metadata.columns:
-        self.obs[x] = pd.Series(dandelion.metadata[x])
+        if x not in self.obs.columns:
+            self.obs[x] = pd.Series(dandelion.metadata[x])
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
