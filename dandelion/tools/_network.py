@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-13 19:57:54
+# @Last Modified time: 2020-12-16 19:53:59
 
 import pandas as pd
 import numpy as np
@@ -171,7 +171,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     if downsample is not None:
         dat_downsample = dat_h.append(dat_l)
-        out = Dandelion(dat_downsample)
+        downsample_meta = self.metadata[self.metadata.index.isin(dat_h['cell_id'])].copy()
+        out = Dandelion(dat_downsample, metadata = downsample_meta)
 
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
@@ -335,7 +336,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         else:
             threshold_ = None
         if downsample is not None:
-            out = Dandelion(data = dat_downsample, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
+            out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
             out.threshold = threshold_
             return(out)
         else:
