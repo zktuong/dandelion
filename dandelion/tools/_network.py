@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 23:43:09
+# @Last Modified time: 2020-12-16 23:50:07
 
 import pandas as pd
 import numpy as np
@@ -439,7 +439,7 @@ def clone_vertexsize(self, clone_key = None, verbose = True):
                         nodes = sorted(list(supernode))
                         for node in nodes[1:]:
                             G = nx.contracted_nodes(G, nodes[0], node)
-                    progress_bar.update(1) # update progress
+                        progress_bar.update(1) # update progress
             else:
                 for supernode in nx.connected_components(G):
                     nodes = sorted(list(supernode))
