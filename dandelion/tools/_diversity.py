@@ -2,13 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 15:50:11
+# @Last Modified time: 2020-12-16 15:51:52
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
-from ..tools._network import clone_centrality, clone_degree, _voterank, generate_network
+from ..tools._network import clone_centrality, clone_degree, clone_voterank, generate_network
 from scipy.special import gammaln
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
