@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 23:13:56
+# @Last Modified time: 2020-12-16 23:36:02
 
 import pandas as pd
 import numpy as np
@@ -434,10 +434,12 @@ def clone_vertexsize(self, clone_key = None, verbose = True):
             G = nx.MultiGraph(G)
             # contract nodes
             if verbose:
-                for supernode in tqdm(nx.connected_components(G), desc = 'merging nodes '):
-                    nodes = sorted(list(supernode))
-                    for node in nodes[1:]:
-                        G = nx.contracted_nodes(G, nodes[0], node)
+                with tqdm(total = len(list(nx.connected_components(G)))) as progress_bar:
+                    for supernode in tqdm(nx.connected_components(G), desc = 'merging nodes '):
+                        nodes = sorted(list(supernode))
+                        for node in nodes[1:]:
+                            G = nx.contracted_nodes(G, nodes[0], node)
+                    progress_bar.update(1) # update progress
             else:
                 for supernode in nx.connected_components(G):
                     nodes = sorted(list(supernode))
