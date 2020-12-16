@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 23:04:44
+# @Last Modified time: 2020-12-16 23:57:22
 
 import pandas as pd
 import numpy as np
@@ -198,6 +198,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         res1 = {}
         if self.__class__ == Dandelion:
             print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
+            sleep(0.5)
             if met == 'clone_vertexsize':
                 clone_vertexsize(self, clone_key = clonekey, verbose = True)
             elif met == 'clone_centrality':
