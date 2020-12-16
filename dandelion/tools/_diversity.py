@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 22:23:22
+# @Last Modified time: 2020-12-16 22:58:41
 
 import pandas as pd
 import numpy as np
@@ -180,6 +180,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             met = metric
 
         # split up the table by groupby
+        metadata[groupby].cat.remove_unused_categories(inplace = True)
         groups = list(set(metadata[groupby]))
 
         if downsample is None:
