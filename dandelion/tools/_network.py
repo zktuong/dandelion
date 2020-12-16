@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 15:48:42
+# @Last Modified time: 2020-12-13 19:57:54
 
 import pandas as pd
 import numpy as np
@@ -387,7 +387,7 @@ def clone_degree(self, weight=None, verbose = True):
         raise TypeError('Input object must be of {}'.format(Dandelion))
     
 
-def clone_centrality(self, verbose = True):
+def clone_centrality(self, weight='weight', verbose = True):
     if verbose:
         start = logg.info('Calculating clone closeness centrality')
     if self.__class__ == Dandelion:
@@ -405,31 +405,6 @@ def clone_centrality(self, verbose = True):
             cc = nx.closeness_centrality(G)
             cc = pd.DataFrame.from_dict(cc, orient = 'index', columns = ['clone_centrality'])
             self.metadata['clone_centrality'] = pd.Series(cc['clone_centrality'])
-            if verbose:
-                logg.info(' finished', time=start,
-                    deep=('Updated Dandelion metadata\n'))
-    else:
-        raise TypeError('Input object must be of {}'.format(Dandelion))
-
-
-def clone_voterank(self, verbose = True):
-    if verbose:
-        start = logg.info('Calculating clone voterank')
-    if self.__class__ == Dandelion:
-        try:
-            G = self.graph[0]
-        except:
-            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
-            A = csr_matrix(dist)
-            G = nx.Graph()
-            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
-
-        if len(G) is 0:
-            raise AttributeError('Graph not found. Plase run tl.generate_network.')
-        else:
-            vr = nx.voterank(G)
-            vr = pd.DataFrame.from_dict(vr, orient = 'index', columns = ['clone_voterank'])
-            self.metadata['clone_voterank'] = pd.Series(cc['clone_voterank'])
             if verbose:
                 logg.info(' finished', time=start,
                     deep=('Updated Dandelion metadata\n'))

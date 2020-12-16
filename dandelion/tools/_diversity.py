@@ -2,13 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 15:50:11
+# @Last Modified time: 2020-12-16 14:34:16
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
-from ..tools._network import clone_centrality, clone_degree, _voterank, generate_network
+from ..tools._network import clone_centrality, clone_degree, generate_network
 from scipy.special import gammaln
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
@@ -201,8 +201,6 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 clone_centrality(self, verbose = True)
             elif met == 'clone_degree':
                 clone_degree(self, verbose = True)
-            elif met == 'clone_voterank':
-                clone_voterank(self, verbose = True)
             metadata = self.metadata.copy()
             data = self.data.copy()
             res2 = {}
@@ -228,8 +226,6 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                             clone_centrality(resampled, verbose = False)
                         elif met == 'clone_degree':
                             clone_degree(resampled, verbose = False)
-                        elif met == 'clone_voterank':
-                            clone_voterank(resampled, verbose = False)
                         else:
                             raise ValueError('Unknown metric for calculating network stats. Please specify one of `clone_centrality` or `clone_degree`.')
                         # clone size gini
