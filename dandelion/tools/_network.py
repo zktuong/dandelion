@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 22:20:38
+# @Last Modified time: 2020-12-16 23:02:51
 
 import pandas as pd
 import numpy as np
@@ -435,8 +435,12 @@ def clone_vertexsize(self, clone_key = None, verbose = True):
             # contract nodes
             for supernode in nx.connected_components(G):
                 nodes = sorted(list(supernode))
-                for node in nodes[1:]:
-                    G = nx.contracted_nodes(G, nodes[0], node)
+                if verbose:
+                    for node in tqdm(nodes[1:], desc = 'contracting nodes '):
+                        G = nx.contracted_nodes(G, nodes[0], node)
+                else:
+                    for node in nodes[1:]:
+                        G = nx.contracted_nodes(G, nodes[0], node)
             selfloopsedgelist = list(nx.selfloop_edges(G))
             count_dict = {i[0]:selfloopsedgelist.count(i)+1 for i in selfloopsedgelist}
             all_nodes = list(G.nodes)
