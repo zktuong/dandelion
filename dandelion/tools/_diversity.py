@@ -2,13 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 16:38:18
+# @Last Modified time: 2020-12-16 22:23:22
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
-from ..tools._network import clone_centrality, clone_degree, generate_network
+from ..tools._network import clone_centrality, clone_degree, clone_vertexsize, generate_network
 from scipy.special import gammaln
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
@@ -99,7 +99,7 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
     method : str
         Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
     metric : str, optional
-        Metric to use for calculating Gini indices of clones. Accepts 'clone_degree' and 'clone_centrality'. Defaults to 'clone_centrality'.
+        Metric to use for calculating Gini indices of clones. Accepts one of ['clone_vertexsize', clone_degree', 'clone_centrality']. Defaults to 'clone_vertexsize'.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -175,7 +175,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             clonekey = clone_key
 
         if metric is None:
-            met = 'clone_centrality'
+            met = 'clone_vertexsize'
         else:
             met = metric
 
@@ -197,7 +197,9 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         res1 = {}
         if self.__class__ == Dandelion:
             print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
-            if met == 'clone_centrality':
+            if met == 'clone_vertexsize':
+                clone_vertexsize(self, clone_key = clonekey, verbose = True)
+            elif met == 'clone_centrality':
                 clone_centrality(self, verbose = True)
             elif met == 'clone_degree':
                 clone_degree(self, verbose = True)
@@ -221,15 +223,17 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     graphlist = []
                 for i in tqdm(range(0, n_resample)):
                     if self.__class__ == Dandelion:
-                        resampled = generate_network(ddl_dat, clone_key = clone_key, downsample = minsize, verbose = False)
-                        if met == 'clone_centrality':
+                        resampled = generate_network(ddl_dat, clone_key = clonekey, downsample = minsize, verbose = False)
+                        if met == 'clone_vertexsize':
+                            clone_vertexsize(resampled, clone_key = clonekey, verbose = False)
+                        elif met == 'clone_centrality':
                             clone_centrality(resampled, verbose = False)
                         elif met == 'clone_degree':
                             clone_degree(resampled, verbose = False)
                         else:
                             raise ValueError('Unknown metric for calculating network stats. Please specify one of `clone_centrality` or `clone_degree`.')
                         # clone size gini
-                        _dat = resampled.data.copy()
+                        _dat = resampled.metadata.copy()
                         _tab = _dat[clonekey].value_counts()
                         if 'nan' in _tab.index or np.nan in _tab.index:
                             try:
@@ -248,10 +252,20 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                             g_c = 0
                         sizelist.append(g_c)
 
-                        # vertex closeness centrality or weighted degree distribution
-                        connectednodes = resampled.metadata[met][resampled.metadata[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
-                        graphcounts = np.array(connectednodes.value_counts())
-                        # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
+                        if met == 'clone_vertexsize':
+                            vertexsizes = _dat.groupby([clonekey]).mean()[met]
+                            if 'nan' in vertexsizes.index or np.nan in vertexsizes.index:
+                                try:
+                                    vertexsizes.drop('nan', inplace = True)
+                                except:
+                                    vertexsizes.drop(np.nan, inplace = True)
+                            graphcounts = np.array(sorted(vertexsizes, reverse = True))
+                            graphcounts = np.append(graphcounts, 0)
+                        else:
+                            # vertex closeness centrality or weighted degree distribution
+                            connectednodes = resampled.metadata[met][resampled.metadata[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
+                            graphcounts = np.array(connectednodes.value_counts())
+                            # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
                         if len(graphcounts) > 0:
                             g_c = gini_index(graphcounts)
                             if g_c < 0 or np.isnan(g_c):
@@ -310,12 +324,22 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 else:
                     g_c = 0
                 res1.update({g:g_c})
-
-                # vertex closeness centrality or weighted degree distribution
+                
                 if self.__class__ == Dandelion:
-                    connectednodes = _dat[met][_dat[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
-                    graphcounts = np.array(connectednodes.value_counts())
-                    # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
+                    if met == 'clone_vertexsize':
+                        vertexsizes = _dat.groupby([clonekey]).mean()[met]
+                        if 'nan' in vertexsizes.index or np.nan in vertexsizes.index:
+                            try:
+                                vertexsizes.drop('nan', inplace = True)
+                            except:
+                                vertexsizes.drop(np.nan, inplace = True)
+                        graphcounts = np.array(sorted(vertexsizes, reverse = True))
+                        graphcounts = np.append(graphcounts, 0)
+                    else:
+                        # vertex closeness centrality or weighted degree distribution
+                        connectednodes = _dat[met][_dat[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
+                        graphcounts = np.array(connectednodes.value_counts())
+                        # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts, method = 'trapezoids')
                         if g_c < 0 or np.isnan(g_c):
