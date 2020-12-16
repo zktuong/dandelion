@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 22:58:41
+# @Last Modified time: 2020-12-16 23:04:44
 
 import pandas as pd
 import numpy as np
@@ -268,7 +268,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                             graphcounts = np.array(connectednodes.value_counts())
                             # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
                         if len(graphcounts) > 0:
-                            g_c = gini_index(graphcounts)
+                            g_c = gini_index(graphcounts, method = 'trapezoids')
                             if g_c < 0 or np.isnan(g_c):
                                 g_c = 0
                         else:
@@ -319,7 +319,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 # append a single zero for lorenz curve calculation
                 clonesizecounts = np.append(clonesizecounts, 0)
                 if len(clonesizecounts) > 0:
-                    g_c = gini_index(clonesizecounts)
+                    g_c = gini_index(clonesizecounts, method = 'trapezoids')
                     if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
                         g_c = 0
                 else:
