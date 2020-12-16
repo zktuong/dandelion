@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 14:34:16
+# @Last Modified time: 2020-12-16 15:56:41
 
 import pandas as pd
 import numpy as np
@@ -251,7 +251,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                         # vertex closeness centrality or weighted degree distribution
                         connectednodes = resampled.metadata[met][resampled.metadata[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
                         graphcounts = np.array(connectednodes.value_counts())
-                        graphcounts = np.append(graphcounts, 0)
+                        # graphcounts = np.append(graphcounts, 0)
                         if len(graphcounts) > 0:
                             g_c = gini_index(graphcounts)
                             if g_c < 0 or np.isnan(g_c):
@@ -315,7 +315,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 if self.__class__ == Dandelion:
                     connectednodes = _dat[met][_dat[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
                     graphcounts = np.array(connectednodes.value_counts())
-                    graphcounts = np.append(graphcounts, 0)
+                    # graphcounts = np.append(graphcounts, 0)
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts, method = 'trapezoids')
                         if g_c < 0 or np.isnan(g_c):
