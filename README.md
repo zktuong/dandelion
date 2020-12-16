@@ -36,11 +36,11 @@ First, install [scanpy](https://scanpy.readthedocs.io/en/latest/installation.htm
 # these are required by dandelion
 conda install -c conda-forge distance joblib plotnine adjustText
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-conda install -c conda-forge rpy2
-# or pip install rpy2
+conda install -c conda-forge "rpy2>=3.3.2,<3.3.5" # to make compatible for R version 4
+# or pip install "rpy2>=3.3.2,<3.3.5"
 # If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
 # then run
-# env CC=/path/to/location/of/bin/gcc-9 pip install rpy2
+# env CC=/path/to/location/of/bin/gcc-9 pip install "rpy2>=3.3.2,<3.3.5"
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
 # and then lastly install this
@@ -119,7 +119,7 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-rpy2>=3.3.2
+rpy2>=3.3.2,<3.3.5
 ```
 
 R packages
