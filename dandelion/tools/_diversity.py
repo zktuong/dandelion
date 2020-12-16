@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-08 15:11:22
+# @Last Modified time: 2020-12-16 14:34:16
 
 import pandas as pd
 import numpy as np
@@ -168,7 +168,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
-            metadata = self.metadata.copy()            
+            metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = 'clone_id'
         else:
@@ -195,7 +195,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             warnings.warn("The minimum cell numbers when grouped by {} is {} (group {}). Exercise caution when interpreting diversity measures.".format(groupby, minsize, metadata[groupby].value_counts().idxmin()))
 
         res1 = {}
-        if self.__class__ == Dandelion:            
+        if self.__class__ == Dandelion:
             print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
             if met == 'clone_centrality':
                 clone_centrality(self, verbose = True)
@@ -206,7 +206,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             res2 = {}
         else:
             print("{} provided. Only computing gini for clone size.".format(self.__class__.__name__))
-        if resample:            
+        if resample:
             print("Downsampling each group specified in `{}` to {} cells for calculating gini indices.".format(groupby, minsize))
         sleep(0.5)
         for g in groups:
@@ -238,20 +238,23 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                                 _tab.drop(np.nan, inplace = True)
                         clonesizecounts = np.array(_tab)
                         clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                        # append a single zero for lorenz curve calculation
+                        clonesizecounts = np.append(clonesizecounts, 0)
                         if len(clonesizecounts) > 0:
                             g_c = gini_index(clonesizecounts, method = 'trapezoids')
-                            if g_c < 0:
+                            if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
                                 g_c = 0
                         else:
                             g_c = 0
                         sizelist.append(g_c)
 
                         # vertex closeness centrality or weighted degree distribution
-                        connectednodes = resampled.metadata[met][resampled.metadata[met] > 0]
-                        graphcounts = np.array(connectednodes.value_counts())                        
+                        connectednodes = resampled.metadata[met][resampled.metadata[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
+                        graphcounts = np.array(connectednodes.value_counts())
+                        graphcounts = np.append(graphcounts, 0)
                         if len(graphcounts) > 0:
                             g_c = gini_index(graphcounts)
-                            if g_c < 0:
+                            if g_c < 0 or np.isnan(g_c):
                                 g_c = 0
                         else:
                             g_c = 0
@@ -267,9 +270,11 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                                 _tab.drop(np.nan, inplace = True)
                         clonesizecounts = np.array(_tab)
                         clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                        # append a single zero for lorenz curve calculation
+                        clonesizecounts = np.append(clonesizecounts, 0)
                         if len(clonesizecounts) > 0:
                             g_c = gini_index(clonesizecounts, method = 'trapezoids')
-                            if g_c < 0:
+                            if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
                                 g_c = 0
                         else:
                             g_c = 0
@@ -296,21 +301,24 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                         _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                # append a single zero for lorenz curve calculation
+                clonesizecounts = np.append(clonesizecounts, 0)
                 if len(clonesizecounts) > 0:
                     g_c = gini_index(clonesizecounts)
-                    if g_c < 0:
+                    if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
                         g_c = 0
                 else:
                     g_c = 0
                 res1.update({g:g_c})
 
                 # vertex closeness centrality or weighted degree distribution
-                if self.__class__ == Dandelion:                    
-                    connectednodes = _dat[met][_dat[met] > 0]
+                if self.__class__ == Dandelion:
+                    connectednodes = _dat[met][_dat[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
                     graphcounts = np.array(connectednodes.value_counts())
+                    graphcounts = np.append(graphcounts, 0)
                     if len(graphcounts) > 0:
                         g_c = gini_index(graphcounts, method = 'trapezoids')
-                        if g_c < 0:
+                        if g_c < 0 or np.isnan(g_c):
                             g_c = 0
                     else:
                         g_c = 0
