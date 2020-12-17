@@ -2,13 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 23:57:22
+# @Last Modified time: 2020-12-17 13:46:39
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
-from ..tools._network import clone_centrality, clone_degree, clone_vertexsize, generate_network
+from ..tools._network import clone_centrality, clone_degree, generate_network
 from scipy.special import gammaln
 from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
@@ -118,21 +118,85 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
+    if downsample is not None:
+        resample = True
     if method == 'gini':
         if update_obs_meta:
-            diversity_gini(self, groupby, metric, clone_key, update_obs_meta, diversity_key, resample, n_resample, downsample)
+            diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample)
         else:
-            return(diversity_gini(self, groupby, metric, clone_key, update_obs_meta, diversity_key, resample, n_resample, downsample))
+            return(diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample))
     if method == 'chao1':
         if update_obs_meta:
-            diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, downsample)
+            diversity_chao1(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample)
         else:
-            return(diversity_chao1(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, downsample))
+            return(diversity_chao1(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample))
     if method == 'shannon':
         if update_obs_meta:
-            diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize, downsample)
+            diversity_shannon(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample)
         else:
-            return(diversity_shannon(self, groupby, clone_key, update_obs_meta, diversity_key, resample, n_resample, normalize, downsample))
+            return(diversity_shannon(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample))
+
+def clone_vertexsize(self, verbose = True):
+    if verbose:
+        start = logg.info('Calculating vertex size of nodes after contraction')
+
+    if self.__class__ == Dandelion:
+        try:
+            G = self.graph[0]
+        except:
+            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
+            A = csr_matrix(dist)
+            G = nx.Graph()
+            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
+
+        if len(G) is 0:
+            raise AttributeError('Graph not found. Plase run tl.generate_network.')
+        else:
+            remove_edges = defaultdict(list)
+            vertexsizes = defaultdict(list)
+            nodes_names = defaultdict(list)
+            vertex_counts = defaultdict(dict)
+            if verbose:
+                for subg in tqdm(nx.connected_components(G), desc = 'Reducing graph '):
+                    nodes = sorted(list(subg))
+                    tmp = nodes[0] #  just assign the value in a single cell, because this will be representative of the clone
+                    for n in nodes:
+                        nodes_names[n] = tmp # keep so i can reference later
+                    if len(nodes) > 1:
+                        G_ = G.subgraph(nodes).copy()
+                        remove_edges[tmp] = [(e[0],e[1]) for e in G_.edges(data = True) if e[2]['weight'] > 0]
+                        if len(remove_edges[tmp]) > 0:
+                            G_.remove_edges_from(remove_edges[tmp])
+                            for connected in nx.connected_components(G_):
+                                vertexsizes[tmp].append(len(connected))
+                            vertexsizes[tmp] = sorted(vertexsizes[tmp], reverse = True)
+                        else:
+                            vertexsizes[tmp] = [1 for i in range(len(G_.edges(data = True)))]
+                    else:
+                        vertexsizes[tmp] = [1]
+            else:
+                for subg in nx.connected_components(G):
+                    nodes = sorted(list(subg))
+                    tmp = nodes[0] # just assign the value in a single cell, because this will be representative of the clone
+                    for n in nodes:
+                        nodes_names[n] = tmp # keep so i can reference later
+                    if len(nodes) > 1:
+                        G_ = G.subgraph(nodes).copy()
+                        remove_edges[tmp] = [(e[0],e[1]) for e in G_.edges(data = True) if e[2]['weight'] > 0]
+                        if len(remove_edges[tmp]) > 0:
+                            G_.remove_edges_from(remove_edges[tmp])
+                            for connected in nx.connected_components(G_):
+                                vertexsizes[tmp].append(len(connected))
+                            vertexsizes[tmp] = sorted(vertexsizes[tmp], reverse = True)
+                        else:
+                            vertexsizes[tmp] = [1 for i in range(len(G_.edges(data = True)))]
+                    else:
+                        vertexsizes[tmp] = [1]
+            # vertexsizes = pd.DataFrame(pd.Series(vertex_counts).reset_index().set_axis(['cell_id','counts'],1,inplace=False))
+            return(nodes_names, vertexsizes)
+    else:
+        raise TypeError('Input object must be of {}'.format(Dandelion))
+
 
 def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50, downsample = None):
     """
@@ -180,17 +244,17 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             met = metric
 
         # split up the table by groupby
+        metadata[groupby] = metadata[groupby].astype('category')
         metadata[groupby].cat.remove_unused_categories(inplace = True)
         groups = list(set(metadata[groupby]))
 
         if downsample is None:
             minsize = metadata[groupby].value_counts().min()
         else:
-            if downsample > metadata[groupby].value_counts().min():
-                print('Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.')
+            minsize = downsample
+            if minsize > metadata[groupby].value_counts().min():
+                print('Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.'.format(downsample))
                 minsize = metadata[groupby].value_counts().min()
-            else:
-                minsize = downsample
 
         if minsize < 100:
             warnings.warn("The minimum cell numbers when grouped by {} is {} (group {}). Exercise caution when interpreting diversity measures.".format(groupby, minsize, metadata[groupby].value_counts().idxmin()))
@@ -200,7 +264,19 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
             sleep(0.5)
             if met == 'clone_vertexsize':
-                clone_vertexsize(self, clone_key = clonekey, verbose = True)
+                n_n, v_s = clone_vertexsize(self, verbose = True)
+                g_c = defaultdict(dict)
+                g_c_res = {}
+                for vs in v_s:
+                    v_sizes = np.array(v_s[vs])
+                    if len(v_sizes) > 1:
+                        v_sizes = np.append(v_sizes, 0)
+                    g_c[vs] = gini_index(v_sizes, method = 'trapezoids')
+                    if g_c[vs] < 0 or np.isnan(g_c[vs]):
+                        g_c[vs] = 0
+                    for cell in n_n:
+                        g_c_res.update({cell:g_c[n_n[cell]]})
+                self.metadata['clone_vertexsize_gini'] = pd.Series(g_c_res)
             elif met == 'clone_centrality':
                 clone_centrality(self, verbose = True)
             elif met == 'clone_degree':
@@ -227,7 +303,19 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     if self.__class__ == Dandelion:
                         resampled = generate_network(ddl_dat, clone_key = clonekey, downsample = minsize, verbose = False)
                         if met == 'clone_vertexsize':
-                            clone_vertexsize(resampled, clone_key = clonekey, verbose = False)
+                            n_n, v_s = clone_vertexsize(resampled, verbose = False)
+                            g_c = defaultdict(dict)
+                            g_c_res = {}
+                            for vs in v_s:
+                                v_sizes = np.array(v_s[vs])
+                                if len(v_sizes) > 1:
+                                    v_sizes = np.append(v_sizes, 0)
+                                g_c[vs] = gini_index(v_sizes, method = 'trapezoids')
+                                if g_c[vs] < 0 or np.isnan(g_c[vs]):
+                                    g_c[vs] = 0
+                                for cell in n_n:
+                                    g_c_res.update({cell:g_c[n_n[cell]]})
+                            resampled.metadata['clone_vertexsize_gini'] = pd.Series(g_c_res)
                         elif met == 'clone_centrality':
                             clone_centrality(resampled, verbose = False)
                         elif met == 'clone_degree':
@@ -244,8 +332,9 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                                 _tab.drop(np.nan, inplace = True)
                         clonesizecounts = np.array(_tab)
                         clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                        # append a single zero for lorenz curve calculation
-                        clonesizecounts = np.append(clonesizecounts, 0)
+                        if len(clonesizecounts) > 1:
+                            # append a single zero for lorenz curve calculation
+                            clonesizecounts = np.append(clonesizecounts, 0)
                         if len(clonesizecounts) > 0:
                             g_c = gini_index(clonesizecounts, method = 'trapezoids')
                             if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
@@ -255,28 +344,20 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                         sizelist.append(g_c)
 
                         if met == 'clone_vertexsize':
-                            vertexsizes = _dat.groupby([clonekey]).mean()[met]
-                            if 'nan' in vertexsizes.index or np.nan in vertexsizes.index:
-                                try:
-                                    vertexsizes.drop('nan', inplace = True)
-                                except:
-                                    vertexsizes.drop(np.nan, inplace = True)
-                            graphcounts = np.array(sorted(vertexsizes, reverse = True))
-                            graphcounts = np.append(graphcounts, 0)
+                            graphlist.append(_dat[met+'_gini'].mean())
                         else:
                             # vertex closeness centrality or weighted degree distribution
                             connectednodes = resampled.metadata[met][resampled.metadata[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
                             graphcounts = np.array(connectednodes.value_counts())
                             # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
-                        if len(graphcounts) > 0:
-                            g_c = gini_index(graphcounts, method = 'trapezoids')
-                            if g_c < 0 or np.isnan(g_c):
+                            if len(graphcounts) > 0:
+                                g_c = gini_index(graphcounts, method = 'trapezoids')
+                                if g_c < 0 or np.isnan(g_c):
+                                    g_c = 0
+                            else:
                                 g_c = 0
-                        else:
-                            g_c = 0
-                        graphlist.append(g_c)
-
-                    if self.__class__ == AnnData:
+                            graphlist.append(g_c)
+                    elif self.__class__ == AnnData:
                         _dat = _dat.sample(minsize)
                         _tab = _dat[clonekey].value_counts()
                         if 'nan' in _tab.index or np.nan in _tab.index:
@@ -287,7 +368,9 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                         clonesizecounts = np.array(_tab)
                         clonesizecounts = clonesizecounts[clonesizecounts > 0]
                         # append a single zero for lorenz curve calculation
-                        clonesizecounts = np.append(clonesizecounts, 0)
+                        if len(clonesizecounts) > 1:
+                            # append a single zero for lorenz curve calculation
+                            clonesizecounts = np.append(clonesizecounts, 0)
                         if len(clonesizecounts) > 0:
                             g_c = gini_index(clonesizecounts, method = 'trapezoids')
                             if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
@@ -317,8 +400,9 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                         _tab.drop(np.nan, inplace = True)
                 clonesizecounts = np.array(_tab)
                 clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                # append a single zero for lorenz curve calculation
-                clonesizecounts = np.append(clonesizecounts, 0)
+                if len(clonesizecounts) > 1:
+                    # append a single zero for lorenz curve calculation
+                    clonesizecounts = np.append(clonesizecounts, 0)
                 if len(clonesizecounts) > 0:
                     g_c = gini_index(clonesizecounts, method = 'trapezoids')
                     if g_c < 0 or np.isnan(g_c): # probably not needed anymore but keep just in case
@@ -326,29 +410,22 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                 else:
                     g_c = 0
                 res1.update({g:g_c})
-                
+
                 if self.__class__ == Dandelion:
                     if met == 'clone_vertexsize':
-                        vertexsizes = _dat.groupby([clonekey]).mean()[met]
-                        if 'nan' in vertexsizes.index or np.nan in vertexsizes.index:
-                            try:
-                                vertexsizes.drop('nan', inplace = True)
-                            except:
-                                vertexsizes.drop(np.nan, inplace = True)
-                        graphcounts = np.array(sorted(vertexsizes, reverse = True))
-                        graphcounts = np.append(graphcounts, 0)
+                        res2.update({g:_dat[met+'_gini'].mean()})
                     else:
                         # vertex closeness centrality or weighted degree distribution
                         connectednodes = _dat[met][_dat[met] > 0] # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
                         graphcounts = np.array(connectednodes.value_counts())
                         # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
-                    if len(graphcounts) > 0:
-                        g_c = gini_index(graphcounts, method = 'trapezoids')
-                        if g_c < 0 or np.isnan(g_c):
+                        if len(graphcounts) > 0:
+                            g_c = gini_index(graphcounts, method = 'trapezoids')
+                            if g_c < 0 or np.isnan(g_c):
+                                g_c = 0
+                        else:
                             g_c = 0
-                    else:
-                        g_c = 0
-                    res2.update({g:g_c})
+                        res2.update({g:g_c})
 
         if 'res2' in locals():
             res_df = pd.DataFrame.from_dict([res1,res2]).T
@@ -376,7 +453,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = gini_indices(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    res  = gini_indices(self, groupby, clone_key, resample = resample, n_resample = n_resample, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'
@@ -447,16 +524,17 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
             clonekey = clone_key
 
         # split up the table by groupby
+        metadata[groupby] = metadata[groupby].astype('category')
+        metadata[groupby].cat.remove_unused_categories(inplace = True)
         groups = list(set(metadata[groupby]))
 
         if downsample is None:
             minsize = metadata[groupby].value_counts().min()
         else:
-            if downsample > metadata[groupby].value_counts().min():
-                print('Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.')
+            minsize = downsample
+            if minsize > metadata[groupby].value_counts().min():
+                print('Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.'.format(downsample))
                 minsize = metadata[groupby].value_counts().min()
-            else:
-                minsize = downsample
 
         if minsize < 100:
             warnings.warn('The minimum cell numbers when grouped by {} is {}. Exercise caution when interpreting diversity measures.'.format(groupby, minsize))
@@ -529,7 +607,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = chao1_estimates(self, groupby, clone_key, resample = resample, n_resample = n_resample)
+    res  = chao1_estimates(self, groupby, clone_key, resample = resample, n_resample = n_resample, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'
@@ -602,16 +680,17 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
             clonekey = clone_key
 
         # split up the table by groupby
+        metadata[groupby] = metadata[groupby].astype('category')
+        metadata[groupby].cat.remove_unused_categories(inplace = True)
         groups = list(set(metadata[groupby]))
 
         if downsample is None:
             minsize = metadata[groupby].value_counts().min()
         else:
-            if downsample > metadata[groupby].value_counts().min():
-                print('Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.')
+            minsize = downsample
+            if minsize > metadata[groupby].value_counts().min():
+                print('Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.'.format(downsample))
                 minsize = metadata[groupby].value_counts().min()
-            else:
-                minsize = downsample
 
         if minsize < 100:
             warnings.warn('The minimum cell numbers when grouped by {} is {}. Exercise caution when interpreting diversity measures.'.format(groupby, minsize))
@@ -708,7 +787,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample, normalize = normalize)
+    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample, normalize = normalize, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'

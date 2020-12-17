@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 23:50:07
+# @Last Modified time: 2020-12-17 11:47:09
 
 import pandas as pd
 import numpy as np
@@ -409,59 +409,6 @@ def clone_centrality(self, verbose = True):
                     deep=('Updated Dandelion metadata\n'))
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
-
-def clone_vertexsize(self, clone_key = None, verbose = True):
-    if verbose:
-        start = logg.info('Calculating vertex size of nodes after contraction')
-
-    if clone_key is None:
-        clonekey = 'clone_id'
-    else:
-        clonekey = clone_key
-
-    if self.__class__ == Dandelion:
-        try:
-            G = self.graph[0]
-        except:
-            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(self.distance[x]) is csr_matrix], axis = 0)
-            A = csr_matrix(dist)
-            G = nx.Graph()
-            G.add_weighted_edges_from(zip(list(self.metadata.index), list(self.metadata.index), A.data))
-
-        if len(G) is 0:
-            raise AttributeError('Graph not found. Plase run tl.generate_network.')
-        else:
-            G = nx.MultiGraph(G)
-            # contract nodes
-            if verbose:
-                with tqdm(total = len(list(nx.connected_components(G))), desc = 'reducing graph ') as progress_bar:
-                    for supernode in nx.connected_components(G):
-                        nodes = sorted(list(supernode))
-                        for node in nodes[1:]:
-                            G = nx.contracted_nodes(G, nodes[0], node)
-                        progress_bar.update(1) # update progress
-            else:
-                for supernode in nx.connected_components(G):
-                    nodes = sorted(list(supernode))
-                    for node in nodes[1:]:
-                        G = nx.contracted_nodes(G, nodes[0], node)
-            selfloopsedgelist = list(nx.selfloop_edges(G))
-            count_dict = {i[0]:selfloopsedgelist.count(i)+1 for i in selfloopsedgelist}
-            all_nodes = list(G.nodes)
-            newnodeattributes_dict = dict(zip(all_nodes, [1 for i in all_nodes]))
-            newnodeattributes_dict.update(count_dict)
-            # nx.set_node_attributes(G, values = newnodeattributes_dict, name = 'vertex_size')
-            vs = pd.DataFrame.from_dict(newnodeattributes_dict, orient = 'index', columns = ['node_vertexsize'])
-            self.metadata['node_vertexsize'] = pd.Series(vs['node_vertexsize'])
-            clonevertexsize_dict = dict(self.metadata.groupby([clonekey]).mean()['node_vertexsize'])
-            clonevertexsize_dict.update({np.nan:0}) # just in case 
-            self.metadata['clone_vertexsize'] = [clonevertexsize_dict[c] for c in self.metadata[clonekey]]
-            if verbose:
-                logg.info(' finished', time=start,
-                    deep=('Updated Dandelion metadata\n'))
-    else:
-        raise TypeError('Input object must be of {}'.format(Dandelion))
-
 
 def generate_layout(vertices, edges = None, min_size = 2, weight = None, verbose = True, **kwargs):
     G = nx.Graph()
