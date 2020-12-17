@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 13:59:24
+# @Last Modified time: 2020-12-17 14:02:13
 
 import pandas as pd
 import numpy as np
@@ -261,7 +261,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
 
         res1 = {}
         if self.__class__ == Dandelion:
-            print("{} provided. Computing gini for clone size and clone network.".format(self.__class__.__name__))
+            print("{} provided. Computing Gini indices for clone size and clone network.".format(self.__class__.__name__))
             sleep(0.5)
             if met == 'clone_vertexsize':
                 n_n, v_s = clone_vertexsize(self, verbose = True)
@@ -285,7 +285,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             data = self.data.copy()
             res2 = {}
         else:
-            print("{} provided. Only computing gini for clone size.".format(self.__class__.__name__))
+            print("{} provided. Only computing Gini indices for clone size.".format(self.__class__.__name__))
         if resample:
             print("Downsampling each group specified in `{}` to {} cells for calculating gini indices.".format(groupby, minsize))
         sleep(0.5)
