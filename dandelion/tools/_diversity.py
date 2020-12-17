@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 18:21:56
+# @Last Modified time: 2020-12-17 19:46:21
 
 import pandas as pd
 import numpy as np
@@ -268,7 +268,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             print("{} provided. Computing Gini indices for clone size and clone network.".format(self.__class__.__name__))
             sleep(0.5)
             if met == 'clone_vertexsize':
-                if not reconstruct_network:                    
+                if not reconstruct_network:
                     n_n, v_s = clone_vertexsize(self, verbose = True)
                     g_c = defaultdict(dict)
                     g_c_res = {}
@@ -431,9 +431,8 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                                 if g_c[vs] < 0 or np.isnan(g_c[vs]):
                                     g_c[vs] = 0
                                 for cell in n_n:
-                                    g_c_res.update({cell:g_c[n_n[cell]]})
-                            ddl_dat.metadata[met+'_gini'] = pd.Series(g_c_res)
-                            res2.update({g:ddl_dat.metadata[met+'_gini'].mean()})
+                                    g_c_res.update({cell:g_c[n_n[cell]]})                            
+                            res2.update({g:pd.Series(g_c_res).mean()})
                         else:
                             res2.update({g:_dat[met+'_gini'].mean()})
                     else:
