@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 13:46:39
+# @Last Modified time: 2020-12-17 13:53:24
 
 import pandas as pd
 import numpy as np
@@ -127,14 +127,14 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
             return(diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample))
     if method == 'chao1':
         if update_obs_meta:
-            diversity_chao1(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample)
+            diversity_chao1(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample)
         else:
-            return(diversity_chao1(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample))
+            return(diversity_chao1(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample))
     if method == 'shannon':
         if update_obs_meta:
-            diversity_shannon(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample)
+            diversity_shannon(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample)
         else:
-            return(diversity_shannon(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample))
+            return(diversity_shannon(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample))
 
 def clone_vertexsize(self, verbose = True):
     if verbose:
