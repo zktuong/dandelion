@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 14:02:13
+# @Last Modified time: 2020-12-17 14:16:45
 
 import pandas as pd
 import numpy as np
@@ -453,7 +453,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = gini_indices(self, groupby, clone_key, resample = resample, n_resample = n_resample, downsample = downsample)
+    res  = gini_indices(self, groupby, clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'
