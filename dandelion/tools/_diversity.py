@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 14:16:45
+# @Last Modified time: 2020-12-17 15:02:20
 
 import pandas as pd
 import numpy as np
@@ -453,7 +453,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = gini_indices(self, groupby, clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample)
+    res  = gini_indices(self, groupby = groupby, clone_key = clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'
@@ -607,7 +607,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = chao1_estimates(self, groupby, clone_key, resample = resample, n_resample = n_resample, downsample = downsample)
+    res  = chao1_estimates(self, groupby = groupby, clone_key = clone_key, resample = resample, n_resample = n_resample, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'
@@ -787,7 +787,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = shannon_entropy(self, groupby, clone_key, resample = resample, n_resample = n_resample, normalize = normalize, downsample = downsample)
+    res  = shannon_entropy(self, groupby = groupby, clone_key = clone_key, resample = resample, n_resample = n_resample, normalize = normalize, downsample = downsample)
 
     if diversity_key is None:
         diversitykey = 'diversity'
