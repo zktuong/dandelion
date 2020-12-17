@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 13:53:24
+# @Last Modified time: 2020-12-17 13:59:24
 
 import pandas as pd
 import numpy as np
@@ -513,7 +513,7 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
     """
     start = logg.info('Calculating Chao1 estimates')
 
-    def chao1_estimates(self, groupby, clone_key = None, resample = False, n_resample = 50):
+    def chao1_estimates(self, groupby, clone_key = None, resample = False, n_resample = 50, downsample = None):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -669,7 +669,7 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
     """
     start = logg.info('Calculating Shannon entropy')
 
-    def shannon_entropy(self, groupby, clone_key = None, resample = False, n_resample = 50, normalize = True):
+    def shannon_entropy(self, groupby, clone_key = None, resample = False, n_resample = 50, normalize = True, downsample = None):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
