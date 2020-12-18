@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 19:47:12
+# @Last Modified time: 2020-12-18 10:56:43
 
 import pandas as pd
 import numpy as np
@@ -86,7 +86,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     if self.__class__ == Dandelion:
         return({'rarefaction_cells_x':pred, 'rarefaction_clones_y':y})
 
-def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = False, downsample = None, n_resample = 50, normalize = True, reconstruct_network = True):
+def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = False, downsample = None, n_resample = 50, normalize = True, reconstruct_network = True, expanded_only = False):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -116,6 +116,8 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
     reconstruct_network : bool
         Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.
+    expanded_only : bool
+        Whether or not to restrict calculation of expanded clones only. Currently limited to vertex size gini only.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
@@ -124,9 +126,9 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         resample = True
     if method == 'gini':
         if update_obs_meta:
-            diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network)
+            diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only)
         else:
-            return(diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network))
+            return(diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only))
     if method == 'chao1':
         if update_obs_meta:
             diversity_chao1(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample)
@@ -138,7 +140,7 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         else:
             return(diversity_shannon(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample))
 
-def clone_vertexsize(self, verbose = True):
+def clone_vertexsize(self, expanded_only = False, verbose = True):
     if verbose:
         start = logg.info('Calculating vertex size of nodes after contraction')
 
@@ -175,7 +177,10 @@ def clone_vertexsize(self, verbose = True):
                         else:
                             vertexsizes[tmp] = [1 for i in range(len(G_.edges(data = True)))]
                     else:
-                        vertexsizes[tmp] = [1]
+                        if not expanded_only:
+                            vertexsizes[tmp] = [1]
+                        else:
+                            pass
             else:
                 for subg in nx.connected_components(G):
                     nodes = sorted(list(subg))
@@ -193,14 +198,17 @@ def clone_vertexsize(self, verbose = True):
                         else:
                             vertexsizes[tmp] = [1 for i in range(len(G_.edges(data = True)))]
                     else:
-                        vertexsizes[tmp] = [1]
+                        if not expanded_only:
+                            vertexsizes[tmp] = [1]
+                        else:
+                            pass
             # vertexsizes = pd.DataFrame(pd.Series(vertex_counts).reset_index().set_axis(['cell_id','counts'],1,inplace=False))
             return(nodes_names, vertexsizes)
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True):
+def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True, expanded_only = False):
     """
     Compute B cell clones Gini indices.
 
@@ -223,16 +231,18 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
     n_resample : int
         Number of times to perform resampling. Default is 50.
     downsample : int, optional
-        number of cells to downsample to. If None, defaults to size of smallest group.
+        Number of cells to downsample to. If None, defaults to size of smallest group.
     reconstruct_network : bool
         Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.
+    expanded_only : bool
+        Whether or not to restrict calculation of expanded clones only. Currently limited to vertex size gini only.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, metric = None, clone_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True):
+    def gini_indices(self, groupby, metric = None, clone_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True, expanded_only = False):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -269,7 +279,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
             sleep(0.5)
             if met == 'clone_vertexsize':
                 if not reconstruct_network:
-                    n_n, v_s = clone_vertexsize(self, verbose = True)
+                    n_n, v_s = clone_vertexsize(self, expanded_only = expanded_only, verbose = True)
                     g_c = defaultdict(dict)
                     g_c_res = {}
                     for vs in v_s:
@@ -308,7 +318,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     if self.__class__ == Dandelion:
                         resampled = generate_network(ddl_dat, clone_key = clonekey, downsample = minsize, verbose = False)
                         if met == 'clone_vertexsize':
-                            n_n, v_s = clone_vertexsize(resampled, verbose = False)
+                            n_n, v_s = clone_vertexsize(resampled, expanded_only = expanded_only, verbose = False)
                             g_c = defaultdict(dict)
                             g_c_res = {}
                             for vs in v_s:
@@ -420,7 +430,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     if met == 'clone_vertexsize':
                         if reconstruct_network:
                             generate_network(ddl_dat, clone_key = clonekey, verbose = False)
-                            n_n, v_s = clone_vertexsize(ddl_dat, verbose = False)
+                            n_n, v_s = clone_vertexsize(ddl_dat, expanded_only = expanded_only, verbose = False)
                             g_c = defaultdict(dict)
                             g_c_res = {}
                             for vs in v_s:
@@ -474,7 +484,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         elif self.__class__ == Dandelion:
             self.metadata = metadata.copy()
 
-    res  = gini_indices(self, groupby = groupby, clone_key = clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample, reconstruct_network = reconstruct_network)
+    res  = gini_indices(self, groupby = groupby, clone_key = clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only)
 
     if diversity_key is None:
         diversitykey = 'diversity'
