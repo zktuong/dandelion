@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-15 21:30:26
+# @Last Modified time: 2020-12-28 16:28:24
 
 import os
 import sys
@@ -565,8 +565,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
         return(out)
 
 
-
-def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key = None, bcr_key = None):
+def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key = None, bcr_key = None, overwrite = None):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -584,6 +583,8 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         prefix for stashed RNA connectivities and distances.
     bcr_key : str, optional
         prefix for stashed BCR connectivities and distances.
+    overwrite : str, list, optional
+        Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).
     Returns
     ----------
         `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
@@ -660,6 +661,11 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
     for x in dandelion.metadata.columns:
         if x not in self.obs.columns:
             self.obs[x] = pd.Series(dandelion.metadata[x])
+        if overwrite is not None:
+            if not type(overwrite) is list:
+                overwrite = [overwrite]
+            for ow in overwrite:
+                self.obs[ow] = pd.Series(dandelion.metadata[ow])
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
