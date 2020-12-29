@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-11-29 14:15:54
+# @Last Modified time: 2020-12-29 20:58:23
 
 import os
 import pandas as pd
@@ -19,7 +19,7 @@ import re
 
 def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', verbose = False):
     """
-    reannotate with IgBLASTn
+    Reannotate with IgBLASTn.
 
     Parameters
     ----------
@@ -68,7 +68,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', ve
 
 def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', extended = True, verbose = False):
     """
-    parses IgBLAST output to airr format
+    Parses IgBLAST output to airr format.
 
     Parameters
     ----------
@@ -127,7 +127,7 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
 
 def parsedb_heavy(db_file, verbose = False):
     """
-    parses AIRR table (heavy chain contigs only).
+    Parses AIRR table (heavy chain contigs only).
 
     Parameters
     ----------
@@ -155,7 +155,7 @@ def parsedb_heavy(db_file, verbose = False):
 
 def parsedb_light(db_file, verbose = False):
     """
-    parses AIRR table (light chain contigs only).
+    Parses AIRR table (light chain contigs only).
 
     Parameters
     ----------
@@ -403,7 +403,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
 
 def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileformat = 'airr', novel_ = 'YES', verbose = False):
     """
-    reassignAlleles with TIgGER in R.
+    Reassign alleles with TIgGER in R.
 
     Parameters
     ----------
@@ -612,7 +612,7 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
 
 def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cutoff=0.1, min_counts=None, max_counts=None, blacklist=None):
     """
-    Recipe for running a standard scanpy QC worflow.
+    Recipe for running a standard scanpy QC workflow.
 
     Parameters
     ----------

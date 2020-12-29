@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-16 22:29:11
+# @Last Modified time: 2020-12-29 20:55:53
 
 import seaborn as sns
 import pandas as pd
@@ -23,6 +23,7 @@ from itertools import combinations
 def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4), save=None):
     """
     Plots rarefaction curve for cell numbers vs clone size.
+
     Parameters
     ----------
     self : AnnData
@@ -165,7 +166,8 @@ def random_palette(n):
 
 def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
     """
-    using scanpy's plotting module to plot the network. Only thing i'm changing is the dfault options: basis = 'bcr' and edges = True
+    Using scanpy's plotting module to plot the network. Only thing that is changed is the dfault options: `basis = 'bcr'` and `edges = True`.
+
     Parameters
     ----------
     adata : AnnData
@@ -182,6 +184,7 @@ def clone_network(adata, basis = 'bcr', edges = True, **kwargs):
 def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = True, sort_descending = True, title = None, xtick_rotation = None, min_clone_size = None, clone_key = None, **kwargs):
     """
     A barplot function to plot usage of V/J genes in the data.
+
     Parameters
     ----------
     self : Dandelion, AnnData
@@ -259,6 +262,7 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
 def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False, title = None, sort_descending=True, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, min_clone_size = None, clone_key = None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
+
     Parameters
     ----------
     self : Dandelion, AnnData
@@ -327,6 +331,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
     def _plot_bar_stacked(dfall, labels=None, figsize = (12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options = None, hide_legend=True, H="/", **kwargs):
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
+
         Parameters
         ----------
         labels
@@ -397,6 +402,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, **kwargs):
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
+
     Parameters
     ----------
     self : Dandelion, AnnData
@@ -513,6 +519,7 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
 def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None, color_mapping = None, node_labels = True, node_label_layout = 'rotation', group_label_position = 'middle', group_label_offset = 8, figsize = (8, 8), return_graph = False, save = None, **kwargs):
     """
     A plot function to visualise clonal overlap as a circos-style plot.
+    
     Parameters
     ----------
     self : Dandelion, AnnData

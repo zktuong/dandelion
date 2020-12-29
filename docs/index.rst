@@ -6,9 +6,8 @@
 Welcome to dandelion's documentation!
 ========================================
 
-.. toctree::
-   :maxdepth: 4
-   :caption: dandelion:
+.. toctree::   
+   :maxdepth: 2
 
    README.md
 
@@ -22,9 +21,10 @@ Welcome to dandelion's documentation!
    notebooks/5_dandelion_running_from_R.ipynb
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: API:
-
+   
+   api.rst
 
 Indices and tables
 ==================

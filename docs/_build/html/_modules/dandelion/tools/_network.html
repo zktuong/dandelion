@@ -1,0 +1,1051 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dandelion.tools._network &mdash; dandelion 0.0.26 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/dandelion_logo.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#basic-requirements">Basic requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Preprocessing: <cite>pp</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dandelion.tools._network</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dandelion.tools._network</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># @Author: Kelvin</span>
+<span class="c1"># @Date:   2020-08-12 18:08:04</span>
+<span class="c1"># @Last Modified by:   Kelvin</span>
+<span class="c1"># @Last Modified time: 2020-12-29 21:08:36</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">polyleven</span> <span class="kn">import</span> <span class="n">levenshtein</span>
+<span class="kn">from</span> <span class="nn">..utilities._utilities</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">random_state</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csr_matrix</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse.csgraph</span> <span class="kn">import</span> <span class="n">minimum_spanning_tree</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">pdist</span><span class="p">,</span> <span class="n">squareform</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">scanpy</span> <span class="kn">import</span> <span class="n">logging</span> <span class="k">as</span> <span class="n">logg</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="generate_network"><a class="viewcode-back" href="../../../_generate/dandelion.tools.generate_network.html#dandelion.tools.generate_network">[docs]</a><span class="k">def</span> <span class="nf">generate_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance_mode</span><span class="o">=</span><span class="s1">&#39;simple&#39;</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">aa_or_nt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clone_key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">downsample</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).</span>
+<span class="sd">    The distance matrices are then combined into a singular matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : Dandelion, DataFrame, str</span>
+<span class="sd">        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.</span>
+<span class="sd">    distance_mode : str</span>
+<span class="sd">        The mode of calculating joint distance matrix for heavy and light chains. Default is &#39;simple&#39;. If &#39;simple&#39;, a simple sum operation will be used. If &#39;scaled&#39;, depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.</span>
+<span class="sd">    min_size : int</span>
+<span class="sd">        For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.</span>
+<span class="sd">    aa_or_nt : str, optional</span>
+<span class="sd">        Option accepts &#39;aa&#39;, &#39;nt&#39; or None, with None defaulting to &#39;aa&#39;. Determines whether amino acid or nucleotide sequences will be used for calculating distances.</span>
+<span class="sd">    clone_key: str, optional</span>
+<span class="sd">        column name to build network on.</span>
+<span class="sd">    weights : tuple, optional</span>
+<span class="sd">        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.</span>
+<span class="sd">    downsample : int, optional</span>
+<span class="sd">        whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the progress bars.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Generating network&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="n">dat</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dat</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clonekey</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clonekey</span> <span class="o">=</span> <span class="n">clone_key</span>
+    <span class="k">if</span> <span class="n">clonekey</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dat</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Data does not contain clone information. Please run find_clones.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># calculate distance</span>
+    <span class="n">dat_h</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;locus&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;IGH&#39;</span><span class="p">]</span>
+    <span class="n">dat_l</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="n">dat</span><span class="p">[</span><span class="s1">&#39;locus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;IGK&#39;</span><span class="p">,</span> <span class="s1">&#39;IGL&#39;</span><span class="p">])]</span>
+
+    <span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">downsample</span> <span class="o">&gt;=</span> <span class="n">dat_h</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Cannot downsample to </span><span class="si">{}</span><span class="s1"> cells. Using all </span><span class="si">{}</span><span class="s1"> cells.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">downsample</span><span class="p">),</span> <span class="n">dat_h</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Downsampling to </span><span class="si">{}</span><span class="s1"> cells.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">downsample</span><span class="p">)))</span>
+            <span class="n">dat_h</span> <span class="o">=</span> <span class="n">dat_h</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">downsample</span><span class="p">)</span>
+            <span class="n">dat_l</span> <span class="o">=</span> <span class="n">dat_l</span><span class="p">[</span><span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]))]</span>
+
+    <span class="k">if</span> <span class="n">dat_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">aa_or_nt</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">aa_or_nt</span> <span class="ow">is</span> <span class="s1">&#39;aa&#39;</span><span class="p">:</span>
+            <span class="n">seq_h</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">],</span> <span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_alignment_aa&#39;</span><span class="p">])))</span>
+        <span class="k">elif</span> <span class="n">aa_or_nt</span> <span class="o">==</span> <span class="s1">&#39;nt&#39;</span><span class="p">:</span>
+            <span class="n">seq_h</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">],</span> <span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_alignment&#39;</span><span class="p">])))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;aa_or_nt only accepts string values &#39;aa&#39;, &#39;nt&#39; or None, with None defaulting to &#39;aa&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">aa_or_nt</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">aa_or_nt</span> <span class="ow">is</span> <span class="s1">&#39;aa&#39;</span><span class="p">:</span>
+            <span class="n">seq_h</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">],</span> <span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_alignment_aa&#39;</span><span class="p">])))</span>
+            <span class="n">seq_l</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">],</span> <span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;sequence_alignment_aa&#39;</span><span class="p">])))</span>
+        <span class="k">elif</span> <span class="n">aa_or_nt</span> <span class="o">==</span> <span class="s1">&#39;nt&#39;</span><span class="p">:</span>
+            <span class="n">seq_h</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">],</span> <span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_alignment&#39;</span><span class="p">])))</span>
+            <span class="n">seq_l</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">],</span> <span class="n">dat_l</span><span class="p">[</span><span class="s1">&#39;sequence_alignment&#39;</span><span class="p">])))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;aa_or_nt only accepts string values &#39;aa&#39;, &#39;nt&#39; or None, with None defaulting to &#39;aa&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)</span>
+    <span class="n">dat_seq</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">seq_h</span><span class="p">,</span> <span class="n">orient</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">,</span> <span class="s1">&#39;heavy&#39;</span><span class="p">])</span>
+    <span class="n">dat_seq</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;cell_id&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dat_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dat_seq</span> <span class="o">=</span> <span class="n">dat_seq</span><span class="p">[[</span><span class="s1">&#39;heavy&#39;</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">light_seq_tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">seq_l</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">light_seq_tree</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="n">light_seq_tree2</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">light_seq_tree</span><span class="p">:</span>
+            <span class="n">second_key</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">light_seq_tree</span><span class="p">[</span><span class="n">g</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">second_key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k2</span><span class="p">)</span>
+            <span class="n">second_key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">second_key</span><span class="p">))</span>
+            <span class="n">second_key_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">second_key</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">second_key</span><span class="p">))))</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">light_seq_tree</span><span class="p">[</span><span class="n">g</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">light_seq_tree2</span><span class="p">[</span><span class="n">g</span><span class="p">][</span><span class="n">second_key_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">dat_seq</span><span class="p">[</span><span class="s1">&#39;light&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">light_seq_tree2</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="nb">dict</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">else</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dat_seq</span><span class="p">[</span><span class="s1">&#39;light&#39;</span><span class="p">]])</span>
+        <span class="n">tmp_dat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">index</span> <span class="o">=</span> <span class="n">dat_seq</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">tmp_dat</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;light_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tmp_dat</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="n">dat_seq</span> <span class="o">=</span> <span class="n">dat_seq</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tmp_dat</span><span class="p">,</span> <span class="n">left_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">right_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">dat_seq</span> <span class="o">=</span> <span class="n">dat_seq</span><span class="p">[[</span><span class="s1">&#39;heavy&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tmp_dat</span><span class="o">.</span><span class="n">columns</span><span class="p">]]</span>
+
+    <span class="c1"># calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs</span>
+    <span class="n">dmat</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">dat_seq</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Calculating distances... &#39;</span><span class="p">):</span>
+            <span class="n">seq_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">seq_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">dat_seq</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span>
+            <span class="n">tdarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seq_list</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))</span>
+            <span class="n">d_mat</span> <span class="o">=</span> <span class="n">squareform</span><span class="p">([</span><span class="n">levenshtein</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">tdarray</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span> <span class="c1"># this is a tad faster than above?</span>
+            <span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_mat</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dat_seq</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">seq_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">seq_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">dat_seq</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span>
+            <span class="n">tdarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seq_list</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))</span>
+            <span class="n">d_mat</span> <span class="o">=</span> <span class="n">squareform</span><span class="p">([</span><span class="n">levenshtein</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">tdarray</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span> <span class="c1"># this is a tad faster than above?</span>
+            <span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_mat</span>
+
+    <span class="n">dist_mat_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dmat</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+
+    <span class="n">n_</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_mat_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">distance_mode</span> <span class="o">==</span> <span class="s1">&#39;simple&#39;</span><span class="p">:</span>
+        <span class="n">total_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dist_mat_list</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">distance_mode</span> <span class="o">==</span> <span class="s1">&#39;scaled&#39;</span><span class="p">:</span>
+        <span class="n">weighted_matrix</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_</span><span class="p">):</span>
+                <span class="n">weighted_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n_</span> <span class="o">*</span> <span class="n">dist_mat_list</span><span class="p">[</span><span class="n">w</span><span class="p">])</span>
+            <span class="n">total_dist</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weighted_matrix</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_</span><span class="p">):</span>
+                    <span class="n">weighted_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weights</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">*</span> <span class="n">dist_mat_list</span><span class="p">[</span><span class="n">w</span><span class="p">])</span>
+                <span class="n">total_dist</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weighted_matrix</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Length of provided weights should be </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_</span><span class="p">))</span>
+
+    <span class="c1"># generate edge list</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># re-initiate a Dandelion class object</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">Dandelion</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span>
+        <span class="n">update_metadata</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="n">clone_key</span><span class="p">,</span> <span class="n">split_heavy_light</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">collapse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dat_downsample</span> <span class="o">=</span> <span class="n">dat_h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dat_l</span><span class="p">)</span>
+        <span class="n">downsample_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">Dandelion</span><span class="p">(</span><span class="n">dat_downsample</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">downsample_meta</span><span class="p">)</span>
+
+    <span class="n">tmp_totaldist</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">total_dist</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">tmp_clusterdist</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">clonekey</span><span class="p">)]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">))</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">overlap</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">clonekey</span><span class="p">)]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)])</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">clonekey</span><span class="p">)]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">):</span>
+                <span class="n">tmp_clusterdist</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cx</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">clonekey</span><span class="p">)]</span>
+            <span class="n">tmp_clusterdist</span><span class="p">[</span><span class="n">cx</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">tmp_clusterdist2</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp_clusterdist</span><span class="p">:</span>
+        <span class="n">tmp_clusterdist2</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp_clusterdist</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+    <span class="n">cluster_dist</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">c_</span> <span class="ow">in</span> <span class="n">tmp_clusterdist2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">c_</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">overlap</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">ol</span> <span class="ow">in</span> <span class="n">overlap</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">c_</span> <span class="ow">in</span> <span class="n">ol</span><span class="p">:</span>
+                    <span class="n">idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flatten</span><span class="p">([</span><span class="n">tmp_clusterdist2</span><span class="p">[</span><span class="n">c_x</span><span class="p">]</span> <span class="k">for</span> <span class="n">c_x</span> <span class="ow">in</span> <span class="n">ol</span><span class="p">])))</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">idx</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">dist_mat_</span> <span class="o">=</span> <span class="n">tmp_totaldist</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">idx</span><span class="p">]</span>
+                        <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">dist_mat_</span><span class="o">.</span><span class="n">shape</span>
+                        <span class="k">if</span> <span class="n">s1</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">s2</span> <span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="n">cluster_dist</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ol</span><span class="p">)]</span> <span class="o">=</span> <span class="n">dist_mat_</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dist_mat_</span> <span class="o">=</span> <span class="n">tmp_totaldist</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">tmp_clusterdist2</span><span class="p">[</span><span class="n">c_</span><span class="p">],</span> <span class="n">tmp_clusterdist2</span><span class="p">[</span><span class="n">c_</span><span class="p">]]</span>
+            <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">dist_mat_</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="n">s1</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">s2</span> <span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">cluster_dist</span><span class="p">[</span><span class="n">c_</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_mat_</span>
+
+    <span class="c1"># to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for each group/clone to connect the shortest path</span>
+    <span class="n">mst_tree</span> <span class="o">=</span> <span class="n">mst</span><span class="p">(</span><span class="n">cluster_dist</span><span class="p">)</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="n">edge_list</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">mst_tree</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Generating edge list &#39;</span><span class="p">):</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_pandas_adjacency</span><span class="p">(</span><span class="n">mst_tree</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+            <span class="n">edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_pandas_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">mst_tree</span><span class="p">:</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_pandas_adjacency</span><span class="p">(</span><span class="n">mst_tree</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+            <span class="n">edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_pandas_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="n">clone_ref</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">clonekey</span><span class="p">])</span>
+    <span class="n">tmp_clone_tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;|&#39;</span> <span class="ow">in</span> <span class="n">clone_ref</span><span class="p">[</span><span class="n">x</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">x_</span> <span class="ow">in</span> <span class="n">clone_ref</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">):</span>
+                <span class="n">tmp_clone_tree</span><span class="p">[</span><span class="n">x_</span><span class="p">][</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp_clone_tree</span><span class="p">[</span><span class="n">clone_ref</span><span class="p">[</span><span class="n">x</span><span class="p">]][</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">tmp_clone_tree2</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp_clone_tree</span><span class="p">:</span>
+        <span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp_clone_tree</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+    <span class="n">tmp_clone_tree3</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="n">tmp_clone_tree3_overlap</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp_clone_tree2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">overlap</span><span class="p">)):</span> <span class="c1"># this is to catch all possible cells that may potentially match up with this clone that&#39;s joined together</span>
+            <span class="k">for</span> <span class="n">ol</span> <span class="ow">in</span> <span class="n">overlap</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ol</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">x_</span> <span class="ow">in</span> <span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">]:</span>
+                            <span class="n">tmp_clone_tree3_overlap</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ol</span><span class="p">)][</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x_</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">tmp_clone_tree3_overlap</span><span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ol</span><span class="p">)][</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">])]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+            <span class="n">tmp_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">tmp_</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">tmp_clone_tree2</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+            <span class="n">tmp_</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">tmp_clone_tree3</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp_clone_tree3_overlap</span><span class="p">:</span> <span class="c1"># repeat for the overlap clones</span>
+        <span class="n">tmp_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="n">tmp_clone_tree3_overlap</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">tmp_clone_tree3_overlap</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="n">tmp_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">tmp_</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">tmp_clone_tree3_overlap</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">tmp_clone_tree3_overlap</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="n">tmp_</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">tmp_clone_tree3</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_</span>
+
+    <span class="c1"># here I&#39;m using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step</span>
+
+    <span class="c1"># create a dataframe to recall the actual distance quickly</span>
+    <span class="n">tmp_totaldiststack</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">tmp_totaldist</span><span class="o">.</span><span class="n">unstack</span><span class="p">())</span>
+    <span class="n">tmp_totaldiststack</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">tmp_totaldiststack</span> <span class="o">=</span> <span class="n">tmp_totaldiststack</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">tmp_totaldiststack</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="s1">&#39;weight&#39;</span><span class="p">]</span>
+    <span class="n">tmp_totaldiststack</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;|&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tmp_totaldiststack</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">],</span> <span class="n">tmp_totaldiststack</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])]</span>
+
+    <span class="n">tmp_edge_list</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">tmp_clone_tree3</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Linking edges &#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp_clone_tree3</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_pandas_adjacency</span><span class="p">(</span><span class="n">tmp_clone_tree3</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_pandas_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;|&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;source&#39;</span><span class="p">],</span> <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">])]</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tmp_totaldiststack</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="c1"># keep only edges when there is 100% identity, to minimise crowding</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tmp_clone_tree3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp_clone_tree3</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_pandas_adjacency</span><span class="p">(</span><span class="n">tmp_clone_tree3</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_pandas_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;|&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;source&#39;</span><span class="p">],</span> <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">])]</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tmp_totaldiststack</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="c1"># keep only edges when there is 100% identity, to minimise crowding</span>
+                <span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># try to catch situations where there&#39;s no edge (only singletons)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">edge_listx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">edge_list</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">edge_list</span><span class="p">])</span>
+        <span class="n">edge_listx</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;|&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">edge_listx</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">],</span><span class="n">edge_listx</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])]</span>
+
+        <span class="n">tmp_edge_listx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">tmp_edge_list</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tmp_edge_list</span><span class="p">])</span>
+        <span class="n">tmp_edge_listx</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">tmp_edge_listx</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;|&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tmp_edge_listx</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">],</span> <span class="n">tmp_edge_listx</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])]</span>
+
+        <span class="n">edge_list_final</span> <span class="o">=</span> <span class="n">edge_listx</span><span class="o">.</span><span class="n">combine_first</span><span class="p">(</span><span class="n">tmp_edge_listx</span><span class="p">)</span>
+
+        <span class="c1"># for idx in edge_list_final.index:</span>
+        <span class="c1">#     edge_list_final.at[idx, &#39;weight&#39;] = tmp_totaldist.loc[idx.split(&#39;|&#39;)[0], idx.split(&#39;|&#39;)[1]]</span>
+        <span class="n">edge_list_final</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tmp_totaldiststack</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
+        <span class="c1"># return the edge list</span>
+        <span class="n">edge_list_final</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">edge_list_final</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># and finally the vertex list which is super easy</span>
+    <span class="n">vertice_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1"># and now to actually generate the network</span>
+    <span class="n">g</span><span class="p">,</span> <span class="n">g_</span><span class="p">,</span> <span class="n">lyt</span><span class="p">,</span> <span class="n">lyt_</span> <span class="o">=</span> <span class="n">generate_layout</span><span class="p">(</span><span class="n">vertice_list</span><span class="p">,</span> <span class="n">edge_list_final</span><span class="p">,</span> <span class="n">min_size</span> <span class="o">=</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># convert distance matrices to sparse</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dmat</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">dmat</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39; finished&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">deep</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Updated Dandelion object: </span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;   </span><span class="se">\&#39;</span><span class="s1">data</span><span class="se">\&#39;</span><span class="s1">, contig-indexed clone table</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;   </span><span class="se">\&#39;</span><span class="s1">metadata</span><span class="se">\&#39;</span><span class="s1">, cell-indexed clone table</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;   </span><span class="se">\&#39;</span><span class="s1">distance</span><span class="se">\&#39;</span><span class="s1">, heavy and light chain distance matrices</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;   </span><span class="se">\&#39;</span><span class="s1">edges</span><span class="se">\&#39;</span><span class="s1">, network edges</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;   </span><span class="se">\&#39;</span><span class="s1">layout</span><span class="se">\&#39;</span><span class="s1">, network layout</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;   </span><span class="se">\&#39;</span><span class="s1">graph</span><span class="se">\&#39;</span><span class="s1">, network&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">germline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">germline_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">germline</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">germline_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">threshold_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">threshold_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">Dandelion</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">dat_downsample</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">downsample_meta</span><span class="p">,</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">dmat</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">edge_list_final</span><span class="p">,</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">lyt</span><span class="p">,</span> <span class="n">lyt_</span><span class="p">),</span> <span class="n">graph</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">g_</span><span class="p">),</span> <span class="n">germline</span> <span class="o">=</span> <span class="n">germline_</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold_</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">dmat</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">edge_list_final</span><span class="p">,</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">lyt</span><span class="p">,</span> <span class="n">lyt_</span><span class="p">),</span> <span class="n">graph</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">g_</span><span class="p">),</span> <span class="n">germline</span> <span class="o">=</span> <span class="n">germline_</span><span class="p">,</span> <span class="n">initialize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold_</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">Dandelion</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">dat</span><span class="p">,</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">dmat</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">edge_list_final</span><span class="p">,</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">lyt</span><span class="p">,</span> <span class="n">lyt_</span><span class="p">),</span> <span class="n">graph</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">g_</span><span class="p">),</span> <span class="n">clone_key</span> <span class="o">=</span> <span class="n">clone_key</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">mst</span><span class="p">(</span><span class="n">mat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct minimum spanning tree based on supplied matrix in dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mat : dict</span>
+<span class="sd">        Dictionary containing numpy ndarrays.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mst_tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">mat</span><span class="p">:</span>
+        <span class="n">mst_tree</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">minimum_spanning_tree</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">c</span><span class="p">]))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">index</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">mst_tree</span><span class="p">)</span>
+
+<div class="viewcode-block" id="clone_degree"><a class="viewcode-back" href="../../../_generate/dandelion.tools.clone_degree.html#dandelion.tools.clone_degree">[docs]</a><span class="k">def</span> <span class="nf">clone_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates node degree in BCR network.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion</span>
+<span class="sd">        `Dandelion` object after `tl.generate_network` has been run.</span>
+<span class="sd">    weight : str, optional</span>
+<span class="sd">        Atribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether or not to show logging information.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        Dandelion object with metadata updated with node degree information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating node degree&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="ow">is</span> <span class="n">csr_matrix</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="n">A</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Graph not found. Plase run tl.generate_network.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="p">))</span>
+            <span class="n">cd</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;clone_degree&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">cd</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39; finished&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                    <span class="n">deep</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Updated Dandelion metadata</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input object must be of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Dandelion</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="clone_centrality"><a class="viewcode-back" href="../../../_generate/dandelion.tools.clone_centrality.html#dandelion.tools.clone_centrality">[docs]</a><span class="k">def</span> <span class="nf">clone_centrality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates node closeness centrality in BCR network.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion</span>
+<span class="sd">        `Dandelion` object after `tl.generate_network` has been run.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether or not to show logging information.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        Dandelion object with metadata updated with node closeness centrality information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating node closeness centrality&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="ow">is</span> <span class="n">csr_matrix</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="n">A</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Graph not found. Plase run tl.generate_network.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cc</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">closeness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+            <span class="n">cc</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="n">orient</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_centrality&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;clone_centrality&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">cc</span><span class="p">[</span><span class="s1">&#39;clone_centrality&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39; finished&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                    <span class="n">deep</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Updated Dandelion metadata</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input object must be of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Dandelion</span><span class="p">))</span></div>
+
+<span class="k">def</span> <span class="nf">generate_layout</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">([(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])])</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="n">G_</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">min_size</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">G_</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">isolates</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">min_size</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">degree</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">degree</span> <span class="o">&gt;</span> <span class="n">min_size</span><span class="p">]</span>
+            <span class="n">G_</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">remove</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="c1"># if edges is not None:</span>
+        <span class="c1"># edges_, weights_ = zip(*nx.get_edge_attributes(G_,&#39;weight&#39;).items())</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;generating network layout&#39;</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">_fruchterman_reingold_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">pos_</span> <span class="o">=</span> <span class="n">_fruchterman_reingold_layout</span><span class="p">(</span><span class="n">G_</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">G_</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">pos_</span><span class="p">)</span>
+
+<span class="c1"># when dealing with a lot of unconnected vertices, the pieces fly out to infinity and the original fr layout can&#39;t be used</span>
+<span class="c1"># work around from https://stackoverflow.com/questions/14283341/how-to-increase-node-spacing-for-networkx-spring-layout</span>
+<span class="c1"># code chunk from networkx&#39;s layout.py https://github.com/networkx/networkx/blob/master/networkx/drawing/layout.py</span>
+<span class="k">def</span> <span class="nf">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="c1"># Some boilerplate code.</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+        <span class="n">empty_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">empty_graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span>
+
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;length of center coordinates must match dimension of layout&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="n">center</span>
+
+<span class="k">def</span> <span class="nf">_fruchterman_reingold_layout</span><span class="p">(</span>
+    <span class="n">G</span><span class="p">,</span>
+    <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+    <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span>
+    <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes using Fruchterman-Reingold force-directed algorithm.</span>
+<span class="sd">    The algorithm simulates a force-directed representation of the network</span>
+<span class="sd">    treating edges as springs holding nodes close, while treating nodes</span>
+<span class="sd">    as repelling objects, sometimes called an anti-gravity force.</span>
+<span class="sd">    Simulation continues until the positions are close to an equilibrium.</span>
+<span class="sd">    There are some hard-coded values: minimal distance between</span>
+<span class="sd">    nodes (0.01) and &quot;temperature&quot; of 0.1 to ensure nodes don&#39;t fly away.</span>
+<span class="sd">    During the simulation, `k` helps determine the distance between nodes,</span>
+<span class="sd">    though `scale` and `center` determine the size and place after</span>
+<span class="sd">    rescaling occurs at the end of the simulation.</span>
+<span class="sd">    Fixing some nodes doesn&#39;t allow them to move in the simulation.</span>
+<span class="sd">    It also turns off the rescaling feature at the simulation&#39;s end.</span>
+<span class="sd">    In addition, setting `scale` to `None` turns off rescaling.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+<span class="sd">    k : float (default=None)</span>
+<span class="sd">        Optimal distance between nodes.  If None the distance is set to</span>
+<span class="sd">        1/sqrt(n) where n is the number of nodes.  Increase this value</span>
+<span class="sd">        to move nodes farther apart.</span>
+<span class="sd">    pos : dict or None  optional (default=None)</span>
+<span class="sd">        Initial positions for nodes as a dictionary with node as keys</span>
+<span class="sd">        and values as a coordinate list or tuple.  If None, then use</span>
+<span class="sd">        random initial positions.</span>
+<span class="sd">    fixed : list or None  optional (default=None)</span>
+<span class="sd">        Nodes to keep fixed at initial position.</span>
+<span class="sd">        ValueError raised if `fixed` specified and `pos` not.</span>
+<span class="sd">    iterations : int  optional (default=50)</span>
+<span class="sd">        Maximum number of iterations taken</span>
+<span class="sd">    threshold: float optional (default = 1e-4)</span>
+<span class="sd">        Threshold for relative error in node position changes.</span>
+<span class="sd">        The iteration stops if the error is below this threshold.</span>
+<span class="sd">    weight : string or None   optional (default=&#39;weight&#39;)</span>
+<span class="sd">        The edge attribute that holds the numerical value used for</span>
+<span class="sd">        the edge weight.  If None, then all edge weights are 1.</span>
+<span class="sd">    scale : number or None (default: 1)</span>
+<span class="sd">        Scale factor for positions. Not used unless `fixed is None`.</span>
+<span class="sd">        If scale is None, no rescaling is performed.</span>
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+<span class="sd">        Not used unless `fixed is None`.</span>
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+<span class="sd">    seed : int, RandomState instance or None  optional (default=None)</span>
+<span class="sd">        Set the random state for deterministic node layouts.</span>
+<span class="sd">        If int, `seed` is the seed used by the random number generator,</span>
+<span class="sd">        if numpy.random.RandomState instance, `seed` is the random</span>
+<span class="sd">        number generator,</span>
+<span class="sd">        if None, the random number generator is the RandomState instance used</span>
+<span class="sd">        by numpy.random.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.spring_layout(G)</span>
+<span class="sd">    # The same using longer but equivalent function name</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.fruchterman_reingold_layout(G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nodes are fixed without positions given&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">fixed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nodes are fixed without positions given&quot;</span><span class="p">)</span>
+        <span class="n">nfixed</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">)}</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">nfixed</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">fixed</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Determine size of existing domain to adjust initial positions</span>
+        <span class="n">dom_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">coord</span> <span class="k">for</span> <span class="n">pos_tup</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">pos_tup</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dom_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dom_size</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">pos_arr</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="n">dim</span><span class="p">)</span> <span class="o">*</span> <span class="n">dom_size</span> <span class="o">+</span> <span class="n">center</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">:</span>
+                <span class="n">pos_arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos_arr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">dom_size</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span> <span class="n">center</span><span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Sparse matrix</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>  <span class="c1"># sparse solver for large graphs</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;f&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We must adjust k by domain size for layouts not near 1x1</span>
+            <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">dom_size</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_sparse_fruchterman_reingold</span><span class="p">(</span>
+            <span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">pos_arr</span><span class="p">,</span> <span class="n">fixed</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">seed</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We must adjust k by domain size for layouts not near 1x1</span>
+            <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">dom_size</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_fruchterman_reingold</span><span class="p">(</span>
+            <span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">pos_arr</span><span class="p">,</span> <span class="n">fixed</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">seed</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+<span class="nd">@random_state</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_fruchterman_reingold</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="c1"># Position nodes in adjacency matrix A using Fruchterman-Reingold</span>
+    <span class="c1"># Entry point for NetworkX graph is fruchterman_reingold_layout()</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;fruchterman_reingold() takes an adjacency matrix as input&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># random initial positions</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># make sure positions are of same type as matrix</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># optimal distance between nodes</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">nnodes</span><span class="p">)</span>
+    <span class="c1"># the initial &quot;temperature&quot;  is about .1 of domain area (=1x1)</span>
+    <span class="c1"># this is the largest step allowed in the dynamics.</span>
+    <span class="c1"># We need to calculate this in case our fixed positions force our domain</span>
+    <span class="c1"># to be much bigger than 1x1</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="c1"># simple cooling scheme.</span>
+    <span class="c1"># linearly step down by dt on each iteration so last iteration is size dt.</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># the inscrutable (but fast) version</span>
+    <span class="c1"># this is still O(V^2)</span>
+    <span class="c1"># could use multilevel methods to speed this up significantly</span>
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="c1"># matrix of difference between points</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">pos</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="c1"># distance between points</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># enforce minimum distance of 0.01</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">distance</span><span class="p">)</span>
+        <span class="c1"># displacement &quot;force&quot;</span>
+        <span class="n">displacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ijk,ij-&gt;ik&quot;</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span> <span class="o">/</span> <span class="n">distance</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">A</span> <span class="o">*</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">k</span><span class="p">))</span>
+        <span class="n">displacement</span> <span class="o">=</span> <span class="n">displacement</span> <span class="o">-</span> <span class="n">pos</span> <span class="o">/</span> <span class="p">(</span> <span class="n">k</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">))</span>
+        <span class="c1"># update positions</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">displacement</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
+        <span class="n">delta_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,i-&gt;ij&quot;</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="n">length</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># don&#39;t change positions of fixed nodes</span>
+            <span class="n">delta_pos</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">delta_pos</span>
+        <span class="c1"># cool temperature</span>
+        <span class="n">t</span> <span class="o">-=</span> <span class="n">dt</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">/</span> <span class="n">nnodes</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+<span class="nd">@random_state</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_sparse_fruchterman_reingold</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="c1"># Position nodes in adjacency matrix A using Fruchterman-Reingold</span>
+    <span class="c1"># Entry point for NetworkX graph is fruchterman_reingold_layout()</span>
+    <span class="c1"># Sparse version</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;fruchterman_reingold() takes an adjacency matrix as input&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ &quot;</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="c1"># make sure we have a LIst of Lists representation</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">tolil</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="n">coo_matrix</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="o">.</span><span class="n">tolil</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># random initial positions</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># make sure positions are of same type as matrix</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># no fixed nodes</span>
+    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># optimal distance between nodes</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">nnodes</span><span class="p">)</span>
+    <span class="c1"># the initial &quot;temperature&quot;  is about .1 of domain area (=1x1)</span>
+    <span class="c1"># this is the largest step allowed in the dynamics.</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="c1"># simple cooling scheme.</span>
+    <span class="c1"># linearly step down by dt on each iteration so last iteration is size dt.</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">displacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">nnodes</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">displacement</span> <span class="o">*=</span> <span class="mi">0</span>
+        <span class="c1"># loop over rows</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fixed</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># difference between this row&#39;s node position and all others</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">pos</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="c1"># distance between points</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">delta</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="c1"># enforce minimum distance of 0.01</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
+            <span class="c1"># the adjacency matrix row</span>
+            <span class="n">Ai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">getrowview</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+            <span class="c1"># displacement &quot;force&quot;</span>
+            <span class="n">displacement</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span> <span class="o">/</span> <span class="n">distance</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">Ai</span> <span class="o">*</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">k</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">displacement</span> <span class="o">=</span> <span class="n">displacement</span> <span class="o">-</span> <span class="n">pos</span> <span class="o">/</span> <span class="p">(</span> <span class="n">k</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">))</span>
+        <span class="c1"># update positions</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">displacement</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
+        <span class="n">delta_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">displacement</span> <span class="o">*</span> <span class="n">t</span> <span class="o">/</span> <span class="n">length</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">delta_pos</span>
+        <span class="c1"># cool temperature</span>
+        <span class="n">t</span> <span class="o">-=</span> <span class="n">dt</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">/</span> <span class="n">nnodes</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+<span class="k">def</span> <span class="nf">_rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns scaled position array to (-scale, scale) in all axes.</span>
+<span class="sd">    The function acts on NumPy arrays which hold position information.</span>
+<span class="sd">    Each position is one row of the array. The dimension of the space</span>
+<span class="sd">    equals the number of columns. Each coordinate in one column.</span>
+<span class="sd">    To rescale, the mean (center) is subtracted from each axis separately.</span>
+<span class="sd">    Then all values are scaled so that the largest magnitude value</span>
+<span class="sd">    from all axes equals `scale` (thus, the aspect ratio is preserved).</span>
+<span class="sd">    The resulting NumPy Array is returned (order of rows unchanged).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pos : numpy array</span>
+<span class="sd">        positions to be scaled. Each row is a position.</span>
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        The size of the resulting extent in all directions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : numpy array</span>
+<span class="sd">        scaled positions. Each row is a position.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find max length over all dimensions</span>
+    <span class="n">lim</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># max coordinate for all axes</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">lim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">lim</span><span class="p">)</span>
+    <span class="c1"># rescale to (-scale, scale) in all directions, preserves aspect</span>
+    <span class="k">if</span> <span class="n">lim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span> <span class="o">/</span> <span class="n">lim</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+<div class="viewcode-block" id="extract_edge_weights"><a class="viewcode-back" href="../../../_generate/dandelion.tools.extract_edge_weights.html#dandelion.tools.extract_edge_weights">[docs]</a><span class="k">def</span> <span class="nf">extract_edge_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves edge weights (BCR levenshtein distance) from graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion</span>
+<span class="sd">        `Dandelion` object after `tl.generate_network` has been run.</span>
+<span class="sd">    expanded_only : bool</span>
+<span class="sd">        whether to retrieve the edge weights from the expanded only graph or entire graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy array containing edge weights.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expanded_only</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">edges</span><span class="p">,</span><span class="n">weights</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">nx</span><span class="o">.</span><span class="n">get_edge_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> i.e. the graph does not contain edges. Therefore, edge weights not returned.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">edges</span><span class="p">,</span><span class="n">weights</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">nx</span><span class="o">.</span><span class="n">get_edge_attributes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> i.e. the graph does not contain edges. Therefore, edge weights not returned.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">&#39;weights&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, zktuong
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

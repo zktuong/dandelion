@@ -1,0 +1,489 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Preprocessing: pp &mdash; dandelion 0.0.26 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/dandelion_logo.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="dandelion.preprocessing.format_fasta" href="_generate/dandelion.preprocessing.format_fasta.html" />
+    <link rel="prev" title="Running from R" href="notebooks/5_dandelion_running_from_R.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#basic-requirements">Basic requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing: <cite>pp</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.assign_isotype.html">dandelion.preprocessing.assign_isotype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.assigngenes_igblast.html">dandelion.preprocessing.external.assigngenes_igblast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.makedb_igblast.html">dandelion.preprocessing.external.makedb_igblast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.parsedb_heavy.html">dandelion.preprocessing.external.parsedb_heavy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.parsedb_light.html">dandelion.preprocessing.external.parsedb_light</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.parsedb_light.html">dandelion.preprocessing.external.parsedb_light</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.creategermlines.html">dandelion.preprocessing.external.creategermlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.tigger_genotype.html">dandelion.preprocessing.external.tigger_genotype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.preprocessing.external.recipe_scanpy_qc.html">dandelion.preprocessing.external.recipe_scanpy_qc</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-dandelion.tools">Tools: <cite>tl</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.transfer.html">dandelion.tools.transfer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.clone_centrality.html">dandelion.tools.clone_centrality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.clone_diversity.html">dandelion.tools.clone_diversity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-dandelion.plotting">Plotting: <cite>pl</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.plotting.clone_rarefaction.html">dandelion.plotting.clone_rarefaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.plotting.clone_network.html">dandelion.plotting.clone_network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.plotting.barplot.html">dandelion.plotting.barplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.plotting.stackedbarplot.html">dandelion.plotting.stackedbarplot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.plotting.spectratype.html">dandelion.plotting.spectratype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.plotting.clone_overlap.html">dandelion.plotting.clone_overlap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-dandelion.utilities">Utilities: <cite>utl</cite></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.utilities.makeblastdb.html">dandelion.utilities.makeblastdb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.utilities.load_data.html">dandelion.utilities.load_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.utilities.Dandelion.html">dandelion.utilities.Dandelion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.utilities.update_metadata.html">dandelion.utilities.update_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.utilities.read_h5.html">dandelion.utilities.read_h5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_generate/dandelion.utilities.read_pkl.html">dandelion.utilities.read_pkl</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Preprocessing: <cite>pp</cite></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-dandelion.preprocessing">
+<span id="preprocessing-pp"></span><h1>Preprocessing: <cite>pp</cite><a class="headerlink" href="#module-dandelion.preprocessing" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.format_fasta.html#dandelion.preprocessing.format_fasta" title="dandelion.preprocessing.format_fasta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_fasta</span></code></a>(fasta[, prefix, suffix, sep, …])</p></td>
+<td><p>Adds prefix to the headers/contig ids in cellranger fasta and annotation file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.format_fastas.html#dandelion.preprocessing.format_fastas" title="dandelion.preprocessing.format_fastas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_fastas</span></code></a>(fastas[, prefix, suffix, sep, …])</p></td>
+<td><p>Adds prefix to the headers/contig ids in cellranger fasta and annotation file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.assign_isotype.html#dandelion.preprocessing.assign_isotype" title="dandelion.preprocessing.assign_isotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign_isotype</span></code></a>(fasta[, fileformat, org, …])</p></td>
+<td><p>Annotate contigs with constant region call using blastn</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.assign_isotypes.html#dandelion.preprocessing.assign_isotypes" title="dandelion.preprocessing.assign_isotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assign_isotypes</span></code></a>(fastas[, fileformat, org, …])</p></td>
+<td><p>Annotate contigs with constant region call using blastn</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.reannotate_genes.html#dandelion.preprocessing.reannotate_genes" title="dandelion.preprocessing.reannotate_genes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reannotate_genes</span></code></a>(data[, igblast_db, …])</p></td>
+<td><p>Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.reassign_alleles.html#dandelion.preprocessing.reassign_alleles" title="dandelion.preprocessing.reassign_alleles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reassign_alleles</span></code></a>(data, combined_folder[, …])</p></td>
+<td><p>Correct allele calls based on a personalized genotype using tigger-reassignAlleles.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.create_germlines.html#dandelion.preprocessing.create_germlines" title="dandelion.preprocessing.create_germlines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_germlines</span></code></a>(self[, germline, org, …])</p></td>
+<td><p>Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.filter_bcr.html#dandelion.preprocessing.filter_bcr" title="dandelion.preprocessing.filter_bcr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_bcr</span></code></a>(data, adata[, filter_bcr, …])</p></td>
+<td><p>Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J <cite>DataFrame</cite> and <cite>AnnData</cite> objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.quantify_mutations.html#dandelion.preprocessing.quantify_mutations" title="dandelion.preprocessing.quantify_mutations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantify_mutations</span></code></a>(self[, split_locus, …])</p></td>
+<td><p>Runs basic mutation load analysis implemented in <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/">shazam</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.calculate_threshold.html#dandelion.preprocessing.calculate_threshold" title="dandelion.preprocessing.calculate_threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_threshold</span></code></a>(self[, …])</p></td>
+<td><p>Calculating nearest neighbor distances for tuning clonal assignment with <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">shazam</a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-dandelion.preprocessing.external">
+<span id="preprocessing-external-pp-external"></span><h1>Preprocessing (external): <cite>pp.external</cite><a class="headerlink" href="#module-dandelion.preprocessing.external" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.assigngenes_igblast.html#dandelion.preprocessing.external.assigngenes_igblast" title="dandelion.preprocessing.external.assigngenes_igblast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assigngenes_igblast</span></code></a>(fasta[, igblast_db, …])</p></td>
+<td><p>Reannotate with IgBLASTn.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.makedb_igblast.html#dandelion.preprocessing.external.makedb_igblast" title="dandelion.preprocessing.external.makedb_igblast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">makedb_igblast</span></code></a>(fasta[, igblast_output, …])</p></td>
+<td><p>Parses IgBLAST output to airr format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.parsedb_heavy.html#dandelion.preprocessing.external.parsedb_heavy" title="dandelion.preprocessing.external.parsedb_heavy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parsedb_heavy</span></code></a>(db_file[, verbose])</p></td>
+<td><p>Parses AIRR table (heavy chain contigs only).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.parsedb_light.html#dandelion.preprocessing.external.parsedb_light" title="dandelion.preprocessing.external.parsedb_light"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parsedb_light</span></code></a>(db_file[, verbose])</p></td>
+<td><p>Parses AIRR table (light chain contigs only).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.parsedb_light.html#dandelion.preprocessing.external.parsedb_light" title="dandelion.preprocessing.external.parsedb_light"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parsedb_light</span></code></a>(db_file[, verbose])</p></td>
+<td><p>Parses AIRR table (light chain contigs only).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.creategermlines.html#dandelion.preprocessing.external.creategermlines" title="dandelion.preprocessing.external.creategermlines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">creategermlines</span></code></a>(db_file[, germtypes, …])</p></td>
+<td><p>Wrapper for CreateGermlines.py for reconstructing germline sequences,</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.tigger_genotype.html#dandelion.preprocessing.external.tigger_genotype" title="dandelion.preprocessing.external.tigger_genotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tigger_genotype</span></code></a>(data[, v_germline, outdir, …])</p></td>
+<td><p>Reassign alleles with TIgGER in R.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.preprocessing.external.recipe_scanpy_qc.html#dandelion.preprocessing.external.recipe_scanpy_qc" title="dandelion.preprocessing.external.recipe_scanpy_qc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recipe_scanpy_qc</span></code></a>(self[, max_genes, …])</p></td>
+<td><p>Recipe for running a standard scanpy QC workflow.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-dandelion.tools">
+<span id="tools-tl"></span><h1>Tools: <cite>tl</cite><a class="headerlink" href="#module-dandelion.tools" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.tools.find_clones.html#dandelion.tools.find_clones" title="dandelion.tools.find_clones"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_clones</span></code></a>(self[, identity, clustering_by, …])</p></td>
+<td><p>Find clones based on heavy chain and light chain CDR3 junction hamming distance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.tools.define_clones.html#dandelion.tools.define_clones" title="dandelion.tools.define_clones"><code class="xref py py-obj docutils literal notranslate"><span class="pre">define_clones</span></code></a>(self[, dist, action, model, …])</p></td>
+<td><p>Find clones using changeo’s <a class="reference external" href="https://changeo.readthedocs.io/en/stable/tools/DefineClones.html">DefineClones.py</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.tools.clone_size.html#dandelion.tools.clone_size" title="dandelion.tools.clone_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_size</span></code></a>(self[, max_size, clone_key, …])</p></td>
+<td><p>Quantifies size of clones</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.tools.clone_overlap.html#dandelion.tools.clone_overlap" title="dandelion.tools.clone_overlap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_overlap</span></code></a>(self, groupby, colorby[, …])</p></td>
+<td><p>A function to tabulate clonal overlap for input as a circos-style plot. :Parameters: * <strong>self</strong> (<em>Dandelion, AnnData</em>) – <cite>Dandelion</cite> or <cite>AnnData</cite> object. * <strong>groupby</strong> (<em>str</em>) – column name in obs/metadata for collapsing to nodes in circos plot. * <strong>colorby</strong> (<em>str</em>) – column name in obs/metadata for grouping and color of nodes in circos plot. * <strong>min_clone_size</strong> (<em>int, optional</em>) – minimum size of clone for plotting connections. Defaults to 2 if left as None. * <strong>clone_key</strong> (<em>str, optional</em>) – column name for clones. None defaults to ‘clone_id’.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.tools.transfer.html#dandelion.tools.transfer" title="dandelion.tools.transfer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transfer</span></code></a>(self, dandelion[, expanded_only, …])</p></td>
+<td><p>Transfer data in <cite>Dandelion</cite> slots to <cite>AnnData</cite> object, updating the <cite>.obs</cite>, <cite>.uns</cite>, <cite>.obsm</cite> and <a href="#id1"><span class="problematic" id="id2">`</span></a>.obsp`slots.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.tools.generate_network.html#dandelion.tools.generate_network" title="dandelion.tools.generate_network"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_network</span></code></a>(self[, distance_mode, …])</p></td>
+<td><p>Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.tools.clone_degree.html#dandelion.tools.clone_degree" title="dandelion.tools.clone_degree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_degree</span></code></a>(self[, weight, verbose])</p></td>
+<td><p>Calculates node degree in BCR network.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.tools.clone_centrality.html#dandelion.tools.clone_centrality" title="dandelion.tools.clone_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_centrality</span></code></a>(self[, verbose])</p></td>
+<td><p>Calculates node closeness centrality in BCR network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.tools.extract_edge_weights.html#dandelion.tools.extract_edge_weights" title="dandelion.tools.extract_edge_weights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_edge_weights</span></code></a>(self[, expanded_only])</p></td>
+<td><p>Retrieves edge weights (BCR levenshtein distance) from graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.tools.clone_diversity.html#dandelion.tools.clone_diversity" title="dandelion.tools.clone_diversity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_diversity</span></code></a>(self, groupby[, method, …])</p></td>
+<td><p>Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.tools.clone_rarefaction.html#dandelion.tools.clone_rarefaction" title="dandelion.tools.clone_rarefaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_rarefaction</span></code></a>(self, groupby[, …])</p></td>
+<td><p>Returns rarefaction predictions for cell numbers vs clone size. :Parameters: * <strong>self</strong> (<em>Dandelion, AnnData</em>) – <cite>Dandelion</cite> or <cite>AnnData</cite> object. * <strong>groupby</strong> (<em>str</em>) – Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc. * <strong>clone_key</strong> (<em>str, optional</em>) – Column name specifying the clone_id column in metadata/obs. * <strong>diversity_key</strong> (<em>str, optional</em>) – key for ‘diversity’ results in AnnData’s <cite>.uns</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-dandelion.plotting">
+<span id="plotting-pl"></span><h1>Plotting: <cite>pl</cite><a class="headerlink" href="#module-dandelion.plotting" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.plotting.clone_rarefaction.html#dandelion.plotting.clone_rarefaction" title="dandelion.plotting.clone_rarefaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_rarefaction</span></code></a>(self, groupby[, …])</p></td>
+<td><p>Plots rarefaction curve for cell numbers vs clone size.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.plotting.clone_network.html#dandelion.plotting.clone_network" title="dandelion.plotting.clone_network"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_network</span></code></a>(adata[, basis, edges])</p></td>
+<td><p>Using scanpy’s plotting module to plot the network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.plotting.barplot.html#dandelion.plotting.barplot" title="dandelion.plotting.barplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">barplot</span></code></a>(self, variable[, palette, figsize, …])</p></td>
+<td><p>A barplot function to plot usage of V/J genes in the data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.plotting.stackedbarplot.html#dandelion.plotting.stackedbarplot" title="dandelion.plotting.stackedbarplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stackedbarplot</span></code></a>(self, variable, groupby[, …])</p></td>
+<td><p>A stackedbarplot function to plot usage of V/J genes in the data split by groups.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.plotting.spectratype.html#dandelion.plotting.spectratype" title="dandelion.plotting.spectratype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectratype</span></code></a>(self, variable, groupby, locus)</p></td>
+<td><p>A stackedbarplot function to plot usage of V/J genes in the data split by groups.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.plotting.clone_overlap.html#dandelion.plotting.clone_overlap" title="dandelion.plotting.clone_overlap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_overlap</span></code></a>(self, groupby, colorby[, …])</p></td>
+<td><p>A plot function to visualise clonal overlap as a circos-style plot.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-dandelion.utilities">
+<span id="utilities-utl"></span><h1>Utilities: <cite>utl</cite><a class="headerlink" href="#module-dandelion.utilities" title="Permalink to this headline">¶</a></h1>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.utilities.makeblastdb.html#dandelion.utilities.makeblastdb" title="dandelion.utilities.makeblastdb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">makeblastdb</span></code></a>(ref)</p></td>
+<td><p>Runs makeblastdb.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.utilities.load_data.html#dandelion.utilities.load_data" title="dandelion.utilities.load_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data</span></code></a>(obj)</p></td>
+<td><p>Reads in or copy dataframe object and set sequence_id as index without dropping.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.utilities.Dandelion.html#dandelion.utilities.Dandelion" title="dandelion.utilities.Dandelion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dandelion</span></code></a>([data, metadata, germline, …])</p></td>
+<td><p>Dandelion class object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.utilities.update_metadata.html#dandelion.utilities.update_metadata" title="dandelion.utilities.update_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_metadata</span></code></a>(self[, retrieve, …])</p></td>
+<td><p>A Dandelion function to update and populate the <cite>.metadata</cite> slot.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_generate/dandelion.utilities.read_h5.html#dandelion.utilities.read_h5" title="dandelion.utilities.read_h5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_h5</span></code></a>([filename])</p></td>
+<td><p>Reads in and returns a <cite>Dandelion</cite> class from .h5 format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_generate/dandelion.utilities.read_pkl.html#dandelion.utilities.read_pkl" title="dandelion.utilities.read_pkl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_pkl</span></code></a>([filename])</p></td>
+<td><p>Reads in and returns a <cite>Dandelion</cite> class saved using pickle format.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="_generate/dandelion.preprocessing.format_fasta.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.format_fasta" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="notebooks/5_dandelion_running_from_R.html" class="btn btn-neutral float-left" title="Running from R" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, zktuong
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

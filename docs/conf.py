@@ -12,7 +12,19 @@
 #
 import os
 import sys
+from pathlib import Path
+from datetime import datetime
+import jupytext
+from sphinx.deprecation import RemovedInSphinx40Warning
+import warnings
+
 sys.path.insert(0, os.path.abspath('.'))
+HERE = Path(__file__).parent
+sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE / "extensions"))
+
+sys.path.append('/Users/kt16/Documents/Github/dandelion')
+import dandelion as ddl
 
 
 # -- Project information -----------------------------------------------------
@@ -24,7 +36,6 @@ author = 'zktuong'
 # The full version, including alpha/beta/rc tags
 release = '0.0.26'
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -33,6 +44,9 @@ release = '0.0.26'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    "sphinx.ext.intersphinx",
+    'sphinx.ext.autosummary',
+    "sphinx_autodoc_typehints",
     'sphinx_rtd_theme',
     'nbsphinx',
     'sphinx.ext.viewcode',
@@ -46,8 +60,13 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', "**.ipynb_checkpoints"]
 
+api_dir = HERE / "_static" / "api"
+api_rel_dir = "_static/api"
+
+nitpicky = True  # Warn about broken links
+needs_sphinx = "2.0"  # Nicer param docs
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -70,3 +89,4 @@ master_doc = 'index'
 
 napoleon_use_param = False
 autodoc_member_order = 'bysource'
+autosummary_generate = True

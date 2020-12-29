@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dandelion.preprocessing.assign_isotype &mdash; dandelion 0.0.26 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/dandelion_logo.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dandelion.preprocessing.assign_isotypes" href="dandelion.preprocessing.assign_isotypes.html" />
+    <link rel="prev" title="dandelion.preprocessing.format_fastas" href="dandelion.preprocessing.format_fastas.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.assign_isotype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
+        
+      <li>dandelion.preprocessing.assign_isotype</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_generate/dandelion.preprocessing.assign_isotype.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="dandelion-preprocessing-assign-isotype">
+<h1>dandelion.preprocessing.assign_isotype<a class="headerlink" href="#dandelion-preprocessing-assign-isotype" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="dandelion.preprocessing.assign_isotype">
+<code class="sig-prename descclassname">dandelion.preprocessing.</code><code class="sig-name descname">assign_isotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fasta</span></em>, <em class="sig-param"><span class="n">fileformat</span><span class="o">=</span><span class="default_value">'blast'</span></em>, <em class="sig-param"><span class="n">org</span><span class="o">=</span><span class="default_value">'human'</span></em>, <em class="sig-param"><span class="n">correct_c_call</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">correction_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">plot</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">(4, 4)</span></em>, <em class="sig-param"><span class="n">blastdb</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allele</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">parallel</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ncpu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#assign_isotype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.preprocessing.assign_isotype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Annotate contigs with constant region call using blastn</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fasta</strong> (<em>str</em>) – path to fasta file.</p></li>
+<li><p><strong>fileformat</strong> (<em>str</em>) – format of V(D)J file/objects. Default is ‘blast’. Also accepts ‘changeo’ (same behaviour as ‘blast’) and ‘airr’.</p></li>
+<li><p><strong>org</strong> (<em>str</em>) – organism of reference folder. Default is ‘human’.</p></li>
+<li><p><strong>correct_c_call</strong> (<em>bool</em>) – whether or not to adjust the c_calls after blast based on provided primers specified in <cite>primer_dict</cite> option. Default is True.</p></li>
+<li><p><strong>correction_dict</strong> (<em>dict[dict], optional</em>) – a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.</p></li>
+<li><p><strong>plot</strong> (<em>bool</em>) – whether or not to plot reassignment summary metrics. Default is True.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple[float, float]</em>) – size of figure. Default is (4, 4).</p></li>
+<li><p><strong>blastdb</strong> (<em>str, optional</em>) – path to blast database. Defaults to <cite>$BLASTDB</cite> environmental variable.</p></li>
+<li><p><strong>allele</strong> (<em>bool</em>) – whether or not to return allele calls. Default is False.</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em>) – whether or not to use parallelization. Default is True.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em>) – number of cores to use if parallel is True. Default is all available minus 1.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – whether or not to print the blast command in terminal. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>V(D)J tsv files with constant genes annotated.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dandelion.preprocessing.assign_isotypes.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.assign_isotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dandelion.preprocessing.format_fastas.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.format_fastas" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, zktuong
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
