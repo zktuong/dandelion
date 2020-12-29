@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.preprocessing.reassign_alleles" href="dandelion.preprocessing.reassign_alleles.html" />
-    <link rel="prev" title="dandelion.preprocessing.assign_isotypes" href="dandelion.preprocessing.assign_isotypes.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,20 +103,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotype.html">dandelion.preprocessing.assign_isotype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.reannotate_genes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
@@ -169,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.preprocessing.reannotate_genes</li>
     
     
@@ -216,31 +200,6 @@
 </style>
 <div class="section" id="dandelion-preprocessing-reannotate-genes">
 <h1>dandelion.preprocessing.reannotate_genes<a class="headerlink" href="#dandelion-preprocessing-reannotate-genes" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.preprocessing.reannotate_genes">
-<code class="sig-prename descclassname">dandelion.preprocessing.</code><code class="sig-name descname">reannotate_genes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">igblast_db</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">germline</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">org</span><span class="o">=</span><span class="default_value">'human'</span></em>, <em class="sig-param"><span class="n">loci</span><span class="o">=</span><span class="default_value">'ig'</span></em>, <em class="sig-param"><span class="n">extended</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#reannotate_genes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.preprocessing.reannotate_genes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>list</em>) – list or sequence of fasta file locations, or folder name containing fasta files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.</p></li>
-<li><p><strong>igblast_db</strong> (<em>str, optional</em>) – path to igblast database folder. Defaults to <cite>$IGDATA</cite> environmental variable.</p></li>
-<li><p><strong>germline</strong> (<em>str, optional</em>) – path to germline database folder. Defaults to <cite>$GERMLINE</cite> environmental variable.</p></li>
-<li><p><strong>org</strong> (<em>str</em>) – organism of germline database. Default is ‘human’.</p></li>
-<li><p><strong>loci</strong> (<em>str</em>) – mode for igblastn. Default is ‘ig’ for BCRs. Also accepts ‘tr’ for TCRs.</p></li>
-<li><p><strong>extended</strong> (<em>bool</em>) – whether or not to transfer additional 10X annotions to output file. Default is True.</p></li>
-<li><p><strong>verbose</strong> – whether or not to print the igblast command used in the terminal. Default is False.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>V(D)J data file in airr/changeo data format.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -248,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.preprocessing.reassign_alleles.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.reassign_alleles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.preprocessing.assign_isotypes.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.assign_isotypes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

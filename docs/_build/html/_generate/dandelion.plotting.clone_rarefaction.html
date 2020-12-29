@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.plotting.clone_network" href="dandelion.plotting.clone_network.html" />
-    <link rel="prev" title="dandelion.tools.clone_rarefaction" href="dandelion.tools.clone_rarefaction.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,19 +103,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.plotting.clone_rarefaction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_network.html">dandelion.plotting.clone_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.barplot.html">dandelion.plotting.barplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.stackedbarplot.html">dandelion.plotting.stackedbarplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.spectratype.html">dandelion.plotting.spectratype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_overlap.html">dandelion.plotting.clone_overlap</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
 
@@ -165,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.plotting.clone_rarefaction</li>
     
     
@@ -212,30 +200,6 @@
 </style>
 <div class="section" id="dandelion-plotting-clone-rarefaction">
 <h1>dandelion.plotting.clone_rarefaction<a class="headerlink" href="#dandelion-plotting-clone-rarefaction" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.plotting.clone_rarefaction">
-<code class="sig-prename descclassname">dandelion.plotting.</code><code class="sig-name descname">clone_rarefaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">groupby</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">palette</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">(6, 4)</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/plotting/_plotting.html#clone_rarefaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.plotting.clone_rarefaction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots rarefaction curve for cell numbers vs clone size.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>AnnData</em>) – <cite>AnnData</cite> object.</p></li>
-<li><p><strong>groupby</strong> (<em>str</em>) – Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.</p></li>
-<li><p><strong>clone_key</strong> (<em>str, optional</em>) – Column name specifying the clone_id column in metadata/obs.</p></li>
-<li><p><strong>palette</strong> (<em>sequence, optional</em>) – Color mapping for unique elements in groupby. Will try to retrieve from AnnData <cite>.uns</cite> slot if present.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple[float, float]</em>) – Size of plot.</p></li>
-<li><p><strong>save</strong> (<em>str, optional</em>) – Save path.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>rarefaction curve plot.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -243,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.plotting.clone_network.html" class="btn btn-neutral float-right" title="dandelion.plotting.clone_network" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.clone_rarefaction.html" class="btn btn-neutral float-left" title="dandelion.tools.clone_rarefaction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

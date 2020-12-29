@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.tools.clone_rarefaction" href="dandelion.tools.clone_rarefaction.html" />
-    <link rel="prev" title="dandelion.tools.extract_edge_weights" href="dandelion.tools.extract_edge_weights.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,23 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.transfer.html">dandelion.tools.transfer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_centrality.html">dandelion.tools.clone_centrality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.clone_diversity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
@@ -170,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.tools.clone_diversity</li>
     
     
@@ -217,39 +200,6 @@
 </style>
 <div class="section" id="dandelion-tools-clone-diversity">
 <h1>dandelion.tools.clone_diversity<a class="headerlink" href="#dandelion-tools-clone-diversity" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.tools.clone_diversity">
-<code class="sig-prename descclassname">dandelion.tools.</code><code class="sig-name descname">clone_diversity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">groupby</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'gini'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">update_obs_meta</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">diversity_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resample</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">downsample</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_resample</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">normalize</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">reconstruct_network</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">expanded_only</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">use_contracted</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">key_added</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_diversity.html#clone_diversity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.tools.clone_diversity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion, AnnData</em>) – <cite>Dandelion</cite> or <cite>AnnData</cite> object.</p></li>
-<li><p><strong>groupby</strong> (<em>str</em>) – Column name to calculate the gini indices on, for e.g. sample, patient etc.</p></li>
-<li><p><strong>method</strong> (<em>str</em>) – Method for diversity estimation. Either one of [‘gini’, ‘chao1’, ‘shannon’].</p></li>
-<li><p><strong>metric</strong> (<em>str, optional</em>) – Metric to use for calculating Gini indices of clones. Accepts one of [‘clone_vertexsize’, clone_degree’, ‘clone_centrality’]. Defaults to ‘clone_vertexsize’.</p></li>
-<li><p><strong>clone_key</strong> (<em>str, optional</em>) – Column name specifying the clone_id column in metadata.</p></li>
-<li><p><strong>update_obs_meta</strong> (<em>bool</em>) – If True, a <cite>pandas</cite> dataframe is returned. If False, function will try to populate the input object’s metadata/obs slot.</p></li>
-<li><p><strong>diversity_key</strong> (<em>str, optional</em>) – key for ‘diversity’ results in <cite>.uns</cite>.</p></li>
-<li><p><strong>downsample</strong> (<em>int, optional</em>) – number of cells to downsample to. If None, defaults to size of smallest group.</p></li>
-<li><p><strong>resample</strong> (<em>bool</em>) – Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.</p></li>
-<li><p><strong>n_resample</strong> (<em>int</em>) – Number of times to perform resampling. Default is 50.</p></li>
-<li><p><strong>normalize</strong> (<em>bool</em>) – Whether or not to return normalized Shannon Entropy according to <a class="reference external" href="https://math.stackexchange.com/a/945172">https://math.stackexchange.com/a/945172</a>. Default is True.</p></li>
-<li><p><strong>reconstruct_network</strong> (<em>bool</em>) – Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.</p></li>
-<li><p><strong>expanded_only</strong> (<em>bool</em>) – Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.</p></li>
-<li><p><strong>use_contracted</strong> (<em>bool</em>) – Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.</p></li>
-<li><p><strong>key_added</strong> (<em>str, list, optional</em>) – column names for output.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>pandas</cite> dataframe, <cite>Dandelion</cite> object with updated <cite>.metadata</cite> slot or <cite>AnnData</cite> object with updated <cite>.obs</cite> slot.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -257,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.tools.clone_rarefaction.html" class="btn btn-neutral float-right" title="dandelion.tools.clone_rarefaction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.extract_edge_weights.html" class="btn btn-neutral float-left" title="dandelion.tools.extract_edge_weights" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.plotting.clone_overlap" href="dandelion.plotting.clone_overlap.html" />
-    <link rel="prev" title="dandelion.plotting.stackedbarplot" href="dandelion.plotting.stackedbarplot.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,19 +103,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_rarefaction.html">dandelion.plotting.clone_rarefaction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_network.html">dandelion.plotting.clone_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.barplot.html">dandelion.plotting.barplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.stackedbarplot.html">dandelion.plotting.stackedbarplot</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.plotting.spectratype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_overlap.html">dandelion.plotting.clone_overlap</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
 
@@ -165,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.plotting.spectratype</li>
     
     
@@ -212,36 +200,6 @@
 </style>
 <div class="section" id="dandelion-plotting-spectratype">
 <h1>dandelion.plotting.spectratype<a class="headerlink" href="#dandelion-plotting-spectratype" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.plotting.spectratype">
-<code class="sig-prename descclassname">dandelion.plotting.</code><code class="sig-name descname">spectratype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">groupby</span></em>, <em class="sig-param"><span class="n">locus</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">(6, 4)</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">xtick_rotation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hide_legend</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">legend_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/plotting/_plotting.html#spectratype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.plotting.spectratype" title="Permalink to this definition">¶</a></dt>
-<dd><p>A stackedbarplot function to plot usage of V/J genes in the data split by groups.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion, AnnData</em>) – <cite>Dandelion</cite> or <cite>AnnData</cite> object.</p></li>
-<li><p><strong>variable</strong> (<em>str</em>) – column name in metadata for plotting in bar plot.</p></li>
-<li><p><strong>groupby</strong> (<em>str</em>) – column name in metadata to split by during plotting.</p></li>
-<li><p><strong>locus</strong> (<em>str</em>) – either IGH or IGL.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple[float, float]</em>) – figure size. Default is (6, 4).</p></li>
-<li><p><strong>width</strong> (<em>float, optional</em>) – width of bars.</p></li>
-<li><p><strong>title</strong> (<em>str, optional</em>) – title of plot.</p></li>
-<li><p><strong>xtick_rotation</strong> (<em>int, optional</em>) – rotation of x tick labels.</p></li>
-<li><p><strong>hide_legend</strong> (<em>bool</em>) – whether or not to hide the legend.</p></li>
-<li><p><strong>legend_options</strong> (<em>tuple[str, tuple[float, float], int]</em>) – a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).</p></li>
-<li><p><strong>labels</strong> (<em>list</em>) – Names of objects will be used for the legend if list of multiple dataframes supplied.</p></li>
-<li><p><strong>**kwargs</strong> – other kwargs passed to matplotlib.pyplot.plot</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>sectratype plot</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -249,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.plotting.clone_overlap.html" class="btn btn-neutral float-right" title="dandelion.plotting.clone_overlap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.plotting.stackedbarplot.html" class="btn btn-neutral float-left" title="dandelion.plotting.stackedbarplot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

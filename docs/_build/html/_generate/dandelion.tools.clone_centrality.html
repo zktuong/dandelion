@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.tools.extract_edge_weights" href="dandelion.tools.extract_edge_weights.html" />
-    <link rel="prev" title="dandelion.tools.clone_degree" href="dandelion.tools.clone_degree.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,23 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.transfer.html">dandelion.tools.transfer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.clone_centrality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_diversity.html">dandelion.tools.clone_diversity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
@@ -170,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.tools.clone_centrality</li>
     
     
@@ -217,26 +200,6 @@
 </style>
 <div class="section" id="dandelion-tools-clone-centrality">
 <h1>dandelion.tools.clone_centrality<a class="headerlink" href="#dandelion-tools-clone-centrality" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.tools.clone_centrality">
-<code class="sig-prename descclassname">dandelion.tools.</code><code class="sig-name descname">clone_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_network.html#clone_centrality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.tools.clone_centrality" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates node closeness centrality in BCR network.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion</em>) – <cite>Dandelion</cite> object after <cite>tl.generate_network</cite> has been run.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em>) – Whether or not to show logging information.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Dandelion object with metadata updated with node closeness centrality information.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -244,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.tools.extract_edge_weights.html" class="btn btn-neutral float-right" title="dandelion.tools.extract_edge_weights" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.clone_degree.html" class="btn btn-neutral float-left" title="dandelion.tools.clone_degree" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

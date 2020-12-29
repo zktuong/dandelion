@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.plotting.barplot" href="dandelion.plotting.barplot.html" />
-    <link rel="prev" title="dandelion.plotting.clone_rarefaction" href="dandelion.plotting.clone_rarefaction.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,19 +103,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_rarefaction.html">dandelion.plotting.clone_rarefaction</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.plotting.clone_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.barplot.html">dandelion.plotting.barplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.stackedbarplot.html">dandelion.plotting.stackedbarplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.spectratype.html">dandelion.plotting.spectratype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_overlap.html">dandelion.plotting.clone_overlap</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
 
@@ -165,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.plotting.clone_network</li>
     
     
@@ -212,22 +200,6 @@
 </style>
 <div class="section" id="dandelion-plotting-clone-network">
 <h1>dandelion.plotting.clone_network<a class="headerlink" href="#dandelion-plotting-clone-network" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.plotting.clone_network">
-<code class="sig-prename descclassname">dandelion.plotting.</code><code class="sig-name descname">clone_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adata</span></em>, <em class="sig-param"><span class="n">basis</span><span class="o">=</span><span class="default_value">'bcr'</span></em>, <em class="sig-param"><span class="n">edges</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/plotting/_plotting.html#clone_network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.plotting.clone_network" title="Permalink to this definition">¶</a></dt>
-<dd><p>Using scanpy’s plotting module to plot the network. Only thing that is changed is the dfault options: <cite>basis = ‘bcr’</cite> and <cite>edges = True</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>adata</strong> (<em>AnnData</em>) – AnnData object.</p></li>
-<li><p><strong>basis</strong> (<em>str</em>) – key for embedding. Default is ‘bcr’.</p></li>
-<li><p><strong>edges</strong> (<em>bool</em>) – whether or not to plot edges. Default is True.</p></li>
-<li><p><strong>**kwargs</strong> – passed <cite>sc.pl.embedding</cite>.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -235,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.plotting.barplot.html" class="btn btn-neutral float-right" title="dandelion.plotting.barplot" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.plotting.clone_rarefaction.html" class="btn btn-neutral float-left" title="dandelion.plotting.clone_rarefaction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.tools.clone_size" href="dandelion.tools.clone_size.html" />
-    <link rel="prev" title="dandelion.tools.find_clones" href="dandelion.tools.find_clones.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,23 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.define_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.transfer.html">dandelion.tools.transfer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_centrality.html">dandelion.tools.clone_centrality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_diversity.html">dandelion.tools.clone_diversity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
@@ -170,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.tools.define_clones</li>
     
     
@@ -217,35 +200,6 @@
 </style>
 <div class="section" id="dandelion-tools-define-clones">
 <h1>dandelion.tools.define_clones<a class="headerlink" href="#dandelion-tools-define-clones" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.tools.define_clones">
-<code class="sig-prename descclassname">dandelion.tools.</code><code class="sig-name descname">define_clones</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">dist</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">action</span><span class="o">=</span><span class="default_value">'set'</span></em>, <em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">'ham'</span></em>, <em class="sig-param"><span class="n">norm</span><span class="o">=</span><span class="default_value">'len'</span></em>, <em class="sig-param"><span class="n">doublets</span><span class="o">=</span><span class="default_value">'drop'</span></em>, <em class="sig-param"><span class="n">fileformat</span><span class="o">=</span><span class="default_value">'airr'</span></em>, <em class="sig-param"><span class="n">ncpu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dirs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">outFilePrefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">key_added</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_tools.html#define_clones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.tools.define_clones" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find clones using changeo’s <a class="reference external" href="https://changeo.readthedocs.io/en/stable/tools/DefineClones.html">DefineClones.py</a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion, DataFrame, str</em>) – <cite>Dandelion</cite> object, pandas <cite>DataFrame</cite> in changeo/airr format, or file path to changeo/airr file after clones have been determined.</p></li>
-<li><p><strong>dist</strong> (<em>float, optional</em>) – The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class .threshold slot.</p></li>
-<li><p><strong>action</strong> (<em>str</em>) – Specifies how to handle multiple V(D)J assignments for initial grouping. Default is ‘set’. The “first” action will use only the first gene listed. The “set” action will use all gene assignments and construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence by a common assignment (similar to single-linkage).</p></li>
-<li><p><strong>model</strong> (<em>str</em>) – Specifies which substitution model to use for calculating distance between sequences. Default is ‘ham’. The “ham” model is nucleotide Hamming distance and “aa” is amino acid Hamming distance. The “hh_s1f” and “hh_s5f” models are human specific single nucleotide and 5-mer content models, respectively, from Yaari et al, 2013. The “mk_rs1nf” and “mk_rs5nf” models are mouse specific single nucleotide and 5-mer content models, respectively, from Cui et al, 2016. The “m1n_compat” and “hs1f_compat” models are deprecated models provided backwards compatibility with the “m1n” and “hs1f” models in Change-O v0.3.3 and SHazaM v0.1.4. Both 5-mer models should be considered experimental.</p></li>
-<li><p><strong>norm</strong> (<em>str</em>) – Specifies how to normalize distances. Default is ‘len’. ‘none’ (do not normalize), ‘len’ (normalize by length), or ‘mut’ (normalize by number of mutations between sequences).</p></li>
-<li><p><strong>doublets</strong> (<em>str</em>) – Option to control behaviour when dealing with heavy chain ‘doublets’. Default is ‘drop’. ‘drop’ will filter out the doublets while ‘count’ will retain only the highest umi count contig.</p></li>
-<li><p><strong>fileformat</strong> (<em>str</em>) – format of V(D)J file/objects. Default is ‘airr’. Also accepts ‘changeo’.</p></li>
-<li><p><strong>ncpu</strong> (<em>int, optional</em>) – number of cpus for parallelization. Default is all available cpus.</p></li>
-<li><p><strong>dirs</strong> (<em>str, optional</em>) – If specified, out file will be in this location.</p></li>
-<li><p><strong>outFilePrefix</strong> (<em>str, optional</em>) – If specified, the out file name will have this prefix. None defaults to ‘dandelion_define_clones’</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em>) – Whether or not to print the command used in terminal to call DefineClones.py. Default is False.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>Dandelion</cite> object with clone_id annotated in <cite>.data</cite> slot and <cite>.metadata</cite> initialized.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -253,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.tools.clone_size.html" class="btn btn-neutral float-right" title="dandelion.tools.clone_size" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.find_clones.html" class="btn btn-neutral float-left" title="dandelion.tools.find_clones" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

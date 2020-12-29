@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.preprocessing.calculate_threshold" href="dandelion.preprocessing.calculate_threshold.html" />
-    <link rel="prev" title="dandelion.preprocessing.filter_bcr" href="dandelion.preprocessing.filter_bcr.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,20 +103,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotype.html">dandelion.preprocessing.assign_isotype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.quantify_mutations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
@@ -169,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.preprocessing.quantify_mutations</li>
     
     
@@ -216,30 +200,6 @@
 </style>
 <div class="section" id="dandelion-preprocessing-quantify-mutations">
 <h1>dandelion.preprocessing.quantify_mutations<a class="headerlink" href="#dandelion-preprocessing-quantify-mutations" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.preprocessing.quantify_mutations">
-<code class="sig-prename descclassname">dandelion.preprocessing.</code><code class="sig-name descname">quantify_mutations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">split_locus</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">region_definition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mutation_definition</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frequency</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">combine</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#quantify_mutations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.preprocessing.quantify_mutations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs basic mutation load analysis implemented in <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/">shazam</a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion</em>) – <cite>Dandelion</cite> object</p></li>
-<li><p><strong>split_locus</strong> (<em>bool</em>) – whether to return the results for heavy chain and light chain separately. Default is False.</p></li>
-<li><p><strong>region_definition</strong> (<em>str, optional</em>) – passed to shazam’s <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/observedMutations/">observedMutations</a>.</p></li>
-<li><p><strong>mutation_definition</strong> (<em>str, optional</em>) – passed to shazam’s <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/observedMutations/">observedMutations</a>.</p></li>
-<li><p><strong>frequency</strong> – whether to return the results a frequency or counts. Default is True (frequency).</p></li>
-<li><p><strong>combine</strong> – whether to return the results for replacement and silent mutations separately (False). Default is True (sum).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>Dandelion</cite> object with updated <cite>.metadata</cite> slot.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -247,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.preprocessing.calculate_threshold.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.calculate_threshold" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.preprocessing.filter_bcr.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.filter_bcr" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

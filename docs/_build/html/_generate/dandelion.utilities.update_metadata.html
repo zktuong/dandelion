@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.utilities.read_h5" href="dandelion.utilities.read_h5.html" />
-    <link rel="prev" title="dandelion.utilities.Dandelion" href="dandelion.utilities.Dandelion.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,20 +103,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.makeblastdb.html">dandelion.utilities.makeblastdb</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.load_data.html">dandelion.utilities.load_data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.Dandelion.html">dandelion.utilities.Dandelion</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.utilities.update_metadata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_h5.html">dandelion.utilities.read_h5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_pkl.html">dandelion.utilities.read_pkl</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
 
             
@@ -165,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.utilities.update_metadata</li>
     
     
@@ -212,29 +200,6 @@
 </style>
 <div class="section" id="dandelion-utilities-update-metadata">
 <h1>dandelion.utilities.update_metadata<a class="headerlink" href="#dandelion-utilities-update-metadata" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.utilities.update_metadata">
-<code class="sig-prename descclassname">dandelion.utilities.</code><code class="sig-name descname">update_metadata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">retrieve</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">isotype_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">split_heavy_light</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">collapse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">clones_sep</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/utilities/_utilities.html#update_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.utilities.update_metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Dandelion function to update and populate the <cite>.metadata</cite> slot.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion</em>) – Dandelion object</p></li>
-<li><p><strong>retrieve</strong> (<em>str</em>) – column name in <cite>.data</cite> slot.</p></li>
-<li><p><strong>split_heavy_light</strong> (<em>bool</em>) – Returns the retrieval splitted into two column for heavy and light. Default is True. False combines the retrieval into a single column.</p></li>
-<li><p><strong>collapse</strong> (<em>bool</em>) – Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.</p></li>
-<li><p><strong>clones_sep</strong> (<em>tuple[int, str]</em>) – A tuple containing how the clone groups should be extracted. None defaults to (0, ‘_’).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Dandelion object with <cite>.metadata</cite> slot initialized.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -242,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.utilities.read_h5.html" class="btn btn-neutral float-right" title="dandelion.utilities.read_h5" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.utilities.Dandelion.html" class="btn btn-neutral float-left" title="dandelion.utilities.Dandelion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

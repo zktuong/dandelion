@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.utilities.update_metadata" href="dandelion.utilities.update_metadata.html" />
-    <link rel="prev" title="dandelion.utilities.load_data" href="dandelion.utilities.load_data.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,20 +103,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.makeblastdb.html">dandelion.utilities.makeblastdb</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.load_data.html">dandelion.utilities.load_data</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.utilities.Dandelion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.update_metadata.html">dandelion.utilities.update_metadata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_h5.html">dandelion.utilities.read_h5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_pkl.html">dandelion.utilities.read_pkl</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
 
             
@@ -165,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.utilities.Dandelion</li>
     
     
@@ -212,43 +200,6 @@
 </style>
 <div class="section" id="dandelion-utilities-dandelion">
 <h1>dandelion.utilities.Dandelion<a class="headerlink" href="#dandelion-utilities-dandelion" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="dandelion.utilities.Dandelion">
-<em class="property">class </em><code class="sig-prename descclassname">dandelion.utilities.</code><code class="sig-name descname">Dandelion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">metadata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">germline</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">distance</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">edges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">layout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">graph</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">initialize</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/utilities/_utilities.html#Dandelion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.utilities.Dandelion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dandelion class object.</p>
-<p>Main class object storing input/ouput slots for all functions.</p>
-<dl class="py method">
-<dt id="dandelion.utilities.Dandelion.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">metadata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">germline</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">distance</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">edges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">layout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">graph</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">initialize</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/utilities/_utilities.html#Dandelion.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.utilities.Dandelion.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
-<p class="rubric">Methods</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#dandelion.utilities.Dandelion.__init__" title="dandelion.utilities.Dandelion.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([data, metadata, germline, …])</p></td>
-<td><p>Initialize self.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="dandelion.utilities.Dandelion.copy.html#dandelion.utilities.Dandelion.copy" title="dandelion.utilities.Dandelion.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code></a>()</p></td>
-<td><p>Performs a deep copy of all slots in <cite>dandelion</cite> class.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="dandelion.utilities.Dandelion.update_germline.html#dandelion.utilities.Dandelion.update_germline" title="dandelion.utilities.Dandelion.update_germline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_germline</span></code></a>([corrected, germline, org])</p></td>
-<td><p>Update germline reference with corrected sequences and store in Dandelion object.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="dandelion.utilities.Dandelion.write_h5.html#dandelion.utilities.Dandelion.write_h5" title="dandelion.utilities.Dandelion.write_h5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_h5</span></code></a>([filename, complib, compression, …])</p></td>
-<td><p>Writes a <cite>Dandelion</cite> class to .h5 format.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="dandelion.utilities.Dandelion.write_pkl.html#dandelion.utilities.Dandelion.write_pkl" title="dandelion.utilities.Dandelion.write_pkl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_pkl</span></code></a>([filename])</p></td>
-<td><p>Writes a <cite>Dandelion</cite> class to .pkl format.</p></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 
@@ -256,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.utilities.update_metadata.html" class="btn btn-neutral float-right" title="dandelion.utilities.update_metadata" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.utilities.load_data.html" class="btn btn-neutral float-left" title="dandelion.utilities.load_data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

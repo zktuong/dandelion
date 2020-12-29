@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.tools.transfer" href="dandelion.tools.transfer.html" />
-    <link rel="prev" title="dandelion.tools.clone_size" href="dandelion.tools.clone_size.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,23 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.clone_overlap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.transfer.html">dandelion.tools.transfer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_centrality.html">dandelion.tools.clone_centrality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_diversity.html">dandelion.tools.clone_diversity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
@@ -170,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.tools.clone_overlap</li>
     
     
@@ -217,29 +200,6 @@
 </style>
 <div class="section" id="dandelion-tools-clone-overlap">
 <h1>dandelion.tools.clone_overlap<a class="headerlink" href="#dandelion-tools-clone-overlap" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.tools.clone_overlap">
-<code class="sig-prename descclassname">dandelion.tools.</code><code class="sig-name descname">clone_overlap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">groupby</span></em>, <em class="sig-param"><span class="n">colorby</span></em>, <em class="sig-param"><span class="n">min_clone_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_tools.html#clone_overlap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.tools.clone_overlap" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function to tabulate clonal overlap for input as a circos-style plot.
-:Parameters: * <strong>self</strong> (<em>Dandelion, AnnData</em>) – <cite>Dandelion</cite> or <cite>AnnData</cite> object.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><strong>groupby</strong> (<em>str</em>) – column name in obs/metadata for collapsing to nodes in circos plot.</p></li>
-<li><p><strong>colorby</strong> (<em>str</em>) – column name in obs/metadata for grouping and color of nodes in circos plot.</p></li>
-<li><p><strong>min_clone_size</strong> (<em>int, optional</em>) – minimum size of clone for plotting connections. Defaults to 2 if left as None.</p></li>
-<li><p><strong>clone_key</strong> (<em>str, optional</em>) – column name for clones. None defaults to ‘clone_id’.</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>a <cite>pandas DataFrame</cite>.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -247,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.tools.transfer.html" class="btn btn-neutral float-right" title="dandelion.tools.transfer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.clone_size.html" class="btn btn-neutral float-left" title="dandelion.tools.clone_size" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.preprocessing.filter_bcr" href="dandelion.preprocessing.filter_bcr.html" />
-    <link rel="prev" title="dandelion.preprocessing.reassign_alleles" href="dandelion.preprocessing.reassign_alleles.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,20 +103,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotype.html">dandelion.preprocessing.assign_isotype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
@@ -169,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.preprocessing.create_germlines</li>
     
     
@@ -216,33 +200,6 @@
 </style>
 <div class="section" id="dandelion-preprocessing-create-germlines">
 <h1>dandelion.preprocessing.create_germlines<a class="headerlink" href="#dandelion-preprocessing-create-germlines" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.preprocessing.create_germlines">
-<code class="sig-prename descclassname">dandelion.preprocessing.</code><code class="sig-name descname">create_germlines</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">germline</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">org</span><span class="o">=</span><span class="default_value">'human'</span></em>, <em class="sig-param"><span class="n">seq_field</span><span class="o">=</span><span class="default_value">'sequence_alignment'</span></em>, <em class="sig-param"><span class="n">v_field</span><span class="o">=</span><span class="default_value">'v_call'</span></em>, <em class="sig-param"><span class="n">d_field</span><span class="o">=</span><span class="default_value">'d_call'</span></em>, <em class="sig-param"><span class="n">j_field</span><span class="o">=</span><span class="default_value">'j_call'</span></em>, <em class="sig-param"><span class="n">germ_types</span><span class="o">=</span><span class="default_value">'dmask'</span></em>, <em class="sig-param"><span class="n">fileformat</span><span class="o">=</span><span class="default_value">'airr'</span></em>, <em class="sig-param"><span class="n">initialize_metadata</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#create_germlines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.preprocessing.create_germlines" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion, DataFrame, str</em>) – <cite>Dandelion</cite> object, pandas <cite>DataFrame</cite> in changeo/airr format, or file path to changeo/airr file after clones have been determined.</p></li>
-<li><p><strong>germline</strong> (<em>str, optional</em>) – path to germline database folder. Defaults to <cite>$GERMLINE</cite> environmental variable.</p></li>
-<li><p><strong>org</strong> (<em>str</em>) – organism of germline database. Default is ‘human’.</p></li>
-<li><p><strong>seq_field</strong> (<em>str</em>) – name of column containing the aligned sequence. Default is ‘sequence_alignment’ (airr).</p></li>
-<li><p><strong>v_field</strong> (<em>str</em>) – name of column containing the germline V segment call. Default is ‘v_call’ (airr).</p></li>
-<li><p><strong>d_field</strong> (<em>str</em>) – name of column containing the germline d segment call. Default is ‘d_call’ (airr).</p></li>
-<li><p><strong>j_field</strong> (<em>str</em>) – name of column containing the germline j segment call. Default is ‘j_call’ (airr).</p></li>
-<li><p><strong>germ_types</strong> (<em>str</em>) – Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is ‘dmask’.</p></li>
-<li><p><strong>fileformat</strong> (<em>str</em>) – format of V(D)J file/objects. Default is ‘airr’. Also accepts ‘changeo’.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>V(D)J data file with reconstructed germline sequences.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -250,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.preprocessing.filter_bcr.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.filter_bcr" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.preprocessing.reassign_alleles.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.reassign_alleles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

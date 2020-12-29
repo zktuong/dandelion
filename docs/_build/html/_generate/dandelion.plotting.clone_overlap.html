@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.utilities.makeblastdb" href="dandelion.utilities.makeblastdb.html" />
-    <link rel="prev" title="dandelion.plotting.spectratype" href="dandelion.plotting.spectratype.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,19 +103,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_rarefaction.html">dandelion.plotting.clone_rarefaction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.clone_network.html">dandelion.plotting.clone_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.barplot.html">dandelion.plotting.barplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.stackedbarplot.html">dandelion.plotting.stackedbarplot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.plotting.spectratype.html">dandelion.plotting.spectratype</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.plotting.clone_overlap</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
 
@@ -165,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.plotting.clone_overlap</li>
     
     
@@ -212,37 +200,6 @@
 </style>
 <div class="section" id="dandelion-plotting-clone-overlap">
 <h1>dandelion.plotting.clone_overlap<a class="headerlink" href="#dandelion-plotting-clone-overlap" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.plotting.clone_overlap">
-<code class="sig-prename descclassname">dandelion.plotting.</code><code class="sig-name descname">clone_overlap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">groupby</span></em>, <em class="sig-param"><span class="n">colorby</span></em>, <em class="sig-param"><span class="n">min_clone_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color_mapping</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">node_labels</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">node_label_layout</span><span class="o">=</span><span class="default_value">'rotation'</span></em>, <em class="sig-param"><span class="n">group_label_position</span><span class="o">=</span><span class="default_value">'middle'</span></em>, <em class="sig-param"><span class="n">group_label_offset</span><span class="o">=</span><span class="default_value">8</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">(8, 8)</span></em>, <em class="sig-param"><span class="n">return_graph</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/plotting/_plotting.html#clone_overlap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.plotting.clone_overlap" title="Permalink to this definition">¶</a></dt>
-<dd><p>A plot function to visualise clonal overlap as a circos-style plot.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion, AnnData</em>) – <cite>Dandelion</cite> or <cite>AnnData</cite> object.</p></li>
-<li><p><strong>groupby</strong> (<em>str</em>) – column name in obs/metadata for collapsing to nodes in circos plot.</p></li>
-<li><p><strong>colorby</strong> (<em>str</em>) – column name in obs/metadata for grouping and color of nodes in circos plot.</p></li>
-<li><p><strong>min_clone_size</strong> (<em>int, optional</em>) – minimum size of clone for plotting connections. Defaults to 2 if left as None.</p></li>
-<li><p><strong>clone_key</strong> (<em>str, optional</em>) – column name for clones. None defaults to ‘clone_id’.</p></li>
-<li><p><strong>color_maopping</strong> (<em>dict, sequence, optional</em>) – custom color mapping provided as a sequence (correpsonding to order of categories or alpha-numeric order if dtype is not category), or dictionary containing custom {category:color} mapping.</p></li>
-<li><p><strong>node_labels</strong> (<em>bool, optional</em>) – whether to use node objects as labels or not</p></li>
-<li><p><strong>node_label_layout</strong> (<em>bool, optional</em>) – which/whether (a) node layout is used. One of ‘rotation’, ‘numbers’ or None.</p></li>
-<li><p><strong>group_label_position</strong> (<em>str</em>) – The position of the group label. One of ‘beginning’, ‘middle’ or ‘end’.</p></li>
-<li><p><strong>group_label_offset</strong> (<em>int, float</em>) – how much to offset the group labels, so that they are not overlapping with node labels.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple[float, float]</em>) – figure size. Default is (8, 8).</p></li>
-<li><p><strong>return_graph</strong> (<em>bool</em>) – whether or not to return the graph for fine tuning. Default is False.</p></li>
-<li><p><strong>**kwargs</strong> – passed to <cite>matplotlib.pyplot.savefig</cite>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>a <cite>nxviz.CircosPlot</cite>.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -250,15 +207,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.utilities.makeblastdb.html" class="btn btn-neutral float-right" title="dandelion.utilities.makeblastdb" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.plotting.spectratype.html" class="btn btn-neutral float-left" title="dandelion.plotting.spectratype" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

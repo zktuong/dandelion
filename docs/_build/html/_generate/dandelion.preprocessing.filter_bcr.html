@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.preprocessing.quantify_mutations" href="dandelion.preprocessing.quantify_mutations.html" />
-    <link rel="prev" title="dandelion.preprocessing.create_germlines" href="dandelion.preprocessing.create_germlines.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,20 +103,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotype.html">dandelion.preprocessing.assign_isotype</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.filter_bcr</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
@@ -169,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.preprocessing.filter_bcr</li>
     
     
@@ -216,39 +200,6 @@
 </style>
 <div class="section" id="dandelion-preprocessing-filter-bcr">
 <h1>dandelion.preprocessing.filter_bcr<a class="headerlink" href="#dandelion-preprocessing-filter-bcr" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.preprocessing.filter_bcr">
-<code class="sig-prename descclassname">dandelion.preprocessing.</code><code class="sig-name descname">filter_bcr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">adata</span></em>, <em class="sig-param"><span class="n">filter_bcr</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">filter_rna</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">filter_poorqualitybcr</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">rescue_igh</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">umi_foldchange_cutoff</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">filter_lightchains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">filter_missing</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">parallel</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ncpu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#filter_bcr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.preprocessing.filter_bcr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J <cite>DataFrame</cite> and <cite>AnnData</cite> objects. Depends on a <cite>AnnData</cite>.obs slot populated with ‘filter_rna’ column.
-If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless <cite>rescue_igh</cite> is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is &gt; umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
-If there’s multiple contigs that survive the ‘rescue’, then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
-Lastly, contigs with no corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>DataDrame, str</em>) – V(D)J airr/changeo data to filter. Can be pandas <cite>DataFrame</cite> object or file path as string.</p></li>
-<li><p><strong>adata</strong> (<em>AnnData</em>) – AnnData object to filter.</p></li>
-<li><p><strong>filter_bcr</strong> (<em>bool</em>) – If True, V(D)J <cite>DataFrame</cite> object returned will be filtered. Default is True.</p></li>
-<li><p><strong>filter_rna</strong> (<em>bool</em>) – If True, <cite>AnnData</cite> object returned will be filtered. Default is True.</p></li>
-<li><p><strong>filter_poorqualitybcr</strong> (<em>bool</em>) – If True, barcodes marked with poor quality BCR contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.</p></li>
-<li><p><strong>rescue_igh</strong> (<em>bool</em>) – If True, rescues IGH contigs with highest umi counts with a requirement that it passes the <cite>umi_foldchange_cutoff</cite> option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.</p></li>
-<li><p><strong>umi_foldchange_cutoff</strong> (<em>int</em>) – related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.</p></li>
-<li><p><strong>filter_lightchains</strong> (<em>bool</em>) – cells with multiple light chains will be marked to filter. Default is True.</p></li>
-<li><p><strong>filter_missing</strong> (<em>bool</em>) – cells in V(D)J data not found in <cite>AnnData</cite> object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.</p></li>
-<li><p><strong>parallel</strong> (<em>bool</em>) – whether or not to use parallelization. Default is True.</p></li>
-<li><p><strong>ncpu</strong> (<em>int</em>) – number of cores to use if parallel is True. Default is all available - 1.</p></li>
-<li><p><strong>save</strong> (<em>str, optional</em>) – Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>V(D)J <cite>DataFrame</cite> object in airr/changeo format and <cite>AnnData</cite> object.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -256,15 +207,6 @@ Lastly, contigs with no corresponding cell barcode in the AnnData object is filt
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.preprocessing.quantify_mutations.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.quantify_mutations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.preprocessing.create_germlines.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.create_germlines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

@@ -39,9 +39,7 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.tools.clone_degree" href="dandelion.tools.clone_degree.html" />
-    <link rel="prev" title="dandelion.tools.transfer" href="dandelion.tools.transfer.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -105,23 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.transfer.html">dandelion.tools.transfer</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.generate_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_centrality.html">dandelion.tools.clone_centrality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_diversity.html">dandelion.tools.clone_diversity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
 </ul>
@@ -170,8 +155,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="../api.html">Preprocessing: <cite>pp</cite></a> &raquo;</li>
-        
       <li>dandelion.tools.generate_network</li>
     
     
@@ -217,34 +200,6 @@
 </style>
 <div class="section" id="dandelion-tools-generate-network">
 <h1>dandelion.tools.generate_network<a class="headerlink" href="#dandelion-tools-generate-network" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="dandelion.tools.generate_network">
-<code class="sig-prename descclassname">dandelion.tools.</code><code class="sig-name descname">generate_network</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">distance_mode</span><span class="o">=</span><span class="default_value">'simple'</span></em>, <em class="sig-param"><span class="n">min_size</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">aa_or_nt</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">downsample</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_network.html#generate_network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.tools.generate_network" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
-The distance matrices are then combined into a singular matrix.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Dandelion, DataFrame, str</em>) – <cite>Dandelion</cite> object, pandas <cite>DataFrame</cite> in changeo/airr format, or file path to changeo/airr file after clones have been determined.</p></li>
-<li><p><strong>distance_mode</strong> (<em>str</em>) – The mode of calculating joint distance matrix for heavy and light chains. Default is ‘simple’. If ‘simple’, a simple sum operation will be used. If ‘scaled’, depending on whether <cite>weights</cite> option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.</p></li>
-<li><p><strong>min_size</strong> (<em>int</em>) – For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.</p></li>
-<li><p><strong>aa_or_nt</strong> (<em>str, optional</em>) – Option accepts ‘aa’, ‘nt’ or None, with None defaulting to ‘aa’. Determines whether amino acid or nucleotide sequences will be used for calculating distances.</p></li>
-<li><p><strong>clone_key</strong> (<em>str, optional</em>) – column name to build network on.</p></li>
-<li><p><strong>weights</strong> (<em>tuple, optional</em>) – A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.</p></li>
-<li><p><strong>downsample</strong> (<em>int, optional</em>) – whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em>) – whether or not to print the progress bars.</p></li>
-<li><p><strong>**kwargs</strong> – additional kwargs passed to options specified in <cite>networkx.drawing.layout.spring_layout</cite>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>Dandelion</cite> object with <cite>.distance</cite>, <cite>.edges</cite>, <cite>.layout</cite>, <cite>.graph</cite> initialized.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -252,15 +207,6 @@ The distance matrices are then combined into a singular matrix.</p>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.tools.clone_degree.html" class="btn btn-neutral float-right" title="dandelion.tools.clone_degree" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.transfer.html" class="btn btn-neutral float-left" title="dandelion.tools.transfer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
