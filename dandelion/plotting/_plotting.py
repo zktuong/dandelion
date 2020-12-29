@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-13 20:47:47
+# @Last Modified time: 2020-12-16 22:29:11
 
 import seaborn as sns
 import pandas as pd
@@ -16,6 +16,7 @@ import random
 from adjustText import adjust_text
 from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
 from scanpy.plotting import palettes
+from time import sleep
 import matplotlib.pyplot as plt
 from itertools import combinations
 
@@ -60,6 +61,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
     # remove those with no counts
     rowsum = res_.sum(axis = 1)
     print('removing due to zero counts:', ', '.join([res_.index[i] for i, x in enumerate(res_.sum(axis = 1) == 0) if x]))
+    sleep(0.5)
     res_ = res_[~(res_.sum(axis = 1) == 0)]
 
     # set up for calculating rarefaction

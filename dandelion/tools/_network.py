@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-13 19:57:54
+# @Last Modified time: 2020-12-17 11:47:09
 
 import pandas as pd
 import numpy as np
@@ -171,7 +171,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     if downsample is not None:
         dat_downsample = dat_h.append(dat_l)
-        out = Dandelion(dat_downsample)
+        downsample_meta = self.metadata[self.metadata.index.isin(dat_h['cell_id'])].copy()
+        out = Dandelion(dat_downsample, metadata = downsample_meta)
 
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
@@ -314,8 +315,6 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         if type(dmat[x]) is np.ndarray:
             dmat[x] = csr_matrix(dmat[x])
 
-    dmat
-
     if verbose:
         logg.info(' finished', time=start,
             deep=('Updated Dandelion object: \n'
@@ -335,7 +334,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         else:
             threshold_ = None
         if downsample is not None:
-            out = Dandelion(data = dat_downsample, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
+            out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
             out.threshold = threshold_
             return(out)
         else:
@@ -364,7 +363,7 @@ def mst(mat):
 
 def clone_degree(self, weight=None, verbose = True):
     if verbose:
-        start = logg.info('Calculating clone degree')
+        start = logg.info('Calculating node degree')
     if self.__class__ == Dandelion:
         try:
             G = self.graph[0]
@@ -387,9 +386,9 @@ def clone_degree(self, weight=None, verbose = True):
         raise TypeError('Input object must be of {}'.format(Dandelion))
     
 
-def clone_centrality(self, weight='weight', verbose = True):
+def clone_centrality(self, verbose = True):
     if verbose:
-        start = logg.info('Calculating clone closeness centrality')
+        start = logg.info('Calculating node closeness centrality')
     if self.__class__ == Dandelion:
         try:
             G = self.graph[0]
@@ -410,7 +409,6 @@ def clone_centrality(self, weight='weight', verbose = True):
                     deep=('Updated Dandelion metadata\n'))
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
-
 
 def generate_layout(vertices, edges = None, min_size = 2, weight = None, verbose = True, **kwargs):
     G = nx.Graph()
