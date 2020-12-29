@@ -14,7 +14,6 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
-import jupytext
 from sphinx.deprecation import RemovedInSphinx40Warning
 import warnings
 
