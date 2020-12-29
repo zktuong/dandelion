@@ -23,5 +23,5 @@ python:
   install:
     - requirements: docs/requirements.txt
 
-R:
-  version: 4.0
+conda:
+  environment: environment.yml
