@@ -1,4 +1,5 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
+[![](https://badge.fury.io/py/sc-dandelion.svg)](https://badge.fury.io/py/sc-dandelion)
 ![](notebooks/img/dandelion_logo_illustration.png)
 
 Version = 0.0.26
