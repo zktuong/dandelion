@@ -89,9 +89,9 @@
               
             
             
-              <p class="caption"><span class="caption-text">Overview:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../README.html">Installation</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
@@ -456,11 +456,11 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Documents/Github/dandelion&#39;</span><span class="p">))</span>
-<span class="kn">import</span> <span class="nn">dandelion</span> <span class="k">as</span> <span class="nn">ddl</span>
-<span class="c1"># change directory to somewhere more workable</span>
-<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">))</span>
+<span></span>import os
+os.chdir(os.path.expanduser(&#39;/Users/kt16/Documents/Github/dandelion&#39;))
+import dandelion as ddl
+# change directory to somewhere more workable
+os.chdir(os.path.expanduser(&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;))
 </pre></div>
 </div>
 </div>
@@ -470,17 +470,17 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">functools</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">scipy.stats</span>
-<span class="kn">import</span> <span class="nn">anndata</span>
+<span></span>import pandas as pd
+import numpy as np
+import scanpy as sc
+import warnings
+import functools
+import seaborn as sns
+import scipy.stats
+import anndata
 
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">print_header</span><span class="p">()</span>
+warnings.filterwarnings(&#39;ignore&#39;)
+sc.logging.print_header()
 </pre></div>
 </div>
 </div>
@@ -498,19 +498,19 @@ scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sc5p_v2_hs_PBMC_1k&#39;</span><span class="p">,</span> <span class="s1">&#39;sc5p_v2_hs_PBMC_10k&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_v1_hs_pbmc3&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_nextgem_hs_pbmc3&#39;</span><span class="p">]</span>
-<span class="n">adata_list</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
-    <span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_10x_h5</span><span class="p">(</span><span class="n">sample</span> <span class="o">+</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="s1">&#39;_filtered_feature_bc_matrix.h5&#39;</span><span class="p">,</span> <span class="n">gex_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span>
-    <span class="c1"># rename cells to sample id + barcode</span>
-    <span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span><span class="p">]</span>
-    <span class="n">adata</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
-    <span class="n">adata_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">adata</span> <span class="o">=</span> <span class="n">adata_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">adata_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-<span class="c1"># rename the obs_names again, this time cleaving the trailing -#</span>
-<span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span><span class="p">]</span>
-<span class="n">adata</span>
+<span></span>samples = [&#39;sc5p_v2_hs_PBMC_1k&#39;, &#39;sc5p_v2_hs_PBMC_10k&#39;, &#39;vdj_v1_hs_pbmc3&#39;, &#39;vdj_nextgem_hs_pbmc3&#39;]
+adata_list = []
+for sample in samples:
+    adata = sc.read_10x_h5(sample +&#39;/&#39; + sample + &#39;_filtered_feature_bc_matrix.h5&#39;, gex_only=True)
+    adata.obs[&#39;sampleid&#39;] = sample
+    # rename cells to sample id + barcode
+    adata.obs_names = [str(sample)+&#39;_&#39;+str(j) for j in adata.obs_names]
+    adata.var_names_make_unique()
+    adata_list.append(adata)
+adata = adata_list[0].concatenate(adata_list[1:])
+# rename the obs_names again, this time cleaving the trailing -#
+adata.obs_names = [str(j).split(&#39;-&#39;)[0] for j in adata.obs_names]
+adata
 </pre></div>
 </div>
 </div>
@@ -546,8 +546,8 @@ AnnData object with n_obs × n_vars = 30471 × 31915
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">recipe_scanpy_qc</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="n">adata</span>
+<span></span>ddl.pp.recipe_scanpy_qc(adata)
+adata
 </pre></div>
 </div>
 </div>
@@ -572,7 +572,7 @@ AnnData object with n_obs × n_vars = 30471 × 31915
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># adata.obs[&#39;filter_rna&#39;] = False</span>
+<span></span># adata.obs[&#39;filter_rna&#39;] = False
 </pre></div>
 </div>
 </div>
@@ -585,14 +585,14 @@ will be dropped and the umis transferred to duplicate_count column. The same pro
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># first we read in the 4 bcr files</span>
-<span class="n">bcr_files</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
-    <span class="n">file_location</span> <span class="o">=</span> <span class="n">sample</span> <span class="o">+</span><span class="s1">&#39;/dandelion/data/&#39;</span><span class="o">+</span><span class="n">sample</span><span class="o">+</span><span class="s1">&#39;_b_filtered_contig_igblast_db-pass_genotyped.tsv&#39;</span>
-    <span class="n">bcr_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_location</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">))</span>
-<span class="n">bcr</span> <span class="o">=</span> <span class="n">bcr_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bcr_files</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-<span class="n">bcr</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="n">bcr</span>
+<span></span># first we read in the 4 bcr files
+bcr_files = []
+for sample in samples:
+    file_location = sample +&#39;/dandelion/data/&#39;+sample+&#39;_b_filtered_contig_igblast_db-pass_genotyped.tsv&#39;
+    bcr_files.append(pd.read_csv(file_location, sep = &#39;\t&#39;))
+bcr = bcr_files[0].append(bcr_files[1:])
+bcr.reset_index(inplace = True, drop = True)
+bcr
 </pre></div>
 </div>
 </div>
@@ -917,8 +917,8 @@ will be dropped and the umis transferred to duplicate_count column. The same pro
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># The function will return both objects.</span>
-<span class="n">vdj</span><span class="p">,</span> <span class="n">adata</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_bcr</span><span class="p">(</span><span class="n">bcr</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+<span></span># The function will return both objects.
+vdj, adata = ddl.pp.filter_bcr(bcr, adata)
 </pre></div>
 </div>
 </div>
@@ -971,7 +971,7 @@ be ignored i.e. drop all multiple IGH contigs:</p>
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span>
+<span></span>vdj
 </pre></div>
 </div>
 </div>
@@ -997,7 +997,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata</span>
+<span></span>adata
 </pre></div>
 </div>
 </div>
@@ -1031,7 +1031,7 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_bcr&#39;</span><span class="p">])</span>
+<span></span>pd.crosstab(adata.obs[&#39;has_bcr&#39;], adata.obs[&#39;filter_bcr&#39;])
 </pre></div>
 </div>
 </div>
@@ -1083,7 +1083,7 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">])</span>
+<span></span>pd.crosstab(adata.obs[&#39;has_bcr&#39;], adata.obs[&#39;bcr_QC_pass&#39;])
 </pre></div>
 </div>
 </div>
@@ -1139,7 +1139,7 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_bcr&#39;</span><span class="p">])</span>
+<span></span>pd.crosstab(adata.obs[&#39;bcr_QC_pass&#39;], adata.obs[&#39;filter_bcr&#39;])
 </pre></div>
 </div>
 </div>
@@ -1193,14 +1193,14 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># filter genes</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">min_cells</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="c1"># Normalize the counts</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">target_sum</span><span class="o">=</span><span class="mf">1e4</span><span class="p">)</span>
-<span class="c1"># Logarithmize the data</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="c1"># Stash the normalised counts</span>
-<span class="n">adata</span><span class="o">.</span><span class="n">raw</span> <span class="o">=</span> <span class="n">adata</span>
+<span></span># filter genes
+sc.pp.filter_genes(adata, min_cells=3)
+# Normalize the counts
+sc.pp.normalize_total(adata, target_sum=1e4)
+# Logarithmize the data
+sc.pp.log1p(adata)
+# Stash the normalised counts
+adata.raw = adata
 </pre></div>
 </div>
 </div>
@@ -1218,8 +1218,8 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">min_mean</span><span class="o">=</span><span class="mf">0.0125</span><span class="p">,</span> <span class="n">max_mean</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">min_disp</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span></span>sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+sc.pl.highly_variable_genes(adata)
 </pre></div>
 </div>
 </div>
@@ -1236,7 +1236,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[:,</span> <span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">highly_variable</span><span class="p">]</span>
+<span></span>adata = adata[:, adata.var.highly_variable]
 </pre></div>
 </div>
 </div>
@@ -1246,8 +1246,8 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">regress_out</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;n_counts&#39;</span><span class="p">,</span> <span class="s1">&#39;percent_mito&#39;</span><span class="p">])</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span></span>sc.pp.regress_out(adata, [&#39;n_counts&#39;, &#39;percent_mito&#39;])
+sc.pp.scale(adata, max_value=10)
 </pre></div>
 </div>
 </div>
@@ -1270,8 +1270,8 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">svd_solver</span><span class="o">=</span><span class="s1">&#39;arpack&#39;</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">pca_variance_ratio</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_pcs</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>sc.tl.pca(adata, svd_solver=&#39;arpack&#39;)
+sc.pl.pca_variance_ratio(adata, log=True, n_pcs = 50)
 </pre></div>
 </div>
 </div>
@@ -1288,12 +1288,12 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Computing the neighborhood graph</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="c1"># Embedding the neighborhood graph</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
-<span class="c1"># Clustering the neighborhood graph</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span></span># Computing the neighborhood graph
+sc.pp.neighbors(adata)
+# Embedding the neighborhood graph
+sc.tl.umap(adata)
+# Clustering the neighborhood graph
+sc.tl.leiden(adata)
 </pre></div>
 </div>
 </div>
@@ -1303,7 +1303,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">])</span>
+<span></span>sc.pl.umap(adata, color=[&#39;leiden&#39;, &#39;bcr_QC_pass&#39;])
 </pre></div>
 </div>
 </div>
@@ -1320,7 +1320,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;IGHM&#39;</span><span class="p">,</span> <span class="s1">&#39;JCHAIN&#39;</span><span class="p">])</span>
+<span></span>sc.pl.umap(adata, color=[&#39;IGHM&#39;, &#39;JCHAIN&#39;])
 </pre></div>
 </div>
 </div>
@@ -1338,7 +1338,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;adata.h5ad&#39;</span><span class="p">,</span> <span class="n">compression</span> <span class="o">=</span> <span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+<span></span>adata.write(&#39;adata.h5ad&#39;, compression = &#39;gzip&#39;)
 </pre></div>
 </div>
 </div>
@@ -1358,7 +1358,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;filtered_vdj_table.tsv&#39;</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+<span></span>vdj.data.to_csv(&#39;filtered_vdj_table.tsv&#39;, sep = &#39;\t&#39;)
 </pre></div>
 </div>
 </div>
@@ -1368,7 +1368,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">write_h5</span><span class="p">(</span><span class="s1">&#39;dandelion_results.h5&#39;</span><span class="p">,</span> <span class="n">complib</span> <span class="o">=</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">)</span>
+<span></span>vdj.write_h5(&#39;dandelion_results.h5&#39;, complib = &#39;bzip2&#39;)
 </pre></div>
 </div>
 </div>
@@ -1377,7 +1377,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">write_pkl</span><span class="p">(</span><span class="s1">&#39;dandelion_results.pkl.pbz2&#39;</span><span class="p">)</span> <span class="c1"># this will automatically use bzip2 for compression, swith the extension to .gz for gzip</span>
+<span></span>vdj.write_pkl(&#39;dandelion_results.pkl.pbz2&#39;) # this will automatically use bzip2 for compression, swith the extension to .gz for gzip
 </pre></div>
 </div>
 </div>

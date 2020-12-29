@@ -89,9 +89,9 @@
               
             
             
-              <p class="caption"><span class="caption-text">Overview:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../README.html">Installation</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
@@ -478,17 +478,17 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Documents/Github/dandelion&#39;</span><span class="p">))</span>
-<span class="kn">import</span> <span class="nn">dandelion</span> <span class="k">as</span> <span class="nn">ddl</span>
-<span class="c1"># change directory to somewhere more workable</span>
-<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">))</span>
-<span class="c1"># I&#39;m importing scanpy here to make use of its logging module.</span>
-<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+<span></span>import os
+import pandas as pd
+os.chdir(os.path.expanduser(&#39;/Users/kt16/Documents/Github/dandelion&#39;))
+import dandelion as ddl
+# change directory to somewhere more workable
+os.chdir(os.path.expanduser(&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;))
+# I&#39;m importing scanpy here to make use of its logging module.
+import scanpy as sc
+sc.settings.verbosity = 3
+import warnings
+warnings.filterwarnings(&#39;ignore&#39;)
 </pre></div>
 </div>
 </div>
@@ -499,8 +499,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="s1">&#39;adata.h5ad&#39;</span><span class="p">)</span>
-<span class="n">adata</span>
+<span></span>adata = sc.read_h5ad(&#39;adata.h5ad&#39;)
+adata
 </pre></div>
 </div>
 </div>
@@ -524,8 +524,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">read_h5</span><span class="p">(</span><span class="s1">&#39;dandelion_results.h5&#39;</span><span class="p">)</span>
-<span class="n">vdj</span>
+<span></span>vdj = ddl.read_h5(&#39;dandelion_results.h5&#39;)
+vdj
 </pre></div>
 </div>
 </div>
@@ -552,7 +552,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span>
+<span></span>vdj
 </pre></div>
 </div>
 </div>
@@ -577,7 +577,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">metadata</span>
+<span></span>vdj.metadata
 </pre></div>
 </div>
 </div>
@@ -836,8 +836,8 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj2</span> <span class="o">=</span> <span class="n">vdj</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">vdj2</span><span class="o">.</span><span class="n">metadata</span>
+<span></span>vdj2 = vdj.copy()
+vdj2.metadata
 </pre></div>
 </div>
 </div>
@@ -1098,8 +1098,8 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;junction_aa&#39;</span><span class="p">)</span>
-<span class="n">vdj</span>
+<span></span>ddl.update_metadata(vdj, retrieve = &#39;junction_aa&#39;)
+vdj
 </pre></div>
 </div>
 </div>
@@ -1161,7 +1161,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">find_clones</span><span class="p">(</span><span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.find_clones(vdj)
 </pre></div>
 </div>
 </div>
@@ -1198,7 +1198,7 @@ Refining clone assignment based on light chain pairing : 100%|██████
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span>
+<span></span>vdj
 </pre></div>
 </div>
 </div>
@@ -1225,10 +1225,10 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># using a list comprehension to remove the light chain clone assignment</span>
-<span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;clone_id_heavyonly&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">]]</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;clone_id_heavyonly&#39;</span><span class="p">,</span> <span class="n">split_heavy_light</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">collapse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="n">vdj</span>
+<span></span># using a list comprehension to remove the light chain clone assignment
+vdj.data[&#39;clone_id_heavyonly&#39;] = [x.rsplit(&#39;_&#39;, 1)[0] if x.count(&#39;_&#39;) == 3 else x for x in vdj.data[&#39;clone_id&#39;]]
+ddl.update_metadata(vdj, retrieve = &#39;clone_id_heavyonly&#39;, split_heavy_light = False, collapse = True)
+vdj
 </pre></div>
 </div>
 </div>
@@ -1257,7 +1257,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">calculate_threshold</span><span class="p">(</span><span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.pp.calculate_threshold(vdj)
 </pre></div>
 </div>
 </div>
@@ -1292,8 +1292,8 @@ Calculating threshold
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># see the actual value in .threshold slot</span>
-<span class="n">vdj</span><span class="o">.</span><span class="n">threshold</span>
+<span></span># see the actual value in .threshold slot
+vdj.threshold
 </pre></div>
 </div>
 </div>
@@ -1312,7 +1312,7 @@ Calculating threshold
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">calculate_threshold</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">manual_threshold</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span>
+<span></span>ddl.pp.calculate_threshold(vdj, manual_threshold = 0.1)
 </pre></div>
 </div>
 </div>
@@ -1347,8 +1347,8 @@ Calculating threshold
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># see the updated .threshold slot</span>
-<span class="n">vdj</span><span class="o">.</span><span class="n">threshold</span>
+<span></span># see the updated .threshold slot
+vdj.threshold
 </pre></div>
 </div>
 </div>
@@ -1367,7 +1367,7 @@ Calculating threshold
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">define_clones</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">key_added</span> <span class="o">=</span> <span class="s1">&#39;changeo_clone_id&#39;</span><span class="p">)</span>
+<span></span>ddl.tl.define_clones(vdj, key_added = &#39;changeo_clone_id&#39;)
 </pre></div>
 </div>
 </div>
@@ -1399,7 +1399,7 @@ Finding clones
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">generate_network</span><span class="p">(</span><span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.generate_network(vdj)
 </pre></div>
 </div>
 </div>
@@ -1443,8 +1443,8 @@ generating network layout
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj_downsample</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">generate_network</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">downsample</span> <span class="o">=</span> <span class="mi">500</span><span class="p">)</span>
-<span class="n">vdj_downsample</span>
+<span></span>vdj_downsample = ddl.tl.generate_network(vdj, downsample = 500)
+vdj_downsample
 </pre></div>
 </div>
 </div>
@@ -1503,7 +1503,7 @@ Dandelion class object with n_obs = 500 and n_contigs = 1015
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj</span>
+<span></span>vdj
 </pre></div>
 </div>
 </div>
@@ -1533,8 +1533,8 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span> <span class="c1"># this will include singletons. To show only expanded clones, specify expanded_only=True</span>
-<span class="n">adata</span>
+<span></span>ddl.tl.transfer(adata, vdj) # this will include singletons. To show only expanded clones, specify expanded_only=True
+adata
 </pre></div>
 </div>
 </div>
@@ -1576,11 +1576,11 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
-                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">],</span>
-                     <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-                     <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>sc.set_figure_params(figsize = [4,4])
+ddl.pl.clone_network(adata,
+                     color = [&#39;sampleid&#39;],
+                     edges_width = 1,
+                     size = 50)
 </pre></div>
 </div>
 </div>
@@ -1620,12 +1620,12 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">edgeweights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">e</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">extract_edge_weights</span><span class="p">(</span><span class="n">vdj</span><span class="p">)]</span> <span class="c1"># add 1 to each edge weight (e) so that distance of 0 becomes the thickest edge</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
-                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;isotype&#39;</span><span class="p">],</span>
-                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-                     <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span>
-                     <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>edgeweights = [1/(e+1) for e in ddl.tl.extract_edge_weights(vdj)] # add 1 to each edge weight (e) so that distance of 0 becomes the thickest edge
+ddl.pl.clone_network(adata,
+                     color = [&#39;isotype&#39;],
+                     legend_fontoutline=3,
+                     edges_width = edgeweights,
+                     size = 50)
 </pre></div>
 </div>
 </div>
@@ -1642,10 +1642,10 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">scanpy.plotting.palettes</span> <span class="kn">import</span> <span class="n">default_28</span><span class="p">,</span> <span class="n">default_102</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
-<span class="c1"># plot the 3 largest clones by size</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span> <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span><span class="p">)</span>
+<span></span>from scanpy.plotting.palettes import default_28, default_102
+sc.set_figure_params(figsize = [4,4])
+# plot the 3 largest clones by size
+ddl.pl.clone_network(adata, color = [&#39;clone_id_by_size&#39;], groups = [&#39;1&#39;, &#39;2&#39;, &#39;3&#39;], ncols = 2, legend_loc = &#39;on data&#39;, legend_fontoutline=3, edges_width = edgeweights, size = 50, palette = default_28)
 </pre></div>
 </div>
 </div>
@@ -1669,7 +1669,7 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_status&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>ddl.pl.clone_network(adata, color = [&#39;status&#39;, &#39;vdj_status&#39;], ncols = 1, legend_fontoutline=3, edges_width = 1, size = 50)
 </pre></div>
 </div>
 </div>
@@ -1686,9 +1686,9 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
-<span class="n">edgeweights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">e</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">extract_edge_weights</span><span class="p">(</span><span class="n">vdj</span><span class="p">)]</span> <span class="c1"># add 1 to each edge weight (e) so that distance of 0 becomes the thickest edge</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span> <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">],</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>ddl.tl.transfer(adata, vdj)
+edgeweights = [1/(e+1) for e in ddl.tl.extract_edge_weights(vdj)] # add 1 to each edge weight (e) so that distance of 0 becomes the thickest edge
+ddl.pl.clone_network(adata, color = [&#39;clone_id_by_size&#39;], groups = [&#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;7&#39;], legend_loc = &#39;on data&#39;, legend_fontoutline=3, edges_width = edgeweights, size = 50)
 </pre></div>
 </div>
 </div>
@@ -1724,9 +1724,9 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># let&#39;s recreate the vdj object with only the first two samples</span>
-<span class="n">subset_data</span> <span class="o">=</span> <span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;sc5p_v2_hs_PBMC_1k&#39;</span><span class="p">,</span> <span class="s1">&#39;sc5p_v2_hs_PBMC_10k&#39;</span><span class="p">])]</span>
-<span class="n">subset_data</span>
+<span></span># let&#39;s recreate the vdj object with only the first two samples
+subset_data = vdj.data[vdj.data[&#39;sample_id&#39;].isin([&#39;sc5p_v2_hs_PBMC_1k&#39;, &#39;sc5p_v2_hs_PBMC_10k&#39;])]
+subset_data
 </pre></div>
 </div>
 </div>
@@ -2075,9 +2075,9 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create a new Dandelion class with this subset</span>
-<span class="n">vdj2</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">Dandelion</span><span class="p">(</span><span class="n">subset_data</span><span class="p">)</span>
-<span class="n">vdj2</span>
+<span></span># create a new Dandelion class with this subset
+vdj2 = ddl.Dandelion(subset_data)
+vdj2
 </pre></div>
 </div>
 </div>
@@ -2101,8 +2101,8 @@ Dandelion class object with n_obs = 454 and n_contigs = 926
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># update the germline using the corrected files after tigger</span>
-<span class="n">vdj2</span><span class="o">.</span><span class="n">update_germline</span><span class="p">(</span><span class="n">corrected</span> <span class="o">=</span> <span class="s1">&#39;tutorial_scgp1/tutorial_scgp1_heavy_igblast_db-pass_genotype.fasta&#39;</span><span class="p">,</span> <span class="n">germline</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">org</span> <span class="o">=</span> <span class="s1">&#39;human&#39;</span><span class="p">)</span>
+<span></span># update the germline using the corrected files after tigger
+vdj2.update_germline(corrected = &#39;tutorial_scgp1/tutorial_scgp1_heavy_igblast_db-pass_genotype.fasta&#39;, germline = None, org = &#39;human&#39;)
 </pre></div>
 </div>
 </div>
@@ -2125,7 +2125,7 @@ Updating germline reference
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">create_germlines</span><span class="p">(</span><span class="n">vdj2</span><span class="p">,</span> <span class="n">v_field</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped&#39;</span><span class="p">,</span> <span class="n">germ_types</span><span class="o">=</span><span class="s1">&#39;dmask&#39;</span><span class="p">)</span>
+<span></span>ddl.pp.create_germlines(vdj2, v_field = &#39;v_call_genotyped&#39;, germ_types=&#39;dmask&#39;)
 </pre></div>
 </div>
 </div>
@@ -2162,7 +2162,7 @@ Reconstructing germline sequences
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj2</span><span class="o">.</span><span class="n">data</span><span class="p">[[</span><span class="s1">&#39;v_call_genotyped&#39;</span><span class="p">,</span> <span class="s1">&#39;germline_alignment_d_mask&#39;</span><span class="p">]]</span>
+<span></span>vdj2.data[[&#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;]]
 </pre></div>
 </div>
 </div>
@@ -2268,8 +2268,8 @@ Reconstructing germline sequences
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># switching back to using the full vdj object</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">quantify_mutations</span><span class="p">(</span><span class="n">vdj</span><span class="p">)</span>
+<span></span># switching back to using the full vdj object
+ddl.pp.quantify_mutations(vdj)
 </pre></div>
 </div>
 </div>
@@ -2290,7 +2290,7 @@ Quantifying mutations
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">quantify_mutations</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">combine</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pp.quantify_mutations(vdj, combine = False)
 </pre></div>
 </div>
 </div>
@@ -2312,7 +2312,7 @@ Quantifying mutations
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">quantify_mutations</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">split_locus</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span></span>ddl.pp.quantify_mutations(vdj, split_locus = True)
 </pre></div>
 </div>
 </div>
@@ -2334,7 +2334,7 @@ Quantifying mutations
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.transfer(adata, vdj)
 </pre></div>
 </div>
 </div>
@@ -2357,8 +2357,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_seq_r&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_seq_s&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_IGH&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_IGL&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span> <span class="o">+</span> <span class="n">default_102</span><span class="p">,</span> <span class="n">color_map</span> <span class="o">=</span> <span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>sc.set_figure_params(figsize = [4,4])
+ddl.pl.clone_network(adata, color = [&#39;clone_id&#39;, &#39;mu_freq&#39;, &#39;mu_freq_seq_r&#39;, &#39;mu_freq_seq_s&#39;, &#39;mu_freq_IGH&#39;, &#39;mu_freq_IGL&#39;], ncols = 2, legend_loc = &#39;none&#39;, legend_fontoutline=3, edges_width = 1, palette = default_28 + default_102, color_map = &#39;viridis&#39;, size = 50)
 </pre></div>
 </div>
 </div>
@@ -2387,8 +2387,8 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_size</span><span class="p">(</span><span class="n">vdj</span><span class="p">)</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.clone_size(vdj)
+ddl.tl.transfer(adata, vdj)
 </pre></div>
 </div>
 </div>
@@ -2414,8 +2414,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">],</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">])</span>
+<span></span>ddl.pl.clone_network(adata, color = [&#39;clone_id_size&#39;], legend_loc = &#39;none&#39;, legend_fontoutline=3, edges_width = 1, size = 50)
+sc.pl.umap(adata, color = [&#39;clone_id_size&#39;])
 </pre></div>
 </div>
 </div>
@@ -2439,8 +2439,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_size</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">max_size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.clone_size(vdj, max_size = 3)
+ddl.tl.transfer(adata, vdj)
 </pre></div>
 </div>
 </div>
@@ -2466,8 +2466,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">],</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">],</span> <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">])</span>
+<span></span>ddl.pl.clone_network(adata, color = [&#39;clone_id_size&#39;], ncols = 2, legend_fontoutline=3, edges_width = 1, palette = [&#39;grey&#39;, &#39;red&#39;, &#39;blue&#39;, &#39;white&#39;], size = 50)
+sc.pl.umap(adata[adata.obs[&#39;has_bcr&#39;] == &#39;True&#39;], color = [&#39;clone_id_size&#39;], palette = [&#39;grey&#39;, &#39;red&#39;, &#39;blue&#39;, &#39;white&#39;])
 </pre></div>
 </div>
 </div>
@@ -2496,7 +2496,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_rarefaction</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sampleid&#39;</span><span class="p">)</span>
+<span></span>ddl.pl.clone_rarefaction(adata, groupby = &#39;sampleid&#39;)
 </pre></div>
 </div>
 </div>
@@ -2566,9 +2566,9 @@ method for bulk BCR-seq as described above. This option can be toggled by <code 
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_network&#39;</span><span class="p">)</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality&#39;</span><span class="p">)</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;gini&#39;, metric = &#39;clone_network&#39;)
+ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;gini&#39;, metric = &#39;clone_centrality&#39;)
+ddl.tl.transfer(adata, vdj)
 </pre></div>
 </div>
 </div>
@@ -2602,7 +2602,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_size_gini&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_centrality_gini&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>ddl.pl.clone_network(adata, color = [&#39;clone_network_cluster_size_gini&#39;, &#39;clone_network_vertex_size_gini&#39;, &#39;clone_size_gini&#39;, &#39;clone_centrality_gini&#39;], ncols = 2, size = 50)
 </pre></div>
 </div>
 </div>
@@ -2619,8 +2619,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_network&#39;</span><span class="p">,</span> <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">key_added</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">])</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
+<span></span>ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;gini&#39;, metric = &#39;clone_network&#39;, expanded_only = True, key_added = [&#39;clone_network_cluster_size_gini_expanded&#39;, &#39;clone_network_vertex_size_gini_expanded&#39;])
+ddl.tl.transfer(adata, vdj)
 </pre></div>
 </div>
 </div>
@@ -2647,7 +2647,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span>ddl.pl.clone_network(adata, color = [&#39;clone_network_cluster_size_gini_expanded&#39;, &#39;clone_network_vertex_size_gini_expanded&#39;], ncols = 2, size = 50)
 </pre></div>
 </div>
 </div>
@@ -2664,8 +2664,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">gini</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">gini</span>
+<span></span>gini = ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;gini&#39;, update_obs_meta=False)
+gini
 </pre></div>
 </div>
 </div>
@@ -2736,8 +2736,8 @@ Computing Gini indices for cluster and vertex size using network.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">gini2</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">key_added</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">])</span>
-<span class="n">gini2</span>
+<span></span>gini2 = ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;gini&#39;, update_obs_meta=False, expanded_only = True, key_added = [&#39;clone_network_cluster_size_gini_expanded&#39;, &#39;clone_network_vertex_size_gini_expanded&#39;])
+gini2
 </pre></div>
 </div>
 </div>
@@ -2808,10 +2808,10 @@ Computing Gini indices for cluster and vertex size using network.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_network_cluster_size_gini&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_network_vertex_size_gini&#39;</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">gini</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
-<span class="n">p</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">p</span>
+<span></span>import seaborn as sns
+p = sns.scatterplot(x = &#39;clone_network_cluster_size_gini&#39;, y = &#39;clone_network_vertex_size_gini&#39;, data = gini, hue = gini.index, palette = dict(zip(adata.obs[&#39;sampleid&#39;].cat.categories, adata.uns[&#39;sampleid_colors&#39;])))
+p.set(ylim=(-0.1,1), xlim = (-0.1,1))
+p
 </pre></div>
 </div>
 </div>
@@ -2836,9 +2836,9 @@ Computing Gini indices for cluster and vertex size using network.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">p2</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">gini2</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span> <span class="n">gini2</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
-<span class="n">p2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">p2</span>
+<span></span>p2 = sns.scatterplot(x = &#39;clone_network_cluster_size_gini_expanded&#39;, y = &#39;clone_network_vertex_size_gini_expanded&#39;, data = gini2, hue = gini2.index, palette = dict(zip(adata.obs[&#39;sampleid&#39;].cat.categories, adata.uns[&#39;sampleid_colors&#39;])))
+p2.set(ylim=(-0.1,1), xlim = (-0.1,1))
+p2
 </pre></div>
 </div>
 </div>
@@ -2864,8 +2864,8 @@ Computing Gini indices for cluster and vertex size using network.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">gini</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">gini</span>
+<span></span>gini = ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;gini&#39;, metric = &#39;clone_centrality&#39;, update_obs_meta=False)
+gini
 </pre></div>
 </div>
 </div>
@@ -2939,10 +2939,10 @@ Calculating node closeness centrality
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># not a great example because there&#39;s only 1 big clone in 1 sample.</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_size_gini&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality_gini&#39;</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">gini</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
-<span class="n">p</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-<span class="n">p</span>
+<span></span># not a great example because there&#39;s only 1 big clone in 1 sample.
+p = sns.scatterplot(x = &#39;clone_size_gini&#39;, y = &#39;clone_centrality_gini&#39;, data = gini, hue = gini.index, palette = dict(zip(adata.obs[&#39;sampleid&#39;].cat.categories, adata.uns[&#39;sampleid_colors&#39;])))
+p.set(ylim=(-0.1,1), xlim = (-0.1,1))
+p
 </pre></div>
 </div>
 </div>
@@ -2968,7 +2968,7 @@ Calculating node closeness centrality
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;chao1&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;chao1&#39;, update_obs_meta = False)
 </pre></div>
 </div>
 </div>
@@ -3034,7 +3034,7 @@ Calculating Chao1 estimates
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;shannon&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;shannon&#39;, update_obs_meta = False)
 </pre></div>
 </div>
 </div>
@@ -3099,7 +3099,7 @@ Calculating Shannon entropy
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;shannon&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.tl.clone_diversity(vdj, groupby = &#39;sample_id&#39;, method = &#39;shannon&#39;, update_obs_meta = False, normalize = False)
 </pre></div>
 </div>
 </div>
@@ -3164,7 +3164,7 @@ Calculating Shannon entropy
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata</span>
+<span></span>adata
 </pre></div>
 </div>
 </div>
@@ -3194,9 +3194,9 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
-<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">rcParamsDefault</span><span class="p">)</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span></span>import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
+ddl.pl.barplot(vdj, variable = &#39;v_call_heavy&#39;, figsize = (12, 4))
 </pre></div>
 </div>
 </div>
@@ -3223,7 +3223,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;tab20&#39;</span><span class="p">)</span>
+<span></span>ddl.pl.barplot(vdj, variable = &#39;v_call_heavy&#39;, figsize = (12, 4), sort_descending = None, palette = &#39;tab20&#39;)
 </pre></div>
 </div>
 </div>
@@ -3250,7 +3250,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;tab20&#39;</span><span class="p">)</span>
+<span></span>ddl.pl.barplot(vdj, variable = &#39;v_call_heavy&#39;, normalize = False, figsize = (12, 4), sort_descending = None, palette = &#39;tab20&#39;)
 </pre></div>
 </div>
 </div>
@@ -3280,9 +3280,9 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">xtick_rotation</span> <span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>import matplotlib.pyplot as plt
+ddl.pl.stackedbarplot(vdj, variable = &#39;isotype&#39;, groupby = &#39;status&#39;, xtick_rotation =0, figsize = (4,4))
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3307,8 +3307,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.stackedbarplot(vdj, variable = &#39;v_call_heavy&#39;, groupby = &#39;isotype&#39;)
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3333,8 +3333,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.stackedbarplot(vdj, variable = &#39;v_call_heavy&#39;, groupby = &#39;isotype&#39;, normalize = True)
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3359,8 +3359,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;vdj_status&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.stackedbarplot(vdj, variable = &#39;v_call_heavy&#39;, groupby = &#39;vdj_status&#39;)
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3386,8 +3386,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.stackedbarplot(vdj, variable = &#39;v_call_heavy&#39;, groupby = &#39;sample_id&#39;)
+plt.legend(bbox_to_anchor = (1, 0.5), loc=&#39;center left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3416,8 +3416,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;junction_length&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="n">locus</span><span class="o">=</span><span class="s1">&#39;IGH&#39;</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mf">2.3</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.spectratype(vdj, variable = &#39;junction_length&#39;, groupby = &#39;c_call&#39;, locus=&#39;IGH&#39;, width = 2.3)
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3442,8 +3442,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;junction_aa_length&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="n">locus</span><span class="o">=</span><span class="s1">&#39;IGH&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.spectratype(vdj, variable = &#39;junction_aa_length&#39;, groupby = &#39;c_call&#39;, locus=&#39;IGH&#39;)
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3468,8 +3468,8 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;junction_aa_length&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="n">locus</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;IGK&#39;</span><span class="p">,</span><span class="s1">&#39;IGL&#39;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span>ddl.pl.spectratype(vdj, variable = &#39;junction_aa_length&#39;, groupby = &#39;c_call&#39;, locus=[&#39;IGK&#39;,&#39;IGL&#39;])
+plt.legend(bbox_to_anchor = (1,1), loc=&#39;upper left&#39;, frameon=False)
 </pre></div>
 </div>
 </div>
@@ -3498,7 +3498,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_overlap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">colorby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">)</span>
+<span></span>ddl.tl.clone_overlap(adata, groupby = &#39;leiden&#39;, colorby = &#39;leiden&#39;)
 </pre></div>
 </div>
 </div>
@@ -3517,7 +3517,7 @@ Finding clones
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_overlap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">colorby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">return_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_label_offset</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
+<span></span>ddl.pl.clone_overlap(adata, groupby = &#39;leiden&#39;, colorby = &#39;leiden&#39;, return_graph=True, group_label_offset=.5)
 </pre></div>
 </div>
 </div>

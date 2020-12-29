@@ -21,11 +21,6 @@ sys.path.insert(0, os.path.abspath('.'))
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE / "extensions"))
-
-sys.path.append('/Users/kt16/Documents/Github/dandelion')
-import dandelion as ddl
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'dandelion'
