@@ -89,10 +89,9 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation and setup:</span></p>
+              <p class="caption"><span class="caption-text">dandelion:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../README.html#examples">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
@@ -102,10 +101,7 @@
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Filtering</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
@@ -573,8 +569,7 @@ AnnData object with n_obs × n_vars = 30471 × 31915
 </pre></div>
 </div>
 </div>
-<div class="section" id="Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">
-<h2>Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data<a class="headerlink" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data" title="Permalink to this headline">¶</a></h2>
+<p><strong>Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data</strong></p>
 <p>We use the function <code class="docutils literal notranslate"><span class="pre">pp.filter_bcr</span></code> to mark and filter out cells and contigs from both the BCR data and transcriptome data in <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>. The operation will remove bad quality cells based on transcriptome information as well as remove BCR doublets (multiplet heavy chain, and/or light chains) from the BCR data. In some situations, a single cell can have multiple heavy/light chain contigs although they have an identical V(D)J+C alignment; in situations like this, the contigs with lesser umis
 will be dropped and the umis transferred to duplicate_count column. The same procedure is applied to both heavy chain and light chains before identifying doublets.</p>
 <p>Cells in the gene expression object without BCR information will not be affected i.e. the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object can hold non-B cells. Run <code class="docutils literal notranslate"><span class="pre">?ddl.pp.filter_bcr</span></code> to check what each option does.</p>
@@ -953,12 +948,12 @@ Initializing Dandelion object
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">filter_missing</span><span class="o">=</span><span class="kc">False</span>
 </pre></div>
 </div>
-<p>Also, when contig are marked as poor quality, the default behaviour is to remove the contigs associated with the barcode, and not the barcode from the transcriptome data. This can be toggled to remove the entire cell if the intention is to retain a conservative dataset for both BCR and transcriptome data:</p>
+<p>Also, when contigs are marked as poor quality, the default behaviour is to remove the contigs associated with the barcode, and not the barcode from the transcriptome data. This can be toggled to remove the entire cell if the intention is to retain a conservative dataset for both BCR and transcriptome data:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">filter_poorqualitybcr</span><span class="o">=</span><span class="kc">True</span>
 </pre></div>
 </div>
 <p>And lastly, the default behaviour is to rescue the heavy chain contig with the highest umi if there are multiple contigs for a single cell. The function requires a minimum fold-difference of 2 between the highest and lowest umi in order to rescue the contig. However, if the contigs have similar number of umis, or if the sum of the umis are very low, then the entire cell will be filtered. The fold-difference cut-off can be specified via the option <code class="docutils literal notranslate"><span class="pre">umi_foldchange_cutoff</span></code>. This can be toggled to
-be ignore i.e. drop all multiple IGH contigs:</p>
+be ignored i.e. drop all multiple IGH contigs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rescue_igh</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 </div>
@@ -1010,17 +1005,17 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
     var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;
 </pre></div></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object now contain a few new columns related to BCR:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot in the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object now contains a few new columns related to BCR:</p>
 <ol class="arabic simple">
-<li><p><strong>``has_bcr`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells with a matching BCR (pre-contig filtering).</p></li>
-<li><p><strong>``filter_bcr_quality`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as having poor quality contigs if <code class="docutils literal notranslate"><span class="pre">filter_poorqualitybcr=True</span></code> (pre-contig filtering).</p></li>
-<li><p><strong>``filter_bcr_heavy`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as heavy chain ‘doublets’ (after rescue if <code class="docutils literal notranslate"><span class="pre">rescue_igh=True</span></code>) (pre-contig filtering).</p></li>
-<li><p><strong>``filter_bcr_light`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identifed as having multiple light chain contigs (pre-contig filtering).</p></li>
+<li><p><strong>has_bcr :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells with a matching BCR (pre-contig filtering).</p></li>
+<li><p><strong>filter_bcr_quality :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as having poor quality contigs if <code class="docutils literal notranslate"><span class="pre">filter_poorqualitybcr=True</span></code> (pre-contig filtering).</p></li>
+<li><p><strong>filter_bcr_heavy :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as heavy chain ‘doublets’ (after rescue if <code class="docutils literal notranslate"><span class="pre">rescue_igh=True</span></code>) (pre-contig filtering).</p></li>
+<li><p><strong>filter_bcr_light :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identifed as having multiple light chain contigs (pre-contig filtering).</p></li>
 </ol>
-<p>****Most importantly:<a href="#id1"><span class="problematic" id="id2">**</span></a><a href="#id3"><span class="problematic" id="id4">*</span></a>*</p>
+<p><strong>Most importantly:</strong></p>
 <ol class="arabic simple" start="5">
-<li><p><strong>``bcr_QC_pass`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells where BCR contigs were removed from #1 due to contigs failing QC. (post-contig filtering)</p></li>
-<li><p><strong>``filter_bcr`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filter for cells flagged in 2-4 (post-contig filtering).</p></li>
+<li><p><strong>bcr_QC_pass :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells where BCR contigs were removed from #1 due to contigs failing QC. (post-contig filtering)</p></li>
+<li><p><strong>filter_bcr :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filter for cells flagged in 2-4 (post-contig filtering).</p></li>
 </ol>
 <p>So this means that to go forward, you want to only select cells that have BCR that passed QC (<code class="docutils literal notranslate"><span class="pre">has_bcr</span> <span class="pre">==</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">bcr_QC_pass</span> <span class="pre">==</span> <span class="pre">True</span></code>) with filtering recommendation to be false (<code class="docutils literal notranslate"><span class="pre">filter_bcr</span> <span class="pre">==</span> <span class="pre">False</span></code>).</p>
 <p><strong>The number of cells that actually has a matching BCR can be tabluated.</strong></p>
@@ -1238,7 +1233,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 </div>
-<p><strong>Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed.Scale the data to unit variance.</strong></p>
+<p><strong>Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed. Scale the data to unit variance.</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -1329,7 +1324,7 @@ Trying to set attribute `.var` of view, copying.
 <img alt="../_images/notebooks_2_dandelion_filtering-10x_data_39_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_39_0.png" />
 </div>
 </div>
-<p><strong>Save the AnnData file</strong></p>
+<p><strong>Save AnnData</strong></p>
 <p>We can save this <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object for now.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
@@ -1349,6 +1344,7 @@ Trying to set attribute `.var` of view, copying.
 ... storing &#39;genome&#39; as categorical
 </pre></div></div>
 </div>
+<p><strong>Save dandelion</strong></p>
 <p>To save the vdj object, we have two options - either save the <code class="docutils literal notranslate"><span class="pre">.data</span></code> and <code class="docutils literal notranslate"><span class="pre">.metadata</span></code> slots with pandas’ functions:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
@@ -1376,16 +1372,6 @@ Trying to set attribute `.var` of view, copying.
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">vdj</span><span class="o">.</span><span class="n">write_pkl</span><span class="p">(</span><span class="s1">&#39;dandelion_results.pkl.pbz2&#39;</span><span class="p">)</span> <span class="c1"># this will automatically use bzip2 for compression, swith the extension to .gz for gzip</span>
 </pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>
-</pre></div>
-</div>
 </div>
 </div>
 </div>

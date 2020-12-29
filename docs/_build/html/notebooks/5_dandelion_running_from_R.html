@@ -88,10 +88,9 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation and setup:</span></p>
+              <p class="caption"><span class="caption-text">dandelion:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../README.html#examples">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
@@ -1535,6 +1534,15 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 </pre></div>
 </div>
 </div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-r notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
 <p><strong>New Session: Transfer ``AnnData`` to ``Seurat``</strong></p>
 <p>We start a new session and read in the files.</p>
 <div class="nbinput nblast docutils container">
@@ -1544,8 +1552,8 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
 <span></span><span class="nf">setwd</span><span class="p">(</span><span class="s">&#39;/Users/kt16/Downloads/dandelion_tutorial_R/&#39;</span><span class="p">)</span>
 <span class="nf">library</span><span class="p">(</span><span class="n">reticulate</span><span class="p">)</span>
-<span class="c1"># ddl = import_from_path(&#39;dandelion&#39;, path = &#39;/Users/kt16/Documents/Github/dandelion&#39;)</span>
-<span class="n">ddl</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&#39;dandelion&#39;</span><span class="p">)</span>
+<span class="n">ddl</span> <span class="o">=</span> <span class="nf">import_from_path</span><span class="p">(</span><span class="s">&#39;dandelion&#39;</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;/Users/kt16/Documents/Github/dandelion&#39;</span><span class="p">)</span>
+<span class="c1"># ddl = import(&#39;dandelion&#39;)</span>
 <span class="n">sc</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&#39;scanpy&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1635,66 +1643,15 @@ Active assay: RNA (38224 features, 2000 variable features)
 </tbody>
 </table></div>
 </div>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata_meta</span> <span class="o">=</span> <span class="n">adata</span><span class="o">$</span><span class="n">obs</span>
-<span class="nf">head</span><span class="p">(</span><span class="n">adata_meta</span><span class="p">)</span>
+<span></span><span class="c1"># extract the metadata from the anndata object</span>
+<span class="n">adata_meta</span> <span class="o">=</span> <span class="n">adata</span><span class="o">$</span><span class="n">obs</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-ERROR while rich displaying an object: Error in as.character.factor(x): malformed factor
-
-Traceback:
-1. FUN(X[[i]], ...)
-2. tryCatch(withCallingHandlers({
- .     if (!mime %in% names(repr::mime2repr))
- .         stop(&#34;No repr_* for mimetype &#34;, mime, &#34; in repr::mime2repr&#34;)
- .     rpr &lt;- repr::mime2repr[[mime]](obj)
- .     if (is.null(rpr))
- .         return(NULL)
- .     prepare_content(is.raw(rpr), rpr)
- . }, error = error_handler), error = outer_handler)
-3. tryCatchList(expr, classes, parentenv, handlers)
-4. tryCatchOne(expr, names, parentenv, handlers[[1L]])
-5. doTryCatch(return(expr), name, parentenv, handler)
-6. withCallingHandlers({
- .     if (!mime %in% names(repr::mime2repr))
- .         stop(&#34;No repr_* for mimetype &#34;, mime, &#34; in repr::mime2repr&#34;)
- .     rpr &lt;- repr::mime2repr[[mime]](obj)
- .     if (is.null(rpr))
- .         return(NULL)
- .     prepare_content(is.raw(rpr), rpr)
- . }, error = error_handler)
-7. repr::mime2repr[[mime]](obj)
-8. repr_text.data.frame(obj)
-9. ellip_limit_arr(obj, rows, cols)
-10. arr_parts_format(parts)
-11. structure(lapply(parts, arr_part_format), omit = attr(parts,
-  .     &#34;omit&#34;))
-12. lapply(parts, arr_part_format)
-13. FUN(X[[i]], ...)
-14. vapply(part, function(col) {
-  .     if (is.matrix(col))
-  .         apply(apply(col, 2L, format), 1L, paste, collapse = &#34;, &#34;)
-  .     else format(col)
-  . }, character(nrow(part)))
-15. FUN(X[[i]], ...)
-16. format(col)
-17. format.factor(col)
-18. format(structure(as.character(x), names = names(x), dim = dim(x),
-  .     dimnames = dimnames(x)), ...)
-19. structure(as.character(x), names = names(x), dim = dim(x), dimnames = dimnames(x))
-20. as.character(x)
-21. as.character.factor(x)
-</pre></div></div>
 </div>
 <p>If you run into issues with the conversion, unfortunately there’s not much I can do about it. One alternative is to just transfer the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot from the dandelion object one by one as above into the seurat object.</p>
 <div class="nbinput docutils container">
@@ -1829,8 +1786,8 @@ The following `from` values were not present in `x`: NaN, nan
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="nf">options</span><span class="p">(</span><span class="n">repr.plot.width</span> <span class="o">=</span> <span class="m">20</span><span class="p">,</span> <span class="n">repr.plot.height</span> <span class="o">=</span> <span class="m">5</span><span class="p">,</span> <span class="n">repr.plot.res</span> <span class="o">=</span> <span class="m">200</span><span class="p">)</span>
-<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">group.by</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;has_bcr&#39;</span><span class="p">,</span> <span class="s">&#39;isotype&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">))</span>
+<span></span><span class="nf">options</span><span class="p">(</span><span class="n">repr.plot.width</span> <span class="o">=</span> <span class="m">6</span><span class="p">,</span> <span class="n">repr.plot.height</span> <span class="o">=</span> <span class="m">12</span><span class="p">,</span> <span class="n">repr.plot.res</span> <span class="o">=</span> <span class="m">200</span><span class="p">)</span>
+<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">group.by</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;bcr_QC_pass&#39;</span><span class="p">,</span> <span class="s">&#39;isotype&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">),</span> <span class="n">ncol</span> <span class="o">=</span> <span class="m">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1838,12 +1795,12 @@ The following `from` values were not present in `x`: NaN, nan
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_running_from_R_88_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_running_from_R_88_0.png" style="width: 2000px; height: 500px;" />
+<img alt="../_images/notebooks_5_dandelion_running_from_R_89_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_running_from_R_89_0.png" style="width: 600px; height: 1200px;" />
 </div>
 </div>
 <p>If you want to visualise the BCR network, you will have to subset to cells that contain BCR.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
@@ -1867,7 +1824,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 <div class="section" id="Plotting-BCR-network">
 <h2>Plotting BCR network<a class="headerlink" href="#Plotting-BCR-network" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
@@ -1882,7 +1839,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
@@ -1891,7 +1848,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
@@ -1904,11 +1861,11 @@ Active assay: RNA (38224 features, 2000 variable features)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_running_from_R_94_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_running_from_R_94_0.png" style="width: 600px; height: 500px;" />
+<img alt="../_images/notebooks_5_dandelion_running_from_R_95_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_running_from_R_95_0.png" style="width: 600px; height: 500px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
@@ -1920,13 +1877,13 @@ Active assay: RNA (38224 features, 2000 variable features)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_running_from_R_95_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_running_from_R_95_0.png" style="width: 600px; height: 500px;" />
+<img alt="../_images/notebooks_5_dandelion_running_from_R_96_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_running_from_R_96_0.png" style="width: 600px; height: 500px;" />
 </div>
 </div>
 <p>This concludes a quick primer on how to use <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> from R. It may be a bit buggy from time to time due to how reticulate works but hopefully it will be overall alright.</p>
 <p>The rest of the functions could be potentially run from R (just be changing <code class="docutils literal notranslate"><span class="pre">.</span></code> to <code class="docutils literal notranslate"><span class="pre">$</span></code> for example), but I haven’t tested it. Might be easier to run it through python, or maybe with the new RStudio 4?</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
