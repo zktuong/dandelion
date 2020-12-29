@@ -12,9 +12,7 @@ Illustration of the `Dandelion` class slots
 
 ![dandelion_overview](notebooks/img/dandelion_class.png)
 
-<!-- <img src="https://github.com/zktuong/dandelion/blob/master/docs/notebooks/img/dandelion_class.png" alt="dandelion_class" width="471.0648" height="341.3572"> -->
-
-Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/devel/docs/notebooks/):
+Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/master/docs/notebooks/):
 
 The raw files for the examples can be downloaded from 10X's Single Cell Immune Profiling datasets [website](https://support.10xgenomics.com/single-cell-vdj/datasets).
 
@@ -68,7 +66,7 @@ python -m ipykernel install --user --name dandelion --display-name "Python (dand
 ```
 
 ## Required database
-Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with [immcantation's](https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html) docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj)(Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
+Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with [immcantation's](https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html) docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj) (Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
 
 So for example, if I unpack into `~/Documents`
 ```bash
@@ -89,7 +87,7 @@ echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile # or ~/.zsh
 source ~/.bash_profile # or ~/.zshenv
 ```
 
-## Basic Requirements
+## Basic requirements
 Python packages
 ```python
 # conda

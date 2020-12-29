@@ -89,7 +89,7 @@ echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile # or ~/.zsh
 source ~/.bash_profile # or ~/.zshenv
 ```
 
-## Basic Requirements
+## Basic requirements
 Python packages
 ```python
 # conda
