@@ -1,5 +1,5 @@
-[![Documentation Status](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
-![dandelion_logo](notebooks/img/dandelion_logo_illustration.png)
+[![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
+![](notebooks/img/dandelion_logo_illustration.png)
 
 Version = 0.0.26
 
@@ -7,11 +7,11 @@ Hi there! I have put together a python package for analyzing single cell BCR/V(D
 
 ## Overview
 
-![dandelion_overview](notebooks/img/dandelion_overview.png)
+![](notebooks/img/dandelion_overview.png)
 
 Illustration of the `Dandelion` class slots
 
-![dandelion_overview](notebooks/img/dandelion_class.png)
+![](notebooks/img/dandelion_class.png)
 
 Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/master/docs/notebooks/):
 
