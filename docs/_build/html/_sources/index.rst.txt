@@ -25,10 +25,3 @@ Welcome to dandelion's documentation!
    :caption: API:
    
    api.rst
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
