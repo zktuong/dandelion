@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dandelion Notebook-1 &mdash; dandelion 0.0.26 documentation</title>
+  <title>Pre-processing &mdash; dandelion 0.0.26 documentation</title>
   
 
   
@@ -40,8 +40,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion Notebook-2" href="2_dandelion_filtering-10x%20data.html" />
-    <link rel="prev" title="Welcome to dandelion’s documentation!" href="../index.html" /> 
+    <link rel="next" title="Filtering" href="2_dandelion_filtering-10x%20data.html" />
+    <link rel="prev" title="Overview" href="../README.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -89,40 +89,30 @@
               
             
             
-              <p class="caption"><span class="caption-text">Tutorials:</span></p>
+              <p class="caption"><span class="caption-text">Installation and setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><em>dandelion</em> Notebook-1</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Pre-processing">Pre-processing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Some-notes-before-starting:">Some notes before starting:</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Step-1:">Step 1:</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pre-processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Foreword">Foreword</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file">Step 1: Formatting the headers of the cellranger fasta file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-2:-Reannotate-the-V/D/J-genes-with-igblastn">Step 2: Reannotate the V/D/J genes with <em>igblastn</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)">Step 3 : Reassigning heavy chain V gene alleles <em>(optional but recommended)</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-4:-Assigning-constant-region-calls">Step 4: Assigning constant region calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-5:-Quantify-mutations-(optional).">Step 5: Quantify mutations <em>(optional)</em>.</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#Formatting-the-headers-of-the-cellranger-fasta-file">Formatting the headers of the cellranger fasta file</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Step-2:">Step 2:</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#Reannotate-the-V/D/J-genes-with-igblastn.">Reannotate the V/D/J genes with <em>igblastn</em>.</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Step-3-(optional-but-recommended):">Step 3 <em>(optional but recommended)</em>:</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#Reassigning-heavy-chain-V-gene-alleles.">Reassigning heavy chain V gene alleles.</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Step-4:">Step 4:</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#Assigning-constant-region-calls">Assigning constant region calls</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Step-5:">Step 5:</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#Quantify-mutations-(optional).">Quantify mutations <em>(optional)</em>.</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x%20data.html"><em>dandelion</em> Notebook-2</a></li>
-<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html"><em>dandelion</em> Notebook-3</a></li>
-<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html#BCR-clustering-and-visualization">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html#Finding-clones">Finding clones</a></li>
-<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html"><em>dandelion</em> Notebook-5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 
             
@@ -169,7 +159,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><em>dandelion</em> Notebook-1</li>
+      <li>Pre-processing</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -458,12 +448,13 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="dandelion-Notebook-1">
-<h1><em>dandelion</em> Notebook-1<a class="headerlink" href="#dandelion-Notebook-1" title="Permalink to this headline">¶</a></h1>
-<p><img alt="dandelion_logo" src="../_images/dandelion_logo.png" /> ## Foreword <strong>dandelion</strong> is written in <code class="docutils literal notranslate"><span class="pre">python=3.7.6</span></code> and is primarily a single-cell BCR-seq analysis package. It makes use of some tools from the fantastic <a class="reference external" href="https://immcantation.readthedocs.io/">immcantation suite</a>, implementing a workflow to streamline the pre-processing and exploratory stages for analyzing single-cell BCR-seq data from 10X Genomics. Post-processed data from <strong>dandelion</strong> can be smoothly transferred to <a class="reference external" href="https://scanpy.readthedocs.io/">scanpy</a>/AnnData
-object for integration and exploration of BCR-seq data and RNA-seq data. I hope to be able to introduce some new single-cell BCR-seq exploratory tools down the road through <em>dandelion</em>.</p>
 <div class="section" id="Pre-processing">
-<h2>Pre-processing<a class="headerlink" href="#Pre-processing" title="Permalink to this headline">¶</a></h2>
+<h1>Pre-processing<a class="headerlink" href="#Pre-processing" title="Permalink to this headline">¶</a></h1>
+<p><img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" /></p>
+<div class="section" id="Foreword">
+<h2>Foreword<a class="headerlink" href="#Foreword" title="Permalink to this headline">¶</a></h2>
+<p><strong>dandelion</strong> is written in <code class="docutils literal notranslate"><span class="pre">python=3.7.6</span></code> and is primarily a single-cell BCR-seq analysis package. It makes use of some tools from the fantastic <a class="reference external" href="https://immcantation.readthedocs.io/">immcantation suite</a>, implementing a workflow to streamline the pre-processing and exploratory stages for analyzing single-cell BCR-seq data from 10X Genomics. Post-processed data from <strong>dandelion</strong> can be smoothly transferred to <a class="reference external" href="https://scanpy.readthedocs.io/">scanpy</a>/AnnData object for integration and
+exploration of BCR-seq data and RNA-seq data. I hope to be able to introduce some new single-cell BCR-seq exploratory tools down the road through <em>dandelion</em>.</p>
 <p>This notebook will cover the initial pre-processing of files after 10X’s <code class="docutils literal notranslate"><span class="pre">cellranger</span> <span class="pre">vdj</span></code> immune profiling data analysis pipeline. We will download the 10x data sets to process for this tutorial:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create sub-folders</span>
 mkdir -p dandelion_tutorial/vdj_nextgem_hs_pbmc3
@@ -495,11 +486,8 @@ wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v
 </div>
 <p><strong>dandelion</strong> requires the cellranger fasta files and annotation files to start, particularly either <em>all_contig.fasta</em> or <em>filtered_contig.fasta</em> and corresponding <em>all_contig_annotations.csv</em> and <em>filtered_contig_annotations.csv</em>.</p>
 <p>In this notebook, I’m running everything with the <em>filtered_contig</em> files as a standard analysis set up. I’m using a standard laptop for the analysis here: entry level 2017 Macbook Pro with 2.3 GHz Intel Core i5 processor and 16 GB 2133 MHz LPDDR3 ram.</p>
-<div class="section" id="Some-notes-before-starting:">
-<h3>Some notes before starting:<a class="headerlink" href="#Some-notes-before-starting:" title="Permalink to this headline">¶</a></h3>
 <p>If you followed the installation instructions, you should have the requisite auxillary softwares installed already. Otherwise, you can download them manually: <a class="reference external" href="https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/">blast+</a> and <a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/">igblast</a>. For tigger-genotype, you can download it <a class="reference external" href="https://bitbucket.org/kleinstein/immcantation/src/default/pipelines/">here</a>. Just note that I made some minor modifications to this
 file, hence there is a version that comes with this package.</p>
-<p>For the databases:</p>
 <p>For convenience, in <strong>shell</strong>, export the path to the database folders like as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># bash/shell</span>
 <span class="nb">echo</span> <span class="s2">&quot;export GERMLINE=/Users/kt16/Documents/Github/dandelion/database/germlines/&quot;</span> &gt;&gt; ~/.bash_profile
@@ -558,12 +546,9 @@ makeblastdb -dbtype nucl -parse_seqids -in <span class="nv">$BLASTDB</span>/huma
 &#39;/Users/kt16/Downloads/dandelion_tutorial&#39;
 </pre></div></div>
 </div>
-<div class="section" id="Step-1:">
-<h4>Step 1:<a class="headerlink" href="#Step-1:" title="Permalink to this headline">¶</a></h4>
 </div>
-</div>
-<div class="section" id="Formatting-the-headers-of-the-cellranger-fasta-file">
-<h3>Formatting the headers of the cellranger fasta file<a class="headerlink" href="#Formatting-the-headers-of-the-cellranger-fasta-file" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file">
+<h2>Step 1: Formatting the headers of the cellranger fasta file<a class="headerlink" href="#Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file" title="Permalink to this headline">¶</a></h2>
 <p>Here, I’m adding a prefix to the headers of each contig in the fasta files, via the function <code class="docutils literal notranslate"><span class="pre">pp.format_fastas</span></code>. The prefix is basically just the folder name, so in this case it’s: <code class="docutils literal notranslate"><span class="pre">sc5p_v2_hs_PBMC_1k</span></code>, <code class="docutils literal notranslate"><span class="pre">sc5p_v2_hs_PBMC_10k</span></code>, <code class="docutils literal notranslate"><span class="pre">vdj_v1_hs_pbmc3</span></code> and <code class="docutils literal notranslate"><span class="pre">vdj_nextgem_hs_pbmc3</span></code>.</p>
 <p>The function will also create sub-folders where a new fasta file and all subsequent files will be located. The function will also add the prefix to the corresponding annotation file automatically and create a copy in the same folder as the formated fasta file.</p>
 <p>This is to ensure that the barcodes are consistent throughout so as not to interfere with subsequent integration with the gene expression data, which will be covered in notebooks 2 and 3.</p>
@@ -610,12 +595,9 @@ makeblastdb -dbtype nucl -parse_seqids -in <span class="nv">$BLASTDB</span>/huma
 Formating fasta(s) : 100%|██████████| 4/4 [00:03&lt;00:00,  1.33it/s]
 </pre></div></div>
 </div>
-<div class="section" id="Step-2:">
-<h4>Step 2:<a class="headerlink" href="#Step-2:" title="Permalink to this headline">¶</a></h4>
 </div>
-</div>
-<div class="section" id="Reannotate-the-V/D/J-genes-with-igblastn.">
-<h3>Reannotate the V/D/J genes with <em>igblastn</em>.<a class="headerlink" href="#Reannotate-the-V/D/J-genes-with-igblastn." title="Permalink to this headline">¶</a></h3>
+<div class="section" id="Step-2:-Reannotate-the-V/D/J-genes-with-igblastn">
+<h2>Step 2: Reannotate the V/D/J genes with <em>igblastn</em><a class="headerlink" href="#Step-2:-Reannotate-the-V/D/J-genes-with-igblastn" title="Permalink to this headline">¶</a></h2>
 <p>Like immcantation, we will reannotate the V(D)J genes with igblastn using the latest IMGT reference databases. <code class="docutils literal notranslate"><span class="pre">pp.reannotate_genes</span></code> uses <a class="reference external" href="https://changeo.readthedocs.io/en/stable/examples/10x.html">changeo</a>’s <code class="docutils literal notranslate"><span class="pre">AssignGenes.py</span></code> and <code class="docutils literal notranslate"><span class="pre">MakeDB.py</span></code> to call <em>igblastn</em> to reannotate the fasta files. With the recent update to changeo v1.0.0, all the column headers are now adhereing to the <a class="reference external" href="http://docs.airr-community.org/">AIRR</a> standard.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -634,13 +616,10 @@ Formating fasta(s) : 100%|██████████| 4/4 [00:03&lt;00:00,  
 Assigning genes : 100%|██████████| 4/4 [06:57&lt;00:00, 104.42s/it]
 </pre></div></div>
 </div>
-<div class="section" id="Step-3-(optional-but-recommended):">
-<h4>Step 3 <em>(optional but recommended)</em>:<a class="headerlink" href="#Step-3-(optional-but-recommended):" title="Permalink to this headline">¶</a></h4>
+</div>
+<div class="section" id="Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)">
+<h2>Step 3 : Reassigning heavy chain V gene alleles <em>(optional but recommended)</em><a class="headerlink" href="#Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)" title="Permalink to this headline">¶</a></h2>
 <p><em>Please note that prior to v0.0.25, this was step 4. The order is now switched to run this first.</em></p>
-</div>
-</div>
-<div class="section" id="Reassigning-heavy-chain-V-gene-alleles.">
-<h3>Reassigning heavy chain V gene alleles.<a class="headerlink" href="#Reassigning-heavy-chain-V-gene-alleles." title="Permalink to this headline">¶</a></h3>
 <p>Next, we use <em>immcantation’s TIgGER</em> method to reassign allelic calls for heavy chain V genes with <code class="docutils literal notranslate"><span class="pre">pp.reassign_alleles</span></code>. As stated in TIgGER’s <a class="reference external" href="https://tigger.readthedocs.io/en/stable/">website</a> and <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/25675496/">manuscript</a>, <em>‘TIgGER is a computational method that significantly improves V(D)J allele assignments by first determining the complete set of gene segments carried by an individual (including novel alleles) from V(D)J-rearrange sequences. TIgGER
 can then infer a subject’s genotype from these sequences, and use this genotype to correct the initial V(D)J allele assignments.’</em></p>
 <p>This impacts on how contigs are chosen for finding clones later. It is also important when considering to do mutational analysis. For convenience, germline sequences are reconstructed at this step using the corrected V-gene alleles. Therefore, it is highly recommended to run it.</p>
@@ -757,12 +736,9 @@ Writing out to individual folders : 100%|██████████| 2/2 [00
 </pre></div></div>
 </div>
 <p>We can see that most of the original ambiguous V calls have now been corrected and only a few remain.</p>
-<div class="section" id="Step-4:">
-<h4>Step 4:<a class="headerlink" href="#Step-4:" title="Permalink to this headline">¶</a></h4>
 </div>
-</div>
-<div class="section" id="Assigning-constant-region-calls">
-<h3>Assigning constant region calls<a class="headerlink" href="#Assigning-constant-region-calls" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="Step-4:-Assigning-constant-region-calls">
+<h2>Step 4: Assigning constant region calls<a class="headerlink" href="#Step-4:-Assigning-constant-region-calls" title="Permalink to this headline">¶</a></h2>
 <p>10X’s annotation files provides a <em>c_gene</em> column, but rather than simply relying on 10x’s annotation, <a class="reference external" href="https://twitter.com/hamish_king">hk6</a> recommended using <a class="reference external" href="https://presto.readthedocs.io/en/version-0.5.3---license-change/tools/MaskPrimers.html">immcantation-presto’s MaskPrimers.py</a> with his custom primer list.</p>
 <p>As an alternative, <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> includes a pre-processing function, <code class="docutils literal notranslate"><span class="pre">pp.assign_isotypes</span></code>, to use <em>blast</em> to annotate constant region calls for all contigs and retrieves the call, merging it with the tsv files. This function will overwrite the output from previous steps and add a <em>c_call</em> column at the end, or replace the existing column if it already exists. The 10x calls are returned as <code class="docutils literal notranslate"><span class="pre">c_call_10x</span></code>.</p>
 <p>Further, to deal with incorrect constant gene calls due to insufficient length, a pairwise alignment will be run against <a class="reference external" href="https://twitter.com/hamish_king">hk6</a>’s curated sequences that were deemed to be highly specific in distinguishing IGHA1-2, IGHG1-4. I have also curated sets of sequences that should help deal with IGLC3/6/7 as these are problematic too. If there is insufficient info, the <code class="docutils literal notranslate"><span class="pre">c_call</span></code> will be returned as a combination of the most aligned sets of sequences. Because of how
@@ -880,12 +856,9 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <p>This may take a while when dealing with large files; the number of cpus to size of file isn’t exactly linear. Nevertheless, I have enabled parallelization as default because there were noticeable improvements in processing speeds with the smaller files. It should work faster with more cpus. The default option will return a summary plot that can be disabled with <code class="docutils literal notranslate"><span class="pre">plot</span> <span class="pre">=</span> <span class="pre">False</span></code>.</p>
 <p>Finally, it’s worthwhile to manually check the the sequences for constant calls returned as IGHA1-2, IGHG1-4 and the light chains and manually correct them if necessary.</p>
-<div class="section" id="Step-5:">
-<h4>Step 5:<a class="headerlink" href="#Step-5:" title="Permalink to this headline">¶</a></h4>
 </div>
-</div>
-<div class="section" id="Quantify-mutations-(optional).">
-<h3>Quantify mutations <em>(optional)</em>.<a class="headerlink" href="#Quantify-mutations-(optional)." title="Permalink to this headline">¶</a></h3>
+<div class="section" id="Step-5:-Quantify-mutations-(optional).">
+<h2>Step 5: Quantify mutations <em>(optional)</em>.<a class="headerlink" href="#Step-5:-Quantify-mutations-(optional)." title="Permalink to this headline">¶</a></h2>
 <p>At this stage, with all the necessary columns in the files, you can quantify the basic mutational load with <code class="docutils literal notranslate"><span class="pre">pp.quantify_mutations</span></code> before subsequent analyses. This will be covered again in notebook-3.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -919,7 +892,6 @@ Basic mutational load analysis : 100%|██████████| 4/4 [00:29
 </div>
 </div>
 </div>
-</div>
 
 
            </div>
@@ -929,10 +901,10 @@ Basic mutational load analysis : 100%|██████████| 4/4 [00:29
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="2_dandelion_filtering-10x%20data.html" class="btn btn-neutral float-right" title="dandelion Notebook-2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="2_dandelion_filtering-10x%20data.html" class="btn btn-neutral float-right" title="Filtering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to dandelion’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../README.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

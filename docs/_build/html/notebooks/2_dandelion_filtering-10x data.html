@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dandelion Notebook-2 &mdash; dandelion 0.0.26 documentation</title>
+  <title>Filtering &mdash; dandelion 0.0.26 documentation</title>
   
 
   
@@ -40,8 +40,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion Notebook-3" href="3_dandelion_findingclones_and_analysis-10x%20data.html" />
-    <link rel="prev" title="dandelion Notebook-1" href="1_dandelion_preprocessing-10x%20data.html" /> 
+    <link rel="next" title="BCR clustering and visualization" href="3_dandelion_findingclones_and_analysis-10x%20data.html" />
+    <link rel="prev" title="Pre-processing" href="1_dandelion_preprocessing-10x%20data.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -89,39 +89,25 @@
               
             
             
-              <p class="caption"><span class="caption-text">Tutorials:</span></p>
+              <p class="caption"><span class="caption-text">Installation and setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x%20data.html"><em>dandelion</em> Notebook-1</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><em>dandelion</em> Notebook-2</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Filtering">Filtering</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Import-dandelion-module">Import <em>dandelion</em> module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Import-modules-for-use-with-scanpy">Import modules for use with scanpy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Import-the-transcriptome-data">Import the transcriptome data</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#pp.recipe_scanpy_qc"><em>pp.recipe_scanpy_qc</em></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pp.filter_bcr"><em>pp.filter_bcr</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Filtering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Check-the-output-V(D)J-table">Check the output V(D)J table</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Check-the-AnnData-object-as-well">Check the AnnData object as well</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#The-number-of-cells-that-actually-has-a-matching-BCR-can-be-tabluated.">The number of cells that actually has a matching BCR can be tabluated.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Now-actually-filter-the-AnnData-object-and-run-through-a-standard-workflow-starting-by-filtering-genes-and-normalizing-the-data">Now actually filter the AnnData object and run through a standard workflow starting by filtering genes and normalizing the data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Identify-highly-variable-genes">Identify highly-variable genes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Filter-the-genes-to-only-those-marked-as-highly-variable">Filter the genes to only those marked as highly-variable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Regress-out-effects-of-total-counts-per-cell-and-the-percentage-of-mitochondrial-genes-expressed.Scale-the-data-to-unit-variance.">Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed.Scale the data to unit variance.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Run-PCA">Run PCA</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Computing-the-neighborhood-graph,-umap-and-clusters">Computing the neighborhood graph, umap and clusters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Visualizing-the-clusters-and-whether-or-not-there’s-a-corresponding-BCR">Visualizing the clusters and whether or not there’s a corresponding BCR</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Visualizing-some-B-cell-genes">Visualizing some B cell genes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Save-the-AnnData-file">Save the AnnData file</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html"><em>dandelion</em> Notebook-3</a></li>
-<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html#BCR-clustering-and-visualization">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html#Finding-clones">Finding clones</a></li>
-<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html"><em>dandelion</em> Notebook-5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 
             
@@ -168,7 +154,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><em>dandelion</em> Notebook-2</li>
+      <li>Filtering</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -457,14 +443,11 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="dandelion-Notebook-2">
-<h1><em>dandelion</em> Notebook-2<a class="headerlink" href="#dandelion-Notebook-2" title="Permalink to this headline">¶</a></h1>
-<p><img alt="dandelion_logo" src="../_images/dandelion_logo.png" /></p>
 <div class="section" id="Filtering">
-<h2>Filtering<a class="headerlink" href="#Filtering" title="Permalink to this headline">¶</a></h2>
+<h1>Filtering<a class="headerlink" href="#Filtering" title="Permalink to this headline">¶</a></h1>
+<p><img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" /></p>
 <p>We now move on to filtering out BCR contigs (and corresponding cells if necessary) from the BCR data and transcriptome object loaded in <em>scanpy</em>.</p>
-<div class="section" id="Import-dandelion-module">
-<h3>Import <em>dandelion</em> module<a class="headerlink" href="#Import-dandelion-module" title="Permalink to this headline">¶</a></h3>
+<p><strong>Import dandelion module</strong></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -478,9 +461,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Import-modules-for-use-with-scanpy">
-<h3>Import modules for use with scanpy<a class="headerlink" href="#Import-modules-for-use-with-scanpy" title="Permalink to this headline">¶</a></h3>
+<p><strong>Import modules for use with scanpy</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -508,9 +489,7 @@ div.rendered_html tbody tr:hover {
 scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.4 scikit-learn==0.23.2 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Import-the-transcriptome-data">
-<h3>Import the transcriptome data<a class="headerlink" href="#Import-the-transcriptome-data" title="Permalink to this headline">¶</a></h3>
+<p><strong>Import the transcriptome data</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -558,8 +537,6 @@ AnnData object with n_obs × n_vars = 30471 × 31915
     var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;
 </pre></div></div>
 </div>
-<div class="section" id="pp.recipe_scanpy_qc">
-<h4><em>pp.recipe_scanpy_qc</em><a class="headerlink" href="#pp.recipe_scanpy_qc" title="Permalink to this headline">¶</a></h4>
 <p>I’m using a wrapper called <code class="docutils literal notranslate"><span class="pre">pp.recipe_scanpy_qc</span></code> to run through a generic <a class="reference external" href="https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html">scanpy</a> workflow. You can skip this if you already have a pre-processed <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object for the subsequent steps.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -596,13 +573,8 @@ AnnData object with n_obs × n_vars = 30471 × 31915
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="pp.filter_bcr">
-<h4><em>pp.filter_bcr</em><a class="headerlink" href="#pp.filter_bcr" title="Permalink to this headline">¶</a></h4>
-</div>
-</div>
 <div class="section" id="Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">
-<h3>Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data<a class="headerlink" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data" title="Permalink to this headline">¶</a></h3>
+<h2>Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data<a class="headerlink" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data" title="Permalink to this headline">¶</a></h2>
 <p>We use the function <code class="docutils literal notranslate"><span class="pre">pp.filter_bcr</span></code> to mark and filter out cells and contigs from both the BCR data and transcriptome data in <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>. The operation will remove bad quality cells based on transcriptome information as well as remove BCR doublets (multiplet heavy chain, and/or light chains) from the BCR data. In some situations, a single cell can have multiple heavy/light chain contigs although they have an identical V(D)J+C alignment; in situations like this, the contigs with lesser umis
 will be dropped and the umis transferred to duplicate_count column. The same procedure is applied to both heavy chain and light chains before identifying doublets.</p>
 <p>Cells in the gene expression object without BCR information will not be affected i.e. the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object can hold non-B cells. Run <code class="docutils literal notranslate"><span class="pre">?ddl.pp.filter_bcr</span></code> to check what each option does.</p>
@@ -990,9 +962,7 @@ be ignore i.e. drop all multiple IGH contigs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rescue_igh</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="Check-the-output-V(D)J-table">
-<h3>Check the output V(D)J table<a class="headerlink" href="#Check-the-output-V(D)J-table" title="Permalink to this headline">¶</a></h3>
+<p><strong>Check the output V(D)J table</strong></p>
 <p>The vdj table is returned as a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class object in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot (described in further detail in the next notebook); if a file was provided for <code class="docutils literal notranslate"><span class="pre">filter_bcr</span></code> above, a new file will be created in the same folder with the <code class="docutils literal notranslate"><span class="pre">filtered</span></code> prefix. Note that this <code class="docutils literal notranslate"><span class="pre">vdj</span></code> table is indexed based on contigs (sequence_id).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -1018,9 +988,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
     graph: None
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Check-the-AnnData-object-as-well">
-<h3>Check the AnnData object as well<a class="headerlink" href="#Check-the-AnnData-object-as-well" title="Permalink to this headline">¶</a></h3>
+<p><strong>Check the AnnData object as well</strong></p>
 <p>And the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object is indexed based on cells.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -1049,14 +1017,13 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 <li><p><strong>``filter_bcr_heavy`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as heavy chain ‘doublets’ (after rescue if <code class="docutils literal notranslate"><span class="pre">rescue_igh=True</span></code>) (pre-contig filtering).</p></li>
 <li><p><strong>``filter_bcr_light`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identifed as having multiple light chain contigs (pre-contig filtering).</p></li>
 </ol>
+<p>****Most importantly:<a href="#id1"><span class="problematic" id="id2">**</span></a><a href="#id3"><span class="problematic" id="id4">*</span></a>*</p>
 <ol class="arabic simple" start="5">
 <li><p><strong>``bcr_QC_pass`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells where BCR contigs were removed from #1 due to contigs failing QC. (post-contig filtering)</p></li>
 <li><p><strong>``filter_bcr`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filter for cells flagged in 2-4 (post-contig filtering).</p></li>
 </ol>
 <p>So this means that to go forward, you want to only select cells that have BCR that passed QC (<code class="docutils literal notranslate"><span class="pre">has_bcr</span> <span class="pre">==</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">bcr_QC_pass</span> <span class="pre">==</span> <span class="pre">True</span></code>) with filtering recommendation to be false (<code class="docutils literal notranslate"><span class="pre">filter_bcr</span> <span class="pre">==</span> <span class="pre">False</span></code>).</p>
-</div>
-<div class="section" id="The-number-of-cells-that-actually-has-a-matching-BCR-can-be-tabluated.">
-<h3>The number of cells that actually has a matching BCR can be tabluated.<a class="headerlink" href="#The-number-of-cells-that-actually-has-a-matching-BCR-can-be-tabluated." title="Permalink to this headline">¶</a></h3>
+<p><strong>The number of cells that actually has a matching BCR can be tabluated.</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -1217,10 +1184,8 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Now-actually-filter-the-AnnData-object-and-run-through-a-standard-workflow-starting-by-filtering-genes-and-normalizing-the-data">
-<h3>Now actually filter the AnnData object and run through a standard workflow starting by filtering genes and normalizing the data<a class="headerlink" href="#Now-actually-filter-the-AnnData-object-and-run-through-a-standard-workflow-starting-by-filtering-genes-and-normalizing-the-data" title="Permalink to this headline">¶</a></h3>
-<p>Because the ‘filtered’ <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object was returned as a filtered but otherwise unprocessed object, we still need to normalize and run through the usual process here.</p>
+<p><strong>Now actually filter the AnnData object and run through a standard workflow starting by filtering genes and normalizing the data</strong></p>
+<p>Because the ‘filtered’ <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object was returned as a filtered but otherwise unprocessed object, we still need to normalize and run through the usual process here. The following is just a standard scanpy workflow.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -1245,9 +1210,7 @@ View of AnnData object with n_obs × n_vars = 16492 × 31915
 Trying to set attribute `.var` of view, copying.
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Identify-highly-variable-genes">
-<h3>Identify highly-variable genes<a class="headerlink" href="#Identify-highly-variable-genes" title="Permalink to this headline">¶</a></h3>
+<p><strong>Identify highly-variable genes</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
@@ -1265,9 +1228,7 @@ Trying to set attribute `.var` of view, copying.
 <img alt="../_images/notebooks_2_dandelion_filtering-10x_data_27_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_27_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Filter-the-genes-to-only-those-marked-as-highly-variable">
-<h3>Filter the genes to only those marked as highly-variable<a class="headerlink" href="#Filter-the-genes-to-only-those-marked-as-highly-variable" title="Permalink to this headline">¶</a></h3>
+<p><strong>Filter the genes to only those marked as highly-variable</strong></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
@@ -1277,9 +1238,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Regress-out-effects-of-total-counts-per-cell-and-the-percentage-of-mitochondrial-genes-expressed.Scale-the-data-to-unit-variance.">
-<h3>Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed.Scale the data to unit variance.<a class="headerlink" href="#Regress-out-effects-of-total-counts-per-cell-and-the-percentage-of-mitochondrial-genes-expressed.Scale-the-data-to-unit-variance." title="Permalink to this headline">¶</a></h3>
+<p><strong>Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed.Scale the data to unit variance.</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -1303,9 +1262,7 @@ Trying to set attribute `.var` of view, copying.
 ... storing &#39;genome&#39; as categorical
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="Run-PCA">
-<h3>Run PCA<a class="headerlink" href="#Run-PCA" title="Permalink to this headline">¶</a></h3>
+<p><strong>Run PCA</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -1323,9 +1280,7 @@ Trying to set attribute `.var` of view, copying.
 <img alt="../_images/notebooks_2_dandelion_filtering-10x_data_33_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_33_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Computing-the-neighborhood-graph,-umap-and-clusters">
-<h3>Computing the neighborhood graph, umap and clusters<a class="headerlink" href="#Computing-the-neighborhood-graph,-umap-and-clusters" title="Permalink to this headline">¶</a></h3>
+<p><strong>Computing the neighborhood graph, umap and clusters</strong></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
@@ -1340,9 +1295,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Visualizing-the-clusters-and-whether-or-not-there’s-a-corresponding-BCR">
-<h3>Visualizing the clusters and whether or not there’s a corresponding BCR<a class="headerlink" href="#Visualizing-the-clusters-and-whether-or-not-there’s-a-corresponding-BCR" title="Permalink to this headline">¶</a></h3>
+<p><strong>Visualizing the clusters and whether or not there’s a corresponding BCR</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -1359,9 +1312,7 @@ Trying to set attribute `.var` of view, copying.
 <img alt="../_images/notebooks_2_dandelion_filtering-10x_data_37_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_37_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Visualizing-some-B-cell-genes">
-<h3>Visualizing some B cell genes<a class="headerlink" href="#Visualizing-some-B-cell-genes" title="Permalink to this headline">¶</a></h3>
+<p><strong>Visualizing some B cell genes</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
@@ -1378,9 +1329,7 @@ Trying to set attribute `.var` of view, copying.
 <img alt="../_images/notebooks_2_dandelion_filtering-10x_data_39_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_39_0.png" />
 </div>
 </div>
-</div>
-<div class="section" id="Save-the-AnnData-file">
-<h3>Save the AnnData file<a class="headerlink" href="#Save-the-AnnData-file" title="Permalink to this headline">¶</a></h3>
+<p><strong>Save the AnnData file</strong></p>
 <p>We can save this <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object for now.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
@@ -1440,7 +1389,6 @@ Trying to set attribute `.var` of view, copying.
 </div>
 </div>
 </div>
-</div>
 
 
            </div>
@@ -1450,10 +1398,10 @@ Trying to set attribute `.var` of view, copying.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="3_dandelion_findingclones_and_analysis-10x%20data.html" class="btn btn-neutral float-right" title="dandelion Notebook-3" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="3_dandelion_findingclones_and_analysis-10x%20data.html" class="btn btn-neutral float-right" title="BCR clustering and visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="1_dandelion_preprocessing-10x%20data.html" class="btn btn-neutral float-left" title="dandelion Notebook-1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="1_dandelion_preprocessing-10x%20data.html" class="btn btn-neutral float-left" title="Pre-processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
