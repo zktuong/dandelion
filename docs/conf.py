@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'sc-dandelion'
+project = 'dandelion'
 copyright = '2020, zktuong'
 author = 'zktuong'
 
