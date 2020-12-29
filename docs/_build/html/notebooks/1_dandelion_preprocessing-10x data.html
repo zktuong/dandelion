@@ -523,11 +523,11 @@ makeblastdb -dbtype nucl -parse_seqids -in <span class="nv">$BLASTDB</span>/huma
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span># Import modules
-import sys
-import os
-sys.path.append(&#39;/Users/kt16/Documents/Github/dandelion&#39;)
-import dandelion as ddl
+<span></span><span class="c1"># Import modules</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Documents/Github/dandelion&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">dandelion</span> <span class="k">as</span> <span class="nn">ddl</span>
 </pre></div>
 </div>
 </div>
@@ -536,10 +536,10 @@ import dandelion as ddl
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span># change directory to somewhere more workable
-os.chdir(os.path.expanduser(&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;))
-# print current working directory
-os.getcwd()
+<span></span><span class="c1"># change directory to somewhere more workable</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">))</span>
+<span class="c1"># print current working directory</span>
+<span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -587,9 +587,9 @@ os.getcwd()
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span># the first option is a list of fasta files to format and the second option is the list of prefix to add to each file.
-samples = [&#39;sc5p_v2_hs_PBMC_1k&#39;, &#39;sc5p_v2_hs_PBMC_10k&#39;, &#39;vdj_v1_hs_pbmc3&#39;, &#39;vdj_nextgem_hs_pbmc3&#39;]
-ddl.pp.format_fastas(samples, prefix = samples)
+<span></span><span class="c1"># the first option is a list of fasta files to format and the second option is the list of prefix to add to each file.</span>
+<span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sc5p_v2_hs_PBMC_1k&#39;</span><span class="p">,</span> <span class="s1">&#39;sc5p_v2_hs_PBMC_10k&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_v1_hs_pbmc3&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_nextgem_hs_pbmc3&#39;</span><span class="p">]</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">format_fastas</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="n">samples</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -610,7 +610,7 @@ Formating fasta(s) : 100%|██████████| 4/4 [00:03&lt;00:00,  
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>ddl.pp.reannotate_genes(samples)
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">reannotate_genes</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -636,8 +636,8 @@ can then infer a subject’s genotype from these sequences, and use this genotyp
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span># reassigning alleles on the first set of samples
-ddl.pp.reassign_alleles(samples[:2], combined_folder = &#39;tutorial_scgp1&#39;)
+<span></span><span class="c1"># reassigning alleles on the first set of samples</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">reassign_alleles</span><span class="p">(</span><span class="n">samples</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">combined_folder</span> <span class="o">=</span> <span class="s1">&#39;tutorial_scgp1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -691,8 +691,8 @@ Writing out to individual folders : 100%|██████████| 2/2 [00
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span># reassigning alleles on the second set of samples
-ddl.pp.reassign_alleles(samples[2:], combined_folder = &#39;tutorial_scgp2&#39;)
+<span></span><span class="c1"># reassigning alleles on the second set of samples</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">reassign_alleles</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">combined_folder</span> <span class="o">=</span> <span class="s1">&#39;tutorial_scgp2&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -764,7 +764,7 @@ similar the lambda light chains are, extremely ambiguous calls (only able to map
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>ddl.pp.assign_isotypes(samples)
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">assign_isotypes</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -871,11 +871,11 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>from tqdm import tqdm
-# quantify mutations
-for s in tqdm(samples, desc = &#39;Basic mutational load analysis &#39;):
-    filePath = s+&#39;/dandelion/data/&#39;+ s + &#39;_b_filtered_contig_igblast_db-pass_genotyped.tsv&#39;
-    ddl.pp.quantify_mutations(filePath)
+<span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="c1"># quantify mutations</span>
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Basic mutational load analysis &#39;</span><span class="p">):</span>
+    <span class="n">filePath</span> <span class="o">=</span> <span class="n">s</span><span class="o">+</span><span class="s1">&#39;/dandelion/data/&#39;</span><span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="s1">&#39;_b_filtered_contig_igblast_db-pass_genotyped.tsv&#39;</span>
+    <span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">quantify_mutations</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

@@ -3,8 +3,8 @@ Preprocessing: `pp`
 .. module:: dandelion.preprocessing
 
 .. autosummary::
-   :toctree: ./_generate
-
+   :toctree: ./_static
+   
    format_fasta
    format_fastas
    assign_isotype
@@ -21,7 +21,7 @@ Preprocessing (external): `pp.external`
 .. module:: dandelion.preprocessing.external
 
 .. autosummary::
-   :toctree: ./_generate
+   :toctree: ./_static
 
    assigngenes_igblast
    makedb_igblast
@@ -37,7 +37,7 @@ Tools: `tl`
 .. module:: dandelion.tools
 
 .. autosummary::
-   :toctree: ./_generate
+   :toctree: ./_static
 
    find_clones
    define_clones
@@ -56,7 +56,7 @@ Plotting: `pl`
 .. module:: dandelion.plotting
 
 .. autosummary::
-   :toctree: ./_generate
+   :toctree: ./_static
 
    clone_rarefaction
    clone_network
@@ -70,7 +70,7 @@ Utilities: `utl`
 .. module:: dandelion.utilities
 
 .. autosummary::
-   :toctree: ./_generate
+   :toctree: ./_static
 
    makeblastdb
    load_data
