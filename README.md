@@ -1,6 +1,6 @@
 # dandelion
 
-![dandelion_logo](notebooks/img/dandelion_logo.png)
+![dandelion_logo](https://github.com/zktuong/dandelion/blob/master/notebooks/img/dandelion_logo.png)
 
 Version = 0.0.26
 
@@ -9,14 +9,14 @@ Hi there! I have put together a python package for analyzing single cell BCR/V(D
 
 Overview
 
-![dandelion_overview](notebooks/img/dandelion_overview.png)
+![dandelion_overview](https://github.com/zktuong/dandelion/blob/master/notebooks/img/dandelion_overview.png)
 
 Illustration of the `Dandelion` class slots
 
 <img src="notebooks/img/dandelion_class.png" alt="dandelion_class" width="471.0648" height="341.3572">
 
 ## Example
-Please see notebooks folder for a step-by-step [example](notebooks/).
+Please see notebooks folder for a step-by-step [example](https://github.com/zktuong/dandelion/tree/master/notebooks/).
 
 The raw files for the examples can be downloaded from 10X's Single Cell Immune Profiling datasets [website](https://support.10xgenomics.com/single-cell-vdj/datasets).
 
