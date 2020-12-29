@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-28 17:51:33
+# @Last Modified time: 2020-12-29 12:38:20
 
 import pandas as pd
 import numpy as np
@@ -91,7 +91,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     if self.__class__ == Dandelion:
         return({'rarefaction_cells_x':pred, 'rarefaction_clones_y':y})
 
-def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = False, downsample = None, n_resample = 50, normalize = True, reconstruct_network = True, expanded_only = False, key_added = None):
+def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = None, update_obs_meta = True, diversity_key = None, resample = False, downsample = None, n_resample = 50, normalize = True, reconstruct_network = True, expanded_only = False, use_contracted = False, key_added = None):
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -121,8 +121,12 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
     reconstruct_network : bool
         Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.
-    expanded_only :
-        Whether or not to calculate gini indices using expanded clones only.
+    expanded_only : bool
+        Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.
+    use_contracted : bool
+        Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.
+    key_added : str, list, optional
+        column names for output.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
@@ -131,9 +135,9 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         resample = True
     if method == 'gini':
         if update_obs_meta:
-            diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only, key_added = key_added)
+            diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only, use_contracted = use_contracted, key_added = key_added)
         else:
-            return(diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only, key_added = key_added))
+            return(diversity_gini(self, groupby=groupby, metric=metric, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only, use_contracted = use_contracted, key_added = key_added))
     if method == 'chao1':
         if update_obs_meta:
             diversity_chao1(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, downsample=downsample, key_added = key_added)
@@ -145,7 +149,7 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         else:
             return(diversity_shannon(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize = normalize, downsample=downsample, key_added = key_added))
 
-def clone_networkstats(self, expanded_only = False, verbose = True):
+def clone_networkstats(self, expanded_only = False, network_clustersize = False, verbose = True):
     if verbose:
         start = logg.info('Calculating vertex size of nodes after contraction')
 
@@ -185,7 +189,10 @@ def clone_networkstats(self, expanded_only = False, verbose = True):
                             vertexsizes[tmp] = sorted(vertexsizes[tmp], reverse = True)
                         else:
                             vertexsizes[tmp] = [1 for i in range(len(G_.edges(data = True)))]
-                        clustersizes[tmp]= len(vertexsizes[tmp])
+                        if network_clustersize:
+                            clustersizes[tmp]= len(vertexsizes[tmp])
+                        else:
+                            clustersizes[tmp]= len(nodes)
                     else:
                         vertexsizes[tmp] = [1]
                         clustersizes[tmp] = [1]
@@ -205,7 +212,10 @@ def clone_networkstats(self, expanded_only = False, verbose = True):
                             vertexsizes[tmp] = sorted(vertexsizes[tmp], reverse = True)
                         else:
                             vertexsizes[tmp] = [1 for i in range(len(G_.edges(data = True)))]
-                        clustersizes[tmp]= len(vertexsizes[tmp])
+                        if network_clustersize:
+                            clustersizes[tmp]= len(vertexsizes[tmp])
+                        else:
+                            clustersizes[tmp]= len(nodes)
                     else:
                         vertexsizes[tmp] = [1]
                         clustersizes[tmp] = [1]
@@ -215,7 +225,7 @@ def clone_networkstats(self, expanded_only = False, verbose = True):
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True, expanded_only = False, key_added = None):
+def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_meta = False, diversity_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True, expanded_only = False, use_contracted = False, key_added = None):
     """
     Compute B cell clones Gini indices.
 
@@ -241,15 +251,19 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         number of cells to downsample to. If None, defaults to size of smallest group.
     reconstruct_network : bool
         Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.
-    expanded_only :
-        Whether or not to calculate gini indices using expanded clones only.
+    expanded_only : bool
+        Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.
+    use_contracted : bool
+        Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.
+    key_added : str, list, optional
+        column names for output.
     Returns
     ----------
-        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
+        `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, metric = None, clone_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True, expanded_only = False, key_added = None):
+    def gini_indices(self, groupby, metric = None, clone_key = None, resample = False, n_resample = 50, downsample = None, reconstruct_network = True, expanded_only = False, contracted = False, key_added = None):
         if self.__class__ == AnnData:
             raise TypeError('Only Dandelion class object accepted.')
         elif self.__class__ == Dandelion:
@@ -285,7 +299,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         if met == 'clone_network':
             print("Computing Gini indices for cluster and vertex size using network.")
             if not reconstruct_network:
-                n_n, v_s, c_s = clone_networkstats(self, expanded_only = expanded_only, verbose = True)
+                n_n, v_s, c_s = clone_networkstats(self, expanded_only = expanded_only, network_clustersize = contracted, verbose = True)
                 g_c_v = defaultdict(dict)
                 g_c_v_res, g_c_c_res = {}, {}
                 for vs in v_s:
@@ -335,7 +349,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     if self.__class__ == Dandelion:
                         resampled = generate_network(ddl_dat, clone_key = clonekey, downsample = minsize, verbose = False)
                         if met == 'clone_network':
-                            n_n, v_s, c_s = clone_networkstats(resampled, expanded_only = expanded_only, verbose = False)
+                            n_n, v_s, c_s = clone_networkstats(resampled, expanded_only = expanded_only, network_clustersize = contracted, verbose = False)
                             g_c_v = defaultdict(dict)
                             g_c_v_res, g_c_c_res = {}, {}
                             for vs in v_s:
@@ -451,7 +465,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                     if met == 'clone_network':
                         if reconstruct_network:
                             generate_network(ddl_dat, clone_key = clonekey, verbose = False)
-                            n_n, v_s, c_s = clone_networkstats(ddl_dat, expanded_only=expanded_only, verbose = False)
+                            n_n, v_s, c_s = clone_networkstats(ddl_dat, expanded_only=expanded_only, network_clustersize = contracted, verbose = False)
                             g_c_v = defaultdict(dict)
                             g_c_v_res, g_c_c_res = {}, {}
                             for vs in v_s:
@@ -530,7 +544,7 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
                         metadata.at[i, c] = gini_results[c][g]
         self.metadata = metadata.copy()        
 
-    res  = gini_indices(self, groupby = groupby, clone_key = clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only, key_added = key_added)
+    res  = gini_indices(self, groupby = groupby, clone_key = clone_key, metric = metric, resample = resample, n_resample = n_resample, downsample = downsample, reconstruct_network = reconstruct_network, expanded_only = expanded_only, contracted = use_contracted, key_added = key_added)
 
     if diversity_key is None:
         diversitykey = 'diversity'
@@ -572,6 +586,8 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
         Number of times to perform resampling. Default is 50.
     downsample : int, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
+    key_added : str, list, optional
+        column names for output.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
@@ -734,6 +750,8 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
     downsample : int, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
+    key_added : str, list, optional
+        column names for output.
     Returns
     ----------
         `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
