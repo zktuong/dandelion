@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dandelion Notebook-3 &mdash; dandelion 0.0.26 documentation</title>
+  <title>BCR clustering and visualization &mdash; dandelion 0.0.26 documentation</title>
   
 
   
@@ -40,8 +40,8 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion Notebook-5" href="5_dandelion_running_from_R.html" />
-    <link rel="prev" title="dandelion Notebook-2" href="2_dandelion_filtering-10x%20data.html" /> 
+    <link rel="next" title="Running from R" href="5_dandelion_running_from_R.html" />
+    <link rel="prev" title="Filtering" href="2_dandelion_filtering-10x%20data.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -89,65 +89,46 @@
               
             
             
-              <p class="caption"><span class="caption-text">Tutorials:</span></p>
+              <p class="caption"><span class="caption-text">Installation and setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x%20data.html"><em>dandelion</em> Notebook-1</a></li>
-<li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x%20data.html"><em>dandelion</em> Notebook-2</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><em>dandelion</em> Notebook-3</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#BCR-clustering-and-visualization">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#Finding-clones">Finding clones</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Import-modules">Import modules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Read-in-the-previously-saved-files">Read in the previously saved files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Quick-primer-to-the-Dandelion-class">Quick primer to the <em>Dandelion</em> class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Running-tl.find_clones">Running <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#Alternative-:-Running-tl.define_clones">Alternative : Running <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BCR clustering and visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Quick-primer-to-the-Dandelion-class">Quick primer to the <em>Dandelion</em> class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#updating-metadata">updating metadata</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#pp.calculate_threshold"><em>pp.calculate_threshold</em></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#tl.define_clones"><em>tl.define_clones</em></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#update_metadata"><em>update_metadata</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Finding-clones">Finding clones</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Running-tl.find_clones">Running <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Alternative-:-Running-tl.define_clones">Alternative : Running <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code></a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#Example-#1-:-editing-and-updating-clone-id">Example #1 : editing and updating clone id</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Example-#2-:-retrieving-junction-amino-acid-sequences">Example #2 : retrieving junction amino acid sequences</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#tl.generate_network"><em>tl.generate_network</em></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Integration-with-scanpy">Integration with scanpy</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#tl.transfer"><em>tl.transfer</em></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pl.clone_network"><em>pl.clone_network</em></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Calculating-mutational-load">Calculating mutational load</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pp.create_germlines"><em>pp.create_germlines</em></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pp.quantify_mutations"><em>pp.quantify_mutations</em></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Calculating-size-of-clones">Calculating size of clones</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#tl.clone_size"><em>tl.clone_size</em></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Calculating-diversity">Calculating diversity</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#clone_rarefaction"><em>clone_rarefaction</em></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#tl.clone_diversity"><em>tl.clone_diversity</em></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#metric-=-clone_network"><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_network</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#metric-=-clone_centrality"><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_centrality</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#metric-=-clone_degree"><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_degree</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#metric-=-clone_size"><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_size</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Additional-plotting-functions">Additional plotting functions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#barplot"><em>barplot</em></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#stackedbarplot"><em>stackedbarplot</em></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#spectratype"><em>spectratype</em></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#clone_overlap"><em>clone_overlap</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Visualization-of-BCR-network">Visualization of BCR network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Integration-with-scanpy">Integration with scanpy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Plotting-in-scanpy">Plotting in scanpy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Calculating-mutational-load">Calculating mutational load</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Calculating-size-of-clones">Calculating size of clones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Calculating-diversity">Calculating diversity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Additional-plotting-functions">Additional plotting functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#barplot"><em>barplot</em></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stackedbarplot"><em>stackedbarplot</em></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spectratype"><em>spectratype</em></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clone_overlap"><em>clone_overlap</em></a></li>
 </ul>
 </li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html"><em>dandelion</em> Notebook-5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html">Running from R</a></li>
 </ul>
 
             
@@ -194,7 +175,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><em>dandelion</em> Notebook-3</li>
+      <li>BCR clustering and visualization</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -483,42 +464,13 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="dandelion-Notebook-3">
-<h1><em>dandelion</em> Notebook-3<a class="headerlink" href="#dandelion-Notebook-3" title="Permalink to this headline">¶</a></h1>
-<p><img alt="dandelion_logo" src="../_images/dandelion_logo.png" /></p>
-</div>
 <div class="section" id="BCR-clustering-and-visualization">
 <h1>BCR clustering and visualization<a class="headerlink" href="#BCR-clustering-and-visualization" title="Permalink to this headline">¶</a></h1>
+<p><img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" /></p>
 <p>Now that we have both 1) a pre-processed BCR data and 2) matching <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object, we can start finding clones and <em>‘integrate’</em> the results. All the BCR analyses files can be saved as <em>.tsv</em> format so that it can be used in other tools like <em>immcantation</em>, <em>immunoarch</em>, <em>vdjtools</em>, etc.</p>
 <p>On the topic of finding clones, there are many ways used for identifying BCR clones, almost all involving some measure based on sequence similarity. There are also a lot of very well established guidelines and criterias maintained by the BCR community. For example, <em>immcantation</em> uses a number of model-based <a class="reference external" href="https://changeo.readthedocs.io/en/stable/methods/clustering.html">methods</a> to group clones based on the distribution of length-normalised junctional hamming distance while
 <a class="reference external" href="https://www.well.ox.ac.uk/research/research-groups/bashford-rogers">rbr1</a> developed a method to use the whole BCR VDJ sequence to define clones as shown in this recent <a class="reference external" href="https://www.nature.com/articles/s41586-019-1595-3.pdf">paper</a>. While these methods have mainly been applied to bulk BCR-seq protocols, they are biological grounded and should be applicable to single cells.</p>
-</div>
-<div class="section" id="Finding-clones">
-<h1>Finding clones<a class="headerlink" href="#Finding-clones" title="Permalink to this headline">¶</a></h1>
-<p>The following is <em>dandelion</em>’s implementation of a rather conventional method to define clones, <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code>.</p>
-<p>Clone definition is based on the following criterias:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="n">Identical</span> <span class="n">IGH</span> <span class="n">V</span><span class="o">-</span><span class="n">J</span> <span class="n">gene</span> <span class="n">usage</span><span class="o">.</span>
-
-<span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="n">Identical</span> <span class="n">CDR3</span> <span class="n">junctional</span> <span class="n">sequence</span> <span class="n">length</span><span class="o">.</span>
-
-<span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="n">CDR3</span> <span class="n">Junctional</span> <span class="n">sequences</span> <span class="n">attains</span> <span class="n">a</span> <span class="n">minimum</span> <span class="n">of</span> <span class="o">%</span> <span class="n">sequence</span> <span class="n">similarity</span><span class="p">,</span> <span class="n">based</span> <span class="n">on</span> <span class="n">hamming</span> <span class="n">distance</span><span class="o">.</span> <span class="n">The</span> <span class="n">similarity</span> <span class="n">cut</span><span class="o">-</span><span class="n">off</span> <span class="ow">is</span> <span class="n">tunable</span> <span class="p">(</span><span class="n">default</span> <span class="ow">is</span> <span class="mi">85</span><span class="o">%</span><span class="p">)</span><span class="o">.</span>
-
-<span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="n">Light</span> <span class="n">chain</span> <span class="n">usage</span><span class="o">.</span> <span class="n">If</span> <span class="n">cells</span> <span class="n">within</span> <span class="n">clones</span> <span class="n">use</span> <span class="n">different</span> <span class="n">light</span> <span class="n">chains</span><span class="p">,</span> <span class="n">the</span> <span class="n">clone</span> <span class="n">will</span> <span class="n">be</span> <span class="n">splitted</span> <span class="n">following</span> <span class="n">the</span> <span class="n">same</span> <span class="n">conditions</span> <span class="k">for</span> <span class="n">heavy</span> <span class="n">chains</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">above</span><span class="o">.</span>
-</pre></div>
-</div>
-<p>The ‘clone_id’ name follows a <code class="docutils literal notranslate"><span class="pre">{A}_{B}_{C}_{D}</span></code> format and largely reflects the conditions above where:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">A</span><span class="p">}</span> <span class="n">indicates</span> <span class="k">if</span> <span class="n">the</span> <span class="n">contigs</span> <span class="n">use</span> <span class="n">the</span> <span class="n">same</span> <span class="n">IGH</span> <span class="n">V</span><span class="o">/</span><span class="n">J</span> <span class="n">genes</span><span class="o">.</span>
-
-<span class="p">{</span><span class="n">B</span><span class="p">}</span> <span class="n">indicates</span> <span class="k">if</span> <span class="n">IGH</span> <span class="n">junctional</span> <span class="n">sequences</span> <span class="n">are</span> <span class="n">equal</span> <span class="ow">in</span> <span class="n">length</span><span class="o">.</span>
-
-<span class="p">{</span><span class="n">C</span><span class="p">}</span> <span class="n">indicates</span> <span class="k">if</span> <span class="n">clones</span> <span class="n">are</span> <span class="n">splitted</span> <span class="n">based</span> <span class="n">on</span> <span class="n">junctional</span> <span class="n">hamming</span> <span class="n">distance</span> <span class="n">threshold</span>
-
-<span class="p">{</span><span class="n">D</span><span class="p">}</span> <span class="n">indicates</span> <span class="n">light</span> <span class="n">chain</span> <span class="n">pairing</span><span class="o">.</span>
-</pre></div>
-</div>
-<p>The last position will not be annotated if there’s only one group of light chains usage detected in the clone.</p>
-<div class="section" id="Import-modules">
-<h2>Import modules<a class="headerlink" href="#Import-modules" title="Permalink to this headline">¶</a></h2>
+<p><strong>Import modules</strong></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -538,8 +490,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Read-in-the-previously-saved-files">
-<h3>Read in the previously saved files<a class="headerlink" href="#Read-in-the-previously-saved-files" title="Permalink to this headline">¶</a></h3>
+<p><strong>Read in the previously saved files</strong></p>
 <p>I will work with the same example from the previous notebook since I have the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object saved and vdj table filtered.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -591,9 +542,8 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
     graph: None
 </pre></div></div>
 </div>
-</div>
 <div class="section" id="Quick-primer-to-the-Dandelion-class">
-<h3>Quick primer to the <em>Dandelion</em> class<a class="headerlink" href="#Quick-primer-to-the-Dandelion-class" title="Permalink to this headline">¶</a></h3>
+<h2>Quick primer to the <em>Dandelion</em> class<a class="headerlink" href="#Quick-primer-to-the-Dandelion-class" title="Permalink to this headline">¶</a></h2>
 <p>So far, we have been operating with the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -1138,8 +1088,80 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 <p>838 rows × 14 columns</p>
 </div></div>
 </div>
+<div class="section" id="updating-metadata">
+<h3>updating metadata<a class="headerlink" href="#updating-metadata" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">.metadata</span></code> slot in Dandelion class automatically initializes whenever the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot is filled. However, it only returns a standard number of columns that are pre-specified. To retrieve other columns in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot, we can update the metadata with <code class="docutils literal notranslate"><span class="pre">ddl.update_metadata</span></code> and specify the option <code class="docutils literal notranslate"><span class="pre">retrieve</span></code>. you can also pass <code class="docutils literal notranslate"><span class="pre">collapse</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">split_heavy_light</span> <span class="pre">=</span> <span class="pre">False</span></code> if the two columns can be reasonably combined for that cell/barcode.</p>
+<p><strong>Example 1 : retrieving junction amino acid sequences</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;junction_aa&#39;</span><span class="p">)</span>
+<span class="n">vdj</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;
+    metadata: &#39;sample_id&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;
+    distance: None
+    edges: None
+    layout: None
+    graph: None
+</pre></div></div>
+</div>
+<p>Note the additional <code class="docutils literal notranslate"><span class="pre">junction_aa</span></code> columns in the metadata slot.</p>
+<p><strong>Example 2 : editing clone_id column</strong></p>
+<p>This will only work later on, after clones havd been defined, I’m just showing an example here.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># using a list comprehension to remove the light chain clone assignment</span>
+<span class="c1"># vdj.data[&#39;clone_id_heavyonly&#39;] = [x.rsplit(&#39;_&#39;, 1)[0] if x.count(&#39;_&#39;) == 3 else x for x in vdj.data[&#39;clone_id&#39;]]</span>
+<span class="c1"># ddl.update_metadata(vdj, retrieve = &#39;clone_id_heavyonly&#39;, split_heavy_light = False, collapse = True)</span>
+<span class="c1"># vdj</span>
+</pre></div>
+</div>
+</div>
+<p><strong>Saving</strong></p>
+<p>And as described in the previous notebook, dandelion class can be saved using <code class="docutils literal notranslate"><span class="pre">.write_h5</span></code> and <code class="docutils literal notranslate"><span class="pre">.write_pkl</span></code> functions.</p>
+</div>
+</div>
+<div class="section" id="Finding-clones">
+<h2>Finding clones<a class="headerlink" href="#Finding-clones" title="Permalink to this headline">¶</a></h2>
+<p>The following is <em>dandelion</em>’s implementation of a rather conventional method to define clones, <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code>.</p>
+<p>Clone definition is based on the following criterias:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="n">Identical</span> <span class="n">IGH</span> <span class="n">V</span><span class="o">-</span><span class="n">J</span> <span class="n">gene</span> <span class="n">usage</span><span class="o">.</span>
+
+<span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="n">Identical</span> <span class="n">CDR3</span> <span class="n">junctional</span> <span class="n">sequence</span> <span class="n">length</span><span class="o">.</span>
+
+<span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="n">CDR3</span> <span class="n">Junctional</span> <span class="n">sequences</span> <span class="n">attains</span> <span class="n">a</span> <span class="n">minimum</span> <span class="n">of</span> <span class="o">%</span> <span class="n">sequence</span> <span class="n">similarity</span><span class="p">,</span> <span class="n">based</span> <span class="n">on</span> <span class="n">hamming</span> <span class="n">distance</span><span class="o">.</span> <span class="n">The</span> <span class="n">similarity</span> <span class="n">cut</span><span class="o">-</span><span class="n">off</span> <span class="ow">is</span> <span class="n">tunable</span> <span class="p">(</span><span class="n">default</span> <span class="ow">is</span> <span class="mi">85</span><span class="o">%</span><span class="p">)</span><span class="o">.</span>
+
+<span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="n">Light</span> <span class="n">chain</span> <span class="n">usage</span><span class="o">.</span> <span class="n">If</span> <span class="n">cells</span> <span class="n">within</span> <span class="n">clones</span> <span class="n">use</span> <span class="n">different</span> <span class="n">light</span> <span class="n">chains</span><span class="p">,</span> <span class="n">the</span> <span class="n">clone</span> <span class="n">will</span> <span class="n">be</span> <span class="n">splitted</span> <span class="n">following</span> <span class="n">the</span> <span class="n">same</span> <span class="n">conditions</span> <span class="k">for</span> <span class="n">heavy</span> <span class="n">chains</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">above</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The ‘clone_id’ name follows a <code class="docutils literal notranslate"><span class="pre">{A}_{B}_{C}_{D}</span></code> format and largely reflects the conditions above where:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">A</span><span class="p">}</span> <span class="n">indicates</span> <span class="k">if</span> <span class="n">the</span> <span class="n">contigs</span> <span class="n">use</span> <span class="n">the</span> <span class="n">same</span> <span class="n">IGH</span> <span class="n">V</span><span class="o">/</span><span class="n">J</span> <span class="n">genes</span><span class="o">.</span>
+
+<span class="p">{</span><span class="n">B</span><span class="p">}</span> <span class="n">indicates</span> <span class="k">if</span> <span class="n">IGH</span> <span class="n">junctional</span> <span class="n">sequences</span> <span class="n">are</span> <span class="n">equal</span> <span class="ow">in</span> <span class="n">length</span><span class="o">.</span>
+
+<span class="p">{</span><span class="n">C</span><span class="p">}</span> <span class="n">indicates</span> <span class="k">if</span> <span class="n">clones</span> <span class="n">are</span> <span class="n">splitted</span> <span class="n">based</span> <span class="n">on</span> <span class="n">junctional</span> <span class="n">hamming</span> <span class="n">distance</span> <span class="n">threshold</span>
+
+<span class="p">{</span><span class="n">D</span><span class="p">}</span> <span class="n">indicates</span> <span class="n">light</span> <span class="n">chain</span> <span class="n">pairing</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The last position will not be annotated if there’s only one group of light chains usage detected in the clone.</p>
 <div class="section" id="Running-tl.find_clones">
-<h4>Running <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code><a class="headerlink" href="#Running-tl.find_clones" title="Permalink to this headline">¶</a></h4>
+<h3>Running <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code><a class="headerlink" href="#Running-tl.find_clones" title="Permalink to this headline">¶</a></h3>
 <p>The function will take a file path, a pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> (for example if you’ve used pandas to read in the filtered file already), or a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class object (described in next section). The default mode for calculation of junctional hamming distance is to use the junction amino acid sequences. If you want to do it via nucleotide, you can specify the option:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">clustering_by</span> <span class="o">=</span> <span class="s1">&#39;nt&#39;</span>
 </pre></div>
@@ -1149,7 +1171,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1170,8 +1192,8 @@ Finding clones
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Finding clones based on heavy chains : 100%|██████████| 176/176 [00:00&lt;00:00, 1993.95it/s]
-Refining clone assignment based on light chain pairing : 100%|██████████| 819/819 [00:00&lt;00:00, 1498.45it/s]
+Finding clones based on heavy chains : 100%|██████████| 176/176 [00:00&lt;00:00, 3553.42it/s]
+Refining clone assignment based on light chain pairing : 100%|██████████| 819/819 [00:00&lt;00:00, 1546.95it/s]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1186,7 +1208,7 @@ Refining clone assignment based on light chain pairing : 100%|██████
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1195,7 +1217,7 @@ Refining clone assignment based on light chain pairing : 100%|██████
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1212,15 +1234,11 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 <p>This will return a new column with the column name <code class="docutils literal notranslate"><span class="pre">'clone_id'</span></code> as per convention. If a filepath is provided as input, it will also save the file automatically into the base directory of the file name. Otherwise, if a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object or <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> is provided it will just be returned as a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object.</p>
 </div>
 <div class="section" id="Alternative-:-Running-tl.define_clones">
-<h4>Alternative : Running <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code><a class="headerlink" href="#Alternative-:-Running-tl.define_clones" title="Permalink to this headline">¶</a></h4>
+<h3>Alternative : Running <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code><a class="headerlink" href="#Alternative-:-Running-tl.define_clones" title="Permalink to this headline">¶</a></h3>
 <p>Alternatively, a wrapper to call <em>changeo’s</em> <code class="docutils literal notranslate"><span class="pre">DefineClones.py</span></code> is also included. To run it, you need to choose the distance threshold for clonal assignment. To facilitate this, the function <code class="docutils literal notranslate"><span class="pre">pp.calculate_threshold</span></code> will run <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/distToNearest/">shazam’s distToNearest</a> function and return a plot showing the length normalized hamming distance distribution and automated threshold value. Again, <code class="docutils literal notranslate"><span class="pre">pp.calculate_threshold</span></code> will take a file path, pandas
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object as input. If a dandelion object is provided, the threshold value will be inserted into the <code class="docutils literal notranslate"><span class="pre">.threshold</span></code> slot. For more fine control, please use the <code class="docutils literal notranslate"><span class="pre">DefineClones.py</span></code> function <a class="reference external" href="https://immcantation.readthedocs.io/en/stable/tutorials/10x_tutorial.html">directly</a>.</p>
-</div>
-</div>
-<div class="section" id="pp.calculate_threshold">
-<h3><em>pp.calculate_threshold</em><a class="headerlink" href="#pp.calculate_threshold" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1240,7 +1258,7 @@ Calculating threshold
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_18_1.png" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_18_1.png" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_26_1.png" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_26_1.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1248,14 +1266,14 @@ Calculating threshold
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (376866549)&gt;
+&lt;ggplot: (379804105)&gt;
  finished: Updated Dandelion object:
    &#39;threshold&#39;, threshold value for tuning clonal assignment
- (0:00:40)
+ (0:00:46)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1265,17 +1283,17 @@ Calculating threshold
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.22271124306605608
+0.2223014379852048
 </pre></div></div>
 </div>
 <p>You can also manually select a value as the threshold if you wish.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1295,7 +1313,7 @@ Calculating threshold
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_21_1.png" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_21_1.png" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_29_1.png" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_29_1.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1303,14 +1321,14 @@ Calculating threshold
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (381616009)&gt;
+&lt;ggplot: (379021853)&gt;
  finished: Updated Dandelion object:
    &#39;threshold&#39;, threshold value for tuning clonal assignment
- (0:00:40)
+ (0:00:42)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1320,7 +1338,7 @@ Calculating threshold
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1328,12 +1346,9 @@ Calculating threshold
 0.1
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="tl.define_clones">
-<h3><em>tl.define_clones</em><a class="headerlink" href="#tl.define_clones" title="Permalink to this headline">¶</a></h3>
 <p>We can run <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code> to call <em>changeo’s</em> <code class="docutils literal notranslate"><span class="pre">DefineClones.py</span></code>; see <a class="reference external" href="https://changeo.readthedocs.io/en/stable/methods/clustering.html">here</a> for more info. Note, if a <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> or file path is provided as the input, the value in dist option (corresponds to threshold value) needs to be manually supplied. If a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object is provided, it will automatically retrieve it from the threshold slot.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1350,79 +1365,17 @@ Finding clones
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:05)
+ (0:00:06)
 </pre></div></div>
 </div>
 <p>Note that I specified the option <code class="docutils literal notranslate"><span class="pre">key_added</span></code> and this adds the output from <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code> into a separate column. If left as default (<code class="docutils literal notranslate"><span class="pre">None</span></code>), it will write into <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> column. The same option can be specified in <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code> earlier. If there is an existing column for <code class="docutils literal notranslate"><span class="pre">clone_id</span></code>, the group column for the new key would not be computed; If you want to extract the grouped column, simply run define clones without key_added to replace the existing <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> and
 <code class="docutils literal notranslate"><span class="pre">clone_id_group</span></code> columns.</p>
-<div class="section" id="update_metadata">
-<h4><em>update_metadata</em><a class="headerlink" href="#update_metadata" title="Permalink to this headline">¶</a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">.metadata</span></code> slot in Dandelion class automatically initializes whenever the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot is filled. However, it only returns a standard number of columns that are pre-specified. To retrieve other columns in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot, we can update the metadata with <code class="docutils literal notranslate"><span class="pre">ddl.update_metadata</span></code> and specify the option <code class="docutils literal notranslate"><span class="pre">retrieve</span></code>. you can also pass <code class="docutils literal notranslate"><span class="pre">collapse</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">split_heavy_light</span> <span class="pre">=</span> <span class="pre">False</span></code> if the two columns can be reasonably combined for that cell/barcode.</p>
 </div>
 </div>
-</div>
-<div class="section" id="Example-#1-:-editing-and-updating-clone-id">
-<h2>Example #1 : editing and updating clone id<a class="headerlink" href="#Example-#1-:-editing-and-updating-clone-id" title="Permalink to this headline">¶</a></h2>
-<p>If we want to collapse the clones based on just heavy chain contigs:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># using a list comprehension to remove the light chain clone assignment</span>
-<span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;clone_id_heavyonly&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">]]</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;clone_id_heavyonly&#39;</span><span class="p">,</span> <span class="n">split_heavy_light</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">collapse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="n">vdj</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;
-    metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;
-    distance: None
-    edges: None
-    layout: None
-    graph: None
-</pre></div></div>
-</div>
-</div>
-<div class="section" id="Example-#2-:-retrieving-junction-amino-acid-sequences">
-<h2>Example #2 : retrieving junction amino acid sequences<a class="headerlink" href="#Example-#2-:-retrieving-junction-amino-acid-sequences" title="Permalink to this headline">¶</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;junction_aa&#39;</span><span class="p">)</span>
-<span class="n">vdj</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;
-    metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;
-    distance: None
-    edges: None
-    layout: None
-    graph: None
-</pre></div></div>
-</div>
-<p>Note the additional <code class="docutils literal notranslate"><span class="pre">junction_aa</span></code> columns in the metadata slot.</p>
+<div class="section" id="Visualization-of-BCR-network">
+<h2>Visualization of BCR network<a class="headerlink" href="#Visualization-of-BCR-network" title="Permalink to this headline">¶</a></h2>
 <p><em>dandelion</em> generates a network to facilitate visualisation of results. This uses the full V(D)J contig sequences instead of just the junctional sequences to chart a tree-like network for each clone. The actual visualization will be achieved through <code class="docutils literal notranslate"><span class="pre">scanpy</span></code> later.</p>
-<div class="section" id="tl.generate_network">
-<h3><em>tl.generate_network</em><a class="headerlink" href="#tl.generate_network" title="Permalink to this headline">¶</a></h3>
+<p><strong>tl.generate_network</strong></p>
 <p>First we need to generate the network. The tool function <code class="docutils literal notranslate"><span class="pre">tl.generate_network</span></code> will take a V(D)J table that has clones defined, specifically under the <code class="docutils literal notranslate"><span class="pre">'clone_id'</span></code> column. The default mode is to use amino acid sequences for constructing Levenshtein distance matrices.</p>
 <p>If you have a pre-processed table parsed from immcantation’s <a class="reference external" href="https://changeo.readthedocs.io/en/stable/examples/10x.html">method</a>, or any other method as long as it’s in a <em>AIRR</em> format, the table can be used as well.</p>
 <p>You can specify the <code class="docutils literal notranslate"><span class="pre">clone_key</span></code> option for generating the network for the clone id definition of choice as long as it exists as a column in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot.</p>
@@ -1448,9 +1401,9 @@ Generating network
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Calculating distances... : 100%|██████████| 4/4 [00:04&lt;00:00,  1.02s/it]
-Generating edge list : 100%|██████████| 7/7 [00:00&lt;00:00, 797.63it/s]
-Linking edges : 100%|██████████| 821/821 [00:00&lt;00:00, 4795.62it/s]
+Calculating distances... : 100%|██████████| 4/4 [00:04&lt;00:00,  1.06s/it]
+Generating edge list : 100%|██████████| 7/7 [00:00&lt;00:00, 866.87it/s]
+Linking edges : 100%|██████████| 821/821 [00:00&lt;00:00, 4424.47it/s]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1494,9 +1447,9 @@ Downsampling to 500 cells.
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Calculating distances... : 100%|██████████| 4/4 [00:01&lt;00:00,  2.82it/s]
-Generating edge list : 100%|██████████| 3/3 [00:00&lt;00:00, 524.11it/s]
-Linking edges : 100%|██████████| 493/493 [00:00&lt;00:00, 5271.43it/s]
+Calculating distances... : 100%|██████████| 4/4 [00:01&lt;00:00,  2.73it/s]
+Generating edge list : 100%|██████████| 3/3 [00:00&lt;00:00, 517.16it/s]
+Linking edges : 100%|██████████| 490/490 [00:00&lt;00:00, 5081.94it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -1511,7 +1464,7 @@ generating network layout
    &#39;distance&#39;, heavy and light chain distance matrices
    &#39;edges&#39;, network edges
    &#39;layout&#39;, network layout
-   &#39;graph&#39;, network (0:00:05)
+   &#39;graph&#39;, network (0:00:06)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1520,15 +1473,16 @@ generating network layout
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 500 and n_contigs = 1015
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;
-    metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;
+Dandelion class object with n_obs = 500 and n_contigs = 1012
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;
     distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
     edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
-    layout: layout for 500 vertices, layout for 10 vertices
-    graph: networkx graph of 500 vertices, networkx graph of 10 vertices
+    layout: layout for 500 vertices, layout for 13 vertices
+    graph: networkx graph of 500 vertices, networkx graph of 13 vertices
 </pre></div></div>
 </div>
+<p><strong>check the newly re-initialized Dandelion object</strong></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
@@ -1545,8 +1499,8 @@ Dandelion class object with n_obs = 500 and n_contigs = 1015
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;
-    metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;
     distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
     edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
     layout: layout for 838 vertices, layout for 24 vertices
@@ -1554,14 +1508,10 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </pre></div></div>
 </div>
 <p>The graph/networks can be accessed through the <code class="docutils literal notranslate"><span class="pre">.graph</span></code> slot as an <code class="docutils literal notranslate"><span class="pre">networkx</span></code> graph object if you want to extract the data for network statistics or make any changes to the network.</p>
+</div>
 <div class="section" id="Integration-with-scanpy">
-<h4>Integration with scanpy<a class="headerlink" href="#Integration-with-scanpy" title="Permalink to this headline">¶</a></h4>
+<h2>Integration with scanpy<a class="headerlink" href="#Integration-with-scanpy" title="Permalink to this headline">¶</a></h2>
 <p>The results can also be ported into the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object for access to more plotting functions provided through <code class="docutils literal notranslate"><span class="pre">scanpy</span></code>.</p>
-</div>
-</div>
-</div>
-<div class="section" id="tl.transfer">
-<h2><em>tl.transfer</em><a class="headerlink" href="#tl.transfer" title="Permalink to this headline">¶</a></h2>
 <p>To proceed, we first need to initialise the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object with our network. This is done by using the tool function <code class="docutils literal notranslate"><span class="pre">tl.transfer</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
@@ -1584,7 +1534,7 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:21)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:25)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1594,7 +1544,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 16492 × 1497
-    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;leiden&#39;, &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;leiden&#39;, &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;
     var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;, &#39;n_cells&#39;, &#39;highly_variable&#39;, &#39;means&#39;, &#39;dispersions&#39;, &#39;dispersions_norm&#39;, &#39;mean&#39;, &#39;std&#39;
     uns: &#39;bcr_QC_pass_colors&#39;, &#39;hvg&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;umap&#39;, &#39;rna_neighbors&#39;
     obsm: &#39;X_pca&#39;, &#39;X_umap&#39;, &#39;X_bcr&#39;
@@ -1603,15 +1553,17 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div></div>
 </div>
 <p>You can see that <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object now contains a couple more columns in the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot, corresponding to the metadata that is returned after <code class="docutils literal notranslate"><span class="pre">tl.generate_network</span></code>, and newly populated <code class="docutils literal notranslate"><span class="pre">.obsm</span></code> and <code class="docutils literal notranslate"><span class="pre">.obsp</span></code> slots. The original RNA connectivities and distances are now added into the <code class="docutils literal notranslate"><span class="pre">.obsp</span></code> slot as well.</p>
-<div class="section" id="pl.clone_network">
-<h3><em>pl.clone_network</em><a class="headerlink" href="#pl.clone_network" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="Plotting-in-scanpy">
+<h2>Plotting in scanpy<a class="headerlink" href="#Plotting-in-scanpy" title="Permalink to this headline">¶</a></h2>
+<p><strong>``pl.clone_network``</strong></p>
 <p>So now, basically we can plot in <code class="docutils literal notranslate"><span class="pre">scanpy</span></code> with their plotting modules. I’ve included a plotting function in <strong>dandelion</strong>, <code class="docutils literal notranslate"><span class="pre">pl.clone_network</span></code>, which is really just a wrapper of their <code class="docutils literal notranslate"><span class="pre">pl.embedding</span></code> module.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
 <span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
                      <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">],</span>
                      <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -1619,41 +1571,16 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-... storing &#39;sample_id&#39; as categorical
-... storing &#39;clone_id&#39; as categorical
-... storing &#39;isotype&#39; as categorical
-... storing &#39;lightchain&#39; as categorical
-... storing &#39;status&#39; as categorical
-... storing &#39;vdj_status&#39; as categorical
-... storing &#39;productive&#39; as categorical
-... storing &#39;umi_counts_light&#39; as categorical
-... storing &#39;v_call_heavy&#39; as categorical
-... storing &#39;v_call_light&#39; as categorical
-... storing &#39;j_call_heavy&#39; as categorical
-... storing &#39;j_call_light&#39; as categorical
-... storing &#39;c_call_heavy&#39; as categorical
-... storing &#39;c_call_light&#39; as categorical
-... storing &#39;changeo_clone_id&#39; as categorical
-... storing &#39;clone_id_heavyonly&#39; as categorical
-... storing &#39;junction_aa_heavy&#39; as categorical
-... storing &#39;junction_aa_light&#39; as categorical
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_43_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_43_1.png" style="width: 722px; height: 539px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_46_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_46_0.png" style="width: 472px; height: 296px;" />
 </div>
 </div>
 <p><strong>dandelion</strong> provides an edge weight extractor tool <code class="docutils literal notranslate"><span class="pre">tl.extract_edge_weights</span></code> to retrieve the edge weights that can be used to specify the edge widths according to weight/distance.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1670,17 +1597,17 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_45_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_45_0.png" style="width: 589px; height: 539px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_48_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_48_0.png" style="width: 339px; height: 296px;" />
 </div>
 </div>
 <p>You can interact with <code class="docutils literal notranslate"><span class="pre">pl.clone_network</span></code> just as how you interact with the rest of the scatterplot modules in <code class="docutils literal notranslate"><span class="pre">scanpy</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">scanpy.plotting.palettes</span> <span class="kn">import</span> <span class="n">default_28</span><span class="p">,</span> <span class="n">default_102</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
 <span class="c1"># plot the 3 largest clones by size</span>
 <span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span> <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span><span class="p">)</span>
 </pre></div>
@@ -1698,11 +1625,11 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_47_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_47_1.png" style="width: 409px; height: 417px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_50_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_50_1.png" style="width: 284px; height: 296px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1714,12 +1641,12 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_48_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_48_0.png" style="width: 620px; height: 840px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_51_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_51_0.png" style="width: 502px; height: 577px;" />
 </div>
 </div>
 <p>By specifying <code class="docutils literal notranslate"><span class="pre">expanded_only=True</span></code>, you will transfer the graph of only expanded clones (&gt; 1 cell in a clone).</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1740,24 +1667,24 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:18)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:26)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_50_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_50_1.png" style="width: 409px; height: 417px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_53_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_53_1.png" style="width: 284px; height: 296px;" />
 </div>
 </div>
 </div>
 <div class="section" id="Calculating-mutational-load">
-<h3>Calculating mutational load<a class="headerlink" href="#Calculating-mutational-load" title="Permalink to this headline">¶</a></h3>
+<h2>Calculating mutational load<a class="headerlink" href="#Calculating-mutational-load" title="Permalink to this headline">¶</a></h2>
 <p>To calculate mutational load, I’ve ported the functions from immcantation suite’s changeo and shazam to work with the <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> class object.</p>
 <p>This can be run immediately after <code class="docutils literal notranslate"><span class="pre">pp.reassign_alleles</span></code> in notebook-1 because the required germline columns should be present in the genotyped <code class="docutils literal notranslate"><span class="pre">.tsv</span></code> file. I would reccomend to run this after TIgGER, after the v_calls were corrected.</p>
 <p>But say you want to run it now instead, this can be achieved:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1768,7 +1695,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1801,6 +1728,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <th>germline_alignment</th>
       <th>junction</th>
       <th>...</th>
+      <th>cdr2_aa</th>
       <th>cdr3_aa</th>
       <th>sequence_alignment_aa</th>
       <th>v_sequence_alignment_aa</th>
@@ -1810,7 +1738,6 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <th>duplicate_count</th>
       <th>clone_id</th>
       <th>changeo_clone_id</th>
-      <th>clone_id_heavyonly</th>
     </tr>
     <tr>
       <th>sequence_id</th>
@@ -1851,6 +1778,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>TCCTATGAGCTGACTCAGCCACCCTCA...GTGTCCGTGTCCCCAG...</td>
       <td>TGTCAGGCGTGGGACAGCAGCAATGTGGTATTC</td>
       <td>...</td>
+      <td>QDN</td>
       <td>QAWDSSNVV</td>
       <td>SYELTQPPSVSVSPGQTASITCSGDKLGHKYACWYQQKPGQSPVLV...</td>
       <td>SYELTQPPSVSVSPGQTASITCSGDKLGHKYACWYQQKPGQSPVLV...</td>
@@ -1858,9 +1786,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>VFGGGTKLTVL</td>
       <td>0.009434</td>
       <td>0</td>
-      <td>146_8_4</td>
-      <td>52_0</td>
-      <td>146_8_4</td>
+      <td>121_8_3</td>
+      <td>57_0</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_2</th>
@@ -1875,6 +1802,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTAAAGCCTG...</td>
       <td>TGTACCACAGAAGCTTTAGACTACGGTGCTAACTCGCGATCCCCGA...</td>
       <td>...</td>
+      <td>IKSNTDGATT</td>
       <td>TTEALDYGANSRSPNFDY</td>
       <td>EVQLVESGGGLVKPGGSLRLSCAASGFIFSNAWMSWVRQAPGKGLE...</td>
       <td>EVQLVESGGGLVKPGGSLRLSCAASGFIFSNAWMSWVRQAPGKGLE...</td>
@@ -1882,9 +1810,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>FDYWGQGTLVTVSS</td>
       <td>0.008671</td>
       <td>0</td>
-      <td>146_8_4</td>
-      <td>52_0</td>
-      <td>146_8_4</td>
+      <td>121_8_3</td>
+      <td>57_0</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_1</th>
@@ -1899,6 +1826,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>GAAATTGTGTTGACGCAGTCTCCAGGCACCCTGTCTTTGTCTCCAG...</td>
       <td>TGTCAGCAGTATGGTAGCTCACCTCCATTCACTTTC</td>
       <td>...</td>
+      <td>GAS</td>
       <td>QQYGSSPPFT</td>
       <td>EIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPR...</td>
       <td>EIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPR...</td>
@@ -1906,9 +1834,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>FTFGPGTKVDIK</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>19_6_2</td>
-      <td>79_1</td>
-      <td>19_6_2</td>
+      <td>23_6_2</td>
+      <td>76_1</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_2</th>
@@ -1923,6 +1850,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
       <td>TGTGCGAAAGATACTGAAGTGGGAGCGAGCCGATACTACTACTACT...</td>
       <td>...</td>
+      <td>IRYDGSNK</td>
       <td>AKDTEVGASRYYYYYGMDV</td>
       <td>QVQLVESGGGVVQPGGSLRLSCAASGFTFSSYGMHWVRQAPGKGLE...</td>
       <td>QVQLVESGGGVVQPGGSLRLSCAASGFTFSSYGMHWVRQAPGKGLE...</td>
@@ -1930,9 +1858,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>YYYYYGMDVWGQGTTVTVSS</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>19_6_2</td>
-      <td>79_1</td>
-      <td>19_6_2</td>
+      <td>23_6_2</td>
+      <td>76_1</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_1k_AATCGGTGTTAGGGTG_contig_1</th>
@@ -1947,6 +1874,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>GACATCGTGATGACCCAGTCTCCAGACTCCCTGGCTGTGTCTCTGG...</td>
       <td>TGTCAGCAATATTATAGTACTCCGATCACCTTC</td>
       <td>...</td>
+      <td>WAS</td>
       <td>QQYYSTPIT</td>
       <td>DIVMTQSPDSLAVSLGERATINCKSSQSVLYSSNNKNYLAWYQQKP...</td>
       <td>DIVMTQSPDSLAVSLGERATINCKSSQSVLYSSNNKNYLAWYQQKP...</td>
@@ -1954,9 +1882,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>ITFGQGTRLEIK</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>171_3_2</td>
-      <td>181_2</td>
-      <td>171_3_2</td>
+      <td>84_3_2</td>
+      <td>184_2</td>
     </tr>
     <tr>
       <th>...</th>
@@ -1995,6 +1922,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>CAGGTGCAGCTGGTGCAGTCTGGGGCT...GAGGTGAAGAAGCCTG...</td>
       <td>TGTGCGAGATATTGTAGTAGTACCAGCTGCTATACGACCTATTACT...</td>
       <td>...</td>
+      <td>MNPNSGNT</td>
       <td>ARYCSSTSCYTTYYYYYYGMDV</td>
       <td>QVQLVQSGAEVKKPGASVKVSCKASGYTFTSYDINWVRQATGQGLE...</td>
       <td>QVQLVQSGAEVKKPGASVKVSCKASGYTFTSYDINWVRQATGQGLE...</td>
@@ -2002,9 +1930,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>YYYYYGMDVWGQGTTVTVSS</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>80_6_1</td>
+      <td>28_6_2</td>
       <td>757_448</td>
-      <td>80_6_1</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_2</th>
@@ -2019,6 +1946,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
       <td>TGTCAGCAGCGTAGCAACTGGCTCACCTTC</td>
       <td>...</td>
+      <td>DAS</td>
       <td>QQRSNWLT</td>
       <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
       <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
@@ -2026,9 +1954,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>TFGQGTRLEIK</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>153_2_1</td>
-      <td>432_449</td>
-      <td>153_2_1</td>
+      <td>159_2_1</td>
+      <td>425_449</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_1</th>
@@ -2043,6 +1970,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>CAGGTGCAGCTGGTGCAATCTGGGTCT...GAGTTGAAGAAGCCTG...</td>
       <td>TGTGCGAGAGTTTTTAGACGCTATGGTTCGGGGAGTTATTATAACC...</td>
       <td>...</td>
+      <td>INTNTGNP</td>
       <td>ARVFRRYGSGSYYNL</td>
       <td>QVQLVQSGSELKKPGASVKVSCKASGYTFTSYAMNWVRQAPGQGLE...</td>
       <td>QVQLVQSGSELKKPGASVKVSCKASGYTFTSYAMNWVRQAPGQGLE...</td>
@@ -2050,9 +1978,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>LWGQGTLVTVSS</td>
       <td>0.003003</td>
       <td>0</td>
-      <td>153_2_1</td>
-      <td>432_449</td>
-      <td>153_2_1</td>
+      <td>159_2_1</td>
+      <td>425_449</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_1</th>
@@ -2067,6 +1994,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTG...</td>
       <td>TGTGCGAGAGATCCCGGTGACTACGTAGAAATTGAGTGGTACTTCG...</td>
       <td>...</td>
+      <td>ISSSSSYI</td>
       <td>ARDPGDYVEIEWYFDL</td>
       <td>EVQLVESGGGLVKPGGSLRLSCAASGFTFSSYSMNWVRQAPGKGLE...</td>
       <td>EVQLVESGGGLVKPGGSLRLSCAASGFTFSSYSMNWVRQAPGKGLE...</td>
@@ -2074,9 +2002,8 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>WYFDLWGRGTLVTVSS</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>62_1_1</td>
-      <td>352_450</td>
-      <td>62_1_1</td>
+      <td>10_1_1</td>
+      <td>357_450</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_2</th>
@@ -2091,6 +2018,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
       <td>TGTCAGCAGCGTAGCAACTGGCCTAGGCTCACTTTC</td>
       <td>...</td>
+      <td>DAS</td>
       <td>QQRSNWPRLT</td>
       <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
       <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
@@ -2098,17 +2026,16 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
       <td>LTFGGGTKVEIK</td>
       <td>0.000000</td>
       <td>0</td>
-      <td>62_1_1</td>
-      <td>352_450</td>
-      <td>62_1_1</td>
+      <td>10_1_1</td>
+      <td>357_450</td>
     </tr>
   </tbody>
 </table>
-<p>926 rows × 85 columns</p>
+<p>926 rows × 84 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2119,13 +2046,13 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 454 and n_contigs = 926
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
     metadata: &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;
     distance: None
     edges: None
@@ -2134,7 +2061,7 @@ Dandelion class object with n_obs = 454 and n_contigs = 926
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2154,13 +2081,11 @@ Updating germline reference
  (0:00:00)
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="pp.create_germlines">
-<h3><em>pp.create_germlines</em><a class="headerlink" href="#pp.create_germlines" title="Permalink to this headline">¶</a></h3>
+<p><strong>``pp.create_germlines``</strong></p>
 <p>Then we run <code class="docutils literal notranslate"><span class="pre">pp.create_germline</span></code> to (re)create the <code class="docutils literal notranslate"><span class="pre">germline_alignment_d_mask</span></code> column in the data. If <code class="docutils literal notranslate"><span class="pre">update_germline</span></code> was run like above, there’s no need to specify the <code class="docutils literal notranslate"><span class="pre">germline</span></code> option as the function will simply retrieve it from the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object.</p>
 <p><em>Note: the ability to run the original CreateGermlines.py with –cloned option is not currently possible through pp.create_germlines(). This is possible with pp.external.creategermlines but requires a physical file for CreateGermlines.py to work on. Thus, I would reccomend for you to run CreateGermlines.py separately if you intend to use the –cloned option. See</em><a class="reference external" href="https://changeo.readthedocs.io/en/stable/examples/germlines.html">here</a><em>for more info.</em></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2181,7 +2106,7 @@ Reconstructing germline sequences
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-   Building dmask germline sequences: 926it [00:00, 986.17it/s]
+   Building dmask germline sequences: 926it [00:00, 967.80it/s]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -2197,7 +2122,7 @@ Reconstructing germline sequences
 </div>
 <p>Ensure that the germline_alignment_d_mask column is populated or subsequent steps will fail.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2206,7 +2131,7 @@ Reconstructing germline sequences
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2299,13 +2224,11 @@ Reconstructing germline sequences
 </div></div>
 </div>
 <p>The default behaviour is to mask the D region with Ns with option <code class="docutils literal notranslate"><span class="pre">germ_types</span> <span class="pre">=</span> <span class="pre">'dmask'</span></code>. See <a class="reference external" href="https://changeo.readthedocs.io/en/stable/methods/germlines.html">here</a> for more info.</p>
-</div>
-<div class="section" id="pp.quantify_mutations">
-<h3><em>pp.quantify_mutations</em><a class="headerlink" href="#pp.quantify_mutations" title="Permalink to this headline">¶</a></h3>
+<p><strong>``pp.quantify_mutations``</strong></p>
 <p>The options for <code class="docutils literal notranslate"><span class="pre">pp.quantify_mutations</span></code> are the same as the basic mutational load analysis <a class="reference external" href="https://shazam.readthedocs.io/en/version-0.1.8---mutation-profiling-enhancements/vignettes/Mutation-Vignette/">vignette</a>. The default behavior is to sum all mutations scores (heavy and light chains, silent and replacement mutations) for the same cell.</p>
 <p>Again, this function can be run immediately after <code class="docutils literal notranslate"><span class="pre">pp.reassign_alleles</span></code> on the genotyped <code class="docutils literal notranslate"><span class="pre">.tsv</span></code> files (without loading into <code class="docutils literal notranslate"><span class="pre">pandas</span></code> or <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code>). Here I’m illustrating a few other options that may be useful.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2327,7 +2250,7 @@ Quantifying mutations
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2349,7 +2272,7 @@ Quantifying mutations
 </div>
 <p>Specifying <code class="docutils literal notranslate"><span class="pre">split_locus</span> <span class="pre">=</span> <span class="pre">True</span></code> will split up the results for the different chains.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2366,12 +2289,12 @@ Quantifying mutations
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:05)
+ (0:00:06)
 </pre></div></div>
 </div>
 <p>To update the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object, simply rerun <code class="docutils literal notranslate"><span class="pre">tl.transfer_network</span></code> with keep_raw option set to <code class="docutils literal notranslate"><span class="pre">False</span></code> to avoid overwriting the stashed neighborhood graph.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2390,15 +2313,15 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:17)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:18)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
 <span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_seq_r&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_seq_s&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_IGH&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_IGL&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span> <span class="o">+</span> <span class="n">default_102</span><span class="p">,</span> <span class="n">color_map</span> <span class="o">=</span> <span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -2415,18 +2338,16 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_68_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_68_1.png" style="width: 925px; height: 1257px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_71_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_71_1.png" style="width: 681px; height: 856px;" />
+</div>
 </div>
 </div>
 <div class="section" id="Calculating-size-of-clones">
-<h4>Calculating size of clones<a class="headerlink" href="#Calculating-size-of-clones" title="Permalink to this headline">¶</a></h4>
-</div>
-</div>
-<div class="section" id="tl.clone_size">
-<h3><em>tl.clone_size</em><a class="headerlink" href="#tl.clone_size" title="Permalink to this headline">¶</a></h3>
+<h2>Calculating size of clones<a class="headerlink" href="#Calculating-size-of-clones" title="Permalink to this headline">¶</a></h2>
+<p><strong>``tl.clone_size``</strong></p>
 <p>Sometimes it’s useful to evaluate the size of the clone. Here <code class="docutils literal notranslate"><span class="pre">tl.quantify_clone_size</span></code> does a simple calculation to enable that.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2449,11 +2370,11 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:16)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:18)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2466,19 +2387,19 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_71_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_71_0.png" style="width: 416px; height: 417px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_0.png" style="width: 297px; height: 296px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_71_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_71_1.png" style="width: 416px; height: 417px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_1.png" style="width: 297px; height: 296px;" />
 </div>
 </div>
 <p>You can also specify <code class="docutils literal notranslate"><span class="pre">max_size</span></code> to clip off the calculation at a fixed value.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2501,11 +2422,11 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:17)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:19)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2518,26 +2439,24 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_0.png" style="width: 416px; height: 417px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_77_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_77_0.png" style="width: 297px; height: 296px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_74_1.png" style="width: 416px; height: 417px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_77_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_77_1.png" style="width: 297px; height: 296px;" />
+</div>
 </div>
 </div>
 <div class="section" id="Calculating-diversity">
-<h4>Calculating diversity<a class="headerlink" href="#Calculating-diversity" title="Permalink to this headline">¶</a></h4>
+<h2>Calculating diversity<a class="headerlink" href="#Calculating-diversity" title="Permalink to this headline">¶</a></h2>
 <p><em>disclaimer: the functions here are not complete yet. Please look to other sources/methods for doing this properly. Also, would appreciate any help to help me finalise this!</em></p>
-</div>
-</div>
-<div class="section" id="clone_rarefaction">
-<h3><em>clone_rarefaction</em><a class="headerlink" href="#clone_rarefaction" title="Permalink to this headline">¶</a></h3>
+<p><strong>``tl.clone_rarefaction/pl.clone_rarefaction``</strong></p>
 <p>We can use <code class="docutils literal notranslate"><span class="pre">pl.clone_rarefaction</span></code> to generate rarefaction curves for the clones. <code class="docutils literal notranslate"><span class="pre">tl.clone_rarefaction</span></code> will populate the <code class="docutils literal notranslate"><span class="pre">.uns</span></code> slot with the results. <code class="docutils literal notranslate"><span class="pre">groupby</span></code> option must be specified. In this case, I decided to group by sample. The function will only work on an <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object and not a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2558,37 +2477,33 @@ removing due to zero counts:
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Calculating rarefaction curve : 100%|██████████| 4/4 [00:00&lt;00:00, 14.89it/s]
+Calculating rarefaction curve : 100%|██████████| 4/4 [00:00&lt;00:00, 14.54it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_76_2.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_76_2.png" style="width: 753px; height: 393px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_79_2.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_79_2.png" style="width: 753px; height: 393px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (381172125)&gt;
+&lt;ggplot: (349039913)&gt;
 </pre></div></div>
 </div>
-</div>
-<div class="section" id="tl.clone_diversity">
-<h3><em>tl.clone_diversity</em><a class="headerlink" href="#tl.clone_diversity" title="Permalink to this headline">¶</a></h3>
+<p><strong>``tl.clone_diversity``</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">tl.clone_diversity</span></code> allows for calculation of diversity measures such as <strong>Chao1</strong>, <strong>Shannon Entropy</strong> and <strong>Gini indices</strong>.</p>
 <p>While the function can work on both <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> and <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> objects, the methods for gini index calculation will only work on a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object as it requires access to the network.</p>
 <p>For Gini indices, we provide several types of measures, inspired by bulk BCRseq analysis methods from Rachael Bashford-Rogers’ <a class="reference external" href="https://genome.cshlp.org/content/23/11/1874.full">works</a>:</p>
-</div>
-<div class="section" id="metric-=-clone_network">
-<h3><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_network</span></code><a class="headerlink" href="#metric-=-clone_network" title="Permalink to this headline">¶</a></h3>
-<p><strong>i) network cluster/clone size Gini index</strong></p>
+<p><strong>Default</strong></p>
+<p><strong>i) network cluster/clone size Gini index - ``metric = clone_network``</strong></p>
 <p>In a contracted BCR network (where identical BCRs are collapsed into the same node/vertex), disparity in the distribution should be correlated to the amount of mutation events i.e. larger networks should indicate more mutation events and smaller networks should indicate lesser mutation events.</p>
-<p><strong>ii) network vertex/node size Gini index</strong></p>
+<p><strong>ii) network vertex/node size Gini index - ``metric = clone_network``</strong></p>
 <p>In the same contracted network, we can count the number of merged/contracted nodes; nodes with higher count numbers indicate more clonal expansion. Thus, disparity in the distribution of count numbers (referred to as vertex size) should be correlated to the overall clonality i.e. clones with larger vertex sizes are more monoclonal and clones with smaller vertex sizes are more polyclonal.</p>
 <p>Therefore, a Gini index of 1 on either measures repesents perfect inequality (i.e. monoclonal and highly mutated) and a value of 0 represents perfect equality (i.e. polyclonal and unmutated).</p>
 <p>However, there are a few limitations/challenges that comes with single-cell data:</p>
@@ -2600,26 +2515,18 @@ Calculating rarefaction curve : 100%|██████████| 4/4 [00:00&
 <p>Therefore, we implement a few work arounds, and ‘experimental’ options below, to try and circumvent these issues.</p>
 <p>Firstly, as a work around for (C), the cluster size gini index can be calculated before or after network contraction. If performing before network contraction (default), it will be calculated based on the size of subgraphs of connected components in the main graph. This will retain the single-cell information and should appropriately show the distribution of the data. If performing after network contraction, the calculation is performed after network contraction, achieving the same effect as the
 method for bulk BCR-seq as described above. This option can be toggled by <code class="docutils literal notranslate"><span class="pre">use_contracted</span></code> and only applies to network cluster size gini index calculation.</p>
-</div>
-<div class="section" id="metric-=-clone_centrality">
-<h3><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_centrality</span></code><a class="headerlink" href="#metric-=-clone_centrality" title="Permalink to this headline">¶</a></h3>
-<p><strong>iii) clone centrality Gini index</strong></p>
+<p><strong>Alternative</strong></p>
+<p><strong>iii) clone centrality Gini index - ``metric = clone_centrality``</strong></p>
 <p>Node/vertex closeness centrality indicates how tightly packed clones are (more clonally related) and thus the distribution of the number of cells connected in each clone informs on whether clones in general are more monoclonal or polyclonal.</p>
-</div>
-<div class="section" id="metric-=-clone_degree">
-<h3><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_degree</span></code><a class="headerlink" href="#metric-=-clone_degree" title="Permalink to this headline">¶</a></h3>
-<p><strong>iv) clone degree Gini index</strong></p>
+<p><strong>iv) clone degree Gini index - ``metric = clone_degree``</strong></p>
 <p>Node/vertex degree indicates how many cells are connected to an individual cell, another indication of how clonally related cells are. However, this would also highlight cells that are in the middle of large networks but are not necessarily within clonally expanded regions (e.g. intermediate connecting cells within the minimum spanning tree)</p>
-</div>
-<div class="section" id="metric-=-clone_size">
-<h3><code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_size</span></code><a class="headerlink" href="#metric-=-clone_size" title="Permalink to this headline">¶</a></h3>
-<p><strong>v) clone size Gini index</strong></p>
+<p><strong>v) clone size Gini index - ``metric = clone_size``</strong></p>
 <p>This is not to be confused with the network cluster size gini index calculation above as this doesn’t rely on the network, although the values should be similar. This is just a simple implementation based on the data frame for the relevant <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> column. By default, this metric is also returned when running <code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_centrality</span></code> or <code class="docutils literal notranslate"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">clone_degree</span></code>.</p>
 <p>For (i) and (ii), we can specify <code class="docutils literal notranslate"><span class="pre">expanded_only</span></code> option to compute the statistic for all clones or expanded only clones. Unlike options (i) and (ii), the current calculation for (iii) and (iv) is largely influenced by the amount of expanded clones i.e. clones with at least 2 cells, and not affected by the number of singleton clones because singleton clones will have a value of 0 regardless.</p>
 <p>The diversity functions also have the option to perform downsampling to a fixed number of cells, or to the smallest sample size specified via <code class="docutils literal notranslate"><span class="pre">groupby</span></code> (default) so that sample sizes are even when comparing between groups.</p>
 <p>if <code class="docutils literal notranslate"><span class="pre">update_obs_meta=False</span></code>, a data frame is returned; otherwise, the value gets added to the <code class="docutils literal notranslate"><span class="pre">AnnData.obs</span></code> or <code class="docutils literal notranslate"><span class="pre">Dandelion.metadata</span></code> accordingly.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2655,7 +2562,7 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2667,12 +2574,12 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_80_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_80_0.png" style="width: 943px; height: 840px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_83_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_83_0.png" style="width: 681px; height: 577px;" />
 </div>
 </div>
 <p>With these particular samples, because there is not many expanded clones in general, the gini indices are quite low when calculated within each sample. We can re-run it by specifying <code class="docutils literal notranslate"><span class="pre">expanded_only</span> <span class="pre">=</span> <span class="pre">True</span></code> to only factor in expanded_clones. We also specify the key_added option to create a new column instead of writing over the original columns.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2696,11 +2603,11 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:17)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:19)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2712,12 +2619,12 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_83_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_83_0.png" style="width: 926px; height: 422px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_86_0.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_86_0.png" style="width: 678px; height: 299px;" />
 </div>
 </div>
 <p>We can also choose not to update the metadata to return a pandas dataframe.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2737,7 +2644,7 @@ Computing Gini indices for cluster and vertex size using network.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2770,9 +2677,9 @@ Computing Gini indices for cluster and vertex size using network.
       <td>0.000000</td>
     </tr>
     <tr>
-      <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.048583</td>
-      <td>0.021134</td>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>0.029412</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
@@ -2780,16 +2687,16 @@ Computing Gini indices for cluster and vertex size using network.
       <td>0.001584</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>0.029412</td>
-      <td>0.000000</td>
+      <th>vdj_nextgem_hs_pbmc3</th>
+      <td>0.048583</td>
+      <td>0.021134</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2809,7 +2716,7 @@ Computing Gini indices for cluster and vertex size using network.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[45]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2842,9 +2749,9 @@ Computing Gini indices for cluster and vertex size using network.
       <td>0.000000</td>
     </tr>
     <tr>
-      <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.467532</td>
-      <td>0.333333</td>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>0.029412</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
@@ -2852,16 +2759,16 @@ Computing Gini indices for cluster and vertex size using network.
       <td>0.333333</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>0.029412</td>
-      <td>0.000000</td>
+      <th>vdj_nextgem_hs_pbmc3</th>
+      <td>0.467532</td>
+      <td>0.333333</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2873,7 +2780,7 @@ Computing Gini indices for cluster and vertex size using network.
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[46]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2885,11 +2792,11 @@ Computing Gini indices for cluster and vertex size using network.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_87_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_87_1.png" style="width: 449px; height: 427px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_90_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_90_1.png" style="width: 329px; height: 306px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2900,7 +2807,7 @@ Computing Gini indices for cluster and vertex size using network.
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[47]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -2912,12 +2819,12 @@ Computing Gini indices for cluster and vertex size using network.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_88_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_88_1.png" style="width: 449px; height: 427px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_91_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_91_1.png" style="width: 339px; height: 327px;" />
 </div>
 </div>
 <p>We can also visualise what the results for the clone centrality gini indices.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2940,7 +2847,7 @@ Calculating node closeness centrality
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[48]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2973,9 +2880,9 @@ Calculating node closeness centrality
       <td>0.000000</td>
     </tr>
     <tr>
-      <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.048583</td>
-      <td>0.045455</td>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>0.029412</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
@@ -2983,16 +2890,16 @@ Calculating node closeness centrality
       <td>0.000000</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>0.029412</td>
-      <td>0.000000</td>
+      <th>vdj_nextgem_hs_pbmc3</th>
+      <td>0.048583</td>
+      <td>0.045455</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3004,7 +2911,7 @@ Calculating node closeness centrality
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[49]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -3016,12 +2923,12 @@ Calculating node closeness centrality
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_91_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_91_1.png" style="width: 449px; height: 427px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_94_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_94_1.png" style="width: 329px; height: 306px;" />
 </div>
 </div>
 <p>Chao1 is an estimator based on abundance</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3039,7 +2946,7 @@ Calculating Chao1 estimates
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[50]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3070,16 +2977,16 @@ Calculating Chao1 estimates
       <td>703.0</td>
     </tr>
     <tr>
-      <th>vdj_nextgem_hs_pbmc3</th>
-      <td>9106.0</td>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>561.0</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
       <td>44205.5</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>561.0</td>
+      <th>vdj_nextgem_hs_pbmc3</th>
+      <td>9106.0</td>
     </tr>
   </tbody>
 </table>
@@ -3087,7 +2994,7 @@ Calculating Chao1 estimates
 </div>
 <p>For Shannon Entropy, we can calculate a normalized (inspired by <code class="docutils literal notranslate"><span class="pre">scirpy</span></code>’s <a class="reference external" href="https://icbi-lab.github.io/scirpy/generated/scirpy.tl.alpha_diversity.html?highlight=diversity#scirpy.tl.alpha_diversity">function</a>) and non-normalized value.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3105,7 +3012,7 @@ Calculating Shannon entropy
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3136,23 +3043,23 @@ Calculating Shannon entropy
       <td>1.000000</td>
     </tr>
     <tr>
-      <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.989883</td>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>1.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
       <td>0.999849</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>1.000000</td>
+      <th>vdj_nextgem_hs_pbmc3</th>
+      <td>0.989883</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3170,7 +3077,7 @@ Calculating Shannon entropy
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -3201,23 +3108,23 @@ Calculating Shannon entropy
       <td>5.209453</td>
     </tr>
     <tr>
-      <th>vdj_nextgem_hs_pbmc3</th>
-      <td>8.285998</td>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>5.044394</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
       <td>8.712926</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>5.044394</td>
+      <th>vdj_nextgem_hs_pbmc3</th>
+      <td>8.285998</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3226,13 +3133,13 @@ Calculating Shannon entropy
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 16492 × 1497
-    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;leiden&#39;, &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavyonly&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;mu_freq&#39;, &#39;mu_freq_seq_r&#39;, &#39;mu_freq_seq_s&#39;, &#39;mu_freq_seq_r_IGH&#39;, &#39;mu_freq_seq_s_IGH&#39;, &#39;mu_freq_IGH&#39;, &#39;mu_freq_seq_r_IGL&#39;, &#39;mu_freq_seq_s_IGL&#39;, &#39;mu_freq_IGL&#39;, &#39;mu_freq_seq_r_IGK&#39;, &#39;mu_freq_seq_s_IGK&#39;, &#39;mu_freq_IGK&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3&#39;, &#39;clone_network_cluster_size_gini&#39;, &#39;clone_network_vertex_size_gini&#39;, &#39;clone_centrality&#39;, &#39;clone_size_gini&#39;, &#39;clone_centrality_gini&#39;, &#39;clone_network_cluster_size_gini_expanded&#39;, &#39;clone_network_vertex_size_gini_expanded&#39;
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;leiden&#39;, &#39;sample_id&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;changeo_clone_id&#39;, &#39;mu_freq&#39;, &#39;mu_freq_seq_r&#39;, &#39;mu_freq_seq_s&#39;, &#39;mu_freq_seq_r_IGK&#39;, &#39;mu_freq_seq_s_IGK&#39;, &#39;mu_freq_IGK&#39;, &#39;mu_freq_seq_r_IGH&#39;, &#39;mu_freq_seq_s_IGH&#39;, &#39;mu_freq_IGH&#39;, &#39;mu_freq_seq_r_IGL&#39;, &#39;mu_freq_seq_s_IGL&#39;, &#39;mu_freq_IGL&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3&#39;, &#39;clone_network_cluster_size_gini&#39;, &#39;clone_network_vertex_size_gini&#39;, &#39;clone_centrality&#39;, &#39;clone_size_gini&#39;, &#39;clone_centrality_gini&#39;, &#39;clone_network_cluster_size_gini_expanded&#39;, &#39;clone_network_vertex_size_gini_expanded&#39;
     var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;, &#39;n_cells&#39;, &#39;highly_variable&#39;, &#39;means&#39;, &#39;dispersions&#39;, &#39;dispersions_norm&#39;, &#39;mean&#39;, &#39;std&#39;
     uns: &#39;bcr_QC_pass_colors&#39;, &#39;hvg&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;umap&#39;, &#39;rna_neighbors&#39;, &#39;sampleid_colors&#39;, &#39;isotype_colors&#39;, &#39;clone_id_by_size_colors&#39;, &#39;status_colors&#39;, &#39;vdj_status_colors&#39;, &#39;clone_id_colors&#39;
     obsm: &#39;X_pca&#39;, &#39;X_umap&#39;, &#39;X_bcr&#39;
@@ -3240,14 +3147,14 @@ AnnData object with n_obs × n_vars = 16492 × 1497
     obsp: &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;bcr_connectivities&#39;, &#39;bcr_distances&#39;
 </pre></div></div>
 </div>
-<div class="section" id="Additional-plotting-functions">
-<h4>Additional plotting functions<a class="headerlink" href="#Additional-plotting-functions" title="Permalink to this headline">¶</a></h4>
 </div>
+<div class="section" id="Additional-plotting-functions">
+<h2>Additional plotting functions<a class="headerlink" href="#Additional-plotting-functions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="barplot">
-<h4><em>barplot</em><a class="headerlink" href="#barplot" title="Permalink to this headline">¶</a></h4>
+<h3><em>barplot</em><a class="headerlink" href="#barplot" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pl.barplot</span></code> is a generic barplot function that will plot items in the metadata slot as a bar plot. This function will also interact with <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot if a <code class="docutils literal notranslate"><span class="pre">scanpy</span></code> object is used in place of <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object. However, if your <code class="docutils literal notranslate"><span class="pre">scanpy</span></code> object holds a lot of non-B cells, then the plotting will be just be saturated with nan values.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3258,7 +3165,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -3271,12 +3178,12 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_99_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_99_1.png" style="width: 1005px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_102_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_102_1.png" style="width: 1005px; height: 432px;" />
 </div>
 </div>
 <p>You can prevent it from sorting by specifying <code class="docutils literal notranslate"><span class="pre">sort_descending</span> <span class="pre">=</span> <span class="pre">None</span></code>. Colours can be changed with <code class="docutils literal notranslate"><span class="pre">palette</span></code> option.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3285,7 +3192,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -3298,12 +3205,12 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_101_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_101_1.png" style="width: 1005px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_104_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_104_1.png" style="width: 1005px; height: 432px;" />
 </div>
 </div>
 <p>Specifying <code class="docutils literal notranslate"><span class="pre">normalize</span> <span class="pre">=</span> <span class="pre">False</span></code> will change the y-axis to counts.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3312,7 +3219,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[56]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -3325,15 +3232,15 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_103_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_103_1.png" style="width: 993px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_106_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_106_1.png" style="width: 993px; height: 432px;" />
 </div>
 </div>
 </div>
 <div class="section" id="stackedbarplot">
-<h4><em>stackedbarplot</em><a class="headerlink" href="#stackedbarplot" title="Permalink to this headline">¶</a></h4>
+<h3><em>stackedbarplot</em><a class="headerlink" href="#stackedbarplot" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pl.stackedbarplot</span></code> is similar to above but can split between specified groups. Some examples below:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[58]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3344,23 +3251,23 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[57]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[58]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16b4f0f50&gt;
+&lt;matplotlib.legend.Legend at 0x169239d50&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_105_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_105_1.png" style="width: 554px; height: 371px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_108_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_108_1.png" style="width: 554px; height: 371px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[58]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[59]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3370,23 +3277,23 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[58]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[59]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16cf1cdd0&gt;
+&lt;matplotlib.legend.Legend at 0x16c216750&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_106_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_106_1.png" style="width: 1073px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_109_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_109_1.png" style="width: 1073px; height: 432px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[59]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[60]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3396,23 +3303,23 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[59]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[60]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16af01b10&gt;
+&lt;matplotlib.legend.Legend at 0x16adeda90&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_107_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_107_1.png" style="width: 1077px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_110_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_110_1.png" style="width: 1077px; height: 432px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[60]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3422,24 +3329,24 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[60]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x166bcd790&gt;
+&lt;matplotlib.legend.Legend at 0x16aade450&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_108_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_108_1.png" style="width: 1204px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_111_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_111_1.png" style="width: 1204px; height: 432px;" />
 </div>
 </div>
 <p>It’s obviously more useful if you don’t have too many groups, but you could try and plot everything and jiggle the legend options and color.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[62]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3449,27 +3356,27 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[62]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16b387d90&gt;
+&lt;matplotlib.legend.Legend at 0x1698e8250&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_110_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_110_1.png" style="width: 1203px; height: 432px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_113_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_113_1.png" style="width: 1203px; height: 432px;" />
 </div>
 </div>
 </div>
 <div class="section" id="spectratype">
-<h4><em>spectratype</em><a class="headerlink" href="#spectratype" title="Permalink to this headline">¶</a></h4>
+<h3><em>spectratype</em><a class="headerlink" href="#spectratype" title="Permalink to this headline">¶</a></h3>
 <p>Spectratype plots contain info displaying CDR3 length distribution for specified groups. For this function, the current method only works for <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> objects as it requires access to the contig-indexed <em>.data</em> slot.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[62]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[63]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3479,23 +3386,23 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[62]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[63]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x166b5f410&gt;
+&lt;matplotlib.legend.Legend at 0x1690f9590&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_112_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_112_1.png" style="width: 629px; height: 369px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_115_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_115_1.png" style="width: 629px; height: 369px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[63]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3505,23 +3412,23 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[63]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16c3cdad0&gt;
+&lt;matplotlib.legend.Legend at 0x16b8d9d10&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_113_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_113_1.png" style="width: 629px; height: 369px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_116_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_116_1.png" style="width: 629px; height: 369px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[65]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3531,27 +3438,27 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[64]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[65]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16d93dd90&gt;
+&lt;matplotlib.legend.Legend at 0x16b793e50&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_114_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_114_1.png" style="width: 669px; height: 369px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_117_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_117_1.png" style="width: 669px; height: 369px;" />
 </div>
 </div>
 </div>
 <div class="section" id="clone_overlap">
-<h4><em>clone_overlap</em><a class="headerlink" href="#clone_overlap" title="Permalink to this headline">¶</a></h4>
+<h3><em>clone_overlap</em><a class="headerlink" href="#clone_overlap" title="Permalink to this headline">¶</a></h3>
 <p>There is now a circos-style clone overlap function where it looks for whather different samples share a clone. If they do, an arc/connection will be drawn between them. This requires the python module <code class="docutils literal notranslate"><span class="pre">nxviz</span></code> to be installed; at the writing of this notebook, there are some dependencies issues with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nxviz</span></code>, therefore I’ve adjusted the requirements in a forked repository which you can install via: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/zktuong/nxviz.git</span></code></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[65]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[66]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3570,7 +3477,7 @@ Finding clones
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[66]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3579,19 +3486,19 @@ Finding clones
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[66]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[67]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;nxviz.plots.CircosPlot at 0x16da6e190&gt;
+&lt;nxviz.plots.CircosPlot at 0x16c3e4f90&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_117_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_117_1.png" style="width: 667px; height: 687px;" />
+<img alt="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_120_1.png" class="no-scaled-link" src="../_images/notebooks_3_dandelion_findingclones_and_analysis-10x_data_120_1.png" style="width: 667px; height: 687px;" />
 </div>
 </div>
 <p>Other use cases for this would be, for example, to plot nodes as individual samples and the colors as group classifications of the samples. As long as this information is found in the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> column in the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>, or even <code class="docutils literal notranslate"><span class="pre">Dandelion.metadata</span></code>, this will work.</p>
@@ -3608,7 +3515,6 @@ Finding clones
 </div>
 </div>
 </div>
-</div>
 
 
            </div>
@@ -3618,10 +3524,10 @@ Finding clones
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="5_dandelion_running_from_R.html" class="btn btn-neutral float-right" title="dandelion Notebook-5" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="5_dandelion_running_from_R.html" class="btn btn-neutral float-right" title="Running from R" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="2_dandelion_filtering-10x%20data.html" class="btn btn-neutral float-left" title="dandelion Notebook-2" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="2_dandelion_filtering-10x%20data.html" class="btn btn-neutral float-left" title="Filtering" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
