@@ -1,0 +1,1501 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dandelion Notebook-2 &mdash; dandelion 0.0.26 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/dandelion_logo.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dandelion Notebook-3" href="3_dandelion_findingclones_and_analysis-10x%20data.html" />
+    <link rel="prev" title="dandelion Notebook-1" href="1_dandelion_preprocessing-10x%20data.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Tutorials:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x%20data.html"><em>dandelion</em> Notebook-1</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><em>dandelion</em> Notebook-2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Filtering">Filtering</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Import-dandelion-module">Import <em>dandelion</em> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Import-modules-for-use-with-scanpy">Import modules for use with scanpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Import-the-transcriptome-data">Import the transcriptome data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pp.recipe_scanpy_qc"><em>pp.recipe_scanpy_qc</em></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pp.filter_bcr"><em>pp.filter_bcr</em></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Check-the-output-V(D)J-table">Check the output V(D)J table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Check-the-AnnData-object-as-well">Check the AnnData object as well</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#The-number-of-cells-that-actually-has-a-matching-BCR-can-be-tabluated.">The number of cells that actually has a matching BCR can be tabluated.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Now-actually-filter-the-AnnData-object-and-run-through-a-standard-workflow-starting-by-filtering-genes-and-normalizing-the-data">Now actually filter the AnnData object and run through a standard workflow starting by filtering genes and normalizing the data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Identify-highly-variable-genes">Identify highly-variable genes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Filter-the-genes-to-only-those-marked-as-highly-variable">Filter the genes to only those marked as highly-variable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Regress-out-effects-of-total-counts-per-cell-and-the-percentage-of-mitochondrial-genes-expressed.Scale-the-data-to-unit-variance.">Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed.Scale the data to unit variance.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Run-PCA">Run PCA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Computing-the-neighborhood-graph,-umap-and-clusters">Computing the neighborhood graph, umap and clusters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Visualizing-the-clusters-and-whether-or-not-there’s-a-corresponding-BCR">Visualizing the clusters and whether or not there’s a corresponding BCR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Visualizing-some-B-cell-genes">Visualizing some B cell genes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Save-the-AnnData-file">Save the AnnData file</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html"><em>dandelion</em> Notebook-3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html#BCR-clustering-and-visualization">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones_and_analysis-10x%20data.html#Finding-clones">Finding clones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="5_dandelion_running_from_R.html"><em>dandelion</em> Notebook-5</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><em>dandelion</em> Notebook-2</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/notebooks/2_dandelion_filtering-10x data.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="dandelion-Notebook-2">
+<h1><em>dandelion</em> Notebook-2<a class="headerlink" href="#dandelion-Notebook-2" title="Permalink to this headline">¶</a></h1>
+<p><img alt="dandelion_logo" src="../_images/dandelion_logo.png" /></p>
+<div class="section" id="Filtering">
+<h2>Filtering<a class="headerlink" href="#Filtering" title="Permalink to this headline">¶</a></h2>
+<p>We now move on to filtering out BCR contigs (and corresponding cells if necessary) from the BCR data and transcriptome object loaded in <em>scanpy</em>.</p>
+<div class="section" id="Import-dandelion-module">
+<h3>Import <em>dandelion</em> module<a class="headerlink" href="#Import-dandelion-module" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Documents/Github/dandelion&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">dandelion</span> <span class="k">as</span> <span class="nn">ddl</span>
+<span class="c1"># change directory to somewhere more workable</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Import-modules-for-use-with-scanpy">
+<h3>Import modules for use with scanpy<a class="headerlink" href="#Import-modules-for-use-with-scanpy" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">import</span> <span class="nn">anndata</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">print_header</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.4 scikit-learn==0.23.2 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Import-the-transcriptome-data">
+<h3>Import the transcriptome data<a class="headerlink" href="#Import-the-transcriptome-data" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sc5p_v2_hs_PBMC_1k&#39;</span><span class="p">,</span> <span class="s1">&#39;sc5p_v2_hs_PBMC_10k&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_v1_hs_pbmc3&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_nextgem_hs_pbmc3&#39;</span><span class="p">]</span>
+<span class="n">adata_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_10x_h5</span><span class="p">(</span><span class="n">sample</span> <span class="o">+</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="s1">&#39;_filtered_feature_bc_matrix.h5&#39;</span><span class="p">,</span> <span class="n">gex_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span>
+    <span class="c1"># rename cells to sample id + barcode</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span><span class="p">]</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
+    <span class="n">adata_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span class="n">adata</span> <span class="o">=</span> <span class="n">adata_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">adata_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+<span class="c1"># rename the obs_names again, this time cleaving the trailing -#</span>
+<span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs_names</span><span class="p">]</span>
+<span class="n">adata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 30471 × 31915
+    obs: &#39;sampleid&#39;, &#39;batch&#39;
+    var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;
+</pre></div></div>
+</div>
+<div class="section" id="pp.recipe_scanpy_qc">
+<h4><em>pp.recipe_scanpy_qc</em><a class="headerlink" href="#pp.recipe_scanpy_qc" title="Permalink to this headline">¶</a></h4>
+<p>I’m using a wrapper called <code class="docutils literal notranslate"><span class="pre">pp.recipe_scanpy_qc</span></code> to run through a generic <a class="reference external" href="https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html">scanpy</a> workflow. You can skip this if you already have a pre-processed <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object for the subsequent steps.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">recipe_scanpy_qc</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span class="n">adata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 30471 × 31915
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;
+    var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;
+</pre></div></div>
+</div>
+<p>To proceed, the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> need to contain a <code class="docutils literal notranslate"><span class="pre">filter_rna</span></code> column.</p>
+<p>If you have a pre-processed/filltered <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object that is ready, just add a <code class="docutils literal notranslate"><span class="pre">'filter_rna'</span></code> column into the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot with every value set to <code class="docutils literal notranslate"><span class="pre">False</span></code> and you should be good to go:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_rna&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># adata.obs[&#39;filter_rna&#39;] = False</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="pp.filter_bcr">
+<h4><em>pp.filter_bcr</em><a class="headerlink" href="#pp.filter_bcr" title="Permalink to this headline">¶</a></h4>
+</div>
+</div>
+<div class="section" id="Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data">
+<h3>Filter cells that are potental doublets and poor quality in both the BCR data and transcriptome data<a class="headerlink" href="#Filter-cells-that-are-potental-doublets-and-poor-quality-in-both-the-BCR-data-and-transcriptome-data" title="Permalink to this headline">¶</a></h3>
+<p>We use the function <code class="docutils literal notranslate"><span class="pre">pp.filter_bcr</span></code> to mark and filter out cells and contigs from both the BCR data and transcriptome data in <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>. The operation will remove bad quality cells based on transcriptome information as well as remove BCR doublets (multiplet heavy chain, and/or light chains) from the BCR data. In some situations, a single cell can have multiple heavy/light chain contigs although they have an identical V(D)J+C alignment; in situations like this, the contigs with lesser umis
+will be dropped and the umis transferred to duplicate_count column. The same procedure is applied to both heavy chain and light chains before identifying doublets.</p>
+<p>Cells in the gene expression object without BCR information will not be affected i.e. the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object can hold non-B cells. Run <code class="docutils literal notranslate"><span class="pre">?ddl.pp.filter_bcr</span></code> to check what each option does.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># first we read in the 4 bcr files</span>
+<span class="n">bcr_files</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+    <span class="n">file_location</span> <span class="o">=</span> <span class="n">sample</span> <span class="o">+</span><span class="s1">&#39;/dandelion/data/&#39;</span><span class="o">+</span><span class="n">sample</span><span class="o">+</span><span class="s1">&#39;_b_filtered_contig_igblast_db-pass_genotyped.tsv&#39;</span>
+    <span class="n">bcr_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_location</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">))</span>
+<span class="n">bcr</span> <span class="o">=</span> <span class="n">bcr_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bcr_files</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+<span class="n">bcr</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">bcr</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>sequence_id</th>
+      <th>sequence</th>
+      <th>rev_comp</th>
+      <th>productive</th>
+      <th>v_call</th>
+      <th>d_call</th>
+      <th>j_call</th>
+      <th>sequence_alignment</th>
+      <th>germline_alignment</th>
+      <th>junction</th>
+      <th>...</th>
+      <th>fwr3_aa</th>
+      <th>fwr4_aa</th>
+      <th>cdr1_aa</th>
+      <th>cdr2_aa</th>
+      <th>cdr3_aa</th>
+      <th>sequence_alignment_aa</th>
+      <th>v_sequence_alignment_aa</th>
+      <th>d_sequence_alignment_aa</th>
+      <th>j_sequence_alignment_aa</th>
+      <th>mu_freq</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>sc5p_v2_hs_PBMC_1k_AACTCCCAGGCTAGGT_contig_2</td>
+      <td>ATACTTTCTGAGAGTCCTGGACCTCCTGTGCAAGAACATGAAACAT...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGHV4-61*02</td>
+      <td>IGHD3-3*01</td>
+      <td>IGHJ6*02</td>
+      <td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTT...</td>
+      <td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTT...</td>
+      <td>TGTGCGAGAGAAAATTACGATTTTTGGAGTGGTTATTACCACGGTG...</td>
+      <td>...</td>
+      <td>NYNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYC</td>
+      <td>WGQGTTVTVSS</td>
+      <td>GGSISSGSYY</td>
+      <td>IYTSGST</td>
+      <td>ARENYDFWSGYYHGADV</td>
+      <td>QVQLQESGPGLVKPSQTLSLTCTVSGGSISSGSYYWSWIRQPAGKG...</td>
+      <td>QVQLQESGPGLVKPSQTLSLTCTVSGGSISSGSYYWSWIRQPAGKG...</td>
+      <td>YDFWSGY</td>
+      <td>YHGADVWGQGTTVTVSS</td>
+      <td>0.008571</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>sc5p_v2_hs_PBMC_1k_AACTCCCAGGCTAGGT_contig_3</td>
+      <td>GGCTGGGGTCTCAGGAGGCAGCGCTCTGGGGACGTCTCCACCATGG...</td>
+      <td>F</td>
+      <td>F</td>
+      <td>IGLV2-5*01</td>
+      <td>NaN</td>
+      <td>IGLJ3*02</td>
+      <td>CAGTCTGCCCTGATTCAGCCTCCCTCC...GTGTCCGGGTCTCCTG...</td>
+      <td>CAGTCTGCCCTGATTCAGCCTCCCTCC...GTGTCCGGGTCTCCTG...</td>
+      <td>TGCTGCTCATATACAAGCAGTGCCACTTTCTTGGGTGTTC</td>
+      <td>...</td>
+      <td>TQPSGVPDRFSGSKSGNTASMTISGLQAEDEADY*C</td>
+      <td>RRRDQADRP</td>
+      <td>SSDVGSYDY</td>
+      <td>NVN</td>
+      <td>CSYTSSATFLG</td>
+      <td>QSALIQPPSVSGSPGQSVTISCTGTSSDVGSYDYVSWYQQHPGTVP...</td>
+      <td>QSALIQPPSVSGSPGQSVTISCTGTSSDVGSYDYVSWYQQHPGTVP...</td>
+      <td>NaN</td>
+      <td>LGVRRRDQADRP</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>sc5p_v2_hs_PBMC_1k_AACTCCCAGGCTAGGT_contig_1</td>
+      <td>ACTGCGGGGGTAAGAGGTTGTGTCCACCATGGCCTGGACTCCTCTC...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGLV5-45*03</td>
+      <td>NaN</td>
+      <td>IGLJ3*02</td>
+      <td>CAGGCTGTGCTGACTCAGCCGTCTTCC...CTCTCTGCATCTCCTG...</td>
+      <td>CAGGCTGTGCTGACTCAGCCGTCTTCC...CTCTCTGCATCTCCTG...</td>
+      <td>TGTATGATTTGGCACAGCAGCGCTTGGGTGTTC</td>
+      <td>...</td>
+      <td>QQGSGVPSRFSGSKDASANAGILLISGLQSEDEADYYC</td>
+      <td>FGGGTKLTVL</td>
+      <td>SGINVGTYR</td>
+      <td>YKSDSDK</td>
+      <td>MIWHSSAWV</td>
+      <td>QAVLTQPSSLSASPGASASLTCTLRSGINVGTYRIYWYQQKPGSPP...</td>
+      <td>QAVLTQPSSLSASPGASASLTCTLRSGINVGTYRIYWYQQKPGSPP...</td>
+      <td>NaN</td>
+      <td>VFGGGTKLTVL</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>sc5p_v2_hs_PBMC_1k_AACTCTTGTCATCGGC_contig_3</td>
+      <td>AGCAGAGCTCTGGGGAGTCTGCACCATGGCTTGGACCCCACTCCTC...</td>
+      <td>F</td>
+      <td>F</td>
+      <td>IGLV4-69*01</td>
+      <td>NaN</td>
+      <td>IGLJ3*02</td>
+      <td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGG...</td>
+      <td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGG...</td>
+      <td>TGTCAGACCTGGGGCACTGGCATTCTTGGGTGTTC</td>
+      <td>...</td>
+      <td>SKGDGIPDRFSGSSSGAERYLTISSLQSEDEADYYC</td>
+      <td>SAEGPS*PS</td>
+      <td>SGHSSYA</td>
+      <td>LNSDGSH</td>
+      <td>QTWGTGILG</td>
+      <td>QLVLTQSPSASASLGASVKLTCTLSSGHSSYAIAWHQQQPEKGPRY...</td>
+      <td>QLVLTQSPSASASLGASVKLTCTLSSGHSSYAIAWHQQQPEKGPRY...</td>
+      <td>NaN</td>
+      <td>GCSAEGPS*PS*</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>sc5p_v2_hs_PBMC_1k_AACTCTTGTCATCGGC_contig_1</td>
+      <td>AGAGCTCTGGGGAGTCTGCACCATGGCTTGGACCCCACTCCTCTTC...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGLV4-69*01</td>
+      <td>NaN</td>
+      <td>IGLJ1*01</td>
+      <td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGG...</td>
+      <td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGG...</td>
+      <td>TGTCAGACCTGGGGCACTGGCATTTATGTCTTC</td>
+      <td>...</td>
+      <td>SKGDGIPDRFSGSSSGAERYLTISSLQSEDEADYYC</td>
+      <td>FGTGTKVTVL</td>
+      <td>SGHSSYA</td>
+      <td>LNSDGSH</td>
+      <td>QTWGTGIYV</td>
+      <td>QLVLTQSPSASASLGASVKLTCTLSSGHSSYAIAWHQQQPEKGPRY...</td>
+      <td>QLVLTQSPSASASLGASVKLTCTLSSGHSSYAIAWHQQQPEKGPRY...</td>
+      <td>NaN</td>
+      <td>YVFGTGTKVTVL</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7507</th>
+      <td>vdj_nextgem_hs_pbmc3_TTTGCGCTCTGTCAAG_contig_2</td>
+      <td>ATCACATAACAACCACATTCCTCCTCTAAAGAAGCCCCCGGGAGCC...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGHV1-69*01,IGHV1-69D*01</td>
+      <td>IGHD3-22*01</td>
+      <td>IGHJ4*02</td>
+      <td>CAGGTGCAGCTGGTGCAGTCTGGGGCT...GAAGTGAAGAAGCCTG...</td>
+      <td>CAGGTGCAGCTGGTGCAGTCTGGGGCT...GAGGTGAAGAAGCCTG...</td>
+      <td>TGTGCGAGGGGGAAGTATTACTATGATAAAAGTGGGTCTCCACCTC...</td>
+      <td>...</td>
+      <td>NYAQKFQGRVSITADESTTTAYMELSSLRSEDSAVYYC</td>
+      <td>WGQGTLVTVSS</td>
+      <td>GGIFSSYA</td>
+      <td>IIPIFGAT</td>
+      <td>ARGKYYYDKSGSPPPIYSFDY</td>
+      <td>QVQLVQSGAEVKKPGSSVKVSCKVSGGIFSSYAISWVRQAPGQGLE...</td>
+      <td>QVQLVQSGAEVKKPGSSVKVSCKVSGGIFSSYAISWVRQAPGQGLE...</td>
+      <td>YYYDKSG</td>
+      <td>FDYWGQGTLVTVSS</td>
+      <td>0.047619</td>
+    </tr>
+    <tr>
+      <th>7508</th>
+      <td>vdj_nextgem_hs_pbmc3_TTTGGTTGTAAGGATT_contig_1</td>
+      <td>AGAGCTCTGGAGAAGAGCTGCTCAGTTAGGACCCAGAGGGAACCAT...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGKV3-20*01</td>
+      <td>NaN</td>
+      <td>IGKJ2*01,IGKJ2*02</td>
+      <td>GAAATTGTGTTGACGCAGTCTCCAGGCACCCTGTCTTTGTCTCCAG...</td>
+      <td>GAAATTGTGTTGACGCAGTCTCCAGGCACCCTGTCTTTGTCTCCAG...</td>
+      <td>TGTCAGCAGTATGATGAGTCACCTCTGACTTTT</td>
+      <td>...</td>
+      <td>SRATGIPDRFSGSGSGTDFTLTISRLVPEDFAVYYC</td>
+      <td>FGQGTKLEIK</td>
+      <td>QSLTNSQ</td>
+      <td>GAS</td>
+      <td>QQYDESPLT</td>
+      <td>EIVLTQSPGTLSLSPGERATLSCRASQSLTNSQLAWYQQKPGQAPR...</td>
+      <td>EIVLTQSPGTLSLSPGERATLSCRASQSLTNSQLAWYQQKPGQAPR...</td>
+      <td>NaN</td>
+      <td>TFGQGTKLEIK</td>
+      <td>0.034161</td>
+    </tr>
+    <tr>
+      <th>7509</th>
+      <td>vdj_nextgem_hs_pbmc3_TTTGGTTGTAAGGATT_contig_2</td>
+      <td>AGCTCTGGGAGAGGAGCCCCAGCCCTGAGATTCCCAGGTGTTTCCA...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGHV3-9*01</td>
+      <td>IGHD5-18*01,IGHD5-5*01</td>
+      <td>IGHJ6*03</td>
+      <td>GAAGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTACAGCCTG...</td>
+      <td>GAAGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTACAGCCTG...</td>
+      <td>TGTGCAAAAGACGGATACAGCTATCGTTCGTCATACTACTTTTACA...</td>
+      <td>...</td>
+      <td>GYADSVKGRFTISRDNAKNSLYLQMNSLRAEDTALYYC</td>
+      <td>WGKGTTVTVSS</td>
+      <td>GFSFDDYV</td>
+      <td>ISWNSGRT</td>
+      <td>AKDGYSYRSSYYFYMDV</td>
+      <td>EVQLVESGGGLVQPGRSLRLSCAASGFSFDDYVMHWVRQAPGKGLE...</td>
+      <td>EVQLVESGGGLVQPGRSLRLSCAASGFSFDDYVMHWVRQAPGKGLE...</td>
+      <td>GYSYR</td>
+      <td>YYFYMDVWGKGTTVTVSS</td>
+      <td>0.028571</td>
+    </tr>
+    <tr>
+      <th>7510</th>
+      <td>vdj_nextgem_hs_pbmc3_TTTGTCACAGTAGAGC_contig_1</td>
+      <td>AGCTCTGAGAGAGGAGCCCAGCCCTGGGATTTTCAGGTGTTTTCAT...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGHV3-23*01,IGHV3-23D*01</td>
+      <td>IGHD4-17*01</td>
+      <td>IGHJ4*02</td>
+      <td>GAGGTGCAGCTGTTGGAGTCTGGGGGA...GGCTTGGTACAGCCTG...</td>
+      <td>GAGGTGCAGCTGTTGGAGTCTGGGGGA...GGCTTGGTACAGCCTG...</td>
+      <td>TGTGCGAAAGATTTTAGGTCGCCATACGGTGACTACTACTTTGACT...</td>
+      <td>...</td>
+      <td>YYADSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYC</td>
+      <td>WGQGTLVTVSS</td>
+      <td>GFTFSSYA</td>
+      <td>ISGSGGST</td>
+      <td>AKDFRSPYGDYYFDY</td>
+      <td>EVQLLESGGGLVQPGGSLRLSCAASGFTFSSYAMSWVRQAPGKGLE...</td>
+      <td>EVQLLESGGGLVQPGGSLRLSCAASGFTFSSYAMSWVRQAPGKGLE...</td>
+      <td>YGD</td>
+      <td>YFDYWGQGTLVTVSS</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>7511</th>
+      <td>vdj_nextgem_hs_pbmc3_TTTGTCACAGTAGAGC_contig_2</td>
+      <td>GTGGGTCCAGGAGGCAGAACTCTGGGTGTCTCACCATGGCCTGGAT...</td>
+      <td>F</td>
+      <td>T</td>
+      <td>IGLV3-25*03</td>
+      <td>NaN</td>
+      <td>IGLJ1*01</td>
+      <td>TCCTATGAGCTGACACAGCCACCCTCG...GTGTCAGTGTCCCCAG...</td>
+      <td>TCCTATGAGCTGACACAGCCACCCTCG...GTGTCAGTGTCCCCAG...</td>
+      <td>TGTCAATCAGCAGACAGCAGTGGTACTTATCTTTATGTCTTC</td>
+      <td>...</td>
+      <td>ERPSGIPERFSGSSSGTTVTLTISGVQAEDEADYYC</td>
+      <td>FGTGTKVTVL</td>
+      <td>ALPKQY</td>
+      <td>KDS</td>
+      <td>QSADSSGTYLYV</td>
+      <td>SYELTQPPSVSVSPGQTARITCSGDALPKQYAYWYQQKPGQAPVLV...</td>
+      <td>SYELTQPPSVSVSPGQTARITCSGDALPKQYAYWYQQKPGQAPVLV...</td>
+      <td>NaN</td>
+      <td>YVFGTGTKVTVL</td>
+      <td>0.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>7512 rows × 81 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># The function will return both objects.</span>
+<span class="n">vdj</span><span class="p">,</span> <span class="n">adata</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_bcr</span><span class="p">(</span><span class="n">bcr</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Scanning for poor quality/ambiguous contigs with 3 cpus
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Annotating in anndata obs slot : 100%|██████████| 30471/30471 [00:00&lt;00:00, 79083.21it/s]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Finishing up filtering
+Initializing Dandelion object
+</pre></div></div>
+</div>
+<p>The default mode is to filter any remaining ‘doublet’ light chains, but some may be interested in keeping them. The option to change the behaviour is by toggling:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">filter_lightchains</span><span class="o">=</span><span class="kc">False</span>
+</pre></div>
+</div>
+<p>Another default behavour is that if the cell in the BCR table cannot be found in the transcriptomic data, it will also be removed from the BCR data. This can be changed by toggling:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">filter_missing</span><span class="o">=</span><span class="kc">False</span>
+</pre></div>
+</div>
+<p>Also, when contig are marked as poor quality, the default behaviour is to remove the contigs associated with the barcode, and not the barcode from the transcriptome data. This can be toggled to remove the entire cell if the intention is to retain a conservative dataset for both BCR and transcriptome data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">filter_poorqualitybcr</span><span class="o">=</span><span class="kc">True</span>
+</pre></div>
+</div>
+<p>And lastly, the default behaviour is to rescue the heavy chain contig with the highest umi if there are multiple contigs for a single cell. The function requires a minimum fold-difference of 2 between the highest and lowest umi in order to rescue the contig. However, if the contigs have similar number of umis, or if the sum of the umis are very low, then the entire cell will be filtered. The fold-difference cut-off can be specified via the option <code class="docutils literal notranslate"><span class="pre">umi_foldchange_cutoff</span></code>. This can be toggled to
+be ignore i.e. drop all multiple IGH contigs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rescue_igh</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="Check-the-output-V(D)J-table">
+<h3>Check the output V(D)J table<a class="headerlink" href="#Check-the-output-V(D)J-table" title="Permalink to this headline">¶</a></h3>
+<p>The vdj table is returned as a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class object in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot (described in further detail in the next notebook); if a file was provided for <code class="docutils literal notranslate"><span class="pre">filter_bcr</span></code> above, a new file will be created in the same folder with the <code class="docutils literal notranslate"><span class="pre">filtered</span></code> prefix. Note that this <code class="docutils literal notranslate"><span class="pre">vdj</span></code> table is indexed based on contigs (sequence_id).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;
+    metadata: &#39;sample_id&#39;, &#39;isotype&#39;, &#39;lightchain&#39;, &#39;status&#39;, &#39;vdj_status&#39;, &#39;productive&#39;, &#39;umi_counts_heavy&#39;, &#39;umi_counts_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;
+    distance: None
+    edges: None
+    layout: None
+    graph: None
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Check-the-AnnData-object-as-well">
+<h3>Check the AnnData object as well<a class="headerlink" href="#Check-the-AnnData-object-as-well" title="Permalink to this headline">¶</a></h3>
+<p>And the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object is indexed based on cells.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">adata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+View of AnnData object with n_obs × n_vars = 16492 × 31915
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;
+    var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;
+</pre></div></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object now contain a few new columns related to BCR:</p>
+<ol class="arabic simple">
+<li><p><strong>``has_bcr`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells with a matching BCR (pre-contig filtering).</p></li>
+<li><p><strong>``filter_bcr_quality`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as having poor quality contigs if <code class="docutils literal notranslate"><span class="pre">filter_poorqualitybcr=True</span></code> (pre-contig filtering).</p></li>
+<li><p><strong>``filter_bcr_heavy`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identified as heavy chain ‘doublets’ (after rescue if <code class="docutils literal notranslate"><span class="pre">rescue_igh=True</span></code>) (pre-contig filtering).</p></li>
+<li><p><strong>``filter_bcr_light`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filtering cells identifed as having multiple light chain contigs (pre-contig filtering).</p></li>
+</ol>
+<ol class="arabic simple" start="5">
+<li><p><strong>``bcr_QC_pass`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> statement marking cells where BCR contigs were removed from #1 due to contigs failing QC. (post-contig filtering)</p></li>
+<li><p><strong>``filter_bcr`` :</strong> <code class="docutils literal notranslate"><span class="pre">True/False</span></code> recommendation for filter for cells flagged in 2-4 (post-contig filtering).</p></li>
+</ol>
+<p>So this means that to go forward, you want to only select cells that have BCR that passed QC (<code class="docutils literal notranslate"><span class="pre">has_bcr</span> <span class="pre">==</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">bcr_QC_pass</span> <span class="pre">==</span> <span class="pre">True</span></code>) with filtering recommendation to be false (<code class="docutils literal notranslate"><span class="pre">filter_bcr</span> <span class="pre">==</span> <span class="pre">False</span></code>).</p>
+</div>
+<div class="section" id="The-number-of-cells-that-actually-has-a-matching-BCR-can-be-tabluated.">
+<h3>The number of cells that actually has a matching BCR can be tabluated.<a class="headerlink" href="#The-number-of-cells-that-actually-has-a-matching-BCR-can-be-tabluated." title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_bcr&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>filter_bcr</th>
+      <th>False</th>
+    </tr>
+    <tr>
+      <th>has_bcr</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>False</th>
+      <td>15603</td>
+    </tr>
+    <tr>
+      <th>True</th>
+      <td>889</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>bcr_QC_pass</th>
+      <th>False</th>
+      <th>True</th>
+    </tr>
+    <tr>
+      <th>has_bcr</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>False</th>
+      <td>15603</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>True</th>
+      <td>51</td>
+      <td>838</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_bcr&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>filter_bcr</th>
+      <th>False</th>
+    </tr>
+    <tr>
+      <th>bcr_QC_pass</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>False</th>
+      <td>15654</td>
+    </tr>
+    <tr>
+      <th>True</th>
+      <td>838</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</div>
+<div class="section" id="Now-actually-filter-the-AnnData-object-and-run-through-a-standard-workflow-starting-by-filtering-genes-and-normalizing-the-data">
+<h3>Now actually filter the AnnData object and run through a standard workflow starting by filtering genes and normalizing the data<a class="headerlink" href="#Now-actually-filter-the-AnnData-object-and-run-through-a-standard-workflow-starting-by-filtering-genes-and-normalizing-the-data" title="Permalink to this headline">¶</a></h3>
+<p>Because the ‘filtered’ <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object was returned as a filtered but otherwise unprocessed object, we still need to normalize and run through the usual process here.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># filter genes</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">min_cells</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1"># Normalize the counts</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">target_sum</span><span class="o">=</span><span class="mf">1e4</span><span class="p">)</span>
+<span class="c1"># Logarithmize the data</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span class="c1"># Stash the normalised counts</span>
+<span class="n">adata</span><span class="o">.</span><span class="n">raw</span> <span class="o">=</span> <span class="n">adata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Trying to set attribute `.var` of view, copying.
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Identify-highly-variable-genes">
+<h3>Identify highly-variable genes<a class="headerlink" href="#Identify-highly-variable-genes" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">min_mean</span><span class="o">=</span><span class="mf">0.0125</span><span class="p">,</span> <span class="n">max_mean</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">min_disp</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_2_dandelion_filtering-10x_data_27_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_27_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Filter-the-genes-to-only-those-marked-as-highly-variable">
+<h3>Filter the genes to only those marked as highly-variable<a class="headerlink" href="#Filter-the-genes-to-only-those-marked-as-highly-variable" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[:,</span> <span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">highly_variable</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Regress-out-effects-of-total-counts-per-cell-and-the-percentage-of-mitochondrial-genes-expressed.Scale-the-data-to-unit-variance.">
+<h3>Regress out effects of total counts per cell and the percentage of mitochondrial genes expressed.Scale the data to unit variance.<a class="headerlink" href="#Regress-out-effects-of-total-counts-per-cell-and-the-percentage-of-mitochondrial-genes-expressed.Scale-the-data-to-unit-variance." title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">regress_out</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;n_counts&#39;</span><span class="p">,</span> <span class="s1">&#39;percent_mito&#39;</span><span class="p">])</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Trying to set attribute `.obs` of view, copying.
+... storing &#39;sampleid&#39; as categorical
+Trying to set attribute `.var` of view, copying.
+... storing &#39;feature_types&#39; as categorical
+Trying to set attribute `.var` of view, copying.
+... storing &#39;genome&#39; as categorical
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Run-PCA">
+<h3>Run PCA<a class="headerlink" href="#Run-PCA" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">svd_solver</span><span class="o">=</span><span class="s1">&#39;arpack&#39;</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">pca_variance_ratio</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_pcs</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_2_dandelion_filtering-10x_data_33_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_33_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Computing-the-neighborhood-graph,-umap-and-clusters">
+<h3>Computing the neighborhood graph, umap and clusters<a class="headerlink" href="#Computing-the-neighborhood-graph,-umap-and-clusters" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># Computing the neighborhood graph</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span class="c1"># Embedding the neighborhood graph</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+<span class="c1"># Clustering the neighborhood graph</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Visualizing-the-clusters-and-whether-or-not-there’s-a-corresponding-BCR">
+<h3>Visualizing the clusters and whether or not there’s a corresponding BCR<a class="headerlink" href="#Visualizing-the-clusters-and-whether-or-not-there’s-a-corresponding-BCR" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_2_dandelion_filtering-10x_data_37_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_37_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Visualizing-some-B-cell-genes">
+<h3>Visualizing some B cell genes<a class="headerlink" href="#Visualizing-some-B-cell-genes" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;IGHM&#39;</span><span class="p">,</span> <span class="s1">&#39;JCHAIN&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_2_dandelion_filtering-10x_data_39_0.png" src="../_images/notebooks_2_dandelion_filtering-10x_data_39_0.png" />
+</div>
+</div>
+</div>
+<div class="section" id="Save-the-AnnData-file">
+<h3>Save the AnnData file<a class="headerlink" href="#Save-the-AnnData-file" title="Permalink to this headline">¶</a></h3>
+<p>We can save this <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object for now.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">adata</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;adata.h5ad&#39;</span><span class="p">,</span> <span class="n">compression</span> <span class="o">=</span> <span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+... storing &#39;feature_types&#39; as categorical
+... storing &#39;genome&#39; as categorical
+</pre></div></div>
+</div>
+<p>To save the vdj object, we have two options - either save the <code class="docutils literal notranslate"><span class="pre">.data</span></code> and <code class="docutils literal notranslate"><span class="pre">.metadata</span></code> slots with pandas’ functions:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;filtered_vdj_table.tsv&#39;</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Or save the whole Dandelion class object with either <code class="docutils literal notranslate"><span class="pre">.write_h5</span></code>, which saves the class to a HDF5 format, or using a pickle-based <code class="docutils literal notranslate"><span class="pre">.write_pkl</span></code> function.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">write_h5</span><span class="p">(</span><span class="s1">&#39;dandelion_results.h5&#39;</span><span class="p">,</span> <span class="n">complib</span> <span class="o">=</span> <span class="s1">&#39;bzip2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">write_pkl</span><span class="p">(</span><span class="s1">&#39;dandelion_results.pkl.pbz2&#39;</span><span class="p">)</span> <span class="c1"># this will automatically use bzip2 for compression, swith the extension to .gz for gzip</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="3_dandelion_findingclones_and_analysis-10x%20data.html" class="btn btn-neutral float-right" title="dandelion Notebook-3" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="1_dandelion_preprocessing-10x%20data.html" class="btn btn-neutral float-left" title="dandelion Notebook-1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, zktuong
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
