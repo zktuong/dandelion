@@ -11,6 +11,10 @@ dependencies:
 - pandoc
 - pyyaml
 - changeo
+- adjustText
+- distance
+- joblib
+- plotnine
 - pip
 - pip:
   - sc-dandelion
