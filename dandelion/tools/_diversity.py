@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-29 12:38:20
+# @Last Modified time: 2020-12-30 01:33:04
 
 import pandas as pd
 import numpy as np
@@ -24,6 +24,7 @@ import warnings
 def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
     """
     Returns rarefaction predictions for cell numbers vs clone size.
+    
     Parameters
     ----------
     self : Dandelion, AnnData

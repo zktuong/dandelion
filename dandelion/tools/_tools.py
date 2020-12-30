@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-28 16:28:24
+# @Last Modified time: 2020-12-30 01:35:16
 
 import os
 import sys
@@ -585,6 +585,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         prefix for stashed BCR connectivities and distances.
     overwrite : str, list, optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).
+    
     Returns
     ----------
         `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
@@ -687,6 +688,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
     else:
         logg.info(' finished', time=start,
                 deep=('updated `.obs` with `.metadata`\n'))
+
 
 def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len', doublets='drop', fileformat='airr', ncpu = None, dirs = None, outFilePrefix = None, key_added = None, verbose = False):
     """
@@ -1066,6 +1068,7 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
 def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = None):
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
+
     Parameters
     ----------
     self : Dandelion, AnnData
@@ -1078,6 +1081,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     clone_key : str, optional
         column name for clones. None defaults to 'clone_id'.
+    
     Return
     ----------
         a `pandas DataFrame`.

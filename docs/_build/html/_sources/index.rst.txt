@@ -1,9 +1,6 @@
 Welcome to dandelion's documentation!
 ========================================
 
-.. automodule:: dandelion
-   :members:
-
 .. toctree::   
    :maxdepth: 2
 
@@ -22,4 +19,4 @@ Welcome to dandelion's documentation!
    :maxdepth: 2
    :caption: API:
    
-   api.rst
+   api

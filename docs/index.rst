@@ -19,4 +19,4 @@ Welcome to dandelion's documentation!
    :maxdepth: 2
    :caption: API:
    
-   api.rst
+   api
