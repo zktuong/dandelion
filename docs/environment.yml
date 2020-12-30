@@ -21,6 +21,7 @@ dependencies:
 - numba
 - pytables
 - pip
-- pip:  
+- pip:
+  - sc-dandelion
   - nbsphinx
   - sphinx-autodoc-typehints
