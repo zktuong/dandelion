@@ -1,9 +1,0 @@
-numpy
-pandas
-sc-dandelion
-pandoc
-sphinx
-nbsphinx
-sphinx-rtd-theme
-sphinx-autodoc-typehints
-recommonmark
