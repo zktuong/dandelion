@@ -21,6 +21,7 @@ dependencies:
 - numba
 - pytables
 - pip
+- tqdm
 - pip:  
   - nbsphinx
   - sphinx-autodoc-typehints
