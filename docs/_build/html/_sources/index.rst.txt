@@ -1,6 +1,9 @@
 Welcome to dandelion's documentation!
 ========================================
 
+.. automodule:: dandelion
+   :members:
+
 .. toctree::   
    :maxdepth: 2
 
