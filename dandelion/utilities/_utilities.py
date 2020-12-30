@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-14 03:22:29
+# @Last Modified time: 2020-12-29 21:12:23
 
 import sys
 import os
@@ -126,6 +126,16 @@ def flatten(l):
             yield el
 
 def makeblastdb(ref):
+    """
+    Runs makeblastdb.
+
+    Parameters
+    ----------
+    ref
+        fasta file
+
+    """
+
     cmd = ['makeblastdb',
                '-dbtype', 'nucl',
                '-parse_seqids',
@@ -308,6 +318,7 @@ def setup_metadata(data, clone_key = None):
 def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
     """
     A Dandelion class subfunction to populate the `.metadata` slot.
+
     Parameters
     ----------
     data : DataFrame
@@ -318,6 +329,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
         Returns the retrieval splitted into two column for heavy and light. Default is True. False combines the retrieval into a single column.
     collapse : bool
         Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.
+
     Returns
     -------
         A dictionary with keys as cell_ids and records as retrieved value.
@@ -659,6 +671,12 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                     raise KeyError('Unknown column : \'%s\' to retrieve.' % ret)
 
 class Dandelion:
+    """
+    Dandelion class object.
+
+    Main class object storing input/ouput slots for all functions.
+
+    """
     def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
         self.data = data
         self.metadata = metadata
@@ -716,6 +734,17 @@ class Dandelion:
         return self._gen_repr(self.n_obs, self.n_contigs)
 
     def copy(self):
+        """
+        Performs a deep copy of all slots in `dandelion` class.
+
+        Parameters
+        ----------
+        self : Dandelion
+            Dandelion object.        
+        Returns
+        -------
+            a deep copy of `dandelion` class.
+        """
         return copy.deepcopy(self)
 
     def update_germline(self, corrected = None, germline = None, org = 'human'):
@@ -790,6 +819,7 @@ class Dandelion:
     def write_pkl(self, filename='dandelion_data.pkl.pbz2', **kwargs):
         """
         Writes a `Dandelion` class to .pkl format.
+
         Parameters
         ----------
         filename
@@ -819,6 +849,7 @@ class Dandelion:
     def write_h5(self, filename='dandelion_data.h5', complib = None, compression = None, compression_level = None, **kwargs):
         """
         Writes a `Dandelion` class to .h5 format.
+
         Parameters
         ----------
         filename
@@ -937,6 +968,7 @@ def isBZIP(filename):
 def read_pkl(filename='dandelion_data.pkl.pbz2'):
     """
     Reads in and returns a `Dandelion` class saved using pickle format.
+
     Parameters
     ----------
     filename
@@ -960,6 +992,7 @@ def read_pkl(filename='dandelion_data.pkl.pbz2'):
 def read_h5(filename='dandelion_data.h5'):
     """
     Reads in and returns a `Dandelion` class from .h5 format.
+
     Parameters
     ----------
     filename
@@ -1061,10 +1094,11 @@ def read_h5(filename='dandelion_data.h5'):
 
 def concat(arrays, check_unique = False):
     """
-    Generates a dictionary from a dataframe
+    Concatenate dataframe and return as Dandelion object.
+
     Parameters
     ----------
-    meta
+    arrays
         pandas dataframe or file path
     columns
         column names in dataframe

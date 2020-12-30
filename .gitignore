@@ -6,10 +6,5 @@
 */*/*/__pycache__/
 */*/__pycache__/
 */__pycache__/
-dist/sc-dandelion-0.0.26.tar.gz
-sc_dandelion.egg-info/dependency_links.txt
-sc_dandelion.egg-info/not-zip-safe
-sc_dandelion.egg-info/PKG-INFO
-sc_dandelion.egg-info/requires.txt
-sc_dandelion.egg-info/SOURCES.txt
-sc_dandelion.egg-info/top_level.txt
+dist/*
+sc_dandelion.egg-info/*

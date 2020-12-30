@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-17 11:47:09
+# @Last Modified time: 2020-12-29 21:08:36
 
 import pandas as pd
 import numpy as np
@@ -46,8 +46,9 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         whether or not to print the progress bars.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
+
     Returns
-    ----------
+    -------
         `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
     """
     if verbose:
@@ -177,7 +178,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
     tmp_clusterdist = Tree()
     overlap = []
-    for i in out.metadata.index:        
+    for i in out.metadata.index:
         if len(out.metadata.loc[i, str(clonekey)].split('|'))>1:
             overlap.append([c for c in out.metadata.loc[i, str(clonekey)].split('|')])
             for c in out.metadata.loc[i, str(clonekey)].split('|'):
@@ -212,7 +213,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     edge_list = Tree()
     if verbose:
         for c in tqdm(mst_tree, desc = 'Generating edge list '):
-            G = nx.from_pandas_adjacency(mst_tree[c])            
+            G = nx.from_pandas_adjacency(mst_tree[c])
             edge_list[c] = nx.to_pandas_edgelist(G)
     else:
         for c in mst_tree:
@@ -352,8 +353,9 @@ def mst(mat):
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
+
     Returns
-    ----------
+    -------
         Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
@@ -362,6 +364,22 @@ def mst(mat):
     return(mst_tree)
 
 def clone_degree(self, weight=None, verbose = True):
+    """
+    Calculates node degree in BCR network.
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object after `tl.generate_network` has been run.
+    weight : str, optional
+        Atribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
+    verbose : bool
+        Whether or not to show logging information.
+
+    Returns
+    -------
+        Dandelion object with metadata updated with node degree information.
+    """
     if verbose:
         start = logg.info('Calculating node degree')
     if self.__class__ == Dandelion:
@@ -384,9 +402,23 @@ def clone_degree(self, weight=None, verbose = True):
                     deep=('Updated Dandelion metadata\n'))
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
-    
+
 
 def clone_centrality(self, verbose = True):
+    """
+    Calculates node closeness centrality in BCR network.
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object after `tl.generate_network` has been run.
+    verbose : bool
+        Whether or not to show logging information.
+
+    Returns
+    -------
+        Dandelion object with metadata updated with node closeness centrality information.
+    """
     if verbose:
         start = logg.info('Calculating node closeness centrality')
     if self.__class__ == Dandelion:
@@ -484,6 +516,7 @@ def _fruchterman_reingold_layout(
     Fixing some nodes doesn't allow them to move in the simulation.
     It also turns off the rescaling feature at the simulation's end.
     In addition, setting `scale` to `None` turns off rescaling.
+
     Parameters
     ----------
     G : NetworkX graph or list of nodes
@@ -522,10 +555,12 @@ def _fruchterman_reingold_layout(
         number generator,
         if None, the random number generator is the RandomState instance used
         by numpy.random.
+
     Returns
     -------
     pos : dict
         A dictionary of positions keyed by node
+
     Examples
     --------
     >>> G = nx.path_graph(4)
@@ -730,7 +765,8 @@ def _sparse_fruchterman_reingold(
     return pos
 
 def _rescale_layout(pos, scale=1):
-    """Returns scaled position array to (-scale, scale) in all axes.
+    """
+    Returns scaled position array to (-scale, scale) in all axes.
     The function acts on NumPy arrays which hold position information.
     Each position is one row of the array. The dimension of the space
     equals the number of columns. Each coordinate in one column.
@@ -738,12 +774,14 @@ def _rescale_layout(pos, scale=1):
     Then all values are scaled so that the largest magnitude value
     from all axes equals `scale` (thus, the aspect ratio is preserved).
     The resulting NumPy Array is returned (order of rows unchanged).
+
     Parameters
     ----------
     pos : numpy array
         positions to be scaled. Each row is a position.
     scale : number (default: 1)
         The size of the resulting extent in all directions.
+
     Returns
     -------
     pos : numpy array
@@ -761,6 +799,20 @@ def _rescale_layout(pos, scale=1):
     return pos
 
 def extract_edge_weights(self, expanded_only = False):
+    """
+    Retrieves edge weights (BCR levenshtein distance) from graph.
+
+    Parameters
+    ----------
+    self : Dandelion
+        `Dandelion` object after `tl.generate_network` has been run.
+    expanded_only : bool
+        whether to retrieve the edge weights from the expanded only graph or entire graph.
+
+    Returns
+    -------
+    numpy array containing edge weights.
+    """
     if expanded_only:
         try:
             edges,weights = zip(*nx.get_edge_attributes(self.graph[1],'weight').items())
