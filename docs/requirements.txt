@@ -1,5 +1,7 @@
-numpy>=1.18.4
-pandas>=1.0.3
+numpy
+pandas
+sc-dandelion
+pandoc
 sphinx
 nbsphinx
 sphinx-rtd-theme

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-29 20:57:51
+# @Last Modified time: 2020-12-30 01:48:33
 
 import sys
 import os
@@ -47,9 +47,10 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to output location. None defaults to 'dandelion/data'.
+    
     Returns
     -------
-        Formatted fasta file with new headers containing prefix
+    Formatted fasta file with new headers containing prefix
     """
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
@@ -175,9 +176,10 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to out put location. Default is None, which is 'dandelion/data'.
+    
     Returns
     -------
-        Formatted fasta file with new headers containing prefix
+    Formatted fasta file with new headers containing prefix
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -235,9 +237,10 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
         number of cores to use if parallel is True. Default is all available minus 1.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
+    
     Returns
     -------
-        V(D)J tsv files with constant genes annotated.
+    V(D)J tsv files with constant genes annotated.
     """
     def _run_blastn(fasta, blastdb, fileformat, org, verbose):
 
@@ -733,9 +736,10 @@ def assign_isotypes(fastas, fileformat = 'blast', org = 'human', correct_c_call 
         number of cores to use if parallel is True. Default is all available - 1.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
+    
     Returns
     -------
-        V(D)J tsv files with constant genes annotated.
+    V(D)J tsv files with constant genes annotated.
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -765,9 +769,10 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         whether or not to transfer additional 10X annotions to output file. Default is True.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
+    
     Returns
-    ----------
-        V(D)J data file in airr/changeo data format.
+    -------
+    V(D)J data file in airr/changeo data format.
     """
     if type(data) is not list:
         data = [data]
@@ -832,9 +837,10 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         dictionary for creating a sample_id column in the concatenated file.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
+    
     Returns
-    ----------
-        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+    -------
+    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
     """
     fileformat = 'blast'
     if type(data) is not list:
@@ -1085,9 +1091,10 @@ def reassign_alleles_(data, combined_folder, germline = None, org = 'human', fil
         dictionary for creating a sample_id column in the concatenated file.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
+    
     Returns
-    ----------
-        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+    -------
+    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
     """
 
     if type(data) is not list:
@@ -1314,9 +1321,10 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is 'dmask'.
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+    
     Returns
-    ----------
-        V(D)J data file with reconstructed germline sequences.
+    -------
+    V(D)J data file with reconstructed germline sequences.
     """
     start = logg.info('Reconstructing germline sequences')
     env = os.environ.copy()
@@ -1339,7 +1347,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
           record : dict with fields and values in the Change-O format
 
         Returns:
-          changeo.Receptor.Receptor : parsed Receptor object.
+        changeo.Receptor.Receptor : parsed Receptor object.
         """
         # Parse fields
         result = {}
@@ -1357,7 +1365,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
           record : dict with fields and values in the AIRR format.
 
         Returns:
-          changeo.Receptor.Receptor : parsed Receptor object.
+        changeo.Receptor.Receptor : parsed Receptor object.
         """
         # Parse fields
         result = {}
@@ -1681,9 +1689,10 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         number of cores to use if parallel is True. Default is all available - 1.
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
+    
     Returns
     -------
-        V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
+    V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
     start = logg.info('Filtering BCRs')
     if data.__class__ == Dandelion:
@@ -2247,9 +2256,10 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         whether to return the results a frequency or counts. Default is True (frequency).
     combine
         whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
+    
     Returns
-    ----------
-        `Dandelion` object with updated `.metadata` slot.
+    -------
+    `Dandelion` object with updated `.metadata` slot.
     """
     start = logg.info('Quantifying mutations')
     try:
@@ -2414,9 +2424,10 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         size of plot. Default is (4.5, 2.5).
     *args
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
+    
     Returns
-    ----------
-        plotnine plot showing histogram of length normalized ham model distance threshold.
+    -------
+    plotnine plot showing histogram of length normalized ham model distance threshold.
     """
     start = logg.info('Calculating threshold')
     try:

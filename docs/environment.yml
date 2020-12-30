@@ -1,0 +1,27 @@
+name: dandelion
+channels:
+- conda-forge
+- bioconda
+- anaconda
+- defaults
+dependencies:
+- python=3.7
+- numpy
+- pandas
+- pandoc
+- pyyaml
+- changeo
+- adjustText
+- distance
+- joblib
+- plotnine
+- seaborn
+- scikit-learn
+- statsmodels
+- numba
+- pytables
+- pip
+- pip:
+  - sc-dandelion
+  - nbsphinx
+  - sphinx-autodoc-typehints

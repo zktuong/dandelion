@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-29 20:58:23
+# @Last Modified time: 2020-12-30 01:49:12
 
 import os
 import pandas as pd
@@ -33,8 +33,7 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', ve
         `ig` or `tr` mode for running igblastn.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    Returns
-    -------
+    
     """
     env = os.environ.copy()
     if igblast_db is None:
@@ -84,8 +83,7 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
         whether or not to parse extended 10x annotations. Default is True.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    Returns
-    -------
+    
     """
     env = os.environ.copy()
     if germline is None:
@@ -135,8 +133,7 @@ def parsedb_heavy(db_file, verbose = False):
         path to AIRR table.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    Returns
-    -------    
+    
     """    
     outname = os.path.basename(db_file).split('.tsv')[0] + '_heavy'
     
@@ -163,8 +160,7 @@ def parsedb_light(db_file, verbose = False):
         path to AIRR table.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    Returns
-    -------    
+    
     """    
     outname = os.path.basename(db_file).split('.tsv')[0] + '_light'
     
@@ -205,8 +201,7 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
         whether to run on heavy or light mode. If left as None, heavy and light will be run together.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    Returns
-    -------    
+    
     """
     env = os.environ.copy()
     if germline is None:
@@ -421,8 +416,7 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
         whether or not to run novel allele discovery. Default is 'YES'.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    Returns
-    -------
+    
     """
     start_time = time()
     env = os.environ.copy()
@@ -632,9 +626,10 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
         maximum number of counts required for a cell to pass filtering. Default is None.
     blacklist : sequence, optional
         if provided, will exclude these genes from highly variable genes list.
+    
     Returns
     -------
-        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
+    `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
     """
     _adata = self.copy()
     # run scrublet    

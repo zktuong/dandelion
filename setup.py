@@ -5,7 +5,7 @@ with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 exec(open('dandelion/version.py').read())
 
-requirements = ["numpy>=1.18.4", "pandas>=1.0.3", "changeo>=1.0.0", "anndata>=0.7.1", "scanpy>=1.4.6", "distance>=0.1.3", "joblib>=0.14.1", "scikit-learn>=0.23.0", "scikit-bio>=0.5.6", "scipy>=1.4.1", "numba>=0.48.0", "seaborn>=0.10.1", "networkx>=2.4", "leidenalg>=0.8.0",  "rpy2>=3.3.2,<3.3.5", "plotnine>=0.6.0", "polyleven>=0.5", "h5py<3.0.0"]
+requirements = ["numpy>=1.18.4", "pandas>=1.0.3", "changeo>=1.0.0", "anndata>=0.7.1", "scanpy>=1.4.6", "distance>=0.1.3", "joblib>=0.14.1", "scikit-learn>=0.23.0", "scikit-bio>=0.5.6", "scipy>=1.4.1", "numba>=0.48.0", "seaborn>=0.10.1", "networkx>=2.4", "leidenalg>=0.8.0", "plotnine>=0.6.0", "polyleven>=0.5", "h5py<3.0.0"]
 setup(
     name="sc-dandelion",
     version=__version__,

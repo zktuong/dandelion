@@ -14,7 +14,11 @@ import os
 import sys
 from sphinx.deprecation import RemovedInSphinx40Warning
 
+sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
+
+import dandelion
+
 # -- Project information -----------------------------------------------------
 
 project = 'dandelion'
@@ -22,7 +26,7 @@ copyright = '2020, zktuong'
 author = 'zktuong'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.26'
+release = '0.0.27.post1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -52,6 +56,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', "**.ipynb_checkpoints"]
 
 nitpicky = True  # Warn about broken links
 needs_sphinx = "2.0"  # Nicer param docs
+nitpick_ignore = [('py:class', 'type')]
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -1,0 +1,912 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dandelion.preprocessing.external._preprocessing &mdash; dandelion 0.0.27.post1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../../_static/dandelion_logo.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html">
+          
+
+          
+            
+            <img src="../../../../_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html#basic-requirements">Basic requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Preprocessing: <cite>pp</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dandelion.preprocessing.external._preprocessing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dandelion.preprocessing.external._preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># @Author: kt16</span>
+<span class="c1"># @Date:   2020-05-12 17:56:02</span>
+<span class="c1"># @Last Modified by:   Kelvin</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:49:12</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">run</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">...utilities._utilities</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<div class="viewcode-block" id="assigngenes_igblast"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.assigngenes_igblast.html#dandelion.preprocessing.external.assigngenes_igblast">[docs]</a><span class="k">def</span> <span class="nf">assigngenes_igblast</span><span class="p">(</span><span class="n">fasta</span><span class="p">,</span> <span class="n">igblast_db</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">org</span> <span class="o">=</span> <span class="s1">&#39;human&#39;</span><span class="p">,</span> <span class="n">loci</span> <span class="o">=</span> <span class="s1">&#39;ig&#39;</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reannotate with IgBLASTn.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fasta : PathLike</span>
+<span class="sd">        fasta file for reannotation.</span>
+<span class="sd">    igblast_db : PathLike, optional</span>
+<span class="sd">        path to igblast database.</span>
+<span class="sd">    org : str</span>
+<span class="sd">        organism for germline sequences.</span>
+<span class="sd">    loci : str</span>
+<span class="sd">        `ig` or `tr` mode for running igblastn.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">igblast_db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">igdb</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s1">&#39;IGDATA&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Environmental variable IGDATA must be set. Otherwise, please provide path to igblast database&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">env</span><span class="p">[</span><span class="s1">&#39;IGDATA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">igblast_db</span>
+        <span class="n">igdb</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s1">&#39;IGDATA&#39;</span><span class="p">]</span>
+
+    <span class="n">outfolder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fasta</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39;/tmp&#39;</span>
+    <span class="n">informat_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;blast&#39;</span><span class="p">:</span><span class="s1">&#39;_igblast.fmt7&#39;</span><span class="p">,</span> <span class="s1">&#39;airr&#39;</span><span class="p">:</span><span class="s1">&#39;_igblast.tsv&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outfolder</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outfolder</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">fileformat</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;blast&#39;</span><span class="p">,</span> <span class="s1">&#39;airr&#39;</span><span class="p">]:</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fasta</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.fasta&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">informat_dict</span><span class="p">[</span><span class="n">fileformat</span><span class="p">]</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AssignGenes.py&#39;</span><span class="p">,</span> <span class="s1">&#39;igblast&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;-s&#39;</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span>
+               <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">igdb</span><span class="p">,</span>
+               <span class="s1">&#39;--organism&#39;</span><span class="p">,</span> <span class="n">org</span><span class="p">,</span>
+               <span class="s1">&#39;--loci&#39;</span><span class="p">,</span> <span class="n">loci</span><span class="p">,</span>
+               <span class="s1">&#39;--format&#39;</span><span class="p">,</span> <span class="n">fileformat</span><span class="p">,</span>
+               <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">outfolder</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+           <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running command: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)))</span>
+        <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span> <span class="c1"># logs are printed to terminal</span></div>
+
+<div class="viewcode-block" id="makedb_igblast"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.makedb_igblast.html#dandelion.preprocessing.external.makedb_igblast">[docs]</a><span class="k">def</span> <span class="nf">makedb_igblast</span><span class="p">(</span><span class="n">fasta</span><span class="p">,</span> <span class="n">igblast_output</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">germline</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">org</span> <span class="o">=</span> <span class="s1">&#39;human&#39;</span><span class="p">,</span> <span class="n">extended</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses IgBLAST output to airr format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fasta : PathLike</span>
+<span class="sd">        fasta file use for reannotation.</span>
+<span class="sd">    igblast_output : PathLike, optional</span>
+<span class="sd">        igblast output file.</span>
+<span class="sd">    germline : PathLike, optional</span>
+<span class="sd">        path to germline database.    </span>
+<span class="sd">    org : str</span>
+<span class="sd">        organism of germline sequences.</span>
+<span class="sd">    extended : bool</span>
+<span class="sd">        whether or not to parse extended 10x annotations. Default is True.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gml</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s1">&#39;GERMLINE&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.&#39;</span><span class="p">)</span>
+        <span class="n">gml</span> <span class="o">=</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;imgt/&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;/vdj/&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">env</span><span class="p">[</span><span class="s1">&#39;GERMLINE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">germline</span>
+        <span class="n">gml</span> <span class="o">=</span> <span class="n">germline</span>
+
+    <span class="k">if</span> <span class="n">igblast_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">indir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fasta</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;/tmp&#39;</span>
+        <span class="n">infile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fasta</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.fasta&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_igblast.fmt7&#39;</span>
+        <span class="n">igbo</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">indir</span><span class="p">,</span> <span class="n">infile</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">igbo</span> <span class="o">=</span> <span class="n">igblast_output</span>
+
+    <span class="n">cellranger_annotation</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fasta</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fasta</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.fasta&#39;</span><span class="p">,</span> <span class="s1">&#39;_annotations.csv&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">extended</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MakeDb.py&#39;</span><span class="p">,</span> <span class="s1">&#39;igblast&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="n">igbo</span><span class="p">,</span>
+            <span class="s1">&#39;-s&#39;</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span>
+            <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+            <span class="s1">&#39;--10x&#39;</span><span class="p">,</span> <span class="n">cellranger_annotation</span><span class="p">,</span>
+            <span class="s1">&#39;--extended&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MakeDb.py&#39;</span><span class="p">,</span> <span class="s1">&#39;igblast&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="n">igbo</span><span class="p">,</span>
+               <span class="s1">&#39;-s&#39;</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span>
+               <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+               <span class="s1">&#39;--10x&#39;</span><span class="p">,</span> <span class="n">cellranger_annotation</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running command: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)))</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span> <span class="c1"># logs are printed to terminal</span></div>
+
+<div class="viewcode-block" id="parsedb_heavy"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.parsedb_heavy.html#dandelion.preprocessing.external.parsedb_heavy">[docs]</a><span class="k">def</span> <span class="nf">parsedb_heavy</span><span class="p">(</span><span class="n">db_file</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses AIRR table (heavy chain contigs only).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db_file : PathLike</span>
+<span class="sd">        path to AIRR table.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">outname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">db_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tsv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_heavy&#39;</span>
+    
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ParseDb.py&#39;</span><span class="p">,</span> <span class="s1">&#39;select&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+           <span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;locus&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;-u&#39;</span><span class="p">,</span> <span class="s1">&#39;IGH&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;--logic&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;--regex&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;--outname&#39;</span><span class="p">,</span> <span class="n">outname</span> 
+           <span class="p">]</span>
+     
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running command: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)))</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="c1"># logs are printed to terminal</span></div>
+
+<div class="viewcode-block" id="parsedb_light"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.parsedb_light.html#dandelion.preprocessing.external.parsedb_light">[docs]</a><span class="k">def</span> <span class="nf">parsedb_light</span><span class="p">(</span><span class="n">db_file</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses AIRR table (light chain contigs only).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db_file : PathLike</span>
+<span class="sd">        path to AIRR table.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">outname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">db_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tsv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_light&#39;</span>
+    
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ParseDb.py&#39;</span><span class="p">,</span> <span class="s1">&#39;select&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+           <span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;locus&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;-u&#39;</span><span class="p">,</span> <span class="s1">&#39;IG[LK]&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;--logic&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;--regex&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;--outname&#39;</span><span class="p">,</span> <span class="n">outname</span> 
+           <span class="p">]</span>
+     
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running command: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)))</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="c1"># logs are printed to terminal</span></div>
+
+<div class="viewcode-block" id="creategermlines"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.creategermlines.html#dandelion.preprocessing.external.creategermlines">[docs]</a><span class="k">def</span> <span class="nf">creategermlines</span><span class="p">(</span><span class="n">db_file</span><span class="p">,</span> <span class="n">germtypes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">germline</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">org</span> <span class="o">=</span> <span class="s1">&#39;human&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">v_field</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cloned</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for CreateGermlines.py for reconstructing germline sequences,</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db_file : PathLike</span>
+<span class="sd">        path to AIRR table.</span>
+<span class="sd">    germtypes : str, optional</span>
+<span class="sd">        germline type for reconstuction.</span>
+<span class="sd">    germline : PathLike, optional</span>
+<span class="sd">        location to germline fasta files.</span>
+<span class="sd">    org : str</span>
+<span class="sd">        organism for germline sequences.</span>
+<span class="sd">    genotype_fasta : PathLike, optional</span>
+<span class="sd">        location to corrected v germine fasta file.</span>
+<span class="sd">    v_field : str, optional</span>
+<span class="sd">        name of column for v segment to perform reconstruction.</span>
+<span class="sd">    cloned : bool</span>
+<span class="sd">        whether or not to run with cloned option.</span>
+<span class="sd">    mode : str, optional</span>
+<span class="sd">        whether to run on heavy or light mode. If left as None, heavy and light will be run together.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gml</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s1">&#39;GERMLINE&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.&#39;</span><span class="p">)</span>
+        <span class="n">gml</span> <span class="o">=</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;imgt/&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;/vdj/&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">env</span><span class="p">[</span><span class="s1">&#39;GERMLINE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">germline</span>
+        <span class="n">gml</span> <span class="o">=</span> <span class="n">germline</span>
+    
+    <span class="k">if</span> <span class="n">germtypes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">germ_type</span> <span class="o">=</span> <span class="s1">&#39;dmask&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">germ_type</span> <span class="o">=</span> <span class="n">germtypes</span>
+
+    <span class="k">if</span> <span class="n">cloned</span><span class="p">:</span>        
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;heavy&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;            Reconstructing heavy chain </span><span class="si">{}</span><span class="s1"> germline sequences with </span><span class="si">{}</span><span class="s1"> for each clone.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">germ_type</span><span class="p">,</span> <span class="n">v_field</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">genotype_fasta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span> 
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span> 
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;light&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;            Reconstructing light chain </span><span class="si">{}</span><span class="s1"> germline sequences with </span><span class="si">{}</span><span class="s1"> for each clone.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">germ_type</span><span class="p">,</span> <span class="n">v_field</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                    <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                    <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLJ.fasta&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                    <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                    <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                    <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                    <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                    <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;            Reconstructing </span><span class="si">{}</span><span class="s1"> germline sequences with </span><span class="si">{}</span><span class="s1"> for each clone.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">germ_type</span><span class="p">,</span> <span class="n">v_field</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">genotype_fasta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;--cloned&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>        
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;heavy&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;            Reconstructing heavy chain </span><span class="si">{}</span><span class="s1"> germline sequences with </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">germ_type</span><span class="p">,</span> <span class="n">v_field</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">genotype_fasta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;light&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;            Reconstructing light chain </span><span class="si">{}</span><span class="s1"> germline sequences with </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">germ_type</span><span class="p">,</span> <span class="n">v_field</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                    <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                    <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                    <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                    <span class="p">]</span>
+        <span class="k">elif</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;            Reconstructing </span><span class="si">{}</span><span class="s1"> germline sequences with </span><span class="si">{}</span><span class="s1"> for each clone.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">germ_type</span><span class="p">,</span> <span class="n">v_field</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">genotype_fasta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHD.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGKJ.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLV.fasta&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGLJ.fasta&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CreateGermlines.py&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">db_file</span><span class="p">,</span>
+                        <span class="s1">&#39;-g&#39;</span><span class="p">,</span> <span class="n">germ_type</span><span class="p">,</span>
+                        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">genotype_fasta</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+                        <span class="s1">&#39;--vf&#39;</span><span class="p">,</span> <span class="n">v_field</span>
+                        <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running command: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)))</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="p">)</span> <span class="c1"># logs are printed to terminal</span></div>
+
+<div class="viewcode-block" id="tigger_genotype"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.tigger_genotype.html#dandelion.preprocessing.external.tigger_genotype">[docs]</a><span class="k">def</span> <span class="nf">tigger_genotype</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">v_germline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">org</span> <span class="o">=</span> <span class="s1">&#39;human&#39;</span><span class="p">,</span> <span class="n">fileformat</span> <span class="o">=</span> <span class="s1">&#39;airr&#39;</span><span class="p">,</span> <span class="n">novel_</span> <span class="o">=</span> <span class="s1">&#39;YES&#39;</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reassign alleles with TIgGER in R.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : PathLike</span>
+<span class="sd">        vdj tabulated data, in Change-O (TAB) or AIRR (TSV) format.</span>
+<span class="sd">    germline : PathLike, optional</span>
+<span class="sd">        fasta file containing IMGT-gapped V segment reference germlines. Defaults to $GERMLINE.</span>
+<span class="sd">    outdir : PathLike,  optional</span>
+<span class="sd">        output directory. Will be created if it does not exist. Defaults to the current working directory.</span>
+<span class="sd">    org : str</span>
+<span class="sd">        organism for germline sequences.</span>
+<span class="sd">    fileformat : str</span>
+<span class="sd">        format for running tigger. Default is &#39;airr&#39;. Also accepts &#39;changeo&#39;.</span>
+<span class="sd">    novel : str</span>
+<span class="sd">        whether or not to run novel allele discovery. Default is &#39;YES&#39;.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">v_germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">gml</span> <span class="o">=</span> <span class="n">env</span><span class="p">[</span><span class="s1">&#39;GERMLINE&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Environmental variable GERMLINE is not set. Please provide either the path to the folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.&#39;</span><span class="p">)</span>
+        <span class="n">gml</span> <span class="o">=</span> <span class="n">gml</span><span class="o">+</span><span class="s1">&#39;imgt/&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;/vdj/imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHV.fasta&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">v_germline</span><span class="p">):</span>
+            <span class="n">gml</span> <span class="o">=</span> <span class="n">v_germline</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;imgt_&#39;</span><span class="o">+</span><span class="n">org</span><span class="o">+</span><span class="s1">&#39;_IGHV.fasta&#39;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">gml</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Input for germline is incorrect. Please rename IGHV germline file to &#39;</span><span class="si">{}</span><span class="s2">&#39;. Otherwise, please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gml</span><span class="p">))</span>        
+        <span class="k">else</span><span class="p">:</span>            
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">v_germline</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.fasta&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Input for germline is incorrect </span><span class="si">{}</span><span class="s1">. Please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_germline</span><span class="p">))</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">v_germline</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="s1">&#39;ighv&#39;</span> <span class="ow">in</span> <span class="n">v_germline</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="n">gml</span> <span class="o">=</span> <span class="n">v_germline</span>
+
+    <span class="k">if</span> <span class="n">outdir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">outdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tigger-genotype.R&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+           <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">gml</span><span class="p">,</span>
+           <span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tsv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+           <span class="s1">&#39;-N&#39;</span><span class="p">,</span> <span class="n">novel_</span><span class="p">,</span>
+           <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span>
+           <span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">fileformat</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;      Reassigning alleles&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running command: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)))</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span> <span class="c1"># logs are printed to terminal</span>
+    <span class="n">elapsed_time_secs</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;tigger-genotype execution took: </span><span class="si">%s</span><span class="s2"> secs (Wall clock time)</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">elapsed_time_secs</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+<span class="c1">## commented out originally in ConvertDb, not sure if it works properly</span>
+<span class="c1"># def insertGaps(db_file, references=None, format=default_format,</span>
+<span class="c1">#                out_file=None, out_args=default_out_args):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Inserts IMGT numbering into V fields</span>
+
+<span class="c1">#     Arguments:</span>
+<span class="c1">#       db_file : the database file name.</span>
+<span class="c1">#       references : folder with germline repertoire files. If None, do not updated alignment columns wtih IMGT gaps.</span>
+<span class="c1">#       format : input format.</span>
+<span class="c1">#       out_file : output file name. Automatically generated from the input file if None.</span>
+<span class="c1">#       out_args : common output argument dictionary from parseCommonArgs.</span>
+
+<span class="c1">#     Returns:</span>
+<span class="c1">#      str : output file name</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     log = OrderedDict()</span>
+<span class="c1">#     log[&#39;START&#39;] = &#39;insertGaps&#39;</span>
+<span class="c1">#     log[&#39;COMMAND&#39;] = &#39;insertGaps&#39;</span>
+<span class="c1">#     log[&#39;FILE&#39;] = os.path.basename(db_file)</span>
+<span class="c1">#     # printLog(log)</span>
+
+<span class="c1">#     # Define format operators</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         reader, writer, schema = getFormatOperators(format)</span>
+<span class="c1">#     except ValueError:</span>
+<span class="c1">#         printError(&#39;Invalid format %s.&#39; % format)</span>
+
+<span class="c1">#     # Open input</span>
+<span class="c1">#     db_handle = open(db_file, &#39;rt&#39;)</span>
+<span class="c1">#     db_iter = reader(db_handle)</span>
+
+<span class="c1">#     # Check for required columns</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         required = [&#39;sequence_imgt&#39;, &#39;v_germ_start_imgt&#39;]</span>
+<span class="c1">#         checkFields(required, db_iter.fields, schema=schema)</span>
+<span class="c1">#     except LookupError as e:</span>
+<span class="c1">#         printError(e)</span>
+
+<span class="c1">#     # Load references</span>
+<span class="c1">#     reference_dict = readGermlines(references)</span>
+
+<span class="c1">#     # Check for IMGT-gaps in germlines</span>
+<span class="c1">#     if all(&#39;...&#39; not in x for x in reference_dict.values()):</span>
+<span class="c1">#         printWarning(&#39;Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.&#39;)</span>
+
+<span class="c1">#     # Open output writer</span>
+<span class="c1">#     if out_file is not None:</span>
+<span class="c1">#         pass_handle = open(out_file, &#39;w&#39;)</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         pass_handle = getOutputHandle(db_file, out_label=&#39;gap&#39;, out_dir=out_args[&#39;out_dir&#39;],</span>
+<span class="c1">#                                       out_name=out_args[&#39;out_name&#39;], out_type=schema.out_type)</span>
+<span class="c1">#     pass_writer = writer(pass_handle, fields=db_iter.fields)</span>
+
+<span class="c1">#     # Count records</span>
+<span class="c1">#     result_count = countDbFile(db_file)</span>
+
+<span class="c1">#     # Iterate over records</span>
+<span class="c1">#     start_time = time()</span>
+<span class="c1">#     rec_count = pass_count = 0</span>
+<span class="c1">#     for rec in db_iter:</span>
+<span class="c1">#         # Print progress for previous iteration</span>
+<span class="c1">#         # printProgress(rec_count, result_count, 0.05, start_time=start_time)</span>
+<span class="c1">#         rec_count += 1</span>
+<span class="c1">#         # Update IMGT fields</span>
+<span class="c1">#         imgt_dict = correctIMGTFields(rec, reference_dict)</span>
+<span class="c1">#         # Write records</span>
+<span class="c1">#         if imgt_dict is not None:</span>
+<span class="c1">#             pass_count += 1</span>
+<span class="c1">#             rec.setDict(imgt_dict, parse=False)</span>
+<span class="c1">#             pass_writer.writeReceptor(rec)</span>
+
+<span class="c1">#     # Print counts</span>
+<span class="c1">#     # printProgress(rec_count, result_count, 0.05, start_time=start_time)</span>
+<span class="c1">#     log = OrderedDict()</span>
+<span class="c1">#     log[&#39;OUTPUT&#39;] = os.path.basename(pass_handle.name)</span>
+<span class="c1">#     log[&#39;RECORDS&#39;] = rec_count</span>
+<span class="c1">#     log[&#39;PASS&#39;] = pass_count</span>
+<span class="c1">#     log[&#39;FAIL&#39;] = rec_count - pass_count</span>
+<span class="c1">#     log[&#39;END&#39;] = &#39;insertGaps&#39;</span>
+<span class="c1">#     # printLog(log)</span>
+
+<span class="c1">#     # Close file handles</span>
+<span class="c1">#     pass_handle.close()</span>
+<span class="c1">#     db_handle.close()</span>
+
+<span class="c1">#     return pass_handle.name</span>
+
+<span class="c1"># def correctIMGTFields(receptor, references):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Add IMGT-gaps to IMGT fields in a Receptor object</span>
+
+<span class="c1">#     Arguments:</span>
+<span class="c1">#       receptor (changeo.Receptor.Receptor): Receptor object to modify.</span>
+<span class="c1">#       references (dict): dictionary of IMGT-gapped references sequences.</span>
+
+<span class="c1">#     Returns:</span>
+<span class="c1">#       changeo.Receptor.Receptor: modified Receptor with IMGT-gapped fields.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     # Initialize update object</span>
+<span class="c1">#     imgt_dict = {&#39;sequence_imgt&#39;: None,</span>
+<span class="c1">#                  &#39;v_germ_start_imgt&#39;: None,</span>
+<span class="c1">#                  &#39;v_germ_length_imgt&#39;: None,</span>
+<span class="c1">#                  &#39;germline_imgt&#39;: None}</span>
+
+<span class="c1">#     try:</span>
+<span class="c1">#         if not all([receptor.sequence_imgt,</span>
+<span class="c1">#                     receptor.v_germ_start_imgt,</span>
+<span class="c1">#                     receptor.v_germ_length_imgt,</span>
+<span class="c1">#                     receptor.v_call]):</span>
+<span class="c1">#             raise AttributeError</span>
+<span class="c1">#     except AttributeError:</span>
+<span class="c1">#         return None</span>
+
+<span class="c1">#     # Update IMGT fields</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         gapped = gapV(receptor.sequence_imgt,</span>
+<span class="c1">#                       receptor.v_germ_start_imgt,</span>
+<span class="c1">#                       receptor.v_germ_length_imgt,</span>
+<span class="c1">#                       receptor.v_call,</span>
+<span class="c1">#                       references)</span>
+<span class="c1">#     except KeyError as e:</span>
+<span class="c1">#         printWarning(e)</span>
+<span class="c1">#         return None</span>
+
+<span class="c1">#     # Verify IMGT-gapped sequence and junction concur</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         check = (receptor.junction == gapped[&#39;sequence_imgt&#39;][309:(309 + receptor.junction_length)])</span>
+<span class="c1">#     except TypeError:</span>
+<span class="c1">#         check = False</span>
+<span class="c1">#     if not check:</span>
+<span class="c1">#         return None</span>
+
+<span class="c1">#     # Rebuild germline sequence</span>
+<span class="c1">#     __, germlines, __ = buildGermline(receptor, references)</span>
+<span class="c1">#     if germlines is None:</span>
+<span class="c1">#         return None</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         gapped[&#39;germline_imgt&#39;] = germlines[&#39;full&#39;]</span>
+
+<span class="c1">#     # Update return object</span>
+<span class="c1">#     imgt_dict.update(gapped)</span>
+
+<span class="c1">#     return imgt_dict</span>
+
+<div class="viewcode-block" id="recipe_scanpy_qc"><a class="viewcode-back" href="../../../../modules/dandelion.preprocessing.external.recipe_scanpy_qc.html#dandelion.preprocessing.external.recipe_scanpy_qc">[docs]</a><span class="k">def</span> <span class="nf">recipe_scanpy_qc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_genes</span><span class="o">=</span><span class="mi">2500</span><span class="p">,</span> <span class="n">min_genes</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">mito_cutoff</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pval_cutoff</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_counts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">blacklist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recipe for running a standard scanpy QC workflow.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata : AnnData</span>
+<span class="sd">        annotated data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.</span>
+<span class="sd">    max_genes : int</span>
+<span class="sd">        naximum number of genes expressed required for a cell to pass filtering. Default is 2500.</span>
+<span class="sd">    min_genes : int</span>
+<span class="sd">        minimum number of genes expressed  required for a cell to pass filtering. Default is 200.</span>
+<span class="sd">    mito_cutoff : float</span>
+<span class="sd">        maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.</span>
+<span class="sd">    pval_cutoff : float</span>
+<span class="sd">        maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.</span>
+<span class="sd">    min_counts : int, optional</span>
+<span class="sd">        minimum number of counts required for a cell to pass filtering. Default is None.</span>
+<span class="sd">    max_counts : int, optional</span>
+<span class="sd">        maximum number of counts required for a cell to pass filtering. Default is None.</span>
+<span class="sd">    blacklist : sequence, optional</span>
+<span class="sd">        if provided, will exclude these genes from highly variable genes list.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_adata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># run scrublet    </span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scrublet</span> <span class="k">as</span> <span class="nn">scr</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Please install scrublet with pip install scrublet.&#39;</span><span class="p">)</span>
+
+    <span class="n">scrub</span> <span class="o">=</span> <span class="n">scr</span><span class="o">.</span><span class="n">Scrublet</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">doublet_scores</span><span class="p">,</span> <span class="n">predicted_doublets</span> <span class="o">=</span> <span class="n">scrub</span><span class="o">.</span><span class="n">scrub_doublets</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">doublet_scores</span>
+    <span class="c1"># overcluster prep. run basic scanpy pipeline</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_cells</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">min_genes</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">mito_genes</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;MT-&#39;</span><span class="p">)</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;percent_mito&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">_adata</span><span class="p">[:,</span> <span class="n">mito_genes</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;n_counts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">target_sum</span> <span class="o">=</span> <span class="mf">1e4</span><span class="p">)</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">_adata</span><span class="p">)</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">min_mean</span><span class="o">=</span><span class="mf">0.0125</span><span class="p">,</span> <span class="n">max_mean</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">min_disp</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">_adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;^TR[AB][VDJ]|^IG[HKL][VDJC]&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+            <span class="n">_adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;highly_variable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">blacklist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">blacklist</span><span class="p">:</span>
+                <span class="n">_adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="s1">&#39;highly_variable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_adata</span> <span class="o">=</span> <span class="n">_adata</span><span class="p">[:,</span> <span class="n">_adata</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s1">&#39;highly_variable&#39;</span><span class="p">]]</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">svd_solver</span><span class="o">=</span><span class="s1">&#39;arpack&#39;</span><span class="p">)</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">n_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_pcs</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="c1"># overclustering proper - do basic clustering first, then cluster each cluster</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">_adata</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">clus</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;leiden&#39;</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">restrict_to</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;leiden&#39;</span><span class="p">,[</span><span class="n">clus</span><span class="p">]),</span> <span class="n">key_added</span> <span class="o">=</span> <span class="s1">&#39;leiden_R&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">clus</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;leiden&#39;</span><span class="p">]))[</span><span class="mi">1</span><span class="p">:]:</span> <span class="c1"># weird how the new anndata/scanpy is forcing this</span>
+        <span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">_adata</span><span class="p">,</span> <span class="n">restrict_to</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;leiden_R&#39;</span><span class="p">,[</span><span class="n">clus</span><span class="p">]),</span> <span class="n">key_added</span> <span class="o">=</span> <span class="s1">&#39;leiden_R&#39;</span><span class="p">)</span>
+    <span class="c1"># compute the cluster scores - the median of Scrublet scores per overclustered cluster</span>
+    <span class="k">for</span> <span class="n">clus</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;leiden_R&#39;</span><span class="p">]):</span>
+        <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;leiden_R&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">clus</span><span class="p">,</span> <span class="s1">&#39;scrublet_cluster_score&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;leiden_R&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">clus</span><span class="p">,</span> <span class="s1">&#39;scrublet_score&#39;</span><span class="p">])</span>
+    <span class="c1"># now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution</span>
+    <span class="n">med</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_cluster_score&#39;</span><span class="p">])</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_cluster_score&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="n">med</span>
+    <span class="n">mad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_cluster_score&#39;</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span><span class="o">-</span><span class="n">med</span><span class="p">)</span>
+    <span class="c1"># 1 sided test for catching outliers</span>
+    <span class="n">pvals</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_cluster_score&#39;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">med</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.4826</span><span class="o">*</span><span class="n">mad</span><span class="p">)</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_score_bh_pval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bh</span><span class="p">(</span><span class="n">pvals</span><span class="p">)</span>
+    <span class="c1"># threshold the p-values to get doublet calls.</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;is_doublet&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;scrublet_score_bh_pval&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pval_cutoff</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;is_doublet&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;is_doublet&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_rna&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">min_genes</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">max_genes</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;n_genes&#39;</span><span class="p">]],</span> <span class="n">index</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">))</span> <span class="o">|</span> \
+        <span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;percent_mito&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">mito_cutoff</span><span class="p">)</span> <span class="o">|</span> \
+            <span class="p">(</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;is_doublet&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># removing columns that probably don&#39;t need anymore</span>
+    <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="s1">&#39;leiden_R&#39;</span><span class="p">,</span> <span class="s1">&#39;scrublet_cluster_score&#39;</span><span class="p">,</span> <span class="s1">&#39;scrublet_score_bh_pval&#39;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, zktuong
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

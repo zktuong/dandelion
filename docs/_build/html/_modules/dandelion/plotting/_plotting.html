@@ -1,0 +1,908 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dandelion.plotting._plotting &mdash; dandelion 0.0.27.post1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/dandelion_logo.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#basic-requirements">Basic requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Preprocessing: <cite>pp</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dandelion.plotting._plotting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dandelion.plotting._plotting</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># @Author: Kelvin</span>
+<span class="c1"># @Date:   2020-05-18 00:15:00</span>
+<span class="c1"># @Last Modified by:   Kelvin</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:46:37</span>
+
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">..utilities._utilities</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">..tools._diversity</span> <span class="kn">import</span> <span class="n">rarefun</span>
+<span class="kn">from</span> <span class="nn">scanpy.plotting._tools.scatterplots</span> <span class="kn">import</span> <span class="n">embedding</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">adjustText</span> <span class="kn">import</span> <span class="n">adjust_text</span>
+<span class="kn">from</span> <span class="nn">plotnine</span> <span class="kn">import</span> <span class="n">ggplot</span><span class="p">,</span> <span class="n">theme_classic</span><span class="p">,</span> <span class="n">aes</span><span class="p">,</span> <span class="n">geom_line</span><span class="p">,</span> <span class="n">xlab</span><span class="p">,</span> <span class="n">ylab</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">ggtitle</span><span class="p">,</span> <span class="n">labs</span><span class="p">,</span> <span class="n">scale_color_manual</span>
+<span class="kn">from</span> <span class="nn">scanpy.plotting</span> <span class="kn">import</span> <span class="n">palettes</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<div class="viewcode-block" id="clone_rarefaction"><a class="viewcode-back" href="../../../modules/dandelion.plotting.clone_rarefaction.html#dandelion.plotting.clone_rarefaction">[docs]</a><span class="k">def</span> <span class="nf">clone_rarefaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">clone_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="n">save</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots rarefaction curve for cell numbers vs clone size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : AnnData</span>
+<span class="sd">        `AnnData` object.</span>
+<span class="sd">    groupby : str</span>
+<span class="sd">        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.</span>
+<span class="sd">    clone_key : str, optional</span>
+<span class="sd">        Column name specifying the clone_id column in metadata/obs.</span>
+<span class="sd">    palette : sequence, optional</span>
+<span class="sd">        Color mapping for unique elements in groupby. Will try to retrieve from AnnData `.uns` slot if present.</span>
+<span class="sd">    figsize :  tuple[float, float]</span>
+<span class="sd">        Size of plot.</span>
+<span class="sd">    save : str, optional</span>
+<span class="sd">        Save path.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rarefaction curve plot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">AnnData</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clonekey</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clonekey</span> <span class="o">=</span> <span class="n">clone_key</span>
+
+    <span class="n">groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="n">groupby</span><span class="p">]))</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">])]</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="n">clonekey</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">clonekey</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">remove_unused_categories</span><span class="p">()</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+        <span class="n">_metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="n">groupby</span><span class="p">]</span><span class="o">==</span><span class="n">g</span><span class="p">]</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">[</span><span class="n">clonekey</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+    <span class="n">res_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">orient</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span><span class="p">)</span>
+
+    <span class="c1"># remove those with no counts</span>
+    <span class="n">rowsum</span> <span class="o">=</span> <span class="n">res_</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;removing due to zero counts:&#39;</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">res_</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">res_</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">]))</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">res_</span> <span class="o">=</span> <span class="n">res_</span><span class="p">[</span><span class="o">~</span><span class="p">(</span><span class="n">res_</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+
+    <span class="c1"># set up for calculating rarefaction</span>
+    <span class="n">tot</span> <span class="o">=</span> <span class="n">res_</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">sum</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">res_</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">nr</span> <span class="o">=</span> <span class="n">res_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># append the results to a dictionary</span>
+    <span class="n">rarecurve</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nr</span><span class="p">),</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Calculating rarefaction curve &#39;</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tot</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">step</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">tot</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">tot</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">rarecurve</span><span class="p">[</span><span class="n">res_</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rarefun</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res_</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,]),</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">n</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">rarecurve</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">rarecurve</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">res_</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">index</span> <span class="o">=</span> <span class="n">res_</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">melt</span><span class="p">()</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">melt</span><span class="p">()</span>
+    <span class="n">pred</span><span class="p">[</span><span class="s1">&#39;yhat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+
+    <span class="n">options</span><span class="o">.</span><span class="n">figure_size</span> <span class="o">=</span> <span class="n">figsize</span>
+    <span class="k">if</span> <span class="n">palette</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">AnnData</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">groupby</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_colors&#39;</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">pred</span><span class="o">.</span><span class="n">variable</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="mi">20</span><span class="p">:</span>
+                    <span class="n">pal</span> <span class="o">=</span> <span class="n">palettes</span><span class="o">.</span><span class="n">default_20</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">pred</span><span class="o">.</span><span class="n">variable</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="mi">28</span><span class="p">:</span>
+                    <span class="n">pal</span> <span class="o">=</span> <span class="n">palettes</span><span class="o">.</span><span class="n">default_28</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">pred</span><span class="o">.</span><span class="n">variable</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="mi">102</span><span class="p">:</span>
+                    <span class="n">pal</span> <span class="o">=</span> <span class="n">palettes</span><span class="o">.</span><span class="n">default_102</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pal</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">pal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;yhat&quot;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;variable&quot;</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="n">theme_classic</span><span class="p">()</span>
+                    <span class="o">+</span> <span class="n">xlab</span><span class="p">(</span><span class="s1">&#39;number of cells&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ylab</span><span class="p">(</span><span class="s1">&#39;number of clones&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ggtitle</span><span class="p">(</span><span class="s1">&#39;rarefaction curve&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">labs</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">scale_color_manual</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="p">(</span><span class="n">pal</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="n">geom_line</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;yhat&quot;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;variable&quot;</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="n">theme_classic</span><span class="p">()</span>
+                    <span class="o">+</span> <span class="n">xlab</span><span class="p">(</span><span class="s1">&#39;number of cells&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ylab</span><span class="p">(</span><span class="s1">&#39;number of clones&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ggtitle</span><span class="p">(</span><span class="s1">&#39;rarefaction curve&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">labs</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">geom_line</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">pred</span><span class="o">.</span><span class="n">variable</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="mi">20</span><span class="p">:</span>
+                <span class="n">pal</span> <span class="o">=</span> <span class="n">palettes</span><span class="o">.</span><span class="n">default_20</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">pred</span><span class="o">.</span><span class="n">variable</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="mi">28</span><span class="p">:</span>
+                <span class="n">pal</span> <span class="o">=</span> <span class="n">palettes</span><span class="o">.</span><span class="n">default_28</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">pred</span><span class="o">.</span><span class="n">variable</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="mi">102</span><span class="p">:</span>
+                <span class="n">pal</span> <span class="o">=</span> <span class="n">palettes</span><span class="o">.</span><span class="n">default_102</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pal</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">pal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;yhat&quot;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;variable&quot;</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="n">theme_classic</span><span class="p">()</span>
+                    <span class="o">+</span> <span class="n">xlab</span><span class="p">(</span><span class="s1">&#39;number of cells&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ylab</span><span class="p">(</span><span class="s1">&#39;number of clones&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ggtitle</span><span class="p">(</span><span class="s1">&#39;rarefaction curve&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">labs</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">scale_color_manual</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="p">(</span><span class="n">pal</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="n">geom_line</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;yhat&quot;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;variable&quot;</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="n">theme_classic</span><span class="p">()</span>
+                    <span class="o">+</span> <span class="n">xlab</span><span class="p">(</span><span class="s1">&#39;number of cells&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ylab</span><span class="p">(</span><span class="s1">&#39;number of clones&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">ggtitle</span><span class="p">(</span><span class="s1">&#39;rarefaction curve&#39;</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">labs</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">geom_line</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">ggplot</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;yhat&quot;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;variable&quot;</span><span class="p">))</span>
+             <span class="o">+</span> <span class="n">theme_classic</span><span class="p">()</span>
+             <span class="o">+</span> <span class="n">xlab</span><span class="p">(</span><span class="s1">&#39;number of cells&#39;</span><span class="p">)</span>
+             <span class="o">+</span> <span class="n">ylab</span><span class="p">(</span><span class="s1">&#39;number of clones&#39;</span><span class="p">)</span>
+             <span class="o">+</span> <span class="n">ggtitle</span><span class="p">(</span><span class="s1">&#39;rarefaction curve&#39;</span><span class="p">)</span>
+             <span class="o">+</span> <span class="n">labs</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">)</span>
+             <span class="o">+</span> <span class="n">geom_line</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;figures/rarefaction&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">save</span><span class="p">),</span> <span class="n">height</span><span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;savefig.dpi&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span><span class="p">(</span><span class="n">p</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">random_palette</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="c1"># a list of 900+colours</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sns</span><span class="o">.</span><span class="n">xkcd_rgb</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="c1"># if max_colors_needed1 &gt; len(cols):</span>
+    <span class="n">cols2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s1">&#39;husl&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">palette</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">sns</span><span class="o">.</span><span class="n">xkcd_palette</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span> <span class="o">+</span> <span class="n">cols2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span>
+
+<div class="viewcode-block" id="clone_network"><a class="viewcode-back" href="../../../modules/dandelion.plotting.clone_network.html#dandelion.plotting.clone_network">[docs]</a><span class="k">def</span> <span class="nf">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;bcr&#39;</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Using scanpy&#39;s plotting module to plot the network. Only thing that is changed is the dfault options: `basis = &#39;bcr&#39;` and `edges = True`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata : AnnData</span>
+<span class="sd">        AnnData object.</span>
+<span class="sd">    basis : str</span>
+<span class="sd">        key for embedding. Default is &#39;bcr&#39;.</span>
+<span class="sd">    edges : bool</span>
+<span class="sd">        whether or not to plot edges. Default is True.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        passed `sc.pl.embedding`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">embedding</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="barplot"><a class="viewcode-back" href="../../../modules/dandelion.plotting.barplot.html#dandelion.plotting.barplot">[docs]</a><span class="k">def</span> <span class="nf">barplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;Set1&#39;</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">xtick_rotation</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_clone_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clone_key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A barplot function to plot usage of V/J genes in the data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion, AnnData</span>
+<span class="sd">        `Dandelion` or `AnnData` object.</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        column name in metadata for plotting in bar plot.</span>
+<span class="sd">    palette : str</span>
+<span class="sd">        Colors to use for the different levels of the variable. Should be something that can be interpreted by [color_palette](https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette), or a dictionary mapping hue levels to matplotlib colors. See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).</span>
+<span class="sd">    figsize : tuple[float, float]</span>
+<span class="sd">        figure size. Default is (12, 4).</span>
+<span class="sd">    normalize : bool</span>
+<span class="sd">        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.</span>
+<span class="sd">    sort_descending : bool</span>
+<span class="sd">        whether or not to sort the order of the plot. Default is True.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        title of plot.</span>
+<span class="sd">    xtick_rotation : int, optional</span>
+<span class="sd">        rotation of x tick labels.</span>
+<span class="sd">    min_clone_size : int, optional</span>
+<span class="sd">        minimum clone size to keep. Defaults to 1 if left as None.</span>
+<span class="sd">    clone_key : str, optional</span>
+<span class="sd">        column name for clones. None defaults to &#39;clone_id&#39;.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        passed to `sns.barplot`.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a seaborn barplot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">AnnData</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">min_clone_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_size</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">min_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_clone_size</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clone_</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clone_</span> <span class="o">=</span> <span class="n">clone_key</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="n">min_size</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">data_</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">keep</span><span class="p">)]</span>
+
+    <span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s1">&#39;whitegrid&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;axes.grid&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sort_descending</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the matplotlib figure</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+    <span class="c1"># plot</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">variable</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">res</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">palette</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c1"># change some parts</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; usage&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;proportion&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xtick_rotation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="n">xtick_rotation</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="stackedbarplot"><a class="viewcode-back" href="../../../modules/dandelion.plotting.stackedbarplot.html#dandelion.plotting.stackedbarplot">[docs]</a><span class="k">def</span> <span class="nf">stackedbarplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sort_descending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xtick_rotation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hide_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">legend_options</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_clone_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clone_key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A stackedbarplot function to plot usage of V/J genes in the data split by groups.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion, AnnData</span>
+<span class="sd">        `Dandelion` or `AnnData` object.</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        column name in metadata for plotting in bar plot.</span>
+<span class="sd">    groupby : str</span>
+<span class="sd">        column name in metadata to split by during plotting.</span>
+<span class="sd">    figsize : tuple[float, float]</span>
+<span class="sd">        figure size. Default is (12, 4).</span>
+<span class="sd">    normalize : bool</span>
+<span class="sd">        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.</span>
+<span class="sd">    sort_descending : bool</span>
+<span class="sd">        whether or not to sort the order of the plot. Default is True.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        title of plot.</span>
+<span class="sd">    xtick_rotation : int, optional</span>
+<span class="sd">        rotation of x tick labels.</span>
+<span class="sd">    hide_legend : bool</span>
+<span class="sd">        whether or not to hide the legend.</span>
+<span class="sd">    legend_options : tuple[str, tuple[float, float], int]</span>
+<span class="sd">        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).</span>
+<span class="sd">    labels : list</span>
+<span class="sd">        Names of objects will be used for the legend if list of multiple dataframes supplied.</span>
+<span class="sd">    min_clone_size : int, optional</span>
+<span class="sd">        minimum clone size to keep. Defaults to 1 if left as None.</span>
+<span class="sd">    clone_key : str, optional</span>
+<span class="sd">        column name for clones. None defaults to &#39;clone_id&#39;.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        other kwargs passed to `matplotlib.plt`.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stacked bar plot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">AnnData</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">]]</span> <span class="c1"># quick fix to prevent dropping of nan</span>
+
+    <span class="k">if</span> <span class="n">min_clone_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_size</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">min_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_clone_size</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clone_</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clone_</span> <span class="o">=</span> <span class="n">clone_key</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="n">min_size</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">data_</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">keep</span><span class="p">)]</span>
+
+    <span class="n">dat_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">variable</span><span class="p">)[</span><span class="n">groupby</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">)</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">stack</span><span class="p">(),</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+    <span class="n">dat_</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">dat_order</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">))</span>
+    <span class="n">dat_</span> <span class="o">=</span> <span class="n">dat_</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">groupby</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sort_descending</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">dat_</span> <span class="o">=</span> <span class="n">dat_</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">dat_order</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sort_descending</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dat_</span> <span class="o">=</span> <span class="n">dat_</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">dat_order</span><span class="o">.</span><span class="n">index</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">sort_descending</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dat_</span> <span class="o">=</span> <span class="n">dat_</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plot_bar_stacked</span><span class="p">(</span><span class="n">dfall</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;multiple stacked bar plot&quot;</span><span class="p">,</span> <span class="n">xtick_rotation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">legend_options</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hide_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        labels</span>
+<span class="sd">            a list of the dataframe objects. Names of objects will be used for the legend.</span>
+<span class="sd">        title</span>
+<span class="sd">            string for the title of the plot</span>
+<span class="sd">        H</span>
+<span class="sd">            is the hatch used for identification of the different dataframes</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            other kwargs passed to matplotlib.plt</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dfall</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">dfall</span> <span class="o">=</span> <span class="p">[</span><span class="n">dfall</span><span class="p">]</span>
+        <span class="n">n_df</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfall</span><span class="p">)</span>
+        <span class="n">n_col</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfall</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">n_ind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfall</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="c1"># Initialize the matplotlib figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfall</span> <span class="p">:</span> <span class="c1"># for each data frame</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span>
+                        <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">stacked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                        <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># make bar plots</span>
+        <span class="n">h</span><span class="p">,</span><span class="n">l</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span> <span class="c1"># get the handles we want to modify</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_df</span> <span class="o">*</span> <span class="n">n_col</span><span class="p">,</span> <span class="n">n_col</span><span class="p">):</span> <span class="c1"># len(h) = n_col * n_df</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">pa</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n_col</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">rect</span> <span class="ow">in</span> <span class="n">pa</span><span class="o">.</span><span class="n">patches</span><span class="p">:</span> <span class="c1"># for each index</span>
+                    <span class="n">rect</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">get_x</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_df</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_col</span><span class="p">))</span>
+                    <span class="n">rect</span><span class="o">.</span><span class="n">set_hatch</span><span class="p">(</span><span class="n">H</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">n_col</span><span class="p">))</span> <span class="c1">#edited part</span>
+                    <span class="n">rect</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_df</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_ind</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_df</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">rotation</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;proportion&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+        <span class="c1"># Add invisible data to add another legend</span>
+        <span class="n">n</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_df</span><span class="p">):</span>
+            <span class="n">n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="n">H</span> <span class="o">*</span> <span class="n">i</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">legend_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Legend</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;center right&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.15</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Legend</span> <span class="o">=</span> <span class="n">legend_options</span>
+        <span class="k">if</span> <span class="n">hide_legend</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">l1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">[:</span><span class="n">n_col</span><span class="p">],</span> <span class="n">l</span><span class="p">[:</span><span class="n">n_col</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncol</span> <span class="o">=</span> <span class="n">Legend</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">l2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncol</span> <span class="o">=</span> <span class="n">Legend</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">xtick_rotation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="n">xtick_rotation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
+
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;multiple stacked bar plot : &quot;</span> <span class="o">+</span> <span class="n">variable</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39; usage&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+
+    <span class="k">return</span> <span class="n">_plot_bar_stacked</span><span class="p">(</span><span class="n">dat_</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="n">figsize</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="p">,</span> <span class="n">xtick_rotation</span> <span class="o">=</span> <span class="n">xtick_rotation</span><span class="p">,</span> <span class="n">legend_options</span> <span class="o">=</span> <span class="n">legend_options</span><span class="p">,</span> <span class="n">hide_legend</span> <span class="o">=</span> <span class="n">hide_legend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="spectratype"><a class="viewcode-back" href="../../../modules/dandelion.plotting.spectratype.html#dandelion.plotting.spectratype">[docs]</a><span class="k">def</span> <span class="nf">spectratype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">locus</span><span class="p">,</span> <span class="n">clone_key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">xtick_rotation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hide_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">legend_options</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A stackedbarplot function to plot usage of V/J genes in the data split by groups.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion, AnnData</span>
+<span class="sd">        `Dandelion` or `AnnData` object.</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        column name in metadata for plotting in bar plot.</span>
+<span class="sd">    groupby : str</span>
+<span class="sd">        column name in metadata to split by during plotting.</span>
+<span class="sd">    locus : str</span>
+<span class="sd">        either IGH or IGL.</span>
+<span class="sd">    figsize : tuple[float, float]</span>
+<span class="sd">        figure size. Default is (6, 4).</span>
+<span class="sd">    width : float, optional</span>
+<span class="sd">        width of bars.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        title of plot.</span>
+<span class="sd">    xtick_rotation : int, optional</span>
+<span class="sd">        rotation of x tick labels.</span>
+<span class="sd">    hide_legend : bool</span>
+<span class="sd">        whether or not to hide the legend.</span>
+<span class="sd">    legend_options : tuple[str, tuple[float, float], int]</span>
+<span class="sd">        a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).</span>
+<span class="sd">    labels : list</span>
+<span class="sd">        Names of objects will be used for the legend if list of multiple dataframes supplied.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        other kwargs passed to matplotlib.pyplot.plot</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sectratype plot</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clonekey</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clonekey</span> <span class="o">=</span> <span class="n">clone_key</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Please provide a &lt;class &#39;Dandelion&#39;&gt; class object or a pandas dataframe instead of </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;locus&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Please ensure dataframe contains &#39;locus&#39; column&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">locus</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">locus</span> <span class="o">=</span> <span class="p">[</span><span class="n">locus</span><span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;locus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">locus</span><span class="p">)]</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">]]</span>
+    <span class="n">dat_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">variable</span><span class="p">)[</span><span class="n">groupby</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">stack</span><span class="p">(),</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+    <span class="n">dat_</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">dat_</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">dat_</span><span class="p">[</span><span class="n">variable</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;coerce&#39;</span><span class="p">)</span>
+    <span class="n">dat_</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="n">variable</span><span class="p">)</span>
+    <span class="n">dat_2</span> <span class="o">=</span> <span class="n">dat_</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">groupby</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+    <span class="n">new_index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">dat_</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">dat_2</span> <span class="o">=</span> <span class="n">dat_2</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">new_index</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_plot_spectra_stacked</span><span class="p">(</span><span class="n">dfall</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;multiple stacked bar plot&quot;</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">xtick_rotation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">legend_options</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hide_legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dfall</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">dfall</span> <span class="o">=</span> <span class="p">[</span><span class="n">dfall</span><span class="p">]</span>
+        <span class="n">n_df</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfall</span><span class="p">)</span>
+        <span class="n">n_col</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfall</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">n_ind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfall</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wdth</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">n_ind</span><span class="o">/</span><span class="mi">60</span><span class="o">+</span><span class="mf">0.8</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wdth</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="c1"># Initialize the matplotlib figure</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfall</span> <span class="p">:</span> <span class="c1"># for each data frame</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span>
+                        <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">stacked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                        <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># make bar plots</span>
+        <span class="n">h</span><span class="p">,</span><span class="n">l</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span> <span class="c1"># get the handles we want to modify</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_df</span> <span class="o">*</span> <span class="n">n_col</span><span class="p">,</span> <span class="n">n_col</span><span class="p">):</span> <span class="c1"># len(h) = n_col * n_df</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">pa</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n_col</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">rect</span> <span class="ow">in</span> <span class="n">pa</span><span class="o">.</span><span class="n">patches</span><span class="p">:</span> <span class="c1"># for each index</span>
+                    <span class="n">rect</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="n">rect</span><span class="o">.</span><span class="n">get_x</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_df</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_col</span><span class="p">))</span>
+                    <span class="n">rect</span><span class="o">.</span><span class="n">set_hatch</span><span class="p">(</span><span class="n">H</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="n">n_col</span><span class="p">))</span> <span class="c1">#edited part</span>
+                    <span class="n">rect</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="n">wdth</span><span class="p">)</span> <span class="c1"># need to see if there&#39;s a better way to toggle this.</span>
+        
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Keeps every 5th label visible and hides the rest</span>
+        <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">l</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">get_ticklabels</span><span class="p">())</span> <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+        <span class="c1"># Add invisible data to add another legend</span>
+        <span class="n">n</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_df</span><span class="p">):</span>
+            <span class="n">n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="n">H</span> <span class="o">*</span> <span class="n">i</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">legend_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Legend</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;center right&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Legend</span> <span class="o">=</span> <span class="n">legend_options</span>
+        <span class="k">if</span> <span class="n">hide_legend</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">l1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">[:</span><span class="n">n_col</span><span class="p">],</span> <span class="n">l</span><span class="p">[:</span><span class="n">n_col</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncol</span> <span class="o">=</span> <span class="n">Legend</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">l2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">Legend</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncol</span> <span class="o">=</span> <span class="n">Legend</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">xtick_rotation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="n">xtick_rotation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
+
+    <span class="k">return</span> <span class="n">_plot_spectra_stacked</span><span class="p">(</span><span class="n">dat_2</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="n">figsize</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">width</span><span class="p">,</span> <span class="n">xtick_rotation</span> <span class="o">=</span> <span class="n">xtick_rotation</span><span class="p">,</span> <span class="n">legend_options</span> <span class="o">=</span> <span class="n">legend_options</span><span class="p">,</span> <span class="n">hide_legend</span> <span class="o">=</span><span class="n">hide_legend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="clone_overlap"><a class="viewcode-back" href="../../../modules/dandelion.plotting.clone_overlap.html#dandelion.plotting.clone_overlap">[docs]</a><span class="k">def</span> <span class="nf">clone_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="n">colorby</span><span class="p">,</span> <span class="n">min_clone_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clone_key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">color_mapping</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">node_labels</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">node_label_layout</span> <span class="o">=</span> <span class="s1">&#39;rotation&#39;</span><span class="p">,</span> <span class="n">group_label_position</span> <span class="o">=</span> <span class="s1">&#39;middle&#39;</span><span class="p">,</span> <span class="n">group_label_offset</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">return_graph</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">save</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A plot function to visualise clonal overlap as a circos-style plot.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    self : Dandelion, AnnData</span>
+<span class="sd">        `Dandelion` or `AnnData` object.</span>
+<span class="sd">    groupby : str</span>
+<span class="sd">        column name in obs/metadata for collapsing to nodes in circos plot.</span>
+<span class="sd">    colorby : str</span>
+<span class="sd">        column name in obs/metadata for grouping and color of nodes in circos plot.</span>
+<span class="sd">    min_clone_size : int, optional</span>
+<span class="sd">        minimum size of clone for plotting connections. Defaults to 2 if left as None.</span>
+<span class="sd">    clone_key : str, optional</span>
+<span class="sd">        column name for clones. None defaults to &#39;clone_id&#39;.</span>
+<span class="sd">    color_maopping : dict, sequence, optional</span>
+<span class="sd">        custom color mapping provided as a sequence (correpsonding to order of categories or alpha-numeric order if dtype is not category), or dictionary containing custom {category:color} mapping.</span>
+<span class="sd">    node_labels : bool, optional</span>
+<span class="sd">        whether to use node objects as labels or not</span>
+<span class="sd">    node_label_layout : bool, optional</span>
+<span class="sd">        which/whether (a) node layout is used. One of &#39;rotation&#39;, &#39;numbers&#39; or None.</span>
+<span class="sd">    group_label_position : str</span>
+<span class="sd">        The position of the group label. One of &#39;beginning&#39;, &#39;middle&#39; or &#39;end&#39;.</span>
+<span class="sd">    group_label_offset : int, float</span>
+<span class="sd">        how much to offset the group labels, so that they are not overlapping with node labels.</span>
+<span class="sd">    figsize : tuple[float, float]</span>
+<span class="sd">        figure size. Default is (8, 8).</span>
+<span class="sd">    return_graph : bool</span>
+<span class="sd">        whether or not to return the graph for fine tuning. Default is False.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        passed to `matplotlib.pyplot.savefig`.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a `nxviz.CircosPlot`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">nxviz</span> <span class="k">as</span> <span class="nn">nxv</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Unable to import module `nxviz`. Have you done install nxviz? Try pip install git+https://github.com/zktuong/nxviz.git&quot;</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">min_clone_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_size</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">min_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_clone_size</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clone_</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clone_</span> <span class="o">=</span> <span class="n">clone_key</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">AnnData</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># get rid of problematic rows that appear because of category conversion?</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">~</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="s1">&#39;NaN&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))]</span>
+        <span class="k">if</span> <span class="s1">&#39;clone_overlap&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">uns</span><span class="p">:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;clone_overlap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>                        
+            <span class="c1"># prepare a summary table</span>
+            <span class="n">datc_</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span>
+            <span class="n">datc_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">datc_</span><span class="p">)</span>
+            <span class="n">datc_</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">datc_</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">,</span> <span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">clone_</span><span class="p">]</span>
+            <span class="n">datc_</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">dictg_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">])</span>
+            <span class="n">datc_</span><span class="p">[</span><span class="n">groupby</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictg_</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">datc_</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]]</span>
+            
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">min_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;min_size must be greater than 0.&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">min_size</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">overlap</span><span class="p">[</span><span class="n">overlap</span> <span class="o">&lt;</span> <span class="n">min_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">overlap</span><span class="p">[</span><span class="n">overlap</span> <span class="o">&gt;=</span> <span class="n">min_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">min_size</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">overlap</span><span class="p">[</span><span class="n">overlap</span> <span class="o">&gt;=</span> <span class="n">min_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    
+            <span class="n">overlap</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">overlap</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>    
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># get rid of problematic rows that appear because of category conversion?</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">~</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="s1">&#39;NaN&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))]</span>
+        
+        <span class="c1"># prepare a summary table</span>
+        <span class="n">datc_</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span>
+        <span class="n">datc_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">datc_</span><span class="p">)</span>
+        <span class="n">datc_</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">datc_</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">,</span> <span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">clone_</span><span class="p">]</span>
+        <span class="n">datc_</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;tmp&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">dictg_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">])</span>
+        <span class="n">datc_</span><span class="p">[</span><span class="n">groupby</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictg_</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">datc_</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]]</span>
+
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">clone_</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">min_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;min_size must be greater than 0.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">min_size</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">overlap</span><span class="p">[</span><span class="n">overlap</span> <span class="o">&lt;</span> <span class="n">min_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">overlap</span><span class="p">[</span><span class="n">overlap</span> <span class="o">&gt;=</span> <span class="n">min_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">min_size</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">overlap</span><span class="p">[</span><span class="n">overlap</span> <span class="o">&gt;=</span> <span class="n">min_size</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    
+        <span class="n">overlap</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">overlap</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">overlap</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">overlap</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">edges</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="o">+</span> <span class="p">({</span><span class="nb">str</span><span class="p">(</span><span class="n">clone_</span><span class="p">):</span><span class="n">x</span><span class="p">},)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">combinations</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">overlap</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">overlap</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="mi">2</span><span class="p">))]</span>
+
+    <span class="c1"># create graph    </span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="c1"># add in the nodes</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">p</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">colorby</span><span class="p">):</span> <span class="n">d</span><span class="p">})</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">colorby</span><span class="p">])])</span>
+
+    <span class="c1"># unpack the edgelist and add to the graph</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="n">edge</span><span class="p">])</span>
+    <span class="n">groupby_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">colorby</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">color_mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">AnnData</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_categorical_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">groupby</span><span class="p">]):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">colorby_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">colorby</span><span class="p">)]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">colorby</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_colors&#39;</span><span class="p">]))</span>
+                <span class="k">except</span><span class="p">:</span>                    
+                    <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">color_mapping</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">colorby_dict</span> <span class="o">=</span> <span class="n">color_mapping</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_categorical_dtype</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">groupby</span><span class="p">]):</span>
+                <span class="n">colorby_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">colorby</span><span class="p">)]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">),</span> <span class="n">color_mapping</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">colorby_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">colorby</span><span class="p">)]))),</span> <span class="n">color_mapping</span><span class="p">))</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">data</span><span class="p">[[</span><span class="n">groupby</span><span class="p">,</span> <span class="n">colorby</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">groupby</span> <span class="o">==</span> <span class="n">colorby</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">data</span><span class="p">[[</span><span class="n">groupby</span><span class="p">]]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">groupby</span><span class="p">)</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">groupby</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">colorby</span><span class="p">)</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">groupby</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">c</span> <span class="o">=</span> <span class="n">nxv</span><span class="o">.</span><span class="n">CircosPlot</span><span class="p">(</span><span class="n">G</span><span class="p">,</span>
+                       <span class="n">node_color</span><span class="o">=</span><span class="n">colorby</span><span class="p">,</span>
+                       <span class="n">node_grouping</span><span class="o">=</span><span class="n">colorby</span><span class="p">,</span>
+                       <span class="n">node_labels</span><span class="o">=</span><span class="n">node_labels</span><span class="p">,</span>
+                       <span class="n">node_label_layout</span><span class="o">=</span><span class="n">node_label_layout</span><span class="p">,</span>
+                       <span class="n">group_label_position</span><span class="o">=</span><span class="n">group_label_position</span><span class="p">,</span>
+                       <span class="n">group_label_offset</span><span class="o">=</span><span class="n">group_label_offset</span><span class="p">,</span>
+                       <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">groupby</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s1">&#39;colorby_dict&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">node_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">colorby_dict</span><span class="p">[</span><span class="n">groupby_dict</span><span class="p">[</span><span class="n">c</span><span class="p">]]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">nodes</span><span class="p">]</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">compute_group_label_positions</span><span class="p">()</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">compute_group_colors</span><span class="p">()</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">save</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">,</span> <span class="n">bbox_inches</span> <span class="o">=</span> <span class="s1">&#39;tight&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_graph</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">c</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, zktuong
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
