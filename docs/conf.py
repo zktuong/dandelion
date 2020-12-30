@@ -17,6 +17,8 @@ from sphinx.deprecation import RemovedInSphinx40Warning
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
+import dandelion
+
 # -- Project information -----------------------------------------------------
 
 project = 'dandelion'
