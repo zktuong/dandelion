@@ -15,11 +15,13 @@ dependencies:
 - distance
 - joblib
 - plotnine
+- seaborn
+- scikit-learn
+- statsmodels
+- numba
+- pytables
 - pip
 - pip:
   - sc-dandelion
-  - sphinx
   - nbsphinx
-  - sphinx-rtd-theme
   - sphinx-autodoc-typehints
-  - recommonmark
