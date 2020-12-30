@@ -8,8 +8,8 @@ dependencies:
 - pandas
 - pandoc
 - pip
-- yaml
 - pip:
+  - pyyaml
   - sc-dandelion
   - sphinx
   - nbsphinx

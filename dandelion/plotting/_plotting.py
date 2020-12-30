@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-29 20:55:53
+# @Last Modified time: 2020-12-30 01:46:37
 
 import seaborn as sns
 import pandas as pd
@@ -38,9 +38,10 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6,4)
         Size of plot.
     save : str, optional
         Save path.
+    
     Returns
-    ----------
-        rarefaction curve plot.
+    -------
+    rarefaction curve plot.
     """
 
     if self.__class__ == AnnData:
@@ -209,9 +210,10 @@ def barplot(self, variable, palette = 'Set1', figsize = (12, 4), normalize = Tru
         column name for clones. None defaults to 'clone_id'.
     **kwargs
         passed to `sns.barplot`.
-    Return
-    ----------
-        a seaborn barplot.
+    
+    Returns
+    -------
+    a seaborn barplot.
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
@@ -293,9 +295,10 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
         column name for clones. None defaults to 'clone_id'.
     **kwargs
         other kwargs passed to `matplotlib.plt`.
-    Return
-    ----------
-        stacked bar plot.
+    
+    Returns
+    -------
+    stacked bar plot.
     """
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
@@ -429,9 +432,10 @@ def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 
         Names of objects will be used for the legend if list of multiple dataframes supplied.
     **kwargs
         other kwargs passed to matplotlib.pyplot.plot
-    Return
-    ----------
-        sectratype plot
+    
+    Returns
+    -------
+    sectratype plot
     """
 
     if clone_key is None:
@@ -548,9 +552,10 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         whether or not to return the graph for fine tuning. Default is False.
     **kwargs
         passed to `matplotlib.pyplot.savefig`.
-    Return
-    ----------
-        a `nxviz.CircosPlot`.
+    
+    Returns
+    -------
+    a `nxviz.CircosPlot`.
     """
     import networkx as nx
     try:

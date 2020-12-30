@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-29 21:08:36
+# @Last Modified time: 2020-12-30 01:50:30
 
 import pandas as pd
 import numpy as np
@@ -49,7 +49,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     Returns
     -------
-        `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
+    `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
     """
     if verbose:
         start = logg.info('Generating network')
@@ -356,7 +356,7 @@ def mst(mat):
 
     Returns
     -------
-        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
+    Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
     for c in mat:
@@ -378,7 +378,7 @@ def clone_degree(self, weight=None, verbose = True):
 
     Returns
     -------
-        Dandelion object with metadata updated with node degree information.
+    Dandelion object with metadata updated with node degree information.
     """
     if verbose:
         start = logg.info('Calculating node degree')
@@ -417,7 +417,7 @@ def clone_centrality(self, verbose = True):
 
     Returns
     -------
-        Dandelion object with metadata updated with node closeness centrality information.
+    Dandelion object with metadata updated with node closeness centrality information.
     """
     if verbose:
         start = logg.info('Calculating node closeness centrality')

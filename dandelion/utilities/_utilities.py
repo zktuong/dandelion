@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-29 21:12:23
+# @Last Modified time: 2020-12-30 01:53:19
 
 import sys
 import os
@@ -75,10 +75,10 @@ def dict_from_table(meta, columns):
         pandas dataframe or file path
     columns
         column names in dataframe
+    
     Returns
     -------
-    sample_dict
-        dictionary
+    dictionary
     """
     if (isinstance(meta, pd.DataFrame)) & (columns is not None):
         meta_ = meta
@@ -98,9 +98,10 @@ def clean_nan_dict(d):
     ----------
     d
         dictionary
+    
     Returns
     -------
-        dictionary with no NAs.
+    dictionary with no NAs.
     """
 
     return {
@@ -115,9 +116,10 @@ def flatten(l):
     ----------
     l
         list
+    
     Returns
     -------
-        a flattened list.
+    a flattened list.
     """
     for el in l:
         if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
@@ -178,9 +180,10 @@ def load_data(obj):
     ----------
     obj : DataFrame, str
         file path to .tsv file or pandas DataFrame object.
+    
     Returns
     -------
-        pandas DataFrame object.
+    pandas DataFrame object.
     """
     if os.path.isfile(str(obj)):
         try:
@@ -206,9 +209,10 @@ def setup_metadata_(data):
     ----------
     data : DataFrame
         pandas DataFrame object.    
+    
     Returns
     -------
-        pandas DataFrame object.
+    pandas DataFrame object.
     """
     dat_h = data[data['locus'] == 'IGH'].copy()
     dict_h = dict(zip(dat_h['sequence_id'], dat_h['cell_id']))
@@ -225,9 +229,10 @@ def setup_metadata(data, clone_key = None):
         pandas DataFrame object.
     clone_key : str, optiona;
         column name of clone id. None defaults to 'clone_id'.
+    
     Returns
     -------
-        pandas DataFrame object.
+    pandas DataFrame object.
     """
     if clone_key is None:
         clonekey = 'clone_id'
@@ -332,7 +337,7 @@ def retrieve_metadata(data, retrieve_id, split_heavy_light, collapse):
 
     Returns
     -------
-        A dictionary with keys as cell_ids and records as retrieved value.
+    A dictionary with keys as cell_ids and records as retrieved value.
     """
     dat_h = data[data['locus'] == 'IGH'].copy()
     dat_l = data[data['locus'].isin(['IGK', 'IGL'])].copy()
@@ -413,9 +418,10 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.
     clones_sep : tuple[int, str]
         A tuple containing how the clone groups should be extracted. None defaults to (0, '_').
+    
     Returns
     -------
-        Dandelion object with `.metadata` slot initialized.
+    Dandelion object with `.metadata` slot initialized.
     """
     dat = load_data(self.data)
     for x in ['cell_id', 'locus', 'c_call', 'umi_count']:
@@ -741,9 +747,10 @@ class Dandelion:
         ----------
         self : Dandelion
             Dandelion object.        
+        
         Returns
         -------
-            a deep copy of `dandelion` class.
+        a deep copy of `dandelion` class.
         """
         return copy.deepcopy(self)
 
@@ -761,9 +768,10 @@ class Dandelion:
             path to germline database folder. Defaults to `$GERMLINE` environmental variable.
         org : str
             organism of reference folder. Default is 'human'.
+        
         Returns
         -------
-            updated germline reference diciontary in `.germline` slot.
+        updated germline reference diciontary in `.germline` slot.
         """
         start = logg.info('Updating germline reference')
         env = os.environ.copy()
@@ -976,7 +984,7 @@ def read_pkl(filename='dandelion_data.pkl.pbz2'):
 
     Returns
     -------
-       Dandelion object.
+    Dandelion object.
     """
     if isBZIP(filename):
         data = bz2.BZ2File(filename, 'rb')
@@ -1000,7 +1008,7 @@ def read_h5(filename='dandelion_data.h5'):
 
     Returns
     -------
-       Dandelion object.
+    Dandelion object.
     """    
     try:
         data = pd.read_hdf(filename, 'data')
@@ -1102,6 +1110,7 @@ def concat(arrays, check_unique = False):
         pandas dataframe or file path
     columns
         column names in dataframe
+    
     Returns
     -------
     sample_dict

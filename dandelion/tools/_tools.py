@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:35:16
+# @Last Modified time: 2020-12-30 01:51:38
 
 import os
 import sys
@@ -51,9 +51,10 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
         If specified, this will be the column name for clones. None defaults to 'clone_id'
     calculate_junction_length : bool
         Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is wrong). Default is True
+    
     Returns
     -------
-        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+    `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     start = logg.info('Finding clones')
     if self.__class__ == Dandelion:
@@ -588,8 +589,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
     
     Returns
     ----------
-        `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
-
+    `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
     """
     start = logg.info('Transferring network')
     if dandelion.graph is not None:
@@ -718,9 +718,10 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         If specified, the out file name will have this prefix. None defaults to 'dandelion_define_clones'
     verbose : bool
         Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
+    
     Returns
-    ----------
-        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+    -------
+    `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     start = logg.info('Finding clones')
     if ncpu is None:
@@ -1009,9 +1010,10 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
         Column name specifying the clone_id column in metadata.
     key_added : str, optional
         column name where clone size is tabulated into.
+    
     Returns
-    ----------
-        `Dandelion` object with clone size columns annotated in `.metadata` slot.
+    -------
+    `Dandelion` object with clone size columns annotated in `.metadata` slot.
     """
 
     start = logg.info('Quantifying clone sizes')
@@ -1082,9 +1084,9 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
     clone_key : str, optional
         column name for clones. None defaults to 'clone_id'.
     
-    Return
-    ----------
-        a `pandas DataFrame`.
+    Returns
+    -------
+    a `pandas DataFrame`.
     """
     start = logg.info('Finding clones')
     if self.__class__ == Dandelion:

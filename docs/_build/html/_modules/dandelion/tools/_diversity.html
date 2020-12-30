@@ -177,7 +177,7 @@
 <span class="c1"># @Author: Kelvin</span>
 <span class="c1"># @Date:   2020-08-13 21:08:53</span>
 <span class="c1"># @Last Modified by:   Kelvin</span>
-<span class="c1"># @Last Modified time: 2020-12-30 01:33:04</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:49:57</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -210,9 +210,10 @@
 <span class="sd">        Column name specifying the clone_id column in metadata/obs.</span>
 <span class="sd">    diversity_key : str, optional</span>
 <span class="sd">        key for &#39;diversity&#39; results in AnnData&#39;s `.uns`.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        Dictionary containing rarefaction results or updated `.uns` slot if `AnnData` object is used.</span>
+<span class="sd">    -------</span>
+<span class="sd">    Dictionary containing rarefaction results or updated `.uns` slot if `AnnData` object is used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Constructing rarefaction curve&#39;</span><span class="p">)</span>
 
@@ -303,9 +304,10 @@
 <span class="sd">        Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.</span>
 <span class="sd">    key_added : str, list, optional</span>
 <span class="sd">        column names for output.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.</span>
+<span class="sd">    -------</span>
+<span class="sd">    `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">resample</span> <span class="o">=</span> <span class="kc">True</span>
@@ -433,9 +435,10 @@
 <span class="sd">        Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.</span>
 <span class="sd">    key_added : str, list, optional</span>
 <span class="sd">        column names for output.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.</span>
+<span class="sd">    -------</span>
+<span class="sd">    `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating Gini indices&#39;</span><span class="p">)</span>
 
@@ -764,9 +767,10 @@
 <span class="sd">        number of cells to downsample to. If None, defaults to size of smallest group.</span>
 <span class="sd">    key_added : str, list, optional</span>
 <span class="sd">        column names for output.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.</span>
+<span class="sd">    -------</span>
+<span class="sd">    `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating Chao1 estimates&#39;</span><span class="p">)</span>
 
@@ -928,9 +932,10 @@
 <span class="sd">        number of cells to downsample to. If None, defaults to size of smallest group.</span>
 <span class="sd">    key_added : str, list, optional</span>
 <span class="sd">        column names for output.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.</span>
+<span class="sd">    -------</span>
+<span class="sd">    `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating Shannon entropy&#39;</span><span class="p">)</span>
 

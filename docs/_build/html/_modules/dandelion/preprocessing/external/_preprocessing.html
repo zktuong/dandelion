@@ -177,7 +177,7 @@
 <span class="c1"># @Author: kt16</span>
 <span class="c1"># @Date:   2020-05-12 17:56:02</span>
 <span class="c1"># @Last Modified by:   Kelvin</span>
-<span class="c1"># @Last Modified time: 2020-12-29 20:58:23</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:49:12</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -208,8 +208,7 @@
 <span class="sd">        `ig` or `tr` mode for running igblastn.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">igblast_db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -259,8 +258,7 @@
 <span class="sd">        whether or not to parse extended 10x annotations. Default is True.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -310,8 +308,7 @@
 <span class="sd">        path to AIRR table.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------    </span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>    
     <span class="n">outname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">db_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tsv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_heavy&#39;</span>
     
@@ -338,8 +335,7 @@
 <span class="sd">        path to AIRR table.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------    </span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>    
     <span class="n">outname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">db_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.tsv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_light&#39;</span>
     
@@ -380,8 +376,7 @@
 <span class="sd">        whether to run on heavy or light mode. If left as None, heavy and light will be run together.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------    </span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">germline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -596,8 +591,7 @@
 <span class="sd">        whether or not to run novel allele discovery. Default is &#39;YES&#39;.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the command used in terminal. Default is False.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -807,9 +801,10 @@
 <span class="sd">        maximum number of counts required for a cell to pass filtering. Default is None.</span>
 <span class="sd">    blacklist : sequence, optional</span>
 <span class="sd">        if provided, will exclude these genes from highly variable genes list.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.</span>
+<span class="sd">    `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_adata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="c1"># run scrublet    </span>

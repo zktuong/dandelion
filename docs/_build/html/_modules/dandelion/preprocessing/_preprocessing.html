@@ -177,7 +177,7 @@
 <span class="c1"># @Author: kt16</span>
 <span class="c1"># @Date:   2020-05-12 17:56:02</span>
 <span class="c1"># @Last Modified by:   Kelvin</span>
-<span class="c1"># @Last Modified time: 2020-12-29 20:57:51</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:48:33</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -222,9 +222,10 @@
 <span class="sd">        whether or not to remove the trailing hyphen number e.g. &#39;-1&#39; from the cell/contig barcodes.</span>
 <span class="sd">    outdir : str, optional</span>
 <span class="sd">        path to output location. None defaults to &#39;dandelion/data&#39;.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        Formatted fasta file with new headers containing prefix</span>
+<span class="sd">    Formatted fasta file with new headers containing prefix</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">filePath</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fasta</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">fasta</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.fasta&quot;</span><span class="p">):</span>
@@ -350,9 +351,10 @@
 <span class="sd">        whether or not to remove the trailing hyphen number e.g. &#39;-1&#39; from the cell/contig barcodes.</span>
 <span class="sd">    outdir : str, optional</span>
 <span class="sd">        path to out put location. Default is None, which is &#39;dandelion/data&#39;.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        Formatted fasta file with new headers containing prefix</span>
+<span class="sd">    Formatted fasta file with new headers containing prefix</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">fastas</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
         <span class="n">fastas</span> <span class="o">=</span> <span class="p">[</span><span class="n">fastas</span><span class="p">]</span>
@@ -410,9 +412,10 @@
 <span class="sd">        number of cores to use if parallel is True. Default is all available minus 1.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the blast command in terminal. Default is False.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        V(D)J tsv files with constant genes annotated.</span>
+<span class="sd">    V(D)J tsv files with constant genes annotated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">_run_blastn</span><span class="p">(</span><span class="n">fasta</span><span class="p">,</span> <span class="n">blastdb</span><span class="p">,</span> <span class="n">fileformat</span><span class="p">,</span> <span class="n">org</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
 
@@ -908,9 +911,10 @@
 <span class="sd">        number of cores to use if parallel is True. Default is all available - 1.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        whether or not to print the blast command in terminal. Default is False.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        V(D)J tsv files with constant genes annotated.</span>
+<span class="sd">    V(D)J tsv files with constant genes annotated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">fastas</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
         <span class="n">fastas</span> <span class="o">=</span> <span class="p">[</span><span class="n">fastas</span><span class="p">]</span>
@@ -940,9 +944,10 @@
 <span class="sd">        whether or not to transfer additional 10X annotions to output file. Default is True.</span>
 <span class="sd">    verbose :</span>
 <span class="sd">        whether or not to print the igblast command used in the terminal. Default is False.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        V(D)J data file in airr/changeo data format.</span>
+<span class="sd">    -------</span>
+<span class="sd">    V(D)J data file in airr/changeo data format.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
@@ -1007,9 +1012,10 @@
 <span class="sd">        dictionary for creating a sample_id column in the concatenated file.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        Whether or not to print the command used in the terminal. Default is False.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls</span>
+<span class="sd">    -------</span>
+<span class="sd">    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fileformat</span> <span class="o">=</span> <span class="s1">&#39;blast&#39;</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
@@ -1260,9 +1266,10 @@
 <span class="sd">        dictionary for creating a sample_id column in the concatenated file.</span>
 <span class="sd">    verbose : bool</span>
 <span class="sd">        Whether or not to print the command used in the terminal. Default is False.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls</span>
+<span class="sd">    -------</span>
+<span class="sd">    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
@@ -1489,9 +1496,10 @@
 <span class="sd">        Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is &#39;dmask&#39;.</span>
 <span class="sd">    fileformat : str</span>
 <span class="sd">        format of V(D)J file/objects. Default is &#39;airr&#39;. Also accepts &#39;changeo&#39;.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        V(D)J data file with reconstructed germline sequences.</span>
+<span class="sd">    -------</span>
+<span class="sd">    V(D)J data file with reconstructed germline sequences.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reconstructing germline sequences&#39;</span><span class="p">)</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -1514,7 +1522,7 @@
 <span class="sd">          record : dict with fields and values in the Change-O format</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">          changeo.Receptor.Receptor : parsed Receptor object.</span>
+<span class="sd">        changeo.Receptor.Receptor : parsed Receptor object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Parse fields</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1532,7 +1540,7 @@
 <span class="sd">          record : dict with fields and values in the AIRR format.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">          changeo.Receptor.Receptor : parsed Receptor object.</span>
+<span class="sd">        changeo.Receptor.Receptor : parsed Receptor object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Parse fields</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1856,9 +1864,10 @@
 <span class="sd">        number of cores to use if parallel is True. Default is all available - 1.</span>
 <span class="sd">    save : str, optional</span>
 <span class="sd">        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.</span>
+<span class="sd">    V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Filtering BCRs&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">Dandelion</span><span class="p">:</span>
@@ -2422,9 +2431,10 @@
 <span class="sd">        whether to return the results a frequency or counts. Default is True (frequency).</span>
 <span class="sd">    combine</span>
 <span class="sd">        whether to return the results for replacement and silent mutations separately (False). Default is True (sum).</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        `Dandelion` object with updated `.metadata` slot.</span>
+<span class="sd">    -------</span>
+<span class="sd">    `Dandelion` object with updated `.metadata` slot.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Quantifying mutations&#39;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
@@ -2589,9 +2599,10 @@
 <span class="sd">        size of plot. Default is (4.5, 2.5).</span>
 <span class="sd">    *args</span>
 <span class="sd">        passed to shazam&#39;s `distToNearest &lt;https://shazam.readthedocs.io/en/stable/topics/distToNearest/&gt;`__.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
-<span class="sd">    ----------</span>
-<span class="sd">        plotnine plot showing histogram of length normalized ham model distance threshold.</span>
+<span class="sd">    -------</span>
+<span class="sd">    plotnine plot showing histogram of length normalized ham model distance threshold.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating threshold&#39;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>

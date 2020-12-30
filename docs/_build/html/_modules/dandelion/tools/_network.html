@@ -177,7 +177,7 @@
 <span class="c1"># @Author: Kelvin</span>
 <span class="c1"># @Date:   2020-08-12 18:08:04</span>
 <span class="c1"># @Last Modified by:   Kelvin</span>
-<span class="c1"># @Last Modified time: 2020-12-29 21:08:36</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:50:30</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -224,7 +224,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.</span>
+<span class="sd">    `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Generating network&#39;</span><span class="p">)</span>
@@ -531,7 +531,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.</span>
+<span class="sd">    Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mst_tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">mat</span><span class="p">:</span>
@@ -553,7 +553,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        Dandelion object with metadata updated with node degree information.</span>
+<span class="sd">    Dandelion object with metadata updated with node degree information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating node degree&#39;</span><span class="p">)</span>
@@ -592,7 +592,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        Dandelion object with metadata updated with node closeness centrality information.</span>
+<span class="sd">    Dandelion object with metadata updated with node closeness centrality information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating node closeness centrality&#39;</span><span class="p">)</span>

@@ -177,7 +177,7 @@
 <span class="c1"># @Author: kt16</span>
 <span class="c1"># @Date:   2020-05-12 14:01:32</span>
 <span class="c1"># @Last Modified by:   Kelvin</span>
-<span class="c1"># @Last Modified time: 2020-12-29 21:12:23</span>
+<span class="c1"># @Last Modified time: 2020-12-30 01:53:19</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -250,10 +250,10 @@
 <span class="sd">        pandas dataframe or file path</span>
 <span class="sd">    columns</span>
 <span class="sd">        column names in dataframe</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    sample_dict</span>
-<span class="sd">        dictionary</span>
+<span class="sd">    dictionary</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">meta_</span> <span class="o">=</span> <span class="n">meta</span>
@@ -273,9 +273,10 @@
 <span class="sd">    ----------</span>
 <span class="sd">    d</span>
 <span class="sd">        dictionary</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        dictionary with no NAs.</span>
+<span class="sd">    dictionary with no NAs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">return</span> <span class="p">{</span>
@@ -290,9 +291,10 @@
 <span class="sd">    ----------</span>
 <span class="sd">    l</span>
 <span class="sd">        list</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        a flattened list.</span>
+<span class="sd">    a flattened list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
@@ -353,9 +355,10 @@
 <span class="sd">    ----------</span>
 <span class="sd">    obj : DataFrame, str</span>
 <span class="sd">        file path to .tsv file or pandas DataFrame object.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        pandas DataFrame object.</span>
+<span class="sd">    pandas DataFrame object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -381,9 +384,10 @@
 <span class="sd">    ----------</span>
 <span class="sd">    data : DataFrame</span>
 <span class="sd">        pandas DataFrame object.    </span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        pandas DataFrame object.</span>
+<span class="sd">    pandas DataFrame object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dat_h</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;locus&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;IGH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">dict_h</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;sequence_id&#39;</span><span class="p">],</span> <span class="n">dat_h</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]))</span>
@@ -400,9 +404,10 @@
 <span class="sd">        pandas DataFrame object.</span>
 <span class="sd">    clone_key : str, optiona;</span>
 <span class="sd">        column name of clone id. None defaults to &#39;clone_id&#39;.</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        pandas DataFrame object.</span>
+<span class="sd">    pandas DataFrame object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">clone_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">clonekey</span> <span class="o">=</span> <span class="s1">&#39;clone_id&#39;</span>
@@ -507,7 +512,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        A dictionary with keys as cell_ids and records as retrieved value.</span>
+<span class="sd">    A dictionary with keys as cell_ids and records as retrieved value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dat_h</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;locus&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;IGH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">dat_l</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;locus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;IGK&#39;</span><span class="p">,</span> <span class="s1">&#39;IGL&#39;</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -588,9 +593,10 @@
 <span class="sd">        Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.</span>
 <span class="sd">    clones_sep : tuple[int, str]</span>
 <span class="sd">        A tuple containing how the clone groups should be extracted. None defaults to (0, &#39;_&#39;).</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">        Dandelion object with `.metadata` slot initialized.</span>
+<span class="sd">    Dandelion object with `.metadata` slot initialized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dat</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">,</span> <span class="s1">&#39;locus&#39;</span><span class="p">,</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="s1">&#39;umi_count&#39;</span><span class="p">]:</span>
@@ -916,9 +922,10 @@
 <span class="sd">        ----------</span>
 <span class="sd">        self : Dandelion</span>
 <span class="sd">            Dandelion object.        </span>
+<span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">            a deep copy of `dandelion` class.</span>
+<span class="sd">        a deep copy of `dandelion` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
@@ -936,9 +943,10 @@
 <span class="sd">            path to germline database folder. Defaults to `$GERMLINE` environmental variable.</span>
 <span class="sd">        org : str</span>
 <span class="sd">            organism of reference folder. Default is &#39;human&#39;.</span>
+<span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">            updated germline reference diciontary in `.germline` slot.</span>
+<span class="sd">        updated germline reference diciontary in `.germline` slot.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">logg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Updating germline reference&#39;</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -1151,7 +1159,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">       Dandelion object.</span>
+<span class="sd">    Dandelion object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">isBZIP</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
@@ -1175,7 +1183,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">       Dandelion object.</span>
+<span class="sd">    Dandelion object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>    
     <span class="k">try</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
@@ -1277,6 +1285,7 @@
 <span class="sd">        pandas dataframe or file path</span>
 <span class="sd">    columns</span>
 <span class="sd">        column names in dataframe</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    sample_dict</span>

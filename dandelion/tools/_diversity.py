@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:33:04
+# @Last Modified time: 2020-12-30 01:49:57
 
 import pandas as pd
 import numpy as np
@@ -35,9 +35,10 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key = None):
         Column name specifying the clone_id column in metadata/obs.
     diversity_key : str, optional
         key for 'diversity' results in AnnData's `.uns`.
+    
     Returns
-    ----------
-        Dictionary containing rarefaction results or updated `.uns` slot if `AnnData` object is used.
+    -------
+    Dictionary containing rarefaction results or updated `.uns` slot if `AnnData` object is used.
     """
     start = logg.info('Constructing rarefaction curve')
 
@@ -128,9 +129,10 @@ def clone_diversity(self, groupby, method = 'gini', metric = None, clone_key = N
         Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.
     key_added : str, list, optional
         column names for output.
+    
     Returns
-    ----------
-        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
+    -------
+    `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     if downsample is not None:
         resample = True
@@ -258,9 +260,10 @@ def diversity_gini(self, groupby, metric = None, clone_key = None, update_obs_me
         Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.
     key_added : str, list, optional
         column names for output.
+    
     Returns
-    ----------
-        `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.
+    -------
+    `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.
     """
     start = logg.info('Calculating Gini indices')
 
@@ -589,9 +592,10 @@ def diversity_chao1(self, groupby, clone_key = None, update_obs_meta = False, di
         number of cells to downsample to. If None, defaults to size of smallest group.
     key_added : str, list, optional
         column names for output.
+    
     Returns
-    ----------
-        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
+    -------
+    `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Chao1 estimates')
 
@@ -753,9 +757,10 @@ def diversity_shannon(self, groupby, clone_key = None, update_obs_meta = False, 
         number of cells to downsample to. If None, defaults to size of smallest group.
     key_added : str, list, optional
         column names for output.
+    
     Returns
-    ----------
-        `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
+    -------
+    `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Shannon entropy')
 
