@@ -5,16 +5,16 @@ Preprocessing: `pp`
 .. autosummary::
    :toctree: modules
 
-   format_fasta
-   format_fastas
    assign_isotype
    assign_isotypes
-   reannotate_genes
-   reassign_alleles
+   calculate_threshold
    create_germlines
    filter_bcr
+   format_fasta
+   format_fastas
    quantify_mutations
-   calculate_threshold
+   reannotate_genes
+   reassign_alleles
 
 Preprocessing (external): `pp.external`
 =======================================
@@ -24,13 +24,13 @@ Preprocessing (external): `pp.external`
    :toctree: modules
 
    assigngenes_igblast
+   creategermlines
    makedb_igblast
    parsedb_heavy
    parsedb_light
    parsedb_light
-   creategermlines
-   tigger_genotype
    recipe_scanpy_qc
+   tigger_genotype
 
 Tools: `tl`
 ===========
@@ -39,17 +39,17 @@ Tools: `tl`
 .. autosummary::
    :toctree: modules
 
-   find_clones
-   define_clones
-   clone_size
-   clone_overlap
-   transfer
-   generate_network
-   clone_degree
    clone_centrality
-   extract_edge_weights
+   clone_degree
    clone_diversity
+   clone_overlap
    clone_rarefaction
+   clone_size   
+   define_clones
+   extract_edge_weights
+   find_clones
+   generate_network
+   transfer
 
 Plotting: `pl`
 ==============
@@ -58,12 +58,12 @@ Plotting: `pl`
 .. autosummary::
    :toctree: modules
 
-   clone_rarefaction
-   clone_network
    barplot
-   stackedbarplot
-   spectratype
+   clone_network
    clone_overlap
+   clone_rarefaction   
+   spectratype
+   stackedbarplot   
 
 Utilities: `utl`
 ================
@@ -72,10 +72,23 @@ Utilities: `utl`
 .. autosummary::
    :toctree: modules
 
-   makeblastdb
-   load_data
    Dandelion
-   update_metadata
+   load_data
+   makeblastdb   
    read_h5
    read_pkl
+   update_metadata
+   
 
+Dandelion
+=========
+.. module:: dandelion.utilities.Dandelion
+
+.. autosummary::
+   :toctree: modules
+
+   copy
+   update_germline
+   write_h5
+   write_pkl
+   
