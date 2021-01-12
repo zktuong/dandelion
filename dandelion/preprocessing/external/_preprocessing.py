@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:49:12
+# @Last Modified time: 2021-01-12 15:11:09
 
 import os
 import pandas as pd
@@ -679,7 +679,7 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
     # threshold the p-values to get doublet calls.
     _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
     _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
+    _adata.obs['filter_rna'] = (pd.Series([min_genes <= n <= max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
         (_adata.obs['percent_mito'] >= mito_cutoff) | \
             (_adata.obs['is_doublet'] == True)
 
