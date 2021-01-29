@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:48:33
+# @Last Modified time: 2021-01-29 17:31:04
 
 import sys
 import os
@@ -2191,8 +2191,18 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 if c not in adata.obs_names:
                     filter_ids.append(c)
 
-        _dat = dat[~(dat['cell_id'].isin(filter_ids))]
-        _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
+        _dat = dat[~(dat['cell_id'].isin(filter_ids))].copy()
+        _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))].copy()
+
+        # final check
+        barcodes_final = list(set(_dat['cell_id']))
+        filter_ids2 = []
+        for b in barcodes_final:
+            check_dat = _dat[(_dat['locus'].isin(['IGH'])) & (_dat['cell_id'].isin([b]))].copy()
+            if check_dat.shape[0] < 1:
+                filter_ids.append(b)
+        _dat = _dat[~(_dat['cell_id'].isin(filter_ids2))].copy()
+
         if _dat.shape[0] is 0:
             raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching?')
 
