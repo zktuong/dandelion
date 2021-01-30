@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 11:29:05
+# @Last Modified time: 2021-01-30 11:31:16
 
 import sys
 import os
@@ -2217,15 +2217,20 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     else:
         _dat = dat.copy()
 
-    barcode1 = list(set(dat['cell_id']))
+    if filter_bcr:
+        barcode1 = list(set(dat['cell_id']))
+    
     barcode2 = list(set(_dat['cell_id']))
-    failed = list(set(barcode1) ^ set(barcode2))
+    
+    if filter_bcr:
+        failed = list(set(barcode1) ^ set(barcode2))
 
     bc_2 = {}
     for b in barcode2:
         bc_2.update({b:True})
-    for b in barcode1:
-        bc_2.update({b:False})
+    if filter_bcr:
+        for b in failed:
+            bc_2.update({b:False})
     bcr_check['bcr_QC_pass'] = pd.Series(bc_2)
     
     adata.obs['bcr_QC_pass'] = pd.Series(bcr_check['bcr_QC_pass'])
