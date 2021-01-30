@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 12:25:28
+# @Last Modified time: 2021-01-30 12:39:05
 
 import sys
 import os
@@ -446,7 +446,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     metadata_status = self.metadata
     if metadata_status is None:
         if clonekey in dat.columns:
-            if all(np.isnan(dat[clonekey])):
+            if all([np.isnan(i) for i in dat[clonekey]]):
                 self.metadata = setup_metadata_(dat)
             else:
                 self.metadata = setup_metadata(dat, clonekey)
