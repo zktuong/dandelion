@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 12:21:11
+# @Last Modified time: 2021-01-30 12:25:28
 
 import sys
 import os
@@ -472,6 +472,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             heavy_umi = retrieve_metadata(dat, 'duplicate_count', False, True)
         heavy_status = retrieve_metadata(dat, 'locus', False, True)
         status = pd.DataFrame([heavy_status], index = ['heavy']).T
+        status['heavy'].replace(np.nan, 'unassigned', inplace = True)
         for i in status.index:
             status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
         if isotype_dict is None:
@@ -559,6 +560,8 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             heavy_umi, light_umi = retrieve_metadata(dat, 'duplicate_count', True, False)
         heavy_status, light_status = retrieve_metadata(dat, 'locus', True, False)
         status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
+        for s in status:
+            status[s].replace(np.nan, 'unassigned', inplace = True)
         for i in status.index:
             try:
                 status.at[i, 'status'] = status.loc[i,'heavy']+' + '+status.loc[i,'light']
