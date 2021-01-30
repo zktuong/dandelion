@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 13:06:57
+# @Last Modified time: 2021-01-30 13:09:14
 
 import sys
 import os
@@ -635,7 +635,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         for k in light_j_call:
             if light_j_call[k] == light_j_call[k]:
                 continue
-            heavy_j_call[k] = 'unassigned'
+            light_j_call[k] = 'unassigned'
 
         for k in heavy_v_call:
             heavy_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_v_call[k]))][0].split(','))))])
