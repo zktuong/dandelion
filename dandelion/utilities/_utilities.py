@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 12:55:15
+# @Last Modified time: 2021-01-30 13:06:57
 
 import sys
 import os
@@ -478,7 +478,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             else:
                 status.at[i, 'status'] = 'unassigned'
         if isotype_dict is None:
-            conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', np.nan:'unassigned', 'na':'unassigned', '':'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
+            conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', np.nan:'unassigned', 'na':'unassigned', '':'unassigned', 'unassigned':'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
         else:
             conversion_dict = isotype_dict
         isotype = {}
@@ -492,6 +492,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                 else:
                     isotype[k] = conversion_dict[heavy_c_call[k].lower()]
             else:
+                heavy_c_call[k] = 'unassigned'
                 isotype[k] = 'unassigned'
         for k in heavy_v_call:
             heavy_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_v_call[k]))][0].split(','))))])
@@ -571,7 +572,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
             else:
                 status.at[i, 'status'] = 'unassigned'
         if isotype_dict is None:
-            conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', np.nan:'unassigned', 'na':'unassigned', '':'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
+            conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', np.nan:'unassigned', 'na':'unassigned', '':'unassigned', 'unassigned':'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
         else:
             conversion_dict = isotype_dict
         isotype = {}
@@ -585,7 +586,19 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                 else:
                     isotype[k] = conversion_dict[heavy_c_call[k].lower()]
             else:
+                heavy_c_call[k] = 'unassigned'
                 isotype[k] = 'unassigned'
+
+
+        for k in heavy_v_call:
+            if heavy_v_call[k] == heavy_v_call[k]:
+                continue
+            heavy_v_call[k] = 'unassigned'
+        for k in heavy_j_call:
+            if heavy_j_call[k] == heavy_j_call[k]:
+                continue
+            heavy_j_call[k] = 'unassigned'
+        
         lightchain = {}
         for k in light_c_call:
             if light_c_call[k] == light_c_call[k]:
@@ -612,7 +625,18 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                     else:
                         lightchain[k] = conversion_dict[light_c_call[k].lower()]
             else:
-                lightchain[k] = light_c_call[k]
+                light_c_call[k] = 'unassigned'
+                lightchain[k] = 'unassigned'
+
+        for k in light_v_call:
+            if light_v_call[k] == light_v_call[k]:
+                continue
+            light_v_call[k] = 'unassigned'
+        for k in light_j_call:
+            if light_j_call[k] == light_j_call[k]:
+                continue
+            heavy_j_call[k] = 'unassigned'
+
         for k in heavy_v_call:
             heavy_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_v_call[k]))][0].split(','))))])
         for k in heavy_j_call:
