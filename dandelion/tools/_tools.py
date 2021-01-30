@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 12:08:35
+# @Last Modified time: 2021-01-30 12:09:38
 
 import os
 import sys
@@ -636,6 +636,8 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         # except:
         #     pass
 
+    global is_categorical
+    
     def is_categorical(array_like):
         return array_like.dtype.name == 'category'
 
