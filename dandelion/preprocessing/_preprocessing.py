@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 11:31:16
+# @Last Modified time: 2021-01-30 11:37:11
 
 import sys
 import os
@@ -1723,7 +1723,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     for b in barcode:
         bc_.update({b:True})
     bcr_check['has_bcr'] = pd.Series(bc_)
-    bcr_check.replace(np.nan, False, inplace = True)
+    
     adata.obs['has_bcr'] = pd.Series(bcr_check['has_bcr'])
     adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
