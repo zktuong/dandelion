@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 12:09:38
+# @Last Modified time: 2021-01-30 12:11:25
 
 import os
 import sys
@@ -637,21 +637,21 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         #     pass
 
     global is_categorical
-    
+
     def is_categorical(array_like):
         return array_like.dtype.name == 'category'
 
     for x in dandelion.metadata.columns:
         if x not in self.obs.columns:
             self.obs[x] = pd.Series(dandelion.metadata[x])
-            if dandelion.metadata[x].dtype == str or dandelion.metadata[x].dtype == object or is_categorical(dandelion.metadata[x].dtype) or dandelion.metadata[x].dtype == bool:
+            if dandelion.metadata[x].dtype == str or dandelion.metadata[x].dtype == object or is_categorical(dandelion.metadata[x]) or dandelion.metadata[x].dtype == bool:
                 self.obs[x].replace(np.nan, 'No_BCR', inplace = True)
         if overwrite is not None:
             if not type(overwrite) is list:
                 overwrite = [overwrite]
             for ow in overwrite:
                 self.obs[ow] = pd.Series(dandelion.metadata[ow])
-                if dandelion.metadata[ow].dtype == str or dandelion.metadata[ow].dtype == object or is_categorical(dandelion.metadata[ow].dtype) or dandelion.metadata[ow].dtype == bool:
+                if dandelion.metadata[ow].dtype == str or dandelion.metadata[ow].dtype == object or is_categorical(dandelion.metadata[ow]) or dandelion.metadata[ow].dtype == bool:
                     self.obs[ow].replace(np.nan, 'No_BCR', inplace = True)
 
     tmp = self.obs.copy()
