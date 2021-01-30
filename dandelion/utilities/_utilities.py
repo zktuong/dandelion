@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 12:40:51
+# @Last Modified time: 2021-01-30 12:55:15
 
 import sys
 import os
@@ -458,7 +458,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
     if 'sample_id' in dat.columns:
         samp_id = retrieve_metadata(dat, 'sample_id', False, True)
 
-    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])].copy()
     if dat_l.shape[0] == 0:
         if 'v_call_genotyped' in dat.columns:
             heavy_v_call = retrieve_metadata(dat, 'v_call_genotyped', False, True) # specifying False/True shouldn't do anything
@@ -471,10 +471,12 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         else:
             heavy_umi = retrieve_metadata(dat, 'duplicate_count', False, True)
         heavy_status = retrieve_metadata(dat, 'locus', False, True)
-        status = pd.DataFrame([heavy_status], index = ['heavy']).T
-        status['heavy'].replace(np.nan, 'unassigned', inplace = True)
+        status = pd.DataFrame([heavy_status], index = ['heavy']).T        
         for i in status.index:
-            status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
+            if status.loc[i,'heavy'] == status.loc[i,'heavy']:
+                status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
+            else:
+                status.at[i, 'status'] = 'unassigned'
         if isotype_dict is None:
             conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', np.nan:'unassigned', 'na':'unassigned', '':'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
         else:
@@ -490,7 +492,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                 else:
                     isotype[k] = conversion_dict[heavy_c_call[k].lower()]
             else:
-                isotype[k] = heavy_c_call[k]
+                isotype[k] = 'unassigned'
         for k in heavy_v_call:
             heavy_v_call[k] = ''.join([','.join(list(set([re.sub('[*][0-9][0-9]', '', str(heavy_v_call[k]))][0].split(','))))])
         for k in heavy_j_call:
@@ -559,14 +561,15 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
         else:
             heavy_umi, light_umi = retrieve_metadata(dat, 'duplicate_count', True, False)
         heavy_status, light_status = retrieve_metadata(dat, 'locus', True, False)
-        status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T
-        for s in status:
-            status[s].replace(np.nan, 'unassigned', inplace = True)
+        status = pd.DataFrame([heavy_status, light_status], index = ['heavy', 'light']).T        
         for i in status.index:
-            try:
-                status.at[i, 'status'] = status.loc[i,'heavy']+' + '+status.loc[i,'light']
-            except:
-                status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
+            if status.loc[i,'heavy'] == status.loc[i,'heavy']:
+                try:
+                    status.at[i, 'status'] = status.loc[i,'heavy']+' + '+status.loc[i,'light']
+                except:
+                    status.at[i, 'status'] = status.loc[i,'heavy'] + '_only'
+            else:
+                status.at[i, 'status'] = 'unassigned'
         if isotype_dict is None:
             conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighm|ighd':'IgM|IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', np.nan:'unassigned', 'na':'unassigned', '':'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
         else:
@@ -582,7 +585,7 @@ def update_metadata(self, retrieve = None, isotype_dict = None, split_heavy_ligh
                 else:
                     isotype[k] = conversion_dict[heavy_c_call[k].lower()]
             else:
-                isotype[k] = heavy_c_call[k]
+                isotype[k] = 'unassigned'
         lightchain = {}
         for k in light_c_call:
             if light_c_call[k] == light_c_call[k]:
