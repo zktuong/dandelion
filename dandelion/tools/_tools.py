@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 11:48:24
+# @Last Modified time: 2021-01-30 11:57:30
 
 import os
 import sys
@@ -639,13 +639,15 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
     for x in dandelion.metadata.columns:
         if x not in self.obs.columns:
             self.obs[x] = pd.Series(dandelion.metadata[x])
-            self.obs[x].replace(np.nan, 'No_BCR', inplace = True)
+            if dandelion.metadata[x].type == str or dandelion.metadata[x].type == object or dandelion.metadata[x].type == 'catgeory':
+                self.obs[x].replace(np.nan, 'No_BCR', inplace = True)
         if overwrite is not None:
             if not type(overwrite) is list:
                 overwrite = [overwrite]
             for ow in overwrite:
                 self.obs[ow] = pd.Series(dandelion.metadata[ow])
-                self.obs[ow].replace(np.nan, 'No_BCR', inplace = True)
+                if dandelion.metadata[x].type == str or dandelion.metadata[x].type == object or dandelion.metadata[x].type == 'catgeory':
+                    self.obs[ow].replace(np.nan, 'No_BCR', inplace = True)
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
