@@ -24,9 +24,9 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
     - name: Install macOS system dependencies
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install cairo pkg-config autoconf automake libtool
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cairo pkg-config autoconf automake libtool
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
@@ -67,7 +67,10 @@ jobs:
             hashFiles('docs/environment.yml') }}
       - uses: conda-incubator/setup-miniconda@v2
         with:
+          auto-update-conda : true
           activate-environment: dandelion
-          channel-priority: strict
+          channels: conda-forge, bioconda, defaults
+          channel-priority: true
+          python-version: ${{ matrix.python-version }}
           environment-file: docs/environment.yml
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
