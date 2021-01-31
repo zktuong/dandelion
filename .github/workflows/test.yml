@@ -17,13 +17,7 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
-        activate-environment: dandelion
-#     - name: Add conda to system path
-#       with:
-#         activate-environment: dandelion
-#       run: |
-#         # $CONDA is an environment variable pointing to the root of the miniconda directory
-#         echo $CONDA/bin >> $GITHUB_PATH        
+        activate-environment: dandelion     
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name dandelion
@@ -38,24 +32,25 @@ jobs:
       run: |
         conda install pytest
         pytest
-caching:
-  name: Caching
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if etc/example-environment.yml has not changed
-          CACHE_NUMBER: 0
-        with:
-          path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-            hashFiles('docs/environment.yml') }}
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: dandelion
-          channel-priority: strict
-          environment-file: docs/environment.yml
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+        
+  caching:
+    name: Caching
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - name: Cache conda
+          uses: actions/cache@v1
+          env:
+            # Increase this value to reset cache if etc/example-environment.yml has not changed
+            CACHE_NUMBER: 0
+          with:
+            path: ~/conda_pkgs_dir
+            key:
+              ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+              hashFiles('docs/environment.yml') }}
+        - uses: conda-incubator/setup-miniconda@v2
+          with:
+            activate-environment: dandelion
+            channel-priority: strict
+            environment-file: docs/environment.yml
+            use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
