@@ -14,13 +14,19 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: [3.7, 3.8]
-    - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+    # - name: Setup Miniconda
+    #    uses: conda-incubator/setup-miniconda@v2.0.1
+    #    with:
+    #      activate-environment: dandelion
+    - name: Add conda to system path
         with:
           activate-environment: dandelion
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH        
     - name: Install dependencies
       run: |
-        conda env update --file environment.yml --name base
+        conda env update --file environment.yml --name dandelion
     - name: Lint with flake8
       run: |
         conda install flake8
