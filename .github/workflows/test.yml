@@ -29,6 +29,8 @@ jobs:
         brew install cairo pkg-config autoconf automake libtool
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
+      run: |
+        conda create --name dandelion
       with:
         auto-update-conda : true
         activate-environment: dandelion
