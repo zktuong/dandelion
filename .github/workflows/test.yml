@@ -1,4 +1,4 @@
-name: Testing package using Miniconda
+name: Testing dandalion package using Miniconda
 
 on:
   pull_request:
@@ -7,9 +7,6 @@ on:
   push:
     branches:
       - "master"
-  schedule:
-    # Note that cronjobs run on master/main by default
-    - cron: "0 0 * * *"
 
 jobs:
   build-linux:
@@ -37,19 +34,14 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        conda env update --file docs/environment.yml --name dandelion
-    - name: Lint with flake8
-      run: |
-        conda install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        conda env update --file docs/environment.yml --name dandelion    
     - name: Test with pytest
       run: |
         conda install pytest
         pytest
-        
+    - name: Test initializing Dandelion class
+      run: |
+        python tests/IO_test.py
   caching:
     name: Caching
     runs-on: ubuntu-latest
