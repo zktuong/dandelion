@@ -16,13 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
-
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
       uses: actions/setup-python@v2
-      with:
-        python-version: [3.7, 3.8]
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
