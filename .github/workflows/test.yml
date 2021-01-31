@@ -19,8 +19,8 @@ jobs:
     #    with:
     #      activate-environment: dandelion
     - name: Add conda to system path
-        with:
-          activate-environment: dandelion
+      with:
+        activate-environment: dandelion
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH        
