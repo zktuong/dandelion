@@ -49,17 +49,13 @@ jobs:
         conda env update --file docs/environment.yml --name dandelion
     - name: Test with pytest
       run: |
+        conda activate dandelion
         conda install pytest
-        pytest
-      with:
-        activate-environment: dandelion
-        python-version: ${{ matrix.python-version }}
+        pytest      
     - name: Test initializing Dandelion class
       run: |
-        python tests/IO_test.py
-      with:
-        activate-environment: dandelion
-        python-version: ${{ matrix.python-version }}
+        conda activate dandelion
+        python tests/IO_test.py      
   caching:
     name: Caching
     runs-on: ubuntu-latest
