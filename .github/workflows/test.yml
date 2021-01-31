@@ -1,6 +1,15 @@
 name: Testing package using Miniconda
 
-on: [push]
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - "master"
+  schedule:
+    # Note that cronjobs run on master/main by default
+    - cron: "0 0 * * *"
 
 jobs:
   build-linux:
@@ -35,22 +44,22 @@ jobs:
         
   caching:
     name: Caching
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - name: Cache conda
-          uses: actions/cache@v1
-          env:
-            # Increase this value to reset cache if etc/example-environment.yml has not changed
-            CACHE_NUMBER: 0
-          with:
-            path: ~/conda_pkgs_dir
-            key:
-              ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-              hashFiles('docs/environment.yml') }}
-        - uses: conda-incubator/setup-miniconda@v2
-          with:
-            activate-environment: dandelion
-            channel-priority: strict
-            environment-file: docs/environment.yml
-            use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v1
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('docs/environment.yml') }}
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: dandelion
+          channel-priority: strict
+          environment-file: docs/environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
