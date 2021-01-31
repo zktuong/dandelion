@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from io import StringIO
 
-def test():
+def init_test():
 	file = 'https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_airr_rearrangement.tsv'
 	r = requests.get(file)
 	test_data = pd.read_csv(StringIO(r.text), sep = '\t')
@@ -15,5 +15,10 @@ def test():
 	test_ddl = ddl.Dandelion(test_data)
 	test_ddl.write_h5('test.h5')
 
+def read_test():
+	test_ddl_2 = ddl.read_h5('test.h5')
+	print(test_ddl_2)
+
 if __name__ == '__main__':
-	test()
+	init_test()
+	read_test()
