@@ -14,10 +14,7 @@ def test_IO():
     file = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_airr_rearrangement.tsv"
     r = requests.get(file)
     test_data = pd.read_csv(StringIO(r.text), sep="\t")
-    test_data["locus"] = [
-        "IGH" if "IGH" in i else "IGK" if "IGK" in i else "IGL" if "IGL" in i else None
-        for i in test_data.v_call
-    ]
+    test_data["locus"] = ["IGH" if "IGH" in i else "IGK" if "IGK" in i else "IGL" if "IGL" in i else None for i in test_data.v_call]
     test_data["umi_count"] = test_data["duplicate_count"]
     test_data["sample_id"] = "test"
     test_ddl = ddl.Dandelion(test_data)
@@ -33,16 +30,7 @@ def test_scanpy():
     r = requests.get(scfile)
     open("tests/sctest.h5", "wb").write(r.content)
     adata = sc.read_10x_h5("tests/sctest.h5")
-    sc.pp.filter_cells(adata, min_genes=200)
-    sc.pp.filter_genes(adata, min_cells=3)
-    sc.pp.normalize_total(adata, target_sum=1e4)
-    sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    adata = adata[:, adata.var["highly_variable"]].copy()
-    sc.pp.scale(adata, max_value=10)
-    sc.tl.pca(adata, svd_solver="arpack")
-    sc.pp.neighbors(adata)
-    adata.write("tests/sctest.h5ad", compression="gzip")
+    adata.write("tests/sctest.h5ad", compression="gzip")    
     print(adata)
 
 
@@ -74,28 +62,30 @@ def test_generate_network():
 
 def test_downsampling():
     test = ddl.read_h5("tests/test.h5")
-    test_downsample = ddl.tl.generate_network(
-        test, key="sequence_alignment", downsample=100
-    )
+    test_downsample = ddl.tl.generate_network(test, key="sequence_alignment", downsample=100)
     print(test_downsample)
 
 
 def test_transfer():
     test = ddl.read_h5("tests/test.h5")
     adata = sc.read_h5ad("tests/sctest.h5ad")
+    sc.pp.filter_cells(adata, min_genes=200)
+    sc.pp.filter_genes(adata, min_cells=3)
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    adata = adata[:, adata.var["highly_variable"]].copy()
+    sc.pp.scale(adata, max_value=10)
+    sc.tl.pca(adata, svd_solver="arpack")
+    sc.pp.neighbors(adata)
     ddl.tl.transfer(adata, test)
     adata.write("tests/sctest.h5ad", compression="gzip")
-
+    print(adata)
 
 def test_create_germlines():
     test = ddl.read_h5("tests/test.h5")
     test.update_germline(germline="database/germlines/imgt/human/vdj/")
-    ddl.pp.create_germlines(
-        test,
-        germline="database/germlines/imgt/human/vdj/",
-        v_field="v_call",
-        germ_types="dmask",
-    )
+    ddl.pp.create_germlines(test, germline="database/germlines/imgt/human/vdj/", v_field="v_call", germ_types="dmask")
     test.write_h5("tests/test.h5", compression="bzip2")
 
 
