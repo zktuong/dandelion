@@ -2,8 +2,6 @@
 # basic requirements for test data
 import sys
 import os
-os.chdir('/Users/kt16/Downloads')
-sys.path.append('/Users/kt16/Documents/Github/dandelion')
 from io import StringIO
 import requests
 import pandas as pd
@@ -11,7 +9,7 @@ import scanpy as sc
 import dandelion as ddl
 
 
-def test_IO():
+def test_setup():
     file = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_airr_rearrangement.tsv"
     r = requests.get(file)
     test_data = pd.read_csv(StringIO(r.text), sep="\t")
@@ -76,8 +74,7 @@ def test_transfer():
     sc.pp.filter_genes(adata, min_cells=3)
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(
-        adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
     adata = adata[:, adata.var["highly_variable"]].copy()
     sc.pp.scale(adata, max_value=10)
     sc.tl.pca(adata, svd_solver="arpack")
@@ -109,7 +106,7 @@ def test_quantify_mutations():
 
 
 if __name__ == "__main__":
-    test_IO()
+    test_setup()
     test_filter()
     test_update_metadata()
     test_find_clones()
