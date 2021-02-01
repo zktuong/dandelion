@@ -53,7 +53,6 @@ jobs:
         python setup.py install
     - name: Test with pytest
       run: |
-        ls tests
         pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning    
   caching:
     name: Caching
