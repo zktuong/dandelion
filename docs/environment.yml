@@ -20,6 +20,7 @@ dependencies:
 - statsmodels
 - numba
 - pytables
+- pytest
 - pip
 - pip:
   - nbsphinx

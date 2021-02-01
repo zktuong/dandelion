@@ -49,18 +49,18 @@ jobs:
         python-version: ${{ matrix.python-version }}
         environment-file: docs/environment.yml
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-    - name: Install dependencies
+    - name: Install Dandelion
       run: |
-        conda env update --file docs/environment.yml --name dandelion
+      conda activate dandelion
+      python setup.py install
     - name: Test with pytest
       run: |
         conda activate dandelion
-        conda install pytest
         pytest -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning
-    - name: Test initializing Dandelion class
-      run: |
-        conda activate dandelion
-        python tests/IO_test.py      
+    # - name: Test initializing Dandelion class
+    #   run: |
+    #     conda activate dandelion
+    #     python tests/IO_test.py
   caching:
     name: Caching
     runs-on: ubuntu-latest
