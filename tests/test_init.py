@@ -45,6 +45,11 @@ def test_find_clones():
 	test = ddl.read_h5('test.h5')
 	ddl.tl.find_clones(test)
 
+def test_define_clones():
+	test = ddl.read_h5('test.h5')
+	ddl.pp.calculate_threshold(test)
+	ddl.tl.define_clones(test, key_added = 'changeo_clone_id')
+
 def test_generate_network():
 	test = ddl.read_h5('test.h5')
 	ddl.tl.generate_network(test, key = 'sequence_alignment')
@@ -55,12 +60,19 @@ def test_downsampling():
 	test_downsample = ddl.tl.generate_network(test, key = 'sequence_alignment', downsample = 500)
 	print(test_downsample)
 
+def test_quantify_mutations():
+	test = ddl.read_h5('test.h5')
+	test.update_germline(germline = 'database/germlines/imgt/human/vdj/')
+	ddl.pp.create_germlines(test, v_field = 'v_call', germ_types='dmask')
+	ddl.pp.quantify_mutations(test)
+
 if __name__ == '__main__':
 	test_airr()
 	test_scanpy()
 	test_filter()
 	test_update_metadata()
 	test_find_clones()
+	test_define_clones()
 	test_generate_network()
 	test_downsampling()
-
+	test_quantify_mutations()
