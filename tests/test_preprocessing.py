@@ -7,16 +7,7 @@ import scanpy as sc
 import pandas as pd
 import requests
 from io import StringIO
-from numba.core.errors import (
-    NumbaWarning,
-    NumbaDeprecationWarning,
-    NumbaPendingDeprecationWarning,
-)
 import warnings
-
-warnings.simplefilter("ignore", category=NumbaWarning)
-warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
-warnings.simplefilter("ignore", category=NumbaPendingDeprecationWarning)
 
 
 def test_setup_preprocessing():
@@ -25,26 +16,26 @@ def test_setup_preprocessing():
     r1 = requests.get(file1)
     open("tests/filtered_contig.fasta", "wb").write(r1.content)
     r2 = requests.get(file2)
-    open("tests/filtered_contig_annotations.csv", "wb").write(r1.content)
+    open("tests/filtered_contig_annotations.csv", "wb").write(r2.content)
 
 
 def test_format_headers():
-    samples = ["test"]
-    ddl.pp.format_fastas(samples, prefix="test")
+    samples = ["tests"]
+    ddl.pp.format_fastas(samples, prefix="tests")
 
 
 def test_reannotate():
-    samples = ["test"]
+    samples = ["tests"]
     ddl.pp.reannotate_genes(samples)
 
 
 def test_reassign():
-    samples = ["test"]
-    ddl.pp.reassign_alleles(samples, combined_folder="test")
+    samples = ["tests"]
+    ddl.pp.reassign_alleles(samples, combined_folder="tests")
 
 
 def test_assign_isotype():
-    samples = ["test"]
+    samples = ["tests"]
     ddl.pp.assign_isotypes(samples, plot=False)
 
 
