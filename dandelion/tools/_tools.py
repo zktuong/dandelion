@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 11:49:33
+# @Last Modified time: 2021-02-01 17:50:44
 
 import os
 import sys
@@ -493,10 +493,12 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
                 # will just update the main dat directly
                 if len(list(set(lclones))) > 1:
                     lclones_dict = dict(zip(sorted(list(set(lclones))), [str(x) for x in range(1,len(list(set(lclones)))+1)]))
-                    renamed_clone_dict_light = {}
-                    for key, value in clone_dict_light.items():
-                        renamed_clone_dict_light[key] = lclones_dict[value]
-                    dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
+                else:
+                    lclones_dict = dict(zip(sorted(list(set(lclones))), ['0' for x in list(set(lclones))]))
+                renamed_clone_dict_light = {}
+                for key, value in clone_dict_light.items():
+                    renamed_clone_dict_light[key] = lclones_dict[value]
+                dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)                
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
