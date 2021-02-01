@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-30 11:41:03
+# @Last Modified time: 2021-02-01 11:16:39
 
 import sys
 import os
@@ -2250,7 +2250,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
 
     if filter_rna:
-        out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
+        out_adata = adata[adata.obs['filter_bcr'] == False].copy() # not saving the scanpy object because there's no need to at the moment
     else:
         out_adata = adata.copy()
 
@@ -2505,7 +2505,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, subsample = subsample_, edge = edge_)
         threshold=np.array(dist_threshold.slots['threshold'])[0]
         if np.isnan(threshold):
-            warnings.warn(UserWarning("Threshold method 'density' did not return with any values. Switching to method = 'gmm'."))
+            print("      Threshold method 'density' did not return with any values. Switching to method = 'gmm'.")            
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
             else:
@@ -2552,7 +2552,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
         threshold=np.array(dist_threshold.slots['threshold'])[0]
     if np.isnan(threshold):
-        warnings.warn(UserWarning("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."))
+        raise ValueError("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually.")
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
 
     if plot:
