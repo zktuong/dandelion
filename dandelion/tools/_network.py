@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 10:47:12
+# @Last Modified time: 2021-02-01 21:53:05
 
 import pandas as pd
 import numpy as np
@@ -166,7 +166,7 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         out = Dandelion(dat)
 
     if clone_key not in out.metadata:
-        update_metadata(out, retrieve = clone_key, split_heavy_light = False, collapse = True, combine = True)
+        update_metadata(out, retrieve = clone_key, split = False, collapse = True, combine = True)
 
     if downsample is not None:
         dat_downsample = dat_h.append(dat_l)
