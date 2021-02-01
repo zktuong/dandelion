@@ -56,7 +56,7 @@ jobs:
       run: |
         conda activate dandelion
         conda install pytest
-        pytest      
+        pytest -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning
     - name: Test initializing Dandelion class
       run: |
         conda activate dandelion
