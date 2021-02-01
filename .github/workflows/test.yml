@@ -9,7 +9,7 @@ on:
       - "master"
 
 jobs:
-  build-linux:
+  testing:
     runs-on: ubuntu-latest
     defaults:
       run:
