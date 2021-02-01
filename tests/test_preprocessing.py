@@ -26,17 +26,17 @@ def test_format_headers():
 
 def test_reannotate():
     samples = ["tests"]
-    ddl.pp.reannotate_genes(samples)
+    ddl.pp.reannotate_genes(samples, igblast_db = "database/igblast/", germline = "database/germlines/imgt/human/vdj/")
 
 
 def test_reassign():
     samples = ["tests"]
-    ddl.pp.reassign_alleles(samples, combined_folder="tests")
+    ddl.pp.reassign_alleles(samples, combined_folder="tests", germline = "database/germlines/imgt/human/vdj/")
 
 
 def test_assign_isotype():
     samples = ["tests"]
-    ddl.pp.assign_isotypes(samples, plot=False)
+    ddl.pp.assign_isotypes(samples, blastdb = "database/blast/", plot=False)
 
 
 def test_quantify_mut():
