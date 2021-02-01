@@ -56,10 +56,16 @@ def test_downsampling():
 	test_downsample = ddl.tl.generate_network(test, key = 'sequence_alignment', downsample = 100)
 	print(test_downsample)
 
+def test_transfer():
+	test = ddl.read_h5('test.h5')
+	adata = sc.read_h5ad('sctest.h5ad')
+	ddl.tl.transfer(adata, test)
+	adata.write('sctest.h5ad', compression = 'gzip')
+
 def test_create_germlines():
 	test = ddl.read_h5('test.h5')
 	test.update_germline(germline = 'database/germlines/imgt/human/vdj/')
-	ddl.pp.create_germlines(test, v_field = 'v_call', germ_types='dmask')
+	ddl.pp.create_germlines(test, germline = 'database/germlines/imgt/human/vdj/', v_field = 'v_call', germ_types='dmask')
 	test.write_h5('test.h5', compression = 'bzip2')
 
 def test_define_clones():
@@ -79,6 +85,7 @@ if __name__ == '__main__':
 	test_find_clones()
 	test_generate_network()
 	test_downsampling()
+	test_transfer()
 	test_create_germlines()
 	test_define_clones()
 	test_quantify_mutations()
