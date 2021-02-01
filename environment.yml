@@ -27,6 +27,8 @@ dependencies:
 - r-tigger
 - r-airr
 - r-shazam
+- blast
+- igblast
 - pip
 - pip:
   - nbsphinx
