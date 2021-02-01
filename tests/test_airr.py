@@ -120,7 +120,7 @@ def test_quantify_mutations():
 
 
 if __name__ == "__main__":
-    test_airr()
+    test_IO()
     test_scanpy()
     test_filter()
     test_update_metadata()
