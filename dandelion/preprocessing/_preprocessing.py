@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 18:09:10
+# @Last Modified time: 2021-02-01 11:48:01
 
 import sys
 import os
@@ -570,7 +570,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
             primer_dict = primers_dict
 
         for i in dat.index:
-            if (dat.loc[i, 'c_call'] == dat.loc[i, 'c_call']) & (dat.loc[i, 'c_call'] is not None):
+            if (dat.loc[i, 'c_call'] is not np.nan) & (dat.loc[i, 'c_call'] is not None):
                 for k in primer_dict:
                     if k in dat.loc[i, 'c_call']:
                         if len(primer_dict[k]) == 2:
@@ -1850,29 +1850,19 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             v = v_dict[hc_id[0]]
             j = j_dict[hc_id[0]]
             c = c_dict[hc_id[0]]
-            if v == v:
+            if v is not np.nan:
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-            else:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-            if j == j:
+            if j is not np.nan:
                 if 'IGH' not in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-            else:
-                if filter_poorqualitybcr:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-            if (c == c) and (c is not None):
+            if c is not np.nan and c is not None:
                 if 'IGH' not in c:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
@@ -1883,17 +1873,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 v = v_dict[hx]
                 j = j_dict[hx]
                 c = c_dict[hx]
-                if v == v:
+                if v is not np.nan:
                     if 'IGH' not in v:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(hx)                
-                if j == j:
+                        drop_contig.append(hx)
+                if j is not np.nan:
                     if 'IGH' not in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(hx)                 
-                if (c == c) and (c is not None):
+                        drop_contig.append(hx)
+                if c is not np.nan and c is not None:
                     if 'IGH' not in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
@@ -1903,8 +1893,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 v = v_dict[lx]
                 j = j_dict[lx]
                 c = c_dict[lx]
-                if v == v:
-                    if j == j:
+                if v is not np.nan:
+                    if j is not np.nan:
                         if 'IGH' in v:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -1914,8 +1904,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 if filter_poorqualitybcr:
                                     poor_qual.append(b)
                                 drop_contig.append(lx)
-                if j == j:
-                    if v == v:
+                if j is not np.nan:
+                    if v is not np.nan:
                         if 'IGH' in j:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -1925,13 +1915,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 if filter_poorqualitybcr:
                                     poor_qual.append(b)
                                 drop_contig.append(lx)
-                if (c is not None) and (c == c):
+                if c is not None and c is not np.nan:
                     if 'IGH' in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(lx)
 
-                if (v != v) or (j != j) or (v is None) or (j is None):
+                if v == np.nan or j == np.nan or v == None or j == None:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(lx) # no/wrong annotations at all
@@ -2077,19 +2067,19 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 v = v_dict[hc_id[0]]
                 j = j_dict[hc_id[0]]
                 c = c_dict[hc_id[0]]
-                if v == v:
+                if v is not np.nan:
                     if 'IGH' not in v:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
-                if j == j:
+                if j is not np.nan:
                     if 'IGH' not in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
-                if (c == c) and (c is not None):
+                if c is not np.nan and c is not None:
                     if 'IGH' not in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
@@ -2100,17 +2090,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     v = v_dict[hx]
                     j = j_dict[hx]
                     c = c_dict[hx]
-                    if v == v:
+                    if v is not np.nan:
                         if 'IGH' not in v:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
-                    if j == j:
+                    if j is not np.nan:
                         if 'IGH' not in j:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
-                    if (c == c) and (c is not None):
+                    if c is not np.nan and c is not None:
                         if 'IGH' not in c:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -2145,7 +2135,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 poor_qual.append(b)
                             drop_contig.append(lx)
 
-                    if (v != v) or (j != j) or (v is None) or (j is None):
+                    if v == np.nan or j == np.nan or v == None or j == None:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(lx) # no/wrong annotations at all
