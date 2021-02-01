@@ -12,9 +12,9 @@ from numba.core.errors import (
     NumbaDeprecationWarning,
     NumbaPendingDeprecationWarning,
 )
-import pytest
 import warnings
 
+warnings.simplefilter("ignore", category=NumbaWarning)
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
 warnings.simplefilter("ignore", category=NumbaPendingDeprecationWarning)
 
@@ -37,7 +37,6 @@ def test_IO():
     print(test)
 
 
-@pytest.mark.filterwarnings("ignore::NumbaWarning")
 def test_scanpy():
     scfile = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_count_filtered_feature_bc_matrix.h5"
     r = requests.get(scfile)
@@ -94,7 +93,7 @@ def test_transfer():
     test = ddl.read_h5("test/test.h5")
     adata = sc.read_h5ad("test/sctest.h5ad")
     ddl.tl.transfer(adata, test)
-    adata.write("sctest.h5ad", compression="gzip")
+    adata.write("test/sctest.h5ad", compression="gzip")
 
 
 def test_create_germlines():
