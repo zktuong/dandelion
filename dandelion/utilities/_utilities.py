@@ -22,26 +22,30 @@ import networkx as nx
 import bz2
 import gzip
 import _pickle as cPickle
+
 try:
     from scanpy import logging as logg
 except ImportError:
     pass
 
+
 class Tree(defaultdict):
-    '''
+    """
     Create a recursive defaultdict
-    '''
+    """
+
     def __init__(self, value=None):
         super(Tree, self).__init__(Tree)
         self.value = value
 
+
 def fasta_iterator(fh):
-    '''
+    """
     Read in a fasta file as an iterator
-    '''
+    """
     while True:
         line = fh.readline()
-        if line.startswith('>'):
+        if line.startswith(">"):
             break
     while True:
         header = line[1:-1].rstrip()
@@ -50,21 +54,23 @@ def fasta_iterator(fh):
             line = fh.readline()
             if not line:
                 break
-            if line.startswith('>'):
+            if line.startswith(">"):
                 break
             sequence += line.rstrip()
-        yield(header, sequence)
+        yield (header, sequence)
         if not line:
             return
 
+
 def Write_output(out, file):
-    '''
+    """
     general line writer
-    '''
+    """
     fh = open(file, "a")
     fh.write(out)
     fh.close()
-    return()
+    return ()
+
 
 def dict_from_table(meta, columns):
     """
@@ -85,12 +91,13 @@ def dict_from_table(meta, columns):
         if len(columns) == 2:
             sample_dict = dict(zip(meta_[columns[0]], meta_[columns[1]]))
     elif (os.path.isfile(str(meta))) & (columns is not None):
-        meta_ = pd.read_csv(meta, sep = '\t', dtype = 'object')
+        meta_ = pd.read_csv(meta, sep="\t", dtype="object")
         if len(columns) == 2:
             sample_dict = dict(zip(meta_[columns[0]], meta_[columns[1]]))
 
     sample_dict = clean_nan_dict(sample_dict)
-    return(sample_dict)
+    return sample_dict
+
 
 def clean_nan_dict(d):
     """
@@ -104,11 +111,8 @@ def clean_nan_dict(d):
     dictionary with no NAs.
     """
 
-    return {
-        k:v
-        for k, v in d.items()
-        if v is not np.nan
-    }
+    return {k: v for k, v in d.items() if v is not np.nan}
+
 
 def flatten(l):
     """
@@ -127,6 +131,7 @@ def flatten(l):
         else:
             yield el
 
+
 def makeblastdb(ref):
     """
     Runs makeblastdb.
@@ -138,11 +143,9 @@ def makeblastdb(ref):
 
     """
 
-    cmd = ['makeblastdb',
-               '-dbtype', 'nucl',
-               '-parse_seqids',
-               '-in', ref]
+    cmd = ["makeblastdb", "-dbtype", "nucl", "-parse_seqids", "-in", ref]
     run(cmd)
+
 
 def bh(pvalues):
     """
@@ -153,24 +156,26 @@ def bh(pvalues):
     """
     n = int(pvalues.shape[0])
     new_pvalues = np.empty(n)
-    values = [ (pvalue, i) for i, pvalue in enumerate(pvalues) ]
+    values = [(pvalue, i) for i, pvalue in enumerate(pvalues)]
     values.sort()
     values.reverse()
     new_values = []
     for i, vals in enumerate(values):
         rank = n - i
         pvalue, index = vals
-        new_values.append((n/rank) * pvalue)
-    for i in range(0, int(n)-1):
-        if new_values[i] < new_values[i+1]:
-            new_values[i+1] = new_values[i]
+        new_values.append((n / rank) * pvalue)
+    for i in range(0, int(n) - 1):
+        if new_values[i] < new_values[i + 1]:
+            new_values[i + 1] = new_values[i]
     for i, vals in enumerate(values):
         pvalue, index = vals
         new_pvalues[index] = new_values[i]
     return new_pvalues
 
+
 # def extract(d, keys):
 #    return(dict((k, d[k]) for k in keys if k in d))
+
 
 def load_data(obj):
     """
@@ -187,20 +192,23 @@ def load_data(obj):
     """
     if os.path.isfile(str(obj)):
         try:
-            obj_ = pd.read_csv(obj, sep = '\t')
+            obj_ = pd.read_csv(obj, sep="\t")
         except FileNotFoundError as e:
             print(e)
     elif isinstance(obj, pd.DataFrame):
-            obj_ = obj.copy()
+        obj_ = obj.copy()
     else:
-        raise TypeError("Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist.")
+        raise TypeError(
+            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
+        )
 
-    if 'sequence_id' in obj_.columns:
-        obj_.set_index('sequence_id', drop = False, inplace = True)
+    if "sequence_id" in obj_.columns:
+        obj_.set_index("sequence_id", drop=False, inplace=True)
     else:
         raise KeyError("'sequence_id' not found in columns of input")
 
-    return(obj_)
+    return obj_
+
 
 # def setup_metadata_(data):
 #     """
@@ -725,52 +733,82 @@ def load_data(obj):
 #                 else:
 #                     raise KeyError('Unknown column : \'%s\' to retrieve.' % ret)
 
+
 def is_categorical(array_like):
-    return array_like.dtype.name == 'category'
+    return array_like.dtype.name == "category"
+
 
 def type_check(dataframe, key):
-    return dataframe[key].dtype == str or dataframe[key].dtype == object or is_categorical(dataframe[key]) or dataframe[key].dtype == bool
+    return (
+        dataframe[key].dtype == str
+        or dataframe[key].dtype == object
+        or is_categorical(dataframe[key])
+        or dataframe[key].dtype == bool
+    )
 
-def retrieve_metadata(data, query, split, collapse, combine = False, locus = 'ig', split_by_locus = False, verbose = False):
+
+def retrieve_metadata(
+    data,
+    query,
+    split,
+    collapse,
+    combine=False,
+    locus="ig",
+    split_by_locus=False,
+    verbose=False,
+):
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
 
-    locus_dict1 ={'ig':'IGH'}
-    locus_dict2 ={'ig':['IGK', 'IGL']}
-    locus_dict3 ={'ig':'H'}
-    locus_dict4 ={'ig':'L'}
-    query_dict = dict(zip(data['sequence_id'], data[query]))
+    locus_dict1 = {"ig": "IGH"}
+    locus_dict2 = {"ig": ["IGK", "IGL"]}
+    locus_dict3 = {"ig": "H"}
+    locus_dict4 = {"ig": "L"}
+    query_dict = dict(zip(data["sequence_id"], data[query]))
 
     if type_check(data, query):
-        data[query].fillna('unassigned', inplace = True)
+        data[query].fillna("unassigned", inplace=True)
 
-    typesoflocus=len(list(set(data['locus'])))
+    typesoflocus = len(list(set(data["locus"])))
 
     if typesoflocus > 1:
         if split_by_locus:
             for loci in flatten([locus_dict1[locus]] + locus_dict2[locus]):
-                tmp = data[data['locus'].isin([loci])].copy()
+                tmp = data[data["locus"].isin([loci])].copy()
                 if tmp.shape[0] > 0:
                     dat_dict[loci] = tmp.copy()
         else:
-            tmp3 = data[data['locus'].isin([locus_dict1[locus]])].copy()
-            tmp4 = data[data['locus'].isin(locus_dict2[locus])].copy()
+            tmp3 = data[data["locus"].isin([locus_dict1[locus]])].copy()
+            tmp4 = data[data["locus"].isin(locus_dict2[locus])].copy()
             if tmp3.shape[0] > 0:
                 dat_dict[locus_dict3[locus]] = tmp3.copy()
             if tmp4.shape[0] > 0:
                 dat_dict[locus_dict4[locus]] = tmp4.copy()
     else:
         if verbose:
-            warnings.warn(UserWarning('Single locus type detected. Ignoring split = True and split_by_locus = True.'))
-        dat_dict[locus_dict3[locus]] = data[data['locus'].isin([locus_dict1[locus]])].copy()
+            warnings.warn(
+                UserWarning(
+                    "Single locus type detected. Ignoring split = True and split_by_locus = True."
+                )
+            )
+        dat_dict[locus_dict3[locus]] = data[
+            data["locus"].isin([locus_dict1[locus]])
+        ].copy()
 
     for d in dat_dict:
-        dict_[d] = dict(zip(dat_dict[d]['sequence_id'], dat_dict[d]['cell_id']))
-        metadata_[d] = pd.DataFrame.from_dict(dict_[d], orient = 'index', columns = ['cell_id'])
-        metadata_[d].reset_index(inplace = True, drop = False)
-        metadata_[d].columns = ['sequence_id', 'cell_id']
-        metadata_[d] = metadata_[d].groupby('cell_id')['sequence_id'].apply(lambda x: pd.Series(list(x))).unstack()
+        dict_[d] = dict(zip(dat_dict[d]["sequence_id"], dat_dict[d]["cell_id"]))
+        metadata_[d] = pd.DataFrame.from_dict(
+            dict_[d], orient="index", columns=["cell_id"]
+        )
+        metadata_[d].reset_index(inplace=True, drop=False)
+        metadata_[d].columns = ["sequence_id", "cell_id"]
+        metadata_[d] = (
+            metadata_[d]
+            .groupby("cell_id")["sequence_id"]
+            .apply(lambda x: pd.Series(list(x)))
+            .unstack()
+        )
 
     if split_by_locus:
         H = locus_dict1[locus]
@@ -778,44 +816,86 @@ def retrieve_metadata(data, query, split, collapse, combine = False, locus = 'ig
         H = locus_dict3[locus]
 
     if len(metadata_[H].columns) > 1:
-        metadata_[H].columns = ['sequence_id_'+H+'_'+str(x) for x in range(0, len(metadata_[H].columns))]
+        metadata_[H].columns = [
+            "sequence_id_" + H + "_" + str(x)
+            for x in range(0, len(metadata_[H].columns))
+        ]
     else:
-        metadata_[H].columns = ['sequence_id_'+H+'_0']
+        metadata_[H].columns = ["sequence_id_" + H + "_0"]
 
     if typesoflocus > 1:
         if split_by_locus:
             for L in locus_dict2[locus]:
                 if len(metadata_[L].columns) > 1:
-                    metadata_[L].columns = ['sequence_id_'+L+'_'+str(x) for x in range(0, len(metadata_[L].columns))]
+                    metadata_[L].columns = [
+                        "sequence_id_" + L + "_" + str(x)
+                        for x in range(0, len(metadata_[L].columns))
+                    ]
                 else:
-                    metadata_[L].columns = ['sequence_id_'+L+'_0']
+                    metadata_[L].columns = ["sequence_id_" + L + "_0"]
         else:
             L = locus_dict4[locus]
             if len(metadata_[L].columns) > 1:
-                metadata_[L].columns = ['sequence_id_'+L+'_'+str(x) for x in range(0, len(metadata_[L].columns))]
+                metadata_[L].columns = [
+                    "sequence_id_" + L + "_" + str(x)
+                    for x in range(0, len(metadata_[L].columns))
+                ]
             else:
-                metadata_[L].columns = ['sequence_id_'+L+'_0']
+                metadata_[L].columns = ["sequence_id_" + L + "_0"]
 
     metadata_result = metadata_.copy()
     for l in metadata_:
         for x in metadata_[l]:
-            metadata_result[l][x] = [query_dict[i] if i == i else np.nan for i in metadata_[l][x]]
+            metadata_result[l][x] = [
+                query_dict[i] if i == i else np.nan for i in metadata_[l][x]
+            ]
 
     if typesoflocus > 1:
         if not split_by_locus:
-            results = retrieve_result_dict(query, data, metadata_result[locus_dict3[locus]], metadata_result[locus_dict4[locus]], locus, split, collapse, combine)
+            results = retrieve_result_dict(
+                query,
+                data,
+                metadata_result[locus_dict3[locus]],
+                metadata_result[locus_dict4[locus]],
+                locus,
+                split,
+                collapse,
+                combine,
+            )
         else:
-            results = retrieve_result_dict(query, data, metadata_result[locus_dict1[locus]], [metadata_result[L] for L in locus_dict2[locus]], locus, split, collapse, combine)
+            results = retrieve_result_dict(
+                query,
+                data,
+                metadata_result[locus_dict1[locus]],
+                [metadata_result[L] for L in locus_dict2[locus]],
+                locus,
+                split,
+                collapse,
+                combine,
+            )
     else:
-        results = retrieve_result_dict_singular(query, data, metadata_result[locus_dict3[locus]], locus, collapse, combine)
-    return(results)
+        results = retrieve_result_dict_singular(
+            query, data, metadata_result[locus_dict3[locus]], locus, collapse, combine
+        )
+    return results
 
-def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True, collapse = True, combine = False, verbose = False):
+
+def retrieve_result_dict(
+    query,
+    data,
+    meta_h,
+    meta_l,
+    locus="ig",
+    split=True,
+    collapse=True,
+    combine=False,
+    verbose=False,
+):
     df_hl = defaultdict(dict)
-    locus_dict1 ={'ig':'IGH'}
-    locus_dict2 ={'ig':['IGK', 'IGL']}
-    locus_dict3 ={'ig':'H'}
-    locus_dict4 ={'ig':'L'}
+    locus_dict1 = {"ig": "IGH"}
+    locus_dict2 = {"ig": ["IGK", "IGL"]}
+    locus_dict3 = {"ig": "H"}
+    locus_dict4 = {"ig": "L"}
     if len(meta_l) == 2:
         H = locus_dict1[locus]
     else:
@@ -823,22 +903,32 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
     if meta_h.shape[1] > 1:
         if collapse:
             newmeta_h = meta_h.copy()
-            if type_check(meta_h, 'sequence_id_'+H+'_0'):
+            if type_check(meta_h, "sequence_id_" + H + "_0"):
                 newh = []
                 for i in meta_h.index:
-                    newh.append('|'.join([h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
-                newmeta_h['sequence_id_'+H+'_0'] = newh
-                meta_h = pd.DataFrame(newmeta_h['sequence_id_'+H+'_0'].copy())
+                    newh.append(
+                        "|".join(
+                            [h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]
+                        )
+                    )
+                newmeta_h["sequence_id_" + H + "_0"] = newh
+                meta_h = pd.DataFrame(newmeta_h["sequence_id_" + H + "_0"].copy())
             else:
                 collapse = False
                 if verbose:
-                    warnings.warn(UserWarning('Multiple heavy chain contigs mapping to the same cell barcode and/or query dtype is {}. Ignoring collapse = True.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
+                    warnings.warn(
+                        UserWarning(
+                            "Multiple heavy chain contigs mapping to the same cell barcode and/or query dtype is {}. Ignoring collapse = True.".format(
+                                meta_h["sequence_id_" + H + "_0"].dtype.name
+                            )
+                        )
+                    )
     if len(meta_l) == 2:
         metadata_ = meta_h.join(meta_l[0]).join(meta_l[1])
     else:
         metadata_ = meta_h.join(meta_l)
     df_ = metadata_.copy()
-    if type_check(meta_h, 'sequence_id_'+H+'_0'):
+    if type_check(meta_h, "sequence_id_" + H + "_0"):
         if split:
             df_hl[H] = df_[list(meta_h.columns)].copy()
             if len(meta_l) == 2:
@@ -855,341 +945,646 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
                 for d in df_res_hl:
                     for i in df_hl[d].index:
                         if combine:
-                            res_[d].append('|'.join([l for l in list(dict.fromkeys(df_hl[d].loc[i])) if l == l]))
+                            res_[d].append(
+                                "|".join(
+                                    [
+                                        l
+                                        for l in list(dict.fromkeys(df_hl[d].loc[i]))
+                                        if l == l
+                                    ]
+                                )
+                            )
                         else:
-                            res_[d].append('|'.join([l for l in list(df_hl[d].loc[i]) if l == l]))
+                            res_[d].append(
+                                "|".join([l for l in list(df_hl[d].loc[i]) if l == l])
+                            )
                     df_res_hl[d][query] = res_[d]
                     result_dict_hl[d] = dict(df_res_hl[d][query])
-                    for k,v in result_dict_hl[d].items():
+                    for k, v in result_dict_hl[d].items():
                         if type(v) is not list:
                             result_dict_hl[d][k] = [v]
                 if len(meta_l) == 2:
-                    result_dict_ = {query+'_'+H:result_dict_hl[H]}
+                    result_dict_ = {query + "_" + H: result_dict_hl[H]}
                     for x in range(0, len(locus_dict2[locus])):
                         L = locus_dict2[locus][x]
-                        result_dict_.update({query+'_'+L:result_dict_hl[L]})
+                        result_dict_.update({query + "_" + L: result_dict_hl[L]})
                 else:
-                    result_dict_ = {query+'_heavy':result_dict_hl[H], query+'_light':result_dict_hl[L]}
+                    result_dict_ = {
+                        query + "_heavy": result_dict_hl[H],
+                        query + "_light": result_dict_hl[L],
+                    }
             else:
                 for d in df_res_hl:
                     result_dict_hl[d] = df_res_hl[d]
         else:
             df_res = df_.copy()
-            q_res =[]
+            q_res = []
             if collapse:
                 for i in metadata_.index:
                     if combine:
-                        q_res.append('|'.join([qq for qq in list(dict.fromkeys(df_.loc[i])) if qq == qq]))
+                        q_res.append(
+                            "|".join(
+                                [
+                                    qq
+                                    for qq in list(dict.fromkeys(df_.loc[i]))
+                                    if qq == qq
+                                ]
+                            )
+                        )
                     else:
-                        q_res.append('|'.join([qq for qq in list(df_.loc[i]) if qq == qq]))
+                        q_res.append(
+                            "|".join([qq for qq in list(df_.loc[i]) if qq == qq])
+                        )
             else:
                 for i in metadata_.index:
                     q_res.append([qq for qq in list(df_.loc[i]) if qq == qq])
             df_res[query] = q_res
             result_dict_ = dict(df_res[query])
     else:
-        result_dict_ = {x:dict(df_[x]) for x in df_}
-    rs_dict1 = {'ig':'[HL]'}
-    rs_dict2 = {'ig':'IG[HKL]'}
+        result_dict_ = {x: dict(df_[x]) for x in df_}
+    rs_dict1 = {"ig": "[HL]"}
+    rs_dict2 = {"ig": "IG[HKL]"}
     if len(meta_l) == 2:
-        rs = '_sequence_id_'+rs_dict2[locus]
+        rs = "_sequence_id_" + rs_dict2[locus]
     else:
-        rs = '_sequence_id_'+rs_dict1[locus]
+        rs = "_sequence_id_" + rs_dict1[locus]
     final_result_ = defaultdict(dict)
     if split:
         if not collapse:
             if len(meta_l) != 2:
                 try:
-                    if type_check(meta_h, 'sequence_id_'+H+'_0'):
+                    if type_check(meta_h, "sequence_id_" + H + "_0"):
                         final_result_h = pd.DataFrame(result_dict_hl[H])
                     else:
                         final_result_h = pd.DataFrame(result_dict_[H])
                 except:
-                    if type_check(meta_h, 'sequence_id_'+H+'_0'):
-                        final_result_h = pd.DataFrame.from_dict(result_dict_hl, orient = 'index').T
+                    if type_check(meta_h, "sequence_id_" + H + "_0"):
+                        final_result_h = pd.DataFrame.from_dict(
+                            result_dict_hl, orient="index"
+                        ).T
                         final_result_h = final_result_h[meta_h.columns].copy()
                     else:
-                        final_result_h = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
+                        final_result_h = pd.DataFrame.from_dict(
+                            result_dict_, orient="index"
+                        ).T
                         final_result_h = final_result_h[meta_h.columns].copy()
-                final_result_h.columns = [re.sub(rs, '', q) for q in [query+'_heavy_'+str(l) for l in final_result_h.columns]]
+                final_result_h.columns = [
+                    re.sub(rs, "", q)
+                    for q in [
+                        query + "_heavy_" + str(l) for l in final_result_h.columns
+                    ]
+                ]
                 try:
-                    if type_check(meta_h, 'sequence_id_'+H+'_0'):
-                        final_result_l = pd.DataFrame(result_dict_hl[locus_dict4[locus]])
+                    if type_check(meta_h, "sequence_id_" + H + "_0"):
+                        final_result_l = pd.DataFrame(
+                            result_dict_hl[locus_dict4[locus]]
+                        )
                     else:
                         final_result_l = pd.DataFrame(result_dict_[locus_dict4[locus]])
                 except:
-                    if type_check(meta_h, 'sequence_id_'+H+'_0'):
-                        final_result_l = pd.DataFrame.from_dict(result_dict_hl, orient = 'index').T
+                    if type_check(meta_h, "sequence_id_" + H + "_0"):
+                        final_result_l = pd.DataFrame.from_dict(
+                            result_dict_hl, orient="index"
+                        ).T
                         final_result_l = final_result_l[meta_l.columns].copy()
                     else:
-                        final_result_l = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
+                        final_result_l = pd.DataFrame.from_dict(
+                            result_dict_, orient="index"
+                        ).T
                         final_result_l = final_result_l[meta_l.columns].copy()
-                final_result_l.columns = [re.sub(rs, '', q) for q in [query+'_light_'+str(l) for l in final_result_l.columns]]
+                final_result_l.columns = [
+                    re.sub(rs, "", q)
+                    for q in [
+                        query + "_light_" + str(l) for l in final_result_l.columns
+                    ]
+                ]
                 final_result = final_result_h.join(final_result_l)
             else:
                 names = [k for k in result_dict_hl.keys()]
-                final_result = result_dict_hl[names[0]].join(result_dict_hl[names[1]]).join(result_dict_hl[names[2]])
-                final_result.columns = [re.sub('_sequence_id', '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+                final_result = (
+                    result_dict_hl[names[0]]
+                    .join(result_dict_hl[names[1]])
+                    .join(result_dict_hl[names[2]])
+                )
+                final_result.columns = [
+                    re.sub("_sequence_id", "", q)
+                    for q in [query + "_" + str(l) for l in final_result.columns]
+                ]
         else:
             if len(meta_l) != 2:
-                if type_check(meta_h, 'sequence_id_'+H+'_0'):
-                    final_result_h = pd.DataFrame.from_dict(result_dict_[query+'_heavy'], orient = 'index')
-                    final_result_h.columns = [query+'_heavy']
-                    final_result_l = pd.DataFrame.from_dict(result_dict_[query+'_light'], orient = 'index')
-                    final_result_l.columns = [query+'_light']
+                if type_check(meta_h, "sequence_id_" + H + "_0"):
+                    final_result_h = pd.DataFrame.from_dict(
+                        result_dict_[query + "_heavy"], orient="index"
+                    )
+                    final_result_h.columns = [query + "_heavy"]
+                    final_result_l = pd.DataFrame.from_dict(
+                        result_dict_[query + "_light"], orient="index"
+                    )
+                    final_result_l.columns = [query + "_light"]
                     final_result = final_result_h.join(final_result_l)
                 else:
                     if verbose:
-                        warnings.warn(UserWarning('Query dtype is {}. Ignoring collapse = True.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
-                    final_result_h = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
+                        warnings.warn(
+                            UserWarning(
+                                "Query dtype is {}. Ignoring collapse = True.".format(
+                                    meta_h["sequence_id_" + H + "_0"].dtype.name
+                                )
+                            )
+                        )
+                    final_result_h = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
                     final_result_h = final_result_h[meta_h.columns].copy()
-                    final_result_h.columns = [re.sub(rs, '', q) for q in [query+'_heavy_'+str(l) for l in final_result_h.columns]]
-                    final_result_l = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
+                    final_result_h.columns = [
+                        re.sub(rs, "", q)
+                        for q in [
+                            query + "_heavy_" + str(l) for l in final_result_h.columns
+                        ]
+                    ]
+                    final_result_l = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
                     final_result_l = final_result_l[meta_l.columns].copy()
-                    final_result_l.columns = [re.sub(rs, '', q) for q in [query+'_light_'+str(l) for l in final_result_l.columns]]
+                    final_result_l.columns = [
+                        re.sub(rs, "", q)
+                        for q in [
+                            query + "_light_" + str(l) for l in final_result_l.columns
+                        ]
+                    ]
                     final_result = final_result_h.join(final_result_l)
             else:
-                if type_check(meta_h, 'sequence_id_'+H+'_0'):
+                if type_check(meta_h, "sequence_id_" + H + "_0"):
                     for d in result_dict_:
-                        final_result_[d] = pd.DataFrame.from_dict(result_dict_[d], orient = 'index')
-                        final_result_[d].columns = [re.sub(rs, '', q) for q in [d+'_'+str(l) for l in final_result_[d].columns]]
-                        final_result_[d].columns = [re.sub('_[0-9]', '', q) for q in final_result_[d].columns]
+                        final_result_[d] = pd.DataFrame.from_dict(
+                            result_dict_[d], orient="index"
+                        )
+                        final_result_[d].columns = [
+                            re.sub(rs, "", q)
+                            for q in [
+                                d + "_" + str(l) for l in final_result_[d].columns
+                            ]
+                        ]
+                        final_result_[d].columns = [
+                            re.sub("_[0-9]", "", q) for q in final_result_[d].columns
+                        ]
                     names = [k for k in final_result_.keys()]
-                    final_result = final_result_[names[0]].join(final_result_[names[1]]).join(final_result_[names[2]])
+                    final_result = (
+                        final_result_[names[0]]
+                        .join(final_result_[names[1]])
+                        .join(final_result_[names[2]])
+                    )
                 else:
                     if verbose:
-                        warnings.warn(UserWarning('Query dtype is {}. Ignoring collapse = True.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-                    final_result.columns = [query+re.sub('sequence_id', '', q) for q in final_result.columns]
+                        warnings.warn(
+                            UserWarning(
+                                "Query dtype is {}. Ignoring collapse = True.".format(
+                                    meta_h["sequence_id_" + H + "_0"].dtype.name
+                                )
+                            )
+                        )
+                    final_result = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
+                    final_result.columns = [
+                        query + re.sub("sequence_id", "", q)
+                        for q in final_result.columns
+                    ]
     else:
-        if type_check(meta_h, 'sequence_id_'+H+'_0'):
+        if type_check(meta_h, "sequence_id_" + H + "_0"):
             if not collapse:
                 if len(meta_l) != 2:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
-                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+                    final_result = pd.DataFrame.from_dict(result_dict_, orient="index")
+                    final_result.columns = [
+                        re.sub(rs, "", q)
+                        for q in [query + "_" + str(l) for l in final_result.columns]
+                    ]
                 else:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
-                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+                    final_result = pd.DataFrame.from_dict(result_dict_, orient="index")
+                    final_result.columns = [
+                        re.sub(rs, "", q)
+                        for q in [query + "_" + str(l) for l in final_result.columns]
+                    ]
             else:
                 if len(meta_l) != 2:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
+                    final_result = pd.DataFrame.from_dict(result_dict_, orient="index")
                     final_result.columns = [query]
                 else:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
+                    final_result = pd.DataFrame.from_dict(result_dict_, orient="index")
                     final_result.columns = [query]
         else:
             if not collapse:
                 if len(meta_l) != 2:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+                    final_result = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
+                    final_result.columns = [
+                        re.sub(rs, "", q)
+                        for q in [query + "_" + str(l) for l in final_result.columns]
+                    ]
                 else:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-                    final_result.columns = [re.sub('_sequence_id', '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+                    final_result = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
+                    final_result.columns = [
+                        re.sub("_sequence_id", "", q)
+                        for q in [query + "_" + str(l) for l in final_result.columns]
+                    ]
             else:
                 if verbose:
-                    warnings.warn(UserWarning('Query dtype is {}. Ignoring collapse = True and split = False.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
+                    warnings.warn(
+                        UserWarning(
+                            "Query dtype is {}. Ignoring collapse = True and split = False.".format(
+                                meta_h["sequence_id_" + H + "_0"].dtype.name
+                            )
+                        )
+                    )
                 if len(meta_l) != 2:
-                    typedict = {locus_dict3[locus]:'heavy', locus_dict4[locus]:'light'}
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+typedict[l.split('_')[2]]+'_'+l for l in final_result.columns]]
+                    typedict = {
+                        locus_dict3[locus]: "heavy",
+                        locus_dict4[locus]: "light",
+                    }
+                    final_result = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
+                    final_result.columns = [
+                        re.sub(rs, "", q)
+                        for q in [
+                            query + "_" + typedict[l.split("_")[2]] + "_" + l
+                            for l in final_result.columns
+                        ]
+                    ]
                 else:
-                    final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-                    final_result.columns = [re.sub('_sequence_id', '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
-    return(final_result)
+                    final_result = pd.DataFrame.from_dict(
+                        result_dict_, orient="index"
+                    ).T
+                    final_result.columns = [
+                        re.sub("_sequence_id", "", q)
+                        for q in [query + "_" + str(l) for l in final_result.columns]
+                    ]
+    return final_result
 
-def retrieve_result_dict_singular(query, data, meta_h, locus = 'ig', collapse = True, verbose = False):
+
+def retrieve_result_dict_singular(
+    query, data, meta_h, locus="ig", collapse=True, verbose=False
+):
 
     df_hl = defaultdict(dict)
 
-    locus_dict1 ={'ig':'IGH'}
-    locus_dict3 ={'ig':'H'}
+    locus_dict1 = {"ig": "IGH"}
+    locus_dict3 = {"ig": "H"}
 
     H = locus_dict3[locus]
     if meta_h.shape[1] > 1:
         if collapse:
             newmeta_h = meta_h.copy()
-            if type_check(meta_h, 'sequence_id_'+H+'_0'):
+            if type_check(meta_h, "sequence_id_" + H + "_0"):
                 newh = []
                 for i in meta_h.index:
-                    newh.append('|'.join([h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
-                newmeta_h['sequence_id_'+H+'_0'] = newh
-                meta_h = pd.DataFrame(newmeta_h['sequence_id_'+H+'_0'].copy())
+                    newh.append(
+                        "|".join(
+                            [h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]
+                        )
+                    )
+                newmeta_h["sequence_id_" + H + "_0"] = newh
+                meta_h = pd.DataFrame(newmeta_h["sequence_id_" + H + "_0"].copy())
             else:
                 collapse = False
                 if verbose:
-                    warnings.warn(UserWarning('Multiple heavy chain contigs mapping to the same cell barcode and/or query dtype is {}. Ignoring collapse = True.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
+                    warnings.warn(
+                        UserWarning(
+                            "Multiple heavy chain contigs mapping to the same cell barcode and/or query dtype is {}. Ignoring collapse = True.".format(
+                                meta_h["sequence_id_" + H + "_0"].dtype.name
+                            )
+                        )
+                    )
 
     metadata_ = meta_h.copy()
 
     df_ = metadata_.copy()
-    if type_check(meta_h, 'sequence_id_'+H+'_0'):
+    if type_check(meta_h, "sequence_id_" + H + "_0"):
         df_res = df_.copy()
-        q_res =[]
+        q_res = []
         if collapse:
             for i in metadata_.index:
                 if combine:
-                    q_res.append('|'.join([qq for qq in list(dict.fromkeys(df_.loc[i])) if qq == qq]))
+                    q_res.append(
+                        "|".join(
+                            [qq for qq in list(dict.fromkeys(df_.loc[i])) if qq == qq]
+                        )
+                    )
                 else:
-                    q_res.append('|'.join([qq for qq in list(df_.loc[i]) if qq == qq]))
+                    q_res.append("|".join([qq for qq in list(df_.loc[i]) if qq == qq]))
         else:
             for i in metadata_.index:
                 q_res.append([qq for qq in list(df_.loc[i]) if qq == qq])
         df_res[query] = q_res
         result_dict_ = dict(df_res[query])
     else:
-        result_dict_ = {x:dict(df_[x]) for x in df_}
+        result_dict_ = {x: dict(df_[x]) for x in df_}
 
-    rs_dict1 = {'ig':'[H]'}
-    rs = '_sequence_id_'+rs_dict1[locus]
+    rs_dict1 = {"ig": "[H]"}
+    rs = "_sequence_id_" + rs_dict1[locus]
     final_result_ = defaultdict(dict)
 
-    if type_check(meta_h, 'sequence_id_'+H+'_0'):
+    if type_check(meta_h, "sequence_id_" + H + "_0"):
         if not collapse:
-            final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
-            final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+            final_result = pd.DataFrame.from_dict(result_dict_, orient="index")
+            final_result.columns = [
+                re.sub(rs, "", q)
+                for q in [query + "_" + str(l) for l in final_result.columns]
+            ]
         else:
-            final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
+            final_result = pd.DataFrame.from_dict(result_dict_, orient="index")
             final_result.columns = [query]
     else:
         if not collapse:
-            final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-            final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
+            final_result = pd.DataFrame.from_dict(result_dict_, orient="index").T
+            final_result.columns = [
+                re.sub(rs, "", q)
+                for q in [query + "_" + str(l) for l in final_result.columns]
+            ]
         else:
             if verbose:
-                warnings.warn(UserWarning('Query dtype is {}. Ignoring collapse = True and split = False.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
-            typedict = {locus_dict3[locus]:'heavy'}
-            final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-            final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+typedict[l.split('_')[2]]+'_'+l for l in final_result.columns]]
-    return(final_result)
+                warnings.warn(
+                    UserWarning(
+                        "Query dtype is {}. Ignoring collapse = True and split = False.".format(
+                            meta_h["sequence_id_" + H + "_0"].dtype.name
+                        )
+                    )
+                )
+            typedict = {locus_dict3[locus]: "heavy"}
+            final_result = pd.DataFrame.from_dict(result_dict_, orient="index").T
+            final_result.columns = [
+                re.sub(rs, "", q)
+                for q in [
+                    query + "_" + typedict[l.split("_")[2]] + "_" + l
+                    for l in final_result.columns
+                ]
+            ]
+    return final_result
+
 
 def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose):
     init_dict = {}
     for col in cols:
-        init_dict.update({col:{'split':True, 'collapse':True, 'combine':False, 'locus':locus_, 'split_by_locus':False}})
+        init_dict.update(
+            {
+                col: {
+                    "split": True,
+                    "collapse": True,
+                    "combine": False,
+                    "locus": locus_,
+                    "split_by_locus": False,
+                }
+            }
+        )
     if clonekey in init_dict:
-        init_dict.update({clonekey:{'split':False, 'collapse':True, 'combine':True, 'locus':locus_, 'split_by_locus':False}})
-    if 'sample_id' in init_dict:
-        init_dict.update({'sample_id':{'split':False, 'collapse':True, 'combine':True, 'locus':locus_, 'split_by_locus':False}})
+        init_dict.update(
+            {
+                clonekey: {
+                    "split": False,
+                    "collapse": True,
+                    "combine": True,
+                    "locus": locus_,
+                    "split_by_locus": False,
+                }
+            }
+        )
+    if "sample_id" in init_dict:
+        init_dict.update(
+            {
+                "sample_id": {
+                    "split": False,
+                    "collapse": True,
+                    "combine": True,
+                    "locus": locus_,
+                    "split_by_locus": False,
+                }
+            }
+        )
     meta_ = defaultdict(dict)
     for k, v in init_dict.items():
-        meta_[k] = retrieve_metadata(self.data, query = k, verbose = verbose, **v)
+        meta_[k] = retrieve_metadata(self.data, query=k, verbose=verbose, **v)
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
     for i in tmp_metadata.index:
-        if tmp_metadata.loc[i,'locus_heavy'] == tmp_metadata.loc[i,'locus_heavy']:
-            if not pd.isnull(tmp_metadata.loc[i,'locus_light']):
-                if tmp_metadata.loc[i,'locus_light'] != '':
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,'locus_heavy']+' + '+ tmp_metadata.loc[i,'locus_light']
+        if tmp_metadata.loc[i, "locus_heavy"] == tmp_metadata.loc[i, "locus_heavy"]:
+            if not pd.isnull(tmp_metadata.loc[i, "locus_light"]):
+                if tmp_metadata.loc[i, "locus_light"] != "":
+                    tmp_metadata.at[i, "status"] = (
+                        tmp_metadata.loc[i, "locus_heavy"]
+                        + " + "
+                        + tmp_metadata.loc[i, "locus_light"]
+                    )
                 else:
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,'locus_heavy'] + '_only'
-            elif tmp_metadata.loc[i,'locus_heavy'] != '':
-                tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,'locus_heavy'] + '_only'
+                    tmp_metadata.at[i, "status"] = (
+                        tmp_metadata.loc[i, "locus_heavy"] + "_only"
+                    )
+            elif tmp_metadata.loc[i, "locus_heavy"] != "":
+                tmp_metadata.at[i, "status"] = (
+                    tmp_metadata.loc[i, "locus_heavy"] + "_only"
+                )
             else:
-                tmp_metadata.at[i, 'status'] = 'unassigned'
+                tmp_metadata.at[i, "status"] = "unassigned"
         else:
-            tmp_metadata.at[i, 'status'] = 'unassigned'
+            tmp_metadata.at[i, "status"] = "unassigned"
     for i in tmp_metadata.index:
-        if tmp_metadata.loc[i,'locus_heavy'] == tmp_metadata.loc[i,'locus_heavy']:
-            if not pd.isnull(tmp_metadata.loc[i,'locus_light']):
-                if tmp_metadata.loc[i,'locus_light'] != '':
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,'locus_heavy']+' + '+ tmp_metadata.loc[i,'locus_light']
+        if tmp_metadata.loc[i, "locus_heavy"] == tmp_metadata.loc[i, "locus_heavy"]:
+            if not pd.isnull(tmp_metadata.loc[i, "locus_light"]):
+                if tmp_metadata.loc[i, "locus_light"] != "":
+                    tmp_metadata.at[i, "status"] = (
+                        tmp_metadata.loc[i, "locus_heavy"]
+                        + " + "
+                        + tmp_metadata.loc[i, "locus_light"]
+                    )
                 else:
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,'locus_heavy'] + '_only'
-            elif tmp_metadata.loc[i,'locus_heavy'] != '':
-                tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,'locus_heavy'] + '_only'
+                    tmp_metadata.at[i, "status"] = (
+                        tmp_metadata.loc[i, "locus_heavy"] + "_only"
+                    )
+            elif tmp_metadata.loc[i, "locus_heavy"] != "":
+                tmp_metadata.at[i, "status"] = (
+                    tmp_metadata.loc[i, "locus_heavy"] + "_only"
+                )
             else:
-                tmp_metadata.at[i, 'status'] = 'unassigned'
+                tmp_metadata.at[i, "status"] = "unassigned"
         else:
-            tmp_metadata.at[i, 'status'] = 'unassigned'
-        if tmp_metadata.loc[i,'productive_heavy'] == tmp_metadata.loc[i,'productive_heavy']:
-            if not pd.isnull(tmp_metadata.loc[i,'productive_light']):
-                if tmp_metadata.loc[i,'productive_light'] != '':
-                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[i,'productive_heavy']+' + '+ tmp_metadata.loc[i,'productive_light']
+            tmp_metadata.at[i, "status"] = "unassigned"
+        if (
+            tmp_metadata.loc[i, "productive_heavy"]
+            == tmp_metadata.loc[i, "productive_heavy"]
+        ):
+            if not pd.isnull(tmp_metadata.loc[i, "productive_light"]):
+                if tmp_metadata.loc[i, "productive_light"] != "":
+                    tmp_metadata.at[i, "productive"] = (
+                        tmp_metadata.loc[i, "productive_heavy"]
+                        + " + "
+                        + tmp_metadata.loc[i, "productive_light"]
+                    )
                 else:
-                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[i,'productive_heavy']
-            elif tmp_metadata.loc[i,'productive_heavy'] != '':
-                tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[i,'productive_heavy']
+                    tmp_metadata.at[i, "productive"] = tmp_metadata.loc[
+                        i, "productive_heavy"
+                    ]
+            elif tmp_metadata.loc[i, "productive_heavy"] != "":
+                tmp_metadata.at[i, "productive"] = tmp_metadata.loc[
+                    i, "productive_heavy"
+                ]
             else:
-                tmp_metadata.at[i, 'productive'] = 'unassigned'
+                tmp_metadata.at[i, "productive"] = "unassigned"
         else:
-            tmp_metadata.at[i, 'productive'] = 'unassigned'
-    conversion_dict = {'igha1':'IgA', 'igha2':'IgA', 'ighm':'IgM', 'ighd':'IgD', 'ighe':'IgE', 'ighg1':'IgG', 'ighg2':'IgG', 'ighg3':'IgG', 'ighg4':'IgG', 'igkc':'IgK', 'iglc1':'IgL', 'iglc2':'IgL', 'iglc3':'IgL', 'iglc4':'IgL', 'iglc5':'IgL', 'iglc6':'IgL', 'iglc7':'IgL', 'igha':'IgA', 'ighg':'IgG', 'iglc':'IgL', 'nan':'unassigned', 'na':'unassigned', 'NA':'unassigned', 'None':'unassigned', '':'unassigned', 'unassigned':'unassigned', np.nan:'unassigned', None:'unassigned'} # the key for IgG being igh is on purpose because of how the counter works
+            tmp_metadata.at[i, "productive"] = "unassigned"
+    conversion_dict = {
+        "igha1": "IgA",
+        "igha2": "IgA",
+        "ighm": "IgM",
+        "ighd": "IgD",
+        "ighe": "IgE",
+        "ighg1": "IgG",
+        "ighg2": "IgG",
+        "ighg3": "IgG",
+        "ighg4": "IgG",
+        "igkc": "IgK",
+        "iglc1": "IgL",
+        "iglc2": "IgL",
+        "iglc3": "IgL",
+        "iglc4": "IgL",
+        "iglc5": "IgL",
+        "iglc6": "IgL",
+        "iglc7": "IgL",
+        "igha": "IgA",
+        "ighg": "IgG",
+        "iglc": "IgL",
+        "nan": "unassigned",
+        "na": "unassigned",
+        "NA": "unassigned",
+        "None": "unassigned",
+        "": "unassigned",
+        "unassigned": "unassigned",
+        np.nan: "unassigned",
+        None: "unassigned",
+    }  # the key for IgG being igh is on purpose because of how the counter works
     isotype = []
-    for k in tmp_metadata['c_call_heavy']:
+    for k in tmp_metadata["c_call_heavy"]:
         if k == k:
-            if ',' in k:
-                k = '|'.join(k.split(','))
-            if '|' in k:
-                isotype.append('|'.join([str(z) for z in [conversion_dict[y.lower()] for y in set([re.sub('[0-9]', '', x) for x in k.split('|')])]]))
+            if "," in k:
+                k = "|".join(k.split(","))
+            if "|" in k:
+                isotype.append(
+                    "|".join(
+                        [
+                            str(z)
+                            for z in [
+                                conversion_dict[y.lower()]
+                                for y in set(
+                                    [re.sub("[0-9]", "", x) for x in k.split("|")]
+                                )
+                            ]
+                        ]
+                    )
+                )
             else:
                 isotype.append(conversion_dict[k.lower()])
         else:
             isotype.append(k)
-    tmp_metadata['isotype'] = isotype
-    vdj_gene_calls = ['v_call', 'd_call', 'j_call']
+    tmp_metadata["isotype"] = isotype
+    vdj_gene_calls = ["v_call", "d_call", "j_call"]
     if collapse_alleles:
         for x in vdj_gene_calls:
             if x in self.data:
                 for c in tmp_metadata:
                     if x in c:
-                        tmp_metadata[c] = ['|'.join(['|'.join(list(set(yy.split(',')))) for yy in list(set([re.sub('[*][0-9][0-9]', '', tx) for tx in t.split('|')]))]) for t in tmp_metadata[c]]
+                        tmp_metadata[c] = [
+                            "|".join(
+                                [
+                                    "|".join(list(set(yy.split(","))))
+                                    for yy in list(
+                                        set(
+                                            [
+                                                re.sub("[*][0-9][0-9]", "", tx)
+                                                for tx in t.split("|")
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                            for t in tmp_metadata[c]
+                        ]
     multi = {}
     for i in tmp_metadata.index:
         try:
-            if 'v_call_genotyped' in cols:
-                hv_ = tmp_metadata.at[i, 'v_call_genotyped_heavy'].split('|')
+            if "v_call_genotyped" in cols:
+                hv_ = tmp_metadata.at[i, "v_call_genotyped_heavy"].split("|")
             else:
-                hv_ = tmp_metadata.at[i, 'v_call_heavy'].split('|')
+                hv_ = tmp_metadata.at[i, "v_call_heavy"].split("|")
         except:
-            if 'v_call_genotyped' in cols:
-                hv_ = tmp_metadata.at[i, 'v_call_genotyped_heavy']
+            if "v_call_genotyped" in cols:
+                hv_ = tmp_metadata.at[i, "v_call_genotyped_heavy"]
             else:
-                hv_ = tmp_metadata.at[i, 'v_call_heavy']
+                hv_ = tmp_metadata.at[i, "v_call_heavy"]
         try:
-            hj_ = tmp_metadata.at[i, 'j_call_heavy'].split('|')
+            hj_ = tmp_metadata.at[i, "j_call_heavy"].split("|")
         except:
-            hj_ = tmp_metadata.at[i, 'j_call_heavy']
+            hj_ = tmp_metadata.at[i, "j_call_heavy"]
         try:
-            if 'v_call_genotyped' in cols:
-                lv_ = tmp_metadata.at[i, 'v_call_genotyped_light'].split('|')
+            if "v_call_genotyped" in cols:
+                lv_ = tmp_metadata.at[i, "v_call_genotyped_light"].split("|")
             else:
-                lv_ = tmp_metadata.at[i, 'v_call_light'].split('|')
+                lv_ = tmp_metadata.at[i, "v_call_light"].split("|")
         except:
-            if 'v_call_genotyped' in cols:
-                lv_ = tmp_metadata.at[i, 'v_call_genotyped_light']
+            if "v_call_genotyped" in cols:
+                lv_ = tmp_metadata.at[i, "v_call_genotyped_light"]
             else:
-                lv_ = tmp_metadata.at[i, 'v_call_light']
+                lv_ = tmp_metadata.at[i, "v_call_light"]
         try:
-            lj_ = tmp_metadata.at[i, 'j_call_light'].split('|')
+            lj_ = tmp_metadata.at[i, "j_call_light"].split("|")
         except:
-            lj_ = tmp_metadata.at[i, 'j_call_light']
+            lj_ = tmp_metadata.at[i, "j_call_light"]
         multi_h = []
         multi_l = []
         if len(hv_) > 1:
-            multi_h.append(['Multi_heavy_v'])
+            multi_h.append(["Multi_heavy_v"])
         if len(hj_) > 1:
-            multi_h.append(['Multi_heavy_j'])
+            multi_h.append(["Multi_heavy_j"])
         if len(lv_) > 1:
-            multi_l.append(['Multi_light_v'])
+            multi_l.append(["Multi_light_v"])
         if len(lj_) > 1:
-            multi_l.append(['Multi_light_j'])
+            multi_l.append(["Multi_light_j"])
         if len(multi_h) < 1:
-            multi_h.append(['Single'])
+            multi_h.append(["Single"])
         if len(multi_l) < 1:
-            multi_l.append(['Single'])
-        multih = '|'.join(list(set(flatten(multi_h))))
-        multil = '|'.join(list(set(flatten(multi_l))))
+            multi_l.append(["Single"])
+        multih = "|".join(list(set(flatten(multi_h))))
+        multil = "|".join(list(set(flatten(multi_l))))
         if len(multih) > 0:
             if len(multil) > 0:
-                multi[i] = multih + ' + ' + multil
+                multi[i] = multih + " + " + multil
             else:
                 multi[i] = multih
         else:
-            multi[i] = 'unassigned'
-    tmp_metadata['vdj_status_detail'] = pd.Series(multi)
-    tmp_metadata['vdj_status'] = ['Multi' if bool(re.search('Multi_heavy(.*)Multi_light', i)) else 'Multi' if '|' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
+            multi[i] = "unassigned"
+    tmp_metadata["vdj_status_detail"] = pd.Series(multi)
+    tmp_metadata["vdj_status"] = [
+        "Multi"
+        if bool(re.search("Multi_heavy(.*)Multi_light", i))
+        else "Multi"
+        if "|" in i
+        else "Single"
+        for i in tmp_metadata["vdj_status_detail"]
+    ]
     self.metadata = tmp_metadata.copy()
 
-def update_metadata(self, retrieve = None, locus = None, clone_key = None, split_heavy_light = True, collapse = True, combine = True, split_by_locus = False, collapse_alleles = True, reinitialize = False,  verbose = False):
+
+def update_metadata(
+    self,
+    retrieve=None,
+    locus=None,
+    clone_key=None,
+    split_heavy_light=True,
+    collapse=True,
+    combine=True,
+    split_by_locus=False,
+    collapse_alleles=True,
+    reinitialize=False,
+    verbose=False,
+):
     """
     A Dandelion initialisation function to update and populate the `.metadata` slot.
 
@@ -1223,39 +1618,56 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
     """
 
     if locus is None:
-        locus_ = 'ig'
+        locus_ = "ig"
     else:
         locus_ = locus
 
     if clone_key is None:
-        clonekey = 'clone_id'
+        clonekey = "clone_id"
     else:
         clonekey = clone_key
 
-    cols = ['sequence_id', 'cell_id', 'sample_id', 'locus', 'productive', 'v_call', 'j_call', 'c_call', 'junction_aa', 'umi_count']
+    cols = [
+        "sequence_id",
+        "cell_id",
+        "sample_id",
+        "locus",
+        "productive",
+        "v_call",
+        "j_call",
+        "c_call",
+        "junction_aa",
+        "umi_count",
+    ]
 
-    if 'umi_count' not in self.data:
-        cols = list(map(lambda x: 'duplicate_count' if x == 'umi_count' else x, cols))
-        if 'duplicate_count' not in self.data:
-            raise ValueError("Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data.")
+    if "umi_count" not in self.data:
+        cols = list(map(lambda x: "duplicate_count" if x == "umi_count" else x, cols))
+        if "duplicate_count" not in self.data:
+            raise ValueError(
+                "Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
+            )
 
     if not all([c in self.data for c in cols]):
-        raise ValueError('Unable to initialize metadata due to missing keys. Please ensure the input data contains all the following columns: {}'.format(cols))
+        raise ValueError(
+            "Unable to initialize metadata due to missing keys. Please ensure the input data contains all the following columns: {}".format(
+                cols
+            )
+        )
 
-    if 'v_call_genotyped' in self.data:
-        cols = list(map(lambda x: 'v_call_genotyped' if x == 'v_call' else x, cols))
+    if "v_call_genotyped" in self.data:
+        cols = list(map(lambda x: "v_call_genotyped" if x == "v_call" else x, cols))
 
-    for c in ['sequence_id', 'cell_id']:
+    for c in ["sequence_id", "cell_id"]:
         cols.remove(c)
 
     if clonekey in self.data:
-        if not all(pd.isnull(self.data['clone_id'])):
+        if not all(pd.isnull(self.data["clone_id"])):
             cols = [clonekey] + cols
 
     metadata_status = self.metadata
     if (metadata_status is None) or reinitialize:
         initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
-        
+
     tmp_metadata = self.metadata.copy()
 
     if retrieve is not None:
@@ -1263,16 +1675,28 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
         if type(retrieve) is str:
             retrieve = [retrieve]
         for ret in retrieve:
-            ret_dict.update({ret:{'split':split_heavy_light, 'collapse':collapse, 'combine':combine, 'locus':locus_, 'split_by_locus':split_by_locus}})
+            ret_dict.update(
+                {
+                    ret: {
+                        "split": split_heavy_light,
+                        "collapse": collapse,
+                        "combine": combine,
+                        "locus": locus_,
+                        "split_by_locus": split_by_locus,
+                    }
+                }
+            )
 
-        vdj_gene_ret = ['v_call', 'd_call', 'j_call']
+        vdj_gene_ret = ["v_call", "d_call", "j_call"]
 
         retrieve_ = defaultdict(dict)
         for k, v in ret_dict.items():
             if k in self.data.columns:
-                retrieve_[k] = retrieve_metadata(self.data, query = k, verbose = verbose, **v)
+                retrieve_[k] = retrieve_metadata(
+                    self.data, query=k, verbose=verbose, **v
+                )
             else:
-                raise KeyError('Cannot retrieve \'%s\' : Unknown column name.' % k)
+                raise KeyError("Cannot retrieve '%s' : Unknown column name." % k)
         ret_metadata = pd.concat(retrieve_.values(), axis=1, join="inner")
 
         if collapse_alleles:
@@ -1280,11 +1704,27 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
                 if k in vdj_gene_ret:
                     for c in ret_metadata:
                         if k in c:
-                            ret_metadata[c] = ['|'.join(['|'.join(list(set(yy.split(',')))) for yy in list(set([re.sub('[*][0-9][0-9]', '', tx) for tx in t.split('|')]))]) for t in ret_metadata[c]]
+                            ret_metadata[c] = [
+                                "|".join(
+                                    [
+                                        "|".join(list(set(yy.split(","))))
+                                        for yy in list(
+                                            set(
+                                                [
+                                                    re.sub("[*][0-9][0-9]", "", tx)
+                                                    for tx in t.split("|")
+                                                ]
+                                            )
+                                        )
+                                    ]
+                                )
+                                for t in ret_metadata[c]
+                            ]
 
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
         self.metadata = tmp_metadata.copy()
+
 
 class Dandelion:
     """
@@ -1293,7 +1733,19 @@ class Dandelion:
     Main class object storing input/ouput slots for all functions.
 
     """
-    def __init__(self, data=None, metadata=None, germline = None, distance=None, edges=None, layout=None, graph=None, initialize = True, **kwargs):
+
+    def __init__(
+        self,
+        data=None,
+        metadata=None,
+        germline=None,
+        distance=None,
+        edges=None,
+        layout=None,
+        graph=None,
+        initialize=True,
+        **kwargs,
+    ):
         self.data = data
         self.metadata = metadata
         self.distance = distance
@@ -1326,7 +1778,9 @@ class Dandelion:
             self.n_obs = 0
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
-        descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
+        descr = (
+            f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
+        )
         for attr in ["data", "metadata", "distance", "edges"]:
             try:
                 keys = getattr(self, attr).keys()
@@ -1364,7 +1818,7 @@ class Dandelion:
         """
         return copy.deepcopy(self)
 
-    def update_germline(self, corrected = None, germline = None, org = 'human'):
+    def update_germline(self, corrected=None, germline=None, org="human"):
         """
         Update germline reference with corrected sequences and store in Dandelion object.
 
@@ -1383,35 +1837,45 @@ class Dandelion:
         -------
         updated germline reference diciontary in `.germline` slot.
         """
-        start = logg.info('Updating germline reference')
+        start = logg.info("Updating germline reference")
         env = os.environ.copy()
         if germline is None:
             try:
-                gml = env['GERMLINE']
+                gml = env["GERMLINE"]
             except:
-                raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.')
-            gml = gml+'imgt/'+org+'/vdj/'
+                raise OSError(
+                    "Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files."
+                )
+            gml = gml + "imgt/" + org + "/vdj/"
         else:
             if os.path.isdir(germline):
                 gml = germline
             elif type(germline) is not list:
                 germline_ = [germline]
                 if len(germline_) < 3:
-                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                    raise OSError(
+                        "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list."
+                    )
                 else:
                     gml = []
                     for x in germline_:
-                        if not x.endswith('.fasta'):
-                            raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                        if not x.endswith(".fasta"):
+                            raise OSError(
+                                "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list."
+                            )
                         gml.append(x)
             elif type(germline) is list:
                 if len(germline) < 3:
-                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                    raise OSError(
+                        "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list."
+                    )
                 else:
                     gml = []
                     for x in germline:
-                        if not x.endswith('.fasta'):
-                            raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                        if not x.endswith(".fasta"):
+                            raise OSError(
+                                "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list."
+                            )
                         gml.append(x)
 
         if type(gml) is not list:
@@ -1424,17 +1888,24 @@ class Dandelion:
             elif os.path.isfile(str(corrected)):
                 personalized_ref_dict = readGermlines([corrected])
             # update with the personalized germline database
-            if 'personalized_ref_dict' in locals():
+            if "personalized_ref_dict" in locals():
                 germline_ref.update(personalized_ref_dict)
             else:
-                raise OSError('Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences.')
+                raise OSError(
+                    "Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences."
+                )
 
         self.germline.update(germline_ref)
-        logg.info(' finished', time=start,
-        deep=('Updated Dandelion object: \n'
-        '   \'germline\', updated germline reference\n'))
+        logg.info(
+            " finished",
+            time=start,
+            deep=(
+                "Updated Dandelion object: \n"
+                "   'germline', updated germline reference\n"
+            ),
+        )
 
-    def write_pkl(self, filename='dandelion_data.pkl.pbz2', **kwargs):
+    def write_pkl(self, filename="dandelion_data.pkl.pbz2", **kwargs):
         """
         Writes a `Dandelion` class to .pkl format.
 
@@ -1447,24 +1918,31 @@ class Dandelion:
         """
         if isBZIP(filename):
             try:
-                with bz2.BZ2File(filename, 'wb') as f:
+                with bz2.BZ2File(filename, "wb") as f:
                     cPickle.dump(self, f, **kwargs)
             except:
-                with bz2.BZ2File(filename, 'wb') as f:
-                    cPickle.dump(self, f, protocol = 4, **kwargs)
+                with bz2.BZ2File(filename, "wb") as f:
+                    cPickle.dump(self, f, protocol=4, **kwargs)
         elif isGZIP(filename):
             try:
-                with gzip.open(filename, 'wb') as f:
+                with gzip.open(filename, "wb") as f:
                     cPickle.dump(self, f, **kwargs)
             except:
-                with gzip.open(filename, 'wb') as f:
-                    cPickle.dump(self, f, protocol = 4, **kwargs)
+                with gzip.open(filename, "wb") as f:
+                    cPickle.dump(self, f, protocol=4, **kwargs)
         else:
-            f = open(filename, 'wb')
+            f = open(filename, "wb")
             cPickle.dump(self, f, **kwargs)
             f.close()
 
-    def write_h5(self, filename='dandelion_data.h5', complib = None, compression = None, compression_level = None, **kwargs):
+    def write_h5(
+        self,
+        filename="dandelion_data.h5",
+        complib=None,
+        compression=None,
+        compression_level=None,
+        **kwargs,
+    ):
         """
         Writes a `Dandelion` class to .h5 format.
 
@@ -1487,7 +1965,7 @@ class Dandelion:
             compression_level = compression_level
 
         # a little hack to overwrite the existing file?
-        with h5py.File(filename,  "w") as hf:
+        with h5py.File(filename, "w") as hf:
             for datasetname in hf.keys():
                 del hf[datasetname]
 
@@ -1498,28 +1976,49 @@ class Dandelion:
         elif complib is None and compression is not None:
             comp = compression
         if complib is not None and compression is not None:
-            raise ValueError('Please specify only complib or compression. They do the same thing.')
+            raise ValueError(
+                "Please specify only complib or compression. They do the same thing."
+            )
 
         # now to actually saving
         for col in self.data.columns:
-            weird = (self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)).any(axis=1)
+            weird = (
+                self.data[[col]].applymap(type) != self.data[[col]].iloc[0].apply(type)
+            ).any(axis=1)
             if len(self.data[weird]) > 0:
-                self.data[col] = self.data[col].where(pd.notnull(self.data[col]), '')
-        self.data.to_hdf(filename, "data", complib = comp, complevel = compression_level, **kwargs)
+                self.data[col] = self.data[col].where(pd.notnull(self.data[col]), "")
+        self.data.to_hdf(
+            filename, "data", complib=comp, complevel=compression_level, **kwargs
+        )
 
         if self.metadata is not None:
             for col in self.metadata.columns:
-                weird = (self.metadata[[col]].applymap(type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
+                weird = (
+                    self.metadata[[col]].applymap(type)
+                    != self.metadata[[col]].iloc[0].apply(type)
+                ).any(axis=1)
                 if len(self.metadata[weird]) > 0:
-                    self.metadata[col] = self.metadata[col].where(pd.notnull(self.metadata[col]), '')
-            self.metadata.to_hdf(filename, "metadata", complib = comp, complevel = compression_level, format='table', nan_rep=np.nan, **kwargs)
+                    self.metadata[col] = self.metadata[col].where(
+                        pd.notnull(self.metadata[col]), ""
+                    )
+            self.metadata.to_hdf(
+                filename,
+                "metadata",
+                complib=comp,
+                complevel=compression_level,
+                format="table",
+                nan_rep=np.nan,
+                **kwargs,
+            )
         # except:
         #     warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
         #     pass
         try:
-            if 'index' in self.edges.columns:
-                self.edges.drop('index', axis = 1, inplace=True)
-            self.edges.to_hdf(filename, "edges", complib = comp, complevel = compression_level, **kwargs)
+            if "index" in self.edges.columns:
+                self.edges.drop("index", axis=1, inplace=True)
+            self.edges.to_hdf(
+                filename, "edges", complib=comp, complevel=compression_level, **kwargs
+            )
         except:
             pass
 
@@ -1527,19 +2026,33 @@ class Dandelion:
         try:
             for g in self.graph:
                 G = nx.to_pandas_adjacency(g, nonedge=np.nan)
-                G.to_hdf(filename, "graph/graph_"+str(graph_counter), complib = comp, complevel = compression_level, **kwargs)
+                G.to_hdf(
+                    filename,
+                    "graph/graph_" + str(graph_counter),
+                    complib=comp,
+                    complevel=compression_level,
+                    **kwargs,
+                )
                 graph_counter += 1
         except:
             pass
 
         try:
             for d in self.distance:
-                dat = pd.DataFrame(self.distance[d].toarray()) # how to make this faster?
-                dat.to_hdf(filename, "distance/"+d, complib = comp, complevel = compression_level, **kwargs)
+                dat = pd.DataFrame(
+                    self.distance[d].toarray()
+                )  # how to make this faster?
+                dat.to_hdf(
+                    filename,
+                    "distance/" + d,
+                    complib=comp,
+                    complevel=compression_level,
+                    **kwargs,
+                )
         except:
             pass
 
-        with h5py.File(filename,  "a") as hf:
+        with h5py.File(filename, "a") as hf:
             # try:
             #     for d in self.distance:
             #         hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_level)
@@ -1553,37 +2066,40 @@ class Dandelion:
                 layout_counter = 0
                 for l in self.layout:
                     try:
-                        hf.create_group('layout/layout_'+str(layout_counter))
+                        hf.create_group("layout/layout_" + str(layout_counter))
                     except:
                         pass
                     for k in l.keys():
-                        hf['layout/layout_'+str(layout_counter)].attrs[k] = l[k]
+                        hf["layout/layout_" + str(layout_counter)].attrs[k] = l[k]
                     layout_counter += 1
             except:
                 pass
 
             if len(self.germline) > 0:
                 try:
-                    hf.create_group('germline')
+                    hf.create_group("germline")
                 except:
                     pass
                 for k in self.germline.keys():
-                    hf['germline'].attrs[k] = self.germline[k]
+                    hf["germline"].attrs[k] = self.germline[k]
             if self.threshold is not None:
                 tr = self.threshold
-                hf.create_dataset('threshold', data=tr)
+                hf.create_dataset("threshold", data=tr)
+
 
 def isGZIP(filename):
-    if filename.split('.')[-1] == 'gz':
+    if filename.split(".")[-1] == "gz":
         return True
     return False
+
 
 def isBZIP(filename):
-    if filename.split('.')[-1] == 'pbz2':
+    if filename.split(".")[-1] == "pbz2":
         return True
     return False
 
-def read_pkl(filename='dandelion_data.pkl.pbz2'):
+
+def read_pkl(filename="dandelion_data.pkl.pbz2"):
     """
     Reads in and returns a `Dandelion` class saved using pickle format.
 
@@ -1597,17 +2113,18 @@ def read_pkl(filename='dandelion_data.pkl.pbz2'):
     Dandelion object.
     """
     if isBZIP(filename):
-        data = bz2.BZ2File(filename, 'rb')
+        data = bz2.BZ2File(filename, "rb")
         data = cPickle.load(data)
     elif isGZIP(filename):
-        data = gzip.open(filename, 'rb')
+        data = gzip.open(filename, "rb")
         data = cPickle.load(data)
     else:
-        with open(filename, 'rb') as f:
+        with open(filename, "rb") as f:
             data = cPickle.load(f)
-    return(data)
+    return data
 
-def read_h5(filename='dandelion_data.h5'):
+
+def read_h5(filename="dandelion_data.h5"):
     """
     Reads in and returns a `Dandelion` class from .h5 format.
 
@@ -1621,59 +2138,59 @@ def read_h5(filename='dandelion_data.h5'):
     Dandelion object.
     """
     try:
-        data = pd.read_hdf(filename, 'data')
+        data = pd.read_hdf(filename, "data")
     except:
-        raise AttributeError('{} does not contain attribute `data`'.format(filename))
+        raise AttributeError("{} does not contain attribute `data`".format(filename))
     try:
-        metadata = pd.read_hdf(filename, 'metadata')
-    except:
-        pass
-
-    try:
-        edges = pd.read_hdf(filename, 'edges')
+        metadata = pd.read_hdf(filename, "metadata")
     except:
         pass
 
     try:
-        g_0 = pd.read_hdf(filename, 'graph/graph_0')
-        g_1 = pd.read_hdf(filename, 'graph/graph_1')
+        edges = pd.read_hdf(filename, "edges")
+    except:
+        pass
+
+    try:
+        g_0 = pd.read_hdf(filename, "graph/graph_0")
+        g_1 = pd.read_hdf(filename, "graph/graph_1")
         g_0 = g_0 + 1
         g_0 = g_0.fillna(0)
         g_1 = g_1 + 1
         g_1 = g_1.fillna(0)
         graph0 = nx.from_pandas_adjacency(g_0)
         graph1 = nx.from_pandas_adjacency(g_1)
-        for u,v,d in graph0.edges(data=True):
-            d['weight'] = d['weight']-1
-        for u,v,d in graph1.edges(data=True):
-            d['weight'] = d['weight']-1
+        for u, v, d in graph0.edges(data=True):
+            d["weight"] = d["weight"] - 1
+        for u, v, d in graph1.edges(data=True):
+            d["weight"] = d["weight"] - 1
         graph = (graph0, graph1)
     except:
         pass
 
-    with h5py.File(filename, 'r') as hf:
+    with h5py.File(filename, "r") as hf:
         try:
             layout0 = {}
-            for k in hf['layout/layout_0'].attrs.keys():
-                layout0.update({k:np.array(hf['layout/layout_0'].attrs[k])})
+            for k in hf["layout/layout_0"].attrs.keys():
+                layout0.update({k: np.array(hf["layout/layout_0"].attrs[k])})
             layout1 = {}
-            for k in hf['layout/layout_1'].attrs.keys():
-                layout1.update({k:np.array(hf['layout/layout_1'].attrs[k])})
+            for k in hf["layout/layout_1"].attrs.keys():
+                layout1.update({k: np.array(hf["layout/layout_1"].attrs[k])})
             layout = (layout0, layout1)
         except:
             pass
 
         germline = {}
         try:
-            for g in hf['germline'].attrs:
-                germline.update({g:hf['germline'].attrs[g]})
+            for g in hf["germline"].attrs:
+                germline.update({g: hf["germline"].attrs[g]})
         except:
             pass
 
         distance = Tree()
         try:
-            for d in hf['distance'].keys():
-                d_ = pd.read_hdf(filename, 'distance/'+d)
+            for d in hf["distance"].keys():
+                d_ = pd.read_hdf(filename, "distance/" + d)
                 distance[d] = scipy.sparse.csr_matrix(d_.values)
                 # d_ = hf['distance'][d]
                 # distance[d] = scipy.sparse.csr_matrix((d_['data'][:],d_['indices'][:], d_['indptr'][:]), d_.attrs['shape'])
@@ -1681,36 +2198,37 @@ def read_h5(filename='dandelion_data.h5'):
             pass
 
         try:
-            threshold = np.float(np.array(hf['threshold']))
+            threshold = np.float(np.array(hf["threshold"]))
         except:
             threshold = None
 
     constructor = {}
-    constructor['data'] = data
-    if 'metadata' in locals():
-        constructor['metadata'] = metadata
-    if 'germline' in locals():
-        constructor['germline'] = germline
-    if 'edges' in locals():
-        constructor['edges'] = edges
-    if 'distance' in locals():
-        constructor['distance'] = distance
-    if 'layout' in locals():
-        constructor['layout'] = layout
-    if 'graph' in locals():
-        constructor['graph'] = graph
+    constructor["data"] = data
+    if "metadata" in locals():
+        constructor["metadata"] = metadata
+    if "germline" in locals():
+        constructor["germline"] = germline
+    if "edges" in locals():
+        constructor["edges"] = edges
+    if "distance" in locals():
+        constructor["distance"] = distance
+    if "layout" in locals():
+        constructor["layout"] = layout
+    if "graph" in locals():
+        constructor["graph"] = graph
     try:
         res = Dandelion(**constructor)
     except:
-        res = Dandelion(**constructor, initialize = False)
+        res = Dandelion(**constructor, initialize=False)
 
-    if 'threshold' in locals():
+    if "threshold" in locals():
         res.threshold = threshold
     else:
         pass
-    return(res)
+    return res
 
-def concat(arrays, check_unique = False):
+
+def concat(arrays, check_unique=False):
     """
     Concatenate dataframe and return as Dandelion object.
 
@@ -1735,8 +2253,8 @@ def concat(arrays, check_unique = False):
     try:
         out = Dandelion(df)
     except:
-        out = Dandelion(df, initialize = False)
-    return(out)
+        out = Dandelion(df, initialize=False)
+    return out
 
 
 # def convert_preprocessed_tcr_10x(file, prefix = None):
@@ -1823,4 +2341,3 @@ def concat(arrays, check_unique = False):
 #                 else:
 #                     cr_annot.at[i, 'productive'] = 'False'
 #     cr_annot.to_csv("{}/{}_annotations_reannotated.csv".format(os.path.dirname(file), os.path.basename(file).split('_annotations.csv')[0]), index = False, na_rep = 'None')
-
