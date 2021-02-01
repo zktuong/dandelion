@@ -2,6 +2,8 @@
 # basic requirements for test data
 import sys
 import os
+os.chdir('/Users/kt16/Downloads')
+sys.path.append('/Users/kt16/Documents/Github/dandelion')
 import dandelion as ddl
 import scanpy as sc
 import pandas as pd
@@ -10,13 +12,15 @@ from io import StringIO
 import warnings
 
 
-def test_setup_preprocessing():
+def test_IO():
     file1 = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_filtered_contig.fasta"
     file2 = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_filtered_contig_annotations.csv"
     r1 = requests.get(file1)
     open("tests/filtered_contig.fasta", "wb").write(r1.content)
     r2 = requests.get(file2)
     open("tests/filtered_contig_annotations.csv", "wb").write(r2.content)
+    print(pd.read_csv('tests/filtered_contig_annotations.csv'))
+
 
 def test_format_headers():
     samples = ["tests"]
@@ -101,7 +105,7 @@ def test_transfer():
 
 
 if __name__ == "__main__":
-    test_setup_preprocessing()
+    test_IO()
     test_format_headers()
     test_reannotate()
     test_reassign()
