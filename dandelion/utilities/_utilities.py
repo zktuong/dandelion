@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 09:14:08
+# @Last Modified time: 2021-02-01 18:18:39
 
 import sys
 import os
@@ -1074,6 +1074,22 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
     for k, v in init_dict.items():
         meta_[k] = retrieve_metadata(self.data, query = k, verbose = verbose, **v)
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
+
+    if clonekey in init_dict:
+        tmp = tmp_metadata[str(clonekey)].str.split('|', expand=True).stack()
+        tmp = tmp.reset_index(drop = False)
+        tmp.columns = ['cell_id', 'tmp', str(clonekey)]
+        clone_size = tmp[str(clonekey)].value_counts()
+        clonesize_dict = dict(clone_size)
+        size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient = 'index')
+        size_of_clone.reset_index(drop = False, inplace = True)
+        size_of_clone.columns = [str(clonekey), 'clone_size']
+        size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
+        size_dict = dict(zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
+        tmp_metadata[str(clonekey)+'_by_size'] = ['|'.join([str(size_dict[c_]) for c_ in c.split('|')]) if len(c.split('|')) > 1 else str(size_dict[c]) for c in tmp_metadata[str(clonekey)]]
+        tmp_metadata[str(clonekey)+'_by_size'] = tmp_metadata[str(clonekey)+'_by_size'].astype('category')
+        tmp_metadata = tmp_metadata[[str(clonekey),str(clonekey)+'_by_size'] + [cl for cl in tmp_metadata if cl not in [str(clonekey),str(clonekey)+'_by_size']]]
+
     for i in tmp_metadata.index:
         if tmp_metadata.loc[i,'locus_heavy'] == tmp_metadata.loc[i,'locus_heavy']:
             if not pd.isnull(tmp_metadata.loc[i,'locus_light']):
@@ -1187,6 +1203,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             multi[i] = 'unassigned'
     tmp_metadata['vdj_status_detail'] = pd.Series(multi)
     tmp_metadata['vdj_status'] = ['Multi' if bool(re.search('Multi_heavy(.*)Multi_light', i)) else 'Multi' if '|' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
+
     self.metadata = tmp_metadata.copy()
 
 def update_metadata(self, retrieve = None, locus = None, clone_key = None, split_heavy_light = True, collapse = True, combine = True, split_by_locus = False, collapse_alleles = True, reinitialize = False,  verbose = False):
