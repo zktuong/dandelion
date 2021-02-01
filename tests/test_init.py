@@ -15,8 +15,8 @@ def test_IO():
 	test_ddl = ddl.Dandelion(test_data)	
 	test_ddl.write_h5('test.h5', compression = 'bzip2')
 	test_ddl.write_pkl('test.pkl.pbz2')
-	test2 = ddl.read_h5('test.h5')
-	test3 = ddl.read_pkl('test.pkl.pbz2')
+	test = ddl.read_h5('test.h5')
+	_ = ddl.read_pkl('test.pkl.pbz2')
 	print(test)
 	return(test)
 
@@ -35,7 +35,7 @@ def test_generate_network(test):
 	
 def test_downsampling(test):
 	test_downsample = ddl.tl.generate_network(test, downsample = 500)
-	print(vdj_downsample)
+	print(test_downsample)
 
 def test_quantify_mutation(test):
 	ddl.pp.quantify_mutations(test)
