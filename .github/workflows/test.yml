@@ -11,6 +11,9 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       fail-fast: false
       max-parallel: 5
@@ -50,13 +53,11 @@ jobs:
       run: |
         conda env update --file docs/environment.yml --name dandelion
     - name: Test with pytest
-      shell: bash -l {0}
       run: |
         conda activate dandelion
         conda install pytest
         pytest      
     - name: Test initializing Dandelion class
-      shell: bash -l {0}
       run: |
         conda activate dandelion
         python tests/IO_test.py      
