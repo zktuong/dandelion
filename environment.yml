@@ -30,6 +30,7 @@ dependencies:
 - blast
 - igblast
 - pip
+- tbb
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
