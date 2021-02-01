@@ -1,5 +1,7 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
 [![](https://badge.fury.io/py/sc-dandelion.svg)](https://badge.fury.io/py/sc-dandelion)
+![tests-master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)
+![tests-devel](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)
 
 ![](notebooks/img/dandelion_logo_illustration.png)
 
