@@ -25,26 +25,26 @@ def test_update_metadata():
 
 def test_find_clones():
 	test = ddl.read_h5('test.h5')
-	ddl.tl.find_clones()
+	ddl.tl.find_clones(test)
 
 def test_define_clones():
 	test = ddl.read_h5('test.h5')
-	ddl.pp.calculate_threshold()
+	ddl.pp.calculate_threshold(test)
 	ddl.tl.define_clones(test, key_added = 'changeo_clone_id')
 
 def test_generate_network():
 	test = ddl.read_h5('test.h5')
-	ddl.tl.generate_network()
+	ddl.tl.generate_network(test)
 
 def test_downsampling():
 	test = ddl.read_h5('test.h5')
-	ddl.tl.generate_network()
+	ddl.tl.generate_network(test)
 	test_downsample = ddl.tl.generate_network(test, downsample = 500)
 	print(test_downsample)
 
 def test_quantify_mutation():
 	test = ddl.read_h5('test.h5')
-	ddl.pp.quantify_mutations()
+	ddl.pp.quantify_mutations(test)
 
 if __name__ == '__main__':
 	test_IO()
