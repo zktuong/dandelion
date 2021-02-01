@@ -7,16 +7,7 @@ import scanpy as sc
 import pandas as pd
 import requests
 from io import StringIO
-from numba.core.errors import (
-    NumbaWarning,
-    NumbaDeprecationWarning,
-    NumbaPendingDeprecationWarning,
-)
 import warnings
-
-warnings.simplefilter("ignore", category=NumbaWarning)
-warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
-warnings.simplefilter("ignore", category=NumbaPendingDeprecationWarning)
 
 
 def test_IO():
