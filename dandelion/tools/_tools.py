@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 11:10:19
+# @Last Modified time: 2021-02-01 11:49:33
 
 import os
 import sys
@@ -754,9 +754,6 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
 
     dat_h.to_csv(h_file1, sep = '\t', index = False)
     dat_l.to_csv(l_file, sep = '\t', index = False)
-
-    if 'germline_alignment_d_mask' not in dat.columns:
-        raise ValueError("Missing 'germline_alignment_d_mask' column in input file. Run create_germlines first.")
 
     if 'v_call_genotyped' in dat.columns:
         v_field = 'v_call_genotyped'
