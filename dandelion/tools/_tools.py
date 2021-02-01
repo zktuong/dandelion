@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 10:45:08
+# @Last Modified time: 2021-02-01 11:10:19
 
 import os
 import sys
@@ -71,7 +71,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
     else:
         key_ = key
     
-    if key_ not in dat_heavy.columns:
+    if key_ not in dat.columns:
         raise ValueError("key {} not found in input table.".format(key_))
 
     if locus is None:
