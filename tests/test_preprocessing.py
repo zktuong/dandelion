@@ -57,6 +57,7 @@ def test_filter():
     bcr = pd.read_csv("tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
     bcr.reset_index(inplace=True, drop=True)
     adata.obs["filter_rna"] = False
+    adata.obs_names = ['tests_'+x.split('-')[0] for x in adata.obs_names]
     vdj, adata = ddl.pp.filter_bcr(bcr, adata)
     adata.write("tests/sctest2.h5ad", compression="gzip")
     vdj.write_h5("tests/test2.h5", compression="bzip2")
@@ -83,10 +84,9 @@ def test_downsampling():
     test_downsample = ddl.tl.generate_network(test, downsample=100)
     print(test_downsample)
 
-
 def test_transfer():
     test = ddl.read_h5("tests/test2.h5")
-    adata = sc.read_h5ad("tests/sctest2.h5ad")
+    adata = sc.read_h5ad("tests/sctest2.h5ad")    
     sc.pp.filter_cells(adata, min_genes=200)
     sc.pp.filter_genes(adata, min_cells=3)
     sc.pp.normalize_total(adata, target_sum=1e4)
