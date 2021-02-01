@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 17:50:44
+# @Last Modified time: 2021-02-01 19:08:09
 
 import os
 import sys
@@ -534,14 +534,14 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
         else:
             threshold_ = None
         if ('clone_id' in self.data.columns) and (clone_key is not None):
-            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split_heavy_light = False) # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split = False, collapse = True, combine = True) # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
         elif ('clone_id' not in self.data.columns) and (clone_key is not None):
-            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split = False, collapse = True, combine = True)
         else:
             self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key)
         self.threshold = threshold_
     else:
-        out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+        out = Dandelion(data = dat, clone_key = clone_key, retrieve = clone_key, split = False, collapse = True, combine = True)
         return(out)
 
 
@@ -957,15 +957,15 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
             threshold_ = None
 
         if ('clone_id' in self.data.columns) and (clone_key is not None):
-            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split_heavy_light = False)
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split = False, collapse = True, combine = True)
         elif ('clone_id' not in self.data.columns) and (clone_key is not None):
-            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split_heavy_light = False)
+            self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split = False, collapse = True, combine = True)
         else:
             self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key)
         self.threshold = threshold_
     else:
         if ('clone_id' in dat.columns) and (clone_key is not None):
-            out = Dandelion(data = dat, retrieve = clonekey, split_heavy_light = False)
+            out = Dandelion(data = dat, retrieve = clonekey, split = False)
         elif ('clone_id' not in dat.columns) and (clone_key is not None):
             out = Dandelion(data = dat, clone_key = clone_key)
         else:
