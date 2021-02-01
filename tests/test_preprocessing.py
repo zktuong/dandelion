@@ -48,26 +48,14 @@ def test_scanpy():
     scfile = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_count_filtered_feature_bc_matrix.h5"
     r = requests.get(scfile)
     open("tests/sctest2.h5", "wb").write(r.content)
-    adata = sc.read_10x_h5("tests/sctest2.h5")
-    sc.pp.filter_cells(adata, min_genes=200)
-    sc.pp.filter_genes(adata, min_cells=3)
-    sc.pp.normalize_total(adata, target_sum=1e4)
-    sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    adata = adata[:, adata.var["highly_variable"]].copy()
-    sc.pp.scale(adata, max_value=10)
-    sc.tl.pca(adata, svd_solver="arpack")
-    sc.pp.neighbors(adata)
+    adata = sc.read_10x_h5("tests/sctest2.h5")    
     adata.write("tests/sctest2.h5ad", compression="gzip")
     print(adata)
 
 
 def test_filter():
     adata = sc.read_10x_h5("tests/sctest2.h5")
-    bcr = pd.read_csv(
-        "tests/dandelion/data/test_filtered_contig_igblast_db-pass_genotyped.tsv",
-        sep="\t",
-    )
+    bcr = pd.read_csv("tests/dandelion/data/test_filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
     bcr.reset_index(inplace=True, drop=True)
     adata.obs["filter_rna"] = False
     vdj, adata = ddl.pp.filter_bcr(bcr, adata)
@@ -100,6 +88,15 @@ def test_downsampling():
 def test_transfer():
     test = ddl.read_h5("tests/test2.h5")
     adata = sc.read_h5ad("tests/sctest2.h5ad")
+    sc.pp.filter_cells(adata, min_genes=200)
+    sc.pp.filter_genes(adata, min_cells=3)
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    adata = adata[:, adata.var["highly_variable"]].copy()
+    sc.pp.scale(adata, max_value=10)
+    sc.tl.pca(adata, svd_solver="arpack")
+    sc.pp.neighbors(adata)
     ddl.tl.transfer(adata, test)
     adata.write("tests/sctest2.h5ad", compression="gzip")
 
