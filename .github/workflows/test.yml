@@ -54,7 +54,7 @@ jobs:
     - name: Test with pytest
       run: |
         ls
-        pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning    
+        pytest -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning    
   caching:
     name: Caching
     runs-on: ubuntu-latest
