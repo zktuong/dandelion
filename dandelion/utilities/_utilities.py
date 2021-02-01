@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 18:18:39
+# @Last Modified time: 2021-02-01 18:45:23
 
 import sys
 import os
@@ -1206,7 +1206,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
 
     self.metadata = tmp_metadata.copy()
 
-def update_metadata(self, retrieve = None, locus = None, clone_key = None, split_heavy_light = True, collapse = True, combine = True, split_by_locus = False, collapse_alleles = True, reinitialize = False,  verbose = False):
+def update_metadata(self, retrieve = None, locus = None, clone_key = None, split = True, collapse = True, combine = True, split_by_locus = False, collapse_alleles = True, reinitialize = False,  verbose = False):
     """
     A Dandelion initialisation function to update and populate the `.metadata` slot.
 
@@ -1220,14 +1220,14 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
         Mode for creating metadata. None defaults to 'ig'. Currently only accepts 'ig'.
     clone_key : str, optional
         Column name of clone id. None defaults to 'clone_id'.
-    split_heavy_light : bool
-        Only applies if retrieve option is not None. Returns the retrieval splitted into two columns, one for heavy and light, if True. Interacts with collapse, combine and split_by_locus options.
+    split : bool
+        Only applies if retrieve option is not None. Returns the retrieval splitted into two columns, e.g. one for heavy and one for light chains in BCR data, if True. Interacts with collapse, combine and split_by_locus options.
     collapse : bool
-        Only applies if retrieve option is not None. Returns the retrieval as a collapsed entry if multiple entries are found (e.g. v genes from multiple contigs) where each entry will be separated by a '|' if True. Interacts with split_heavy_light, combine and split_by_locus options.
+        Only applies if retrieve option is not None. Returns the retrieval as a collapsed entry if multiple entries are found (e.g. v genes from multiple contigs) where each entry will be separated by a '|' if True. Interacts with split, combine and split_by_locus options.
     combine : bool
-        Only applies if retrieve option is not None. Returns the retrieval as a collapsed entry with only unique entries (separated by a '|' if multiple are found). Interacts with split_heavy_light, collapse, and split_by_locus options.
+        Only applies if retrieve option is not None. Returns the retrieval as a collapsed entry with only unique entries (separated by a '|' if multiple are found). Interacts with split, collapse, and split_by_locus options.
     split_by_locus : bool
-        Only applies if retrieve option is not None. Similar to split_heavy_light except it returns the retrieval splitted into multiple columns corresponding to each unique element in the 'locus' column (e.g. IGH, IGK, IGL). Interacts with split_heavy_light, collapse, and combine options.
+        Only applies if retrieve option is not None. Similar to split except it returns the retrieval splitted into multiple columns corresponding to each unique element in the 'locus' column (e.g. IGH, IGK, IGL). Interacts with split, collapse, and combine options.
     collapse_alleles : bool
         Returns the V-D-J genes with allelic calls if False.
     reinitialize : bool
@@ -1280,7 +1280,7 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
         if type(retrieve) is str:
             retrieve = [retrieve]
         for ret in retrieve:
-            ret_dict.update({ret:{'split':split_heavy_light, 'collapse':collapse, 'combine':combine, 'locus':locus_, 'split_by_locus':split_by_locus}})
+            ret_dict.update({ret:{'split':split, 'collapse':collapse, 'combine':combine, 'locus':locus_, 'split_by_locus':split_by_locus}})
 
         vdj_gene_ret = ['v_call', 'd_call', 'j_call']
 
@@ -1343,6 +1343,7 @@ class Dandelion:
             self.n_obs = 0
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
+        # inspire by AnnData's function
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
         for attr in ["data", "metadata", "distance", "edges"]:
             try:
@@ -1364,6 +1365,7 @@ class Dandelion:
         return descr
 
     def __repr__(self) -> str:
+        # inspire by AnnData's function
         return self._gen_repr(self.n_obs, self.n_contigs)
 
     def copy(self):
