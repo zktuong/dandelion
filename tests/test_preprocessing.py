@@ -18,7 +18,6 @@ def test_setup_preprocessing():
     r2 = requests.get(file2)
     open("tests/filtered_contig_annotations.csv", "wb").write(r2.content)
 
-
 def test_format_headers():
     samples = ["tests"]
     ddl.pp.format_fastas(samples, prefix="tests")
@@ -40,7 +39,7 @@ def test_assign_isotype():
 
 
 def test_quantify_mut():
-    filePath = "tests/dandelion/data/test_filtered_contig_igblast_db-pass_genotyped.tsv"
+    filePath = "tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv"
     ddl.pp.quantify_mutations(filePath)
 
 
@@ -55,7 +54,7 @@ def test_scanpy():
 
 def test_filter():
     adata = sc.read_10x_h5("tests/sctest2.h5")
-    bcr = pd.read_csv("tests/dandelion/data/test_filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
+    bcr = pd.read_csv("tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
     bcr.reset_index(inplace=True, drop=True)
     adata.obs["filter_rna"] = False
     vdj, adata = ddl.pp.filter_bcr(bcr, adata)
