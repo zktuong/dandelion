@@ -53,7 +53,7 @@ jobs:
         python setup.py install
     - name: Test with pytest
       run: |
-        pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning -W ignore::NumbaWarning
+        pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
   caching:
     name: Caching
     runs-on: ubuntu-latest
