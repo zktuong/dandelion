@@ -23,10 +23,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Set up Python
       uses: actions/setup-python@v2
-    # - name: Set up R
-    #   uses: r-lib/actions/setup-r@v1
-    #   with:
-    #     r-version: '4.0.0' # The R version to download (if necessary) and use.
     - name: Install macOS system dependencies
       if: matrix.os == 'macos-latest'
       run: |
@@ -40,7 +36,7 @@ jobs:
         path: ~/conda_pkgs_dir
         key:
           ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-          hashFiles('docs/environment.yml') }}
+          hashFiles('environment.yml') }}
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
@@ -50,7 +46,7 @@ jobs:
         channels: conda-forge, bioconda, anaconda, defaults
         channel-priority: true
         python-version: ${{ matrix.python-version }}
-        environment-file: docs/environment.yml
+        environment-file: environment.yml
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     - name: Install Dandelion
       run: |
@@ -75,7 +71,7 @@ jobs:
           path: ~/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-            hashFiles('docs/environment.yml') }}
+            hashFiles('environment.yml') }}
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda : true
@@ -83,5 +79,5 @@ jobs:
           channels: conda-forge, bioconda, anaconda, defaults
           channel-priority: true
           python-version: ${{ matrix.python-version }}
-          environment-file: docs/environment.yml
+          environment-file: environment.yml
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!

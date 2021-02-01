@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-31 21:14:36
+# @Last Modified time: 2021-02-01 10:45:08
 
 import os
 import sys
@@ -33,7 +33,7 @@ import multiprocessing
 from changeo.Gene import getGene
 from anndata import AnnData
 
-def find_clones(self, identity=0.85, key = None, mode = None, by_alleles = False, key_added = None, recalculate_length = True):
+def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = False, key_added = None, recalculate_length = True):
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -45,7 +45,7 @@ def find_clones(self, identity=0.85, key = None, mode = None, by_alleles = False
         Junction similarity parameter. Default 0.85
     key : str, optional
         column name for performing clone clustering. None defaults to 'junction_aa'.
-    mode : str, optional
+    locus : str, optional
         placeholder to allow for future tcr analysis mode for performing clustering. None defaults to 'bcr'.
     by_alleles : bool
         Whether or not to collapse alleles to genes. None defaults to False.
@@ -64,12 +64,20 @@ def find_clones(self, identity=0.85, key = None, mode = None, by_alleles = False
     else:
         dat = load_data(self)
 
-    mode_dict = {'bcr':'IGH', 'BCR':'IGH'}
+    locus_dict = {'bcr':'IGH', 'BCR':'IGH', 'ig':'IGH'}
 
-    if mode is None:
+    if key is None:
+        key_ = 'junction_aa' # default
+    else:
+        key_ = key
+    
+    if key_ not in dat_heavy.columns:
+        raise ValueError("key {} not found in input table.".format(key_))
+
+    if locus is None:
         locus_ = 'IGH'
     else:
-        locus_ = mode_dict[mode]
+        locus_ = locus_dict[locus]
     
     locus_log1_dict = {'IGH':'IGH'}
     locus_log2_dict = {'IGH':'IGL/IGL'}
@@ -98,15 +106,7 @@ def find_clones(self, identity=0.85, key = None, mode = None, by_alleles = False
 
     # collapse the alleles to just genes
     V = [','.join(list(set(v.split(',')))) for v in V]
-    J = [','.join(list(set(j.split(',')))) for j in J]
-
-    if key is None:
-        key_ = 'junction_aa' # default
-    else:
-        key_ = key
-    
-    if key_ not in dat_heavy.columns:
-        raise ValueError("key {} not found in input table.".format(key_))
+    J = [','.join(list(set(j.split(',')))) for j in J]    
 
     seq = dict(zip(dat_heavy.index, dat_heavy[key_]))
     if recalculate_length:

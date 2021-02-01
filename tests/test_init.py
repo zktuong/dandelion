@@ -8,7 +8,7 @@ import pandas as pd
 import requests
 from io import StringIO
 
-def test_init():
+def test_airr():
 	file = 'https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_airr_rearrangement.tsv'
 	r = requests.get(file)
 	test_data = pd.read_csv(StringIO(r.text), sep = '\t')
@@ -56,7 +56,7 @@ def test_downsampling():
 	print(test_downsample)
 
 if __name__ == '__main__':
-	test_init()
+	test_airr()
 	test_scanpy()
 	test_filter()
 	test_update_metadata()
