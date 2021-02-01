@@ -6,6 +6,7 @@ import dandelion as ddl
 import scanpy as sc
 import pandas as pd
 import requests
+from Bio.Seq import translate
 from io import StringIO
 
 def test_init():
@@ -15,6 +16,7 @@ def test_init():
 	test_data['locus'] = ['IGH' if 'IGH' in i else 'IGK' if 'IGK' in i else 'IGL' if 'IGL' in i else None for i in test_data.v_call]
 	test_data['umi_count'] = test_data['duplicate_count']
 	test_data['sample_id'] = '10X'
+	test_data['sequence_alignment_aa'] = [translate(d, stop_symbol="@") for d in test_data['sequence_alignment']]
 	test_ddl = ddl.Dandelion(test_data)
 	test_ddl.write_h5('test.h5', compression = 'bzip2')
 	test_ddl.write_pkl('test.pkl.pbz2')
@@ -47,12 +49,12 @@ def test_find_clones():
 
 def test_generate_network():
 	test = ddl.read_h5('test.h5')
-	ddl.tl.generate_network(test, key = 'sequence_alignment')
+	ddl.tl.generate_network(test)
 
 def test_downsampling():
 	test = ddl.read_h5('test.h5')
-	ddl.tl.generate_network(test, key = 'sequence_alignment')
-	test_downsample = ddl.tl.generate_network(test, key = 'sequence_alignment', downsample = 500)
+	ddl.tl.generate_network(test)
+	test_downsample = ddl.tl.generate_network(test, downsample = 500)
 	print(test_downsample)
 
 if __name__ == '__main__':

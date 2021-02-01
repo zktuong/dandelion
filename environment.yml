@@ -21,6 +21,12 @@ dependencies:
 - numba
 - pytables
 - pytest
+- rpy2<3.3.5
+- r-optparse
+- r-alakazam
+- r-tigger
+- r-airr
+- r-shazam
 - pip
 - pip:
   - nbsphinx
@@ -42,4 +48,3 @@ dependencies:
   - plotnine>=0.6.0
   - polyleven>=0.5
   - h5py>=2.10.0,<3.0.0
-  - rpy2>=3.3.2,<3.3.5

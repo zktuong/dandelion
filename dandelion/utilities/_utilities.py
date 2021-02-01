@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-01-31 21:26:50
+# @Last Modified time: 2021-02-01 09:14:08
 
 import sys
 import os
@@ -1255,8 +1255,9 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
     metadata_status = self.metadata
     if (metadata_status is None) or reinitialize:
         initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
-    else:
-        tmp_metadata = self.metadata.copy()
+        
+    tmp_metadata = self.metadata.copy()
+
     if retrieve is not None:
         ret_dict = {}
         if type(retrieve) is str:
