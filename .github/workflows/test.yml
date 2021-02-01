@@ -50,13 +50,11 @@ jobs:
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     - name: Install Dandelion
       run: |
-        conda activate dandelion
         python setup.py install
     - name: Test with pytest
       run: |
-        conda activate dandelion
-        conda install pytest
-        pytest -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning    
+        ls
+        pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning    
   caching:
     name: Caching
     runs-on: ubuntu-latest
