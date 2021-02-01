@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 18:45:23
+# @Last Modified time: 2021-02-01 18:58:03
 
 import sys
 import os
@@ -1070,6 +1070,8 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         init_dict.update({clonekey:{'split':False, 'collapse':True, 'combine':True, 'locus':locus_, 'split_by_locus':False}})
     if 'sample_id' in init_dict:
         init_dict.update({'sample_id':{'split':False, 'collapse':True, 'combine':True, 'locus':locus_, 'split_by_locus':False}})
+    if 'c_call' in init_dict:
+        init_dict.update({'c_call':{'split':True, 'collapse':True, 'combine':True, 'locus':locus_, 'split_by_locus':False}})
     meta_ = defaultdict(dict)
     for k, v in init_dict.items():
         meta_[k] = retrieve_metadata(self.data, query = k, verbose = verbose, **v)
