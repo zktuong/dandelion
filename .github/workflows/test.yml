@@ -51,8 +51,8 @@ jobs:
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     - name: Install Dandelion
       run: |
-      conda activate dandelion
-      python setup.py install
+        conda activate dandelion
+        python setup.py install
     - name: Test with pytest
       run: |
         conda activate dandelion
