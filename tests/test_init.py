@@ -13,6 +13,7 @@ def test_IO():
 	r = requests.get(file)
 	test_data = pd.read_csv(StringIO(r.text), sep = '\t')
 	test_data['locus'] = ['IGH' if 'IGH' in i else 'IGK' if 'IGK' in i else 'IGL' if 'IGL' in i else None for i in test_data.v_call]
+	test_data['umi_count'] = test_data['duiplicate_count']
 	test_data['sample_id'] = '10X'
 	test_ddl = ddl.Dandelion(test_data)
 	test_ddl.write_h5('test.h5', compression = 'bzip2')
