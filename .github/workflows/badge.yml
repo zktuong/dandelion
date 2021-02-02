@@ -1,16 +1,42 @@
-name: master_badge
+name: badge
 
 on:
+  pull_request:
+    branches:
+      - "*"
   push:
     branches:
       - "master"
 
 jobs:
-  badge_job:
+  devel:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+      - id: version
+        run: echo "##[set-output name=version;]$(python dandelion/version.py)"
+      - name: version badge
+        uses: RubbaBoy/BYOB@v1.2.0
+        with:
+          NAME: devel-version
+          LABEL: 'devel-version'
+          ICON: 'github'
+          STATUS: ${{ steps.version.outputs.version}}
+          COLOR: blue
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  master:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
