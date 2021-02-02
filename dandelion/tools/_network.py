@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:50:30
+# @Last Modified time: 2021-02-01 21:53:05
 
 import pandas as pd
 import numpy as np
@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 
-def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, clone_key = None, weights = None, downsample = None, verbose = True, **kwargs):
+def generate_network(self, key = None, clone_key = None, scale=False, min_size=2, weights = None, downsample = None, verbose = True, **kwargs):
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix.
@@ -30,16 +30,16 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
     ----------
     data : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    distance_mode : str
-        The mode of calculating joint distance matrix for heavy and light chains. Default is 'simple'. If 'simple', a simple sum operation will be used. If 'scaled', depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data into a single analysis.
+    key : str, optional
+        column name for distance calulations. None defaults to 'sequence_alignment_aa'.
+    clone_key: str, optional
+        column name to build network on.    
     min_size : int
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    aa_or_nt : str, optional
-        Option accepts 'aa', 'nt' or None, with None defaulting to 'aa'. Determines whether amino acid or nucleotide sequences will be used for calculating distances.
-    clone_key: str, optional
-        column name to build network on.
+    scale : bool
+        The mode of calculating joint distance matrix for heavy and light chains. If True, a simple sum operation will be used. Otherwise, depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data before summing.
     weights : tuple, optional
-        A tuple containing weights to scale each layer. default is None where each layer is scaled evenly i.e. 1/number of layers.
+        A tuple containing weights to scale each layer. Default is None where each layer is scaled evenly i.e. 1/number of layers. Only applies if scale is True.
     downsample : int, optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool
@@ -57,12 +57,21 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         dat = load_data(self.data)
     else:
         dat = load_data(self)
+    
+    if key is None:
+        key_ = 'sequence_alignment_aa' # default
+    else:
+        key_ = key
+    
+    if key_ not in dat:
+        raise ValueError("key {} not found in input table.".format(key_))
+
     if clone_key is None:
         clonekey = 'clone_id'
     else:
         clonekey = clone_key
-    if clonekey not in dat.columns:
-        raise TypeError('Data does not contain clone information. Please run find_clones.')
+    if clonekey not in dat:
+        raise ValueError('Data does not contain clone information. Please run find_clones.')
 
     # calculate distance
     dat_h = dat[dat['locus'] == 'IGH']
@@ -78,24 +87,13 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
             dat_h = dat_h.sample(downsample)
             dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))]
 
-    if dat_l.shape[0] == 0:
-        if aa_or_nt is None or aa_or_nt is 'aa':
-            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
-        elif aa_or_nt == 'nt':
-            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
-        else:
-            raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
+    if dat_l.shape[0] == 0:        
+        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))        
     else:
-        if aa_or_nt is None or aa_or_nt is 'aa':
-            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment_aa'])))
-            seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment_aa'])))
-        elif aa_or_nt == 'nt':
-            seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h['sequence_alignment'])))
-            seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l['sequence_alignment'])))
-        else:
-            raise ValueError("aa_or_nt only accepts string values 'aa', 'nt' or None, with None defaulting to 'aa'.")
-
-    # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible) and light (multiple possible)
+        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))
+        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[key_])))
+        
+    # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
     dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
     dat_seq.set_index('cell_id', inplace = True)
     if dat_l.shape[0] == 0:
@@ -144,10 +142,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
-    n_ = len(dist_mat_list)
-    if distance_mode == 'simple':
-        total_dist = np.sum(dist_mat_list,axis=0)
-    if distance_mode == 'scaled':
+    n_ = len(dist_mat_list)    
+    if scale:
         weighted_matrix = []
         if weights is None:
             for w in range(0, n_):
@@ -160,6 +156,8 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
                 total_dist = sum(weighted_matrix)
             else:
                 raise IndexError('Length of provided weights should be %s.' % int(n_))
+    else:
+        total_dist = np.sum(dist_mat_list,axis=0)
 
     # generate edge list
     if self.__class__ == Dandelion:
@@ -168,7 +166,7 @@ def generate_network(self, distance_mode='simple', min_size=2, aa_or_nt=None, cl
         out = Dandelion(dat)
 
     if clone_key not in out.metadata:
-        update_metadata(out, retrieve = clone_key, split_heavy_light = False, collapse = True)
+        update_metadata(out, retrieve = clone_key, split = False, collapse = True, combine = True)
 
     if downsample is not None:
         dat_downsample = dat_h.append(dat_l)

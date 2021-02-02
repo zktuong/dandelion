@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:48:33
+# @Last Modified time: 2021-02-01 18:09:10
 
 import sys
 import os
@@ -47,7 +47,7 @@ def format_fasta(fasta, prefix = None, suffix = None, sep = None, remove_trailin
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to output location. None defaults to 'dandelion/data'.
-    
+
     Returns
     -------
     Formatted fasta file with new headers containing prefix
@@ -176,7 +176,7 @@ def format_fastas(fastas, prefix = None, suffix = None, sep = None, remove_trail
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
     outdir : str, optional
         path to out put location. Default is None, which is 'dandelion/data'.
-    
+
     Returns
     -------
     Formatted fasta file with new headers containing prefix
@@ -237,7 +237,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
         number of cores to use if parallel is True. Default is all available minus 1.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
-    
+
     Returns
     -------
     V(D)J tsv files with constant genes annotated.
@@ -570,7 +570,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
             primer_dict = primers_dict
 
         for i in dat.index:
-            if (dat.loc[i, 'c_call'] is not np.nan) & (dat.loc[i, 'c_call'] is not None):
+            if (dat.loc[i, 'c_call'] == dat.loc[i, 'c_call']) & (dat.loc[i, 'c_call'] is not None):
                 for k in primer_dict:
                     if k in dat.loc[i, 'c_call']:
                         if len(primer_dict[k]) == 2:
@@ -581,8 +581,8 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
                             four_gene_correction(dat, i, primer_dict[k])
         return(dat)
 
-    # main function from here    
-    format_dict = {'changeo':'_igblast_db-pass', 'blast':'_igblast_db-pass', 'airr':'_igblast_gap'}    
+    # main function from here
+    format_dict = {'changeo':'_igblast_db-pass', 'blast':'_igblast_db-pass', 'airr':'_igblast_gap'}
 
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
@@ -619,11 +619,11 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     # Add the c_calls to the data file
     c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}, {}
     c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(filePath, format_dict[fileformat], allele, parallel, ncpu)
-    
+
     _file = "{}/tmp/{}_genotyped.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+format_dict[fileformat])
     _airrfile = "{}/tmp/{}.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+'_igblast')
     _file2 = "{}/{}_genotyped.tsv".format(os.path.dirname(filePath), os.path.basename(filePath).split('.fasta')[0]+format_dict[fileformat])
-    
+
     if verbose:
         print('Loading 10X annotations \n')
     dat_10x = load_data(_file)
@@ -679,7 +679,7 @@ def assign_isotype(fasta, fileformat = 'blast', org = 'human', correct_c_call = 
     dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
-    cols_to_merge = ['junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa', 'v_sequence_alignment_aa', 'd_sequence_alignment_aa', 'j_sequence_alignment_aa'] 
+    cols_to_merge = ['junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa', 'v_sequence_alignment_aa', 'd_sequence_alignment_aa', 'j_sequence_alignment_aa']
     for x in cols_to_merge:
         dat[x] = pd.Series(airr_output[x])
     dat.to_csv(_file2, sep = '\t', index=False)
@@ -736,7 +736,7 @@ def assign_isotypes(fastas, fileformat = 'blast', org = 'human', correct_c_call 
         number of cores to use if parallel is True. Default is all available - 1.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
-    
+
     Returns
     -------
     V(D)J tsv files with constant genes annotated.
@@ -769,7 +769,7 @@ def reannotate_genes(data, igblast_db = None, germline = None, org ='human', loc
         whether or not to transfer additional 10X annotions to output file. Default is True.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
-    
+
     Returns
     -------
     V(D)J data file in airr/changeo data format.
@@ -837,7 +837,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         dictionary for creating a sample_id column in the concatenated file.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
-    
+
     Returns
     -------
     Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
@@ -887,20 +887,20 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
             raise OSError('Path to .tsv file for {} is unknown. Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'.format(s))
 
         if sample_id_dictionary is not None:
-            sampleNames_dict[filePath] = sample_id_dictionary[s]        
+            sampleNames_dict[filePath] = sample_id_dictionary[s]
         else:
             sampleNames_dict[filePath] = str(s)
-        
+
         filePath_dict[str(s)] =  filePath
 
         # splitting up to heavy chain and light chain files
         parsedb_heavy(filePath)
         parsedb_light(filePath)
 
-        # add to counter        
+        # add to counter
         filepathlist_heavy.append(filePath_heavy)
         filepathlist_light.append(filePath_light)
-    
+
     # make output directory
     outDir = combined_folder.rstrip('/')
     if not os.path.exists(outDir):
@@ -955,15 +955,15 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         heavy = load_data(outDir+'/'+outDir+'_heavy'+germpass_dict[fileformat])
         heavy['v_call_genotyped'] = heavy['v_call']
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
-        light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])        
+        light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])
         light['v_call_genotyped'] = light['v_call']
-    else:    
+    else:
         creategermlines(outDir+'/'+outDir+'_light'+informat_dict[fileformat], germtypes = germ_types, mode = 'light', genotype_fasta = None, germline = germline, v_field = 'v_call', verbose = verbose, cloned = cloned)
         heavy = load_data(outDir+'/'+outDir+'_heavy'+fileformat_passed_dict[fileformat])
         print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
         light = load_data(outDir+'/'+outDir+'_light'+germpass_dict[fileformat])
         light['v_call_genotyped'] = light['v_call']
-    
+
     sampledict = {}
     heavy['sample_id'], light['sample_id'] = None, None
     for file in sampleNames_dict.keys():
@@ -977,13 +977,13 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
         dat_.sort_values(by = 'cell_id', inplace=True)
     else:
         dat_.sort_values(by = 'sequence_id', inplace=True)
-    
+
     if plot:
         if 'tigger_failed' not in locals():
             print('Returning summary plot')
             inferred_genotype = outDir+'/'+outDir+'_heavy'+inferred_fileformat_dict[fileformat]
             inf_geno = pd.read_csv(inferred_genotype, sep = '\t', dtype = 'object')
-    
+
             s2 = set(inf_geno['gene'])
             results = []
             for samp in list(set(heavy['sample_id'])):
@@ -1024,7 +1024,7 @@ def reassign_alleles(data, combined_folder, v_germline = None, germline = None, 
             not_in_genotype_table['var_group'] = not_in_genotype_table['var_group'].astype('category')
             ambiguous_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
             not_in_genotype_table['var_group'].cat.reorder_categories(['before', 'after'], inplace = True)
-    
+
             options.figure_size = figsize
             final_table = pd.concat([ambiguous_table, not_in_genotype_table])
             p = (ggplot(final_table, aes(x='sample_id', y = 'var', fill='var_group'))
@@ -1091,7 +1091,7 @@ def reassign_alleles_(data, combined_folder, germline = None, org = 'human', fil
         dictionary for creating a sample_id column in the concatenated file.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
-    
+
     Returns
     -------
     Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
@@ -1321,7 +1321,7 @@ def create_germlines(self, germline = None, org = 'human', seq_field='sequence_a
         Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is 'dmask'.
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    
+
     Returns
     -------
     V(D)J data file with reconstructed germline sequences.
@@ -1689,7 +1689,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         number of cores to use if parallel is True. Default is all available - 1.
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
-    
+
     Returns
     -------
     V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
@@ -1723,7 +1723,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     for b in barcode:
         bc_.update({b:True})
     bcr_check['has_bcr'] = pd.Series(bc_)
-    bcr_check.replace(np.nan, False, inplace = True)
+    bcr_check.replace(np.nan, 'No_BCR', inplace = True)
     adata.obs['has_bcr'] = pd.Series(bcr_check['has_bcr'])
     adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
 
@@ -1850,19 +1850,29 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             v = v_dict[hc_id[0]]
             j = j_dict[hc_id[0]]
             c = c_dict[hc_id[0]]
-            if v is not np.nan:
+            if v == v:
                 if 'IGH' not in v:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-            if j is not np.nan:
+            else:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
+            if j == j:
                 if 'IGH' not in j:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
-            if c is not np.nan and c is not None:
+            else:
+                if filter_poorqualitybcr:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
+            if (c == c) and (c is not None):
                 if 'IGH' not in c:
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
@@ -1873,17 +1883,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 v = v_dict[hx]
                 j = j_dict[hx]
                 c = c_dict[hx]
-                if v is not np.nan:
+                if v == v:
                     if 'IGH' not in v:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(hx)
-                if j is not np.nan:
+                        drop_contig.append(hx)                
+                if j == j:
                     if 'IGH' not in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
-                        drop_contig.append(hx)
-                if c is not np.nan and c is not None:
+                        drop_contig.append(hx)                 
+                if (c == c) and (c is not None):
                     if 'IGH' not in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
@@ -1893,8 +1903,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 v = v_dict[lx]
                 j = j_dict[lx]
                 c = c_dict[lx]
-                if v is not np.nan:
-                    if j is not np.nan:
+                if v == v:
+                    if j == j:
                         if 'IGH' in v:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -1904,8 +1914,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 if filter_poorqualitybcr:
                                     poor_qual.append(b)
                                 drop_contig.append(lx)
-                if j is not np.nan:
-                    if v is not np.nan:
+                if j == j:
+                    if v == v:
                         if 'IGH' in j:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -1915,13 +1925,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 if filter_poorqualitybcr:
                                     poor_qual.append(b)
                                 drop_contig.append(lx)
-                if c is not None and c is not np.nan:
+                if (c is not None) and (c == c):
                     if 'IGH' in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(lx)
 
-                if v == np.nan or j == np.nan or v == None or j == None:
+                if (v != v) or (j != j) or (v is None) or (j is None):
                     if filter_poorqualitybcr:
                         poor_qual.append(b)
                     drop_contig.append(lx) # no/wrong annotations at all
@@ -2067,19 +2077,19 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 v = v_dict[hc_id[0]]
                 j = j_dict[hc_id[0]]
                 c = c_dict[hc_id[0]]
-                if v is not np.nan:
+                if v == v:
                     if 'IGH' not in v:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
-                if j is not np.nan:
+                if j == j:
                     if 'IGH' not in j:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
-                if c is not np.nan and c is not None:
+                if (c == c) and (c is not None):
                     if 'IGH' not in c:
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
@@ -2090,17 +2100,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     v = v_dict[hx]
                     j = j_dict[hx]
                     c = c_dict[hx]
-                    if v is not np.nan:
+                    if v == v:
                         if 'IGH' not in v:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
-                    if j is not np.nan:
+                    if j == j:
                         if 'IGH' not in j:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
-                    if c is not np.nan and c is not None:
+                    if (c == c) and (c is not None):
                         if 'IGH' not in c:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -2135,7 +2145,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 poor_qual.append(b)
                             drop_contig.append(lx)
 
-                    if v == np.nan or j == np.nan or v == None or j == None:
+                    if (v != v) or (j != j) or (v is None) or (j is None):
                         if filter_poorqualitybcr:
                             poor_qual.append(b)
                         drop_contig.append(lx) # no/wrong annotations at all
@@ -2191,8 +2201,18 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 if c not in adata.obs_names:
                     filter_ids.append(c)
 
-        _dat = dat[~(dat['cell_id'].isin(filter_ids))]
-        _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))]
+        _dat = dat[~(dat['cell_id'].isin(filter_ids))].copy()
+        _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))].copy()
+
+        # final check
+        barcodes_final = list(set(_dat['cell_id']))
+        filter_ids2 = []
+        for b in barcodes_final:
+            check_dat = _dat[(_dat['locus'].isin(['IGH'])) & (_dat['cell_id'].isin([b]))].copy()
+            if check_dat.shape[0] < 1:
+                filter_ids2.append(b)
+        _dat = _dat[~(_dat['cell_id'].isin(filter_ids2))].copy()
+
         if _dat.shape[0] is 0:
             raise IndexError('No BCRs passed filtering. Are you sure that the cell barcodes are matching?')
 
@@ -2207,12 +2227,22 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     else:
         _dat = dat.copy()
 
+    if filter_bcr:
+        barcode1 = list(set(dat['cell_id']))
+
     barcode2 = list(set(_dat['cell_id']))
+
+    if filter_bcr:
+        failed = list(set(barcode1) ^ set(barcode2))
+
     bc_2 = {}
     for b in barcode2:
         bc_2.update({b:True})
+    if filter_bcr:
+        for b in failed:
+            bc_2.update({b:False})
     bcr_check['bcr_QC_pass'] = pd.Series(bc_2)
-    bcr_check.replace(np.nan, False, inplace = True)
+    bcr_check.replace(np.nan, 'No_BCR', inplace = True)
     adata.obs['bcr_QC_pass'] = pd.Series(bcr_check['bcr_QC_pass'])
     adata.obs['bcr_QC_pass'] = adata.obs['bcr_QC_pass'].astype('category')
 
@@ -2230,7 +2260,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
 
     if filter_rna:
-        out_adata = adata[adata.obs['filter_bcr'] == False] # not saving the scanpy object because there's no need to at the moment
+        out_adata = adata[adata.obs['filter_bcr'] == False].copy() # not saving the scanpy object because there's no need to at the moment
     else:
         out_adata = adata.copy()
 
@@ -2238,7 +2268,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             deep=('Returning Dandelion and AnnData objects: \n'))
     return(out_dat, out_adata)
 
-def quantify_mutations(self, split_locus = False, region_definition=None, mutation_definition=None, frequency=True, combine=True):
+def quantify_mutations(self, split_locus = False, sequence_column = None, germline_column = None, region_definition=None, mutation_definition=None, frequency=True, combine=True):
     """
     Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
 
@@ -2248,6 +2278,10 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         `Dandelion` object
     split_locus : bool
         whether to return the results for heavy chain and light chain separately. Default is False.
+    sequence_column: str, optional
+        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+    germline_column: str, optional
+        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
     region_definition : str, optional
         passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
     mutation_definition : str, optional
@@ -2256,7 +2290,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
         whether to return the results a frequency or counts. Default is True (frequency).
     combine
         whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
-    
+
     Returns
     -------
     `Dandelion` object with updated `.metadata` slot.
@@ -2279,6 +2313,16 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
+    if sequence_column is None:
+        seq_ = 'sequence_alignment'
+    else:
+        seq_ = sequence_column
+
+    if germline_column is None:
+        germline_ = 'germline_alignment_d_mask'
+    else:
+        germline_ = germline_column
+
     if region_definition is None:
         reg_d = NULL
     else:
@@ -2297,7 +2341,7 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             dat = dat.astype(str)
             dat_r = pandas2ri.py2rpy(dat)
 
-        results = sh.observedMutations(dat_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        results = sh.observedMutations(dat_r, sequenceColumn = seq_, germlineColumn = germline_, regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
     else:
@@ -2318,8 +2362,8 @@ def quantify_mutations(self, split_locus = False, region_definition=None, mutati
             dat_l = dat_l.astype(str)
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
-        results_h = sh.observedMutations(dat_h_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn = "sequence_alignment", germlineColumn = "germline_alignment_d_mask", regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        results_h = sh.observedMutations(dat_h_r, sequenceColumn = seq_, germlineColumn = germline_, regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
+        results_l = sh.observedMutations(dat_l_r, sequenceColumn = seq_, germlineColumn = germline_, regionDefinition = reg_d, mutationDefinition = mut_d, frequency = frequency, combine = combine)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace = True, drop = False)
@@ -2382,7 +2426,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
 
     Runs the following:
-    
+
     distToNearest
         Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.
     findThreshold
@@ -2424,7 +2468,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         size of plot. Default is (4.5, 2.5).
     *args
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
-    
+
     Returns
     -------
     plotnine plot showing histogram of length normalized ham model distance threshold.
@@ -2485,7 +2529,8 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, subsample = subsample_, edge = edge_)
         threshold=np.array(dist_threshold.slots['threshold'])[0]
         if np.isnan(threshold):
-            warnings.warn(UserWarning("Threshold method 'density' did not return with any values. Switching to method = 'gmm'."))
+            print("      Threshold method 'density' did not return with any values. Switching to method = 'gmm'.")
+            threshold_method_ = 'gmm'
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
             else:
@@ -2506,7 +2551,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
                 spc_ = NULL
             else:
                 spc_ = specificity
-            dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method='gmm', model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
+            dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
             threshold=np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2532,8 +2577,13 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]), method=threshold_method_, model = threshold_model_, cross = cross_, subsample = subsample_, cutoff = cutoff_, sen = sen_, spc = spc_)
         threshold=np.array(dist_threshold.slots['threshold'])[0]
     if np.isnan(threshold):
-        warnings.warn(UserWarning("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."))
+        raise ValueError("Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually.")
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
+
+    if manual_threshold is None:
+        tr = threshold
+    else:
+        tr = manual_threshold
 
     if plot:
         options.figure_size = figsize
@@ -2541,10 +2591,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
             plot_group = 'sample_id'
         else:
             plot_group = plot_group
-        if manual_threshold is None:
-            tr = threshold
-        else:
-            tr = manual_threshold
+        
         print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
              + theme_bw()
              + xlab("Grouped Hamming distance")
@@ -2555,7 +2602,7 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
              + facet_wrap('~'+str(plot_group), scales="free_y")
              + theme(legend_position = 'none')))
     else:
-        print('Automatic Threshold : '+str(np.around(threshold, decimals=2), '\n method = '+str(threshold_method)))
+        print("Automatic Threshold : "+str(np.around(threshold, decimals=2)) + "\n method = "+str(threshold_method_))
     if self.__class__ == Dandelion:
         self.threshold = tr
         logg.info(' finished', time=start,
