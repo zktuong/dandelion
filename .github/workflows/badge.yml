@@ -1,0 +1,15 @@
+jobs:
+  badge_job:
+    runs-on: ubuntu-latest
+    steps:
+      - id: version
+        run: echo "##[set-output name=version;]$(python dandelion/version.py)"
+      - name: version badge
+        uses: RubbaBoy/BYOB@v1.2.0
+        with:
+          NAME: github
+          LABEL: 'GitHub'
+          ICON: 'github'
+          STATUS: ${{ steps.date.outputs.version}}
+          COLOR: blue
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
