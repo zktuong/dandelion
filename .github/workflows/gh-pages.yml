@@ -64,7 +64,7 @@ jobs:
           python setup.py install
       - name: run sphinx
         run: |
-          cd docs && make html SPHINXOPTS="-W --keep-going"
+          cd docs && make _builds/html SPHINXOPTS="-W --keep-going"
       - name: Get target folder for page deploy from github ref
         if: ( matrix.os == 'ubuntu-latest' ) &&  ( matrix.python-version == '3.7' )
         run: |
