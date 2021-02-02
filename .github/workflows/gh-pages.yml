@@ -1,12 +1,12 @@
 name: gh-pages
 
 on:
-  push:
-    branches: "master"
   pull_request:
-    branches: "*"
-  release:
-    types: [created]
+    branches:
+      - "*"
+  push:
+    branches:
+      - "master"
 
 jobs:
   docs:
