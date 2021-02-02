@@ -1,4 +1,4 @@
-name: Create badge
+name: version_badge
 
 on:
   pull_request:
