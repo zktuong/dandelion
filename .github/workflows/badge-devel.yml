@@ -26,7 +26,7 @@ jobs:
         uses: RubbaBoy/BYOB@v1.2.0
         with:
           NAME: devel-version
-          LABEL: 'GitHub'
+          LABEL: 'devel-version'
           ICON: 'github'
           STATUS: ${{ steps.version.outputs.version}}
           COLOR: blue

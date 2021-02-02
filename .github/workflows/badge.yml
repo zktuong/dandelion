@@ -26,8 +26,8 @@ jobs:
         uses: RubbaBoy/BYOB@v1.2.0
         with:
           NAME: master-version
-          LABEL: 'GitHub'
+          LABEL: 'master-version'
           ICON: 'github'
           STATUS: ${{ steps.version.outputs.version}}
-          COLOR: blue
+          COLOR: green
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
