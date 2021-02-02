@@ -10,21 +10,34 @@ on:
 
 jobs:
   docs:
-    runs-on: ${{ matrix.os }}
-    strategy:      
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      max-parallel: 5
       matrix:
-        python-version: [3.7]
-        os: ubuntu-latest
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0 # required for setuptools-scm
       - name: Fetch all tags s.t. get_version can retrieve the correct version.
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+      - name: Install macOS system dependencies
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install cairo pkg-config pandoc autoconf automake libtool
+      
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.7'
+     
       - name: Cache conda
         uses: actions/cache@v1
         env:
