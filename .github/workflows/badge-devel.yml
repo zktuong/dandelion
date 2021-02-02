@@ -3,10 +3,10 @@ name: master_version
 on:
   pull_request:
     branches:
-      - "master"
+      - "*"
   push:
     branches:
-      - "master"
+      - "devel"
 
 jobs:
   badge_job:
@@ -25,7 +25,7 @@ jobs:
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
-          NAME: master-version
+          NAME: devel-version
           LABEL: 'GitHub'
           ICON: 'github'
           STATUS: ${{ steps.version.outputs.version}}
