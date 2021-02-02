@@ -1,7 +1,22 @@
+name: Create badge
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - "master"
+
 jobs:
   badge_job:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
       - id: version
         run: echo "##[set-output name=version;]$(python dandelion/version.py)"
       - name: version badge
