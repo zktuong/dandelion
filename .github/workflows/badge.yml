@@ -1,4 +1,4 @@
-name: master_version
+name: master_badge
 
 on:
   pull_request:
