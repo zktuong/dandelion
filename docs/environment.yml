@@ -21,11 +21,16 @@ dependencies:
 - numba
 - pytables
 - pytest
+- mock
+- pillow
+- sphinx
+- sphinx_rtd_theme
 - pip
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
-  - sphinx_rtd_theme
+  - six
+  - readthedocs-sphinx-ext
   - recommonmark
   - numpy>=1.18.4
   - pandas>=1.0.3
