@@ -21,12 +21,13 @@ dependencies:
 - numba
 - pytables
 - pytest
-- rpy2<3.3.5
+- rpy2>=3.3.2,<3.3.5
 - r-optparse
 - r-alakazam
 - r-tigger
 - r-airr
 - r-shazam
+- r-stringi
 - blast
 - igblast
 - pip
