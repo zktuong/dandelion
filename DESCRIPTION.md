@@ -1,8 +1,11 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
 [![](https://badge.fury.io/py/sc-dandelion.svg)](https://badge.fury.io/py/sc-dandelion)
-![](https://github.com/zktuong/dandelion/tree/master/notebooks/img/dandelion_logo_illustration.png)
+[![](https://byob.yarr.is/zktuong/dandelion/master-version)](https://github.com/zktuong/dandelion/tree/master)
+[![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)]((https://github.com/zktuong/dandelion/actions?query=workflow%3Atests))
+[![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
+[![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)](https://github.com/zktuong/dandelion/actions?query=workflow%3Atests)
 
-Version = 0.0.27.post1
+![](https://github.com/zktuong/dandelion/tree/master/notebooks/img/dandelion_logo_illustration.png)
 
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
 

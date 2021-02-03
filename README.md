@@ -1,10 +1,9 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
 [![](https://badge.fury.io/py/sc-dandelion.svg)](https://badge.fury.io/py/sc-dandelion)
-[![HitCount](http://hits.dwyl.com/zktuong/dandelion.svg)](http://hits.dwyl.com/zktuong/dandelion)
 [![](https://byob.yarr.is/zktuong/dandelion/master-version)](https://github.com/zktuong/dandelion/tree/master)
-![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)
+[![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)]((https://github.com/zktuong/dandelion/actions?query=workflow%3Atests))
 [![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
-![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)
+[![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)](https://github.com/zktuong/dandelion/actions?query=workflow%3Atests)
 
 ![](notebooks/img/dandelion_logo_illustration.png)
 
