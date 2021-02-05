@@ -59,8 +59,7 @@ jobs:
         command: |
           Rscript tests/r_dependencies.R
         on_retry_command: |
-          echo 'R_LIBS_USER=$CONDA_PREFIX/lib/R/library/' >> ~/.Renviron
-          Rscript tests/r_dependencies.R
+          Rscript tests/r_install.R
     - name: Test with pytest
       run: |
         pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
