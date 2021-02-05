@@ -59,7 +59,7 @@ jobs:
         command: |
           Rscript tests/r_dependencies.R
         on_retry_command: |
-          conda install -c r "rpy2>=3.3.2,<3.3.5" r-optparse r-alakazam r-tigger r-airr r-shazam --force-reinstall
+          export R_LIBS_USER=$CONDA_PREFIX/lib/R/library/
           Rscript tests/r_dependencies.R
     - name: Test with pytest
       run: |
