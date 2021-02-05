@@ -29,6 +29,9 @@ jobs:
         brew install cairo pkg-config autoconf automake libtool
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
+      with:
+          r-version: release
+    - name: install R dependencies
       run: |
         install.packages(c("remotes", "rcmdcheck", 'shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
         remotes::install_deps(dependencies = TRUE)
