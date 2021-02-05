@@ -51,6 +51,16 @@ jobs:
     - name: Install Dandelion
       run: |
         python setup.py install
+    - name: Test if R dependencies are installed properly
+      uses: nick-invision/retry@v2
+      with:
+        timeout_seconds: 15
+        max_attempts: 3
+        command: |
+          Rscript tests/r_dependencies.R
+        on_retry_command: |
+          conda install -c conda-forge "rpy2>=3.3.2,<3.3.5" r-optparse r-alakazam r-tigger r-airr r-shazam
+          Rscript tests/r_dependencies.R
     - name: Test with pytest
       run: |
         pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
