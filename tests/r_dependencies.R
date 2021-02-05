@@ -1,3 +1,4 @@
+.libPaths()
 library(shazam)
 library(alakazam)
 library(tigger)
