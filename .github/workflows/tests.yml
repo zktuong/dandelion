@@ -33,8 +33,7 @@ jobs:
           r-version: release
     - name: install R dependencies
       run: |
-        install.packages(c("remotes", "rcmdcheck", 'shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
-        remotes::install_deps(dependencies = TRUE)
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))        
       shell: Rscript {0}
     - name: Cache conda
       uses: actions/cache@v1
