@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 18:09:10
+# @Last Modified time: 2021-02-06 18:52:18
 
 import sys
 import os
@@ -1735,7 +1735,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     c_dict = dict(zip(dat['sequence_id'], dat['c_call']))
 
     # rather than leaving a nan cell, i will create a 0 column for now
-    dat['duplicate_count'] = 0
+    if 'duplicate_count' in dat and 'umi_count' not in dat:
+        dat['umi_count'] = dat['duplicate_count'] # just do a simple swap?
+        dat['duplicate_count'] = 0 
+    elif 'duplicate_count' not in dat and 'umi_count' in dat:
+        dat['duplicate_count'] = 0
 
     global parallel_marking
 
