@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 15:42:17
+# @Last Modified time: 2021-02-06 16:44:16
 
 import os
 import sys
@@ -303,7 +303,11 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
                     clone_dict[v] = str(first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
     # add it to the original dataframes
     dat_heavy[clone_key] = pd.Series(clone_dict)
-    hclone = dict(zip(dat_heavy['cell_id'], dat_heavy[clone_key]))
+    rep_dict = {}
+    for cell_ in list(set(dat_heavy['cell_id'])):
+        clonh = '|'.join(sorted(list(set(dat_heavy[dat_heavy['cell_id'] == cell_][clone_key]))))
+        rep_dict.update({cell_:clonh})
+    hclone = dict(zip(dat_heavy['cell_id'], [rep_dict[clh] for clh in dat_heavy['cell_id']]))    
     hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell_id']]))
 
     dat[clone_key] = pd.Series(hlclone)
@@ -311,8 +315,8 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
     dat_light = dat[~(dat['locus'] == locus_)].copy()
     if dat_light.shape[0] != 0:
         # retrieve the J genes and J genes
-        for c in tqdm(list(set(dat_light[clone_key])), desc = 'Refining clone assignment based on light chain pairing '):
-            dat_light_c = dat_light[dat_light[clone_key] == c]
+        for cx in tqdm(list(set(dat_light[clone_key])), desc = 'Refining clone assignment based on light chain pairing '):
+            dat_light_c = dat_light[dat_light[clone_key] == cx]
             if dat_light_c.shape[0] > 1:
                 if not by_alleles:
                     if 'v_call_genotyped' in dat_light_c.columns:
@@ -496,7 +500,24 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
                     renamed_clone_dict_light = {}
                     for key, value in clone_dict_light.items():
                         renamed_clone_dict_light[key] = lclones_dict[value]
-                    dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)                
+                    if '|' in ''.join(list(set(dat.loc[renamed_clone_dict_light.keys(), clone_key]))):
+                        for tt in dat.loc[renamed_clone_dict_light.keys(), clone_key]:
+                            temp_list = []
+                            for tx in tt.split('|'):
+                                temp_list.append([tx + '_' + pd.Series(renamed_clone_dict_light)])
+                            tmp_clone = list(set(flatten(temp_list)))
+                    else:                            
+                        tmp_clone = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)                    
+                    final_clone = '|'.join(sorted(list(set(tmp_clone))))
+                    _clone_dict = {cx:final_clone}
+                    all_clone_dict = dict(dat[clone_key])
+                    for key, value in all_clone_dict.items():
+                        try:        
+                            all_clone_dict[key] = _clone_dict[value]
+                        except:
+                            pass
+                    dat[clone_key] = pd.Series(all_clone_dict)
+
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
