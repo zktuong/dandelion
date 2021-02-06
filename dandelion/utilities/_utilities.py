@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 20:13:08
+# @Last Modified time: 2021-02-06 21:18:10
 
 import sys
 import os
@@ -829,7 +829,10 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
             if type_check(meta_h, 'sequence_id_'+H+'_0'):
                 newh = []
                 for i in meta_h.index:
-                    newh.append('|'.join([h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
+                    try:
+                        newh.append('|'.join([h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
+                    except:
+                        newh.append('|'.join([str(h) for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
                 newmeta_h['sequence_id_'+H+'_0'] = newh
                 meta_h = pd.DataFrame(newmeta_h['sequence_id_'+H+'_0'].copy())
             else:
@@ -858,9 +861,15 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
                 for d in df_res_hl:
                     for i in df_hl[d].index:
                         if combine:
-                            res_[d].append('|'.join([l for l in list(dict.fromkeys(df_hl[d].loc[i])) if l == l]))
+                            try:
+                                res_[d].append('|'.join([l for l in list(dict.fromkeys(df_hl[d].loc[i])) if l == l]))
+                            except:
+                                res_[d].append('|'.join([str(l) for l in list(dict.fromkeys(df_hl[d].loc[i])) if l == l]))
                         else:
-                            res_[d].append('|'.join([l for l in list(df_hl[d].loc[i]) if l == l]))
+                            try:
+                                res_[d].append('|'.join([l for l in list(df_hl[d].loc[i]) if l == l]))
+                            except:
+                                res_[d].append('|'.join([str(l) for l in list(df_hl[d].loc[i]) if l == l]))
                     df_res_hl[d][query] = res_[d]
                     result_dict_hl[d] = dict(df_res_hl[d][query])
                     for k,v in result_dict_hl[d].items():
@@ -904,7 +913,7 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
             if len(meta_l) == 2 and type(meta_l) is list:
                 names = [k for k in result_dict_hl.keys()]
                 final_result = result_dict_hl[names[0]].join(result_dict_hl[names[1]]).join(result_dict_hl[names[2]])
-                final_result.columns = [re.sub('_sequence_id', '', q) for q in [query+'_'+str(l) for l in final_result.columns]]                
+                final_result.columns = [re.sub('_sequence_id', '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
             else:
                 try:
                     if type_check(meta_h, 'sequence_id_'+H+'_0'):
@@ -932,7 +941,7 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
                         final_result_l = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
                         final_result_l = final_result_l[meta_l.columns].copy()
                 final_result_l.columns = [re.sub(rs, '', q) for q in [query+'_light_'+str(l) for l in final_result_l.columns]]
-                final_result = final_result_h.join(final_result_l)                
+                final_result = final_result_h.join(final_result_l)
         else:
             if len(meta_l) == 2 and type(meta_l) is list:
                 if type_check(meta_h, 'sequence_id_'+H+'_0'):
@@ -947,7 +956,7 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
                         warnings.warn(UserWarning('Query dtype is {}. Ignoring collapse = True.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
                     final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
                     final_result.columns = [query+re.sub('sequence_id', '', q) for q in final_result.columns]
-            else:                
+            else:
                 if type_check(meta_h, 'sequence_id_'+H+'_0'):
                     final_result_h = pd.DataFrame.from_dict(result_dict_[query+'_heavy'], orient = 'index')
                     final_result_h.columns = [query+'_heavy']
@@ -969,17 +978,17 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
             if not collapse:
                 if len(meta_l) == 2 and type(meta_l) is list:
                     final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
-                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]                    
+                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
                 else:
                     final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
                     final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
             else:
                 if len(meta_l) == 2 and type(meta_l) is list:
                     final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
-                    final_result.columns = [query]                    
+                    final_result.columns = [query]
                 else:
                     final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index')
-                    final_result.columns = [query]                    
+                    final_result.columns = [query]
         else:
             if not collapse:
                 if len(meta_l) == 2 and type(meta_l) is list:
@@ -987,7 +996,7 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus = 'ig', split = True
                     final_result.columns = [re.sub('_sequence_id', '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
                 else:
                     final_result = pd.DataFrame.from_dict(result_dict_, orient = 'index').T
-                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]                    
+                    final_result.columns = [re.sub(rs, '', q) for q in [query+'_'+str(l) for l in final_result.columns]]
             else:
                 if verbose:
                     warnings.warn(UserWarning('Query dtype is {}. Ignoring collapse = True and split = False.'.format(meta_h['sequence_id_'+H+'_0'].dtype.name)))
@@ -1015,7 +1024,10 @@ def retrieve_result_dict_singular(query, data, meta_h, locus = 'ig', collapse = 
             if type_check(meta_h, 'sequence_id_'+H+'_0'):
                 newh = []
                 for i in meta_h.index:
-                    newh.append('|'.join([h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
+                    try:
+                        newh.append('|'.join([h for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
+                    except:
+                        newh.append('|'.join([str(h) for h in list(dict.fromkeys(newmeta_h.loc[i])) if h == h]))
                 newmeta_h['sequence_id_'+H+'_0'] = newh
                 meta_h = pd.DataFrame(newmeta_h['sequence_id_'+H+'_0'].copy())
             else:
@@ -1032,9 +1044,15 @@ def retrieve_result_dict_singular(query, data, meta_h, locus = 'ig', collapse = 
         if collapse:
             for i in metadata_.index:
                 if combine:
-                    q_res.append('|'.join([qq for qq in list(dict.fromkeys(df_.loc[i])) if qq == qq]))
+                    try:
+                        q_res.append('|'.join([qq for qq in list(dict.fromkeys(df_.loc[i])) if qq == qq]))
+                    except:
+                        q_res.append('|'.join([str(qq) for qq in list(dict.fromkeys(df_.loc[i])) if qq == qq]))
                 else:
-                    q_res.append('|'.join([qq for qq in list(df_.loc[i]) if qq == qq]))
+                    try:
+                        q_res.append('|'.join([qq for qq in list(df_.loc[i]) if qq == qq]))
+                    except:
+                        q_res.append('|'.join([str(qq) for qq in list(df_.loc[i]) if qq == qq]))
         else:
             for i in metadata_.index:
                 q_res.append([qq for qq in list(df_.loc[i]) if qq == qq])
@@ -1276,7 +1294,7 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
     metadata_status = self.metadata
     if (metadata_status is None) or reinitialize:
         initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
-        
+
     tmp_metadata = self.metadata.copy()
 
     if retrieve is not None:
@@ -1740,7 +1758,7 @@ def concat(arrays, check_unique = True):
     Parameters
     ----------
     arrays : List
-        List of `Dandelion` class objects or pandas dataframe       
+        List of `Dandelion` class objects or pandas dataframe
     check_unique : bool
         Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
 
@@ -1755,7 +1773,7 @@ def concat(arrays, check_unique = True):
         arrays_ = [x.data.copy() for x in arrays]
     except:
         arrays_ = [x.copy() for x in arrays]
-        
+
     if check_unique:
         try:
             df = pd.concat(arrays_, verify_integrity=True)
