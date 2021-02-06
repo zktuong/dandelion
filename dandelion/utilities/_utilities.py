@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 21:18:10
+# @Last Modified time: 2021-02-06 22:00:36
 
 import sys
 import os
@@ -1789,6 +1789,47 @@ def concat(arrays, check_unique = True):
     except:
         out = Dandelion(df, initialize = False)
     return(out)
+
+def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
+    """
+    Reads the 10x AIRR rearrangement .tsv directly and returns a Dandelion object.
+    
+    Parameters
+    ----------
+    file
+        path to `airr_rearrangement.tsv`
+    sample_id : str, optional
+        Name to populated sample id column
+    return_dandelion : bool
+        Whether or not to return as an initialized Dandelion object. Default is False mainly due to load times.
+
+    Returns
+    -------
+    `Dandelion` object of pandas data frame.
+
+    """
+    if os.path.isfile(file):
+        dat = ddl.load_data(file)
+    if sample_id is None:
+        sampid = 'sample_1'
+    else:
+        sampid = sample_id
+    dat['sample_id'] = sampid
+    # get all the v,d,j,c calls
+    tmp = [(v,d,j,c) for v,d,j,c in zip(dat['v_call'], dat['d_call'], dat['j_call'], dat['c_call'])]
+    locus = []
+    for t in tmp:
+        if all('IGH' in x for x in t if x == x):
+            locus.append('IGH')
+        elif all('IGK' in x for x in t if x == x):
+            locus.append('IGK')
+        elif all('IGL' in x for x in t if x == x):
+            locus.append('IGL')
+        else:
+            locus.append(np.nan)
+    dat['locus'] = locus
+    
+    return(Dandelion(dat, initialize = initialize_dandelion))
 
 
 # def convert_preprocessed_tcr_10x(file, prefix = None):

@@ -76,6 +76,7 @@ Utilities: `utl`
    makeblastdb   
    read_h5
    read_pkl
+   read_10x_airr
    update_metadata
    concat
    
