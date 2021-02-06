@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 22:00:36
+# @Last Modified time: 2021-02-06 22:14:22
 
 import sys
 import os
@@ -1809,7 +1809,7 @@ def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
 
     """
     if os.path.isfile(file):
-        dat = ddl.load_data(file)
+        dat = load_data(file)
     if sample_id is None:
         sampid = 'sample_1'
     else:
