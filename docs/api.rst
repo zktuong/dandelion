@@ -71,13 +71,13 @@ Utilities: `utl`
 
 .. autosummary::
    :toctree: modules
-
-   Dandelion
+   
    load_data
    makeblastdb   
    read_h5
    read_pkl
    update_metadata
+   concat
    
 
 Dandelion
@@ -91,4 +91,13 @@ Dandelion
    update_germline
    write_h5
    write_pkl
+
+Logging
+=========
+.. module:: dandelion.logging
+
+.. autosummary::
+   :toctree: modules
+
+   print_header
    
