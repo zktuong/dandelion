@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 18:46:19
+# @Last Modified time: 2021-02-06 20:13:08
 
 import sys
 import os
@@ -1733,16 +1733,16 @@ def read_h5(filename='dandelion_data.h5'):
         pass
     return(res)
 
-def concat(arrays, check_unique = False):
+def concat(arrays, check_unique = True):
     """
     Concatenate dataframe and return as Dandelion object.
 
     Parameters
     ----------
-    arrays
-        pandas dataframe or file path
-    columns
-        column names in dataframe
+    arrays : List
+        List of `Dandelion` class objects or pandas dataframe       
+    check_unique : bool
+        Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
 
     Returns
     -------
@@ -1750,9 +1750,20 @@ def concat(arrays, check_unique = False):
         dictionary
     """
     arrays = list(arrays)
-    arrays_ = [x.data for x in arrays]
+
+    try:
+        arrays_ = [x.data.copy() for x in arrays]
+    except:
+        arrays_ = [x.copy() for x in arrays]
+        
     if check_unique:
-        df = pd.concat(arrays_, verify_integrity=True)
+        try:
+            df = pd.concat(arrays_, verify_integrity=True)
+        except:
+            for i in range(0, len(arrays)):
+                arrays_[i]['sequence_id'] = [x + '__' + str(i) for x in arrays_[i]['sequence_id']]
+            arrays_ = [load_data(x) for x in arrays_]
+            df = pd.concat(arrays_, verify_integrity=True)
     else:
         df = pd.concat(arrays_)
     try:
