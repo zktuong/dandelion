@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 23:25:56
+# @Last Modified time: 2021-02-06 15:42:17
 
 import os
 import sys
@@ -53,7 +53,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
         If specified, this will be the column name for clones. None defaults to 'clone_id'
     recalculate_length : bool
         Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is wrong). Default is True
-    
+
     Returns
     -------
     `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
@@ -70,7 +70,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
         key_ = 'junction_aa' # default
     else:
         key_ = key
-    
+
     if key_ not in dat.columns:
         raise ValueError("key {} not found in input table.".format(key_))
 
@@ -78,7 +78,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
         locus_ = 'IGH'
     else:
         locus_ = locus_dict[locus]
-    
+
     locus_log1_dict = {'IGH':'IGH'}
     locus_log2_dict = {'IGH':'IGL/IGL'}
 
@@ -102,11 +102,11 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
             V = [v for v in dat_heavy['v_call_genotyped']]
         else:
             V = [v for v in dat_heavy['v_call']]
-        J = [j for j in dat_heavy['j_call']]    
+        J = [j for j in dat_heavy['j_call']]
 
     # collapse the alleles to just genes
     V = [','.join(list(set(v.split(',')))) for v in V]
-    J = [','.join(list(set(j.split(',')))) for j in J]    
+    J = [','.join(list(set(j.split(',')))) for j in J]
 
     seq = dict(zip(dat_heavy.index, dat_heavy[key_]))
     if recalculate_length:
@@ -147,7 +147,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
     for g in tqdm(seq_grp, desc = 'Finding clones based on heavy chains '):
         for l in seq_grp[g]:
             seq_ = list(seq_grp[g][l])
-            tdarray = np.array(seq_).reshape(-1,1)            
+            tdarray = np.array(seq_).reshape(-1,1)
             d_mat = squareform(pdist(tdarray, lambda x,y: hamming(x[0],y[0])))
             # then calculate what the acceptable threshold is for each length of sequence
             tr = math.floor(int(l)*(1-identity))
@@ -181,8 +181,8 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
             dist = {}
             for st in source_target:
                 dist.update({st:d_mat[st]})
-            
-            cm1, cm2, cm3 = [], [], []            
+
+            cm1, cm2, cm3 = [], [], []
             # now to calculate which contigs to group
             tr2 = min(dist.values())
             if tr2 <= tr:
@@ -305,7 +305,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
     dat_heavy[clone_key] = pd.Series(clone_dict)
     hclone = dict(zip(dat_heavy['cell_id'], dat_heavy[clone_key]))
     hlclone = dict(zip(dat['sequence_id'], [hclone[c] for c in dat['cell_id']]))
-    
+
     dat[clone_key] = pd.Series(hlclone)
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
     dat_light = dat[~(dat['locus'] == locus_)].copy()
@@ -326,13 +326,13 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
                     else:
                         Vlight = [v for v in dat_light_c['v_call']]
                     Jlight = [j for j in dat_light_c['j_call']]
-                
+
                 # collapse the alleles to just genes
                 Vlight = [','.join(list(set(v.split(',')))) for v in Vlight]
                 Jlight = [','.join(list(set(j.split(',')))) for j in Jlight]
-                
+
                 seq = dict(zip(dat_light_c.index, dat_light_c[key_]))
-                
+
                 if recalculate_length:
                     seq_length = [len(str(l)) for l in dat_light_c[key_]]
                 else:
@@ -340,7 +340,7 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
                         seq_length = [len(str(l)) for l in dat_light_c[key_+'_length']]
                     except:
                         raise ValueError("{} not found in {} input table.".format(key_ + '_length', locus_log2_dict[locus_]))
-                seq_length_dict = dict(zip(dat_light_c.index, seq_length))                
+                seq_length_dict = dict(zip(dat_light_c.index, seq_length))
 
                 # Create a dictionary and group sequence ids with same V and J genes
                 V_Jlight = dict(zip(dat_light_c.index, zip(Vlight,Jlight)))
@@ -493,12 +493,10 @@ def find_clones(self, identity=0.85, key = None, locus = None, by_alleles = Fals
                 # will just update the main dat directly
                 if len(list(set(lclones))) > 1:
                     lclones_dict = dict(zip(sorted(list(set(lclones))), [str(x) for x in range(1,len(list(set(lclones)))+1)]))
-                else:
-                    lclones_dict = dict(zip(sorted(list(set(lclones))), ['0' for x in list(set(lclones))]))
-                renamed_clone_dict_light = {}
-                for key, value in clone_dict_light.items():
-                    renamed_clone_dict_light[key] = lclones_dict[value]
-                dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)                
+                    renamed_clone_dict_light = {}
+                    for key, value in clone_dict_light.items():
+                        renamed_clone_dict_light[key] = lclones_dict[value]
+                    dat.at[renamed_clone_dict_light.keys(), clone_key] = dat.loc[renamed_clone_dict_light.keys(), clone_key] + '_' + pd.Series(renamed_clone_dict_light)                
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self), os.path.basename(self).split('.tsv')[0]), sep = '\t', index = False)
@@ -565,7 +563,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         prefix for stashed BCR connectivities and distances.
     overwrite : str, list, optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).
-    
+
     Returns
     ----------
     `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
@@ -640,7 +638,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
 
     for x in dandelion.metadata.columns:
         if x not in self.obs.columns:
-            self.obs[x] = pd.Series(dandelion.metadata[x])            
+            self.obs[x] = pd.Series(dandelion.metadata[x])
         elif type_check(dandelion.metadata, x):
             self.obs[x].replace(np.nan, 'No_BCR', inplace = True)
         if overwrite is not None:
@@ -701,7 +699,7 @@ def define_clones(self, dist = None, action = 'set', model = 'ham', norm = 'len'
         If specified, the out file name will have this prefix. None defaults to 'dandelion_define_clones'
     verbose : bool
         Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
-    
+
     Returns
     -------
     `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
@@ -990,7 +988,7 @@ def clone_size(self, max_size = None, clone_key = None, key_added = None):
         Column name specifying the clone_id column in metadata.
     key_added : str, optional
         column name where clone size is tabulated into.
-    
+
     Returns
     -------
     `Dandelion` object with clone size columns annotated in `.metadata` slot.
@@ -1063,7 +1061,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     clone_key : str, optional
         column name for clones. None defaults to 'clone_id'.
-    
+
     Returns
     -------
     a `pandas DataFrame`.
