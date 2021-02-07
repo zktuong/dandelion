@@ -33,7 +33,9 @@ jobs:
           r-version: release
     - name: install R dependencies
       run: |
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))        
+        if (!requireNamespace("BiocManager", quietly = TRUE)); install.packages("BiocManager")
+        BiocManager::install(c("Biostrings","GenomicAlignments", "IRanges"))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
     - name: Cache conda
       uses: actions/cache@v1
