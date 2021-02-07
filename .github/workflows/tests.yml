@@ -21,6 +21,14 @@ jobs:
         python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
+        - name: Set up R
+      uses: r-lib/actions/setup-r@v1
+      with:
+          r-version: release
+    - name: install R dependencies
+      run: |
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+      shell: Rscript {0}
     - name: Set up Python
       uses: actions/setup-python@v2        
     - name: Install macOS system dependencies
@@ -51,14 +59,6 @@ jobs:
     - name: Install Dandelion
       run: |
         python setup.py install      
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v1
-      with:
-          r-version: release
-    - name: install R dependencies
-      run: |
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
-      shell: Rscript {0}
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
       with:
