@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-07 19:04:32
+# @Last Modified time: 2021-02-07 19:09:00
 
 import os
 import sys
@@ -1101,7 +1101,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size = None, clone_key = Non
         clone_ = clone_key
 
     # get rid of problematic rows that appear because of category conversion?
-    data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', None]))]
+    data = data[~(data[clone_].isin([np.nan, 'nan', 'NaN', 'No_BCR', 'unassigned', None]))]
 
     # prepare a summary table
     datc_ = data[clone_].str.split('|', expand = True).stack()
