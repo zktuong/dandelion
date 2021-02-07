@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 22:14:22
+# @Last Modified time: 2021-02-07 20:51:53
 
 import sys
 import os
@@ -766,14 +766,16 @@ def retrieve_metadata(data, query, split, collapse, combine = False, locus = 'ig
         dat_dict[locus_dict3[locus]] = data[data['locus'].isin([locus_dict1[locus]])].copy()
 
     for d in dat_dict:
-        dict_[d] = dict(zip(dat_dict[d]['sequence_id'], dat_dict[d]['cell_id']))
-        metadata_[d] = pd.DataFrame.from_dict(dict_[d], orient = 'index', columns = ['cell_id'])
-        metadata_[d].reset_index(inplace = True, drop = False)
-        metadata_[d].columns = ['sequence_id', 'cell_id']
-        try:
-            metadata_[d] = metadata_[d].groupby('cell_id')['sequence_id'].apply(lambda x: pd.Series(list(x))).unstack()
-        except:
-            metadata_[d] = pd.DataFrame(metadata_[d].groupby('cell_id')['sequence_id'].apply(lambda x: pd.DataFrame.from_dict(dict(x), orient = 'index', columns = [pd.Series(x).name]))).T
+        tmp = Tree()
+        for cell, seq in zip(dat_dict[d]['cell_id'], dat_dict[d]['sequence_id']):
+             tmp[cell][seq].value = 1
+        cells = []
+        seqs = []
+        for t in tmp:
+            cells.append(t)
+            seqs.append([s for s in tmp[t]])
+        metadata_[d] = pd.DataFrame(seqs, index = cells)
+        metadata_[d][pd.isnull(metadata_[d])] = np.nan
 
     if split_by_locus:
         H = locus_dict1[locus]
