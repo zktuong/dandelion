@@ -26,23 +26,12 @@ jobs:
     - name: Install macOS system dependencies
       if: matrix.os == 'macos-latest'
       run: |
-        brew install cairo pkg-config autoconf automake libtool
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v1
-      with:
-          r-version: release
-    - name: install R dependencies
-      run: |
-        if (!requireNamespace("BiocManager", quietly = TRUE))
-          install.packages("BiocManager")
-        BiocManager::install(c("Biostrings","GenomicAlignments", "IRanges"))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
-      shell: Rscript {0}
+        brew install cairo pkg-config autoconf automake libtool    
     - name: Cache conda
       uses: actions/cache@v1
       env:
         # Increase this value to reset cache if etc/example-environment.yml has not changed
-        CACHE_NUMBER: 1
+        CACHE_NUMBER: 0
       with:
         path: ~/conda_pkgs_dir
         key:
@@ -62,6 +51,14 @@ jobs:
     - name: Install Dandelion
       run: |
         python setup.py install      
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v1
+      with:
+          r-version: release
+    - name: install R dependencies
+      run: |
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+      shell: Rscript {0}
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
       with:
