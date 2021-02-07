@@ -9,6 +9,8 @@
 [![](https://byob.yarr.is/zktuong/dandelion/master-version)](https://github.com/zktuong/dandelion/tree/master)
 [![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
 
+***There is something wrong with v0.0.28's find_clones and generate_network functions. Please either revert to the last release [v0.0.27.post1](https://github.com/clatworthylab/dandelion) or update to the devel ([v0.0.29](https://github.com/zktuong/dandelion/tree/devel)) versions.***
+
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
 
 Dandelion is now included in a preprint:
