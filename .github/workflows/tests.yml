@@ -33,7 +33,8 @@ jobs:
           r-version: release
     - name: install R dependencies
       run: |
-        if (!requireNamespace("BiocManager", quietly = TRUE)); install.packages("BiocManager")
+        if (!requireNamespace("BiocManager", quietly = TRUE))
+          install.packages("BiocManager")
         BiocManager::install(c("Biostrings","GenomicAlignments", "IRanges"))
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
