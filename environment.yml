@@ -21,6 +21,7 @@ dependencies:
 - numba
 - pytables
 - pytest
+- r-essentials
 - rpy2<3.3.5
 - r-optparse
 - r-alakazam
