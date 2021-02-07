@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-01 21:53:05
+# @Last Modified time: 2021-02-07 18:58:19
 
 import pandas as pd
 import numpy as np
@@ -20,6 +20,7 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
+
 
 def generate_network(self, key = None, clone_key = None, scale=False, min_size=2, weights = None, downsample = None, verbose = True, **kwargs):
     """
@@ -74,70 +75,73 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         raise ValueError('Data does not contain clone information. Please run find_clones.')
 
     # calculate distance
-    dat_h = dat[dat['locus'] == 'IGH']
-    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
 
     if downsample is not None:
-        if downsample >= dat_h.shape[0]:
+        # if downsample >= dat_h.shape[0]:
+        if downsample >= self.metadata.shape[0]:
             if verbose:
-                print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), dat_h.shape[0]))
+                # print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), dat_h.shape[0]))
+                print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), self.metadata.shape[0]))
         else:
             if verbose:
                 print('Downsampling to {} cells.'.format(str(downsample)))
+            dat_h = dat[dat['locus'] == 'IGH']
+            dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
             dat_h = dat_h.sample(downsample)
             dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))]
-
-    if dat_l.shape[0] == 0:        
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))        
+            dat_ = dat_h.append(dat_l)
     else:
-        seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))
-        seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[key_])))
-        
+        dat_ = dat.copy()
+    
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
-    dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
-    dat_seq.set_index('cell_id', inplace = True)
-    if dat_l.shape[0] == 0:
-        dat_seq = dat_seq[['heavy']]
-    else:
-        light_seq_tree = Tree()
-        for key, value in seq_l.items():
-            k, v = value
-            light_seq_tree[k][key] = v
-        light_seq_tree2 = Tree()
-        for g in light_seq_tree:
-            second_key = []
-            for k2 in light_seq_tree[g].keys():
-                second_key.append(k2)
-            second_key = list(set(second_key))
-            second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-            for key, value in light_seq_tree[g].items():
-                light_seq_tree2[g][second_key_dict[key]] = value
-        dat_seq['light'] = pd.Series(light_seq_tree2)
-        tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
-        tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
+    dat_seq = retrieve_metadata(dat_, query = key_, split = True, collapse = False)
+    dat_seq.columns = [re.sub(key_+'_', '', i) for i in dat_seq.columns]
+    
+    # depreciated
+    # if dat_l.shape[0] == 0:        
+    #     seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))        
+    # else:
+    #     seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))
+    #     seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[key_])))
+    
+    # dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
+    # dat_seq.set_index('cell_id', inplace = True)
+    # if dat_l.shape[0] == 0:
+    #     dat_seq = dat_seq[['heavy']]
+    # else:
+        # light_seq_tree = Tree()
+        # for key, value in seq_l.items():
+        #     k, v = value
+        #     light_seq_tree[k][key] = v
+        # light_seq_tree2 = Tree()
+        # for g in light_seq_tree:
+        #     second_key = []
+        #     for k2 in light_seq_tree[g].keys():
+        #         second_key.append(k2)
+        #     second_key = list(set(second_key))
+        #     second_key_dict = dict(zip(second_key, range(0,len(second_key))))
+        #     for key, value in light_seq_tree[g].items():
+        #         light_seq_tree2[g][second_key_dict[key]] = value
+        # dat_seq['light'] = pd.Series(light_seq_tree2)
+        # tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
+        # tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
 
-        tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-        dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
-        dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
+        # tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
+        # dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
+        # dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
     dmat = Tree()
     sleep(0.5)
     if verbose:
-        for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):
-            seq_list = []
-            seq_list = [y for y in dat_seq[x]]
-            tdarray = np.array(seq_list).reshape(-1,1)
-            # d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
-            d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)]) # this is a tad faster than above?
+        for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):            
+            tdarray = np.array(np.array(dat_seq[x])).reshape(-1,1)
+            d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))            
             dmat[x] = d_mat
     else:
         for x in dat_seq.columns:
-            seq_list = []
-            seq_list = [y for y in dat_seq[x]]
-            tdarray = np.array(seq_list).reshape(-1,1)
-            # d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0])))
-            d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)]) # this is a tad faster than above?
+            tdarray = np.array(np.array(dat_seq[x])).reshape(-1,1)
+            d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))            
             dmat[x] = d_mat
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
@@ -162,18 +166,18 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
     # generate edge list
     if self.__class__ == Dandelion:
         out = self.copy()
+        if downsample is not None:
+            out = Dandelion(dat_)
     else: # re-initiate a Dandelion class object
-        out = Dandelion(dat)
+        # out = Dandelion(dat)
+        out = Dandelion(dat_)
 
-    if clone_key not in out.metadata:
-        update_metadata(out, retrieve = clone_key, split = False, collapse = True, combine = True)
+    # if downsample is not None:
+    #     dat_downsample = dat_h.append(dat_l)
+    #     downsample_meta = self.metadata[self.metadata.index.isin(dat_h['cell_id'])].copy()
+    #     out = Dandelion(dat_downsample, metadata = downsample_meta)
 
-    if downsample is not None:
-        dat_downsample = dat_h.append(dat_l)
-        downsample_meta = self.metadata[self.metadata.index.isin(dat_h['cell_id'])].copy()
-        out = Dandelion(dat_downsample, metadata = downsample_meta)
-
-    tmp_totaldist = pd.DataFrame(total_dist, index = out.metadata.index, columns = out.metadata.index)
+    tmp_totaldist = pd.DataFrame(total_dist, index = dat_seq.index, columns = dat_seq.index)
     tmp_clusterdist = Tree()
     overlap = []
     for i in out.metadata.index:
@@ -263,6 +267,8 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
     tmp_totaldiststack = tmp_totaldiststack.reset_index(drop = False)
     tmp_totaldiststack.columns = ['source', 'target', 'weight']
     tmp_totaldiststack.index = [str(s)+'|'+str(t) for s, t in zip(tmp_totaldiststack['source'], tmp_totaldiststack['target'])]
+    tmp_totaldiststack['keep'] = [False if len(list(set(i.split('|')))) == 1 else True for i in tmp_totaldiststack.index]
+    tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop('keep', axis = 1)
 
     tmp_edge_list = Tree()
     if verbose:
@@ -333,14 +339,16 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         else:
             threshold_ = None
         if downsample is not None:
-            out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
+            # out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
+            out = Dandelion(data = dat_, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
             out.threshold = threshold_
             return(out)
         else:
             self.__init__(data = self.data, metadata = self.metadata, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_, initialize = False)
             self.threshold = threshold_
     else:
-        out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
+        # out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
+        out = Dandelion(data = dat_, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
         return(out)
 
 def mst(mat):

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-06 16:44:16
+# @Last Modified time: 2021-02-07 19:04:32
 
 import os
 import sys
@@ -582,7 +582,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         prefix for stashed RNA connectivities and distances.
     bcr_key : str, optional
         prefix for stashed BCR connectivities and distances.
-    overwrite : str, list, optional
+    overwrite : str, bool, list, optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).
 
     Returns
@@ -649,26 +649,23 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key = None, rna_key
         self.obsp['distances'] = df_distances_.copy()
         self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
-        # try:
-        #     self.uns[neighbors_key]['connectivities'] = df_connectivities_.copy()
-        #     self.uns[neighbors_key]['distances'] = df_distances_.copy()
-        #     self.uns[neighbors_key]['params'] = {'method':'bcr'}
-        #     self.uns[bcr_neighbors_key] = self.uns[neighbors_key].copy()
-        # except:
-        #     pass
 
+    # always overwrite with whatever columns are in dandelion's metadata:
     for x in dandelion.metadata.columns:
         if x not in self.obs.columns:
             self.obs[x] = pd.Series(dandelion.metadata[x])
-        elif type_check(dandelion.metadata, x):
+        elif overwrite is True:
+            self.obs[x] = pd.Series(dandelion.metadata[x])
+        if type_check(dandelion.metadata, x):
             self.obs[x].replace(np.nan, 'No_BCR', inplace = True)
-        if overwrite is not None:
-            if not type(overwrite) is list:
-                overwrite = [overwrite]
-            for ow in overwrite:
-                self.obs[ow] = pd.Series(dandelion.metadata[ow])
-                if type_check(dandelion.metadata, ow):
-                    self.obs[ow].replace(np.nan, 'No_BCR', inplace = True)
+        
+    if overwrite is not None and overwrite is not True:
+        if not type(overwrite) is list:
+            overwrite = [overwrite]
+        for ow in overwrite:
+            self.obs[ow] = pd.Series(dandelion.metadata[ow])
+            if type_check(dandelion.metadata, ow):
+                self.obs[ow].replace(np.nan, 'No_BCR', inplace = True)        
 
     tmp = self.obs.copy()
     if dandelion.layout is not None:
