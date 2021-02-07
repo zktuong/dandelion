@@ -1,2 +1,2 @@
-import dandelion as ddl
-print(ddl.__version__)
+exec(open('../version.py').read())
+print(__version__)
