@@ -44,22 +44,13 @@ jobs:
       run:
         install.packages('remotes')
       shell: Rscript {0}
-    - name: Install ubuntu system dependencies
-      if: matrix.os != 'macos-latest'
+    - name: Install system dependencies
       run: |
         sudo apt-get install libcurl4-openssl-dev
         sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04")), collapse = " "))')
         echo $sysreqs
         sudo -s eval "$sysreqs"
-
-    - name: Install macos system dependencies
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew install cairo pkg-config autoconf automake libtool
-        ## Enable installing XML from source if needed
-        brew install libxml2 imagemagick@6 harfbuzz fribidi libgit2
-        echo "XML_CONFIG=/usr/local/opt/libxml2/bin/xml2-config" >> $GITHUB_ENV
-
+        
     - name: Cache conda
       uses: actions/cache@v1
       env:
