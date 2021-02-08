@@ -60,31 +60,6 @@ jobs:
         brew install libxml2 imagemagick@6 harfbuzz fribidi libgit2
         echo "XML_CONFIG=/usr/local/opt/libxml2/bin/xml2-config" >> $GITHUB_ENV
 
-    - name: install R dependencies
-      run: |
-        install.packages(c('RCurl','XML'))
-        remotes::install_cran("BiocManager")
-        BiocManager::install(version = "3.12", ask = FALSE)
-        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
-      shell: Rscript {0}
-
-    - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
-      with:
-        auto-activate-base: true
-        auto-update-conda : true
-        activate-environment: dandelion
-        channels: conda-forge, bioconda, anaconda, defaults
-        channel-priority: true
-        python-version: ${{ matrix.python-version }}
-        environment-file: environment.yml
-        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-    
-    - name: Install Dandelion
-      run: |
-        python setup.py install
-
     - name: Cache conda
       uses: actions/cache@v1
       env:
@@ -111,6 +86,31 @@ jobs:
         path: /home/runner/work/_temp/Library
         key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
         restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
+        
+    - name: install R dependencies
+      run: |
+        install.packages(c('RCurl','XML'))
+        remotes::install_cran("BiocManager")
+        BiocManager::install(version = "3.12", ask = FALSE)
+        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+      shell: Rscript {0}
+
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        auto-activate-base: true
+        auto-update-conda : true
+        activate-environment: dandelion
+        channels: conda-forge, bioconda, anaconda, defaults
+        channel-priority: true
+        python-version: ${{ matrix.python-version }}
+        environment-file: environment.yml
+        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+    
+    - name: Install Dandelion
+      run: |
+        python setup.py install
     
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
