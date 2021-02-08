@@ -28,6 +28,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Setup curl
+      uses: wei/curl@master
+      with:
+        args: https://httpbin.org/get
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
