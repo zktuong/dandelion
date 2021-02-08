@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-07 20:55:54
+# @Last Modified time: 2021-02-08 13:07:56
 
 import sys
 import os
@@ -1232,12 +1232,12 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
 
 def update_metadata(self, retrieve = None, locus = None, clone_key = None, split = True, collapse = True, combine = True, split_locus = False, collapse_alleles = True, reinitialize = False,  verbose = False):
     """
-    A Dandelion initialisation function to update and populate the `.metadata` slot.
+    A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
     Parameters
     ----------
     self : Dandelion
-        Dandelion object.
+        `Dandelion` object.
     retrieve : str, sequence, list, optional
         Column name in `.data` slot to retrieve and update the metadata.
     locus : str, optional
@@ -1255,12 +1255,12 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
     collapse_alleles : bool
         Returns the V-D-J genes with allelic calls if False.
     reinitialize : bool
-        Whether or not to reinitialize the current metadata. Useful when updating older versions of Dandelion to newer version.
+        Whether or not to reinitialize the current metadata. Useful when updating older versions of `dandelion` to newer version.
     verbose : bool
         Whether or not to print warning messages when constructing object.
     Returns
     -------
-    Dandelion object with `.metadata` slot initialized.
+    `Dandelion` object with `.metadata` slot initialized.
     """
 
     if locus is None:
@@ -1329,7 +1329,7 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
 
 class Dandelion:
     """
-    Dandelion class object.
+    `Dandelion` class object.
 
     Main class object storing input/ouput slots for all functions.
 
@@ -1394,27 +1394,27 @@ class Dandelion:
 
     def copy(self):
         """
-        Performs a deep copy of all slots in `dandelion` class.
+        Performs a deep copy of all slots in `Dandelion` class.
 
         Parameters
         ----------
         self : Dandelion
-            Dandelion object.
+            `Dandelion` object.
 
         Returns
         -------
-        a deep copy of `dandelion` class.
+        a deep copy of `Dandelion` class.
         """
         return copy.deepcopy(self)
 
     def update_germline(self, corrected = None, germline = None, org = 'human'):
         """
-        Update germline reference with corrected sequences and store in Dandelion object.
+        Update germline reference with corrected sequences and store in `Dandelion` object.
 
         Parameters
         ----------
         self : Dandelion
-            Dandelion object.
+            `Dandelion` object.
         corrected : dict, str, optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
         germline : str, optional
@@ -1484,7 +1484,7 @@ class Dandelion:
         Parameters
         ----------
         filename
-            path to Dandelion `.pkl` file.
+            path to `.pkl` file.
         **kwargs
             passed to `_pickle`.
         """
@@ -1514,7 +1514,7 @@ class Dandelion:
         Parameters
         ----------
         filename
-            path to Dandelion `.h5` file.
+            path to `.h5` file.
         complib : str, optional
             method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
         compression : str, optional
@@ -1633,7 +1633,7 @@ def read_pkl(filename='dandelion_data.pkl.pbz2'):
     Parameters
     ----------
     filename
-        path to Dandelion `.pkl` file. Depending on the extension, it will try to unzip accordingly.
+        path to `.pkl` file. Depending on the extension, it will try to unzip accordingly.
 
     Returns
     -------
@@ -1657,11 +1657,11 @@ def read_h5(filename='dandelion_data.h5'):
     Parameters
     ----------
     filename
-        path to Dandelion `.h5` file
+        path to `.h5` file
 
     Returns
     -------
-    Dandelion object.
+    `Dandelion` object.
     """
     try:
         data = pd.read_hdf(filename, 'data')
@@ -1755,7 +1755,7 @@ def read_h5(filename='dandelion_data.h5'):
 
 def concat(arrays, check_unique = True):
     """
-    Concatenate dataframe and return as Dandelion object.
+    Concatenate dataframe and return as `Dandelion` object.
 
     Parameters
     ----------
@@ -1794,7 +1794,7 @@ def concat(arrays, check_unique = True):
 
 def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
     """
-    Reads the 10x AIRR rearrangement .tsv directly and returns a Dandelion object.
+    Reads the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
     
     Parameters
     ----------
@@ -1803,7 +1803,7 @@ def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
     sample_id : str, optional
         Name to populated sample id column
     return_dandelion : bool
-        Whether or not to return as an initialized Dandelion object. Default is False mainly due to load times.
+        Whether or not to return as an initialized `Dandelion` object. Default is False mainly due to load times.
 
     Returns
     -------

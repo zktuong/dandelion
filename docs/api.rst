@@ -28,7 +28,6 @@ Preprocessing (external): `pp.external`
    makedb_igblast
    parsedb_heavy
    parsedb_light
-   parsedb_light
    recipe_scanpy_qc
    tigger_genotype
 

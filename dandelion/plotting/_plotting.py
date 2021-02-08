@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-07 19:09:43
+# @Last Modified time: 2021-02-08 13:05:40
 
 import seaborn as sns
 import pandas as pd
@@ -404,7 +404,7 @@ def stackedbarplot(self, variable, groupby, figsize = (12, 4), normalize = False
 
 def spectratype(self, variable, groupby, locus, clone_key = None, figsize = (6, 4), width = None, title = None, xtick_rotation=None, hide_legend=True, legend_options = None, labels=None, **kwargs):
     """
-    A stackedbarplot function to plot usage of V/J genes in the data split by groups.
+    A spectratype function to plot usage of CDR3 length in the data split by groups.
 
     Parameters
     ----------
