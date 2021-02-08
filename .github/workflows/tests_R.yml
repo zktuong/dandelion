@@ -19,29 +19,30 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.7, 3.8]
-        r: release
-        bioc: 3.12        
+        config:
+          - r: 'release'
+          - bioc: '3.12'
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       NOT_CRAN: true
       TZ: UTC
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
-        r-version: ${{ matrix.r }}
+        r-version: ${{ matrix.config.r }}
     - name: install R dependencies
       run: |
-        install.packages(c('remotes','RCur','XML'))
+        install.packages(c('remotes','RCurl','XML'))
         remotes::install_cran("BiocManager")
-        BiocManager::install(version = "${{ matrix.bioc }}", ask = FALSE)
+        BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE)
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('remotes','shazam', 'alakazam', 'tigger', 'airr', 'optparse'))        
-      shell: Rscript {0}        
+        install.packages(c('remotes','shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+      shell: Rscript {0}
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
       with:
