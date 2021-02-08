@@ -49,9 +49,10 @@ jobs:
     
     - name: Install windows system dependencies
       if: matrix.os == 'windows-latest'
-      uses: crazy-max/ghaction-chocolatey@v1
-      with:
-        args: install curl
+      uses: actions/setup-node@v2
+      run: |
+        npm install
+        npm i node-libcurl --save
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
