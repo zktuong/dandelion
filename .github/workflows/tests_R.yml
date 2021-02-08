@@ -46,10 +46,12 @@ jobs:
         ## Enable installing XML from source if needed
         brew install libxml2 imagemagick@6 harfbuzz fribidi libgit2
         echo "XML_CONFIG=/usr/local/opt/libxml2/bin/xml2-config" >> $GITHUB_ENV        
+    
     - name: Install windows system dependencies
       if: matrix.os == 'windows-latest'
-      run: |
-        choco install curl
+      uses: crazy-max/ghaction-chocolatey@v1
+      with:
+        cmd: choco install curl
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
