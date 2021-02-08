@@ -19,13 +19,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.7, 3.8]
-        config: 
-          - { os: ubuntu-latest, r: '4.0', bioc: '3.12', cont: "bioconductor/bioconductor_docker:RELEASE_3_12", rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest" }
-          - { os: macOS-latest, r: '4.0', bioc: '3.12'}
-          - { os: windows-latest, r: '4.0', bioc: '3.12'}
+        r: release
+        bioc: 3.12        
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
       NOT_CRAN: true
       TZ: UTC
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,12 +33,12 @@ jobs:
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
-        r-version: ${{ matrix.config.r }}
+        r-version: ${{ matrix.r }}
     - name: install R dependencies
       run: |
-        install.packages('remotes')
+        install.packages(c('remotes','RCur','XML'))
         remotes::install_cran("BiocManager")
-        BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE)
+        BiocManager::install(version = "${{ matrix.bioc }}", ask = FALSE)
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages(c('remotes','shazam', 'alakazam', 'tigger', 'airr', 'optparse'))        
       shell: Rscript {0}        
