@@ -20,7 +20,8 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest]
         python-version: [3.7, 3.8]        
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -30,7 +31,8 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v2    
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
     - name: Install ubuntu system dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -49,7 +51,6 @@ jobs:
     
     - name: Install windows system dependencies
       if: matrix.os == 'windows-latest'
-      uses: actions/setup-node@v2
       run: |
         npm install
         npm i node-libcurl --save
