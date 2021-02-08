@@ -33,28 +33,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
-    - name: Install ubuntu system dependencies
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get install libcurl4-openssl-dev
-        sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04")), collapse = " "))')
-        echo $sysreqs
-        sudo -s eval "$sysreqs"
     
-    - name: Install macos system dependencies
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew install cairo pkg-config autoconf automake libtool
-        ## Enable installing XML from source if needed
-        brew install libxml2 imagemagick@6 harfbuzz fribidi libgit2
-        echo "XML_CONFIG=/usr/local/opt/libxml2/bin/xml2-config" >> $GITHUB_ENV        
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.0.1
+      with:
+        auto-activate-base: true
+        auto-update-conda : true
+        activate-environment: dandelion
+        channels: conda-forge, bioconda, anaconda, defaults
+        channel-priority: true
+        python-version: ${{ matrix.python-version }}
+    - run: |
+        conda install libcurl
     
-    - name: Install windows system dependencies
-      if: matrix.os == 'windows-latest'
-      run: |
-        npm install
-        npm i node-libcurl --save
-
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
@@ -66,11 +57,7 @@ jobs:
 
     - name: install R dependencies
       run: |
-        install.packages(c('remotes','RCurl','XML'))
-        remotes::install_cran("BiocManager")
-        BiocManager::install(version = "3.12", ask = FALSE)
-        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+        install.packages(c('RCurl'))
       shell: Rscript {0}
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
