@@ -37,8 +37,10 @@ jobs:
       uses: r-lib/actions/setup-r@v1
       with:
           r-version: release
-
-    - name: Install windows system dependencies
+    - name: Install remotes
+      run: |
+        install.packages('remotes')
+    - name: Install system dependencies
       if: matrix.os != 'macos-latest'
       run: |
         sudo apt-get install libcurl4-openssl-dev
