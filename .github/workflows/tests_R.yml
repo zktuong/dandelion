@@ -75,18 +75,18 @@ jobs:
           Rscript tests/r_install.R
 
     - name: Cache R packages
-        if: "!contains(github.event.head_commit.message, '/nocache') && matrix.os != 'ubuntu-latest'"
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
+      if: "!contains(github.event.head_commit.message, '/nocache') && matrix.os != 'ubuntu-latest'"
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.R_LIBS_USER }}
+        key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
+        restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
 
-      - name: Cache R packages on ubuntu-latest
-        if: "!contains(github.event.head_commit.message, '/nocache') && matrix.os == 'ubuntu-latest' "
-        uses: actions/cache@v2
-        with:
-          path: /home/runner/work/_temp/Library
-          key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
+    - name: Cache R packages on ubuntu-latest
+      if: "!contains(github.event.head_commit.message, '/nocache') && matrix.os == 'ubuntu-latest' "
+      uses: actions/cache@v2
+      with:
+        path: /home/runner/work/_temp/Library
+        key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
+        restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
 
