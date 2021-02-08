@@ -46,6 +46,10 @@ jobs:
         ## Enable installing XML from source if needed
         brew install libxml2 imagemagick@6 harfbuzz fribidi libgit2
         echo "XML_CONFIG=/usr/local/opt/libxml2/bin/xml2-config" >> $GITHUB_ENV        
+    - name: Install windows system dependencies
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install curl
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
@@ -62,7 +66,7 @@ jobs:
         remotes::install_cran("BiocManager")
         BiocManager::install(version = "3.12", ask = FALSE)
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('remotes','shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
