@@ -8,6 +8,9 @@ on:
     branches:
       - "master"
 
+env:  
+  cache-version: 'cache-v1'
+
 jobs:
   R-tests:
     runs-on: ubuntu-latest
@@ -27,15 +30,32 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup curl
-      uses: wei/curl@master
-      with:
-        args: https://httpbin.org/get
+    - uses: actions/checkout@v2    
+    - name: Install ubuntu system dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get install libcurl4-openssl-dev
+        sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04")), collapse = " "))')
+        echo $sysreqs
+        sudo -s eval "$sysreqs"
+    
+    - name: Install macos system dependencies
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cairo pkg-config autoconf automake libtool
+        ## Enable installing XML from source if needed
+        brew install libxml2 imagemagick@6 harfbuzz fribidi libgit2
+        echo "XML_CONFIG=/usr/local/opt/libxml2/bin/xml2-config" >> $GITHUB_ENV        
+
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
-        r-version: "release"
+          r-version: release
+
+    - name: Setup pandoc from r-lib
+      if: matrix.os != 'ubuntu-latest'
+      uses: r-lib/actions/setup-pandoc@master
+
     - name: install R dependencies
       run: |
         install.packages(c('remotes','RCurl','XML'))
@@ -53,3 +73,20 @@ jobs:
           Rscript tests/r_dependencies.R
         on_retry_command: |
           Rscript tests/r_install.R
+
+    - name: Cache R packages
+        if: "!contains(github.event.head_commit.message, '/nocache') && matrix.os != 'ubuntu-latest'"
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
+
+      - name: Cache R packages on ubuntu-latest
+        if: "!contains(github.event.head_commit.message, '/nocache') && matrix.os == 'ubuntu-latest' "
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/work/_temp/Library
+          key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
+
