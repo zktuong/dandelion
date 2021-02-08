@@ -36,9 +36,13 @@ jobs:
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
-          r-version: release
+        r-version: release
+    - name: Setup pandoc from r-lib
+      if: matrix.os != 'ubuntu-latest'
+      uses: r-lib/actions/setup-pandoc@master
+
     - name: Install remotes
-      run: |
+      run: 
         install.packages('remotes')
     - name: Install system dependencies
       if: matrix.os != 'macos-latest'
@@ -48,10 +52,7 @@ jobs:
         echo $sysreqs
         sudo -s eval "$sysreqs"
 
-    - name: Setup pandoc from r-lib
-      if: matrix.os != 'ubuntu-latest'
-      uses: r-lib/actions/setup-pandoc@master
-
+    
     - name: install R dependencies
       run: |
         install.packages(c('RCurl'))
