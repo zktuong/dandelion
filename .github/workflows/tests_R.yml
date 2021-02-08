@@ -36,14 +36,11 @@ jobs:
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
-        r-version: release
-    - name: Setup pandoc from r-lib
-      if: matrix.os != 'ubuntu-latest'
-      uses: r-lib/actions/setup-pandoc@master
-
-    - name: Install remotes
+        r-version: release    
+    - name: Setup r-lib/remotes
       run: 
         install.packages('remotes')
+      shell: Rscript {0}
     - name: Install system dependencies
       if: matrix.os != 'macos-latest'
       run: |
