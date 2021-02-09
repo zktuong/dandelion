@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-09 12:34:56
+# @Last Modified time: 2021-02-09 13:19:47
 
 import sys
 import os
@@ -1837,6 +1837,45 @@ def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
     
     return(Dandelion(dat, initialize = initialize_dandelion))
 
+def to_scirpy(Dandelion):
+    """
+    Converts a `Dandelion` object to scirpy's format.
+    
+    Parameters
+    ----------
+    Dandelion
+        `Dandelion` object
+    
+    Returns
+    -------
+    `AnnData` object in the format initialized by `scirpy`.
+
+    """
+    try:
+        import scirpy as ir
+    except:
+        raise ImportError('Please install scirpy. pip install scirpy')
+    return(ir.io.read_dandelion(Dandelion))
+
+def read_scirpy(adata):
+    """
+    Reads a scirpy initialized oject and returns a `Dandelion` object.
+    
+    Parameters
+    ----------
+    adata
+        scirpy initialized `AnnData` object.
+    
+    Returns
+    -------
+    `Dandelion` object.
+
+    """
+    try:
+        import scirpy as ir
+    except:
+        raise ImportError('Please install scirpy. pip install scirpy')
+    return(ir.io.to_dandelion(Dandelion))
 
 # def convert_preprocessed_tcr_10x(file, prefix = None):
 #     """
