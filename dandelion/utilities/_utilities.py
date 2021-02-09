@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-09 13:19:47
+# @Last Modified time: 2021-02-09 13:24:49
 
 import sys
 import os
@@ -1795,7 +1795,7 @@ def concat(arrays, check_unique = True):
         out = Dandelion(df, initialize = False)
     return(out)
 
-def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
+def read_10x_airr(file, sample_id = None):
     """
     Reads the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
     
@@ -1805,9 +1805,7 @@ def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
         path to `airr_rearrangement.tsv`
     sample_id : str, optional
         Name to populated sample id column
-    return_dandelion : bool
-        Whether or not to return as an initialized `Dandelion` object. Default is False mainly due to load times.
-
+    
     Returns
     -------
     `Dandelion` object of pandas data frame.
@@ -1835,7 +1833,7 @@ def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
                 locus.append(np.nan)
         dat['locus'] = locus
     
-    return(Dandelion(dat, initialize = initialize_dandelion))
+    return(Dandelion(dat))
 
 def to_scirpy(Dandelion):
     """
