@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-08 13:07:56
+# @Last Modified time: 2021-02-09 12:34:56
 
 import sys
 import os
@@ -1273,7 +1273,7 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
     else:
         clonekey = clone_key
 
-    cols = ['sequence_id', 'cell_id', 'sample_id', 'locus', 'productive', 'v_call', 'j_call', 'c_call', 'umi_count', 'junction_aa']
+    cols = ['sequence_id', 'cell_id', 'locus', 'productive', 'v_call', 'j_call', 'c_call', 'umi_count', 'junction_aa']
 
     if 'umi_count' not in self.data:
         cols = list(map(lambda x: 'duplicate_count' if x == 'umi_count' else x, cols))
@@ -1282,6 +1282,9 @@ def update_metadata(self, retrieve = None, locus = None, clone_key = None, split
 
     if not all([c in self.data for c in cols]):
         raise ValueError('Unable to initialize metadata due to missing keys. Please ensure the input data contains all the following columns: {}'.format(cols))
+
+    if 'sample_id' in self.data:
+        cols = ['sample_id'] + cols
 
     if 'v_call_genotyped' in self.data:
         cols = list(map(lambda x: 'v_call_genotyped' if x == 'v_call' else x, cols))
@@ -1818,18 +1821,19 @@ def read_10x_airr(file, sample_id = None, initialize_dandelion = False):
         sampid = sample_id
     dat['sample_id'] = sampid
     # get all the v,d,j,c calls
-    tmp = [(v,d,j,c) for v,d,j,c in zip(dat['v_call'], dat['d_call'], dat['j_call'], dat['c_call'])]
-    locus = []
-    for t in tmp:
-        if all('IGH' in x for x in t if x == x):
-            locus.append('IGH')
-        elif all('IGK' in x for x in t if x == x):
-            locus.append('IGK')
-        elif all('IGL' in x for x in t if x == x):
-            locus.append('IGL')
-        else:
-            locus.append(np.nan)
-    dat['locus'] = locus
+    if 'locus' not in dat:
+        tmp = [(v,d,j,c) for v,d,j,c in zip(dat['v_call'], dat['d_call'], dat['j_call'], dat['c_call'])]
+        locus = []
+        for t in tmp:
+            if all('IGH' in x for x in t if x == x):
+                locus.append('IGH')
+            elif all('IGK' in x for x in t if x == x):
+                locus.append('IGK')
+            elif all('IGL' in x for x in t if x == x):
+                locus.append('IGL')
+            else:
+                locus.append(np.nan)
+        dat['locus'] = locus
     
     return(Dandelion(dat, initialize = initialize_dandelion))
 
