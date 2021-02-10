@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 13:57:15
+# @Last Modified time: 2021-02-10 14:04:21
 
 import pandas as pd
 import numpy as np
@@ -272,7 +272,7 @@ def generate_network(self, key=None, clone_key=None, min_size=2, downsample=None
         edge_list_final['weight'].update(tmp_totaldiststack['weight'])
         # return the edge list
         edge_list_final.reset_index(drop=True, inplace=True)
-    except KeyError:
+    except:
         edge_list_final = None
 
     # and finally the vertex list which is super easy

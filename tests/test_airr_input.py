@@ -13,11 +13,7 @@ def test_setup():
     file = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_vdj_b_airr_rearrangement.tsv"
     r = requests.get(file)
     test_data = pd.read_csv(StringIO(r.text), sep="\t")
-    test_data["locus"] = [
-        "IGH" if "IGH" in i else "IGK" if "IGK" in i else "IGL" if "IGL" in i else None for i in test_data.v_call]
-    test_data["umi_count"] = test_data["duplicate_count"]
-    test_data["sample_id"] = "test"
-    test_ddl = ddl.Dandelion(test_data)
+    test_ddl = ddl.read_10x_airr(test_data)
     test_ddl.write_h5("tests/test.h5", compression="bzip2")
     test_ddl.write_pkl("tests/test.pkl.pbz2")
     test = ddl.read_h5("tests/test.h5")
