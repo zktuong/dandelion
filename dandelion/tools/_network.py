@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-07 18:58:19
+# @Last Modified time: 2021-02-10 13:35:05
 
 import pandas as pd
 import numpy as np
@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 
-def generate_network(self, key = None, clone_key = None, scale=False, min_size=2, weights = None, downsample = None, verbose = True, **kwargs):
+def generate_network(self, key = None, clone_key = None, min_size=2, downsample = None, verbose = True, **kwargs):
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix.
@@ -34,13 +34,9 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
     key : str, optional
         column name for distance calulations. None defaults to 'sequence_alignment_aa'.
     clone_key: str, optional
-        column name to build network on.    
+        column name to build network on.
     min_size : int
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    scale : bool
-        The mode of calculating joint distance matrix for heavy and light chains. If True, a simple sum operation will be used. Otherwise, depending on whether `weights` option is provided, it will scale each layer to range of 0 to 1 to bring the multiple layers of data before summing.
-    weights : tuple, optional
-        A tuple containing weights to scale each layer. Default is None where each layer is scaled evenly i.e. 1/number of layers. Only applies if scale is True.
     downsample : int, optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool
@@ -58,12 +54,12 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         dat = load_data(self.data)
     else:
         dat = load_data(self)
-    
+
     if key is None:
         key_ = 'sequence_alignment_aa' # default
     else:
         key_ = key
-    
+
     if key_ not in dat:
         raise ValueError("key {} not found in input table.".format(key_))
 
@@ -80,7 +76,6 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         # if downsample >= dat_h.shape[0]:
         if downsample >= self.metadata.shape[0]:
             if verbose:
-                # print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), dat_h.shape[0]))
                 print('Cannot downsample to {} cells. Using all {} cells.'.format(str(downsample), self.metadata.shape[0]))
         else:
             if verbose:
@@ -92,76 +87,30 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
             dat_ = dat_h.append(dat_l)
     else:
         dat_ = dat.copy()
-    
+
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
     dat_seq = retrieve_metadata(dat_, query = key_, split = True, collapse = False)
     dat_seq.columns = [re.sub(key_+'_', '', i) for i in dat_seq.columns]
-    
-    # depreciated
-    # if dat_l.shape[0] == 0:        
-    #     seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))        
-    # else:
-    #     seq_h = dict(zip(dat_h['sequence_id'], zip(dat_h['cell_id'], dat_h[key_])))
-    #     seq_l = dict(zip(dat_l['sequence_id'], zip(dat_l['cell_id'], dat_l[key_])))
-    
-    # dat_seq = pd.DataFrame.from_dict(seq_h, orient = 'index', columns = ['cell_id', 'heavy'])
-    # dat_seq.set_index('cell_id', inplace = True)
-    # if dat_l.shape[0] == 0:
-    #     dat_seq = dat_seq[['heavy']]
-    # else:
-        # light_seq_tree = Tree()
-        # for key, value in seq_l.items():
-        #     k, v = value
-        #     light_seq_tree[k][key] = v
-        # light_seq_tree2 = Tree()
-        # for g in light_seq_tree:
-        #     second_key = []
-        #     for k2 in light_seq_tree[g].keys():
-        #         second_key.append(k2)
-        #     second_key = list(set(second_key))
-        #     second_key_dict = dict(zip(second_key, range(0,len(second_key))))
-        #     for key, value in light_seq_tree[g].items():
-        #         light_seq_tree2[g][second_key_dict[key]] = value
-        # dat_seq['light'] = pd.Series(light_seq_tree2)
-        # tmp = pd.Series([dict(i) if i is not np.nan else {0:i} for i in dat_seq['light']])
-        # tmp_dat = pd.DataFrame(tmp.tolist(), index = dat_seq.index)
-
-        # tmp_dat.columns = ['light_' + str(c) for c in tmp_dat.columns]
-        # dat_seq = dat_seq.merge(tmp_dat, left_index = True, right_index = True)
-        # dat_seq = dat_seq[['heavy'] + [str(c) for c in tmp_dat.columns]]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
     dmat = Tree()
     sleep(0.5)
     if verbose:
-        for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):            
+        for x in tqdm(dat_seq.columns, desc = 'Calculating distances... '):
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1,1)
-            d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))            
+            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) if (x[0] == x[0]) and (y[0] == y[0]) else 0])
+            d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))
             dmat[x] = d_mat
     else:
         for x in dat_seq.columns:
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1,1)
-            d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))            
+            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) if (x[0] == x[0]) and (y[0] == y[0]) else 0])
+            d_mat = squareform(pdist(tdarray,lambda x,y: levenshtein(x[0],y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))
             dmat[x] = d_mat
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
-    n_ = len(dist_mat_list)    
-    if scale:
-        weighted_matrix = []
-        if weights is None:
-            for w in range(0, n_):
-                weighted_matrix.append(1/n_ * dist_mat_list[w])
-            total_dist = sum(weighted_matrix)
-        else:
-            if len(weights) == n_:
-                for w in range(0, n_):
-                    weighted_matrix.append(weights[w] * dist_mat_list[w])
-                total_dist = sum(weighted_matrix)
-            else:
-                raise IndexError('Length of provided weights should be %s.' % int(n_))
-    else:
-        total_dist = np.sum(dist_mat_list,axis=0)
+    total_dist = np.sum(dist_mat_list,axis=0)
 
     # generate edge list
     if self.__class__ == Dandelion:
@@ -169,13 +118,7 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         if downsample is not None:
             out = Dandelion(dat_)
     else: # re-initiate a Dandelion class object
-        # out = Dandelion(dat)
         out = Dandelion(dat_)
-
-    # if downsample is not None:
-    #     dat_downsample = dat_h.append(dat_l)
-    #     downsample_meta = self.metadata[self.metadata.index.isin(dat_h['cell_id'])].copy()
-    #     out = Dandelion(dat_downsample, metadata = downsample_meta)
 
     tmp_totaldist = pd.DataFrame(total_dist, index = dat_seq.index, columns = dat_seq.index)
     tmp_clusterdist = Tree()
@@ -300,13 +243,10 @@ def generate_network(self, key = None, clone_key = None, scale=False, min_size=2
         tmp_edge_listx.index = [str(s)+'|'+str(t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
 
         edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-
-        # for idx in edge_list_final.index:
-        #     edge_list_final.at[idx, 'weight'] = tmp_totaldist.loc[idx.split('|')[0], idx.split('|')[1]]
         edge_list_final['weight'].update(tmp_totaldiststack['weight'])
         # return the edge list
         edge_list_final.reset_index(drop = True, inplace = True)
-    except:
+    except KeyError:
         edge_list_final = None
 
     # and finally the vertex list which is super easy
