@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2020-12-30 01:49:12
+# @Last Modified time: 2021-02-10 13:59:09
 
 import os
 import pandas as pd
@@ -17,7 +17,8 @@ import scanpy as sc
 import scipy.stats
 import re
 
-def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', verbose = False):
+
+def assigngenes_igblast(fasta, igblast_db=None, org='human', loci='ig', verbose=False):
     """
     Reannotate with IgBLASTn.
 
@@ -33,25 +34,27 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', ve
         `ig` or `tr` mode for running igblastn.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    
+
     """
     env = os.environ.copy()
     if igblast_db is None:
         try:
             igdb = env['IGDATA']
         except:
-            raise OSError('Environmental variable IGDATA must be set. Otherwise, please provide path to igblast database')
+            raise OSError(
+                'Environmental variable IGDATA must be set. Otherwise, please provide path to igblast database')
     else:
         env['IGDATA'] = igblast_db
         igdb = env['IGDATA']
 
     outfolder = os.path.abspath(os.path.dirname(fasta))+'/tmp'
-    informat_dict = {'blast':'_igblast.fmt7', 'airr':'_igblast.tsv'}
+    informat_dict = {'blast': '_igblast.fmt7', 'airr': '_igblast.tsv'}
     if not os.path.exists(outfolder):
         os.makedirs(outfolder)
-    
+
     for fileformat in ['blast', 'airr']:
-        outfile = os.path.basename(fasta).split('.fasta')[0] + informat_dict[fileformat]
+        outfile = os.path.basename(fasta).split(
+            '.fasta')[0] + informat_dict[fileformat]
         cmd = ['AssignGenes.py', 'igblast',
                '-s', fasta,
                '-b', igdb,
@@ -59,13 +62,14 @@ def assigngenes_igblast(fasta, igblast_db = None, org = 'human', loci = 'ig', ve
                '--loci', loci,
                '--format', fileformat,
                '-o', "{}/{}".format(outfolder, outfile)
-           ]
+               ]
 
         if verbose:
             print('Running command: %s\n' % (' '.join(cmd)))
-        run(cmd, env=env) # logs are printed to terminal
+        run(cmd, env=env)  # logs are printed to terminal
 
-def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human', extended = True, verbose = False):
+
+def makedb_igblast(fasta, igblast_output=None, germline=None, org='human', extended=True, verbose=False):
     """
     Parses IgBLAST output to airr format.
 
@@ -83,14 +87,15 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
         whether or not to parse extended 10x annotations. Default is True.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    
+
     """
     env = os.environ.copy()
     if germline is None:
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
+            raise OSError(
+                'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
         gml = gml+'imgt/'+org+'/vdj/'
     else:
         env['GERMLINE'] = germline
@@ -103,15 +108,16 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
     else:
         igbo = igblast_output
 
-    cellranger_annotation = "{}/{}".format(os.path.dirname(fasta), os.path.basename(fasta).replace('.fasta', '_annotations.csv'))
+    cellranger_annotation = "{}/{}".format(os.path.dirname(
+        fasta), os.path.basename(fasta).replace('.fasta', '_annotations.csv'))
 
     if extended:
         cmd = ['MakeDb.py', 'igblast',
-            '-i', igbo,
-            '-s', fasta,
-            '-r', gml,
-            '--10x', cellranger_annotation,
-            '--extended']
+               '-i', igbo,
+               '-s', fasta,
+               '-r', gml,
+               '--10x', cellranger_annotation,
+               '--extended']
     else:
         cmd = ['MakeDb.py', 'igblast',
                '-i', igbo,
@@ -121,9 +127,10 @@ def makedb_igblast(fasta, igblast_output = None, germline = None, org = 'human',
 
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd, env=env) # logs are printed to terminal
+    run(cmd, env=env)  # logs are printed to terminal
 
-def parsedb_heavy(db_file, verbose = False):
+
+def parsedb_heavy(db_file, verbose=False):
     """
     Parses AIRR table (heavy chain contigs only).
 
@@ -133,24 +140,25 @@ def parsedb_heavy(db_file, verbose = False):
         path to AIRR table.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    
-    """    
+
+    """
     outname = os.path.basename(db_file).split('.tsv')[0] + '_heavy'
-    
+
     cmd = ['ParseDb.py', 'select',
            '-d', db_file,
            '-f', 'locus',
            '-u', 'IGH',
            '--logic', 'all',
            '--regex',
-           '--outname', outname 
+           '--outname', outname
            ]
-     
+
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd) # logs are printed to terminal
+    run(cmd)  # logs are printed to terminal
 
-def parsedb_light(db_file, verbose = False):
+
+def parsedb_light(db_file, verbose=False):
     """
     Parses AIRR table (light chain contigs only).
 
@@ -160,24 +168,25 @@ def parsedb_light(db_file, verbose = False):
         path to AIRR table.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    
-    """    
+
+    """
     outname = os.path.basename(db_file).split('.tsv')[0] + '_light'
-    
+
     cmd = ['ParseDb.py', 'select',
            '-d', db_file,
            '-f', 'locus',
            '-u', 'IG[LK]',
            '--logic', 'all',
            '--regex',
-           '--outname', outname 
+           '--outname', outname
            ]
-     
+
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd) # logs are printed to terminal
+    run(cmd)  # logs are printed to terminal
 
-def creategermlines(db_file, germtypes = None, germline = None, org = 'human', genotype_fasta = None, v_field = None, cloned = False, mode = None, verbose = False):
+
+def creategermlines(db_file, germtypes=None, germline=None, org='human', genotype_fasta=None, v_field=None, cloned=False, mode=None, verbose=False):
     """
     Wrapper for CreateGermlines.py for reconstructing germline sequences,
 
@@ -201,202 +210,224 @@ def creategermlines(db_file, germtypes = None, germline = None, org = 'human', g
         whether to run on heavy or light mode. If left as None, heavy and light will be run together.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    
+
     """
     env = os.environ.copy()
     if germline is None:
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError('Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
+            raise OSError(
+                'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
         gml = gml+'imgt/'+org+'/vdj/'
     else:
         env['GERMLINE'] = germline
         gml = germline
-    
+
     if germtypes is None:
         germ_type = 'dmask'
     else:
         germ_type = germtypes
 
-    if cloned:        
+    if cloned:
         if mode == 'heavy':
-            print('            Reconstructing heavy chain {} germline sequences with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing heavy chain {} germline sequences with {} for each clone.'.format(
+                germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file, 
-                        '-g', germ_type, 
-                        '--cloned',
-                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_' +
+                           org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', gml,
+                           '--vf', v_field
+                           ]
             else:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', genotype_fasta, gml+'/imgt_'+org +
+                           '_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', genotype_fasta, gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', genotype_fasta, gml,
+                           '--vf', v_field
+                           ]
         elif mode == 'light':
-            print('            Reconstructing light chain {} germline sequences with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing light chain {} germline sequences with {} for each clone.'.format(
+                germ_type, v_field))
             if germline is None:
                 cmd = ['CreateGermlines.py',
-                    '-d', db_file,
-                    '-g', germ_type,
-                    '--cloned',
-                    '-r', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
-                    '--vf', v_field
-                    ]
+                       '-d', db_file,
+                       '-g', germ_type,
+                       '--cloned',
+                       '-r', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml +
+                       '/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                       '--vf', v_field
+                       ]
             else:
                 cmd = ['CreateGermlines.py',
-                    '-d', db_file,
-                    '-g', germ_type,
-                    '--cloned',
-                    '-r', gml,
-                    '--vf', v_field
-                    ]
+                       '-d', db_file,
+                       '-g', germ_type,
+                       '--cloned',
+                       '-r', gml,
+                       '--vf', v_field
+                       ]
         elif mode is None:
-            print('            Reconstructing {} germline sequences with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing {} germline sequences with {} for each clone.'.format(
+                germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_' +
+                           org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml +
+                               '/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', gml,
+                           '--vf', v_field
+                           ]
             else:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org +
+                           '_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_' +
+                           org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '--cloned',
-                        '-r', genotype_fasta, gml,
-                        '--vf', v_field
-                        ]
-    else:        
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '--cloned',
+                           '-r', genotype_fasta, gml,
+                           '--vf', v_field
+                           ]
+    else:
         if mode == 'heavy':
-            print('            Reconstructing heavy chain {} germline sequences with {}.'.format(germ_type, v_field))
+            print('            Reconstructing heavy chain {} germline sequences with {}.'.format(
+                germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_' +
+                           org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', gml,
+                           '--vf', v_field
+                           ]
             else:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', genotype_fasta, gml+'/imgt_'+org +
+                           '_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', genotype_fasta, gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', genotype_fasta, gml,
+                           '--vf', v_field
+                           ]
         elif mode == 'light':
-            print('            Reconstructing light chain {} germline sequences with {}.'.format(germ_type, v_field))
+            print('            Reconstructing light chain {} germline sequences with {}.'.format(
+                germ_type, v_field))
             if germline is None:
-                    cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
-                        '--vf', v_field
-                        ]
+                cmd = ['CreateGermlines.py',
+                       '-d', db_file,
+                       '-g', germ_type,
+                       '-r', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml +
+                       '/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                       '--vf', v_field
+                       ]
             else:
                 cmd = ['CreateGermlines.py',
-                    '-d', db_file,
-                    '-g', germ_type,
-                    '-r', gml,
-                    '--vf', v_field
-                    ]
+                       '-d', db_file,
+                       '-g', germ_type,
+                       '-r', gml,
+                       '--vf', v_field
+                       ]
         elif mode is None:
-            print('            Reconstructing {} germline sequences with {} for each clone.'.format(germ_type, v_field))
+            print('            Reconstructing {} germline sequences with {} for each clone.'.format(
+                germ_type, v_field))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', gml+'/imgt_'+org+'_IGHV.fasta', gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_' +
+                           org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml +
+                               '/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', gml,
+                           '--vf', v_field
+                           ]
             else:
                 if germline is None:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org+'_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_'+org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', genotype_fasta, gml+'/imgt_'+org+'_IGHD.fasta', gml+'/imgt_'+org+'_IGHJ.fasta', gml+'/imgt_'+org +
+                           '_IGKV.fasta', gml+'/imgt_'+org+'_IGKJ.fasta', gml+'/imgt_' +
+                           org+'_IGLV.fasta', gml+'/imgt_'+org+'_IGLJ.fasta',
+                           '--vf', v_field
+                           ]
                 else:
                     cmd = ['CreateGermlines.py',
-                        '-d', db_file,
-                        '-g', germ_type,
-                        '-r', genotype_fasta, gml,
-                        '--vf', v_field
-                        ]
+                           '-d', db_file,
+                           '-g', germ_type,
+                           '-r', genotype_fasta, gml,
+                           '--vf', v_field
+                           ]
 
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd, env = env) # logs are printed to terminal
+    run(cmd, env=env)  # logs are printed to terminal
 
-def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileformat = 'airr', novel_ = 'YES', verbose = False):
+
+def tigger_genotype(data, v_germline=None, outdir=None, org='human', fileformat='airr', novel_='YES', verbose=False):
     """
     Reassign alleles with TIgGER in R.
 
@@ -416,7 +447,7 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
         whether or not to run novel allele discovery. Default is 'YES'.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
-    
+
     """
     start_time = time()
     env = os.environ.copy()
@@ -430,10 +461,11 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
         if os.path.isdir(v_germline):
             gml = v_germline.rstrip('/') + 'imgt_'+org+'_IGHV.fasta'
             if not os.path.isfile(gml):
-                raise OSError("Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.".format(gml))        
-        else:            
+                raise OSError("Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.".format(gml))
+        else:
             if not v_germline.endswith('.fasta'):
-                raise OSError('Input for germline is incorrect {}. Please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.'.format(v_germline))
+                raise OSError(
+                    'Input for germline is incorrect {}. Please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.'.format(v_germline))
             if (os.path.isfile(v_germline)) & ('ighv' in v_germline.lower()):
                 gml = v_germline
 
@@ -453,13 +485,14 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
     print('      Reassigning alleles')
     if verbose:
         print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd, env=env) # logs are printed to terminal
+    run(cmd, env=env)  # logs are printed to terminal
     elapsed_time_secs = time() - start_time
-    msg = "tigger-genotype execution took: %s secs (Wall clock time)\n" % timedelta(seconds=round(elapsed_time_secs))
+    msg = "tigger-genotype execution took: %s secs (Wall clock time)\n" % timedelta(
+        seconds=round(elapsed_time_secs))
     if verbose:
         print(msg)
 
-## commented out originally in ConvertDb, not sure if it works properly
+# commented out originally in ConvertDb, not sure if it works properly
 # def insertGaps(db_file, references=None, format=default_format,
 #                out_file=None, out_args=default_out_args):
 #     """
@@ -604,6 +637,7 @@ def tigger_genotype(data, v_germline=None, outdir=None, org = 'human', fileforma
 
 #     return imgt_dict
 
+
 def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cutoff=0.1, min_counts=None, max_counts=None, blacklist=None):
     """
     Recipe for running a standard scanpy QC workflow.
@@ -626,13 +660,13 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
         maximum number of counts required for a cell to pass filtering. Default is None.
     blacklist : sequence, optional
         if provided, will exclude these genes from highly variable genes list.
-    
+
     Returns
     -------
     `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
     """
     _adata = self.copy()
-    # run scrublet    
+    # run scrublet
     try:
         import scrublet as scr
     except:
@@ -642,13 +676,15 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
     doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
     _adata.obs['scrublet_score'] = doublet_scores
     # overcluster prep. run basic scanpy pipeline
-    sc.pp.filter_cells(_adata, min_genes = 0)
+    sc.pp.filter_cells(_adata, min_genes=0)
     mito_genes = _adata.var_names.str.startswith('MT-')
-    _adata.obs['percent_mito'] = np.sum(_adata[:, mito_genes].X, axis = 1) / np.sum(_adata.X, axis = 1)*100
-    _adata.obs['n_counts'] = _adata.X.sum(axis = 1)
-    sc.pp.normalize_total(_adata, target_sum = 1e4)
+    _adata.obs['percent_mito'] = np.sum(
+        _adata[:, mito_genes].X, axis=1) / np.sum(_adata.X, axis=1)*100
+    _adata.obs['n_counts'] = _adata.X.sum(axis=1)
+    sc.pp.normalize_total(_adata, target_sum=1e4)
     sc.pp.log1p(_adata)
-    sc.pp.highly_variable_genes(_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    sc.pp.highly_variable_genes(
+        _adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
     for i in _adata.var.index:
         if re.search('^TR[AB][VDJ]|^IG[HKL][VDJC]', i):
             _adata.var.at[i, 'highly_variable'] = False
@@ -662,27 +698,34 @@ def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cu
     # overclustering proper - do basic clustering first, then cluster each cluster
     sc.tl.leiden(_adata)
     for clus in list(np.unique(_adata.obs['leiden']))[0]:
-        sc.tl.leiden(_adata, restrict_to=('leiden',[clus]), key_added = 'leiden_R')
-    for clus in list(np.unique(_adata.obs['leiden']))[1:]: # weird how the new anndata/scanpy is forcing this
-        sc.tl.leiden(_adata, restrict_to=('leiden_R',[clus]), key_added = 'leiden_R')
+        sc.tl.leiden(_adata, restrict_to=(
+            'leiden', [clus]), key_added='leiden_R')
+    # weird how the new anndata/scanpy is forcing this
+    for clus in list(np.unique(_adata.obs['leiden']))[1:]:
+        sc.tl.leiden(_adata, restrict_to=(
+            'leiden_R', [clus]), key_added='leiden_R')
     # compute the cluster scores - the median of Scrublet scores per overclustered cluster
     for clus in np.unique(_adata.obs['leiden_R']):
-        _adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_cluster_score'] = \
-            np.median(_adata.obs.loc[_adata.obs['leiden_R']==clus, 'scrublet_score'])
+        _adata.obs.loc[_adata.obs['leiden_R'] == clus, 'scrublet_cluster_score'] = \
+            np.median(
+                _adata.obs.loc[_adata.obs['leiden_R'] == clus, 'scrublet_score'])
     # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
     med = np.median(_adata.obs['scrublet_cluster_score'])
-    mask = _adata.obs['scrublet_cluster_score']>med
+    mask = _adata.obs['scrublet_cluster_score'] > med
     mad = np.median(_adata.obs['scrublet_cluster_score'][mask]-med)
     # 1 sided test for catching outliers
-    pvals = 1-scipy.stats.norm.cdf(_adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
+    pvals = 1 - \
+        scipy.stats.norm.cdf(
+            _adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826*mad)
     _adata.obs['scrublet_score_bh_pval'] = bh(pvals)
     # threshold the p-values to get doublet calls.
     _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
     _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index = _adata.obs.index)) | \
+    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes']], index=_adata.obs.index)) | \
         (_adata.obs['percent_mito'] >= mito_cutoff) | \
-            (_adata.obs['is_doublet'] == True)
+        (_adata.obs['is_doublet'] == True)
 
     # removing columns that probably don't need anymore
-    _adata.obs = _adata.obs.drop(['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval'], axis = 1)
+    _adata.obs = _adata.obs.drop(
+        ['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval'], axis=1)
     self.obs = _adata.obs.copy()
