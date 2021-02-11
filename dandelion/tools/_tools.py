@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 10:57:48
+# @Last Modified time: 2021-02-11 12:26:27
 
 import os
 import sys
@@ -11,6 +11,8 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from ..utilities._utilities import *
+from ..utilities._core import *
+from ..utilities._io import *
 from ._network import *
 from collections import defaultdict
 from itertools import groupby

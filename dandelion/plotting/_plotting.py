@@ -2,12 +2,14 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 13:59:19
+# @Last Modified time: 2021-02-11 12:26:50
 
 import seaborn as sns
 import pandas as pd
 import numpy as np
 from ..utilities._utilities import *
+from ..utilities._core import *
+from ..utilities._io import *
 from ..tools._diversity import rarefun
 from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt

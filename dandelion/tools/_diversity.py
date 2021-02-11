@@ -2,12 +2,14 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 13:57:29
+# @Last Modified time: 2021-02-11 12:26:39
 
 import pandas as pd
 import numpy as np
 import networkx as nx
 from ..utilities._utilities import *
+from ..utilities._core import *
+from ..utilities._io import *
 from ..tools._network import clone_centrality, clone_degree, generate_network
 from scipy.special import gammaln
 from anndata import AnnData

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 10:56:35
+# @Last Modified time: 2021-02-11 12:26:45
 
 import sys
 import os
@@ -15,6 +15,8 @@ from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
 from ..utilities._utilities import *
+from ..utilities._core import *
+from ..utilities._io import *
 from .external._preprocessing import assigngenes_igblast, makedb_igblast, parsedb_heavy, parsedb_light, tigger_genotype, creategermlines
 from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
 from changeo.Gene import buildGermline
