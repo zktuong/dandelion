@@ -82,7 +82,7 @@ Utilities: `utl`
 
 Dandelion
 =========
-.. module:: dandelion.utilities.Dandelion
+.. module:: dandelion.Dandelion
 
 .. autosummary::
    :toctree: modules
