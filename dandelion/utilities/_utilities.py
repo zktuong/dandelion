@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 14:00:45
+# @Last Modified time: 2021-02-11 11:02:49
 
 import sys
 import os
@@ -564,7 +564,7 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus='ig', split=True, co
     return(final_result)
 
 
-def retrieve_result_dict_singular(query, data, meta_h, locus='ig', collapse=True, verbose=False):
+def retrieve_result_dict_singular(query, data, meta_h, locus='ig', collapse=True, combine=False, verbose=False):
 
     df_hl = defaultdict(dict)
 
@@ -668,6 +668,13 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         meta_[k] = retrieve_metadata(self.data, query=k, verbose=verbose, **v)
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
 
+    if 'locus_heavy' in tmp_metadata:
+        suffix_h = '_heavy'
+        suffix_l = '_light'
+    else:
+        suffix_h = ''
+        suffix_l = ''
+
     if clonekey in init_dict:
         tmp = tmp_metadata[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop=False)
@@ -688,56 +695,47 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             cl for cl in tmp_metadata if cl not in [str(clonekey), str(clonekey)+'_by_size']]]
 
     for i in tmp_metadata.index:
-        if tmp_metadata.loc[i, 'locus_heavy'] == tmp_metadata.loc[i, 'locus_heavy']:
-            if not pd.isnull(tmp_metadata.loc[i, 'locus_light']):
-                if tmp_metadata.loc[i, 'locus_light'] != '':
+        if tmp_metadata.loc[i, 'locus'+suffix_h] == tmp_metadata.loc[i, 'locus'+suffix_h]:
+            if not pd.isnull(tmp_metadata.loc[i, 'locus'+suffix_l]):
+                if tmp_metadata.loc[i, 'locus'+suffix_l] != '':
                     tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
-                                                                    'locus_heavy']+' + ' + tmp_metadata.loc[i, 'locus_light']
+                                                                    'locus'+suffix_h]+' + ' + tmp_metadata.loc[i, 'locus'+suffix_l]
                 else:
                     tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
-                                                                    'locus_heavy'] + '_only'
-            elif tmp_metadata.loc[i, 'locus_heavy'] != '':
+                                                                    'locus'+suffix_h] + '_only'
+            elif tmp_metadata.loc[i, 'locus'+suffix_h] != '':
                 tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
-                                                                'locus_heavy'] + '_only'
+                                                                'locus'+suffix_h] + '_only'
             else:
                 tmp_metadata.at[i, 'status'] = 'unassigned'
         else:
             tmp_metadata.at[i, 'status'] = 'unassigned'
+    tmp_metadata['status_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['status']]
+
     for i in tmp_metadata.index:
-        if tmp_metadata.loc[i, 'locus_heavy'] == tmp_metadata.loc[i, 'locus_heavy']:
-            if not pd.isnull(tmp_metadata.loc[i, 'locus_light']):
-                if tmp_metadata.loc[i, 'locus_light'] != '':
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
-                                                                    'locus_heavy']+' + ' + tmp_metadata.loc[i, 'locus_light']
-                else:
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
-                                                                    'locus_heavy'] + '_only'
-            elif tmp_metadata.loc[i, 'locus_heavy'] != '':
-                tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
-                                                                'locus_heavy'] + '_only'
-            else:
-                tmp_metadata.at[i, 'status'] = 'unassigned'
-        else:
-            tmp_metadata.at[i, 'status'] = 'unassigned'
-        if tmp_metadata.loc[i, 'productive_heavy'] == tmp_metadata.loc[i, 'productive_heavy']:
-            if not pd.isnull(tmp_metadata.loc[i, 'productive_light']):
-                if tmp_metadata.loc[i, 'productive_light'] != '':
+        if tmp_metadata.loc[i, 'productive'+suffix_h] == tmp_metadata.loc[i, 'productive'+suffix_h]:
+            if not pd.isnull(tmp_metadata.loc[i, 'productive'+suffix_l]):
+                if tmp_metadata.loc[i, 'productive'+suffix_l] != '':
                     tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[i,
-                                                                        'productive_heavy']+' + ' + tmp_metadata.loc[i, 'productive_light']
+                                                                        'productive'+suffix_h]+' + ' + tmp_metadata.loc[i, 'productive'+suffix_l]
                 else:
                     tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[i,
-                                                                        'productive_heavy']
-            elif tmp_metadata.loc[i, 'productive_heavy'] != '':
+                                                                        'productive'+suffix_h]
+            elif tmp_metadata.loc[i, 'productive'+suffix_h] != '':
                 tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[i,
-                                                                    'productive_heavy']
+                                                                    'productive'+suffix_h]
             else:
                 tmp_metadata.at[i, 'productive'] = 'unassigned'
         else:
             tmp_metadata.at[i, 'productive'] = 'unassigned'
+    tmp_metadata['productive_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['productive']]
+
     conversion_dict = {'igha1': 'IgA', 'igha2': 'IgA', 'ighm': 'IgM', 'ighd': 'IgD', 'ighe': 'IgE', 'ighg1': 'IgG', 'ighg2': 'IgG', 'ighg3': 'IgG', 'ighg4': 'IgG', 'igkc': 'IgK', 'iglc1': 'IgL', 'iglc2': 'IgL', 'iglc3': 'IgL', 'iglc4': 'IgL', 'iglc5': 'IgL', 'iglc6': 'IgL', 'iglc7': 'IgL',
                        'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'NA': 'unassigned', 'None': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}  # the key for IgG being igh is on purpose because of how the counter works
     isotype = []
-    for k in tmp_metadata['c_call_heavy']:
+    for k in tmp_metadata['c_call'+suffix_h]:
         if k == k:
             if ',' in k:
                 k = '|'.join(k.split(','))
@@ -749,6 +747,9 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         else:
             isotype.append(k)
     tmp_metadata['isotype'] = isotype
+    tmp_metadata['isotype_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['isotype']]
+
     vdj_gene_calls = ['v_call', 'd_call', 'j_call']
     if collapse_alleles:
         for x in vdj_gene_calls:
@@ -761,38 +762,40 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
     for i in tmp_metadata.index:
         try:
             if 'v_call_genotyped' in cols:
-                hv_ = tmp_metadata.at[i, 'v_call_genotyped_heavy'].split('|')
+                hv_ = tmp_metadata.at[i,
+                                      'v_call_genotyped'+suffix_h].split('|')
             else:
-                hv_ = tmp_metadata.at[i, 'v_call_heavy'].split('|')
+                hv_ = tmp_metadata.at[i, 'v_call'+suffix_h].split('|')
         except:
             if 'v_call_genotyped' in cols:
-                hv_ = tmp_metadata.at[i, 'v_call_genotyped_heavy']
+                hv_ = tmp_metadata.at[i, 'v_call_genotyped'+suffix_h]
             else:
-                hv_ = tmp_metadata.at[i, 'v_call_heavy']
+                hv_ = tmp_metadata.at[i, 'v_call'+suffix_h]
         try:
-            hj_ = tmp_metadata.at[i, 'j_call_heavy'].split('|')
+            hj_ = tmp_metadata.at[i, 'j_call'+suffix_h].split('|')
         except:
-            hj_ = tmp_metadata.at[i, 'j_call_heavy']
+            hj_ = tmp_metadata.at[i, 'j_call'+suffix_h]
         try:
             if 'v_call_genotyped' in cols:
-                lv_ = tmp_metadata.at[i, 'v_call_genotyped_light'].split('|')
+                lv_ = tmp_metadata.at[i,
+                                      'v_call_genotyped'+suffix_l].split('|')
             else:
-                lv_ = tmp_metadata.at[i, 'v_call_light'].split('|')
+                lv_ = tmp_metadata.at[i, 'v_call'+suffix_l].split('|')
         except:
             if 'v_call_genotyped' in cols:
-                lv_ = tmp_metadata.at[i, 'v_call_genotyped_light']
+                lv_ = tmp_metadata.at[i, 'v_call_genotyped'+suffix_l]
             else:
-                lv_ = tmp_metadata.at[i, 'v_call_light']
+                lv_ = tmp_metadata.at[i, 'v_call'+suffix_l]
         try:
-            lj_ = tmp_metadata.at[i, 'j_call_light'].split('|')
+            lj_ = tmp_metadata.at[i, 'j_call'+suffix_l].split('|')
         except:
-            lj_ = tmp_metadata.at[i, 'j_call_light']
+            lj_ = tmp_metadata.at[i, 'j_call'+suffix_l]
         multi_h = []
         multi_l = []
         if len(hv_) > 1:
-            multi_h.append(['Multi_heavy_v'])
+            multi_h.append(['Multi'+suffix_h+'_v'])
         if len(hj_) > 1:
-            multi_h.append(['Multi_heavy_j'])
+            multi_h.append(['Multi'+suffix_h+'_j'])
         if len(lv_) > 1:
             multi_l.append(['Multi_light_v'])
         if len(lj_) > 1:
@@ -812,7 +815,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             multi[i] = 'unassigned'
     tmp_metadata['vdj_status_detail'] = pd.Series(multi)
     tmp_metadata['vdj_status'] = ['Multi' if bool(re.search(
-        'Multi_heavy(.*)Multi_light', i)) else 'Multi' if '|' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
+        'Multi'+suffix_h+'(.*)Multi'+suffix_l, i)) else 'Multi' if '|' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
 
     self.metadata = tmp_metadata.copy()
 
@@ -1418,7 +1421,7 @@ def concat(arrays, check_unique=True):
     return(out)
 
 
-def read_10x_airr(file, sample_id=None):
+def read_10x_airr(file):
     """
     Reads the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
@@ -1436,11 +1439,6 @@ def read_10x_airr(file, sample_id=None):
     """
     if os.path.isfile(file):
         dat = load_data(file)
-    if sample_id is None:
-        sampid = 'sample_1'
-    else:
-        sampid = sample_id
-    dat['sample_id'] = sampid
     # get all the v,d,j,c calls
     if 'locus' not in dat:
         tmp = [(v, d, j, c) for v, d, j, c in zip(
@@ -1500,4 +1498,3 @@ def read_scirpy(adata):
     except:
         raise ImportError('Please install scirpy. pip install scirpy')
     return(ir.io.to_dandelion(Dandelion))
-

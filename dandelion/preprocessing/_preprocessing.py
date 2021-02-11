@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 13:58:15
+# @Last Modified time: 2021-02-11 10:56:35
 
 import sys
 import os
@@ -1876,6 +1876,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         dat = load_data(data.data)
     else:
         dat = load_data(data)
+
+    adata_ = adata.copy()
+
     h = Tree()
     l = Tree()
     h_umi = Tree()
@@ -1891,20 +1894,19 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     if 'cell_id' not in dat.columns:
         raise AttributeError(
             "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering.")
-    if 'filter_rna' not in adata.obs:
-        raise AttributeError(
-            "AnnData obs does not contain 'filter_rna' column. Please run `pp.recipe_scanpy_qc` before continuing.")
+    if 'filter_rna' not in adata_.obs:
+        adata_.obs['filter_rna'] = False
 
     barcode = list(set(dat['cell_id']))
 
-    bcr_check = pd.DataFrame(index=adata.obs_names)
+    bcr_check = pd.DataFrame(index=adata_.obs_names)
     bc_ = {}
     for b in barcode:
         bc_.update({b: True})
     bcr_check['has_bcr'] = pd.Series(bc_)
     bcr_check.replace(np.nan, 'No_BCR', inplace=True)
-    adata.obs['has_bcr'] = pd.Series(bcr_check['has_bcr'])
-    adata.obs['has_bcr'] = adata.obs['has_bcr'].astype('category')
+    adata_.obs['has_bcr'] = pd.Series(bcr_check['has_bcr'])
+    adata_.obs['has_bcr'] = adata_.obs['has_bcr'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
@@ -1929,8 +1931,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             dat['locus'] == 'IGH')]['sequence_id'])
         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
                                       & (dat['locus'] == 'IGH')]['umi_count']]
-        hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'] == 'IGH')]['sequence_alignment']]
+        if 'sequence_alignment' in dat:
+            hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
+                dat['locus'] == 'IGH')]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b]))
                                       & (dat['locus'] == 'IGH')]['duplicate_count']]
         hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
@@ -1940,43 +1943,45 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
         lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
             dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
-        lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-        # lc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['c_call']]
+        if 'sequence_alignment' in dat:
+            lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
+                dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
 
         h[b] = hc_id
         h_umi[b] = hc_umi
-        h_seq[b] = hc_seq
+        if 'sequence_alignment' in dat:
+            h_seq[b] = hc_seq        
         h_dup[b] = hc_dup
         h_ccall[b] = hc_ccall
 
         l[b] = lc_id
         l_umi[b] = lc_umi
-        l_seq[b] = lc_seq
-        # l_ccall[b] = lc_ccall
+        if 'sequence_alignment' in dat:
+            l_seq[b] = lc_seq
 
         # marking doublets defined by heavy chains
         if len(h[b]) > 1:
             ccall = []
-            if len(list(set(h_seq[b]))) == 1:
-                highest_umi_h = max(h_umi[b])
-                highest_umi_h_idx = [i for i, j in enumerate(
-                    h_umi[b]) if j == highest_umi_h]
-                keep_index_h = highest_umi_h_idx[0]
-                drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h+1:])
-                keep_hc_contig = h[b][keep_index_h]
-                dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                    np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1:]))
-                hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'] == 'IGH')]['sequence_id'])
-                hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'] == 'IGH')]['umi_count']]
-                hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'] == 'IGH')]['duplicate_count']]
-                h[b] = hc_id
-                h_umi[b] = hc_umi
-                h_dup[b] = hc_dup
-                h_seq[b] = hc_seq
+            if 'sequence_alignment' in dat:
+                if len(list(set(h_seq[b]))) == 1:
+                    highest_umi_h = max(h_umi[b])
+                    highest_umi_h_idx = [i for i, j in enumerate(
+                        h_umi[b]) if j == highest_umi_h]
+                    keep_index_h = highest_umi_h_idx[0]
+                    drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h+1:])
+                    keep_hc_contig = h[b][keep_index_h]
+                    dat.at[keep_hc_contig, 'duplicate_count'] = int(
+                        np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1:]))
+                    hc_id = list(dat[(dat['cell_id'].isin([b])) & (
+                        dat['locus'] == 'IGH')]['sequence_id'])
+                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                        dat['locus'] == 'IGH')]['umi_count']]
+                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                        dat['locus'] == 'IGH')]['duplicate_count']]
+                    h[b] = hc_id
+                    h_umi[b] = hc_umi
+                    h_dup[b] = hc_dup
+                    h_seq[b] = hc_seq
             if len(h[b]) > 1:
                 if rescue_igh:
                     highest_umi_h = max(h_umi[b])
@@ -1984,55 +1989,45 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     highest_umi_idx = [i for i, j in enumerate(
                         h_umi[b]) if j == highest_umi_h]
                     keep_index_h = highest_umi_idx[0]
-                    umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b]
-                                [:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                    umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1:]]
                     sum_umi = sum(h_umi[b]+h_dup[b])
-                    if len(highest_umi_idx) > 1:
-                        h_doublet.append(b)
-                    if sum_umi < 4:
-                        h_doublet.append(b)
-                    if any(umi_test):
-                        h_doublet.append(b)
-                    if len(highest_umi_idx) == 1:
-                        other_umi_idx = [i for i, j in enumerate(
-                            h_umi[b]) if j != highest_umi_h]
-                        umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
-                                     [:keep_index_h] + h_umi[b][keep_index_h+1:]]
-                        umi_test_dict = dict(zip(other_umi_idx, umi_test_))
-                        for otherindex in umi_test_dict:
-                            if umi_test_dict[otherindex]:
-                                drop_contig.append(h[b][otherindex])
-                                ccall.append(h_ccall[b][otherindex])
-                        # experimental: see if this can pick up any naive IgM+IgD+ cells?
-                        if len(ccall) == 1:
-                            try:
-                                call_list = list(
-                                    h_ccall[b][keep_index_h])+ccall
-                                if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
-                                    dat.at[keep_hc_contig,
-                                           'c_call'] = 'IGHM|IGHD'
-                            except:
-                                pass
+                    other_umi_idx = [i for i, j in enumerate(h_umi[b]) if j != highest_umi_h]                    
+                    if ('IGHM' and 'IGHD') not in h_ccall[b]:
+                        if len(highest_umi_idx) > 1:
+                            h_doublet.append(b)
+                        if sum_umi < 4:
+                            h_doublet.append(b)
+                        if any(umi_test):
+                            h_doublet.append(b)
+                        if len(highest_umi_idx) == 1:
+                            other_umi_idx = [i for i, j in enumerate(h_umi[b]) if j != highest_umi_h]
+                            umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                            umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                            for otherindex in umi_test_dict:
+                                if umi_test_dict[otherindex]:
+                                    drop_contig.append(h[b][otherindex])
+                                    ccall.append(h_ccall[b][otherindex])                            
                 else:
                     h_doublet.append(b)
         if len(l[b]) > 1:
-            if len(list(set(l_seq[b]))) == 1:
-                highest_umi_l = max(l_umi[b])
-                highest_umi_l_idx = [i for i, j in enumerate(
-                    l_umi[b]) if j == highest_umi_l]
-                keep_index_l = highest_umi_l_idx[0]
-                drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l+1:])
-                keep_lc_contig = l[b][keep_index_l]
-                dat.at[keep_lc_contig, 'duplicate_count'] = int(
-                    np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1:]))
-                lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
-                l[b] = lc_id
-                l_umi[b] = lc_umi
-                l_seq[b] = lc_seq
-            if len(list(set(l_seq[b]))) > 1:
+            if 'sequence_alignment' in dat:
+                if len(list(set(l_seq[b]))) == 1:
+                    highest_umi_l = max(l_umi[b])
+                    highest_umi_l_idx = [i for i, j in enumerate(
+                        l_umi[b]) if j == highest_umi_l]
+                    keep_index_l = highest_umi_l_idx[0]
+                    drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l+1:])
+                    keep_lc_contig = l[b][keep_index_l]
+                    dat.at[keep_lc_contig, 'duplicate_count'] = int(
+                        np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1:]))
+                    lc_id = list(dat[(dat['cell_id'].isin([b])) & (
+                        dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                        dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                    l[b] = lc_id
+                    l_umi[b] = lc_umi
+                    l_seq[b] = lc_seq            
+            if len(list(set(l[b]))) > 1:
                 # also apply the same cut off to multiple light chains
                 highest_umi_l = max(l_umi[b])
                 highest_umi_l_idx = [i for i, j in enumerate(
@@ -2177,8 +2172,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 dat['locus'] == 'IGH')]['sequence_id'])
             hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
                                           & (dat['locus'] == 'IGH')]['umi_count']]
-            hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['sequence_alignment']]
+            if 'sequence_alignment' in dat:
+                hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
+                    dat['locus'] == 'IGH')]['sequence_alignment']]
             hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
                 dat['locus'] == 'IGH')]['duplicate_count']]
             hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
@@ -2188,46 +2184,48 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                 dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
             lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
                 dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
-            lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
-            # lc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL']))]['c_call']]
+            if 'sequence_alignment' in dat:
+                lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
+                    dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
 
             h[b] = hc_id
             h_umi[b] = hc_umi
-            h_seq[b] = hc_seq
+            
+            if 'sequence_alignment' in dat:
+                h_seq[b] = hc_seq
             h_dup[b] = hc_dup
             h_ccall[b] = hc_ccall
 
             l[b] = lc_id
             l_umi[b] = lc_umi
-            l_seq[b] = lc_seq
-            # l_ccall[b] = lc_ccall
-            # l_dup[b] = lc_dup
-
+            if 'sequence_alignment' in dat:
+                l_seq[b] = lc_seq
+            
             # marking doublets defined by heavy chains
             if len(h[b]) > 1:
                 ccall = []
-                if len(list(set(h_seq[b]))) == 1:
-                    highest_umi_h = max(h_umi[b])
-                    highest_umi_h_idx = [i for i, j in enumerate(
-                        h_umi[b]) if j == highest_umi_h]
-                    keep_index_h = highest_umi_h_idx[0]
-                    drop_contig.append(
-                        h[b][:keep_index_h] + h[b][keep_index_h+1:])
-                    keep_hc_contig = h[b][keep_index_h]
-                    dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                        np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1:]))
-
-                    hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['sequence_id'])
-                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['umi_count']]
-                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['duplicate_count']]
-                    h[b] = hc_id
-                    h_umi[b] = hc_umi
-                    h_dup[b] = hc_dup
-                    h_seq[b] = hc_seq
+                if 'sequence_alignment' in dat:
+                    if len(list(set(h_seq[b]))) == 1:
+                        highest_umi_h = max(h_umi[b])
+                        highest_umi_h_idx = [i for i, j in enumerate(
+                            h_umi[b]) if j == highest_umi_h]
+                        keep_index_h = highest_umi_h_idx[0]
+                        drop_contig.append(
+                            h[b][:keep_index_h] + h[b][keep_index_h+1:])
+                        keep_hc_contig = h[b][keep_index_h]
+                        dat.at[keep_hc_contig, 'duplicate_count'] = int(
+                            np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h+1:]))
+    
+                        hc_id = list(dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'] == 'IGH')]['sequence_id'])
+                        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'] == 'IGH')]['umi_count']]
+                        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'] == 'IGH')]['duplicate_count']]
+                        h[b] = hc_id
+                        h_umi[b] = hc_umi
+                        h_dup[b] = hc_dup
+                        h_seq[b] = hc_seq
                 if len(h[b]) > 1:
                     if rescue_igh:
                         highest_umi_h = max(h_umi[b])
@@ -2239,54 +2237,46 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b]
                                     [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                         sum_umi = sum(h_umi[b]+h_dup[b])
-                        if len(highest_umi_idx) > 1:
-                            h_doublet.append(b)
-                        if sum_umi < 4:
-                            h_doublet.append(b)
-                        if any(umi_test):
-                            h_doublet.append(b)
-                        if len(highest_umi_idx) == 1:
-                            other_umi_idx = [i for i, j in enumerate(
-                                h_umi[b]) if j != highest_umi_h]
-                            umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
-                                         [:keep_index_h] + h_umi[b][keep_index_h+1:]]
-                            umi_test_dict = dict(zip(other_umi_idx, umi_test_))
-                            for otherindex in umi_test_dict:
-                                if umi_test_dict[otherindex]:
-                                    drop_contig.append(h[b][otherindex])
-                                    ccall.append(h_ccall[b][otherindex])
-                            # experimental: see if this can pick up any naive IgM+IgD+ cells?
-                            if len(ccall) == 1:
-                                try:
-                                    call_list = list(
-                                        h_ccall[b][keep_index_h])+ccall
-                                    if call_list == ['IGHM', 'IGHD'] or call_list == ['IGHD', 'IGHM']:
-                                        dat.at[keep_hc_contig,
-                                               'c_call'] = 'IGHM|IGHD'
-                                except:
-                                    pass
+                        if ('IGHM' and 'IGHD') not in h_ccall[b]:
+                            if len(highest_umi_idx) > 1:
+                                h_doublet.append(b)
+                            if sum_umi < 4:
+                                h_doublet.append(b)
+                            if any(umi_test):
+                                h_doublet.append(b)
+                            if len(highest_umi_idx) == 1:
+                                other_umi_idx = [i for i, j in enumerate(
+                                    h_umi[b]) if j != highest_umi_h]
+                                umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
+                                            [:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                                umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                                for otherindex in umi_test_dict:
+                                    if umi_test_dict[otherindex]:
+                                        drop_contig.append(h[b][otherindex])
+                                        ccall.append(h_ccall[b][otherindex])                            
                     else:
                         h_doublet.append(b)
 
             if len(l[b]) > 1:
-                if len(list(set(l_seq[b]))) == 1:
-                    highest_umi_l = max(l_umi[b])
-                    highest_umi_l_idx = [i for i, j in enumerate(
-                        l_umi[b]) if j == highest_umi_l]
-                    keep_index_l = highest_umi_l_idx[0]
-                    drop_contig.append(
-                        l[b][:keep_index_l] + l[b][keep_index_l+1:])
-                    keep_lc_contig = l[b][keep_index_l]
-                    dat.at[keep_lc_contig, 'duplicate_count'] = int(
-                        np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1:]))
-                    lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
-                    l[b] = lc_id
-                    l_umi[b] = lc_umi
-                    l_seq[b] = lc_seq
-                if len(list(set(l_seq[b]))) > 1:
+                if 'sequence_alignment' in dat:
+                    if len(list(set(l_seq[b]))) == 1:
+                        highest_umi_l = max(l_umi[b])
+                        highest_umi_l_idx = [i for i, j in enumerate(
+                            l_umi[b]) if j == highest_umi_l]
+                        keep_index_l = highest_umi_l_idx[0]
+                        drop_contig.append(
+                            l[b][:keep_index_l] + l[b][keep_index_l+1:])
+                        keep_lc_contig = l[b][keep_index_l]
+                        dat.at[keep_lc_contig, 'duplicate_count'] = int(
+                            np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l+1:]))
+                        lc_id = list(dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+                        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                        l[b] = lc_id
+                        l_umi[b] = lc_umi
+                        l_seq[b] = lc_seq
+                if len(list(set(l[b]))) > 1:
                     # also apply the same cut off to multiple light chains
                     highest_umi_l = max(l_umi[b])
                     highest_umi_l_idx = [i for i, j in enumerate(
@@ -2378,7 +2368,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
-                    if c is not None and c is not np.nan:
+                    if (c is not None) and (c == c):
                         if 'IGH' in c:
                             if filter_poorqualitybcr:
                                 poor_qual.append(b)
@@ -2392,7 +2382,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     poorqual = Tree()
     hdoublet = Tree()
     ldoublet = Tree()
-    for c in tqdm(adata.obs_names, desc='Annotating in anndata obs slot '):
+    for c in tqdm(adata_.obs_names, desc='Annotating in anndata obs slot '):
         if c in poor_qual:
             poorqual[c] = True
         else:
@@ -2408,14 +2398,14 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
         else:
             ldoublet[c] = False
 
-    adata.obs['filter_bcr_quality'] = pd.Series(dict(poorqual))
-    adata.obs['filter_bcr_quality'] = adata.obs['filter_bcr_quality'].astype(
+    adata_.obs['filter_bcr_quality'] = pd.Series(dict(poorqual))
+    adata_.obs['filter_bcr_quality'] = adata_.obs['filter_bcr_quality'].astype(
         'category')
-    adata.obs['filter_bcr_heavy'] = pd.Series(dict(hdoublet))
-    adata.obs['filter_bcr_heavy'] = adata.obs['filter_bcr_heavy'].astype(
+    adata_.obs['filter_bcr_heavy'] = pd.Series(dict(hdoublet))
+    adata_.obs['filter_bcr_heavy'] = adata_.obs['filter_bcr_heavy'].astype(
         'category')
-    adata.obs['filter_bcr_light'] = pd.Series(dict(ldoublet))
-    adata.obs['filter_bcr_light'] = adata.obs['filter_bcr_light'].astype(
+    adata_.obs['filter_bcr_light'] = pd.Series(dict(ldoublet))
+    adata_.obs['filter_bcr_light'] = adata_.obs['filter_bcr_light'].astype(
         'category')
 
     drop_contig = list(set(flatten(drop_contig)))
@@ -2436,12 +2426,12 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
 
         if filter_rna:
             filter_ids = filter_ids + \
-                list(adata[adata.obs['filter_rna'] == True].obs_names)
+                list(adata_[adata_.obs['filter_rna'] == True].obs_names)
             filter_ids = list(set(filter_ids))
 
         if filter_missing:
             for c in dat['cell_id']:
-                if c not in adata.obs_names:
+                if c not in adata_.obs_names:
                     filter_ids.append(c)
 
         _dat = dat[~(dat['cell_id'].isin(filter_ids))].copy()
@@ -2490,8 +2480,8 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             bc_2.update({b: False})
     bcr_check['bcr_QC_pass'] = pd.Series(bc_2)
     bcr_check.replace(np.nan, 'No_BCR', inplace=True)
-    adata.obs['bcr_QC_pass'] = pd.Series(bcr_check['bcr_QC_pass'])
-    adata.obs['bcr_QC_pass'] = adata.obs['bcr_QC_pass'].astype('category')
+    adata_.obs['bcr_QC_pass'] = pd.Series(bcr_check['bcr_QC_pass'])
+    adata_.obs['bcr_QC_pass'] = adata_.obs['bcr_QC_pass'].astype('category')
 
     print('Initializing Dandelion object')
     if data.__class__ == Dandelion:
@@ -2501,17 +2491,17 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
             out_dat = Dandelion(data=_dat, initialize=True)
         except:
             warnings.warn(UserWarning(
-                'Dandelion metadata cannot be initialized due to duplicate barcodes. Recommending to run function with filter_bcr = True.'))
+                'Dandelion metadata_ cannot be initialized due to duplicate barcodes. Recommending to run function with filter_bcr = True.'))
             out_dat = Dandelion(data=_dat, initialize=False)
 
-    adata.obs['filter_bcr'] = adata.obs_names.isin(filter_ids)
-    adata.obs['filter_bcr'] = adata.obs['filter_bcr'].astype('category')
+    adata_.obs['filter_bcr'] = adata_.obs_names.isin(filter_ids)
+    adata_.obs['filter_bcr'] = adata_.obs['filter_bcr'].astype('category')
 
     if filter_rna:
         # not saving the scanpy object because there's no need to at the moment
-        out_adata = adata[adata.obs['filter_bcr'] == False].copy()
+        out_adata = adata_[adata_.obs['filter_bcr'] == False].copy()
     else:
-        out_adata = adata.copy()
+        out_adata = adata_.copy()
 
     logg.info(' finished', time=start,
               deep=('Returning Dandelion and AnnData objects: \n'))
