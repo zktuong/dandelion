@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 11:02:49
+# @Last Modified time: 2021-02-11 12:05:34
 
 import sys
 import os
@@ -1436,9 +1436,8 @@ def read_10x_airr(file):
     -------
     `Dandelion` object of pandas data frame.
 
-    """
-    if os.path.isfile(file):
-        dat = load_data(file)
+    """    
+    dat = load_data(file)
     # get all the v,d,j,c calls
     if 'locus' not in dat:
         tmp = [(v, d, j, c) for v, d, j, c in zip(
