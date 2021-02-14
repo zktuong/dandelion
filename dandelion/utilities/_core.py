@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 20:41:31
+# @Last Modified time: 2021-02-14 20:46:34
 
 import os
 from collections import defaultdict
@@ -611,14 +611,18 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         if len(hj_) > 1:
             multi_h.append(['Multi'+suffix_h+'_j'])
         if len(lv_) > 1:
-            multi_l.append(['Multi_'+suffix_l+'_v'])
+            multi_l.append(['Multi'+suffix_l+'_v'])
         if len(lj_) > 1:
-            multi_l.append(['Multi_'+suffix_l+'_j'])
+            multi_l.append(['Multi'+suffix_l+'_j'])
         if len(hc_) > 1:
-            if (tmp_metadata.at[i, 'c_call'+suffix_h] != 'IGHM|IGHD') and (tmp_metadata.at[i, 'c_call'+suffix_h] != 'IGHD|IGHM'):
+            if (~tmp_metadata.at[i, 'c_call'+suffix_h].isin(['IGHM|IGHD', 'IGHD|IGHM'])):
                 multi_hc.append(['Multi_'+suffix_h+'_c'])
+            else:
+                multi_hc.append(['Single'])
         if len(lc_) > 1:
             multi_lc.append(['Multi_'+suffix_l+'_c'])
+        if len(hc_) < 1:
+            multi_hc.append(['Single'])
         if len(multi_lc) < 1:
             multi_lc.append(['Single'])
         if len(multi_h) < 1:
