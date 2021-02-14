@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 12:25:50
+# @Last Modified time: 2021-02-14 19:45:21
 
 import os
 from collections import defaultdict
@@ -498,9 +498,9 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             cl for cl in tmp_metadata if cl not in [str(clonekey), str(clonekey)+'_by_size']]]
 
     for i in tmp_metadata.index:
-        if tmp_metadata.loc[i, 'locus'+suffix_h] == tmp_metadata.loc[i, 'locus'+suffix_h]:
-            if not pd.isnull(tmp_metadata.loc[i, 'locus'+suffix_l]):
-                if tmp_metadata.loc[i, 'locus'+suffix_l] != '':
+        if pd.notnull(tmp_metadata.loc[i, 'locus'+suffix_h]):
+            if pd.notnull(tmp_metadata.loc[i, 'locus'+suffix_l]):
+                if (tmp_metadata.loc[i, 'locus'+suffix_l] != ''):
                     tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i,
                                                                     'locus'+suffix_h]+' + ' + tmp_metadata.loc[i, 'locus'+suffix_l]
                 else:
@@ -617,8 +617,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         else:
             multi[i] = 'unassigned'
     tmp_metadata['vdj_status_detail'] = pd.Series(multi)
-    tmp_metadata['vdj_status'] = ['Multi' if bool(re.search(
-        'Multi'+suffix_h+'(.*)Multi'+suffix_l, i)) else 'Multi' if '|' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
+    tmp_metadata['vdj_status'] = ['Multi' if 'Multi_heavy' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
 
     self.metadata = tmp_metadata.copy()
 
