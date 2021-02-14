@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 21:05:05
+# @Last Modified time: 2021-02-14 23:39:56
 
 import os
 from collections import defaultdict
@@ -604,6 +604,8 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             lc_ = tmp_metadata.at[i, 'c_call'+suffix_l]
         multi_h = []
         multi_l = []
+        multi_hc = []
+        multi_lc = []
         if len(hv_) > 1:
             multi_h.append(['Multi'+suffix_h+'_v'])
         if len(hj_) > 1:
@@ -612,14 +614,29 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             multi_l.append(['Multi'+suffix_l+'_v'])
         if len(lj_) > 1:
             multi_l.append(['Multi'+suffix_l+'_j'])
+        if len(hc_) > 1:
+            if (tmp_metadata.at[i, 'c_call'+suffix_h] == 'IGHM|IGHD') or (tmp_metadata.at[i, 'c_call'+suffix_h] != 'IGHD|IGHM'):
+                multi_hc.append(['Exception'+suffix_h+'_c'])
+            else:
+                multi_hc.append(['Multi'+suffix_h+'_c'])
+        if len(lc_) > 1:
+            multi_lc.append(['Multi'+suffix_l+'_c'])
+        if len(multi_hc) < 1:
+            multi_hc.append(['Single'])
         if len(multi_h) < 1:
             multi_h.append(['Single'])
         if (len(lv_) == 1) & (len(lj_) == 1):
             if ('' not in lv_) and ('' not in lj_):
                 if len(multi_l) < 1:
                     multi_l.append(['Single'])
+        if len(lc_) == 1:
+            if ('' not in lc_):
+                if len(multi_lc) < 1:
+                    multi_lc.append(['Single'])
         multih = '|'.join(list(set(flatten(multi_h))))
         multil = '|'.join(list(set(flatten(multi_l))))
+        multihc = '|'.join(list(set(flatten(multi_hc))))
+        multilc = '|'.join(list(set(flatten(multi_lc))))
         if len(multih) > 0:
             if len(multil) > 0:
                 multi[i] = multih + ' + ' + multil
@@ -627,9 +644,22 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                 multi[i] = multih
         else:
             multi[i] = 'unassigned'
-    tmp_metadata['vdj_status_detail'] = pd.Series(multi)
-    tmp_metadata['vdj_status'] = [
-        'Multi' if 'Multi_heavy' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
+        if len(multihc) > 0:
+            if len(multilc) > 0:
+                multic[i] = multihc + ' + ' + multilc
+            else:
+                multic[i] = multihc
+        else:
+            multic[i] = 'unassigned'
+    tmp_metadata['vdj_status'] = pd.Series(multi)
+    tmp_metadata['vdj_status_summary'] = [
+        'Multi' if 'Multi'+suffix_h in i else 'Single' for i in tmp_metadata['vdj_status']]
+    tmp_metadata['constant_status'] = pd.Series(multic)
+    tmp_metadata['constant_status_summary'] = [
+        'Multi' if 'Multi'+suffix_h in i else 'Single' for i in tmp_metadata['constant_status']]
+
+    tmp_metadata['contig_status'] = ['Multi' if 'Multi' in (i, j) else 'Single' for i, j in zip(
+        tmp_metadata['vdj_status'], tmp_metadata['vdj_status'])]
 
     self.metadata = tmp_metadata.copy()
 
