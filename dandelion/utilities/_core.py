@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 20:06:51
+# @Last Modified time: 2021-02-14 20:27:23
 
 import os
 from collections import defaultdict
@@ -562,6 +562,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                         tmp_metadata[c] = ['|'.join(['|'.join(list(set(yy.split(',')))) for yy in list(set(
                             [re.sub('[*][0-9][0-9]', '', tx) for tx in t.split('|')]))]) for t in tmp_metadata[c]]
     multi = {}
+    multic = {}
     for i in tmp_metadata.index:
         try:
             if 'v_call_genotyped' in cols:
@@ -593,24 +594,43 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             lj_ = tmp_metadata.at[i, 'j_call'+suffix_l].split('|')
         except:
             lj_ = tmp_metadata.at[i, 'j_call'+suffix_l]
+        try:
+            hc_ = tmp_metadata.at[i, 'c_call'+suffix_h].split('|')
+        except:
+            hc_ = tmp_metadata.at[i, 'c_call'+suffix_h]
+        try:
+            lc_ = tmp_metadata.at[i, 'c_call'+suffix_l].split('|')
+        except:
+            lc_ = tmp_metadata.at[i, 'c_call'+suffix_l]
         multi_h = []
         multi_l = []
+        multi_hc = []
+        multi_lc = []
         if len(hv_) > 1:
             multi_h.append(['Multi'+suffix_h+'_v'])
         if len(hj_) > 1:
             multi_h.append(['Multi'+suffix_h+'_j'])
         if len(lv_) > 1:
-            multi_l.append(['Multi_light_v'])
+            multi_l.append(['Multi_'+suffix_l+'_v'])
         if len(lj_) > 1:
-            multi_l.append(['Multi_light_j'])
-        if len(multi_h) < 1:
-            multi_h.append(['Single'])
+            multi_l.append(['Multi_'+suffix_l+'_j'])
+        if len(hc_) > 1:
+            if (h_c != 'IGHM|IGHD') and (hc_ != 'IGHD|IGHM'):
+                multi_hc.append(['Multi_'+suffix_h+'_c'])
+        if len(lc_) > 1:
+            multi_lc.append(['Multi_'+suffix_l+'_c'])
+        if len(multi_hc) < 1:
+            multi_hc.append(['Single'])
+        if len(multi_lc) < 1:
+            multi_lc.append(['Single'])
         if (len(lv_) == 1) & (len(lj_) == 1):
             if ('' not in lv_) and ('' not in lj_):
                 if len(multi_l) < 1:
                     multi_l.append(['Single'])
         multih = '|'.join(list(set(flatten(multi_h))))
         multil = '|'.join(list(set(flatten(multi_l))))
+        multihc = '|'.join(list(set(flatten(multi_hc))))
+        multilc = '|'.join(list(set(flatten(multi_lc))))
         if len(multih) > 0:
             if len(multil) > 0:
                 multi[i] = multih + ' + ' + multil
@@ -618,8 +638,17 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                 multi[i] = multih
         else:
             multi[i] = 'unassigned'
+        if len(multihc) > 0:
+            if len(multilc) > 0:
+                multic[i] = multihc + ' + ' + multilc
+            else:
+                multic[i] = multihc
+        else:
+            multic[i] = 'unassigned'
     tmp_metadata['vdj_status_detail'] = pd.Series(multi)
     tmp_metadata['vdj_status'] = ['Multi' if 'Multi_heavy' in i else 'Single' for i in tmp_metadata['vdj_status_detail']]
+    tmp_metadata['c_status_detail'] = pd.Series(multic)
+    tmp_metadata['c_status'] = ['Multi' if 'Multi_heavy' in i else 'Single' for i in tmp_metadata['c_status_detail']]
 
     self.metadata = tmp_metadata.copy()
 
