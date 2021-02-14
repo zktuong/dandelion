@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 20:50:35
+# @Last Modified time: 2021-02-14 20:53:08
 
 import os
 from collections import defaultdict
@@ -621,7 +621,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                 multi_hc.append(['Single'])
         if len(lc_) > 1:
             multi_lc.append(['Multi_'+suffix_l+'_c'])
-        if len(hc_) < 1:
+        if len(multi_hc) < 1:
             multi_hc.append(['Single'])
         if len(multi_lc) < 1:
             multi_lc.append(['Single'])
