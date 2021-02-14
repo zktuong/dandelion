@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 19:45:21
+# @Last Modified time: 2021-02-14 20:06:51
 
 import os
 from collections import defaultdict
@@ -605,8 +605,10 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             multi_l.append(['Multi_light_j'])
         if len(multi_h) < 1:
             multi_h.append(['Single'])
-        if len(multi_l) < 1:
-            multi_l.append(['Single'])
+        if (len(lv_) == 1) & (len(lj_) == 1):
+            if ('' not in lv_) and ('' not in lj_):
+                if len(multi_l) < 1:
+                    multi_l.append(['Single'])
         multih = '|'.join(list(set(flatten(multi_h))))
         multil = '|'.join(list(set(flatten(multi_l))))
         if len(multih) > 0:
