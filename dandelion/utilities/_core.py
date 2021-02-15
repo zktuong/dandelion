@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-15 00:28:10
+# @Last Modified time: 2021-02-15 00:56:22
 
 import os
 from collections import defaultdict
@@ -615,8 +615,8 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         if len(lj_) > 1:
             multi_l.append(['Multi'+suffix_l+'_j'])
         if len(hc_) > 1:
-            if (tmp_metadata.at[i, 'c_call'+suffix_h] == 'IGHM|IGHD') or (tmp_metadata.at[i, 'c_call'+suffix_h] != 'IGHD|IGHM'):
-                multi_hc.append(['IgM_IgD'+suffix_h+'_c'])
+            if (tmp_metadata.at[i, 'isotype_summary'] == 'IgM|IgD') or (tmp_metadata.at[i, 'isotype_summary'] == 'IgD|IgM'):
+                multi_hc.append([tmp_metadata.at[i, 'isotype_summary']])
             else:
                 multi_hc.append(['Multi'+suffix_h+'_c'])
         if len(lc_) > 1:
