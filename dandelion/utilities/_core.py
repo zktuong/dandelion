@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 23:39:56
+# @Last Modified time: 2021-02-15 00:28:10
 
 import os
 from collections import defaultdict
@@ -616,7 +616,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
             multi_l.append(['Multi'+suffix_l+'_j'])
         if len(hc_) > 1:
             if (tmp_metadata.at[i, 'c_call'+suffix_h] == 'IGHM|IGHD') or (tmp_metadata.at[i, 'c_call'+suffix_h] != 'IGHD|IGHM'):
-                multi_hc.append(['Exception'+suffix_h+'_c'])
+                multi_hc.append(['IgM_IgD'+suffix_h+'_c'])
             else:
                 multi_hc.append(['Multi'+suffix_h+'_c'])
         if len(lc_) > 1:
@@ -654,12 +654,8 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
     tmp_metadata['vdj_status'] = pd.Series(multi)
     tmp_metadata['vdj_status_summary'] = [
         'Multi' if 'Multi'+suffix_h in i else 'Single' for i in tmp_metadata['vdj_status']]
-    tmp_metadata['constant_status'] = pd.Series(multic)
-    tmp_metadata['constant_status_summary'] = [
-        'Multi' if 'Multi'+suffix_h in i else 'Single' for i in tmp_metadata['constant_status']]
-
-    tmp_metadata['contig_status'] = ['Multi' if 'Multi' in (i, j) else 'Single' for i, j in zip(
-        tmp_metadata['vdj_status'], tmp_metadata['vdj_status'])]
+    tmp_metadata['isotype_status_summary'] = [
+        'Multi' if 'Multi'+suffix_h in i else 'Single' for i in pd.Series(multic)]
 
     self.metadata = tmp_metadata.copy()
 
