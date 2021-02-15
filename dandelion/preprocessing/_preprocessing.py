@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-15 00:06:35
+# @Last Modified time: 2021-02-15 00:36:47
 
 import sys
 import os
@@ -1996,7 +1996,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     sum_umi = sum(h_umi[b]+h_dup[b])
                     other_umi_idx = [i for i, j in enumerate(
                         h_umi[b]) if j != highest_umi_h]
-                    if ('IGHM' in h_ccall[b]) and ('IGHD' in h_ccall[b]):
+                    if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
                         pass
                     else:
                         if len(highest_umi_idx) > 1:
@@ -2244,7 +2244,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b]
                                     [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                         sum_umi = sum(h_umi[b]+h_dup[b])
-                        if ('IGHM' in h_ccall[b]) and ('IGHD' in h_ccall[b]):
+                        if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
                             pass
                         else:
                             if len(highest_umi_idx) > 1:
