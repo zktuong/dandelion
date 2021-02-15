@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-14 23:59:18
+# @Last Modified time: 2021-02-15 00:00:47
 
 import sys
 import os
@@ -2493,9 +2493,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     adata_.obs['bcr_QC_pass'] = adata_.obs['bcr_QC_pass'].astype('category')
 
     print('Initializing Dandelion object')
-    tmp_dat = Dandelion(data=_dat)
-    if filter_bcr:
-
+    out_dat = Dandelion(data=_dat)
     if data.__class__ == Dandelion:
         out_dat.germline = data.germline
 
