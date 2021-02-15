@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-15 00:56:57
+# @Last Modified time: 2021-02-15 00:57:11
 
 import os
 from collections import defaultdict
@@ -654,7 +654,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
     tmp_metadata['vdj_status'] = pd.Series(multi)
     tmp_metadata['vdj_status_summary'] = [
         'Multi' if 'Multi'+suffix_h in i else 'Single' for i in tmp_metadata['vdj_status']]
-    tmp_metadata['contig_status_summary'] = [
+    tmp_metadata['heavychain_status_summary'] = [
         'Multi' if 'Multi'+suffix_h in i else 'Single' for i in pd.Series(multic)]
 
     self.metadata = tmp_metadata.copy()
