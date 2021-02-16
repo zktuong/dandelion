@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-06 13:18:58
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 13:59:33
+# @Last Modified time: 2021-02-16 15:57:39
 
 modules = ['dandelion', 'pandas', 'numpy', 'matplotlib',
            'networkx', 'scipy', 'skbio', 'distance', 'polyleven']
@@ -19,7 +19,7 @@ def _versions_dependencies(dependencies):
             pass
 
 
-def print_header(dependencies=modules):
+def print_versions(dependencies=modules):
     '''
     Versions that are essential for dandelion's operation.
     '''
