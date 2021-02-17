@@ -100,4 +100,5 @@ Logging
    :toctree: modules
 
    print_header
+   print_versions
    
