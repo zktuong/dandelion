@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 12:26:27
+# @Last Modified time: 2021-02-18 20:30:40
 
 import os
 import sys
@@ -523,25 +523,39 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
                     renamed_clone_dict_light = {}
                     for key, value in clone_dict_light.items():
                         renamed_clone_dict_light[key] = lclones_dict[value]
-                    if '|' in ''.join(list(set(dat.loc[renamed_clone_dict_light.keys(), clone_key]))):
-                        for tt in dat.loc[renamed_clone_dict_light.keys(), clone_key]:
-                            temp_list = []
-                            for tx in tt.split('|'):
-                                temp_list.append(
-                                    [tx + '_' + pd.Series(renamed_clone_dict_light)])
-                            tmp_clone = list(set(flatten(temp_list)))
-                    else:
-                        tmp_clone = dat.loc[renamed_clone_dict_light.keys(
+                    tmp_clone = dat.loc[renamed_clone_dict_light.keys(
                         ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
-                    final_clone = '|'.join(sorted(list(set(tmp_clone))))
-                    _clone_dict = {cx: final_clone}
-                    all_clone_dict = dict(dat[clone_key])
-                    for key, value in all_clone_dict.items():
-                        try:
-                            all_clone_dict[key] = _clone_dict[value]
-                        except:
-                            pass
-                    dat[clone_key] = pd.Series(all_clone_dict)
+                    tmp_clone_dict = dict(tmp_clone)
+                    tmpdict = defaultdict(dict)
+                    for k in tmp_clone_dict.keys():
+                        tmpdict[k.split('_contig')[0]].update({k:tmp_clone_dict[k]})                    
+                    final_dict = {}
+                    for kk in tmpdict:
+                        if len(tmpdict[kk]) > 1:
+                            tmp_test = []
+                            for v in tmpdict[kk].values():
+                                tmp_test.append(v)
+                            final_dict[kk] = '|'.join(list(set(tmp_test)))
+                        else:
+                            final_dict[kk] = '|'.join([str(x) for x in tmpdict[kk].values()])
+                    for x in renamed_clone_dict_light.keys():
+                        cellid = dat.at[x, 'cell_id']
+                        contigids = dat[dat['cell_id'] == cellid]['sequence_id']
+                        for y in contigids:
+                            dat.at[y, clone_key] = final_dict[cellid]
+                else:
+                    lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
+                    renamed_clone_dict_light = {}
+                    for key, value in clone_dict_light.items():
+                        renamed_clone_dict_light[key] = lclones_dict[value]
+                    tmp_clone = dat.loc[renamed_clone_dict_light.keys(
+                        ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
+                    final_dict = dict(zip(dat.loc[renamed_clone_dict_light.keys(), 'cell_id'], tmp_clone))
+                    for x in renamed_clone_dict_light.keys():
+                        cellid = dat.at[x, 'cell_id']
+                        contigids = dat[dat['cell_id'] == cellid]['sequence_id']
+                        for y in contigids:
+                            dat.at[y, clone_key] = final_dict[cellid]
 
     if os.path.isfile(str(self)):
         dat.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self),
