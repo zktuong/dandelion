@@ -1,5 +1,5 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
-[![](https://badge.fury.io/py/sc-dandelion.svg)](https://badge.fury.io/py/sc-dandelion)
+[![](https://img.shields.io/pypi/v/sc-dandelion?logo=PyPI)](https://pypi.org/project/sc-dandelion/)
 [![](https://byob.yarr.is/zktuong/dandelion/master-version)](https://github.com/zktuong/dandelion/tree/master)
 ![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)
 [![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
