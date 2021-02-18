@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-15 00:57:11
+# @Last Modified time: 2021-02-18 21:57:01
 
 import os
 from collections import defaultdict
@@ -25,7 +25,7 @@ from ..utilities._utilities import *
 from ..utilities._io import *
 
 
-def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', split_locus=False, verbose=False):
+def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', split_locus=False, verbose=False, typecheck = True):
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
@@ -37,7 +37,8 @@ def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', s
     query_dict = dict(zip(data['sequence_id'], data[query]))
 
     if type_check(data, query):
-        data[query].fillna('unassigned', inplace=True)
+        if typecheck:
+            data[query].fillna('unassigned', inplace=True)
 
     typesoflocus = len(list(set(data['locus'])))
 
@@ -462,7 +463,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                                 'combine': False, 'locus': locus_, 'split_locus': False}})
     if clonekey in init_dict:
         init_dict.update({clonekey: {'split': False, 'collapse': True,
-                                     'combine': True, 'locus': locus_, 'split_locus': False}})
+                                     'combine': True, 'locus': locus_, 'split_locus': False, 'typecheck':False}})
     if 'sample_id' in init_dict:
         init_dict.update({'sample_id': {'split': False, 'collapse': True,
                                         'combine': True, 'locus': locus_, 'split_locus': False}})
@@ -489,8 +490,8 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         size_of_clone.columns = [str(clonekey), 'clone_size']
         size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
         size_dict = dict(
-            zip(size_of_clone['clone_id'], size_of_clone['clone_id_by_size']))
-        tmp_metadata[str(clonekey)+'_by_size'] = ['|'.join([str(size_dict[c_]) for c_ in c.split('|')])
+            zip(size_of_clone[clonekey], size_of_clone[str(clonekey)+'_by_size']))
+        tmp_metadata[str(clonekey)+'_by_size'] = ['|'.join(sorted(list(set([str(size_dict[c_]) for c_ in c.split('|')]))))
                                                   if len(c.split('|')) > 1 else str(size_dict[c]) for c in tmp_metadata[str(clonekey)]]
         tmp_metadata[str(
             clonekey)+'_by_size'] = tmp_metadata[str(clonekey)+'_by_size'].astype('category')
