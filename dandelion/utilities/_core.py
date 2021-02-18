@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 22:38:35
+# @Last Modified time: 2021-02-18 23:10:45
 
 import os
 from collections import defaultdict
@@ -36,9 +36,8 @@ def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', s
     locus_dict4 = {'ig': 'L'}
     query_dict = dict(zip(data['sequence_id'], data[query]))
 
-    if type_check(data, query):
-        if typecheck:
-            data[query].fillna('unassigned', inplace=True)
+    if type_check(data, query):        
+        data[query].fillna('unassigned', inplace=True)
 
     typesoflocus = len(list(set(data['locus'])))
 
@@ -463,7 +462,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                                 'combine': False, 'locus': locus_, 'split_locus': False}})
     if clonekey in init_dict:
         init_dict.update({clonekey: {'split': False, 'collapse': True,
-                                     'combine': True, 'locus': locus_, 'split_locus': False, 'typecheck':False}})
+                                     'combine': True, 'locus': locus_, 'split_locus': False}})
     if 'sample_id' in init_dict:
         init_dict.update({'sample_id': {'split': False, 'collapse': True,
                                         'combine': True, 'locus': locus_, 'split_locus': False}})
@@ -480,6 +479,16 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         suffix_l = ''
 
     if clonekey in init_dict:
+        clones = tmp_metadata[str(clonekey)].str.split('|', expand=True)
+        tmpclones = []
+        for i in clones:
+            if 'unassigned' in i:
+                i.remove('unassigned')
+            else:
+                pass
+            tmpclones.append(i)
+        tmpclones = ['|'.join(x) for x in tmpclones]
+        tmp_metadata[str(clonekey)] = tmpclones
         tmp = tmp_metadata[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop=False)
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]
@@ -735,7 +744,7 @@ def update_metadata(self, retrieve=None, locus=None, clone_key=None, split=True,
         cols.remove(c)
 
     if clonekey in self.data:
-        if not all(pd.isnull(self.data['clone_id'])):
+        if not all(pd.isnull(self.data[clonekey])):
             cols = [clonekey] + cols
 
     metadata_status = self.metadata
