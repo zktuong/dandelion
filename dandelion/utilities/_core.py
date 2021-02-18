@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 22:35:01
+# @Last Modified time: 2021-02-18 22:38:35
 
 import os
 from collections import defaultdict
@@ -488,7 +488,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
                 dt = tmp.at[d, str(clonekey)].split('|')
                 if 'unassigned' in dt:
                     dt.remove('unassigned')
-            tmp.at[d, str(clonekey)] = '|'.join(dt)
+                tmp.at[d, str(clonekey)] = '|'.join(dt)
         clone_size = tmp[str(clonekey)].value_counts()
         clonesize_dict = dict(clone_size)
         size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient='index')
