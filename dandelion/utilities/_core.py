@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 23:24:56
+# @Last Modified time: 2021-02-18 23:45:48
 
 import os
 from collections import defaultdict
@@ -482,13 +482,12 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         clones = tmp_metadata[str(clonekey)].str.split('|', expand=False)
         tmpclones = []
         for i in clones:
-            if 'unassigned' in i:
+            while 'unassigned' in i:
                 i.remove('unassigned')
-            else:
-                pass
             tmpclones.append(i)
-        tmpclones = ['|'.join(x) for x in tmpclones]
-        tmp_metadata[str(clonekey)] = tmpclones
+        tmpclones = ['|'.join(list(set(x))) for x in tmpclones]
+        tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
+        tmp_metadata[str(clonekey)] = pd.Series(tmpclonesdict)
         tmp = tmp_metadata[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop=False)
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]        
