@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 16:52:20
+# @Last Modified time: 2021-02-18 16:49:38
 
 import os
 import sys
@@ -556,7 +556,7 @@ def find_clones(self, identity=0.85, clustering_by = None, by_alleles = None, ke
             threshold_ = self.threshold
         else:
             threshold_ = None
-        if ('clone_id' in self.data.columns) and (clone_key is not None):
+    if ('clone_id' in self.data.columns) and (clone_key is not None):
             self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, retrieve = clone_key, split=False, collapse=True, combine=True) # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
         elif ('clone_id' not in self.data.columns) and (clone_key is not None):
             self.__init__(data = dat, germline = germline_, distance = dist_, edges = edge_, layout = layout_, graph = graph_, initialize = True, clone_key = clone_key, retrieve = clone_key, split=False, collapse=True, combine=True)
