@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 23:10:45
+# @Last Modified time: 2021-02-18 23:11:28
 
 import os
 from collections import defaultdict
@@ -25,7 +25,7 @@ from ..utilities._utilities import *
 from ..utilities._io import *
 
 
-def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', split_locus=False, verbose=False, typecheck = True):
+def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', split_locus=False, verbose=False):
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
