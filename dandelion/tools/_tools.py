@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 01:15:26
+# @Last Modified time: 2021-02-19 01:31:28
 
 import os
 import sys
@@ -97,7 +97,7 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
     dump = []
     if dat_light.shape[0] > 1:
         for cell in dat_light['cell_id']:
-            if cell not in dat_heavy['cell_id']:
+            if not any(dat_heavy['cell_id'].isin([cell])):
                 dump.append(cell)
     dat = dat[~(dat['cell_id'].isin(dump))]
     dat_heavy = dat[dat['locus'] == locus_].copy()
