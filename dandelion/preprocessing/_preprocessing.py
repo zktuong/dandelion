@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-16 17:47:48
+# @Last Modified time: 2021-02-19 10:14:24
 
 import sys
 import os
@@ -1839,7 +1839,7 @@ def create_germlines(self, germline=None, org='human', seq_field='sequence_align
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=2, filter_lightchains=True, filter_missing=True, parallel=True, ncpu=None, save=None):
+def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, productive_only = True, parallel=True, ncpu=None, save=None):
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1861,9 +1861,11 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     rescue_igh : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
-        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5-fold.
     filter_lightchains : bool
         cells with multiple light chains will be marked to filter. Default is True.
+    productive_only : bool
+        whether or not to retain only productive contigs.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.
     parallel : bool
@@ -1879,9 +1881,14 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     """
     start = logg.info('Filtering BCRs')
     if data.__class__ == Dandelion:
-        dat = load_data(data.data)
+        dat_ = load_data(data.data)
     else:
-        dat = load_data(data)
+        dat_ = load_data(data)
+
+    if productive_only:
+        dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE', True])].copy()
+    else:
+        dat = dat_.copy()
 
     adata_ = adata.copy()
 
@@ -2012,7 +2019,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         if len(highest_umi_idx) == 1:
                             other_umi_idx = [i for i, j in enumerate(
                                 h_umi[b]) if j != highest_umi_h]
-                            umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
+                            umi_test_ = [highest_umi_h/x > umi_foldchange_cutoff for x in h_umi[b]
                                          [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                             umi_test_dict = dict(zip(other_umi_idx, umi_test_))
                             for otherindex in umi_test_dict:
@@ -2260,7 +2267,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                             if len(highest_umi_idx) == 1:
                                 other_umi_idx = [i for i, j in enumerate(
                                     h_umi[b]) if j != highest_umi_h]
-                                umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
+                                umi_test_ = [highest_umi_h/x > umi_foldchange_cutoff for x in h_umi[b]
                                              [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                                 umi_test_dict = dict(
                                     zip(other_umi_idx, umi_test_))
