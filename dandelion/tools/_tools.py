@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 09:43:51
+# @Last Modified time: 2021-02-19 13:17:38
 
 import os
 import sys
@@ -1192,6 +1192,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None):
     datc_.reset_index(drop=False, inplace=True)
     datc_.columns = ['cell_id', 'tmp', clone_]
     datc_.drop('tmp', inplace=True, axis=1)
+    datc_ = datc_[~(datc_[clone_].isin(['', np.nan, 'nan', 'NaN', 'No_BCR', 'unassigned', None]))]
     dictg_ = dict(data[groupby])
     datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
