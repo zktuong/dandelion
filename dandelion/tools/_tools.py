@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 01:41:58
+# @Last Modified time: 2021-02-19 01:52:34
 
 import os
 import sys
@@ -329,11 +329,11 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
     else:
         dat[clone_key].update(dat_heavy[clone_key])
     dat_light = dat[~(dat['locus'] == locus_)].copy()
+    celltree = {}
     for cell in list(set(dat_heavy['cell_id'])):
-        tmpdat = dat_heavy[dat_heavy['cell_id'] == cell].copy()
-        tmpclone = '|'.join(list(set(tmpdat[clone_key])))
-        for i in dat_light[dat_light['cell_id'] == cell].index:
-            dat.at[i, clone_key] = tmpclone
+        celltree[cell] = '|'.join(list(set(dat_heavy[dat_heavy['cell_id'] == cell][clone_key])))
+    dat_light[clone_key] = [celltree[ci] for ci in dat_light['cell_id']]
+    dat[clone_key].update(dat_light[clone_key])
 
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
     dat_light = dat[~(dat['locus'] == locus_)].copy()
