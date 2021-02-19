@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 10:14:24
+# @Last Modified time: 2021-02-19 10:15:49
 
 import sys
 import os
@@ -2019,7 +2019,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         if len(highest_umi_idx) == 1:
                             other_umi_idx = [i for i, j in enumerate(
                                 h_umi[b]) if j != highest_umi_h]
-                            umi_test_ = [highest_umi_h/x > umi_foldchange_cutoff for x in h_umi[b]
+                            umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
                                          [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                             umi_test_dict = dict(zip(other_umi_idx, umi_test_))
                             for otherindex in umi_test_dict:
@@ -2267,7 +2267,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                             if len(highest_umi_idx) == 1:
                                 other_umi_idx = [i for i, j in enumerate(
                                     h_umi[b]) if j != highest_umi_h]
-                                umi_test_ = [highest_umi_h/x > umi_foldchange_cutoff for x in h_umi[b]
+                                umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
                                              [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                                 umi_test_dict = dict(
                                     zip(other_umi_idx, umi_test_))
