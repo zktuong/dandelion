@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 01:52:34
+# @Last Modified time: 2021-02-19 02:26:27
 
 import os
 import sys
@@ -329,10 +329,13 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
     else:
         dat[clone_key].update(dat_heavy[clone_key])
     dat_light = dat[~(dat['locus'] == locus_)].copy()
-    celltree = {}
-    for cell in list(set(dat_heavy['cell_id'])):
-        celltree[cell] = '|'.join(list(set(dat_heavy[dat_heavy['cell_id'] == cell][clone_key])))
-    dat_light[clone_key] = [celltree[ci] for ci in dat_light['cell_id']]
+    celltree = Tree()
+    for cell in dat_heavy.index:
+        celltree[dat_heavy.at[cell, 'cell_id']][dat_heavy.at[cell, clone_key]].value = 1
+    fin = {}
+    for cell in celltree:
+        fin[cell] = '|'.join([cell_ for cell_ in celltree[cell].keys()])
+    dat_light[clone_key] = [fin[ci] for ci in dat_light['cell_id']]
     dat[clone_key].update(dat_light[clone_key])
 
     # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
@@ -583,6 +586,7 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
                             dat.at[y, clone_key] = final_dict[cellid]
 
     dat_[clone_key] = pd.Series(dat[clone_key])
+    dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(self)):
         dat_.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self),
                                              os.path.basename(self).split('.tsv')[0]), sep='\t', index=False)
