@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 01:31:28
+# @Last Modified time: 2021-02-19 01:41:58
 
 import os
 import sys
@@ -94,12 +94,11 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
 
     dat_light = dat[~(dat['locus'] == locus_)].copy()
     dat_heavy = dat[dat['locus'] == locus_].copy()
-    dump = []
-    if dat_light.shape[0] > 1:
-        for cell in dat_light['cell_id']:
-            if not any(dat_heavy['cell_id'].isin([cell])):
-                dump.append(cell)
-    dat = dat[~(dat['cell_id'].isin(dump))]
+    
+    if dat_light.shape[0] > 0:        
+        dump = dat_light[~(dat_light['cell_id'].isin(dat_heavy['cell_id']))].copy()
+        if dump.shape[0] > 0:
+            dat = dat[~(dat['cell_id'].isin(dump['cell_id']))].copy()
     dat_heavy = dat[dat['locus'] == locus_].copy()
     pd.set_option('mode.chained_assignment', None)
 
