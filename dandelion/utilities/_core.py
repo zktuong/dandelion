@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 23:45:48
+# @Last Modified time: 2021-02-19 01:09:03
 
 import os
 from collections import defaultdict
@@ -482,8 +482,10 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         clones = tmp_metadata[str(clonekey)].str.split('|', expand=False)
         tmpclones = []
         for i in clones:
-            while 'unassigned' in i:
+            while 'unassigned' in i:                
                 i.remove('unassigned')
+                if len(i) == 1:
+                    break
             tmpclones.append(i)
         tmpclones = ['|'.join(list(set(x))) for x in tmpclones]
         tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
