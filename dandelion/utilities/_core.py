@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 01:09:03
+# @Last Modified time: 2021-02-19 02:28:32
 
 import os
 from collections import defaultdict
@@ -479,6 +479,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         suffix_l = ''
 
     if clonekey in init_dict:
+        tmp_metadata[str(clonekey)] = tmp_metadata[str(clonekey)].replace('', 'unassigned')
         clones = tmp_metadata[str(clonekey)].str.split('|', expand=False)
         tmpclones = []
         for i in clones:
