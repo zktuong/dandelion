@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 10:15:49
+# @Last Modified time: 2021-02-19 11:25:46
 
 import sys
 import os
@@ -2007,8 +2007,25 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                     sum_umi = sum(h_umi[b]+h_dup[b])
                     other_umi_idx = [i for i, j in enumerate(
                         h_umi[b]) if j != highest_umi_h]
-                    if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
-                        pass
+                    if 'IGHM' and 'IGHD' in h_ccall[b]:
+                        if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
+                            pass
+                        else:
+                            if len(highest_umi_idx) > 1:
+                                h_doublet.append(b)
+                            if sum_umi < 4:
+                                h_doublet.append(b)
+                            if any(umi_test):
+                                h_doublet.append(b)
+                            if len(highest_umi_idx) == 1:
+                                other_umi_idx = [i for i, j in enumerate(
+                                    h_umi[b]) if j != highest_umi_h]
+                                umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
+                                            [:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                                umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                                for otherindex in umi_test_dict:
+                                    if umi_test_dict[otherindex]:
+                                        drop_contig.append(h[b][otherindex])
                     else:
                         if len(highest_umi_idx) > 1:
                             h_doublet.append(b)
@@ -2255,8 +2272,25 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                         umi_test = [highest_umi_h/x < umi_foldchange_cutoff for x in h_umi[b]
                                     [:keep_index_h] + h_umi[b][keep_index_h+1:]]
                         sum_umi = sum(h_umi[b]+h_dup[b])
-                        if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
-                            pass
+                        if 'IGHM' and 'IGHD' in h_ccall[b]:
+                            if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
+                                pass
+                            else:
+                                if len(highest_umi_idx) > 1:
+                                    h_doublet.append(b)
+                                if sum_umi < 4:
+                                    h_doublet.append(b)
+                                if any(umi_test):
+                                    h_doublet.append(b)
+                                if len(highest_umi_idx) == 1:
+                                    other_umi_idx = [i for i, j in enumerate(
+                                        h_umi[b]) if j != highest_umi_h]
+                                    umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
+                                                [:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                                    umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                                    for otherindex in umi_test_dict:
+                                        if umi_test_dict[otherindex]:
+                                            drop_contig.append(h[b][otherindex])
                         else:
                             if len(highest_umi_idx) > 1:
                                 h_doublet.append(b)
