@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 01:03:34
+# @Last Modified time: 2021-02-19 00:34:53
 
 import os
 import sys
@@ -70,7 +70,7 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         dat_ = load_data(self)
 
     if productive_only:
-        dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE', True])].copy()        
+        dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE', True])].copy()
     else:
         dat = dat_.copy()
 
@@ -93,15 +93,6 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
     locus_log2_dict = {'IGH': 'IGL/IGL'}
 
     dat_heavy = dat[dat['locus'] == locus_].copy()
-    dat_light = dat[~(dat['locus'] == locus_)].copy()
-    dump = []
-    if dat_light.shape[0] > 1:
-        for cell in dat_light['cell_id']:
-            if cell not in dat_heavy['cell_id']:
-                dump.append(cell)
-    dat = dat[~(dat['cell_id'].isin(dump))]
-    dat_heavy = dat[dat['locus'] == locus_].copy()
-    
     pd.set_option('mode.chained_assignment', None)
 
     if key_added is None:
@@ -328,12 +319,9 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
     dat_heavy[clone_key] = pd.Series(clone_dict)
     if clone_key not in dat:
         dat[clone_key] = pd.Series(dat_heavy[clone_key])
-    
-        dat_light = dat[~(dat['locus'] == locus_)].copy()
-        if dat_light.shape[0] > 1:
-            for cell in else:
+    else:
         dat[clone_key].update(dat_heavy[clone_key])
-    
+    dat_light = dat[~(dat['locus'] == locus_)].copy()
     for cell in list(set(dat_heavy['cell_id'])):
         tmpdat = dat_heavy[dat_heavy['cell_id'] == cell].copy()
         tmpclone = '|'.join(list(set(tmpdat[clone_key])))
