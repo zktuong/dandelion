@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 02:26:27
+# @Last Modified time: 2021-02-19 04:04:55
 
 import os
 import sys
@@ -328,262 +328,205 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         dat[clone_key] = pd.Series(dat_heavy[clone_key])
     else:
         dat[clone_key].update(dat_heavy[clone_key])
-    dat_light = dat[~(dat['locus'] == locus_)].copy()
-    celltree = Tree()
-    for cell in dat_heavy.index:
-        celltree[dat_heavy.at[cell, 'cell_id']][dat_heavy.at[cell, clone_key]].value = 1
-    fin = {}
-    for cell in celltree:
-        fin[cell] = '|'.join([cell_ for cell_ in celltree[cell].keys()])
-    dat_light[clone_key] = [fin[ci] for ci in dat_light['cell_id']]
-    dat[clone_key].update(dat_light[clone_key])
-
-    # repeat this process for the light chains within each clone, but only for those with more than 1 light chains in a clone
-    dat_light = dat[~(dat['locus'] == locus_)].copy()
-    if dat_light.shape[0] != 0:
-        # retrieve the J genes and J genes
-        for cx in tqdm(list(set(dat_light[clone_key])), desc='Refining clone assignment based on light chain pairing '):
-            dat_light_c = dat_light[dat_light[clone_key] == cx]
-            if dat_light_c.shape[0] > 1:
-                if not by_alleles:
-                    if 'v_call_genotyped' in dat_light_c.columns:
-                        Vlight = [re.sub('[*][0-9][0-9]', '', v)
-                                  for v in dat_light_c['v_call_genotyped']]
-                    else:
-                        Vlight = [re.sub('[*][0-9][0-9]', '', v)
-                                  for v in dat_light_c['v_call']]
-                    Jlight = [re.sub('[*][0-9][0-9]', '', j)
-                              for j in dat_light_c['j_call']]
-                else:
-                    if 'v_call_genotyped' in dat_light_c.columns:
-                        Vlight = [v for v in dat_light_c['v_call_genotyped']]
-                    else:
-                        Vlight = [v for v in dat_light_c['v_call']]
-                    Jlight = [j for j in dat_light_c['j_call']]
-
-                # collapse the alleles to just genes
-                Vlight = [','.join(list(set(v.split(',')))) for v in Vlight]
-                Jlight = [','.join(list(set(j.split(',')))) for j in Jlight]
-
-                seq = dict(zip(dat_light_c.index, dat_light_c[key_]))
-
-                if recalculate_length:
-                    seq_length = [len(str(l)) for l in dat_light_c[key_]]
-                else:
-                    try:
-                        seq_length = [len(str(l))
-                                      for l in dat_light_c[key_+'_length']]
-                    except:
-                        raise ValueError("{} not found in {} input table.".format(
-                            key_ + '_length', locus_log2_dict[locus_]))
-                seq_length_dict = dict(zip(dat_light_c.index, seq_length))
-
-                # Create a dictionary and group sequence ids with same V and J genes
-                V_Jlight = dict(zip(dat_light_c.index, zip(Vlight, Jlight)))
-                vj_lightgrp = defaultdict(list)
-                for key, val in sorted(V_Jlight.items()):
-                    vj_lightgrp[val].append(key)
-                # and now we split the groups based on lengths of the seqs
-                vj_len_lightgrp = Tree()
-                seq_lightgrp = Tree()
-                for g in vj_lightgrp:
-                    # first, obtain what's the unique lengths
-                    jlen = []
-                    for contig_id in vj_lightgrp[g]:
-                        jlen.append(seq_length_dict[contig_id])
-                    setjlen = list(set(jlen))
-                    # then for each unique length, we add the contigs to a new tree if it matches the length
-                    # and also the actual seq sequences into a another one
-                    for s in setjlen:
-                        for contig_id in vj_lightgrp[g]:
-                            jlen_ = seq_length_dict[contig_id]
-                            if jlen_ == s:
-                                vj_len_lightgrp[g][s][contig_id].value = 1
-                                seq_lightgrp[g][s][seq[contig_id]].value = 1
-                                for c in [contig_id]:
-                                    vj_len_lightgrp[g][s][c] = seq[c]
-
-                clones_light = Tree()
-                for g in seq_lightgrp:
-                    for l in seq_lightgrp[g]:
-                        seq_ = list(seq_lightgrp[g][l])
-                        tdarray = np.array(seq_).reshape(-1, 1)
-                        d_mat = squareform(
-                            pdist(tdarray, lambda x, y: hamming(x[0], y[0])))
-                        tr = math.floor(int(l)*(1-identity))
-                        d_mat = np.tril(d_mat)
-                        np.fill_diagonal(d_mat, 0)
-                        indices_temp = []
-                        indices = []
-                        indices_temp = [list(x)
-                                        for x in np.tril_indices_from(d_mat)]
-                        indices = list(zip(indices_temp[0], indices_temp[1]))
-                        if len(indices) > 1:
-                            for pairs in indices:
-                                if pairs[0] == pairs[1]:
-                                    indices.remove(pairs)
-                        indices_j = []
-                        for p in range(0, len(indices)):
-                            a1, b1 = indices[p]
-                            indices_j.append(seq_[a1])
-                            indices_j.append(seq_[b1])
-                        indices_j_f = list(set(indices_j))
-                        source, target = d_mat.nonzero()
-                        source_target = list(
-                            zip(source.tolist(), target.tolist()))
-                        if len(source) == 0 & len(target) == 0:
-                            source_target = list([(0, 0)])
-                        dist = {}
-                        for st in source_target:
-                            dist.update({st: d_mat[st]})
-                        cm1 = []
-                        cm2 = []
-                        cm3 = []
-                        tr2 = min(dist.values())
-                        if tr2 <= tr:
-                            for d in dist:
-                                if dist[d] == tr2:
-                                    cm1.append(d)
-                                else:
-                                    cm3.append(d)
+    dat_light_c = dat[~(dat['locus'] == locus_)].copy()
+    if dat_light_c.shape[0] != 0:
+        if not by_alleles:
+            if 'v_call_genotyped' in dat_light_c.columns:
+                Vlight = [re.sub('[*][0-9][0-9]', '', v)
+                            for v in dat_light_c['v_call_genotyped']]
+            else:
+                Vlight = [re.sub('[*][0-9][0-9]', '', v)
+                            for v in dat_light_c['v_call']]
+            Jlight = [re.sub('[*][0-9][0-9]', '', j)
+                        for j in dat_light_c['j_call']]
+        else:
+            if 'v_call_genotyped' in dat_light_c.columns:
+                Vlight = [v for v in dat_light_c['v_call_genotyped']]
+            else:
+                Vlight = [v for v in dat_light_c['v_call']]
+            Jlight = [j for j in dat_light_c['j_call']]
+        # collapse the alleles to just genes
+        Vlight = [','.join(list(set(v.split(',')))) for v in Vlight]
+        Jlight = [','.join(list(set(j.split(',')))) for j in Jlight]
+        seq = dict(zip(dat_light_c.index, dat_light_c[key_]))
+        if recalculate_length:
+            seq_length = [len(str(l)) for l in dat_light_c[key_]]
+        else:
+            try:
+                seq_length = [len(str(l))
+                                for l in dat_light_c[key_+'_length']]
+            except:
+                raise ValueError("{} not found in {} input table.".format(
+                    key_ + '_length', locus_log2_dict[locus_]))
+        seq_length_dict = dict(zip(dat_light_c.index, seq_length))
+        # Create a dictionary and group sequence ids with same V and J genes
+        V_Jlight = dict(zip(dat_light_c.index, zip(Vlight, Jlight)))
+        vj_lightgrp = defaultdict(list)
+        for key, val in sorted(V_Jlight.items()):
+            vj_lightgrp[val].append(key)
+        # and now we split the groups based on lengths of the seqs
+        vj_len_lightgrp = Tree()
+        seq_lightgrp = Tree()
+        for g in vj_lightgrp:
+            # first, obtain what's the unique lengths
+            jlen = []
+            for contig_id in vj_lightgrp[g]:
+                jlen.append(seq_length_dict[contig_id])
+            setjlen = list(set(jlen))
+            # then for each unique length, we add the contigs to a new tree if it matches the length
+            # and also the actual seq sequences into a another one
+            for s in setjlen:
+                for contig_id in vj_lightgrp[g]:
+                    jlen_ = seq_length_dict[contig_id]
+                    if jlen_ == s:
+                        vj_len_lightgrp[g][s][contig_id].value = 1
+                        seq_lightgrp[g][s][seq[contig_id]].value = 1
+                        for c in [contig_id]:
+                            vj_len_lightgrp[g][s][c] = seq[c]
+        clones_light = Tree()
+        for g in seq_lightgrp:
+            for l in seq_lightgrp[g]:
+                seq_ = list(seq_lightgrp[g][l])
+                tdarray = np.array(seq_).reshape(-1, 1)
+                d_mat = squareform(
+                    pdist(tdarray, lambda x, y: hamming(x[0], y[0])))
+                tr = math.floor(int(l)*(1-identity))
+                d_mat = np.tril(d_mat)
+                np.fill_diagonal(d_mat, 0)
+                indices_temp = []
+                indices = []
+                indices_temp = [list(x)
+                                for x in np.tril_indices_from(d_mat)]
+                indices = list(zip(indices_temp[0], indices_temp[1]))
+                if len(indices) > 1:
+                    for pairs in indices:
+                        if pairs[0] == pairs[1]:
+                            indices.remove(pairs)
+                indices_j = []
+                for p in range(0, len(indices)):
+                    a1, b1 = indices[p]
+                    indices_j.append(seq_[a1])
+                    indices_j.append(seq_[b1])
+                indices_j_f = list(set(indices_j))
+                source, target = d_mat.nonzero()
+                source_target = list(
+                    zip(source.tolist(), target.tolist()))
+                if len(source) == 0 & len(target) == 0:
+                    source_target = list([(0, 0)])
+                dist = {}
+                for st in source_target:
+                    dist.update({st: d_mat[st]})
+                cm1 = []
+                cm2 = []
+                cm3 = []
+                tr2 = min(dist.values())
+                if tr2 <= tr:
+                    for d in dist:
+                        if dist[d] == tr2:
+                            cm1.append(d)
                         else:
-                            for d in dist:
-                                cm3.append(d)
-
-                        if len(dist) > 3:
-                            for d in dist:
-                                if dist[d] < tr:
-                                    cm2.append(d)
-                                else:
-                                    cm3.append(d)
-                            cm2 = list(set(cm2) ^ set(cm1))
-                            cm3 = list(set(cm3) ^ set(cm1))
-                        j_list1 = []
-                        if len(cm1) > 0:
-                            for i in range(0, len(cm1)):
-                                a, b = cm1[i]
-                                j_list1.append(seq_[a])
-                                j_list1.append(seq_[b])
-                            j_list1 = list(set(j_list1))
-                        j_list2 = []
-                        if len(cm3) > 0:
-                            for i in range(0, len(cm2)):
-                                a, b = cm2[i]
-                                j_list2.append(seq_[a])
-                                j_list2.append(seq_[b])
-                            j_list2 = list(set(j_list2))
-                        j_list3 = []
-                        if len(cm3) > 0:
-                            for i in range(0, len(cm3)):
-                                a, b = cm3[i]
-                                j_list3.append(seq_[a])
-                                j_list3.append(seq_[b])
-                            j_list3 = list(set(j_list3))
-                        for jl3_1 in j_list1:
-                            if jl3_1 in j_list3:
-                                j_list3.remove(jl3_1)
-                        for jl2_1 in j_list1:
-                            if jl2_1 in j_list2:
-                                j_list2.remove(jl2_1)
-                        for jl3_2 in j_list2:
-                            if jl3_2 in j_list3:
-                                j_list3.remove(jl3_2)
-                        j_list3 = [i.split() for i in list(set(j_list3))]
-                        if len(j_list1) > 0:
-                            clones_light[g][l][str(0)] = j_list1
-                        if len(j_list2) > 0:
-                            clones_light[g][l][str(1)] = j_list2
-                        if len(j_list3) > 0:
-                            for c in range(0, len(j_list3)):
-                                clones_light[g][l][str(c+2)] = j_list3[c]
-                clone_dict_light = {}
-                cid_light = Tree()
-                for g in clones_light:
-                    for l in clones_light[g]:
-                        for c in clones_light[g][l]:
-                            grp_seq = clones_light[g][l][c]
-                            for key, value in vj_len_lightgrp[g][l].items():
-                                if value in grp_seq:
-                                    cid_light[g][l][c][key].value = 1
-                first_key = []
-                for k1 in cid_light.keys():
-                    first_key.append(k1)
-                first_key = list(set(first_key))
-                first_key_dict = dict(
-                    zip(first_key, range(1, len(first_key)+1)))
-                for g in cid_light:
-                    second_key = []
-                    for k2 in cid_light[g].keys():
-                        second_key.append(k2)
-                    second_key = list(set(second_key))
-                    second_key_dict = dict(
-                        zip(second_key, range(1, len(second_key)+1)))
-                    for l in cid_light[g]:
-                        third_key = []
-                        for k3 in cid_light[g][l].keys():
-                            third_key.append(k3)
-                        third_key = list(set(third_key))
-                        third_key_dict = dict(
-                            zip(third_key, range(1, len(third_key)+1)))
-                        for key, value in dict(cid_light[g][l]).items():
-                            vL = []
-                            for v in value:
-                                if type(v) is int:
-                                    break
-                                clone_dict_light[v] = str(
-                                    first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
-                lclones = list(clone_dict_light.values())
-                # will just update the main dat directly
-                if len(list(set(lclones))) > 1:
-                    lclones_dict = dict(zip(sorted(list(set(lclones))), [
-                                        str(x) for x in range(1, len(list(set(lclones)))+1)]))
-                    renamed_clone_dict_light = {}
-                    for key, value in clone_dict_light.items():
-                        renamed_clone_dict_light[key] = lclones_dict[value]
-                    tmp_clone = dat.loc[renamed_clone_dict_light.keys(
-                    ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
-                    tmp_clone_dict = dict(tmp_clone)
-                    tmpdict = defaultdict(dict)
-                    for k in tmp_clone_dict.keys():
-                        tmpdict[k.split('_contig')[0]].update(
-                            {k: tmp_clone_dict[k]})
-                    final_dict = {}
-                    for kk in tmpdict:
-                        if len(tmpdict[kk]) > 1:
-                            tmp_test = []
-                            for v in tmpdict[kk].values():
-                                if '|' in v:
-                                    tmp_test = tmp_test + \
-                                        list(flatten(v.split('|')))
-                                else:
-                                    tmp_test.append(v)
-                            final_dict[kk] = '|'.join(
-                                sorted(list(set(tmp_test))))
-                        else:
-                            final_dict[kk] = '|'.join(
-                                sorted([str(x) for x in tmpdict[kk].values()]))
-                    for x in renamed_clone_dict_light.keys():
-                        cellid = dat.at[x, 'cell_id']
-                        contigids = dat[dat['cell_id']
-                                        == cellid]['sequence_id']
-                        for y in contigids:
-                            dat.at[y, clone_key] = final_dict[cellid]
+                            cm3.append(d)
                 else:
-                    lclones_dict = dict(
-                        zip(sorted(list(set(lclones))), str(1)))
-                    renamed_clone_dict_light = {}
-                    for key, value in clone_dict_light.items():
-                        renamed_clone_dict_light[key] = lclones_dict[value]
-                    tmp_clone = dat.loc[renamed_clone_dict_light.keys(
-                    ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
-                    final_dict = dict(
-                        zip(dat.loc[renamed_clone_dict_light.keys(), 'cell_id'], tmp_clone))
-                    for x in renamed_clone_dict_light.keys():
-                        cellid = dat.at[x, 'cell_id']
-                        contigids = dat[dat['cell_id']
-                                        == cellid]['sequence_id']
-                        for y in contigids:
-                            dat.at[y, clone_key] = final_dict[cellid]
+                    for d in dist:
+                        cm3.append(d)
+                if len(dist) > 3:
+                    for d in dist:
+                        if dist[d] < tr:
+                            cm2.append(d)
+                        else:
+                            cm3.append(d)
+                    cm2 = list(set(cm2) ^ set(cm1))
+                    cm3 = list(set(cm3) ^ set(cm1))
+                j_list1 = []
+                if len(cm1) > 0:
+                    for i in range(0, len(cm1)):
+                        a, b = cm1[i]
+                        j_list1.append(seq_[a])
+                        j_list1.append(seq_[b])
+                    j_list1 = list(set(j_list1))
+                j_list2 = []
+                if len(cm3) > 0:
+                    for i in range(0, len(cm2)):
+                        a, b = cm2[i]
+                        j_list2.append(seq_[a])
+                        j_list2.append(seq_[b])
+                    j_list2 = list(set(j_list2))
+                j_list3 = []
+                if len(cm3) > 0:
+                    for i in range(0, len(cm3)):
+                        a, b = cm3[i]
+                        j_list3.append(seq_[a])
+                        j_list3.append(seq_[b])
+                    j_list3 = list(set(j_list3))
+                for jl3_1 in j_list1:
+                    if jl3_1 in j_list3:
+                        j_list3.remove(jl3_1)
+                for jl2_1 in j_list1:
+                    if jl2_1 in j_list2:
+                        j_list2.remove(jl2_1)
+                for jl3_2 in j_list2:
+                    if jl3_2 in j_list3:
+                        j_list3.remove(jl3_2)
+                j_list3 = [i.split() for i in list(set(j_list3))]
+                if len(j_list1) > 0:
+                    clones_light[g][l][str(0)] = j_list1
+                if len(j_list2) > 0:
+                    clones_light[g][l][str(1)] = j_list2
+                if len(j_list3) > 0:
+                    for c in range(0, len(j_list3)):
+                        clones_light[g][l][str(c+2)] = j_list3[c]
+        clone_dict_light = {}
+        cid_light = Tree()
+        for g in clones_light:
+            for l in clones_light[g]:
+                for c in clones_light[g][l]:
+                    grp_seq = clones_light[g][l][c]
+                    for key, value in vj_len_lightgrp[g][l].items():
+                        if value in grp_seq:
+                            cid_light[g][l][c][key].value = 1
+        first_key = []
+        for k1 in cid_light.keys():
+            first_key.append(k1)
+        first_key = list(set(first_key))
+        first_key_dict = dict(
+            zip(first_key, range(1, len(first_key)+1)))
+        for g in cid_light:
+            second_key = []
+            for k2 in cid_light[g].keys():
+                second_key.append(k2)
+            second_key = list(set(second_key))
+            second_key_dict = dict(
+                zip(second_key, range(1, len(second_key)+1)))
+            for l in cid_light[g]:
+                third_key = []
+                for k3 in cid_light[g][l].keys():
+                    third_key.append(k3)
+                third_key = list(set(third_key))
+                third_key_dict = dict(
+                    zip(third_key, range(1, len(third_key)+1)))
+                for key, value in dict(cid_light[g][l]).items():
+                    vL = []
+                    for v in value:
+                        if type(v) is int:
+                            break
+                        clone_dict_light[v] = str(
+                            first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
+        lclones = list(clone_dict_light.values())
+        # will just update the main dat directly
+        if len(list(set(lclones))) > 1:
+            lclones_dict = dict(zip(sorted(list(set(lclones))), [
+                                str(x) for x in range(1, len(list(set(lclones)))+1)]))
+        else:
+            lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
+        renamed_clone_dict_light = {}
+        for key, value in clone_dict_light.items():
+            renamed_clone_dict_light[key] = lclones_dict[value]
+        for k in tqdm(renamed_clone_dict_light, desc = 'Refining clone assignment based on light chain pairing '):
+            tmpdat = dat[dat['cell_id'].isin([dat.loc[k]['cell_id']])]
+            tmpclone = list(set([x for x in tmpdat[clone_key] if pd.notnull(x)]))                
+            tmp_clone = '|'.join([tx + '_' + renamed_clone_dict_light[k] for tx in tmpclone])
+            tmpdat[clone_key] = tmp_clone
+            dat[clone_key].update(tmpdat[clone_key])        
 
     dat_[clone_key] = pd.Series(dat[clone_key])
     dat_[clone_key].replace('', 'unassigned')
