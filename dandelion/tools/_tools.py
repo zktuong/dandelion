@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-18 21:50:53
+# @Last Modified time: 2021-02-19 00:34:53
 
 import os
 import sys
@@ -36,7 +36,7 @@ from changeo.Gene import getGene
 from anndata import AnnData
 
 
-def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key_added=None, recalculate_length=True, productive_only = True):
+def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key_added=None, recalculate_length=True, productive_only=True):
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -531,46 +531,54 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
                     for key, value in clone_dict_light.items():
                         renamed_clone_dict_light[key] = lclones_dict[value]
                     tmp_clone = dat.loc[renamed_clone_dict_light.keys(
-                        ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
+                    ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
                     tmp_clone_dict = dict(tmp_clone)
                     tmpdict = defaultdict(dict)
                     for k in tmp_clone_dict.keys():
-                        tmpdict[k.split('_contig')[0]].update({k:tmp_clone_dict[k]})                    
+                        tmpdict[k.split('_contig')[0]].update(
+                            {k: tmp_clone_dict[k]})
                     final_dict = {}
                     for kk in tmpdict:
                         if len(tmpdict[kk]) > 1:
                             tmp_test = []
                             for v in tmpdict[kk].values():
                                 if '|' in v:
-                                    tmp_test = tmp_test + list(flatten(v.split('|')))
+                                    tmp_test = tmp_test + \
+                                        list(flatten(v.split('|')))
                                 else:
                                     tmp_test.append(v)
-                            final_dict[kk] = '|'.join(sorted(list(set(tmp_test))))
+                            final_dict[kk] = '|'.join(
+                                sorted(list(set(tmp_test))))
                         else:
-                            final_dict[kk] = '|'.join(sorted([str(x) for x in tmpdict[kk].values()]))
+                            final_dict[kk] = '|'.join(
+                                sorted([str(x) for x in tmpdict[kk].values()]))
                     for x in renamed_clone_dict_light.keys():
                         cellid = dat.at[x, 'cell_id']
-                        contigids = dat[dat['cell_id'] == cellid]['sequence_id']
+                        contigids = dat[dat['cell_id']
+                                        == cellid]['sequence_id']
                         for y in contigids:
                             dat.at[y, clone_key] = final_dict[cellid]
                 else:
-                    lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
+                    lclones_dict = dict(
+                        zip(sorted(list(set(lclones))), str(1)))
                     renamed_clone_dict_light = {}
                     for key, value in clone_dict_light.items():
                         renamed_clone_dict_light[key] = lclones_dict[value]
                     tmp_clone = dat.loc[renamed_clone_dict_light.keys(
-                        ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
-                    final_dict = dict(zip(dat.loc[renamed_clone_dict_light.keys(), 'cell_id'], tmp_clone))
+                    ), clone_key] + '_' + pd.Series(renamed_clone_dict_light)
+                    final_dict = dict(
+                        zip(dat.loc[renamed_clone_dict_light.keys(), 'cell_id'], tmp_clone))
                     for x in renamed_clone_dict_light.keys():
                         cellid = dat.at[x, 'cell_id']
-                        contigids = dat[dat['cell_id'] == cellid]['sequence_id']
+                        contigids = dat[dat['cell_id']
+                                        == cellid]['sequence_id']
                         for y in contigids:
                             dat.at[y, clone_key] = final_dict[cellid]
 
-    dat_[clone_key]= pd.Series(dat[clone_key])
+    dat_[clone_key] = pd.Series(dat[clone_key])
     if os.path.isfile(str(self)):
         dat_.to_csv("{}/{}_clone.tsv".format(os.path.dirname(self),
-                                            os.path.basename(self).split('.tsv')[0]), sep='\t', index=False)
+                                             os.path.basename(self).split('.tsv')[0]), sep='\t', index=False)
 
     sleep(0.5)
     logg.info(' finished', time=start,
@@ -602,16 +610,18 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
             threshold_ = self.threshold
         else:
             threshold_ = None
-        if ('clone_id' in self.data.columns) and (clone_key is not None):
-            self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_, layout=layout_, graph=graph_, initialize=True, retrieve=clone_key,
-                          split=False, collapse=True, combine=True)  # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
-        elif ('clone_id' not in self.data.columns) and (clone_key is not None):
-            self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_, layout=layout_, graph=graph_,
-                          initialize=True, clone_key=clone_key, retrieve=clone_key, split=False, collapse=True, combine=True)
-        else:
+        if ('clone_id' in self.data.columns) and (key_added is None):
+            self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_, layout=layout_, graph=graph_)  # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
+            update_metadata(self, reinitialize=True)
+        elif ('clone_id' in self.data.columns) and (key_added is not None):
+            self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_, layout=layout_, graph=graph_)
+            update_metadata(self, reinitialize=True, clone_key = 'clone_id', retrieve = clone_key, split=False, collapse=True, combine=True)
+        else:        
             self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_,
-                          layout=layout_, graph=graph_, initialize=True, clone_key=clone_key)
+                          layout=layout_, graph=graph_, clone_key=clone_key)
+            update_metadata(self, reinitialize=True, clone_key = clone_key)
         self.threshold = threshold_
+
     else:
         out = Dandelion(data=dat_, clone_key=clone_key, retrieve=clone_key,
                         split=False, collapse=True, combine=True)
