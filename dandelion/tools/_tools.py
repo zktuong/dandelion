@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 04:04:55
+# @Last Modified time: 2021-02-19 09:43:51
 
 import os
 import sys
@@ -324,10 +324,8 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
                         first_key_dict[g])+'_'+str(second_key_dict[l])+'_'+str(third_key_dict[key])
     # add it to the original dataframes
     dat_heavy[clone_key] = pd.Series(clone_dict)
-    if clone_key not in dat:
-        dat[clone_key] = pd.Series(dat_heavy[clone_key])
-    else:
-        dat[clone_key].update(dat_heavy[clone_key])
+    dat[clone_key] = pd.Series(dat_heavy[clone_key])
+    
     dat_light_c = dat[~(dat['locus'] == locus_)].copy()
     if dat_light_c.shape[0] != 0:
         if not by_alleles:
@@ -521,12 +519,34 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         renamed_clone_dict_light = {}
         for key, value in clone_dict_light.items():
             renamed_clone_dict_light[key] = lclones_dict[value]
-        for k in tqdm(renamed_clone_dict_light, desc = 'Refining clone assignment based on light chain pairing '):
-            tmpdat = dat[dat['cell_id'].isin([dat.loc[k]['cell_id']])]
-            tmpclone = list(set([x for x in tmpdat[clone_key] if pd.notnull(x)]))                
-            tmp_clone = '|'.join([tx + '_' + renamed_clone_dict_light[k] for tx in tmpclone])
-            tmpdat[clone_key] = tmp_clone
-            dat[clone_key].update(tmpdat[clone_key])        
+        
+        cellclonetree = Tree()
+        seqcellclonetree = Tree()
+        for c,s,z in zip(dat['cell_id'], dat['sequence_id'], dat[clone_key]):
+            seqcellclonetree[c][s].value = 1
+            if pd.notnull(z):
+                cellclonetree[c][z].value = 1
+        
+        for c in cellclonetree:
+            cellclonetree[c] = list(cellclonetree[c])
+        
+        fintree = Tree()
+        for c in tqdm(cellclonetree, desc = 'Refining clone assignment based on light chain pairing '):
+            suffix = [renamed_clone_dict_light[x] for x in seqcellclonetree[c] if x in renamed_clone_dict_light]
+            fintree[c] = []
+            if len(suffix) > 1:                
+                for s in suffix:
+                    for cl in cellclonetree[c]:
+                        fintree[c].append(cl+'_'+s)
+                fintree[c] = sorted(fintree[c])
+            else:
+                for cl in cellclonetree[c]:
+                    if len(suffix) > 0:
+                        fintree[c].append(cl+'_'+''.join(suffix))
+                    else:
+                        fintree[c].append(cl)
+            fintree[c] = '|'.join(fintree[c])
+        dat[clone_key] = [fintree[x] for x in dat['cell_id']]        
 
     dat_[clone_key] = pd.Series(dat[clone_key])
     dat_[clone_key].replace('', 'unassigned')
