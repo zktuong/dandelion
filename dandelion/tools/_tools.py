@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 13:17:38
+# @Last Modified time: 2021-02-20 09:06:29
 
 import os
 import sys
@@ -34,9 +34,10 @@ from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
 from anndata import AnnData
+from typing import Union, Sequence, Tuple
 
 
-def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key_added=None, recalculate_length=True, productive_only=True):
+def find_clones(self: Union[Dandelion, pd.DataFrame], identity: float = 0.85, key: Union[None, str] = None, locus: Union[None, str] = None, by_alleles: bool = False, key_added: Union[None, str] = None, recalculate_length: bool = True, productive_only: bool = True) -> Dandelion:
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -94,9 +95,10 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
 
     dat_light = dat[~(dat['locus'] == locus_)].copy()
     dat_heavy = dat[dat['locus'] == locus_].copy()
-    
-    if dat_light.shape[0] > 0:        
-        dump = dat_light[~(dat_light['cell_id'].isin(dat_heavy['cell_id']))].copy()
+
+    if dat_light.shape[0] > 0:
+        dump = dat_light[~(dat_light['cell_id'].isin(
+            dat_heavy['cell_id']))].copy()
         if dump.shape[0] > 0:
             dat = dat[~(dat['cell_id'].isin(dump['cell_id']))].copy()
     dat_heavy = dat[dat['locus'] == locus_].copy()
@@ -325,18 +327,18 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
     # add it to the original dataframes
     dat_heavy[clone_key] = pd.Series(clone_dict)
     dat[clone_key] = pd.Series(dat_heavy[clone_key])
-    
+
     dat_light_c = dat[~(dat['locus'] == locus_)].copy()
     if dat_light_c.shape[0] != 0:
         if not by_alleles:
             if 'v_call_genotyped' in dat_light_c.columns:
                 Vlight = [re.sub('[*][0-9][0-9]', '', v)
-                            for v in dat_light_c['v_call_genotyped']]
+                          for v in dat_light_c['v_call_genotyped']]
             else:
                 Vlight = [re.sub('[*][0-9][0-9]', '', v)
-                            for v in dat_light_c['v_call']]
+                          for v in dat_light_c['v_call']]
             Jlight = [re.sub('[*][0-9][0-9]', '', j)
-                        for j in dat_light_c['j_call']]
+                      for j in dat_light_c['j_call']]
         else:
             if 'v_call_genotyped' in dat_light_c.columns:
                 Vlight = [v for v in dat_light_c['v_call_genotyped']]
@@ -352,7 +354,7 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         else:
             try:
                 seq_length = [len(str(l))
-                                for l in dat_light_c[key_+'_length']]
+                              for l in dat_light_c[key_+'_length']]
             except:
                 raise ValueError("{} not found in {} input table.".format(
                     key_ + '_length', locus_log2_dict[locus_]))
@@ -519,22 +521,23 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         renamed_clone_dict_light = {}
         for key, value in clone_dict_light.items():
             renamed_clone_dict_light[key] = lclones_dict[value]
-        
+
         cellclonetree = Tree()
         seqcellclonetree = Tree()
-        for c,s,z in zip(dat['cell_id'], dat['sequence_id'], dat[clone_key]):
+        for c, s, z in zip(dat['cell_id'], dat['sequence_id'], dat[clone_key]):
             seqcellclonetree[c][s].value = 1
             if pd.notnull(z):
                 cellclonetree[c][z].value = 1
-        
+
         for c in cellclonetree:
             cellclonetree[c] = list(cellclonetree[c])
-        
+
         fintree = Tree()
-        for c in tqdm(cellclonetree, desc = 'Refining clone assignment based on light chain pairing '):
-            suffix = [renamed_clone_dict_light[x] for x in seqcellclonetree[c] if x in renamed_clone_dict_light]
+        for c in tqdm(cellclonetree, desc='Refining clone assignment based on light chain pairing '):
+            suffix = [renamed_clone_dict_light[x]
+                      for x in seqcellclonetree[c] if x in renamed_clone_dict_light]
             fintree[c] = []
-            if len(suffix) > 1:                
+            if len(suffix) > 1:
                 for s in suffix:
                     for cl in cellclonetree[c]:
                         fintree[c].append(cl+'_'+s)
@@ -546,7 +549,7 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
                     else:
                         fintree[c].append(cl)
             fintree[c] = '|'.join(fintree[c])
-        dat[clone_key] = [fintree[x] for x in dat['cell_id']]        
+        dat[clone_key] = [fintree[x] for x in dat['cell_id']]
 
     dat_[clone_key] = pd.Series(dat[clone_key])
     dat_[clone_key].replace('', 'unassigned')
@@ -585,15 +588,19 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         else:
             threshold_ = None
         if ('clone_id' in self.data.columns) and (key_added is None):
-            self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_, layout=layout_, graph=graph_)  # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
+            # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
+            self.__init__(data=dat_, germline=germline_, distance=dist_,
+                          edges=edge_, layout=layout_, graph=graph_)
             update_metadata(self, reinitialize=True)
         elif ('clone_id' in self.data.columns) and (key_added is not None):
-            self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_, layout=layout_, graph=graph_)
-            update_metadata(self, reinitialize=True, clone_key = 'clone_id', retrieve = clone_key, split=False, collapse=True, combine=True)
-        else:        
+            self.__init__(data=dat_, germline=germline_, distance=dist_,
+                          edges=edge_, layout=layout_, graph=graph_)
+            update_metadata(self, reinitialize=True, clone_key='clone_id',
+                            retrieve=clone_key, split=False, collapse=True, combine=True)
+        else:
             self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_,
                           layout=layout_, graph=graph_, clone_key=clone_key)
-            update_metadata(self, reinitialize=True, clone_key = clone_key)
+            update_metadata(self, reinitialize=True, clone_key=clone_key)
         self.threshold = threshold_
 
     else:
@@ -602,7 +609,7 @@ def find_clones(self, identity=0.85, key=None, locus=None, by_alleles=False, key
         return(out)
 
 
-def transfer(self, dandelion, expanded_only=False, neighbors_key=None, rna_key=None, bcr_key=None, overwrite=None):
+def transfer(self: AnnData, dandelion: Dandelion, expanded_only: bool = False, neighbors_key: Union[None, str] = None, rna_key: Union[None, str] = None, bcr_key: Union[None, str] = None, overwrite: Union[None, bool, Sequence, str] = None) -> AnnData:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -737,7 +744,7 @@ def transfer(self, dandelion, expanded_only=False, neighbors_key=None, rna_key=N
                   deep=('updated `.obs` with `.metadata`\n'))
 
 
-def define_clones(self, dist=None, action='set', model='ham', norm='len', doublets='drop', fileformat='airr', ncpu=None, dirs=None, outFilePrefix=None, key_added=None, verbose=False):
+def define_clones(self: Union[Dandelion, pd.DataFrame, str], dist: Union[None, float] = None, action: Literal['first', 'set'] = 'set', model: Literal['ham', 'aa', 'hh_s1f', 'hh_s5f', 'mk_rs1nf', 'mk_rs5nf', 'hs1f_compat', 'm1n_compat'] = 'ham', norm: Literal['len', 'mut', 'none'] = 'len', doublets: Literal['drop', 'count'] = 'drop', fileformat: Literal['changeo', 'airr'] = 'airr', ncpu: Union[None, int] = None, dirs: Union[None, str] = None, outFilePrefix: Union[None, int] = None, key_added: Union[None, int] = None, verbose: bool = False)->Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
 
@@ -1066,7 +1073,7 @@ def define_clones(self, dist=None, action='set', model='ham', norm='len', double
                     '   \'metadata\', cell-indexed clone table\n'))
 
 
-def clone_size(self, max_size=None, clone_key=None, key_added=None):
+def clone_size(self: Dandelion, max_size: Union[None, int] = None, clone_key: Union[None, str] = None, key_added: Union[None, str] = None):
     """
     Quantifies size of clones
 
@@ -1145,7 +1152,7 @@ def clone_size(self, max_size=None, clone_key=None, key_added=None):
                     '   \'metadata\', cell-indexed clone table'))
 
 
-def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None):
+def clone_overlap(self: Union[Dandelion, AnnData], groupby: str, colorby: str, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None) -> Union[AnnData, pd.DataFrame]:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
 
@@ -1192,7 +1199,8 @@ def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None):
     datc_.reset_index(drop=False, inplace=True)
     datc_.columns = ['cell_id', 'tmp', clone_]
     datc_.drop('tmp', inplace=True, axis=1)
-    datc_ = datc_[~(datc_[clone_].isin(['', np.nan, 'nan', 'NaN', 'No_BCR', 'unassigned', None]))]
+    datc_ = datc_[~(datc_[clone_].isin(
+        ['', np.nan, 'nan', 'NaN', 'No_BCR', 'unassigned', None]))]
     dictg_ = dict(data[groupby])
     datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 

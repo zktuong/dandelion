@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 12:26:39
+# @Last Modified time: 2021-02-20 09:37:51
 
 import pandas as pd
 import numpy as np
@@ -20,11 +20,11 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
-
+from typing import Union, Sequence, Tuple, Dict
 import warnings
 
 
-def clone_rarefaction(self, groupby, clone_key=None, diversity_key=None):
+def clone_rarefaction(self: Union[Dandelion, AnnData], groupby: str, clone_key: Union[None, str] = None, diversity_key: Union[None, str] = None) -> Union[AnnData, Dict]:
     """
     Returns rarefaction predictions for cell numbers vs clone size.
 
@@ -101,7 +101,7 @@ def clone_rarefaction(self, groupby, clone_key=None, diversity_key=None):
         return({'rarefaction_cells_x': pred, 'rarefaction_clones_y': y})
 
 
-def clone_diversity(self, groupby, method='gini', metric=None, clone_key=None, update_obs_meta=True, diversity_key=None, resample=False, downsample=None, n_resample=50, normalize=True, reconstruct_network=True, expanded_only=False, use_contracted=False, key_added=None):
+def clone_diversity(self: Union[Dandelion, AnnData], groupby: str, method: Literal['gini', 'chao1', 'shannon'] = 'gini', metric: Literal['clone_vertexsize', 'clone_degree', 'clone_centrality'] = None, clone_key: Union[None, str] = None, update_obs_meta: bool = True, diversity_key: Union[None, str] = None, resample: bool = False, downsample: Union[None, int] = None, n_resample: int = 50, normalize: bool = True, reconstruct_network: bool = True, expanded_only: bool = False, use_contracted: bool = False, key_added: Union[None, str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -114,7 +114,7 @@ def clone_diversity(self, groupby, method='gini', metric=None, clone_key=None, u
     method : str
         Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
     metric : str, optional
-        Metric to use for calculating Gini indices of clones. Accepts one of ['clone_vertexsize', clone_degree', 'clone_centrality']. Defaults to 'clone_vertexsize'.
+        Metric to use for calculating Gini indices of clones. Accepts one of ['clone_vertexsize', 'clone_degree', 'clone_centrality']. `None` defaults to 'clone_vertexsize'.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
@@ -164,7 +164,7 @@ def clone_diversity(self, groupby, method='gini', metric=None, clone_key=None, u
             return(diversity_shannon(self, groupby=groupby, clone_key=clone_key, update_obs_meta=update_obs_meta, diversity_key=diversity_key, resample=resample, n_resample=n_resample, normalize=normalize, downsample=downsample, key_added=key_added))
 
 
-def clone_networkstats(self, expanded_only=False, network_clustersize=False, verbose=True):
+def clone_networkstats(self: Dandelion, expanded_only: bool = False, network_clustersize: bool = False, verbose: bool = True):
     if verbose:
         start = logg.info('Calculating vertex size of nodes after contraction')
 
@@ -251,7 +251,7 @@ def clone_networkstats(self, expanded_only=False, network_clustersize=False, ver
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def diversity_gini(self, groupby, metric=None, clone_key=None, update_obs_meta=False, diversity_key=None, resample=False, n_resample=50, downsample=None, reconstruct_network=True, expanded_only=False, use_contracted=False, key_added=None):
+def diversity_gini(self: Union[Dandelion, AnnData], groupby: str, metric: Union[None, str] = None, clone_key: Union[None, str] = None, update_obs_meta: bool = False, diversity_key: Union[None, str] = None, resample: bool = False, n_resample: int = 50, downsample: Union[None, int] = None, reconstruct_network: bool = True, expanded_only: bool = False, use_contracted: bool = False, key_added: Union[None, str] = None)->Union[pd.DataFrame, Dandelion]:
     """
     Compute B cell clones Gini indices.
 
@@ -290,7 +290,7 @@ def diversity_gini(self, groupby, metric=None, clone_key=None, update_obs_meta=F
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(self, groupby, metric=None, clone_key=None, resample=False, n_resample=50, downsample=None, reconstruct_network=True, expanded_only=False, contracted=False, key_added=None):
+    def gini_indices(self: Dandelion, groupby: str, metric: Union[None, str] = None, clone_key: Union[None, str] = None, resample: bool = False, n_resample: int = 50, downsample: Union[None, int] = None, reconstruct_network: bool = True, expanded_only: bool = False, contracted: bool = False, key_added: Union[None, str] = None)->pd.DataFrame:
         if self.__class__ == AnnData:
             raise TypeError('Only Dandelion class object accepted.')
         elif self.__class__ == Dandelion:
@@ -593,7 +593,7 @@ def diversity_gini(self, groupby, metric=None, clone_key=None, update_obs_meta=F
                         'Please provide {} key(s) for new column names.'.format(len(res_df.columns)))
         return(res_df)
 
-    def transfer_gini_indices(self, gini_results, groupby):
+    def transfer_gini_indices(self: Dandelion, gini_results: pd.DataFrame, groupby: str) -> Dandelion:
         metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
@@ -627,7 +627,7 @@ def diversity_gini(self, groupby, metric=None, clone_key=None, update_obs_meta=F
         return(res_)
 
 
-def diversity_chao1(self, groupby, clone_key=None, update_obs_meta=False, diversity_key=None, resample=False, n_resample=50, downsample=None, key_added=None):
+def diversity_chao1(self: Union[Dandelion, AnnData], groupby: str, clone_key: Union[None, str] = None, update_obs_meta: bool = False, diversity_key: Union[None, str] = None, resample: bool = False, n_resample: int = 50, downsample: Union[None, int] = None, key_added: Union[None, str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Chao1 estimates.
 
@@ -658,7 +658,7 @@ def diversity_chao1(self, groupby, clone_key=None, update_obs_meta=False, divers
     """
     start = logg.info('Calculating Chao1 estimates')
 
-    def chao1_estimates(self, groupby, clone_key=None, resample=False, n_resample=50, downsample=None, key_added=None):
+    def chao1_estimates(self: Union[Dandelion, AnnData], groupby: str, clone_key: Union[None, str] = None, resample: bool = False, n_resample: int = 50, downsample: Union[None, int] = None, key_added: Union[None, str] = None) -> pd.DataFrame:
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -742,7 +742,7 @@ def diversity_chao1(self, groupby, clone_key=None, update_obs_meta=False, divers
 
         return(res_df)
 
-    def transfer_chao1_estimates(self, chao1_results, groupby):
+    def transfer_chao1_estimates(self: Union[Dandelion, AnnData], chao1_results: pd.DataFrame, groupby: str):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -794,7 +794,7 @@ def diversity_chao1(self, groupby, clone_key=None, update_obs_meta=False, divers
         return(res_)
 
 
-def diversity_shannon(self, groupby, clone_key=None, update_obs_meta=False, diversity_key=None, resample=False, n_resample=50, normalize=True, downsample=None, key_added=None):
+def diversity_shannon(self: Union[Dandelion, AnnData], groupby: str, clone_key: Union[None, str] = None, update_obs_meta: bool = False, diversity_key: Union[None, str] = None, resample: bool = False, n_resample: int = 50, normalize: bool = True, downsample: Union[None, int] = None, key_added: Union[None, str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Shannon entropy.
 
@@ -827,7 +827,7 @@ def diversity_shannon(self, groupby, clone_key=None, update_obs_meta=False, dive
     """
     start = logg.info('Calculating Shannon entropy')
 
-    def shannon_entropy(self, groupby, clone_key=None, resample=False, n_resample=50, normalize=True, downsample=None, key_added=None):
+    def shannon_entropy(self: Union[Dandelion, AnnData], groupby: str, clone_key: Union[None, str] = None, resample: bool = False, n_resample: int = 50, normalize: bool = True, downsample: Union[None, int] = None, key_added: Union[None, str] = None) -> pd.DataFrame:
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -940,7 +940,7 @@ def diversity_shannon(self, groupby, clone_key=None, update_obs_meta=False, dive
 
         return(res_df)
 
-    def transfer_shannon_entropy(self, shannon_results, groupby):
+    def transfer_shannon_entropy(self: Union[Dandelion, AnnData], shannon_results: pd.DataFrame, groupby: str):
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:

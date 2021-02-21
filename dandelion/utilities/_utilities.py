@@ -2,13 +2,28 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 12:24:47
+# @Last Modified time: 2021-02-20 09:53:35
 
 import os
 from collections import defaultdict, Iterable
 import pandas as pd
 import numpy as np
 from subprocess import run
+from typing import Sequence, Tuple, Dict
+try:
+    from typing import Literal
+except ImportError:
+    try:
+        from typing_extensions import Literal
+    except ImportError:
+        class LiteralMeta(type):
+            def __getitem__(cls, values):
+                if not isinstance(values, tuple):
+                    values = (values,)
+                return type("Literal_", (Literal,), dict(__args__=values))
+
+        class Literal(metaclass=LiteralMeta):
+            pass
 
 
 class Tree(defaultdict):
@@ -21,7 +36,7 @@ class Tree(defaultdict):
         self.value = value
 
 
-def dict_from_table(meta, columns):
+def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
     """
     Generates a dictionary from a dataframe
     Parameters
@@ -33,7 +48,7 @@ def dict_from_table(meta, columns):
 
     Returns
     -------
-    dictionary
+        dictionary
     """
     if (isinstance(meta, pd.DataFrame)) & (columns is not None):
         meta_ = meta
@@ -48,16 +63,16 @@ def dict_from_table(meta, columns):
     return(sample_dict)
 
 
-def clean_nan_dict(d):
+def clean_nan_dict(d: Dict) -> Dict:
     """
     Parameters
     ----------
-    d
+    d : Dict
         dictionary
 
     Returns
     -------
-    dictionary with no NAs.
+        dictionary with no NAs.
     """
 
     return {
@@ -67,16 +82,16 @@ def clean_nan_dict(d):
     }
 
 
-def flatten(l):
+def flatten(l: Sequence) -> Sequence:
     """
     Parameters
     ----------
-    l
-        list
+    l : Sequence
+        a list-in-list list
 
     Returns
     -------
-    a flattened list.
+        a flattened list.
     """
     for el in l:
         if isinstance(el, Iterable) and not isinstance(el, (str, bytes)):
@@ -85,14 +100,17 @@ def flatten(l):
             yield el
 
 
-def makeblastdb(ref):
+def makeblastdb(ref: str):
     """
-    Runs makeblastdb.
+    Runs makeblastdb on constant region fasta file
 
     Parameters
     ----------
-    ref
-        fasta file
+    ref : str
+        constant region fasta file
+    Returns
+    -------
+
 
     """
 
@@ -103,12 +121,17 @@ def makeblastdb(ref):
     run(cmd)
 
 
-def bh(pvalues):
+def bh(pvalues: np.array) -> np.array:
     """
     Computes the Benjamini-Hochberg FDR correction.
 
-    Input:
-        * pvals - vector of p-values to correct
+    Parameters
+    ----------
+        pvalues : np.array
+            array of p-values to correct
+    Returns
+    -------
+        np.array of corrected p-values
     """
     n = int(pvalues.shape[0])
     new_pvalues = np.empty(n)
@@ -129,21 +152,21 @@ def bh(pvalues):
     return new_pvalues
 
 
-def is_categorical(array_like):
+def is_categorical(array_like) -> bool:
     return array_like.dtype.name == 'category'
 
 
-def type_check(dataframe, key):
+def type_check(dataframe, key) -> bool:
     return dataframe[key].dtype == str or dataframe[key].dtype == object or is_categorical(dataframe[key]) or dataframe[key].dtype == bool
 
 
-def isGZIP(filename):
+def isGZIP(filename: str) -> bool:
     if filename.split('.')[-1] == 'gz':
         return True
     return False
 
 
-def isBZIP(filename):
+def isBZIP(filename: str) -> bool:
     if filename.split('.')[-1] == 'pbz2':
         return True
     return False

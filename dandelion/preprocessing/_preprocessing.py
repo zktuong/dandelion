@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 11:25:46
+# @Last Modified time: 2021-02-20 11:16:04
 
 import sys
 import os
@@ -30,9 +30,11 @@ except ImportError:
     pass
 import numpy as np
 from Bio import Align
+from typing import Union, Sequence, Tuple
+from os import PathLike
 
 
-def format_fasta(fasta, prefix=None, suffix=None, sep=None, remove_trailing_hyphen_number=True, outdir=None):
+def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, suffix: Union[None, str] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None):
     """
     Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -181,18 +183,18 @@ def format_fasta(fasta, prefix=None, suffix=None, sep=None, remove_trailing_hyph
     data.to_csv(out_anno, index=False)
 
 
-def format_fastas(fastas, prefix=None, suffix=None, sep=None, remove_trailing_hyphen_number=True, outdir=None):
+def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix: Union[None, Sequence] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None):
     """
     Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
     Parameters
     ----------
-    fastas : list
-        list or sequence of paths to fasta files.
+    fastas : Sequence
+        list of paths to fasta files.
     prefix : list, optional
-        list or sequence of prefixes to append to headers/contig ids in each fasta file.
+        list of prefixes to append to headers/contig ids in each fasta file.
     suffix : str, optional
-        list or sequence of suffixes to append to headers/contig ids in each fasta file.
+        list of suffixes to append to headers/contig ids in each fasta file.
     sep : str, optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
@@ -235,7 +237,7 @@ def format_fastas(fastas, prefix=None, suffix=None, sep=None, remove_trailing_hy
                              remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
 
 
-def assign_isotype(fasta, fileformat='blast', org='human', correct_c_call=True, correction_dict=None, plot=True, figsize=(4, 4), blastdb=None, allele=False, parallel=True, ncpu=None, verbose=False):
+def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[Dict, None] = None, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -249,11 +251,11 @@ def assign_isotype(fasta, fileformat='blast', org='human', correct_c_call=True, 
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option. Default is True.
-    correction_dict : dict[dict], optional
+    correction_dict : Dict, optional
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
@@ -758,13 +760,13 @@ def assign_isotype(fasta, fileformat='blast', org='human', correct_c_call=True, 
         print(p)
 
 
-def assign_isotypes(fastas, fileformat='blast', org='human', correct_c_call=True, correction_dict=None, plot=True, figsize=(4, 4), blastdb=None, allele=False, parallel=True, ncpu=None, verbose=False):
+def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[None, Dict] = None, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn
 
     Parameters
     ----------
-    fastas : list
+    fastas : Sequence
         list or sequence of paths to fasta files.
     fileformat : str
         format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
@@ -772,11 +774,11 @@ def assign_isotypes(fastas, fileformat='blast', org='human', correct_c_call=True
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option. Default is True.
-    correction_dict : dict[dict], optional
+    correction_dict : Dict, optional
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
@@ -803,17 +805,17 @@ def assign_isotypes(fastas, fileformat='blast', org='human', correct_c_call=True
                        plot=plot, figsize=figsize, blastdb=blastdb, allele=allele, parallel=parallel, ncpu=ncpu, verbose=verbose)
 
 
-def reannotate_genes(data, igblast_db=None, germline=None, org='human', loci='ig', extended=True, verbose=False):
+def reannotate_genes(data: Sequence, igblast_db: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'ig'] = 'human', loci: Literal['ig', 'tr'] = 'ig', extended: bool = True, verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
     Parameters
     ----------
-    data : list
-        list or sequence of fasta file locations, or folder name containing fasta files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    igblast_db : str, optional
+    data : Sequence
+        list of fasta file locations, or folder name containing fasta files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
+    igblast_db : str, PathLike, optional
         path to igblast database folder. Defaults to `$IGDATA` environmental variable.
-    germline : str, optional
+    germline : str, PathLike, optional
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
     org : str
         organism of germline database. Default is 'human'.
@@ -864,15 +866,15 @@ def reannotate_genes(data, igblast_db=None, germline=None, org='human', loci='ig
                        extended=extended, verbose=verbose)
 
 
-def reassign_alleles(data, combined_folder, v_germline=None, germline=None, org='human', v_field='v_call_genotyped', germ_types='dmask', novel=True, cloned=False, plot=True, figsize=(4, 3), sample_id_dictionary=None, verbose=False, ):
+def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_germline: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call_genotyped', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', novel: bool = True, cloned: bool = False, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3), sample_id_dictionary: Union[None, Dict] = None, verbose: bool = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
     Parameters
     ----------
-    data : list
-        list or sequence of data folders containing the .tsv files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    combined_folder : str
+    data : Sequence
+        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
+    combined_folder : str, PathLike
         name of folder for concatenated data file and genotyped files.
     v_germline : str, optional
         path to heavy chain v germline fasta. Defaults to IGHV fasta in `$GERMLINE` environmental variable.
@@ -890,7 +892,7 @@ def reassign_alleles(data, combined_folder, v_germline=None, germline=None, org=
         whether or not to run CreateGermlines.py with `--cloned`.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 3).
     sample_id_dictionary : dict, optional
         dictionary for creating a sample_id column in the concatenated file.
@@ -1086,9 +1088,10 @@ def reassign_alleles(data, combined_folder, v_germline=None, germline=None, org=
             try:
                 for samp in list(set(heavy['sample_id'])):
                     res_x = heavy[(heavy['sample_id'] == samp)]
-                    V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call']]
+                    V_ = [re.sub('[*][0-9][0-9]', '', v)
+                          for v in res_x['v_call']]
                     V_g = [re.sub('[*][0-9][0-9]', '', v)
-                        for v in res_x['v_call_genotyped']]
+                           for v in res_x['v_call_genotyped']]
                     s1 = set(
                         list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
                     setdiff = s1 - s2
@@ -1097,7 +1100,7 @@ def reassign_alleles(data, combined_folder, v_germline=None, germline=None, org=
                     not_in_genotype = ([i in setdiff for i in V_].count(
                         True)/len(V_)*100, [i in setdiff for i in V_g].count(True)/len(V_g)*100)
                     stats = pd.DataFrame([ambiguous, not_in_genotype], columns=[
-                                        'ambiguous', 'not_in_genotype'], index=['before', 'after']).T
+                        'ambiguous', 'not_in_genotype'], index=['before', 'after']).T
                     stats.index.set_names(['vgroup'], inplace=True)
                     stats.reset_index(drop=False, inplace=True)
                     stats['sample_id'] = samp
@@ -1140,19 +1143,20 @@ def reassign_alleles(data, combined_folder, v_germline=None, germline=None, org=
                     ['before', 'after'], inplace=True)
                 not_in_genotype_table['var_group'].cat.reorder_categories(
                     ['before', 'after'], inplace=True)
-    
+
                 options.figure_size = figsize
-                final_table = pd.concat([ambiguous_table, not_in_genotype_table])
+                final_table = pd.concat(
+                    [ambiguous_table, not_in_genotype_table])
                 p = (ggplot(final_table, aes(x='sample_id', y='var', fill='var_group'))
-                    + coord_flip()
-                    + theme_classic()
-                    + xlab("sample_id")
-                    + ylab("% allele calls")
-                    + ggtitle("Genotype reassignment with TIgGER")
-                    + geom_bar(stat="identity")
-                    + facet_grid('~'+str('vgroup'), scales="free_y")
-                    + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
-                    + theme(legend_title=element_blank()))
+                     + coord_flip()
+                     + theme_classic()
+                     + xlab("sample_id")
+                     + ylab("% allele calls")
+                     + ggtitle("Genotype reassignment with TIgGER")
+                     + geom_bar(stat="identity")
+                     + facet_grid('~'+str('vgroup'), scales="free_y")
+                     + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
+                     + theme(legend_title=element_blank()))
                 print(p)
             except:
                 pass
@@ -1173,14 +1177,14 @@ def reassign_alleles(data, combined_folder, v_germline=None, germline=None, org=
             '.tsv', '_genotyped.tsv'), index=False, sep='\t')
 
 
-def reassign_alleles_(data, combined_folder, germline=None, org='human', fileformat='blast', seq_field='sequence_alignment', v_field='v_call_genotyped', d_field='d_call', j_field='j_call', germ_types='dmask', novel=True, plot=True, figsize=(4, 3), sample_id_dictionary=None, verbose=False):
+def reassign_alleles_(data: Sequence, combined_folder:Union[str, PathLike], germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', seq_field: Literal['sequence_alignment'] = 'sequence_alignment', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call_genotyped', d_field: Literal['d_call'] = 'd_call', j_field: Literal['j_call'] = 'j_call', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', novel: bool = True, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3), sample_id_dictionary: Union[None, Dict] = None, verbose: bool = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
     Parameters
     ----------
-    data : list
-        list or sequence of data folders containing the .tsv files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
+    data : Sequence
+        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
     combined_folder : str
         name of folder for concatenated data file and genotyped files.
     germline : str, optional
@@ -1205,7 +1209,7 @@ def reassign_alleles_(data, combined_folder, germline=None, org='human', filefor
         whether or not to run novel allele discovery during tigger-genotyping. Default is True (yes).
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 3).
     sample_id_dictionary : dict, optional
         dictionary for creating a sample_id column in the concatenated file.
@@ -1457,13 +1461,13 @@ def reassign_alleles_(data, combined_folder, germline=None, org='human', filefor
             '.tsv', '_genotyped.tsv'), index=False, sep='\t')
 
 
-def create_germlines(self, germline=None, org='human', seq_field='sequence_alignment', v_field='v_call', d_field='d_call', j_field='j_call', germ_types='dmask', fileformat='airr', initialize_metadata=False):
+def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', seq_field: Literal['sequence_alignment'] = 'sequence_alignment', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call', d_field: Literal['d_call'] = 'd_call', j_field: Literal['j_call'] = 'j_call', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', fileformat: Literal['changeo', 'airr'] = 'airr', initialize_metadata: bool = False) -> Dandelion:
     """
     Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
 
     Parameters
     ----------
-    self : Dandelion, DataFrame, str
+    self : Dandelion, pd.DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     germline : str, optional
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
@@ -1839,7 +1843,7 @@ def create_germlines(self, germline=None, org='human', seq_field='sequence_align
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
 
-def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorqualitybcr=False, rescue_igh=True, umi_foldchange_cutoff=5, filter_lightchains=True, filter_missing=True, productive_only = True, parallel=True, ncpu=None, save=None):
+def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_bcr: bool = True, filter_rna: bool = True, filter_poorqualitybcr: bool = False, rescue_igh: bool = True, umi_foldchange_cutoff: int = 5, filter_lightchains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1848,7 +1852,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
 
     Parameters
     ----------
-    data : DataDrame, str
+    data : Dandeion, pd.DataDrame, str
         V(D)J airr/changeo data to filter. Can be pandas `DataFrame` object or file path as string.
     adata : AnnData
         AnnData object to filter.
@@ -2021,8 +2025,9 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                 other_umi_idx = [i for i, j in enumerate(
                                     h_umi[b]) if j != highest_umi_h]
                                 umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
-                                            [:keep_index_h] + h_umi[b][keep_index_h+1:]]
-                                umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                                             [:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                                umi_test_dict = dict(
+                                    zip(other_umi_idx, umi_test_))
                                 for otherindex in umi_test_dict:
                                     if umi_test_dict[otherindex]:
                                         drop_contig.append(h[b][otherindex])
@@ -2286,11 +2291,13 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
                                     other_umi_idx = [i for i, j in enumerate(
                                         h_umi[b]) if j != highest_umi_h]
                                     umi_test_ = [highest_umi_h/x >= umi_foldchange_cutoff for x in h_umi[b]
-                                                [:keep_index_h] + h_umi[b][keep_index_h+1:]]
-                                    umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                                                 [:keep_index_h] + h_umi[b][keep_index_h+1:]]
+                                    umi_test_dict = dict(
+                                        zip(other_umi_idx, umi_test_))
                                     for otherindex in umi_test_dict:
                                         if umi_test_dict[otherindex]:
-                                            drop_contig.append(h[b][otherindex])
+                                            drop_contig.append(
+                                                h[b][otherindex])
                         else:
                             if len(highest_umi_idx) > 1:
                                 h_doublet.append(b)
@@ -2556,7 +2563,7 @@ def filter_bcr(data, adata, filter_bcr=True, filter_rna=True, filter_poorquality
     return(out_dat, out_adata)
 
 
-def quantify_mutations(self, split_locus=False, sequence_column=None, germline_column=None, region_definition=None, mutation_definition=None, frequency=True, combine=True):
+def quantify_mutations(self: Dandelion, split_locus: bool = False, sequence_column: Union[None, str] = None, germline_column: Union[None, str] = None, region_definition: Union[None, str] = None, mutation_definition: Union[None, str] = None, frequency: bool = False, combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
     """
     Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
 
@@ -2721,7 +2728,7 @@ def quantify_mutations(self, split_locus=False, sequence_column=None, germline_c
             dat.to_csv(self, sep='\t', index=False)
 
 
-def calculate_threshold(self, manual_threshold=None, model=None, normalize_method=None, threshold_method=None, edge=None, cross=None, subsample=None, threshold_model=None, cutoff=None, sensitivity=None, specificity=None, ncpu=None, plot=True, plot_group=None,  figsize=(4.5, 2.5), *args):
+def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_threshold: Union[None, float] = None, model: Union[None, Literal["ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat"]] = None, normalize_method: Union[None, Literal['len']] = None, threshold_method: Union[None, Literal['gmm', 'density']] = None, edge: Union[None, float] = None, cross: Union[None, Sequence] = None, subsample: Union[None, int] = None, threshold_model: Union[None, Literal["norm-norm", "norm-gamma", "gamma-norm", "gamma-gamma"]] = None, cutoff: Union[None, Literal["optimal", "intersect", "user"]] = None, sensitivity: Union[None, float] = None, specificity: Union[None, float] = None, ncpu: Union[None, int] = None, plot: bool = True, plot_group: Union[None, str] = None,  figsize: Tuple[Union[int, float], Union[int, float]] = (4.5, 2.5), *args) -> Dandelion:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
 
@@ -2746,14 +2753,14 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
     edge : float, optional
         upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method="density".
-    cross : list, array, optional
+    cross : Sequence, optional
         supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method="gmm".
     subsample : int, optional
         maximum number of distances to subsample to before threshold detection.
     threshold_model : str, optional
         allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma", "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
     cutoff : str, optional
-        method to use for threshold selection: the optimal threshold "opt", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
+        method to use for threshold selection: the optimal threshold "optimal", the intersection point of the two fitted curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only when method="gmm".
     sensitivity : float, optional
         sensitivity required. Applies only when method="gmm" and cutoff="user".
     specificity : float, optional
@@ -2764,14 +2771,16 @@ def calculate_threshold(self, manual_threshold=None, model=None, normalize_metho
         whether or not to return plot.
     plot_group : str, optional
         determines the fill color and facets.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         size of plot. Default is (4.5, 2.5).
     *args
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
 
     Returns
     -------
-    plotnine plot showing histogram of length normalized ham model distance threshold.
+        `Dandelion` object object with distance threshold value in `.threshold`.
+
+        If plot = True,plotnine plot showing histogram of length normalized ham model distance threshold.
     """
     start = logg.info('Calculating threshold')
     try:

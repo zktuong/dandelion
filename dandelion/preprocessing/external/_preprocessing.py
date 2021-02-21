@@ -2,13 +2,14 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-10 13:59:09
+# @Last Modified time: 2021-02-21 12:45:29
 
 import os
 import pandas as pd
 import numpy as np
 from subprocess import run
 from datetime import timedelta
+from anndata import AnnData
 from time import time
 from collections import OrderedDict
 from time import time
@@ -16,9 +17,11 @@ from ...utilities._utilities import *
 import scanpy as sc
 import scipy.stats
 import re
+from os import PathLike
+from typing import Union, Sequence, Tuple
 
 
-def assigngenes_igblast(fasta, igblast_db=None, org='human', loci='ig', verbose=False):
+def assigngenes_igblast(fasta: Union[str, PathLike], igblast_db: Union[None, str] = None, org: Literal['human', 'mouse'] = 'human', loci: Literal['ig', 'tr'] = 'ig', verbose: bool = False):
     """
     Reannotate with IgBLASTn.
 
@@ -69,7 +72,7 @@ def assigngenes_igblast(fasta, igblast_db=None, org='human', loci='ig', verbose=
         run(cmd, env=env)  # logs are printed to terminal
 
 
-def makedb_igblast(fasta, igblast_output=None, germline=None, org='human', extended=True, verbose=False):
+def makedb_igblast(fasta: Union[str, PathLike], igblast_output: Union[None, str, PathLike] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', extended: bool = True, verbos: bool = False):
     """
     Parses IgBLAST output to airr format.
 
@@ -130,7 +133,7 @@ def makedb_igblast(fasta, igblast_output=None, germline=None, org='human', exten
     run(cmd, env=env)  # logs are printed to terminal
 
 
-def parsedb_heavy(db_file, verbose=False):
+def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
     """
     Parses AIRR table (heavy chain contigs only).
 
@@ -158,7 +161,7 @@ def parsedb_heavy(db_file, verbose=False):
     run(cmd)  # logs are printed to terminal
 
 
-def parsedb_light(db_file, verbose=False):
+def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
     """
     Parses AIRR table (light chain contigs only).
 
@@ -186,7 +189,7 @@ def parsedb_light(db_file, verbose=False):
     run(cmd)  # logs are printed to terminal
 
 
-def creategermlines(db_file, germtypes=None, germline=None, org='human', genotype_fasta=None, v_field=None, cloned=False, mode=None, verbose=False):
+def creategermlines(db_file: Union[str, PathLike], germtypes: Union[None, str] = None, germline: Union[None, PathLike, str] = None, org: Literal['human', 'mouse'] = 'human', genotype_fasta: Union[None, PathLike, str] = None, v_field: Union[None, Literal['v_call', 'v_call_genotyped']] = None, cloned: bool = False, mode: Union[None, Literal['heavy', 'light']] = None, verbose: bool = False):
     """
     Wrapper for CreateGermlines.py for reconstructing germline sequences,
 
@@ -427,7 +430,7 @@ def creategermlines(db_file, germtypes=None, germline=None, org='human', genotyp
     run(cmd, env=env)  # logs are printed to terminal
 
 
-def tigger_genotype(data, v_germline=None, outdir=None, org='human', fileformat='airr', novel_='YES', verbose=False):
+def tigger_genotype(data: Union[str, PathLike], v_germline: Union[None, PathLike, str] = None, outdir: Union[None, PathLike, str] = None, org: Literal['human', 'mouse'] = 'human', fileformat: Literal['airr', 'changeo'] = 'airr', novel_: Literal['YES', 'NO'] = 'YES', verbose: bool = False):
     """
     Reassign alleles with TIgGER in R.
 
@@ -492,153 +495,8 @@ def tigger_genotype(data, v_germline=None, outdir=None, org='human', fileformat=
     if verbose:
         print(msg)
 
-# commented out originally in ConvertDb, not sure if it works properly
-# def insertGaps(db_file, references=None, format=default_format,
-#                out_file=None, out_args=default_out_args):
-#     """
-#     Inserts IMGT numbering into V fields
 
-#     Arguments:
-#       db_file : the database file name.
-#       references : folder with germline repertoire files. If None, do not updated alignment columns wtih IMGT gaps.
-#       format : input format.
-#       out_file : output file name. Automatically generated from the input file if None.
-#       out_args : common output argument dictionary from parseCommonArgs.
-
-#     Returns:
-#      str : output file name
-#     """
-#     log = OrderedDict()
-#     log['START'] = 'insertGaps'
-#     log['COMMAND'] = 'insertGaps'
-#     log['FILE'] = os.path.basename(db_file)
-#     # printLog(log)
-
-#     # Define format operators
-#     try:
-#         reader, writer, schema = getFormatOperators(format)
-#     except ValueError:
-#         printError('Invalid format %s.' % format)
-
-#     # Open input
-#     db_handle = open(db_file, 'rt')
-#     db_iter = reader(db_handle)
-
-#     # Check for required columns
-#     try:
-#         required = ['sequence_imgt', 'v_germ_start_imgt']
-#         checkFields(required, db_iter.fields, schema=schema)
-#     except LookupError as e:
-#         printError(e)
-
-#     # Load references
-#     reference_dict = readGermlines(references)
-
-#     # Check for IMGT-gaps in germlines
-#     if all('...' not in x for x in reference_dict.values()):
-#         printWarning('Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.')
-
-#     # Open output writer
-#     if out_file is not None:
-#         pass_handle = open(out_file, 'w')
-#     else:
-#         pass_handle = getOutputHandle(db_file, out_label='gap', out_dir=out_args['out_dir'],
-#                                       out_name=out_args['out_name'], out_type=schema.out_type)
-#     pass_writer = writer(pass_handle, fields=db_iter.fields)
-
-#     # Count records
-#     result_count = countDbFile(db_file)
-
-#     # Iterate over records
-#     start_time = time()
-#     rec_count = pass_count = 0
-#     for rec in db_iter:
-#         # Print progress for previous iteration
-#         # printProgress(rec_count, result_count, 0.05, start_time=start_time)
-#         rec_count += 1
-#         # Update IMGT fields
-#         imgt_dict = correctIMGTFields(rec, reference_dict)
-#         # Write records
-#         if imgt_dict is not None:
-#             pass_count += 1
-#             rec.setDict(imgt_dict, parse=False)
-#             pass_writer.writeReceptor(rec)
-
-#     # Print counts
-#     # printProgress(rec_count, result_count, 0.05, start_time=start_time)
-#     log = OrderedDict()
-#     log['OUTPUT'] = os.path.basename(pass_handle.name)
-#     log['RECORDS'] = rec_count
-#     log['PASS'] = pass_count
-#     log['FAIL'] = rec_count - pass_count
-#     log['END'] = 'insertGaps'
-#     # printLog(log)
-
-#     # Close file handles
-#     pass_handle.close()
-#     db_handle.close()
-
-#     return pass_handle.name
-
-# def correctIMGTFields(receptor, references):
-#     """
-#     Add IMGT-gaps to IMGT fields in a Receptor object
-
-#     Arguments:
-#       receptor (changeo.Receptor.Receptor): Receptor object to modify.
-#       references (dict): dictionary of IMGT-gapped references sequences.
-
-#     Returns:
-#       changeo.Receptor.Receptor: modified Receptor with IMGT-gapped fields.
-#     """
-#     # Initialize update object
-#     imgt_dict = {'sequence_imgt': None,
-#                  'v_germ_start_imgt': None,
-#                  'v_germ_length_imgt': None,
-#                  'germline_imgt': None}
-
-#     try:
-#         if not all([receptor.sequence_imgt,
-#                     receptor.v_germ_start_imgt,
-#                     receptor.v_germ_length_imgt,
-#                     receptor.v_call]):
-#             raise AttributeError
-#     except AttributeError:
-#         return None
-
-#     # Update IMGT fields
-#     try:
-#         gapped = gapV(receptor.sequence_imgt,
-#                       receptor.v_germ_start_imgt,
-#                       receptor.v_germ_length_imgt,
-#                       receptor.v_call,
-#                       references)
-#     except KeyError as e:
-#         printWarning(e)
-#         return None
-
-#     # Verify IMGT-gapped sequence and junction concur
-#     try:
-#         check = (receptor.junction == gapped['sequence_imgt'][309:(309 + receptor.junction_length)])
-#     except TypeError:
-#         check = False
-#     if not check:
-#         return None
-
-#     # Rebuild germline sequence
-#     __, germlines, __ = buildGermline(receptor, references)
-#     if germlines is None:
-#         return None
-#     else:
-#         gapped['germline_imgt'] = germlines['full']
-
-#     # Update return object
-#     imgt_dict.update(gapped)
-
-#     return imgt_dict
-
-
-def recipe_scanpy_qc(self, max_genes=2500, min_genes=200, mito_cutoff=5, pval_cutoff=0.1, min_counts=None, max_counts=None, blacklist=None):
+def recipe_scanpy_qc(self: AnnData, max_genes: int = 2500, min_genes: int = 200, mito_cutoff: int = 5, pval_cutoff: float = 0.1, min_counts: Union[None, int] = None, max_counts: Union[None, int] = None, blacklist: Union[None, Sequence] = None) -> AnnData:
     """
     Recipe for running a standard scanpy QC workflow.
 

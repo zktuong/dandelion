@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-11 12:26:36
+# @Last Modified time: 2021-02-20 08:47:56
 
 import pandas as pd
 import numpy as np
@@ -22,9 +22,10 @@ try:
     from scanpy import logging as logg
 except ImportError:
     pass
+from typing import Union, Sequence, Tuple
 
 
-def generate_network(self, key=None, clone_key=None, min_size=2, downsample=None, verbose=True, **kwargs):
+def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None, str] = None, clone_key: Union[None, str] = None, min_size: int = 2, downsample: Union[None, int] = None, verbose: bool = True, **kwargs)->Dandelion:
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix.
@@ -324,7 +325,7 @@ def generate_network(self, key=None, clone_key=None, min_size=2, downsample=None
         return(out)
 
 
-def mst(mat):
+def mst(mat: dict) -> Tree:
     """
     Construct minimum spanning tree based on supplied matrix in dictionary.
 
@@ -344,7 +345,7 @@ def mst(mat):
     return(mst_tree)
 
 
-def clone_degree(self, weight=None, verbose=True):
+def clone_degree(self: Dandelion, weight: Union[None, str] = None, verbose: bool = True) -> Dandelion:
     """
     Calculates node degree in BCR network.
 
@@ -388,7 +389,7 @@ def clone_degree(self, weight=None, verbose=True):
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def clone_centrality(self, verbose=True):
+def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
     """
     Calculates node closeness centrality in BCR network.
 
@@ -432,7 +433,7 @@ def clone_centrality(self, verbose=True):
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def generate_layout(vertices, edges=None, min_size=2, weight=None, verbose=True, **kwargs):
+def generate_layout(vertices: Sequence, edges: pd.DataFrame = None, min_size: int = 2, weight: Union[None, str] = None, verbose: bool = True, **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
@@ -798,7 +799,7 @@ def _rescale_layout(pos, scale=1):
     return pos
 
 
-def extract_edge_weights(self, expanded_only=False):
+def extract_edge_weights(self: Dandelion, expanded_only: bool = False) -> Sequence:
     """
     Retrieves edge weights (BCR levenshtein distance) from graph.
 

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 02:28:32
+# @Last Modified time: 2021-02-20 10:15:01
 
 import os
 from collections import defaultdict
@@ -16,6 +16,7 @@ import h5py
 import networkx as nx
 import bz2
 import gzip
+from anndata import AnnData
 import _pickle as cPickle
 try:
     from scanpy import logging as logg
@@ -23,9 +24,357 @@ except ImportError:
     pass
 from ..utilities._utilities import *
 from ..utilities._io import *
+from typing import Union, Sequence, Tuple, Dict
 
 
-def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', split_locus=False, verbose=False):
+class Dandelion:
+    """
+    `Dandelion` class object.
+
+    Main class object storing input/ouput slots for all functions.
+
+    """
+
+    def __init__(self, data=None, metadata=None, germline=None, distance=None, edges=None, layout=None, graph=None, initialize=True, **kwargs):
+        self.data = data
+        self.metadata = metadata
+        self.distance = distance
+        self.edges = edges
+        self.layout = layout
+        self.graph = graph
+        self.threshold = None
+        self.germline = {}
+
+        if germline is not None:
+            self.germline.update(germline)
+
+        if os.path.isfile(str(self.data)):
+            self.data = load_data(self.data)
+
+        if self.data is not None:
+            self.n_contigs = self.data.shape[0]
+            if metadata is None:
+                if initialize is True:
+                    update_metadata(self, **kwargs)
+                try:
+                    self.n_obs = self.metadata.shape[0]
+                except:
+                    self.n_obs = 0
+            else:
+                self.metadata = metadata
+                self.n_obs = self.metadata.shape[0]
+        else:
+            self.n_contigs = 0
+            self.n_obs = 0
+
+    def _gen_repr(self, n_obs, n_contigs) -> str:
+        # inspire by AnnData's function
+        descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
+        for attr in ["data", "metadata", "distance", "edges"]:
+            try:
+                keys = getattr(self, attr).keys()
+            except:
+                keys = []
+            if len(keys) > 0:
+                descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
+            else:
+                descr += f"\n    {attr}: {str(None)}"
+        if self.layout is not None:
+            descr += f"\n    layout: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1])])}"
+        else:
+            descr += f"\n    layout: {str(None)}"
+        if self.graph is not None:
+            descr += f"\n    graph: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
+        else:
+            descr += f"\n    graph: {str(None)}"
+        return descr
+
+    def __repr__(self) -> str:
+        # inspire by AnnData's function
+        return self._gen_repr(self.n_obs, self.n_contigs)
+
+    def copy(self):
+        """
+        Performs a deep copy of all slots in `Dandelion` class.
+
+        Parameters
+        ----------
+        self : Dandelion
+            `Dandelion` object.
+
+        Returns
+        -------
+        a deep copy of `Dandelion` class.
+        """
+        return copy.deepcopy(self)
+
+    def update_germline(self, corrected: Union[None, Dict, str] = None, germline: Union[None, str] = None, org: Literal['human', 'mouse'] = 'human'):
+        """
+        Update germline reference with corrected sequences and store in `Dandelion` object.
+
+        Parameters
+        ----------
+        self : Dandelion
+            `Dandelion` object.
+        corrected : dict, str, optional
+            dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
+        germline : str, optional
+            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+        org : str
+            organism of reference folder. Default is 'human'.
+
+        Returns
+        -------
+        updated germline reference diciontary in `.germline` slot.
+        """
+        start = logg.info('Updating germline reference')
+        env = os.environ.copy()
+        if germline is None:
+            try:
+                gml = env['GERMLINE']
+            except:
+                raise OSError(
+                    'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.')
+            gml = gml+'imgt/'+org+'/vdj/'
+        else:
+            if os.path.isdir(germline):
+                gml = germline
+            elif type(germline) is not list:
+                germline_ = [germline]
+                if len(germline_) < 3:
+                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                else:
+                    gml = []
+                    for x in germline_:
+                        if not x.endswith('.fasta'):
+                            raise OSError(
+                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                        gml.append(x)
+            elif type(germline) is list:
+                if len(germline) < 3:
+                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                else:
+                    gml = []
+                    for x in germline:
+                        if not x.endswith('.fasta'):
+                            raise OSError(
+                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
+                        gml.append(x)
+
+        if type(gml) is not list:
+            gml = [gml]
+
+        germline_ref = readGermlines(gml)
+        if corrected is not None:
+            if type(corrected) is dict:
+                personalized_ref_dict = corrected
+            elif os.path.isfile(str(corrected)):
+                personalized_ref_dict = readGermlines([corrected])
+            # update with the personalized germline database
+            if 'personalized_ref_dict' in locals():
+                germline_ref.update(personalized_ref_dict)
+            else:
+                raise OSError(
+                    'Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences.')
+
+        self.germline.update(germline_ref)
+        logg.info(' finished', time=start,
+                  deep=('Updated Dandelion object: \n'
+                        '   \'germline\', updated germline reference\n'))
+
+    def write_pkl(self, filename: str = 'dandelion_data.pkl.pbz2', **kwargs):
+        """
+        Writes a `Dandelion` class to .pkl format.
+
+        Parameters
+        ----------
+        filename
+            path to `.pkl` file.
+        **kwargs
+            passed to `_pickle`.
+        """
+        if isBZIP(filename):
+            try:
+                with bz2.BZ2File(filename, 'wb') as f:
+                    cPickle.dump(self, f, **kwargs)
+            except:
+                with bz2.BZ2File(filename, 'wb') as f:
+                    cPickle.dump(self, f, protocol=4, **kwargs)
+        elif isGZIP(filename):
+            try:
+                with gzip.open(filename, 'wb') as f:
+                    cPickle.dump(self, f, **kwargs)
+            except:
+                with gzip.open(filename, 'wb') as f:
+                    cPickle.dump(self, f, protocol=4, **kwargs)
+        else:
+            f = open(filename, 'wb')
+            cPickle.dump(self, f, **kwargs)
+            f.close()
+
+    def write_h5(self, filename: str = 'dandelion_data.h5', complib: Literal['zlib', 'lzo', 'bzip2', 'blosc', 'blosc:blosclz', 'blosc:lz4', 'blosc:lz4hc', 'blosc:snappy', 'blosc:zlib', 'blosc:zstd'] = None, compression: Literal['zlib', 'lzo', 'bzip2', 'blosc', 'blosc:blosclz', 'blosc:lz4', 'blosc:lz4hc', 'blosc:snappy', 'blosc:zlib', 'blosc:zstd'] = None, compression_level: Union[None, int] = None, **kwargs):
+        """
+        Writes a `Dandelion` class to .h5 format.
+
+        Parameters
+        ----------
+        filename
+            path to `.h5` file.
+        complib : str, optional
+            method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
+        compression : str, optional
+            same call as complib. Just a convenience option.
+        compression_opts : {0-9}, optional
+            Specifies a compression level for data. A value of 0 disables compression.
+        **kwargs
+            passed to `pd.DataFrame.to_hdf`.
+        """
+        if compression_level is None:
+            compression_level = 9
+        else:
+            compression_level = compression_level
+
+        # a little hack to overwrite the existing file?
+        with h5py.File(filename,  "w") as hf:
+            for datasetname in hf.keys():
+                del hf[datasetname]
+
+        if complib is None and compression is None:
+            comp = None
+        elif complib is not None and compression is None:
+            comp = complib
+        elif complib is None and compression is not None:
+            comp = compression
+        if complib is not None and compression is not None:
+            raise ValueError(
+                'Please specify only complib or compression. They do the same thing.')
+
+        # now to actually saving
+        for col in self.data.columns:
+            weird = (self.data[[col]].applymap(type) !=
+                     self.data[[col]].iloc[0].apply(type)).any(axis=1)
+            if len(self.data[weird]) > 0:
+                self.data[col] = self.data[col].where(
+                    pd.notnull(self.data[col]), '')
+        self.data.to_hdf(filename, "data", complib=comp,
+                         complevel=compression_level, **kwargs)
+
+        if self.metadata is not None:
+            for col in self.metadata.columns:
+                weird = (self.metadata[[col]].applymap(
+                    type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
+                if len(self.metadata[weird]) > 0:
+                    self.metadata[col] = self.metadata[col].where(
+                        pd.notnull(self.metadata[col]), '')
+            self.metadata.to_hdf(filename, "metadata", complib=comp,
+                                 complevel=compression_level, format='table', nan_rep=np.nan, **kwargs)
+        # except:
+        #     warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
+        #     pass
+        try:
+            if 'index' in self.edges.columns:
+                self.edges.drop('index', axis=1, inplace=True)
+            self.edges.to_hdf(filename, "edges", complib=comp,
+                              complevel=compression_level, **kwargs)
+        except:
+            pass
+
+        graph_counter = 0
+        try:
+            for g in self.graph:
+                G = nx.to_pandas_adjacency(g, nonedge=np.nan)
+                G.to_hdf(filename, "graph/graph_"+str(graph_counter),
+                         complib=comp, complevel=compression_level, **kwargs)
+                graph_counter += 1
+        except:
+            pass
+
+        try:
+            for d in self.distance:
+                # how to make this faster?
+                dat = pd.DataFrame(self.distance[d].toarray())
+                dat.to_hdf(filename, "distance/"+d, complib=comp,
+                           complevel=compression_level, **kwargs)
+        except:
+            pass
+
+        with h5py.File(filename,  "a") as hf:
+            # try:
+            #     for d in self.distance:
+            #         hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_level)
+            #         hf.create_dataset('distance/'+d+'/indptr', data=self.distance[d].indptr, compression = compression, compression_opts = compression_level)
+            #         hf.create_dataset('distance/'+d+'/indices', data=self.distance[d].indices, compression = compression, compression_opts = compression_level)
+            #         hf['distance/'+d].attrs['shape'] = self.distance[d].shape
+            # except:
+            #     pass
+
+            try:
+                layout_counter = 0
+                for l in self.layout:
+                    try:
+                        hf.create_group('layout/layout_'+str(layout_counter))
+                    except:
+                        pass
+                    for k in l.keys():
+                        hf['layout/layout_' +
+                            str(layout_counter)].attrs[k] = l[k]
+                    layout_counter += 1
+            except:
+                pass
+
+            if len(self.germline) > 0:
+                try:
+                    hf.create_group('germline')
+                except:
+                    pass
+                for k in self.germline.keys():
+                    hf['germline'].attrs[k] = self.germline[k]
+            if self.threshold is not None:
+                tr = self.threshold
+                hf.create_dataset('threshold', data=tr)
+
+
+def concat(arrays:Sequence[Union[pd.DataFrame, Dandelion]], check_unique:bool =True) -> Dandelion:
+    """
+    Concatenate dataframe and return as `Dandelion` object.
+
+    Parameters
+    ----------
+    arrays : Sequence
+        List of `Dandelion` class objects or pandas dataframe
+    check_unique : bool
+        Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
+
+    Returns
+    -------
+        `Dandelion` object
+    """
+    arrays = list(arrays)
+
+    try:
+        arrays_ = [x.data.copy() for x in arrays]
+    except:
+        arrays_ = [x.copy() for x in arrays]
+
+    if check_unique:
+        try:
+            df = pd.concat(arrays_, verify_integrity=True)
+        except:
+            for i in range(0, len(arrays)):
+                arrays_[i]['sequence_id'] = [x + '__' +
+                                             str(i) for x in arrays_[i]['sequence_id']]
+            arrays_ = [load_data(x) for x in arrays_]
+            df = pd.concat(arrays_, verify_integrity=True)
+    else:
+        df = pd.concat(arrays_)
+    try:
+        out = Dandelion(df)
+    except:
+        out = Dandelion(df, initialize=False)
+    return(out)
+
+
+def retrieve_metadata(data: pd.DataFrame, query: str, split: bool = True, collapse: bool = True, combine: bool = False, locus: Literal['ig'] = 'ig', split_locus: bool = False, verbose: bool = False) -> pd.DataFrame:
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
@@ -36,7 +385,7 @@ def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', s
     locus_dict4 = {'ig': 'L'}
     query_dict = dict(zip(data['sequence_id'], data[query]))
 
-    if type_check(data, query):        
+    if type_check(data, query):
         data[query].fillna('unassigned', inplace=True)
 
     typesoflocus = len(list(set(data['locus'])))
@@ -119,7 +468,7 @@ def retrieve_metadata(data, query, split, collapse, combine=False, locus='ig', s
     return(results)
 
 
-def retrieve_result_dict(query, data, meta_h, meta_l, locus='ig', split=True, collapse=True, combine=False, verbose=False):
+def retrieve_result_dict(query: str, data: pd.DataFrame, meta_h: pd.DataFrame, meta_l: pd.DataFrame, locus: Literal['ig'] = 'ig', split: bool = True, collapse: bool = True, combine: bool = False, verbose: bool = False) -> Dict:
     df_hl = defaultdict(dict)
     locus_dict1 = {'ig': 'IGH'}
     locus_dict2 = {'ig': ['IGK', 'IGL']}
@@ -367,7 +716,7 @@ def retrieve_result_dict(query, data, meta_h, meta_l, locus='ig', split=True, co
     return(final_result)
 
 
-def retrieve_result_dict_singular(query, data, meta_h, locus='ig', collapse=True, combine=False, verbose=False):
+def retrieve_result_dict_singular(query: str, data: pd.DataFrame, meta_h: pd.DataFrame, locus: Literal['ig'] = 'ig', collapse: bool = True, combine: bool = False, verbose: bool = False) -> Dict:
 
     df_hl = defaultdict(dict)
 
@@ -455,7 +804,7 @@ def retrieve_result_dict_singular(query, data, meta_h, locus='ig', collapse=True
     return(final_result)
 
 
-def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose):
+def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collapse_alleles: bool, verbose: bool) -> Dandelion:
     init_dict = {}
     for col in cols:
         init_dict.update({col: {'split': True, 'collapse': True,
@@ -479,11 +828,12 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         suffix_l = ''
 
     if clonekey in init_dict:
-        tmp_metadata[str(clonekey)] = tmp_metadata[str(clonekey)].replace('', 'unassigned')
+        tmp_metadata[str(clonekey)] = tmp_metadata[str(
+            clonekey)].replace('', 'unassigned')
         clones = tmp_metadata[str(clonekey)].str.split('|', expand=False)
         tmpclones = []
         for i in clones:
-            while 'unassigned' in i:                
+            while 'unassigned' in i:
                 i.remove('unassigned')
                 if len(i) == 1:
                     break
@@ -493,7 +843,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
         tmp_metadata[str(clonekey)] = pd.Series(tmpclonesdict)
         tmp = tmp_metadata[str(clonekey)].str.split('|', expand=True).stack()
         tmp = tmp.reset_index(drop=False)
-        tmp.columns = ['cell_id', 'tmp', str(clonekey)]        
+        tmp.columns = ['cell_id', 'tmp', str(clonekey)]
         clone_size = tmp[str(clonekey)].value_counts()
         clonesize_dict = dict(clone_size)
         size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient='index')
@@ -672,7 +1022,7 @@ def initialize_metadata(self, cols, locus_, clonekey, collapse_alleles, verbose)
     self.metadata = tmp_metadata.copy()
 
 
-def update_metadata(self, retrieve=None, locus=None, clone_key=None, split=True, collapse=True, combine=True, split_locus=False, collapse_alleles=True, reinitialize=False,  verbose=False):
+def update_metadata(self: Dandelion, retrieve: Union[None, Sequence, str] = None, locus: Union[None, Literal['ig']] = None, clone_key: Union[None, str] = None, split: bool = True, collapse: bool = True, combine: bool = True, split_locus: bool = False, collapse_alleles: bool = True, reinitialize: bool = False,  verbose: bool = False) -> Dandelion:
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
@@ -680,7 +1030,7 @@ def update_metadata(self, retrieve=None, locus=None, clone_key=None, split=True,
     ----------
     self : Dandelion
         `Dandelion` object.
-    retrieve : str, sequence, list, optional
+    retrieve : str, sequence, optional
         Column name in `.data` slot to retrieve and update the metadata.
     locus : str, optional
         Mode for creating metadata. None defaults to 'ig'. Currently only accepts 'ig'.
@@ -781,351 +1131,3 @@ def update_metadata(self, retrieve=None, locus=None, clone_key=None, split=True,
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
         self.metadata = tmp_metadata.copy()
-
-
-class Dandelion:
-    """
-    `Dandelion` class object.
-
-    Main class object storing input/ouput slots for all functions.
-
-    """
-
-    def __init__(self, data=None, metadata=None, germline=None, distance=None, edges=None, layout=None, graph=None, initialize=True, **kwargs):
-        self.data = data
-        self.metadata = metadata
-        self.distance = distance
-        self.edges = edges
-        self.layout = layout
-        self.graph = graph
-        self.threshold = None
-        self.germline = {}
-
-        if germline is not None:
-            self.germline.update(germline)
-
-        if os.path.isfile(str(self.data)):
-            self.data = load_data(self.data)
-
-        if self.data is not None:
-            self.n_contigs = self.data.shape[0]
-            if metadata is None:
-                if initialize is True:
-                    update_metadata(self, **kwargs)
-                try:
-                    self.n_obs = self.metadata.shape[0]
-                except:
-                    self.n_obs = 0
-            else:
-                self.metadata = metadata
-                self.n_obs = self.metadata.shape[0]
-        else:
-            self.n_contigs = 0
-            self.n_obs = 0
-
-    def _gen_repr(self, n_obs, n_contigs) -> str:
-        # inspire by AnnData's function
-        descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
-        for attr in ["data", "metadata", "distance", "edges"]:
-            try:
-                keys = getattr(self, attr).keys()
-            except:
-                keys = []
-            if len(keys) > 0:
-                descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
-            else:
-                descr += f"\n    {attr}: {str(None)}"
-        if self.layout is not None:
-            descr += f"\n    layout: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1])])}"
-        else:
-            descr += f"\n    layout: {str(None)}"
-        if self.graph is not None:
-            descr += f"\n    graph: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
-        else:
-            descr += f"\n    graph: {str(None)}"
-        return descr
-
-    def __repr__(self) -> str:
-        # inspire by AnnData's function
-        return self._gen_repr(self.n_obs, self.n_contigs)
-
-    def copy(self):
-        """
-        Performs a deep copy of all slots in `Dandelion` class.
-
-        Parameters
-        ----------
-        self : Dandelion
-            `Dandelion` object.
-
-        Returns
-        -------
-        a deep copy of `Dandelion` class.
-        """
-        return copy.deepcopy(self)
-
-    def update_germline(self, corrected=None, germline=None, org='human'):
-        """
-        Update germline reference with corrected sequences and store in `Dandelion` object.
-
-        Parameters
-        ----------
-        self : Dandelion
-            `Dandelion` object.
-        corrected : dict, str, optional
-            dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : str, optional
-            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
-        org : str
-            organism of reference folder. Default is 'human'.
-
-        Returns
-        -------
-        updated germline reference diciontary in `.germline` slot.
-        """
-        start = logg.info('Updating germline reference')
-        env = os.environ.copy()
-        if germline is None:
-            try:
-                gml = env['GERMLINE']
-            except:
-                raise OSError(
-                    'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.')
-            gml = gml+'imgt/'+org+'/vdj/'
-        else:
-            if os.path.isdir(germline):
-                gml = germline
-            elif type(germline) is not list:
-                germline_ = [germline]
-                if len(germline_) < 3:
-                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-                else:
-                    gml = []
-                    for x in germline_:
-                        if not x.endswith('.fasta'):
-                            raise OSError(
-                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-                        gml.append(x)
-            elif type(germline) is list:
-                if len(germline) < 3:
-                    raise OSError('Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-                else:
-                    gml = []
-                    for x in germline:
-                        if not x.endswith('.fasta'):
-                            raise OSError(
-                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.')
-                        gml.append(x)
-
-        if type(gml) is not list:
-            gml = [gml]
-
-        germline_ref = readGermlines(gml)
-        if corrected is not None:
-            if type(corrected) is dict:
-                personalized_ref_dict = corrected
-            elif os.path.isfile(str(corrected)):
-                personalized_ref_dict = readGermlines([corrected])
-            # update with the personalized germline database
-            if 'personalized_ref_dict' in locals():
-                germline_ref.update(personalized_ref_dict)
-            else:
-                raise OSError(
-                    'Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences.')
-
-        self.germline.update(germline_ref)
-        logg.info(' finished', time=start,
-                  deep=('Updated Dandelion object: \n'
-                        '   \'germline\', updated germline reference\n'))
-
-    def write_pkl(self, filename='dandelion_data.pkl.pbz2', **kwargs):
-        """
-        Writes a `Dandelion` class to .pkl format.
-
-        Parameters
-        ----------
-        filename
-            path to `.pkl` file.
-        **kwargs
-            passed to `_pickle`.
-        """
-        if isBZIP(filename):
-            try:
-                with bz2.BZ2File(filename, 'wb') as f:
-                    cPickle.dump(self, f, **kwargs)
-            except:
-                with bz2.BZ2File(filename, 'wb') as f:
-                    cPickle.dump(self, f, protocol=4, **kwargs)
-        elif isGZIP(filename):
-            try:
-                with gzip.open(filename, 'wb') as f:
-                    cPickle.dump(self, f, **kwargs)
-            except:
-                with gzip.open(filename, 'wb') as f:
-                    cPickle.dump(self, f, protocol=4, **kwargs)
-        else:
-            f = open(filename, 'wb')
-            cPickle.dump(self, f, **kwargs)
-            f.close()
-
-    def write_h5(self, filename='dandelion_data.h5', complib=None, compression=None, compression_level=None, **kwargs):
-        """
-        Writes a `Dandelion` class to .h5 format.
-
-        Parameters
-        ----------
-        filename
-            path to `.h5` file.
-        complib : str, optional
-            method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
-        compression : str, optional
-            same call as complib. Just a convenience option.
-        compression_opts : {0-9}, optional
-            Specifies a compression level for data. A value of 0 disables compression.
-        **kwargs
-            passed to `pd.DataFrame.to_hdf`.
-        """
-        if compression_level is None:
-            compression_level = 9
-        else:
-            compression_level = compression_level
-
-        # a little hack to overwrite the existing file?
-        with h5py.File(filename,  "w") as hf:
-            for datasetname in hf.keys():
-                del hf[datasetname]
-
-        if complib is None and compression is None:
-            comp = None
-        elif complib is not None and compression is None:
-            comp = complib
-        elif complib is None and compression is not None:
-            comp = compression
-        if complib is not None and compression is not None:
-            raise ValueError(
-                'Please specify only complib or compression. They do the same thing.')
-
-        # now to actually saving
-        for col in self.data.columns:
-            weird = (self.data[[col]].applymap(type) !=
-                     self.data[[col]].iloc[0].apply(type)).any(axis=1)
-            if len(self.data[weird]) > 0:
-                self.data[col] = self.data[col].where(
-                    pd.notnull(self.data[col]), '')
-        self.data.to_hdf(filename, "data", complib=comp,
-                         complevel=compression_level, **kwargs)
-
-        if self.metadata is not None:
-            for col in self.metadata.columns:
-                weird = (self.metadata[[col]].applymap(
-                    type) != self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
-                if len(self.metadata[weird]) > 0:
-                    self.metadata[col] = self.metadata[col].where(
-                        pd.notnull(self.metadata[col]), '')
-            self.metadata.to_hdf(filename, "metadata", complib=comp,
-                                 complevel=compression_level, format='table', nan_rep=np.nan, **kwargs)
-        # except:
-        #     warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
-        #     pass
-        try:
-            if 'index' in self.edges.columns:
-                self.edges.drop('index', axis=1, inplace=True)
-            self.edges.to_hdf(filename, "edges", complib=comp,
-                              complevel=compression_level, **kwargs)
-        except:
-            pass
-
-        graph_counter = 0
-        try:
-            for g in self.graph:
-                G = nx.to_pandas_adjacency(g, nonedge=np.nan)
-                G.to_hdf(filename, "graph/graph_"+str(graph_counter),
-                         complib=comp, complevel=compression_level, **kwargs)
-                graph_counter += 1
-        except:
-            pass
-
-        try:
-            for d in self.distance:
-                # how to make this faster?
-                dat = pd.DataFrame(self.distance[d].toarray())
-                dat.to_hdf(filename, "distance/"+d, complib=comp,
-                           complevel=compression_level, **kwargs)
-        except:
-            pass
-
-        with h5py.File(filename,  "a") as hf:
-            # try:
-            #     for d in self.distance:
-            #         hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_level)
-            #         hf.create_dataset('distance/'+d+'/indptr', data=self.distance[d].indptr, compression = compression, compression_opts = compression_level)
-            #         hf.create_dataset('distance/'+d+'/indices', data=self.distance[d].indices, compression = compression, compression_opts = compression_level)
-            #         hf['distance/'+d].attrs['shape'] = self.distance[d].shape
-            # except:
-            #     pass
-
-            try:
-                layout_counter = 0
-                for l in self.layout:
-                    try:
-                        hf.create_group('layout/layout_'+str(layout_counter))
-                    except:
-                        pass
-                    for k in l.keys():
-                        hf['layout/layout_' +
-                            str(layout_counter)].attrs[k] = l[k]
-                    layout_counter += 1
-            except:
-                pass
-
-            if len(self.germline) > 0:
-                try:
-                    hf.create_group('germline')
-                except:
-                    pass
-                for k in self.germline.keys():
-                    hf['germline'].attrs[k] = self.germline[k]
-            if self.threshold is not None:
-                tr = self.threshold
-                hf.create_dataset('threshold', data=tr)
-
-
-def concat(arrays, check_unique=True):
-    """
-    Concatenate dataframe and return as `Dandelion` object.
-
-    Parameters
-    ----------
-    arrays : List
-        List of `Dandelion` class objects or pandas dataframe
-    check_unique : bool
-        Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
-
-    Returns
-    -------
-    sample_dict
-        dictionary
-    """
-    arrays = list(arrays)
-
-    try:
-        arrays_ = [x.data.copy() for x in arrays]
-    except:
-        arrays_ = [x.copy() for x in arrays]
-
-    if check_unique:
-        try:
-            df = pd.concat(arrays_, verify_integrity=True)
-        except:
-            for i in range(0, len(arrays)):
-                arrays_[i]['sequence_id'] = [x + '__' +
-                                             str(i) for x in arrays_[i]['sequence_id']]
-            arrays_ = [load_data(x) for x in arrays_]
-            df = pd.concat(arrays_, verify_integrity=True)
-    else:
-        df = pd.concat(arrays_)
-    try:
-        out = Dandelion(df)
-    except:
-        out = Dandelion(df, initialize=False)
-    return(out)

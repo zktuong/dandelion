@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-19 13:17:33
+# @Last Modified time: 2021-02-20 09:44:55
 
 import seaborn as sns
 import pandas as pd
@@ -21,23 +21,26 @@ from scanpy.plotting import palettes
 from time import sleep
 import matplotlib.pyplot as plt
 from itertools import combinations
+from typing import Union, Sequence, Tuple, Dict
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 
-def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4), save=None):
+def clone_rarefaction(self: Union[AnnData, Dandelion], color: str, clone_key: Union[None, str] = None, palette: Union[None, Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), save: Union[None, str] = None) -> ggplot:
     """
     Plots rarefaction curve for cell numbers vs clone size.
 
     Parameters
     ----------
-    self : AnnData
-        `AnnData` object.
-    groupby : str
+    self : `AnnData`, `Dandelion`
+        `AnnData` or `Dandelion` object.
+    color : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata/obs.
-    palette : sequence, optional
-        Color mapping for unique elements in groupby. Will try to retrieve from AnnData `.uns` slot if present.
-    figsize :  tuple[float, float]
+    palette : Sequence, optional
+        Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
+    figsize :  Tuple[Union[int,float], Union[int,float]]
         Size of plot.
     save : str, optional
         Save path.
@@ -49,17 +52,19 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
 
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
+    elif self.__class__ == Dandelion:
+        metadata = self.metadata.copy()
     if clone_key is None:
         clonekey = 'clone_id'
     else:
         clonekey = clone_key
 
-    groups = list(set(metadata[groupby]))
+    groups = list(set(metadata[color]))
     metadata = metadata[metadata['bcr_QC_pass'].isin([True, 'True'])]
     metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
-        _metadata = metadata[metadata[groupby] == g]
+        _metadata = metadata[metadata[color] == g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient='index')
 
@@ -95,7 +100,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
     if palette is None:
         if self.__class__ == AnnData:
             try:
-                pal = self.uns[str(groupby)+'_colors']
+                pal = self.uns[str(color)+'_colors']
             except:
                 if len(list(set((pred.variable)))) <= 20:
                     pal = palettes.default_20
@@ -112,7 +117,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
                      + xlab('number of cells')
                      + ylab('number of clones')
                      + ggtitle('rarefaction curve')
-                     + labs(color=groupby)
+                     + labs(color=color)
                      + scale_color_manual(values=(pal))
                      + geom_line())
             else:
@@ -121,7 +126,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
                      + xlab('number of cells')
                      + ylab('number of clones')
                      + ggtitle('rarefaction curve')
-                     + labs(color=groupby)
+                     + labs(color=color)
                      + geom_line())
         else:
             if len(list(set((pred.variable)))) <= 20:
@@ -139,7 +144,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
                      + xlab('number of cells')
                      + ylab('number of clones')
                      + ggtitle('rarefaction curve')
-                     + labs(color=groupby)
+                     + labs(color=color)
                      + scale_color_manual(values=(pal))
                      + geom_line())
             else:
@@ -148,7 +153,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
                      + xlab('number of cells')
                      + ylab('number of clones')
                      + ggtitle('rarefaction curve')
-                     + labs(color=groupby)
+                     + labs(color=color)
                      + geom_line())
     else:
         p = (ggplot(pred, aes(x="value", y="yhat", color="variable"))
@@ -156,7 +161,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
              + xlab('number of cells')
              + ylab('number of clones')
              + ggtitle('rarefaction curve')
-             + labs(color=groupby)
+             + labs(color=color)
              + geom_line())
     if save:
         p.save(filename='figures/rarefaction'+str(save),
@@ -165,7 +170,7 @@ def clone_rarefaction(self, groupby, clone_key=None, palette=None, figsize=(6, 4
     return(p)
 
 
-def random_palette(n):
+def random_palette(n: int) -> Sequence:
     # a list of 900+colours
     cols = list(sns.xkcd_rgb.keys())
     # if max_colors_needed1 > len(cols):
@@ -174,7 +179,7 @@ def random_palette(n):
     return(palette)
 
 
-def clone_network(adata, basis='bcr', edges=True, **kwargs):
+def clone_network(adata: AnnData, basis: str = 'bcr', edges: bool = True, **kwargs) -> Union[Figure, Axes, None]:
     """
     Using scanpy's plotting module to plot the network. Only thing that is changed is the dfault options: `basis = 'bcr'` and `edges = True`.
 
@@ -192,7 +197,7 @@ def clone_network(adata, basis='bcr', edges=True, **kwargs):
     embedding(adata, basis=basis, edges=edges, **kwargs)
 
 
-def barplot(self, variable, palette='Set1', figsize=(12, 4), normalize=True, sort_descending=True, title=None, xtick_rotation=None, min_clone_size=None, clone_key=None, **kwargs):
+def barplot(self: Union[AnnData, Dandelion], color: str, palette: str = 'Set1', figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), normalize: bool = True, sort_descending: bool = True, title: Union[None, str] = None, xtick_rotation: Union[None, Union[int, float]] = None, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None, **kwargs) -> Tuple[Figure, Axes]:
     """
     A barplot function to plot usage of V/J genes in the data.
 
@@ -200,11 +205,11 @@ def barplot(self, variable, palette='Set1', figsize=(12, 4), normalize=True, sor
     ----------
     self : Dandelion, AnnData
         `Dandelion` or `AnnData` object.
-    variable : str
+    color : str
         column name in metadata for plotting in bar plot.
     palette : str
-        Colors to use for the different levels of the variable. Should be something that can be interpreted by [color_palette](https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette), or a dictionary mapping hue levels to matplotlib colors. See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).
-    figsize : tuple[float, float]
+        Colors to use for the different levels of the color variable. Should be something that can be interpreted by [color_palette](https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette), or a dictionary mapping hue levels to matplotlib colors. See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).
+    figsize : Tuple[Union[int,float], Union[int,float]]
         figure size. Default is (12, 4).
     normalize : bool
         if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
@@ -212,7 +217,7 @@ def barplot(self, variable, palette='Set1', figsize=(12, 4), normalize=True, sor
         whether or not to sort the order of the plot. Default is True.
     title : str, optional
         title of plot.
-    xtick_rotation : int, optional
+    xtick_rotation : int, float, optional
         rotation of x tick labels.
     min_clone_size : int, optional
         minimum clone size to keep. Defaults to 1 if left as None.
@@ -245,7 +250,7 @@ def barplot(self, variable, palette='Set1', figsize=(12, 4), normalize=True, sor
     data_ = data[data[clone_].isin(keep)]
 
     sns.set_style('whitegrid', {'axes.grid': False})
-    res = pd.DataFrame(data_[variable].value_counts(normalize=normalize))
+    res = pd.DataFrame(data_[color].value_counts(normalize=normalize))
     if not sort_descending:
         res = res.sort_index()
     res.reset_index(drop=False, inplace=True)
@@ -254,10 +259,10 @@ def barplot(self, variable, palette='Set1', figsize=(12, 4), normalize=True, sor
     fig, ax = plt.subplots(figsize=figsize)
 
     # plot
-    sns.barplot(x='index', y=variable, data=res, palette=palette, **kwargs)
+    sns.barplot(x='index', y=color, data=res, palette=palette, **kwargs)
     # change some parts
     if title is None:
-        ax.set_title(variable.replace('_', ' ')+' usage')
+        ax.set_title(color.replace('_', ' ')+' usage')
     else:
         ax.set_title(title)
     if normalize:
@@ -272,7 +277,7 @@ def barplot(self, variable, palette='Set1', figsize=(12, 4), normalize=True, sor
     return fig, ax
 
 
-def stackedbarplot(self, variable, groupby, figsize=(12, 4), normalize=False, title=None, sort_descending=True, xtick_rotation=None, hide_legend=True, legend_options=None, labels=None, min_clone_size=None, clone_key=None, **kwargs):
+def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[None, str], figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), normalize: bool = False, title: Union[None, str] = None, sort_descending: bool = True, xtick_rotation: Union[None, Union[float, int]] = None, hide_legend: bool = True, legend_options: Tuple[str, Tuple[float, float], int] = None, labels: Union[None, Sequence] = None, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None, **kwargs) -> Tuple[Figure, Axes]:
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
 
@@ -280,11 +285,11 @@ def stackedbarplot(self, variable, groupby, figsize=(12, 4), normalize=False, ti
     ----------
     self : Dandelion, AnnData
         `Dandelion` or `AnnData` object.
-    variable : str
+    color : str
         column name in metadata for plotting in bar plot.
     groupby : str
         column name in metadata to split by during plotting.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         figure size. Default is (12, 4).
     normalize : bool
         if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
@@ -292,13 +297,13 @@ def stackedbarplot(self, variable, groupby, figsize=(12, 4), normalize=False, ti
         whether or not to sort the order of the plot. Default is True.
     title : str, optional
         title of plot.
-    xtick_rotation : int, optional
+    xtick_rotation: Union[None, Union[float,int]] : int, float, optional
         rotation of x tick labels.
     hide_legend : bool
         whether or not to hide the legend.
-    legend_options : tuple[str, tuple[float, float], int]
+    legend_options : Tuple[str, Tuple[float, float], int]
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : list
+    labels : Sequence, optional
         Names of objects will be used for the legend if list of multiple dataframes supplied.
     min_clone_size : int, optional
         minimum clone size to keep. Defaults to 1 if left as None.
@@ -332,11 +337,11 @@ def stackedbarplot(self, variable, groupby, figsize=(12, 4), normalize=False, ti
     keep = list(size[size >= min_size].index)
     data_ = data[data[clone_].isin(keep)]
 
-    dat_ = pd.DataFrame(data_.groupby(variable)[groupby].value_counts(
+    dat_ = pd.DataFrame(data_.groupby(color)[groupby].value_counts(
         normalize=normalize).unstack(fill_value=0).stack(), columns=['value'])
     dat_.reset_index(drop=False, inplace=True)
-    dat_order = pd.DataFrame(data[variable].value_counts(normalize=normalize))
-    dat_ = dat_.pivot(index=variable, columns=groupby, values='value')
+    dat_order = pd.DataFrame(data[color].value_counts(normalize=normalize))
+    dat_ = dat_.pivot(index=color, columns=groupby, values='value')
     if sort_descending is True:
         dat_ = dat_.reindex(dat_order.index)
     elif sort_descending is False:
@@ -344,7 +349,7 @@ def stackedbarplot(self, variable, groupby, figsize=(12, 4), normalize=False, ti
     elif sort_descending is None:
         dat_ = dat_.sort_index()
 
-    def _plot_bar_stacked(dfall, labels=None, figsize=(12, 4), title="multiple stacked bar plot", xtick_rotation=None, legend_options=None, hide_legend=True, H="/", **kwargs):
+    def _plot_bar_stacked(dfall: pd.DataFrame, labels: Union[None, Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), title: str = "multiple stacked bar plot", xtick_rotation: Union[None, Union[float, int]] = None, legend_options: Tuple[str, Tuple[float, float], int] = None, hide_legend: bool = True, H: Literal["/"] = "/", **kwargs) -> Tuple[Figure, Axes]:
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
 
@@ -413,14 +418,14 @@ def stackedbarplot(self, variable, groupby, figsize=(12, 4), normalize=False, ti
 
     if title is None:
         title = "multiple stacked bar plot : " + \
-            variable.replace('_', ' ') + ' usage'
+            color.replace('_', ' ') + ' usage'
     else:
         title = title
 
     return _plot_bar_stacked(dat_, labels=labels, figsize=figsize, title=title, xtick_rotation=xtick_rotation, legend_options=legend_options, hide_legend=hide_legend, **kwargs)
 
 
-def spectratype(self, variable, groupby, locus, clone_key=None, figsize=(6, 4), width=None, title=None, xtick_rotation=None, hide_legend=True, legend_options=None, labels=None, **kwargs):
+def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus: str, clone_key: Union[None, str] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), width: Union[None, Union[int, float]] = None, title: Union[None, str] = None, xtick_rotation: Union[None, Union[float, int]] = None, hide_legend: bool = True, legend_options: Tuple[str, Tuple[float, float], int] = None, labels: Union[None, Sequence] = None, **kwargs) -> Tuple[Figure, Axes]:
     """
     A spectratype function to plot usage of CDR3 length in the data split by groups.
 
@@ -428,25 +433,25 @@ def spectratype(self, variable, groupby, locus, clone_key=None, figsize=(6, 4), 
     ----------
     self : Dandelion, AnnData
         `Dandelion` or `AnnData` object.
-    variable : str
+    color : str
         column name in metadata for plotting in bar plot.
     groupby : str
         column name in metadata to split by during plotting.
     locus : str
         either IGH or IGL.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         figure size. Default is (6, 4).
-    width : float, optional
+    width : float, int, optional
         width of bars.
     title : str, optional
         title of plot.
-    xtick_rotation : int, optional
+    xtick_rotation : int, float, optional
         rotation of x tick labels.
     hide_legend : bool
         whether or not to hide the legend.
-    legend_options : tuple[str, tuple[float, float], int]
+    legend_options : Tuple[str, Tuple[float, float], int]
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : list
+    labels : Sequence, optional
         Names of objects will be used for the legend if list of multiple dataframes supplied.
     **kwargs
         other kwargs passed to matplotlib.pyplot.plot
@@ -477,16 +482,16 @@ def spectratype(self, variable, groupby, locus, clone_key=None, figsize=(6, 4), 
         locus = [locus]
     data = data[data['locus'].isin(locus)]
     data[groupby] = [str(l) for l in data[groupby]]
-    dat_ = pd.DataFrame(data.groupby(variable)[groupby].value_counts(
+    dat_ = pd.DataFrame(data.groupby(color)[groupby].value_counts(
         normalize=False).unstack(fill_value=0).stack(), columns=['value'])
     dat_.reset_index(drop=False, inplace=True)
-    dat_[variable] = pd.to_numeric(dat_[variable], errors='coerce')
-    dat_.sort_values(by=variable)
-    dat_2 = dat_.pivot(index=variable, columns=groupby, values='value')
-    new_index = range(0, int(dat_[variable].max())+1)
+    dat_[color] = pd.to_numeric(dat_[color], errors='coerce')
+    dat_.sort_values(by=color)
+    dat_2 = dat_.pivot(index=color, columns=groupby, values='value')
+    new_index = range(0, int(dat_[color].max())+1)
     dat_2 = dat_2.reindex(new_index, fill_value=0)
 
-    def _plot_spectra_stacked(dfall, labels=None, figsize=(6, 4), title="multiple stacked bar plot", width=None, xtick_rotation=None, legend_options=None, hide_legend=True, H="/", **kwargs):
+    def _plot_spectra_stacked(dfall: pd.DataFrame, labels: Union[None, Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), title: str = "multiple stacked bar plot", width: Union[None, Union[int, float]] = None, xtick_rotation: Union[None, Union[float, int]] = None, legend_options: Tuple[str, Tuple[float, float], int] = None, hide_legend: bool = True, H: Literal["/"] = "/", **kwargs) -> Tuple[Figure, Axes]:
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
@@ -546,9 +551,9 @@ def spectratype(self, variable, groupby, locus, clone_key=None, figsize=(6, 4), 
     return _plot_spectra_stacked(dat_2, labels=labels, figsize=figsize, title=title, width=width, xtick_rotation=xtick_rotation, legend_options=legend_options, hide_legend=hide_legend, **kwargs)
 
 
-def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None, color_mapping=None, node_labels=True, node_label_layout='rotation', group_label_position='middle', group_label_offset=8, figsize=(8, 8), return_graph=False, save=None, **kwargs):
+def clone_overlap(self: Union[AnnData, Dandelion], groupby: str, colorby: str, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None, color_mapping: Union[None, Sequence, Dict] = None, node_labels: bool = True, node_label_layout: Literal[None, 'rotation', 'numbers'] = 'rotation', group_label_position: Literal['beginning', 'middle', 'end'] = 'middle', group_label_offset: int = 8, figsize: Tuple[Union[int, float], Union[int, float]] = (8, 8), return_graph: bool = False, save: Union[None, str] = None, **kwargs):
     """
-    A plot function to visualise clonal overlap as a circos-style plot.
+    A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.
 
     Parameters
     ----------
@@ -562,7 +567,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None, c
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     clone_key : str, optional
         column name for clones. None defaults to 'clone_id'.
-    color_maopping : dict, sequence, optional
+    color_maopping : Dict, Sequence, optional
         custom color mapping provided as a sequence (correpsonding to order of categories or alpha-numeric order if dtype is not category), or dictionary containing custom {category:color} mapping.
     node_labels : bool, optional
         whether to use node objects as labels or not
@@ -572,7 +577,7 @@ def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None, c
         The position of the group label. One of 'beginning', 'middle' or 'end'.
     group_label_offset : int, float
         how much to offset the group labels, so that they are not overlapping with node labels.
-    figsize : tuple[float, float]
+    figsize : Tuple[Union[int,float], Union[int,float]]
         figure size. Default is (8, 8).
     return_graph : bool
         whether or not to return the graph for fine tuning. Default is False.
@@ -613,7 +618,8 @@ def clone_overlap(self, groupby, colorby, min_clone_size=None, clone_key=None, c
             datc_.reset_index(drop=False, inplace=True)
             datc_.columns = ['cell_id', 'tmp', clone_]
             datc_.drop('tmp', inplace=True, axis=1)
-            datc_ = datc_[~(datc_[clone_].isin(['', np.nan, 'nan', 'NaN', 'No_BCR', 'unassigned', None]))]
+            datc_ = datc_[~(datc_[clone_].isin(
+                ['', np.nan, 'nan', 'NaN', 'No_BCR', 'unassigned', None]))]
             dictg_ = dict(data[groupby])
             datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
