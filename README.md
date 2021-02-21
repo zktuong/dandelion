@@ -53,7 +53,7 @@ conda install -c conda-forge "rpy2>=3.4" # to make compatible for R version 4
 # and then lastly install this
 pip install sc-dandelion
 # or
-pip install git+https://github.com/zktuong/dandelion.git
+pip install git+https://github.com/clatworthylab/dandelion.git
 
 # for the development branch, run this:
 pip install git+https://github.com/zktuong/dandelion.git@devel
