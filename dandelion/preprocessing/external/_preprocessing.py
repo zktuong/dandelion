@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-21 12:45:29
+# @Last Modified time: 2021-02-21 13:10:05
 
 import os
 import pandas as pd
@@ -72,7 +72,7 @@ def assigngenes_igblast(fasta: Union[str, PathLike], igblast_db: Union[None, str
         run(cmd, env=env)  # logs are printed to terminal
 
 
-def makedb_igblast(fasta: Union[str, PathLike], igblast_output: Union[None, str, PathLike] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', extended: bool = True, verbos: bool = False):
+def makedb_igblast(fasta: Union[str, PathLike], igblast_output: Union[None, str, PathLike] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', extended: bool = True, verbose: bool = False):
     """
     Parses IgBLAST output to airr format.
 
