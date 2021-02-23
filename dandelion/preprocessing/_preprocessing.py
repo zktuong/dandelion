@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-23 10:51:14
+# @Last Modified time: 2021-02-23 10:54:32
 
 import sys
 import os
@@ -2640,7 +2640,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
             dat_r = pandas2ri.py2rpy(dat)
 
         results = sh.observedMutations(dat_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                       regionDefinition=reg_d.values(), mutationDefinition=mut_d, frequency=frequency, combine=combine)
+                                       regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
     else:
@@ -2662,9 +2662,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
         results_h = sh.observedMutations(dat_h_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                         regionDefinition=reg_d.values(), mutationDefinition=mut_d, frequency=frequency, combine=combine)
+                                         regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
         results_l = sh.observedMutations(dat_l_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                         regionDefinition=reg_d.values(), mutationDefinition=mut_d, frequency=frequency, combine=combine)
+                                         regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace=True, drop=False)
