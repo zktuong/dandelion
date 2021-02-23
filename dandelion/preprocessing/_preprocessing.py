@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-20 11:16:04
+# @Last Modified time: 2021-02-23 10:51:14
 
 import sys
 import os
@@ -2563,24 +2563,24 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     return(out_dat, out_adata)
 
 
-def quantify_mutations(self: Dandelion, split_locus: bool = False, sequence_column: Union[None, str] = None, germline_column: Union[None, str] = None, region_definition: Union[None, str] = None, mutation_definition: Union[None, str] = None, frequency: bool = False, combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
+def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool = False, sequence_column: Union[None, str] = None, germline_column: Union[None, str] = None, region_definition: Union[None, str] = None, mutation_definition: Union[None, str] = None, frequency: bool = True, combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
     """
     Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
 
     Parameters
     ----------
-    self : Dandelion
-        `Dandelion` object
+    self : Dandelion, str, PathLike
+        `Dandelion` object, file path to AIRR file.
     split_locus : bool
         whether to return the results for heavy chain and light chain separately. Default is False.
     sequence_column: str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+        passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/observedMutations
     germline_column: str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+        passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/observedMutations
     region_definition : str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+        passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/IMGT_SCHEMES/
     mutation_definition : str, optional
-        passed to shazam's `observedMutations <https://shazam.readthedocs.io/en/stable/topics/observedMutations/>`__.
+        passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/MUTATION_SCHEMES/
     frequency
         whether to return the results a frequency or counts. Default is True (frequency).
     combine
@@ -2600,6 +2600,7 @@ def quantify_mutations(self: Dandelion, split_locus: bool = False, sequence_colu
             "Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
 
     sh = importr('shazam')
+    base = importr('base')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
     elif self.__class__ == pd.DataFrame or os.path.isfile(self):
@@ -2622,12 +2623,13 @@ def quantify_mutations(self: Dandelion, split_locus: bool = False, sequence_colu
     if region_definition is None:
         reg_d = NULL
     else:
-        reg_d = data(sh).fetch(region_definition)
+
+        reg_d = base.get(region_definition)
 
     if mutation_definition is None:
         mut_d = NULL
     else:
-        mut_d = data(sh).fetch(mutation_definition)
+        mut_d = base.get(mutation_definition)
 
     if split_locus is False:
         dat = dat.where(dat.isna(), dat.astype(str))
@@ -2638,7 +2640,7 @@ def quantify_mutations(self: Dandelion, split_locus: bool = False, sequence_colu
             dat_r = pandas2ri.py2rpy(dat)
 
         results = sh.observedMutations(dat_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                       regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
+                                       regionDefinition=reg_d.values(), mutationDefinition=mut_d, frequency=frequency, combine=combine)
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
     else:
@@ -2660,9 +2662,9 @@ def quantify_mutations(self: Dandelion, split_locus: bool = False, sequence_colu
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
         results_h = sh.observedMutations(dat_h_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                         regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
+                                         regionDefinition=reg_d.values(), mutationDefinition=mut_d, frequency=frequency, combine=combine)
         results_l = sh.observedMutations(dat_l_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                         regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
+                                         regionDefinition=reg_d.values(), mutationDefinition=mut_d, frequency=frequency, combine=combine)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace=True, drop=False)
