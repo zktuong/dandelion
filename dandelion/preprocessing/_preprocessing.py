@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-23 10:54:32
+# @Last Modified time: 2021-03-04 13:14:05
 
 import sys
 import os
@@ -1831,7 +1831,7 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             return(_create_germlines_file(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
     else:
         if self.__class__ == Dandelion:
-            if len(self.germline) is not 0:
+            if len(self.germline) != 0:
                 _create_germlines_object(
                     self, self.germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
             else:
@@ -2508,7 +2508,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 filter_ids2.append(b)
         _dat = _dat[~(_dat['cell_id'].isin(filter_ids2))].copy()
 
-        if _dat.shape[0] is 0:
+        if _dat.shape[0] == 0:
             raise IndexError(
                 'No BCRs passed filtering. Are you sure that the cell barcodes are matching?')
 
@@ -2834,7 +2834,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
         dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
     # Find threshold using density method
     dist = np.array(dist_ham['dist_nearest'])
-    if threshold_method_ is 'density':
+    if threshold_method_ == 'density':
         if edge is None:
             edge_ = 0.9
         else:

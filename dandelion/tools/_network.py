@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-20 08:47:56
+# @Last Modified time: 2021-03-04 13:12:41
 
 import pandas as pd
 import numpy as np
@@ -375,7 +375,7 @@ def clone_degree(self: Dandelion, weight: Union[None, str] = None, verbose: bool
             G.add_weighted_edges_from(
                 zip(list(self.metadata.index), list(self.metadata.index), A.data))
 
-        if len(G) is 0:
+        if len(G) == 0:
             raise AttributeError(
                 'Graph not found. Plase run tl.generate_network.')
         else:
@@ -417,7 +417,7 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
             G.add_weighted_edges_from(
                 zip(list(self.metadata.index), list(self.metadata.index), A.data))
 
-        if len(G) is 0:
+        if len(G) == 0:
             raise AttributeError(
                 'Graph not found. Plase run tl.generate_network.')
         else:
