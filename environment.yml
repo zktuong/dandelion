@@ -30,7 +30,7 @@ dependencies:
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
-  - rpy2>=3.4
+  - rpy2>=3.4.0
   - numpy>=1.18.4
   - pandas>=1.0.3
   - changeo>=1.0.0
