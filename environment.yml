@@ -23,13 +23,6 @@ dependencies:
 - numba
 - pytables
 - pytest
-- r-essentials
-- rpy2>=3.4
-- r-optparse
-- r-alakazam
-- r-tigger
-- r-airr
-- r-shazam
 - blast
 - igblast
 - pip
@@ -37,6 +30,7 @@ dependencies:
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
+  - rpy2>=3.4
   - numpy>=1.18.4
   - pandas>=1.0.3
   - changeo>=1.0.0
