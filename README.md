@@ -31,7 +31,7 @@ I would reccomend installing this in order:
 ```bash
 # in bash/zsh terminal
 # create a conda environment with specific modules
-conda create --name dandelion python=3.7 
+conda create --name dandelion 'python>=3.7,<=3.8'
 conda activate dandelion
 ```
 
@@ -41,11 +41,8 @@ First, install [scanpy](https://scanpy.readthedocs.io/en/latest/installation.htm
 # these are required by dandelion
 conda install -c conda-forge distance joblib plotnine adjustText
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-conda install -c conda-forge "rpy2>=3.3.2,<3.3.5" # to make compatible for R version 4
-# or pip install "rpy2>=3.3.2,<3.3.5"
-# If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
-# then run
-# env CC=/path/to/location/of/bin/gcc-9 pip install "rpy2>=3.3.2,<3.3.5"
+conda install -c conda-forge "rpy2>=3.4" # to make compatible for R version 4
+# or pip install rpy2>=3.4
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
 # and then lastly install this
@@ -100,22 +97,22 @@ source ~/.bash_profile # or ~/.zshenv
 Python packages
 ```python
 # conda
-python>=3.7,<3.8 (conda-forge)
+python>=3.7,<=3.8 (conda-forge)
 numpy>=1.18.4 (conda-forge)
 pandas>=1.0.3 (conda-forge)
 distance>=0.1.3 (conda-forge)
-joblib==0.14.1 (conda-forge)
-jupyter==1.0.0 (conda-forge)
+joblib>=0.14.1 (conda-forge)
+jupyter (conda-forge)
 scikit-learn>=0.23.0 (conda-forge)
 numba>=0.48.0 (conda-forge)
-pytables==3.6.1 (conda-forge)
+pytables>=3.6.1 (conda-forge)
 seaborn>=0.10.1 (conda-forge)
 leidenalg>=0.8.0 (conda-forge)
 plotnine>=0.6.0 (conda-forge)
 
 # Other executables (through conda)
 blast>=2.10.0 (bioconda) # depends on the database version as well
-igblast==1.15.0 (bioconda)
+igblast>=1.15.0 (bioconda)
 
 # pip
 anndata>=0.7.1
@@ -126,7 +123,7 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-rpy2>=3.3.2,<3.3.5
+rpy2>=3.4 or # rpy2>=3.3.2,<3.3.5
 ```
 
 R packages
