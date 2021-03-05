@@ -5,7 +5,7 @@
 [![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
 [![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)](https://github.com/zktuong/dandelion/actions?query=workflow%3Atests)
 
-![](notebooks/img/dandelion_logo_illustration.png)
+![](docs/notebooks/img/dandelion_logo_illustration.png)
 
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
 
@@ -15,11 +15,11 @@ Hi there! I have put together a python package for analyzing single cell BCR/V(D
 
 ## Overview
 
-![](notebooks/img/dandelion_overview.png)
+![](docs/notebooks/img/dandelion_overview.png)
 
 Illustration of the `Dandelion` class slots
 
-![](notebooks/img/dandelion_class.png)
+![](docs/notebooks/img/dandelion_class.png)
 
 Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/master/docs/notebooks/):
 
@@ -31,7 +31,7 @@ I would reccomend installing this in order:
 ```bash
 # in bash/zsh terminal
 # create a conda environment with specific modules
-conda create --name dandelion 'python>=3.7,<=3.8'
+conda create --name dandelion python=3.7 # or 3.8
 conda activate dandelion
 ```
 
