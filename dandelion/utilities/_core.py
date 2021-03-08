@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-20 10:15:01
+# @Last Modified time: 2021-03-08 11:24:34
 
 import os
 from collections import defaultdict
@@ -835,6 +835,11 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         for i in clones:
             while 'unassigned' in i:
                 i.remove('unassigned')
+                if len(i) == 1:
+                    break
+        for i in clones:
+            while '' in i:
+                i.remove('')
                 if len(i) == 1:
                     break
             tmpclones.append(i)
