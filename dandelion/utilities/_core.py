@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-08 12:20:24
+# @Last Modified time: 2021-03-08 12:27:12
 
 import os
 from collections import defaultdict
@@ -845,7 +845,8 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         tmp = tmp.reset_index(drop=False)
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]
         clone_size = tmp[str(clonekey)].value_counts()
-        clone_size = clone_size.drop("", axis = 0)
+        if "" in clone_size.index:
+            clone_size = clone_size.drop("", axis = 0)
         clonesize_dict = dict(clone_size)
         size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient='index')
         size_of_clone.reset_index(drop=False, inplace=True)
