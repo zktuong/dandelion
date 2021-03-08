@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-08 11:24:34
+# @Last Modified time: 2021-03-08 12:20:24
 
 import os
 from collections import defaultdict
@@ -836,12 +836,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
             while 'unassigned' in i:
                 i.remove('unassigned')
                 if len(i) == 1:
-                    break
-        for i in clones:
-            while '' in i:
-                i.remove('')
-                if len(i) == 1:
-                    break
+                    break        
             tmpclones.append(i)
         tmpclones = ['|'.join(list(set(x))) for x in tmpclones]
         tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
@@ -850,6 +845,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         tmp = tmp.reset_index(drop=False)
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]
         clone_size = tmp[str(clonekey)].value_counts()
+        clone_size = clone_size.drop("", axis = 0)
         clonesize_dict = dict(clone_size)
         size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient='index')
         size_of_clone.reset_index(drop=False, inplace=True)
@@ -857,6 +853,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
         size_dict = dict(
             zip(size_of_clone[clonekey], size_of_clone[str(clonekey)+'_by_size']))
+        size_dict.update({'':'unassigned'})
         tmp_metadata[str(clonekey)+'_by_size'] = ['|'.join(sorted(list(set([str(size_dict[c_]) for c_ in c.split('|')]))))
                                                   if len(c.split('|')) > 1 else str(size_dict[c]) for c in tmp_metadata[str(clonekey)]]
         tmp_metadata[str(
