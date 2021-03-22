@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-04 13:14:05
+# @Last Modified time: 2021-03-22 12:04:01
 
 import sys
 import os
@@ -1934,10 +1934,9 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
 
     # rather than leaving a nan cell, i will create a 0 column for now
     if 'duplicate_count' in dat and 'umi_count' not in dat:
-        dat['umi_count'] = dat['duplicate_count']  # just do a simple swap?
-        dat['duplicate_count'] = 0
+        dat['umi_count'] = dat['duplicate_count']  # just do a simple swap?        
     elif 'duplicate_count' not in dat and 'umi_count' in dat:
-        dat['duplicate_count'] = 0
+        dat['duplicate_count'] = dat['umi_count']
 
     global parallel_marking
 
