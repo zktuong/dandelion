@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-08 12:27:12
+# @Last Modified time: 2021-03-30 11:20:04
 
 import os
 from collections import defaultdict
@@ -334,7 +334,7 @@ class Dandelion:
                 hf.create_dataset('threshold', data=tr)
 
 
-def concat(arrays:Sequence[Union[pd.DataFrame, Dandelion]], check_unique:bool =True) -> Dandelion:
+def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool = True) -> Dandelion:
     """
     Concatenate dataframe and return as `Dandelion` object.
 
@@ -375,6 +375,7 @@ def concat(arrays:Sequence[Union[pd.DataFrame, Dandelion]], check_unique:bool =T
 
 
 def retrieve_metadata(data: pd.DataFrame, query: str, split: bool = True, collapse: bool = True, combine: bool = False, locus: Literal['ig'] = 'ig', split_locus: bool = False, verbose: bool = False) -> pd.DataFrame:
+    data_tmp = data.copy()
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
@@ -383,22 +384,23 @@ def retrieve_metadata(data: pd.DataFrame, query: str, split: bool = True, collap
     locus_dict2 = {'ig': ['IGK', 'IGL']}
     locus_dict3 = {'ig': 'H'}
     locus_dict4 = {'ig': 'L'}
-    query_dict = dict(zip(data['sequence_id'], data[query]))
+    query_dict = dict(zip(data_tmp['sequence_id'], data_tmp[query]))
 
     if type_check(data, query):
-        data[query].fillna('unassigned', inplace=True)
+        data_tmp[query].fillna('unassigned', inplace=True)
 
-    typesoflocus = len(list(set(data['locus'])))
+    typesoflocus = len(list(set(data_tmp['locus'])))
 
     if typesoflocus > 1:
         if split_locus:
             for loci in flatten([locus_dict1[locus]] + locus_dict2[locus]):
-                tmp = data[data['locus'].isin([loci])].copy()
+                tmp = data_tmp[data_tmp['locus'].isin([loci])].copy()
                 if tmp.shape[0] > 0:
                     dat_dict[loci] = tmp.copy()
         else:
-            tmp3 = data[data['locus'].isin([locus_dict1[locus]])].copy()
-            tmp4 = data[data['locus'].isin(locus_dict2[locus])].copy()
+            tmp3 = data_tmp[data_tmp['locus'].isin(
+                [locus_dict1[locus]])].copy()
+            tmp4 = data_tmp[data_tmp['locus'].isin(locus_dict2[locus])].copy()
             if tmp3.shape[0] > 0:
                 dat_dict[locus_dict3[locus]] = tmp3.copy()
             if tmp4.shape[0] > 0:
@@ -407,7 +409,7 @@ def retrieve_metadata(data: pd.DataFrame, query: str, split: bool = True, collap
         if verbose:
             warnings.warn(UserWarning(
                 'Single locus type detected. Ignoring split = True and split_locus = True.'))
-        dat_dict[locus_dict3[locus]] = data[data['locus'].isin(
+        dat_dict[locus_dict3[locus]] = data_tmp[data_tmp['locus'].isin(
             [locus_dict1[locus]])].copy()
 
     for d in dat_dict:
@@ -458,13 +460,13 @@ def retrieve_metadata(data: pd.DataFrame, query: str, split: bool = True, collap
     if typesoflocus > 1:
         if not split_locus:
             results = retrieve_result_dict(
-                query, data, metadata_result[locus_dict3[locus]], metadata_result[locus_dict4[locus]], locus, split, collapse, combine)
+                query, data_tmp, metadata_result[locus_dict3[locus]], metadata_result[locus_dict4[locus]], locus, split, collapse, combine)
         else:
-            results = retrieve_result_dict(query, data, metadata_result[locus_dict1[locus]], [
+            results = retrieve_result_dict(query, data_tmp, metadata_result[locus_dict1[locus]], [
                                            metadata_result[L] for L in locus_dict2[locus]], locus, split, collapse, combine)
     else:
         results = retrieve_result_dict_singular(
-            query, data, metadata_result[locus_dict3[locus]], locus, collapse, combine)
+            query, data_tmp, metadata_result[locus_dict3[locus]], locus, collapse, combine)
     return(results)
 
 
@@ -836,7 +838,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
             while 'unassigned' in i:
                 i.remove('unassigned')
                 if len(i) == 1:
-                    break        
+                    break
             tmpclones.append(i)
         tmpclones = ['|'.join(list(set(x))) for x in tmpclones]
         tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
@@ -846,7 +848,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         tmp.columns = ['cell_id', 'tmp', str(clonekey)]
         clone_size = tmp[str(clonekey)].value_counts()
         if "" in clone_size.index:
-            clone_size = clone_size.drop("", axis = 0)
+            clone_size = clone_size.drop("", axis=0)
         clonesize_dict = dict(clone_size)
         size_of_clone = pd.DataFrame.from_dict(clonesize_dict, orient='index')
         size_of_clone.reset_index(drop=False, inplace=True)
@@ -854,7 +856,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         size_of_clone[str(clonekey)+'_by_size'] = size_of_clone.index+1
         size_dict = dict(
             zip(size_of_clone[clonekey], size_of_clone[str(clonekey)+'_by_size']))
-        size_dict.update({'':'unassigned'})
+        size_dict.update({'': 'unassigned'})
         tmp_metadata[str(clonekey)+'_by_size'] = ['|'.join(sorted(list(set([str(size_dict[c_]) for c_ in c.split('|')]))))
                                                   if len(c.split('|')) > 1 else str(size_dict[c]) for c in tmp_metadata[str(clonekey)]]
         tmp_metadata[str(
