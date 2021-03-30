@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Index &mdash; dandelion 0.0.27.post1 documentation</title>
+  <title>Index &mdash; dandelion 0.1.0 documentation</title>
   
 
   
@@ -18,7 +18,10 @@
   
     <link rel="shortcut icon" href="_static/dandelion_logo.png"/>
   
+
   
+  
+
   
 
   
@@ -32,8 +35,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -97,10 +98,14 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -109,6 +114,8 @@
 <li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.Dandelion">Dandelion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.logging">Logging</a></li>
 </ul>
 
             
@@ -149,6 +156,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -160,7 +169,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
         
       </li>
     
@@ -192,6 +201,7 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -253,6 +263,10 @@
       </ul></li>
       <li><a href="modules/dandelion.tools.clone_size.html#dandelion.tools.clone_size">clone_size() (in module dandelion.tools)</a>
 </li>
+      <li><a href="modules/dandelion.utilities.concat.html#dandelion.utilities.concat">concat() (in module dandelion.utilities)</a>
+</li>
+      <li><a href="modules/dandelion.Dandelion.copy.html#dandelion.Dandelion.copy">copy() (dandelion.Dandelion method)</a>
+</li>
       <li><a href="modules/dandelion.preprocessing.create_germlines.html#dandelion.preprocessing.create_germlines">create_germlines() (in module dandelion.preprocessing)</a>
 </li>
       <li><a href="modules/dandelion.preprocessing.external.creategermlines.html#dandelion.preprocessing.external.creategermlines">creategermlines() (in module dandelion.preprocessing.external)</a>
@@ -265,6 +279,20 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/dandelion.utilities.Dandelion.html#dandelion.utilities.Dandelion">Dandelion (class in dandelion.utilities)</a>
 </li>
+      <li>
+    dandelion.Dandelion
+
+      <ul>
+        <li><a href="api.html#module-dandelion.Dandelion">module</a>
+</li>
+      </ul></li>
+      <li>
+    dandelion.logging
+
+      <ul>
+        <li><a href="api.html#module-dandelion.logging">module</a>
+</li>
+      </ul></li>
       <li>
     dandelion.plotting
 
@@ -279,6 +307,8 @@
         <li><a href="api.html#module-dandelion.preprocessing">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     dandelion.preprocessing.external
 
@@ -286,8 +316,6 @@
         <li><a href="api.html#module-dandelion.preprocessing.external">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     dandelion.tools
 
@@ -328,6 +356,8 @@
 </li>
       <li><a href="modules/dandelion.preprocessing.format_fastas.html#dandelion.preprocessing.format_fastas">format_fastas() (in module dandelion.preprocessing)</a>
 </li>
+      <li><a href="modules/dandelion.utilities.from_scirpy.html#dandelion.utilities.from_scirpy">from_scirpy() (in module dandelion.utilities)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -358,6 +388,10 @@
     module
 
       <ul>
+        <li><a href="api.html#module-dandelion.Dandelion">dandelion.Dandelion</a>
+</li>
+        <li><a href="api.html#module-dandelion.logging">dandelion.logging</a>
+</li>
         <li><a href="api.html#module-dandelion.plotting">dandelion.plotting</a>
 </li>
         <li><a href="api.html#module-dandelion.preprocessing">dandelion.preprocessing</a>
@@ -377,9 +411,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/dandelion.preprocessing.external.parsedb_heavy.html#dandelion.preprocessing.external.parsedb_heavy">parsedb_heavy() (in module dandelion.preprocessing.external)</a>
 </li>
+      <li><a href="modules/dandelion.preprocessing.external.parsedb_light.html#dandelion.preprocessing.external.parsedb_light">parsedb_light() (in module dandelion.preprocessing.external)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules/dandelion.preprocessing.external.parsedb_light.html#dandelion.preprocessing.external.parsedb_light">parsedb_light() (in module dandelion.preprocessing.external)</a>
+      <li><a href="modules/dandelion.logging.print_header.html#dandelion.logging.print_header">print_header() (in module dandelion.logging)</a>
+</li>
+      <li><a href="modules/dandelion.logging.print_versions.html#dandelion.logging.print_versions">print_versions() (in module dandelion.logging)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -395,6 +433,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dandelion.utilities.read_10x_airr.html#dandelion.utilities.read_10x_airr">read_10x_airr() (in module dandelion.utilities)</a>
+</li>
       <li><a href="modules/dandelion.utilities.read_h5.html#dandelion.utilities.read_h5">read_h5() (in module dandelion.utilities)</a>
 </li>
       <li><a href="modules/dandelion.utilities.read_pkl.html#dandelion.utilities.read_pkl">read_pkl() (in module dandelion.utilities)</a>
@@ -429,6 +469,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dandelion.utilities.to_scirpy.html#dandelion.utilities.to_scirpy">to_scirpy() (in module dandelion.utilities)</a>
+</li>
       <li><a href="modules/dandelion.tools.transfer.html#dandelion.tools.transfer">transfer() (in module dandelion.tools)</a>
 </li>
   </ul></td>
@@ -437,7 +479,23 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dandelion.Dandelion.update_germline.html#dandelion.Dandelion.update_germline">update_germline() (dandelion.Dandelion method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/dandelion.utilities.update_metadata.html#dandelion.utilities.update_metadata">update_metadata() (in module dandelion.utilities)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dandelion.Dandelion.write_h5.html#dandelion.Dandelion.write_h5">write_h5() (dandelion.Dandelion method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dandelion.Dandelion.write_pkl.html#dandelion.Dandelion.write_pkl">write_pkl() (dandelion.Dandelion method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -448,28 +506,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, zktuong
+        &#169; Copyright 2020, zktuong.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

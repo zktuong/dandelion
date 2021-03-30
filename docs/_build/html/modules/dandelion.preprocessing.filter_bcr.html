@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.preprocessing.filter_bcr &mdash; dandelion 0.0.27.post1 documentation</title>
+  <title>dandelion.preprocessing.filter_bcr &mdash; dandelion 0.1.0 documentation</title>
   
 
   
@@ -18,7 +18,10 @@
   
     <link rel="shortcut icon" href="../_static/dandelion_logo.png"/>
   
+
   
+  
+
   
 
   
@@ -32,15 +35,13 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.preprocessing.quantify_mutations" href="dandelion.preprocessing.quantify_mutations.html" />
+    <link rel="next" title="dandelion.preprocessing.format_fasta" href="dandelion.preprocessing.format_fasta.html" />
     <link rel="prev" title="dandelion.preprocessing.create_germlines" href="dandelion.preprocessing.create_germlines.html" /> 
 </head>
 
@@ -99,30 +100,36 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotype.html">dandelion.preprocessing.assign_isotype</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.filter_bcr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reannotate_genes.html">dandelion.preprocessing.reannotate_genes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.reassign_alleles.html">dandelion.preprocessing.reassign_alleles</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.Dandelion">Dandelion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.logging">Logging</a></li>
 </ul>
 
             
@@ -163,6 +170,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -176,7 +185,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/modules/dandelion.preprocessing.filter_bcr.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -218,7 +227,7 @@
 <h1>dandelion.preprocessing.filter_bcr<a class="headerlink" href="#dandelion-preprocessing-filter-bcr" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.preprocessing.filter_bcr">
-<code class="sig-prename descclassname">dandelion.preprocessing.</code><code class="sig-name descname">filter_bcr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">adata</span></em>, <em class="sig-param"><span class="n">filter_bcr</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">filter_rna</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">filter_poorqualitybcr</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">rescue_igh</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">umi_foldchange_cutoff</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">filter_lightchains</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">filter_missing</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">parallel</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">ncpu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#filter_bcr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.preprocessing.filter_bcr" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">filter_bcr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_bcr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_rna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_poorqualitybcr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescue_igh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">umi_foldchange_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_lightchains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">productive_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#filter_bcr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.filter_bcr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J <cite>DataFrame</cite> and <cite>AnnData</cite> objects. Depends on a <cite>AnnData</cite>.obs slot populated with ‘filter_rna’ column.
 If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless <cite>rescue_igh</cite> is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is &gt; umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
 If there’s multiple contigs that survive the ‘rescue’, then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
@@ -226,14 +235,15 @@ Lastly, contigs with no corresponding cell barcode in the AnnData object is filt
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>DataDrame, str</em>) – V(D)J airr/changeo data to filter. Can be pandas <cite>DataFrame</cite> object or file path as string.</p></li>
+<li><p><strong>data</strong> (<em>Dandeion, pd.DataDrame, str</em>) – V(D)J airr/changeo data to filter. Can be pandas <cite>DataFrame</cite> object or file path as string.</p></li>
 <li><p><strong>adata</strong> (<em>AnnData</em>) – AnnData object to filter.</p></li>
 <li><p><strong>filter_bcr</strong> (<em>bool</em>) – If True, V(D)J <cite>DataFrame</cite> object returned will be filtered. Default is True.</p></li>
 <li><p><strong>filter_rna</strong> (<em>bool</em>) – If True, <cite>AnnData</cite> object returned will be filtered. Default is True.</p></li>
 <li><p><strong>filter_poorqualitybcr</strong> (<em>bool</em>) – If True, barcodes marked with poor quality BCR contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.</p></li>
 <li><p><strong>rescue_igh</strong> (<em>bool</em>) – If True, rescues IGH contigs with highest umi counts with a requirement that it passes the <cite>umi_foldchange_cutoff</cite> option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.</p></li>
-<li><p><strong>umi_foldchange_cutoff</strong> (<em>int</em>) – related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.</p></li>
+<li><p><strong>umi_foldchange_cutoff</strong> (<em>int</em>) – related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5-fold.</p></li>
 <li><p><strong>filter_lightchains</strong> (<em>bool</em>) – cells with multiple light chains will be marked to filter. Default is True.</p></li>
+<li><p><strong>productive_only</strong> (<em>bool</em>) – whether or not to retain only productive contigs.</p></li>
 <li><p><strong>filter_missing</strong> (<em>bool</em>) – cells in V(D)J data not found in <cite>AnnData</cite> object will be marked to filter. Default is True. This may be useful for toggling to False if integrating with bulk data.</p></li>
 <li><p><strong>parallel</strong> (<em>bool</em>) – whether or not to use parallelization. Default is True.</p></li>
 <li><p><strong>ncpu</strong> (<em>int</em>) – number of cores to use if parallel is True. Default is all available - 1.</p></li>
@@ -256,37 +266,29 @@ Lastly, contigs with no corresponding cell barcode in the AnnData object is filt
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.preprocessing.quantify_mutations.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.quantify_mutations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.preprocessing.create_germlines.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.create_germlines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="dandelion.preprocessing.format_fasta.html" class="btn btn-neutral float-right" title="dandelion.preprocessing.format_fasta" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dandelion.preprocessing.create_germlines.html" class="btn btn-neutral float-left" title="dandelion.preprocessing.create_germlines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, zktuong
+        &#169; Copyright 2020, zktuong.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

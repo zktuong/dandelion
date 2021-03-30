@@ -78,6 +78,8 @@ Utilities: `utl`
    read_10x_airr
    update_metadata
    concat
+   to_scirpy
+   from_scirpy
    
 
 Dandelion
