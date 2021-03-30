@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.7'
       - id: version
-        run: echo "##[set-output name=version;]$(python dandelion/version.py)"
+        run: echo "##[set-output name=version;]$(python dandelion/logging/_version.py)"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
@@ -44,7 +44,7 @@ jobs:
         with:
           python-version: '3.7'
       - id: version
-        run: echo "##[set-output name=version;]$(python dandelion/version.py)"
+        run: echo "##[set-output name=version;]$(python dandelion/logging/_version.py)"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:

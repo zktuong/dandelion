@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.utilities.update_metadata &mdash; dandelion 0.0.27.post1 documentation</title>
+  <title>dandelion.utilities.update_metadata &mdash; dandelion 0.1.0 documentation</title>
   
 
   
@@ -18,7 +18,10 @@
   
     <link rel="shortcut icon" href="../_static/dandelion_logo.png"/>
   
+
   
+  
+
   
 
   
@@ -32,16 +35,14 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.utilities.read_h5" href="dandelion.utilities.read_h5.html" />
-    <link rel="prev" title="dandelion.utilities.Dandelion" href="dandelion.utilities.Dandelion.html" /> 
+    <link rel="next" title="dandelion.utilities.concat" href="dandelion.utilities.concat.html" />
+    <link rel="prev" title="dandelion.utilities.read_10x_airr" href="dandelion.utilities.read_10x_airr.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,10 +100,17 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -111,14 +119,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.makeblastdb.html">dandelion.utilities.makeblastdb</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.load_data.html">dandelion.utilities.load_data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.Dandelion.html">dandelion.utilities.Dandelion</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.utilities.update_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.makeblastdb.html">dandelion.utilities.makeblastdb</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_h5.html">dandelion.utilities.read_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_pkl.html">dandelion.utilities.read_pkl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_10x_airr.html">dandelion.utilities.read_10x_airr</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.utilities.update_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.concat.html">dandelion.utilities.concat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.to_scirpy.html">dandelion.utilities.to_scirpy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.from_scirpy.html">dandelion.utilities.from_scirpy</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.Dandelion">Dandelion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.logging">Logging</a></li>
 </ul>
 
             
@@ -159,6 +172,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -172,7 +187,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/modules/dandelion.utilities.update_metadata.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -214,23 +229,29 @@
 <h1>dandelion.utilities.update_metadata<a class="headerlink" href="#dandelion-utilities-update-metadata" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.utilities.update_metadata">
-<code class="sig-prename descclassname">dandelion.utilities.</code><code class="sig-name descname">update_metadata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">retrieve</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">isotype_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">split_heavy_light</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">collapse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">clones_sep</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clone_key</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/utilities/_utilities.html#update_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.utilities.update_metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Dandelion function to update and populate the <cite>.metadata</cite> slot.</p>
+<code class="sig-prename descclassname"><span class="pre">dandelion.utilities.</span></code><code class="sig-name descname"><span class="pre">update_metadata</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retrieve</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clone_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combine</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_locus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_alleles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reinitialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/utilities/_core.html#update_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.utilities.update_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>Dandelion</cite> initialisation function to update and populate the <cite>.metadata</cite> slot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion</em>) – Dandelion object</p></li>
-<li><p><strong>retrieve</strong> (<em>str</em>) – column name in <cite>.data</cite> slot.</p></li>
-<li><p><strong>split_heavy_light</strong> (<em>bool</em>) – Returns the retrieval splitted into two column for heavy and light. Default is True. False combines the retrieval into a single column.</p></li>
-<li><p><strong>collapse</strong> (<em>bool</em>) – Whether or not to collapse unique elements if duplicated. For example, different contigs and same sample id would then benefit from this option being set to True.</p></li>
-<li><p><strong>clones_sep</strong> (<em>tuple[int, str]</em>) – A tuple containing how the clone groups should be extracted. None defaults to (0, ‘_’).</p></li>
+<li><p><strong>self</strong> (<em>Dandelion</em>) – <cite>Dandelion</cite> object.</p></li>
+<li><p><strong>retrieve</strong> (<em>str, sequence, optional</em>) – Column name in <cite>.data</cite> slot to retrieve and update the metadata.</p></li>
+<li><p><strong>locus</strong> (<em>str, optional</em>) – Mode for creating metadata. None defaults to ‘ig’. Currently only accepts ‘ig’.</p></li>
+<li><p><strong>clone_key</strong> (<em>str, optional</em>) – Column name of clone id. None defaults to ‘clone_id’.</p></li>
+<li><p><strong>split</strong> (<em>bool</em>) – Only applies if retrieve option is not None. Returns the retrieval splitted into two columns, e.g. one for heavy and one for light chains in BCR data, if True. Interacts with collapse, combine and split_locus options.</p></li>
+<li><p><strong>collapse</strong> (<em>bool</em>) – Only applies if retrieve option is not None. Returns the retrieval as a collapsed entry if multiple entries are found (e.g. v genes from multiple contigs) where each entry will be separated by a ‘|’ if True. Interacts with split, combine and split_locus options.</p></li>
+<li><p><strong>combine</strong> (<em>bool</em>) – Only applies if retrieve option is not None. Returns the retrieval as a collapsed entry with only unique entries (separated by a ‘|’ if multiple are found). Interacts with split, collapse, and split_locus options.</p></li>
+<li><p><strong>split_locus</strong> (<em>bool</em>) – Only applies if retrieve option is not None. Similar to split except it returns the retrieval splitted into multiple columns corresponding to each unique element in the ‘locus’ column (e.g. IGH, IGK, IGL). Interacts with split, collapse, and combine options.</p></li>
+<li><p><strong>collapse_alleles</strong> (<em>bool</em>) – Returns the V-D-J genes with allelic calls if False.</p></li>
+<li><p><strong>reinitialize</strong> (<em>bool</em>) – Whether or not to reinitialize the current metadata. Useful when updating older versions of <cite>dandelion</cite> to newer version.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Whether or not to print warning messages when constructing object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Dandelion object with <cite>.metadata</cite> slot initialized.</p>
+<dd class="field-odd"><p><cite>Dandelion</cite> object with <cite>.metadata</cite> slot initialized.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -242,37 +263,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.utilities.read_h5.html" class="btn btn-neutral float-right" title="dandelion.utilities.read_h5" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.utilities.Dandelion.html" class="btn btn-neutral float-left" title="dandelion.utilities.Dandelion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="dandelion.utilities.concat.html" class="btn btn-neutral float-right" title="dandelion.utilities.concat" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dandelion.utilities.read_10x_airr.html" class="btn btn-neutral float-left" title="dandelion.utilities.read_10x_airr" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, zktuong
+        &#169; Copyright 2020, zktuong.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

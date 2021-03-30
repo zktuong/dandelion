@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Overview &mdash; dandelion 0.0.27.post1 documentation</title>
+  <title>Overview &mdash; dandelion 0.1.0 documentation</title>
   
 
   
@@ -18,7 +18,10 @@
   
     <link rel="shortcut icon" href="_static/dandelion_logo.png"/>
   
+
   
+  
+
   
 
   
@@ -32,15 +35,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Pre-processing" href="notebooks/1_dandelion_preprocessing-10x%20data.html" />
+    <link rel="next" title="Pre-processing" href="notebooks/1_dandelion_preprocessing-10x_data.html" />
     <link rel="prev" title="Welcome to dandelion’s documentation!" href="index.html" /> 
 </head>
 
@@ -99,10 +100,17 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -111,6 +119,8 @@
 <li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.Dandelion">Dandelion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html#module-dandelion.logging">Logging</a></li>
 </ul>
 
             
@@ -151,6 +161,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -162,7 +174,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/README.md.txt" rel="nofollow"> View page source</a>
           
         
@@ -201,16 +213,21 @@
 }
 </style>
 <p><a class="reference external" href="https://sc-dandelion.readthedocs.io/en/latest/?badge=latest"><img alt="https://readthedocs.org/projects/sc-dandelion/badge/?version=latest" src="https://readthedocs.org/projects/sc-dandelion/badge/?version=latest" /></a>
-<a class="reference external" href="https://badge.fury.io/py/sc-dandelion"><img alt="https://badge.fury.io/py/sc-dandelion.svg" src="https://badge.fury.io/py/sc-dandelion.svg" /></a></p>
+<a class="reference external" href="https://pypi.org/project/sc-dandelion/"><img alt="https://img.shields.io/pypi/v/sc-dandelion?logo=PyPI" src="https://img.shields.io/pypi/v/sc-dandelion?logo=PyPI" /></a>
+<a class="reference external" href="https://github.com/zktuong/dandelion/tree/master"><img alt="https://byob.yarr.is/zktuong/dandelion/master-version" src="https://byob.yarr.is/zktuong/dandelion/master-version" /></a>
+<img alt="master" src="https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master" />
+<a class="reference external" href="https://github.com/zktuong/dandelion/tree/devel"><img alt="https://byob.yarr.is/zktuong/dandelion/devel-version" src="https://byob.yarr.is/zktuong/dandelion/devel-version" /></a>
+<img alt="tests" src="https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel" /></p>
 <p><img alt="_images/dandelion_logo_illustration.png" src="_images/dandelion_logo_illustration.png" /></p>
-<p>Version = 0.0.27.post1</p>
 <p>Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5’ solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> is now included in a preprint:</p>
+<p><em>Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka, Katarzyna Kania, Justin Engelbert, Bayanne Olabi, Jarmila Stremenova Spegarova, Nicola K Wilson, Nicole Mende, Laura Jardine, Louis CS Gardner, Issac Goh, Dave Horsfall, Jim McGrath, Simone Webb, Michael W Mather, Rik GH Lindeboom, Emma Dann, Ni Huang, Krzysztof Polanski, Elena Prigmore, Florian Gothe, Jonathan Scott, Rebecca P Payne, Kenneth F Baker, Aidan T Hanrath, Ina CD Schim van der Loeff, Andrew S Barr, Amada Sanchez-Gonzalez, Laura Bergamaschi, Federica Mescia, Josephine L Barnes, Eliz Kilich, Angus de Wilton, Anita Saigal, Aarash Saleh, Sam M Janes, Claire M Smith, Nusayhah Gopee, Caroline Wilson, Paul Coupland, Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.</em> <em><strong>The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres</strong></em>. <em>medRxiv 2021.01.13.21249725; doi: https://doi.org/10.1101/2021.01.13.21249725</em></p>
 <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <p><img alt="_images/dandelion_overview.png" src="_images/dandelion_overview.png" /></p>
 <p>Illustration of the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class slots</p>
 <p><img alt="_images/dandelion_class.png" src="_images/dandelion_class.png" /></p>
-<!-- <img src="https://github.com/zktuong/dandelion/blob/master/docs/notebooks/img/dandelion_class.png" alt="dandelion_class" width="471.0648" height="341.3572"> --><p>Please refer to the <a class="reference external" href="https://sc-dandelion.readthedocs.io/">documentation</a> or the notebooks <a class="reference external" href="https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/devel/docs/notebooks/">here</a>:</p>
+<p>Please refer to the <a class="reference external" href="https://sc-dandelion.readthedocs.io/">documentation</a> or the notebooks <a class="reference external" href="https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/master/docs/notebooks/">here</a>:</p>
 <p>The raw files for the examples can be downloaded from 10X’s Single Cell Immune Profiling datasets <a class="reference external" href="https://support.10xgenomics.com/single-cell-vdj/datasets">website</a>.</p>
 </div>
 <div class="section" id="installation">
@@ -218,7 +235,7 @@
 <p>I would reccomend installing this in order:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># in bash/zsh terminal</span>
 <span class="c1"># create a conda environment with specific modules</span>
-conda create --name dandelion <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7 
+conda create --name dandelion <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7 <span class="c1"># or 3.8</span>
 conda activate dandelion
 </pre></div>
 </div>
@@ -226,11 +243,8 @@ conda activate dandelion
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># these are required by dandelion</span>
 conda install -c conda-forge distance joblib plotnine adjustText
 conda install -c bioconda igblast blast <span class="c1"># if this doesn&#39;t work, download them manually (see below)</span>
-conda install -c conda-forge <span class="s2">&quot;rpy2&gt;=3.3.2,&lt;3.3.5&quot;</span> <span class="c1"># to make compatible for R version 4</span>
-<span class="c1"># or pip install &quot;rpy2&gt;=3.3.2,&lt;3.3.5&quot;</span>
-<span class="c1"># If it fails because it&#39;s compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):</span>
-<span class="c1"># then run</span>
-<span class="c1"># env CC=/path/to/location/of/bin/gcc-9 pip install &quot;rpy2&gt;=3.3.2,&lt;3.3.5&quot;</span>
+conda install -c conda-forge <span class="s2">&quot;rpy2&gt;=3.4&quot;</span> <span class="c1"># to make compatible for R version 4</span>
+<span class="c1"># or pip install rpy2&gt;=3.4</span>
 
 <span class="c1"># Use pip to install the following with --no-cache-dir --upgrade if necessary</span>
 <span class="c1"># and then lastly install this</span>
@@ -260,7 +274,7 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 </div>
 <div class="section" id="required-database">
 <h1>Required database<a class="headerlink" href="#required-database" title="Permalink to this headline">¶</a></h1>
-<p>Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with <a class="reference external" href="https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html">immcantation’s</a> docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate <a class="reference external" href="https://github.com/zktuong/databases_for_vdj">repository</a>(Last update: 28/11/2020). Once you’ve unpacked the folders, export the the path to the database folders as environmental variables in your <code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.zshenv</span></code> like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.</p>
+<p>Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with <a class="reference external" href="https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html">immcantation’s</a> docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate <a class="reference external" href="https://github.com/zktuong/databases_for_vdj">repository</a> (Last update: 28/11/2020). Once you’ve unpacked the folders, export the the path to the database folders as environmental variables in your <code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.zshenv</span></code> like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.</p>
 <p>So for example, if I unpack into <code class="docutils literal notranslate"><span class="pre">~/Documents</span></code></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># in bash/zsh terminal</span>
 <span class="c1"># set up environmental variables in ~/.bash_profile</span>
@@ -285,22 +299,22 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <h1>Basic requirements<a class="headerlink" href="#basic-requirements" title="Permalink to this headline">¶</a></h1>
 <p>Python packages</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># conda</span>
-<span class="n">python</span><span class="o">&gt;=</span><span class="mf">3.7</span><span class="p">,</span><span class="o">&lt;</span><span class="mf">3.8</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
+<span class="n">python</span><span class="o">&gt;=</span><span class="mf">3.7</span><span class="p">,</span><span class="o">&lt;=</span><span class="mf">3.8</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">numpy</span><span class="o">&gt;=</span><span class="mf">1.18</span><span class="o">.</span><span class="mi">4</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">pandas</span><span class="o">&gt;=</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">3</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">distance</span><span class="o">&gt;=</span><span class="mf">0.1</span><span class="o">.</span><span class="mi">3</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
-<span class="n">joblib</span><span class="o">==</span><span class="mf">0.14</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
-<span class="n">jupyter</span><span class="o">==</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
+<span class="n">joblib</span><span class="o">&gt;=</span><span class="mf">0.14</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
+<span class="n">jupyter</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span><span class="o">&gt;=</span><span class="mf">0.23</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">numba</span><span class="o">&gt;=</span><span class="mf">0.48</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
-<span class="n">pytables</span><span class="o">==</span><span class="mf">3.6</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
+<span class="n">pytables</span><span class="o">&gt;=</span><span class="mf">3.6</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">seaborn</span><span class="o">&gt;=</span><span class="mf">0.10</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">leidenalg</span><span class="o">&gt;=</span><span class="mf">0.8</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">plotnine</span><span class="o">&gt;=</span><span class="mf">0.6</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 
 <span class="c1"># Other executables (through conda)</span>
 <span class="n">blast</span><span class="o">&gt;=</span><span class="mf">2.10</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">bioconda</span><span class="p">)</span> <span class="c1"># depends on the database version as well</span>
-<span class="n">igblast</span><span class="o">==</span><span class="mf">1.15</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">bioconda</span><span class="p">)</span>
+<span class="n">igblast</span><span class="o">&gt;=</span><span class="mf">1.15</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">bioconda</span><span class="p">)</span>
 
 <span class="c1"># pip</span>
 <span class="n">anndata</span><span class="o">&gt;=</span><span class="mf">0.7</span><span class="o">.</span><span class="mi">1</span>
@@ -311,7 +325,7 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <span class="n">presto</span><span class="o">&gt;=</span><span class="mf">0.6</span><span class="o">.</span><span class="mi">0</span>
 <span class="n">polyleven</span><span class="o">&gt;=</span><span class="mf">0.5</span>
 <span class="n">networkx</span><span class="o">&gt;=</span><span class="mf">2.4</span>
-<span class="n">rpy2</span><span class="o">&gt;=</span><span class="mf">3.3</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span><span class="o">&lt;</span><span class="mf">3.3</span><span class="o">.</span><span class="mi">5</span>
+<span class="n">rpy2</span><span class="o">&gt;=</span><span class="mf">3.4</span> <span class="ow">or</span> <span class="c1"># rpy2&gt;=3.3.2,&lt;3.3.5</span>
 </pre></div>
 </div>
 <p>R packages</p>
@@ -335,37 +349,29 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="notebooks/1_dandelion_preprocessing-10x%20data.html" class="btn btn-neutral float-right" title="Pre-processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to dandelion’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="notebooks/1_dandelion_preprocessing-10x_data.html" class="btn btn-neutral float-right" title="Pre-processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to dandelion’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, zktuong
+        &#169; Copyright 2020, zktuong.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

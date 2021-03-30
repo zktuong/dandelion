@@ -1,28 +1,25 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
-[![](https://badge.fury.io/py/sc-dandelion.svg)](https://badge.fury.io/py/sc-dandelion)
-![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)
-![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)
-
-![](notebooks/img/dandelion_logo_illustration.png)
-
+[![](https://img.shields.io/pypi/v/sc-dandelion?logo=PyPI)](https://pypi.org/project/sc-dandelion/)
 [![](https://byob.yarr.is/zktuong/dandelion/master-version)](https://github.com/zktuong/dandelion/tree/master)
+[![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)]((https://github.com/zktuong/dandelion/actions?query=workflow%3Atests))
 [![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
+[![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)](https://github.com/zktuong/dandelion/actions?query=workflow%3Atests)
 
-***There is something wrong with v0.0.28's find_clones and generate_network functions. Please either revert to the last release [v0.0.27.post2](https://github.com/clatworthylab/dandelion) or update to the devel ([v0.0.29](https://github.com/zktuong/dandelion/tree/devel)) versions.***
+![](docs/notebooks/img/dandelion_logo_illustration.png)
 
 Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
 
-Dandelion is now included in a preprint:
+`dandelion` is now included in a preprint:
 
 *Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka, Katarzyna Kania, Justin Engelbert, Bayanne Olabi, Jarmila Stremenova Spegarova, Nicola K Wilson, Nicole Mende, Laura Jardine, Louis CS Gardner, Issac Goh, Dave Horsfall, Jim McGrath, Simone Webb, Michael W Mather, Rik GH Lindeboom, Emma Dann, Ni Huang, Krzysztof Polanski, Elena Prigmore, Florian Gothe, Jonathan Scott, Rebecca P Payne, Kenneth F Baker, Aidan T Hanrath, Ina CD Schim van der Loeff, Andrew S Barr, Amada Sanchez-Gonzalez, Laura Bergamaschi, Federica Mescia, Josephine L Barnes, Eliz Kilich, Angus de Wilton, Anita Saigal, Aarash Saleh, Sam M Janes, Claire M Smith, Nusayhah Gopee, Caroline Wilson, Paul Coupland, Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.* ***The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres***. *medRxiv 2021.01.13.21249725; doi: https://doi.org/10.1101/2021.01.13.21249725*
 
 ## Overview
 
-![](notebooks/img/dandelion_overview.png)
+![](docs/notebooks/img/dandelion_overview.png)
 
 Illustration of the `Dandelion` class slots
 
-![](notebooks/img/dandelion_class.png)
+![](docs/notebooks/img/dandelion_class.png)
 
 Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/master/docs/notebooks/):
 
@@ -34,7 +31,7 @@ I would reccomend installing this in order:
 ```bash
 # in bash/zsh terminal
 # create a conda environment with specific modules
-conda create --name dandelion python=3.7 
+conda create --name dandelion python=3.7 # or 3.8
 conda activate dandelion
 ```
 
@@ -44,11 +41,8 @@ First, install [scanpy](https://scanpy.readthedocs.io/en/latest/installation.htm
 # these are required by dandelion
 conda install -c conda-forge distance joblib plotnine adjustText
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-conda install -c conda-forge "rpy2>=3.3.2,<3.3.5" # to make compatible for R version 4
-# or pip install "rpy2>=3.3.2,<3.3.5"
-# If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
-# then run
-# env CC=/path/to/location/of/bin/gcc-9 pip install "rpy2>=3.3.2,<3.3.5"
+conda install -c conda-forge "rpy2>=3.4" # to make compatible for R version 4
+# or pip install rpy2>=3.4
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
 # and then lastly install this
@@ -103,22 +97,22 @@ source ~/.bash_profile # or ~/.zshenv
 Python packages
 ```python
 # conda
-python>=3.7,<3.8 (conda-forge)
+python>=3.7,<=3.8 (conda-forge)
 numpy>=1.18.4 (conda-forge)
 pandas>=1.0.3 (conda-forge)
 distance>=0.1.3 (conda-forge)
-joblib==0.14.1 (conda-forge)
-jupyter==1.0.0 (conda-forge)
+joblib>=0.14.1 (conda-forge)
+jupyter (conda-forge)
 scikit-learn>=0.23.0 (conda-forge)
 numba>=0.48.0 (conda-forge)
-pytables==3.6.1 (conda-forge)
+pytables>=3.6.1 (conda-forge)
 seaborn>=0.10.1 (conda-forge)
 leidenalg>=0.8.0 (conda-forge)
 plotnine>=0.6.0 (conda-forge)
 
 # Other executables (through conda)
 blast>=2.10.0 (bioconda) # depends on the database version as well
-igblast==1.15.0 (bioconda)
+igblast>=1.15.0 (bioconda)
 
 # pip
 anndata>=0.7.1
@@ -129,7 +123,7 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-rpy2>=3.3.2,<3.3.5
+rpy2>=3.4 or # rpy2>=3.3.2,<3.3.5
 ```
 
 R packages

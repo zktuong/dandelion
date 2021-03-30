@@ -28,7 +28,6 @@ Preprocessing (external): `pp.external`
    makedb_igblast
    parsedb_heavy
    parsedb_light
-   parsedb_light
    recipe_scanpy_qc
    tigger_genotype
 
@@ -71,18 +70,21 @@ Utilities: `utl`
 
 .. autosummary::
    :toctree: modules
-
-   Dandelion
+   
    load_data
    makeblastdb   
    read_h5
    read_pkl
+   read_10x_airr
    update_metadata
+   concat
+   to_scirpy
+   from_scirpy
    
 
 Dandelion
 =========
-.. module:: dandelion.utilities.Dandelion
+.. module:: dandelion.Dandelion
 
 .. autosummary::
    :toctree: modules
@@ -91,4 +93,14 @@ Dandelion
    update_germline
    write_h5
    write_pkl
+
+Logging
+=========
+.. module:: dandelion.logging
+
+.. autosummary::
+   :toctree: modules
+
+   print_header
+   print_versions
    

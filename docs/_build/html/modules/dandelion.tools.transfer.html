@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.tools.transfer &mdash; dandelion 0.0.27.post1 documentation</title>
+  <title>dandelion.tools.transfer &mdash; dandelion 0.1.0 documentation</title>
   
 
   
@@ -18,7 +18,10 @@
   
     <link rel="shortcut icon" href="../_static/dandelion_logo.png"/>
   
+
   
+  
+
   
 
   
@@ -32,16 +35,14 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.tools.generate_network" href="dandelion.tools.generate_network.html" />
-    <link rel="prev" title="dandelion.tools.clone_overlap" href="dandelion.tools.clone_overlap.html" /> 
+    <link rel="next" title="dandelion.plotting.barplot" href="dandelion.plotting.barplot.html" />
+    <link rel="prev" title="dandelion.tools.generate_network" href="dandelion.tools.generate_network.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,31 +100,40 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x%20data.html">Pre-processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x%20data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones_and_analysis-10x%20data.html">BCR clustering and visualization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_running_from_R.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.transfer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_centrality.html">dandelion.tools.clone_centrality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_degree.html">dandelion.tools.clone_degree</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_diversity.html">dandelion.tools.clone_diversity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_overlap.html">dandelion.tools.clone_overlap</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_rarefaction.html">dandelion.tools.clone_rarefaction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.clone_size.html">dandelion.tools.clone_size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.define_clones.html">dandelion.tools.define_clones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.extract_edge_weights.html">dandelion.tools.extract_edge_weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.find_clones.html">dandelion.tools.find_clones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.tools.generate_network.html">dandelion.tools.generate_network</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.tools.transfer</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.Dandelion">Dandelion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.logging">Logging</a></li>
 </ul>
 
             
@@ -164,6 +174,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -177,7 +189,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/modules/dandelion.tools.transfer.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -219,7 +231,7 @@
 <h1>dandelion.tools.transfer<a class="headerlink" href="#dandelion-tools-transfer" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.tools.transfer">
-<code class="sig-prename descclassname">dandelion.tools.</code><code class="sig-name descname">transfer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">dandelion</span></em>, <em class="sig-param"><span class="n">expanded_only</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">neighbors_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rna_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bcr_key</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">overwrite</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_tools.html#transfer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dandelion.tools.transfer" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">dandelion.tools.</span></code><code class="sig-name descname"><span class="pre">transfer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dandelion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expanded_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbors_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rna_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bcr_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/tools/_tools.html#transfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.tools.transfer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transfer data in <cite>Dandelion</cite> slots to <cite>AnnData</cite> object, updating the <cite>.obs</cite>, <cite>.uns</cite>, <cite>.obsm</cite> and <a href="#id1"><span class="problematic" id="id2">`</span></a>.obsp`slots.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -230,7 +242,7 @@
 <li><p><strong>neighbors_key</strong> (<em>str, optional</em>) – key for ‘neighbors’ slot in <cite>.uns</cite>.</p></li>
 <li><p><strong>rna_key</strong> (<em>str, optional</em>) – prefix for stashed RNA connectivities and distances.</p></li>
 <li><p><strong>bcr_key</strong> (<em>str, optional</em>) – prefix for stashed BCR connectivities and distances.</p></li>
-<li><p><strong>overwrite</strong> (<em>str, list, optional</em>) – Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).</p></li>
+<li><p><strong>overwrite</strong> (<em>str, bool, list, optional</em>) – Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -249,37 +261,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="dandelion.tools.generate_network.html" class="btn btn-neutral float-right" title="dandelion.tools.generate_network" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="dandelion.tools.clone_overlap.html" class="btn btn-neutral float-left" title="dandelion.tools.clone_overlap" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="dandelion.plotting.barplot.html" class="btn btn-neutral float-right" title="dandelion.plotting.barplot" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dandelion.tools.generate_network.html" class="btn btn-neutral float-left" title="dandelion.tools.generate_network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, zktuong
+        &#169; Copyright 2020, zktuong.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

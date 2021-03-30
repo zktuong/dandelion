@@ -1,0 +1,1547 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Dandelion class &mdash; dandelion 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/dandelion_logo.png"/>
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running from R" href="6_dandelion_running_from_R-10x_data.html" />
+    <link rel="prev" title="Calculating diversity and mutation" href="5_dandelion_diversity_and_mutation-10x_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/dandelion_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#required-database">Required database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><em>Dandelion</em> class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#copy">copy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Retrieving-entries-with-update_metadata">Retrieving entries with <code class="docutils literal notranslate"><span class="pre">update_metadata</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#concatenating-multiple-objects"><code class="docutils literal notranslate"><span class="pre">concat</span></code>enating multiple objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read/write">read/write</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Preprocessing: <cite>pp</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.preprocessing.external">Preprocessing (external): <cite>pp.external</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.tools">Tools: <cite>tl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.plotting">Plotting: <cite>pl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.utilities">Utilities: <cite>utl</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.Dandelion">Dandelion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html#module-dandelion.logging">Logging</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dandelion</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><em>Dandelion</em> class</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/notebooks/0_dandelion_primer.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="Dandelion-class">
+<h1><em>Dandelion</em> class<a class="headerlink" href="#Dandelion-class" title="Permalink to this headline">¶</a></h1>
+<img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" />
+<p>Much of the functions and utility of the <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> package revolves around the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class object. The class will act as an intermediary object for storage and flexible interaction with other tools. This notebook will run through a quick primer to the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class.</p>
+<p><strong>Import modules</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">dandelion</span> <span class="k">as</span> <span class="nn">ddl</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">logging</span><span class="o">.</span><span class="n">print_versions</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 scipy==1.5.3 skbio==0.5.6
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">read_h5</span><span class="p">(</span><span class="s1">&#39;dandelion_results.h5&#39;</span><span class="p">)</span>
+<span class="n">vdj</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavy_only&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;, &#39;d_call_heavy&#39;, &#39;d_call_light&#39;, &#39;clone_id_heavy_only&#39;
+    distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+    edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
+    layout: layout for 838 vertices, layout for 24 vertices
+    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+</pre></div></div>
+</div>
+<p>Basically, the object can be summarized in the following illustration:</p>
+<img alt="dandelion_class &lt;" src="../_images/dandelion_class.png" />
+<p>Essentially, the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot holds the AIRR contig table while the <code class="docutils literal notranslate"><span class="pre">.metadata</span></code> holds a collapsed version that is compatible with combining with <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>’s <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot. You can retrieve these slots like a typical class object; for example, if I want the metadata:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj</span><span class="o">.</span><span class="n">metadata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>clone_id</th>
+      <th>clone_id_by_size</th>
+      <th>sample_id</th>
+      <th>locus_heavy</th>
+      <th>locus_light</th>
+      <th>productive_heavy</th>
+      <th>productive_light</th>
+      <th>v_call_genotyped_heavy</th>
+      <th>v_call_genotyped_light</th>
+      <th>j_call_heavy</th>
+      <th>...</th>
+      <th>junction_aa_light</th>
+      <th>status</th>
+      <th>productive</th>
+      <th>isotype</th>
+      <th>vdj_status_detail</th>
+      <th>vdj_status</th>
+      <th>changeo_clone_id</th>
+      <th>d_call_heavy</th>
+      <th>d_call_light</th>
+      <th>clone_id_heavy_only</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCCGTTGTC</th>
+      <td>102_3_1</td>
+      <td>563</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV1-69</td>
+      <td>IGKV1-8</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CQQYYSYPRTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>110_33</td>
+      <td>IGHD3-22</td>
+      <td></td>
+      <td>102_3_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCGAGAACG</th>
+      <td>141_4_1</td>
+      <td>658</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV1-2</td>
+      <td>IGLV5-45</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CMIWHSSAWVV</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>467_34</td>
+      <td>IGHD3-16|IGHD4-17</td>
+      <td></td>
+      <td>141_4_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCTTGAGAC</th>
+      <td>26_2_2</td>
+      <td>670</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV5-51</td>
+      <td>IGKV1D-8</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CQQYYSFPYTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>306_35</td>
+      <td>IGHD1/OR15-1a|IGHD1/OR15-1b|IGHD1-26</td>
+      <td></td>
+      <td>26_2_2</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAAGATGGTCGAATCT</th>
+      <td>66_8_3</td>
+      <td>527</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-15</td>
+      <td>IGLV6-57</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CQSYDSSNVVF</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Multi_light_j</td>
+      <td>Single</td>
+      <td>56_36</td>
+      <td>IGHD1-26</td>
+      <td></td>
+      <td>66_8_3</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AACCATGCAAGCTGTT</th>
+      <td>18_4_1</td>
+      <td>244</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-33</td>
+      <td>IGLV2-14</td>
+      <td>IGHJ6</td>
+      <td>...</td>
+      <td>CSSYTSSSTRVF</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>125_37</td>
+      <td>IGHD3-10</td>
+      <td></td>
+      <td>18_4_1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TCTTCGGTCCTAAGTG</th>
+      <td>15_8_1</td>
+      <td>653</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV4-59</td>
+      <td>IGKV1-12</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CQQANSFPLTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>348_483</td>
+      <td>IGHD6-19</td>
+      <td></td>
+      <td>15_8_1</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TGCACCTCAGACAAAT</th>
+      <td>69_8_1</td>
+      <td>189</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-21</td>
+      <td>IGKV3-20</td>
+      <td>IGHJ6</td>
+      <td>...</td>
+      <td>CQQYGSSPLFTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>731_484</td>
+      <td>IGHD3-3</td>
+      <td></td>
+      <td>69_8_1</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TGTATTCTCTGTTGAG</th>
+      <td>90_7_2</td>
+      <td>713</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-48</td>
+      <td>IGLV2-14</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CSSYTSSSTRVF</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>229_485</td>
+      <td>IGHD3-3</td>
+      <td></td>
+      <td>90_7_2</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TTTATGCTCAGGATCT</th>
+      <td>172_4_2</td>
+      <td>372</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV4-34</td>
+      <td>IGKV1D-39|IGKV1-39</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CQQSYSTPRTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Multi_light_v</td>
+      <td>Single</td>
+      <td>702_486</td>
+      <td>IGHD3-22</td>
+      <td></td>
+      <td>172_4_2</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TTTATGCTCCTAGAAC</th>
+      <td>48_4_1_1|48_4_1_2</td>
+      <td>699|28</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGL|IGL</td>
+      <td>T</td>
+      <td>T|F</td>
+      <td>IGHV4-4</td>
+      <td>IGLV1-51|IGLV1-40</td>
+      <td>IGHJ5</td>
+      <td>...</td>
+      <td>CQSYDRSLGGHYVF|CGTWDSSLSAGCA</td>
+      <td>IGH + IGL|IGL</td>
+      <td>T + T|F</td>
+      <td>IgM</td>
+      <td>Single + Multi_light_j|Multi_light_v</td>
+      <td>Multi</td>
+      <td>155_487</td>
+      <td>IGHD4-17|IGHD4-23</td>
+      <td></td>
+      <td>48_4_1</td>
+    </tr>
+  </tbody>
+</table>
+<p>838 rows × 28 columns</p>
+</div></div>
+</div>
+<div class="section" id="copy">
+<h2>copy<a class="headerlink" href="#copy" title="Permalink to this headline">¶</a></h2>
+<p>You can deep copy the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object to another variable which will inherit all slots:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vdj2</span> <span class="o">=</span> <span class="n">vdj</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">vdj2</span><span class="o">.</span><span class="n">metadata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>clone_id</th>
+      <th>clone_id_by_size</th>
+      <th>sample_id</th>
+      <th>locus_heavy</th>
+      <th>locus_light</th>
+      <th>productive_heavy</th>
+      <th>productive_light</th>
+      <th>v_call_genotyped_heavy</th>
+      <th>v_call_genotyped_light</th>
+      <th>j_call_heavy</th>
+      <th>...</th>
+      <th>junction_aa_light</th>
+      <th>status</th>
+      <th>productive</th>
+      <th>isotype</th>
+      <th>vdj_status_detail</th>
+      <th>vdj_status</th>
+      <th>changeo_clone_id</th>
+      <th>d_call_heavy</th>
+      <th>d_call_light</th>
+      <th>clone_id_heavy_only</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCCGTTGTC</th>
+      <td>102_3_1</td>
+      <td>563</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV1-69</td>
+      <td>IGKV1-8</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CQQYYSYPRTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>110_33</td>
+      <td>IGHD3-22</td>
+      <td></td>
+      <td>102_3_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCGAGAACG</th>
+      <td>141_4_1</td>
+      <td>658</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV1-2</td>
+      <td>IGLV5-45</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CMIWHSSAWVV</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>467_34</td>
+      <td>IGHD3-16|IGHD4-17</td>
+      <td></td>
+      <td>141_4_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCTTGAGAC</th>
+      <td>26_2_2</td>
+      <td>670</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV5-51</td>
+      <td>IGKV1D-8</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CQQYYSFPYTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>306_35</td>
+      <td>IGHD1/OR15-1a|IGHD1/OR15-1b|IGHD1-26</td>
+      <td></td>
+      <td>26_2_2</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAAGATGGTCGAATCT</th>
+      <td>66_8_3</td>
+      <td>527</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-15</td>
+      <td>IGLV6-57</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CQSYDSSNVVF</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Multi_light_j</td>
+      <td>Single</td>
+      <td>56_36</td>
+      <td>IGHD1-26</td>
+      <td></td>
+      <td>66_8_3</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AACCATGCAAGCTGTT</th>
+      <td>18_4_1</td>
+      <td>244</td>
+      <td>sc5p_v2_hs_PBMC_10k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-33</td>
+      <td>IGLV2-14</td>
+      <td>IGHJ6</td>
+      <td>...</td>
+      <td>CSSYTSSSTRVF</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>125_37</td>
+      <td>IGHD3-10</td>
+      <td></td>
+      <td>18_4_1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TCTTCGGTCCTAAGTG</th>
+      <td>15_8_1</td>
+      <td>653</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV4-59</td>
+      <td>IGKV1-12</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CQQANSFPLTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>348_483</td>
+      <td>IGHD6-19</td>
+      <td></td>
+      <td>15_8_1</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TGCACCTCAGACAAAT</th>
+      <td>69_8_1</td>
+      <td>189</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-21</td>
+      <td>IGKV3-20</td>
+      <td>IGHJ6</td>
+      <td>...</td>
+      <td>CQQYGSSPLFTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>731_484</td>
+      <td>IGHD3-3</td>
+      <td></td>
+      <td>69_8_1</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TGTATTCTCTGTTGAG</th>
+      <td>90_7_2</td>
+      <td>713</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV3-48</td>
+      <td>IGLV2-14</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CSSYTSSSTRVF</td>
+      <td>IGH + IGL</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>229_485</td>
+      <td>IGHD3-3</td>
+      <td></td>
+      <td>90_7_2</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TTTATGCTCAGGATCT</th>
+      <td>172_4_2</td>
+      <td>372</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>T</td>
+      <td>T</td>
+      <td>IGHV4-34</td>
+      <td>IGKV1D-39|IGKV1-39</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CQQSYSTPRTF</td>
+      <td>IGH + IGK</td>
+      <td>T + T</td>
+      <td>IgM</td>
+      <td>Single + Multi_light_v</td>
+      <td>Single</td>
+      <td>702_486</td>
+      <td>IGHD3-22</td>
+      <td></td>
+      <td>172_4_2</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TTTATGCTCCTAGAAC</th>
+      <td>48_4_1_1|48_4_1_2</td>
+      <td>699|28</td>
+      <td>vdj_v1_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGL|IGL</td>
+      <td>T</td>
+      <td>T|F</td>
+      <td>IGHV4-4</td>
+      <td>IGLV1-51|IGLV1-40</td>
+      <td>IGHJ5</td>
+      <td>...</td>
+      <td>CQSYDRSLGGHYVF|CGTWDSSLSAGCA</td>
+      <td>IGH + IGL|IGL</td>
+      <td>T + T|F</td>
+      <td>IgM</td>
+      <td>Single + Multi_light_j|Multi_light_v</td>
+      <td>Multi</td>
+      <td>155_487</td>
+      <td>IGHD4-17|IGHD4-23</td>
+      <td></td>
+      <td>48_4_1</td>
+    </tr>
+  </tbody>
+</table>
+<p>838 rows × 28 columns</p>
+</div></div>
+</div>
+</div>
+<div class="section" id="Retrieving-entries-with-update_metadata">
+<h2>Retrieving entries with <code class="docutils literal notranslate"><span class="pre">update_metadata</span></code><a class="headerlink" href="#Retrieving-entries-with-update_metadata" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">.metadata</span></code> slot in Dandelion class automatically initializes whenever the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot is filled. However, it only returns a standard number of columns that are pre-specified. To retrieve other columns from the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot, we can update the metadata with <code class="docutils literal notranslate"><span class="pre">ddl.update_metadata</span></code> and specify the option <code class="docutils literal notranslate"><span class="pre">retrieve</span></code>.</p>
+<p>The following options determine how the retrieval is completed:</p>
+<p><code class="docutils literal notranslate"><span class="pre">split</span></code> - splits the retrieval into heavy and light chains calls.</p>
+<p><code class="docutils literal notranslate"><span class="pre">split_locus</span></code> - smiliar to <code class="docutils literal notranslate"><span class="pre">split</span></code> but splits the retrieval to <code class="docutils literal notranslate"><span class="pre">IGH/IGK/IGL</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">collapse</span></code> - Adds a <code class="docutils literal notranslate"><span class="pre">|</span></code> to separate every element.</p>
+<p><code class="docutils literal notranslate"><span class="pre">combine</span></code> - similar to <code class="docutils literal notranslate"><span class="pre">collapse</span></code> but only retains unique elements (separated by a <code class="docutils literal notranslate"><span class="pre">|</span></code> if multiple are found).</p>
+<p><strong>Example 1 : retrieving junction amino acid sequences</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;d_call&#39;</span><span class="p">)</span>
+<span class="n">vdj</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavy_only&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;, &#39;d_call_heavy&#39;, &#39;d_call_light&#39;, &#39;clone_id_heavy_only&#39;
+    distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+    edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
+    layout: layout for 838 vertices, layout for 24 vertices
+    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+</pre></div></div>
+</div>
+<p>Note the additional <code class="docutils literal notranslate"><span class="pre">d_call</span></code> heavy and light columns in the metadata slot.</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> will not try to merge numerical columns as it can create mixed dtype columns.</p>
+<p><strong>Example 2 : editing clone_id column</strong></p>
+<p>Perhaps you want to have a bit more control with how clones are called. We can edit this directly from the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot and retrieve accordingly.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># if we only want to keep the light chain clone assignment</span>
+<span class="n">clones</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">clone</span> <span class="ow">in</span> <span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="s1">&#39;|&#39;</span> <span class="ow">in</span> <span class="n">clone</span><span class="p">:</span> <span class="c1"># this is because clones were merged into the the same column if they have different pairing of BCR combinations</span>
+        <span class="n">clone_list</span> <span class="o">=</span> <span class="n">clone</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+        <span class="n">clones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">clone_2</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">clone_2</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="n">clone_2</span> <span class="k">for</span> <span class="n">clone_2</span> <span class="ow">in</span> <span class="n">clone_list</span><span class="p">]))))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">clone</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span> <span class="c1"># this means it&#39;s looking for X_X_X_X, 3 underscores</span>
+            <span class="n">clones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clone</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># split the 3rd underscore but only keep the first entry</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clone</span><span class="p">)</span>
+<span class="n">vdj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;clone_id_heavy_only&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clones</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">update_metadata</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">retrieve</span> <span class="o">=</span> <span class="s1">&#39;clone_id_heavy_only&#39;</span><span class="p">,</span> <span class="n">split</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">collapse</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">vdj</span><span class="o">.</span><span class="n">metadata</span><span class="p">[[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_id_heavy_only&#39;</span><span class="p">]]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>clone_id</th>
+      <th>clone_id_heavy_only</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCCGTTGTC</th>
+      <td>102_3_1</td>
+      <td>102_3_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCGAGAACG</th>
+      <td>141_4_1</td>
+      <td>141_4_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCTTGAGAC</th>
+      <td>26_2_2</td>
+      <td>26_2_2</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AAAGATGGTCGAATCT</th>
+      <td>66_8_3</td>
+      <td>66_8_3</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_AACCATGCAAGCTGTT</th>
+      <td>18_4_1</td>
+      <td>18_4_1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TCTTCGGTCCTAAGTG</th>
+      <td>15_8_1</td>
+      <td>15_8_1</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TGCACCTCAGACAAAT</th>
+      <td>69_8_1</td>
+      <td>69_8_1</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TGTATTCTCTGTTGAG</th>
+      <td>90_7_2</td>
+      <td>90_7_2</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TTTATGCTCAGGATCT</th>
+      <td>172_4_2</td>
+      <td>172_4_2</td>
+    </tr>
+    <tr>
+      <th>vdj_v1_hs_pbmc3_TTTATGCTCCTAGAAC</th>
+      <td>48_4_1_1|48_4_1_2</td>
+      <td>48_4_1</td>
+    </tr>
+  </tbody>
+</table>
+<p>838 rows × 2 columns</p>
+</div></div>
+</div>
+</div>
+<div class="section" id="concatenating-multiple-objects">
+<h2><code class="docutils literal notranslate"><span class="pre">concat</span></code>enating multiple objects<a class="headerlink" href="#concatenating-multiple-objects" title="Permalink to this headline">¶</a></h2>
+<p>This is a simple function to concatenate (append) two or more <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class, or <code class="docutils literal notranslate"><span class="pre">pandas</span></code> dataframes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># for example, the original dandelion class has 838 unique cell barcodes and 1700 contigs</span>
+<span class="n">vdj</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavy_only&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;, &#39;d_call_heavy&#39;, &#39;d_call_light&#39;, &#39;clone_id_heavy_only&#39;
+    distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+    edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
+    layout: layout for 838 vertices, layout for 24 vertices
+    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># now it has 5100 contigs instead, and the metadata should also be properly populated</span>
+<span class="n">vdj_concat</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">vdj</span><span class="p">,</span> <span class="n">vdj</span><span class="p">,</span> <span class="n">vdj</span><span class="p">])</span>
+<span class="n">vdj_concat</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 5100
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavy_only&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_heavy_1&#39;, &#39;umi_count_heavy_2&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;umi_count_light_3&#39;, &#39;umi_count_light_4&#39;, &#39;umi_count_light_5&#39;, &#39;umi_count_light_6&#39;, &#39;umi_count_light_7&#39;, &#39;umi_count_light_8&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+    distance: None
+    edges: None
+    layout: None
+    graph: None
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="read/write">
+<h2>read/write<a class="headerlink" href="#read/write" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class can be saved using <code class="docutils literal notranslate"><span class="pre">.write_h5</span></code> and <code class="docutils literal notranslate"><span class="pre">.write_pkl</span></code> functions with accompanying compression methods. <code class="docutils literal notranslate"><span class="pre">write_h5</span></code> primarily uses pandas <code class="docutils literal notranslate"><span class="pre">to_hdf</span></code> library and <code class="docutils literal notranslate"><span class="pre">write_pkl</span></code> just uses pickle. <code class="docutils literal notranslate"><span class="pre">read_h5</span></code> and <code class="docutils literal notranslate"><span class="pre">read_pkl</span></code> functions will read the respective file formats accordingly.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">time</span> vdj.write_h5(&#39;dandelion_results.h5&#39;, complib = &#39;bzip2&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 1.53 s, sys: 65.7 ms, total: 1.59 s
+Wall time: 1.64 s
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">time</span> vdj_1 = ddl.read_h5(&#39;dandelion_results.h5&#39;)
+<span class="n">vdj_1</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 564 ms, sys: 54.6 ms, total: 619 ms
+Wall time: 631 ms
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavy_only&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;, &#39;d_call_heavy&#39;, &#39;d_call_light&#39;, &#39;clone_id_heavy_only&#39;
+    distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+    edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
+    layout: layout for 838 vertices, layout for 24 vertices
+    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+</pre></div></div>
+</div>
+<p>The read/write times using <code class="docutils literal notranslate"><span class="pre">pickle</span></code> can be situationally faster/slower and file sizes can also be situationally smaller/larger (depending on which compression is used).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">time</span> vdj.write_pkl(&#39;dandelion_results.pkl.gz&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 9.14 s, sys: 68 ms, total: 9.21 s
+Wall time: 9.41 s
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">time</span> vdj_2 = ddl.read_pkl(&#39;dandelion_results.pkl.gz&#39;)
+<span class="n">vdj_2</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 89.9 ms, sys: 9.16 ms, total: 99.1 ms
+Wall time: 106 ms
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 838 and n_contigs = 1700
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;, &#39;clone_id_heavy_only&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;, &#39;d_call_heavy&#39;, &#39;d_call_light&#39;, &#39;clone_id_heavy_only&#39;
+    distance: &#39;heavy&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+    edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
+    layout: layout for 838 vertices, layout for 24 vertices
+    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="6_dandelion_running_from_R-10x_data.html" class="btn btn-neutral float-right" title="Running from R" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="5_dandelion_diversity_and_mutation-10x_data.html" class="btn btn-neutral float-left" title="Calculating diversity and mutation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, zktuong.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

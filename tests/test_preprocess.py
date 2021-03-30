@@ -21,7 +21,7 @@ def test_setup():
     scfile = "https://cf.10xgenomics.com/samples/cell-vdj/5.0.0/sc5p_v2_hs_B_1k_multi_5gex_b/sc5p_v2_hs_B_1k_multi_5gex_b_count_filtered_feature_bc_matrix.h5"
     r = requests.get(scfile)
     open("tests/sctest2.h5", "wb").write(r.content)
-    adata = sc.read_10x_h5("tests/sctest2.h5")    
+    adata = sc.read_10x_h5("tests/sctest2.h5")
     adata.obs_names = ['tests_' + x.split('-')[0] for x in adata.obs_names]
     adata.write("tests/sctest2.h5ad", compression="gzip")
     print(adata)
@@ -34,17 +34,20 @@ def test_format_headers():
 
 def test_reannotate():
     samples = ["tests"]
-    ddl.pp.reannotate_genes(samples, igblast_db = "database/igblast/", germline = "database/germlines/imgt/human/vdj/")
+    ddl.pp.reannotate_genes(samples, igblast_db="database/igblast/",
+                            germline="database/germlines/imgt/human/vdj/")
 
 
 def test_reassign():
     samples = ["tests"]
-    ddl.pp.reassign_alleles(samples, combined_folder="test_reassigned", germline = "database/germlines/imgt/human/vdj", novel = False, plot = False)
+    ddl.pp.reassign_alleles(samples, combined_folder="test_reassigned",
+                            germline="database/germlines/imgt/human/vdj", novel=False, plot=False)
 
 
 def test_assign_isotype():
-    samples = ["tests"]    
-    ddl.pp.assign_isotypes(samples, blastdb = "database/blast/human/human_BCR_C.fasta", plot=False)
+    samples = ["tests"]
+    ddl.pp.assign_isotypes(
+        samples, blastdb="database/blast/human/human_BCR_C.fasta", plot=False)
 
 
 def test_quantify_mut():
@@ -54,7 +57,8 @@ def test_quantify_mut():
 
 def test_filter():
     adata = sc.read_h5ad("tests/sctest2.h5ad")
-    bcr = pd.read_csv("tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
+    bcr = pd.read_csv(
+        "tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
     bcr.reset_index(inplace=True, drop=True)
     adata.obs["filter_rna"] = False
     vdj, adata = ddl.pp.filter_bcr(bcr, adata)
@@ -86,12 +90,13 @@ def test_generate_network():
 
 def test_transfer():
     test = ddl.read_h5("tests/test2.h5")
-    adata = sc.read_h5ad("tests/sctest2.h5ad")    
+    adata = sc.read_h5ad("tests/sctest2.h5ad")
     sc.pp.filter_cells(adata, min_genes=200)
     sc.pp.filter_genes(adata, min_cells=3)
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    sc.pp.highly_variable_genes(
+        adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
     adata = adata[:, adata.var["highly_variable"]].copy()
     sc.pp.scale(adata, max_value=10)
     sc.tl.pca(adata, svd_solver="arpack")
@@ -110,6 +115,6 @@ if __name__ == "__main__":
     test_quantify_mut()
     test_filter()
     test_find_clones()
-    test_update_metadata()    
+    test_update_metadata()
     test_generate_network()
     test_transfer()
