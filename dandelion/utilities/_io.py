@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-22 12:08:55
+# @Last Modified time: 2021-03-30 12:27:43
 
 import os
 import pandas as pd
@@ -246,7 +246,7 @@ def read_10x_airr(file: str) -> Dandelion:
     return(Dandelion(dat))
 
 
-def to_scirpy(data: Dandelion):
+def to_scirpy(data: Dandelion) -> AnnData:
     """
     Converts a `Dandelion` object to scirpy's format.
 
@@ -267,7 +267,7 @@ def to_scirpy(data: Dandelion):
 
     if 'duplicate_count' not in data.data and 'umi_count' in data.data:
         data.data['duplicate_count'] = data.data['umi_count']        
-    return(ir.io.read_dandelion(data))
+    return(ir.io.from_dandelion(data))
 
 
 def read_scirpy(adata: AnnData) -> Dandelion:
@@ -288,4 +288,4 @@ def read_scirpy(adata: AnnData) -> Dandelion:
         import scirpy as ir
     except:
         raise ImportError('Please install scirpy. pip install scirpy')
-    return(ir.io.to_dandelion(Dandelion))
+    return(ir.io.to_dandelion(adata))
