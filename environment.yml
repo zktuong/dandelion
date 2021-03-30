@@ -22,3 +22,4 @@ dependencies:
   - nbsphinx
   - sphinx-autodoc-typehints
   - -r file:requirements_dev.txt
+  - rpy2>=3.4.0
