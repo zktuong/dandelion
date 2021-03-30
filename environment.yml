@@ -10,10 +10,6 @@ dependencies:
 - pandoc
 - pyyaml
 - changeo
-- adjustText
-- distance
-- joblib
-- plotnine
 - seaborn
 - statsmodels
 - numba
@@ -25,13 +21,4 @@ dependencies:
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
-  - rpy2>=3.4.0
-  - anndata>=0.7.1
-  - scanpy>=1.4.6
-  - scikit-learn>=0.23.0
-  - scikit-bio>=0.5.6
-  - scipy>=1.4.1
-  - networkx>=2.4
-  - leidenalg>=0.8.0
-  - polyleven>=0.5
-  - h5py>=2.10.0,<3.0.0
+  - -r file:requirements_dev.txt
