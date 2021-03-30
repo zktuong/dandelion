@@ -78,16 +78,7 @@ jobs:
         path: /home/runner/work/_temp/Library
         key: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-${{ hashFiles('.github/depends.Rds') }}
         restore-keys: ${{ env.cache-version }}-${{ matrix.os }}-biocversion-RELEASE_3_12-r-4.0-
-        
-    - name: install R dependencies
-      run: |
-        install.packages(c('RCurl','XML'))
-        remotes::install_cran("BiocManager")
-        BiocManager::install(version = "3.12", ask = FALSE)
-        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
-      shell: Rscript {0}
-
+            
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.0.1
       with:
@@ -104,6 +95,15 @@ jobs:
       run: |
         python setup.py install
     
+    - name: install R dependencies
+      run: |
+        install.packages(c('RCurl','XML'))
+        remotes::install_cran("BiocManager")
+        BiocManager::install(version = "3.12", ask = FALSE)
+        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+      shell: Rscript {0}
+
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
       with:
@@ -114,6 +114,16 @@ jobs:
         on_retry_command: |
           Rscript tests/r_install.R
     
+    - name: Force installation of rpy2
+      uses: nick-invision/retry@v2
+      with:
+        timeout_seconds: 15
+        max_attempts: 3
+        command: |
+          pip install "rpy2>=3.4.0"
+        on_retry_command: |
+          pip install "rpy2>=3.4.0" -U
+
     - name: Test with pytest
       run: |
         pytest tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
