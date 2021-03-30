@@ -901,10 +901,10 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         'Multi' if '|' in i else i for i in tmp_metadata['productive']]
 
     conversion_dict = {'igha1': 'IgA', 'igha2': 'IgA', 'ighm': 'IgM', 'ighd': 'IgD', 'ighe': 'IgE', 'ighg1': 'IgG', 'ighg2': 'IgG', 'ighg3': 'IgG', 'ighg4': 'IgG', 'igkc': 'IgK', 'iglc1': 'IgL', 'iglc2': 'IgL', 'iglc3': 'IgL', 'iglc4': 'IgL', 'iglc5': 'IgL', 'iglc6': 'IgL', 'iglc7': 'IgL',
-                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'NA': 'unassigned', 'None': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}  # the key for IgG being igh is on purpose because of how the counter works
+                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'none': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}  # the key for IgG being igh is on purpose because of how the counter works
     isotype = []
     for k in tmp_metadata['c_call'+suffix_h]:
-        if k == k:
+        if isinstance(k, str):
             if ',' in k:
                 k = '|'.join(k.split(','))
             if '|' in k:
@@ -913,7 +913,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
             else:
                 isotype.append(conversion_dict[k.lower()])
         else:
-            isotype.append(k)
+            isotype.append('unassigned')
     tmp_metadata['isotype'] = isotype
     tmp_metadata['isotype_summary'] = [i if i == 'IgM|IgD' or i == 'IgD|IgM' else
                                        'Multi' if '|' in i else i for i in tmp_metadata['isotype']]
