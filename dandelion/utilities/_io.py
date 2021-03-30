@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-30 12:27:43
+# @Last Modified time: 2021-03-30 13:48:31
 
 import os
 import pandas as pd
@@ -270,7 +270,7 @@ def to_scirpy(data: Dandelion) -> AnnData:
     return(ir.io.from_dandelion(data))
 
 
-def read_scirpy(adata: AnnData) -> Dandelion:
+def from_scirpy(adata: AnnData) -> Dandelion:
     """
     Reads a scirpy initialized oject and returns a `Dandelion` object.
 
