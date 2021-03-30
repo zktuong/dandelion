@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-30 11:20:04
+# @Last Modified time: 2021-03-30 15:30:49
 
 import os
 from collections import defaultdict
@@ -818,8 +818,12 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         init_dict.update({'sample_id': {'split': False, 'collapse': True,
                                         'combine': True, 'locus': locus_, 'split_locus': False}})
     meta_ = defaultdict(dict)
-    for k, v in init_dict.items():
+    for k, v in init_dict.copy().items():
+        if (all(pd.isnull(self.data[k]))) or (all([i == '' for i in self.data[k]])):
+            init_dict.pop(k)
+            continue
         meta_[k] = retrieve_metadata(self.data, query=k, verbose=verbose, **v)
+
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
 
     if 'locus_heavy' in tmp_metadata:
@@ -903,7 +907,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
         'Multi' if '|' in i else i for i in tmp_metadata['productive']]
 
     conversion_dict = {'igha1': 'IgA', 'igha2': 'IgA', 'ighm': 'IgM', 'ighd': 'IgD', 'ighe': 'IgE', 'ighg1': 'IgG', 'ighg2': 'IgG', 'ighg3': 'IgG', 'ighg4': 'IgG', 'igkc': 'IgK', 'iglc1': 'IgL', 'iglc2': 'IgL', 'iglc3': 'IgL', 'iglc4': 'IgL', 'iglc5': 'IgL', 'iglc6': 'IgL', 'iglc7': 'IgL',
-                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'none': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}  # the key for IgG being igh is on purpose because of how the counter works
+                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'none': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}
     isotype = []
     for k in tmp_metadata['c_call'+suffix_h]:
         if isinstance(k, str):
