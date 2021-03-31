@@ -10,7 +10,8 @@ with open("requirements_dev.txt", "rt", encoding="utf-8") as fh:
 
 setup(
     name="sc-dandelion",
-    version=__version__,
+    use_scm_version=False,
+    version = __version__,
     author="zktuong",
     author_email="kt16@sanger.ac.uk",
     description="sc-BCR analysis tool",
