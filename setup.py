@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import toml
 import pkg_resources
 
 with open("README.md", "r") as readme_file:
@@ -10,8 +11,12 @@ with open("requirements_dev.txt", "rt", encoding="utf-8") as fh:
 
 setup(
     name="sc-dandelion",
-    use_scm_version=False,
-    version = __version__,
+    use_scm_version={
+        'write_to': 'dandelion/logging/_scmtag.py',
+        'write_to_template': '__version__ = "{version}"',
+        'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$',
+    },
+    # version = __version__,
     author="zktuong",
     author_email="kt16@sanger.ac.uk",
     description="sc-BCR analysis tool",
