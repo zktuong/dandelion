@@ -7,3 +7,4 @@
 *scmtag.py
 dist/*
 sc_dandelion.egg-info/*
+dandelion/logging/version.py
