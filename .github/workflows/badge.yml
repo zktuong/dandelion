@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.7'
       - id: version
-        run: echo "##[set-output name=version;]$(python dandelion/logging/_version.py)"
+        run: echo "##[set-output name=version;]$(echo "$(python setup.py -V)" | awk -F'+' '{print $1}')"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: '3.7'
       - id: version
-        run: echo "##[set-output name=version;]$(python dandelion/logging/_version.py)"
+        run: echo "##[set-output name=version;]$(echo "$(python setup.py -V)" | awk -F'+' '{print $1}')"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
