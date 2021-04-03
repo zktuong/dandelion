@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-04-03 11:42:52
+# @Last Modified time: 2021-04-03 11:55:58
 
 import os
 import pandas as pd
@@ -306,35 +306,4 @@ def from_scirpy(adata: AnnData, clone_key: Union[None, str] = None, key_added: U
     else:
         clonekey_d = key_added
 
-    airr_cells = ir.io.to_ir_objs(adata)
-    tmp_ = ir.io.to_dandelion(adata)
-    tmp = tmp_.data.copy()
-
-    if clonekey_d in adata.obs:
-        cell_clone_id_dict = dict(zip(adata.obs.index, adata.obs[clonekey_d]))
-    elif clonekey_s in adata.obs:
-        cell_clone_id_dict = dict(zip(adata.obs.index, adata.obs[clonekey_s]))
-    else:
-        cell_clone_id_dict = {}
-        for c in airr_cells:
-            clones_ = '|'.join([cx['clone_id'] if isinstance(
-                cx['clone_id'], str) else '' for cx in c.chains])
-            cell_clone_id_dict[c.cell_id] = clones_
-
-    if mapping_mode == 'cell':
-        tmp[clonekey_d] = [cell_clone_id_dict[x] for x in tmp['cell_id']]
-    elif mapping_mode == 'chain':
-        clone_dict = {}
-        for c in airr_cells:
-            for cx in c.chains:
-                clone_dict[cx['sequence_id']] = cx['clone_id']
-        if all(v == '' for v in clone_dict.values()) or all(pd.isnull(v) for v in clone_dict.values()):
-            clone_dict = {}
-            for c in airr_cells:
-                for cx in c.chains:
-                    clone_dict[cx['sequence_id']] = cell_clone_id_dict[c.cell_id]
-        tmp[clonekey_d] = [clone_dict[x] for x in tmp['sequence_id']]
-
-    tmp_.__init__(data=tmp)
-
-    return(tmp_)
+    return(ir.io.to_dandelion(adata))
