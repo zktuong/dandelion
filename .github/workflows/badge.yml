@@ -23,6 +23,7 @@ jobs:
           python-version: '3.7'
       - id: version
         run: |
+          python setup.py --version
           echo "##[set-output name=version;]$(python dandelion/logging/_badge.py)"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
