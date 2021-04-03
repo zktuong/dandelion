@@ -26,7 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install "setuptools>=45" "wheel" "setuptools_scm[toml]>=6.0"
           # echo "##[set-output name=version;]$(python dandelion/logging/_version.py)"
-          echo "##[set-output name=version;]$(python setup.py --name)"
+          echo "##[set-output name=version;]$(python setup.py --version)"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
