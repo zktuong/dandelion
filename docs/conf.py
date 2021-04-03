@@ -16,7 +16,6 @@ from sphinx.deprecation import RemovedInSphinx40Warning
 
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
-exec(open('../dandelion/version.py').read())
 
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
@@ -30,7 +29,7 @@ copyright = '2020, zktuong'
 author = 'zktuong'
 
 # The full version, including alpha/beta/rc tags
-release = __version__
+release = dandelion.__version__
 
 # -- General configuration ---------------------------------------------------
 
