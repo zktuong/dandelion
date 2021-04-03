@@ -3,9 +3,8 @@
 *.DS_Store
 *-checkpoint.ipynb
 */dist/
-*/*/*/__pycache__/
-*/*/__pycache__/
-*/__pycache__/
-__pycache__
+*__pycache__
+*scmtag.py
 dist/*
 sc_dandelion.egg-info/*
+

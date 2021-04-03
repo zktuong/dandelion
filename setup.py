@@ -12,7 +12,7 @@ with open("requirements_dev.txt", "rt", encoding="utf-8") as fh:
 setup(
     name="sc-dandelion",
     use_scm_version={
-        'write_to': 'dandelion/logging/_scmtag.py',
+        'write_to': 'scmtag.py',
         'write_to_template': '__version__ = "{version}"',
         'tag_regex': r'^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$',
     },
