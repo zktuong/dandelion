@@ -4,7 +4,7 @@ import pkg_resources
 
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
-exec(open('dandelion/version.py').read())
+# exec(open('dandelion/version.py').read())
 
 with open("requirements_dev.txt", "rt", encoding="utf-8") as fh:
     requirements = [line.strip() for line in fh.readlines()]

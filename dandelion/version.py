@@ -1,7 +1,4 @@
-try:
-	exec(open('dandelion/logging/_scmtag.py').read())
-except:
-	exec(open('../dandelion/logging/_scmtag.py').read())
+from .logging._scmtag import version
 
 if '+' in version:
 	__version__ = version.split('+')[0]
