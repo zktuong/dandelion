@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-22 12:04:01
+# @Last Modified time: 2021-04-09 14:15:48
 
 import sys
 import os
@@ -1843,7 +1843,7 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
 
-def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_bcr: bool = True, filter_rna: bool = True, filter_poorqualitybcr: bool = False, rescue_igh: bool = True, umi_foldchange_cutoff: int = 5, filter_lightchains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
+def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_bcr: bool = True, filter_rna: bool = True, filter_poorqualitybcr: bool = False, rescue_igh: bool = True, umi_foldchange_cutoff: int = 2, filter_lightchains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1865,7 +1865,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     rescue_igh : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
-        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 5-fold.
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.
     filter_lightchains : bool
         cells with multiple light chains will be marked to filter. Default is True.
     productive_only : bool
