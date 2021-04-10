@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-04-09 14:15:48
+# @Last Modified time: 2021-04-10 09:21:47
 
 import sys
 import os
@@ -2484,10 +2484,9 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
             else:
                 filter_ids = list(set(h_doublet + l_doublet))
 
-        if filter_rna:
-            filter_ids = filter_ids + \
-                list(adata_[adata_.obs['filter_rna'] == True].obs_names)
-            filter_ids = list(set(filter_ids))
+        filter_ids = filter_ids + \
+            list(adata_[adata_.obs['filter_rna'] == True].obs_names)
+        filter_ids = list(set(filter_ids))
 
         if filter_missing:
             for c in dat['cell_id']:
