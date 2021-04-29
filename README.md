@@ -46,8 +46,13 @@ First, install [scanpy](https://scanpy.readthedocs.io/en/latest/installation.htm
 # these are required by dandelion
 conda install -c conda-forge distance joblib plotnine adjustText
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-conda install -c conda-forge "rpy2>=3.4" # to make compatible for R version 4
-# or pip install rpy2>=3.4
+
+# installing rpy2
+# if you just want to stick with the base R
+pip install "rpy2>=3.4"
+# or if you don't mind having conda manage R:
+conda install -c conda-forge "rpy2>=3.4"
+# make sure not to use the same R package folder or you will end up with major issues later.
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
 # and then lastly install this
@@ -75,6 +80,20 @@ The package should now be properly installed and when starting up jupyter notebo
 # in bash/zsh terminal
 python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
 ```
+
+## Required database
+Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with [immcantation's](https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html) docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj) (Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
+
+So for example, if I unpack into `~/Documents`
+```bash
+# in bash/zsh terminal
+# set up environmental variables in ~/.bash_profile
+echo 'export GERMLINE=~/Documents/dandelion/database/germlines/' >> ~/.bash_profile # or ~/.zshenv
+echo 'export IGDATA=~/Documents/dandelion/database/igblast/' >> ~/.bash_profile # or ~/.zshenv
+echo 'export BLASTDB=~/Documents/dandelion/database/blast/' >> ~/.bash_profile # or ~/.zshenv
+source ~/.bash_profile # or ~/.zshenv
+```
+see https://github.com/zktuong/dandelion/issues/66 for a known issue if you are using a notebook via jupyterhub.
 
 ## Required database
 Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with [immcantation's](https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html) docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate [repository](https://github.com/zktuong/databases_for_vdj) (Last update: 28/11/2020). Once you've unpacked the folders, export the the path to the database folders as environmental variables in your `~/.bash_profile` or `~/.zshenv` like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.
