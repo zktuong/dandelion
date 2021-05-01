@@ -6,7 +6,6 @@ from io import StringIO
 import requests
 import pandas as pd
 import scanpy as sc
-import multiprocessing
 import dandelion as ddl
 
 
