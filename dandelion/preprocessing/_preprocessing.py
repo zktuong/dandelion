@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-01 09:40:03
+# @Last Modified time: 2021-05-14 12:57:43
 
 import sys
 import os
@@ -18,7 +18,7 @@ from ..utilities._utilities import *
 from ..utilities._core import *
 from ..utilities._io import *
 from .external._preprocessing import assigngenes_igblast, makedb_igblast, parsedb_heavy, parsedb_light, tigger_genotype, creategermlines
-from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline
+from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline, save_as_pdf_pages
 from changeo.Gene import buildGermline
 from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
@@ -237,13 +237,13 @@ def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix
                              remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
 
 
-def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[Dict, None] = None, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
+def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[Dict, None] = None, plot: bool = True, save_plot: Union[str, PathLike, None] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn
 
     Parameters
     ----------
-    fasta : str
+    fasta : str, PathLike
         path to fasta file.
     fileformat : str
         format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
@@ -255,6 +255,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
+    save_plot : str, PathLike, optional
+        file name for pdf of reassignment summary metrics plots. Default is None (does not save).
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, optional
@@ -757,10 +759,13 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                  + geom_col(stat="identity", position='dodge')
                  + scale_fill_manual(values=('#79706e', '#86bcb6'))
                  + theme(legend_title=element_blank()))
-        print(p)
+        if save_plot is not None:        
+            save_as_pdf_pages(p, file_name = save_plot)
+        else:
+            print(p)
 
 
-def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[None, Dict] = None, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
+def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[None, Dict] = None, plot: bool = True, save_plot: Union[str, PathLike, None] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn
 
@@ -778,6 +783,8 @@ def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'a
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
+    save_plot : str, PathLike, optional
+        file name for pdf of reassignment summary metrics plots. Default is None (does not save).
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, optional
@@ -802,7 +809,7 @@ def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'a
         print('Assign isotypes \n')
     for fasta in fastas:
         assign_isotype(fasta, fileformat=fileformat, org=org, correct_c_call=correct_c_call, correction_dict=correction_dict,
-                       plot=plot, figsize=figsize, blastdb=blastdb, allele=allele, parallel=parallel, ncpu=ncpu, verbose=verbose)
+                       plot=plot, save_plot=save_plot, figsize=figsize, blastdb=blastdb, allele=allele, parallel=parallel, ncpu=ncpu, verbose=verbose)
 
 
 def reannotate_genes(data: Sequence, igblast_db: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'ig'] = 'human', loci: Literal['ig', 'tr'] = 'ig', extended: bool = True, verbose: bool = False):
@@ -866,7 +873,7 @@ def reannotate_genes(data: Sequence, igblast_db: Union[None, str] = None, germli
                        extended=extended, verbose=verbose)
 
 
-def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_germline: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call_genotyped', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', novel: bool = True, cloned: bool = False, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3), sample_id_dictionary: Union[None, Dict] = None, verbose: bool = False):
+def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_germline: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call_genotyped', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', novel: bool = True, cloned: bool = False, plot: bool = True, save_plot: Union[str, PathLike, None] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3), sample_id_dictionary: Union[None, Dict] = None, verbose: bool = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -892,6 +899,8 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
         whether or not to run CreateGermlines.py with `--cloned`.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
+    save_plot : str, PathLike, optional
+        file name for pdf of reassignment summary metrics plots. Default is None (does not save).
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 3).
     sample_id_dictionary : dict, optional
@@ -1157,10 +1166,13 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
                      + facet_grid('~' + str('vgroup'), scales="free_y")
                      + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
                      + theme(legend_title=element_blank()))
-                print(p)
+                if save_plot is not None:
+                    save_as_pdf_pages(p, file_name = save_plot)
+                else:
+                    print(p)
             except:
-                pass
                 print('Error in plotting encountered. Skipping.')
+                pass                
         else:
             pass
     sleep(0.5)
@@ -1174,290 +1186,6 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
             out_file = dat_[dat_['sample_id'] == s]
         outfilepath = filePath_dict[s]
         out_file.to_csv(outfilepath.replace(
-            '.tsv', '_genotyped.tsv'), index=False, sep='\t')
-
-
-def reassign_alleles_(data: Sequence, combined_folder: Union[str, PathLike], germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', seq_field: Literal['sequence_alignment'] = 'sequence_alignment', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call_genotyped', d_field: Literal['d_call'] = 'd_call', j_field: Literal['j_call'] = 'j_call', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', novel: bool = True, plot: bool = True, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3), sample_id_dictionary: Union[None, Dict] = None, verbose: bool = False):
-    """
-    Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
-
-    Parameters
-    ----------
-    data : Sequence
-        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    combined_folder : str
-        name of folder for concatenated data file and genotyped files.
-    germline : str, optional
-        path to germline database folder. Defaults to `$GERMLINE` environmental variable.
-    org : str
-        organism of germline database. Default is 'human'.
-    fileformat : str
-        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
-    org : str
-        organism of germline database. Default is 'human'.
-    seq_field : str
-        name of column containing the aligned sequence. Default is 'sequence_alignment' (airr).
-    v_field : str
-        name of column containing the germline V segment call. Default is 'v_call_genotyped' (airr) after tigger.
-    d_field : str
-        name of column containing the germline d segment call. Default is 'd_call' (airr).
-    j_field : str
-        name of column containing the germline j segment call. Default is 'j_call' (airr).
-    germ_types : str
-        Specify type(s) of germlines to include full germline, germline with D segment masked, or germline for V segment only. Default is 'dmask'.
-    novel : bool
-        whether or not to run novel allele discovery during tigger-genotyping. Default is True (yes).
-    plot : bool
-        whether or not to plot reassignment summary metrics. Default is True.
-    figsize : Tuple[Union[int,float], Union[int,float]]
-        size of figure. Default is (4, 3).
-    sample_id_dictionary : dict, optional
-        dictionary for creating a sample_id column in the concatenated file.
-    verbose : bool
-        Whether or not to print the command used in the terminal. Default is False.
-
-    Returns
-    -------
-    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
-    """
-
-    if type(data) is not list:
-        data = [data]
-
-    informat_dict = {'changeo': '_igblast_db-pass.tsv',
-                     'blast': '_igblast_db-pass.tsv', 'airr': '_igblast_gap.tsv'}
-    fileformat_dict = {'changeo': '_igblast_db-pass_genotyped.tsv',
-                       'blast': '_igblast_db-pass_genotyped.tsv', 'airr': '_igblast_gap_genotyped.tsv'}
-    inferred_fileformat_dict = {'changeo': '_igblast_db-pass_inferredGenotype.txt',
-                                'blast': '_igblast_db-pass_inferredGenotype.txt', 'airr': '_igblast_gap_inferredGenotype.txt'}
-    germline_dict = {'changeo': '_igblast_db-pass_genotype.fasta',
-                     'blast': '_igblast_db-pass_genotype.fasta', 'airr': '_igblast_gap_genotype.fasta'}
-    fform_dict = {'blast': 'airr', 'airr': 'airr', 'changeo': 'changeo'}
-
-    data_list = []
-    filePath = None
-    for s in tqdm(data, desc='Processing data file(s) '):
-        if os.path.isfile(str(s)) and str(s).endswith(informat_dict[fileformat]):
-            filePath = s
-        elif os.path.isdir(str(s)):
-            files = os.listdir(s)
-            for file in files:
-                if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
-                    if file == 'dandelion':
-                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
-                            out_ = s + '/' + os.path.basename(file) + '/data/'
-                            for x in os.listdir(out_):
-                                if x.endswith(informat_dict[fileformat]):
-                                    filePath = out_ + x
-                    else:
-                        out_ = s.rstrip('/') + '/' + os.path.basename(file)
-                        for x in os.listdir(out_):
-                            if x.endswith(informat_dict[fileformat]):
-                                filePath = out_ + '/' + x
-        if filePath is None:
-            raise OSError(
-                'Path to .tsv file for {} is unknown. Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'.format(s))
-
-        dat = load_data(filePath)
-        if sample_id_dictionary is not None:
-            dat['sample_id'] = sample_id_dictionary[s]
-        else:
-            dat['sample_id'] = str(s)
-        data_list.append(dat)
-
-    # concatenate
-    if len(data_list) > 1:
-        print('Concatenating objects')
-        dat_ = pd.concat(data_list, sort=False)
-    else:
-        dat_ = data_list[0]
-
-    # write out this file for tigger
-    outDir = combined_folder.rstrip('/')
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
-
-    novel_dict = {True: 'YES', False: 'NO'}
-
-    print('   Writing out concatenated object')
-    # dat_.to_csv(outDir+'filtered_contig'+informat_dict[fileformat], index = False, sep = '\t', na_rep='')
-    dat_h = dat_[dat_['locus'] == 'IGH']
-    dat_h.to_csv(outDir + '/' + outDir + '_heavy' +
-                 informat_dict[fileformat], index=False, sep='\t', na_rep='')
-    if novel:
-        try:
-            print('      Running tigger-genotype with novel allele discovery.')
-            tigger_genotype(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], germline=germline,
-                            fileformat=fform_dict[fileformat], novel_=novel_dict[novel], verbose=verbose)
-            out_h = load_data(outDir + '/' + outDir + '_heavy' +
-                              fileformat_dict[fileformat])
-            dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
-        except:
-            try:
-                print('      Novel allele discovery exceution halted.')
-                print(
-                    '      Attempting to run tigger-genotype without novel allele discovery.')
-                tigger_genotype(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], germline=germline,
-                                fileformat=fform_dict[fileformat], novel_=novel_dict[False], verbose=verbose)
-                out_h = load_data(outDir + '/' + outDir + '_heavy' +
-                                  fileformat_dict[fileformat])
-                dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
-                tigger_novel_failed = ''
-            except:
-                print(
-                    '      Insufficient contigs for running tigger-genotype. Defaulting to using original v_calls.')
-                out_h = dat_h.copy()
-                print(
-                    '      For convenience, entries in `v_call` are copied to `v_call_genotyped`.')
-                dat_['v_call_genotyped'] = pd.Series(out_h['v_call'])
-                tigger_failed = ''
-    else:
-        try:
-            print('      Running tigger-genotype without novel allele discovery.')
-            tigger_genotype(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], germline=germline,
-                            fileformat=fform_dict[fileformat], novel_=novel_dict[False], verbose=verbose)
-            out_h = load_data(outDir + '/' + outDir + '_heavy' +
-                              fileformat_dict[fileformat])
-            dat_['v_call_genotyped'] = pd.Series(out_h['v_call_genotyped'])
-            tigger_novel_failed = ''
-        except:
-            print(
-                '      Insufficient contigs for running tigger-genotype. Defaulting to using original v_calls.')
-            out_h = dat_h.copy()
-            print(
-                '      For convenience, entries in `v_call` are copied to `v_call_genotyped`.')
-            dat_['v_call_genotyped'] = pd.Series(out_h['v_call'])
-            tigger_failed = ''
-
-    # transfer light chain V calls to v_call_genotyped as well
-    print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
-    dat_['v_call_genotyped'].update(dat_[~(dat_['locus'] == 'IGH')]['v_call'])
-
-    res = Dandelion(dat_, initialize=False)
-    # update with the personalized germline database
-    res.update_germline(corrected=outDir + '/' + outDir + '_heavy' +
-                        germline_dict[fileformat], germline=germline, org=org)
-    create_germlines(res, germline=germline, org=org, seq_field=seq_field, v_field=v_field,
-                     d_field=d_field, j_field=j_field, germ_types=germ_types, fileformat=fform_dict[fileformat])
-
-    germtypedict = {'dmask': 'germline_alignment_d_mask', 'full': 'germline_alignment',
-                    'vonly': 'germline_alignment_v_region', 'regions': 'germline_regions'}
-    if novel:
-        if 'tigger_novel_failed' or 'tigger_failed' in locals():
-            print(
-                'Germline reconstruction with `{}` has failed. Re-running with original v_call.'.format(v_field))
-            res.update_germline(corrected=None, germline=germline, org=org)
-            create_germlines(res, germline=germline, org=org, seq_field=seq_field, v_field='v_call',
-                             d_field=d_field, j_field=j_field, germ_types=germ_types, fileformat=fform_dict[fileformat])
-
-    print('   Saving corrected genotyped object')
-    sleep(0.5)
-    res.data.to_csv(outDir + '/' + outDir +
-                    fileformat_dict[fileformat], index=False, sep='\t')
-
-    # reset dat_
-    dat_ = res.data.copy()
-
-    if plot:
-        print('Returning summary plot')
-        inferred_genotype = outDir + '/' + outDir + \
-            '_heavy' + inferred_fileformat_dict[fileformat]
-        inf_geno = pd.read_csv(inferred_genotype, sep='\t', dtype='object')
-
-        s2 = set(inf_geno['gene'])
-        results = []
-        for samp in list(set(out_h['sample_id'])):
-            res_x = out_h[(out_h['sample_id'] == samp)]
-            V_ = [re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call']]
-            V_g = [re.sub('[*][0-9][0-9]', '', v)
-                   for v in res_x['v_call_genotyped']]
-            s1 = set(
-                list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
-            setdiff = s1 - s2
-            ambiguous = (["," in i for i in V_].count(True) / len(V_)
-                         * 100, ["," in i for i in V_g].count(True) / len(V_g) * 100)
-            not_in_genotype = ([i in setdiff for i in V_].count(
-                True) / len(V_) * 100, [i in setdiff for i in V_g].count(True) / len(V_g) * 100)
-            stats = pd.DataFrame([ambiguous, not_in_genotype], columns=[
-                                 'ambiguous', 'not_in_genotype'], index=['before', 'after']).T
-            stats.index.set_names(['vgroup'], inplace=True)
-            stats.reset_index(drop=False, inplace=True)
-            stats['sample_id'] = samp
-            # stats['donor'] = str(combined_folder)
-            results.append(stats)
-        results = pd.concat(results)
-        ambiguous_table = results[results['vgroup'] == 'ambiguous']
-        not_in_genotype_table = results[results['vgroup'] == 'not_in_genotype']
-        ambiguous_table.reset_index(inplace=True, drop=True)
-        not_in_genotype_table.reset_index(inplace=True, drop=True)
-        # melting the dataframe
-        ambiguous_table_before = ambiguous_table.drop('after', axis=1)
-        ambiguous_table_before.rename(columns={"before": "var"}, inplace=True)
-        ambiguous_table_before['var_group'] = 'before'
-        ambiguous_table_after = ambiguous_table.drop('before', axis=1)
-        ambiguous_table_after.rename(columns={"after": "var"}, inplace=True)
-        ambiguous_table_after['var_group'] = 'after'
-        ambiguous_table = pd.concat(
-            [ambiguous_table_before, ambiguous_table_after])
-        not_in_genotype_table_before = not_in_genotype_table.drop(
-            'after', axis=1)
-        not_in_genotype_table_before.rename(
-            columns={"before": "var"}, inplace=True)
-        not_in_genotype_table_before['var_group'] = 'before'
-        not_in_genotype_table_after = not_in_genotype_table.drop(
-            'before', axis=1)
-        not_in_genotype_table_after.rename(
-            columns={"after": "var"}, inplace=True)
-        not_in_genotype_table_after['var_group'] = 'after'
-        not_in_genotype_table = pd.concat(
-            [not_in_genotype_table_before, not_in_genotype_table_after])
-        ambiguous_table['var_group'] = ambiguous_table['var_group'].astype(
-            'category')
-        not_in_genotype_table['var_group'] = not_in_genotype_table['var_group'].astype(
-            'category')
-        ambiguous_table['var_group'].cat.reorder_categories(
-            ['before', 'after'], inplace=True)
-        not_in_genotype_table['var_group'].cat.reorder_categories(
-            ['before', 'after'], inplace=True)
-
-        options.figure_size = figsize
-        final_table = pd.concat([ambiguous_table, not_in_genotype_table])
-        p = (ggplot(final_table, aes(x='sample_id', y='var', fill='var_group'))
-             + coord_flip()
-             + theme_classic()
-             + xlab("sample_id")
-             + ylab("% allele calls")
-             + ggtitle("Genotype reassignment with TIgGER")
-             + geom_bar(stat="identity")
-             + facet_grid('~' + str('vgroup'), scales="free_y")
-             + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
-             + theme(legend_title=element_blank()))
-        print(p)
-    sleep(0.5)
-    # if split_write_out:
-    for s in tqdm(data, desc='Writing out to individual folders '):
-        if sample_id_dictionary is not None:
-            out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
-        else:
-            out_file = dat_[dat_['sample_id'] == s]
-        if os.path.isfile(str(s)) and str(s).endswith(informat_dict[fileformat]):
-            filePath = s
-        elif os.path.isdir(str(s)):
-            files = os.listdir(s)
-            for file in files:
-                if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
-                    if file == 'dandelion':
-                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
-                            out_ = s + '/' + os.path.basename(file) + '/data/'
-                            for x in os.listdir(out_):
-                                if x.endswith(informat_dict[fileformat]):
-                                    filePath = out_ + x
-                    else:
-                        out_ = s.rstrip('/') + '/' + os.path.basename(file)
-                        for x in os.listdir(out_):
-                            if x.endswith(informat_dict[fileformat]):
-                                filePath = out_ + '/' + x
-        out_file.to_csv(filePath.replace(
             '.tsv', '_genotyped.tsv'), index=False, sep='\t')
 
 
