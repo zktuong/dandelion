@@ -2,9 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-15 10:51:43
+# @Last Modified time: 2021-05-15 14:25:00
 
-import sys
 import os
 import pandas as pd
 from subprocess import run
@@ -17,11 +16,17 @@ from time import sleep
 from ..utilities._utilities import *
 from ..utilities._core import *
 from ..utilities._io import *
-from .external._preprocessing import assigngenes_igblast, makedb_igblast, parsedb_heavy, parsedb_light, tigger_genotype, creategermlines
-from plotnine import ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual, coord_flip, options, element_blank, aes, xlab, ylab, facet_wrap, facet_grid, theme_classic, theme, annotate, theme_bw, geom_histogram, geom_vline, save_as_pdf_pages
+from .external._preprocessing import (assigngenes_igblast, makedb_igblast,
+                                      parsedb_heavy, parsedb_light,
+                                      tigger_genotype, creategermlines)
+from plotnine import (ggplot, geom_bar, geom_col, ggtitle, scale_fill_manual,
+                      coord_flip, options, element_blank, aes, xlab, ylab,
+                      facet_wrap, facet_grid, theme_classic, theme, annotate,
+                      theme_bw, geom_histogram, geom_vline, save_as_pdf_pages)
 from changeo.Gene import buildGermline
-from changeo.IO import countDbFile, getDbFields, getFormatOperators, readGermlines, checkFields
-from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
+from changeo.IO import (getFormatOperators, readGermlines, checkFields)
+from changeo.Receptor import (AIRRSchema, ChangeoSchema, Receptor,
+                              ReceptorData)
 import re
 import functools
 try:
@@ -34,7 +39,12 @@ from typing import Union, Sequence, Tuple
 from os import PathLike
 
 
-def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, suffix: Union[None, str] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None):
+def format_fasta(fasta: Union[str, PathLike],
+                 prefix: Union[None, str] = None,
+                 suffix: Union[None, str] = None,
+                 sep: Union[None, str] = None,
+                 remove_trailing_hyphen_number: bool = True,
+                 outdir: Union[None, str] = None):
     """
     Add prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -63,11 +73,17 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
     elif os.path.isdir(str(fasta)):
         files = os.listdir(fasta)
         for file in files:
-            if os.path.isfile(fasta.rstrip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
+            if os.path.isfile(
+                    fasta.rstrip('/') + '/' +
+                    os.path.basename(file)) and str(file).endswith(".fasta"):
                 filePath = fasta + '/' + os.path.basename(file)
     if filePath is None:
-        raise OSError(
-            'Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file. Starting folder should only contain 1 fasta file.')
+        errMsg = (
+            'Path to fasta file is unknown. Please specify path to fasta file '
+            +
+            'or folder containing fasta file. Starting folder should only contain 1 fasta file.'
+        )
+        raise OSError(errMsg)
 
     fh = open(filePath, 'r')
     seqs = {}
@@ -83,15 +99,20 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
         elif prefix is not None:
             if suffix is not None:
                 if remove_trailing_hyphen_number:
-                    newheader = str(prefix) + separator + str(header).split('_contig')[0].split(
-                        '-')[0] + separator + str(suffix) + '_contig' + str(header).split('_contig')[1]
+                    newheader = str(prefix) + separator + str(header).split(
+                        '_contig')[0].split('-')[0] + separator + str(
+                            suffix) + '_contig' + str(header).split(
+                                '_contig')[1]
                 else:
-                    newheader = str(prefix) + separator + str(header).split('_contig')[
-                        0] + separator + str(suffix) + '_contig' + str(header).split('_contig')[1]
+                    newheader = str(prefix) + separator + str(header).split(
+                        '_contig')[0] + separator + str(
+                            suffix) + '_contig' + str(header).split(
+                                '_contig')[1]
             else:
                 if remove_trailing_hyphen_number:
-                    newheader = str(prefix) + separator + str(header).split('_contig')[
-                        0].split('-')[0] + '_contig' + str(header).split('_contig')[1]
+                    newheader = str(prefix) + separator + str(header).split(
+                        '_contig')[0].split('-')[0] + '_contig' + str(
+                            header).split('_contig')[1]
                 else:
                     newheader = str(prefix) + separator + str(header)
             seqs[newheader] = sequence
@@ -99,7 +120,8 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
             if suffix is not None:
                 if remove_trailing_hyphen_number:
                     newheader = str(header).split('_contig')[0].split(
-                        '-')[0] + separator + str(suffix) + '_contig' + str(header).split('_contig')[1]
+                        '-')[0] + separator + str(suffix) + '_contig' + str(
+                            header).split('_contig')[1]
                 else:
                     newheader = str(header) + separator + str(suffix)
             else:
@@ -141,38 +163,65 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
     if prefix is not None:
         if suffix is not None:
             if remove_trailing_hyphen_number:
-                data['contig_id'] = [str(prefix) + separator + str(c).split('_contig')[0].split('-')[
-                    0] + separator + str(suffix) + '_contig' + str(c).split('_contig')[1] for c in data['contig_id']]
-                data['barcode'] = [str(prefix) + separator + str(b).split('-')
-                                   [0] + separator + str(suffix) for b in data['barcode']]
-            else:
-                data['contig_id'] = [str(prefix) + separator + str(c).split('_contig')[0] + separator + str(
-                    suffix) + '_contig' + str(c).split('_contig')[1] for c in data['contig_id']]
+                data['contig_id'] = [
+                    str(prefix) + separator +
+                    str(c).split('_contig')[0].split('-')[0] + separator +
+                    str(suffix) + '_contig' + str(c).split('_contig')[1]
+                    for c in data['contig_id']
+                ]
                 data['barcode'] = [
-                    str(prefix) + separator + str(b) + separator + str(suffix) for b in data['barcode']]
+                    str(prefix) + separator + str(b).split('-')[0] +
+                    separator + str(suffix) for b in data['barcode']
+                ]
+            else:
+                data['contig_id'] = [
+                    str(prefix) + separator + str(c).split('_contig')[0] +
+                    separator + str(suffix) + '_contig' +
+                    str(c).split('_contig')[1] for c in data['contig_id']
+                ]
+                data['barcode'] = [
+                    str(prefix) + separator + str(b) + separator + str(suffix)
+                    for b in data['barcode']
+                ]
         else:
             if remove_trailing_hyphen_number:
-                data['contig_id'] = [str(prefix) + separator + str(c).split('_contig')[0].split(
-                    '-')[0] + '_contig' + str(c).split('_contig')[1] for c in data['contig_id']]
+                data['contig_id'] = [
+                    str(prefix) + separator +
+                    str(c).split('_contig')[0].split('-')[0] + '_contig' +
+                    str(c).split('_contig')[1] for c in data['contig_id']
+                ]
                 data['barcode'] = [
-                    str(prefix) + separator + str(b).split('-')[0] for b in data['barcode']]
+                    str(prefix) + separator + str(b).split('-')[0]
+                    for b in data['barcode']
+                ]
             else:
-                data['contig_id'] = [str(prefix) + separator + str(c)
-                                     for c in data['contig_id']]
-                data['barcode'] = [str(prefix) + separator + str(b)
-                                   for b in data['barcode']]
+                data['contig_id'] = [
+                    str(prefix) + separator + str(c) for c in data['contig_id']
+                ]
+                data['barcode'] = [
+                    str(prefix) + separator + str(b) for b in data['barcode']
+                ]
     else:
         if suffix is not None:
             if remove_trailing_hyphen_number:
-                data['contig_id'] = [str(c).split('_contig')[0].split('-')[0] + separator + str(
-                    suffix) + '_contig' + str(c).split('_contig')[1] for c in data['contig_id']]
-                data['barcode'] = [str(b).split(
-                    '-')[0] + separator + str(suffix) for b in data['barcode']]
+                data['contig_id'] = [
+                    str(c).split('_contig')[0].split('-')[0] + separator +
+                    str(suffix) + '_contig' + str(c).split('_contig')[1]
+                    for c in data['contig_id']
+                ]
+                data['barcode'] = [
+                    str(b).split('-')[0] + separator + str(suffix)
+                    for b in data['barcode']
+                ]
             else:
-                data['contig_id'] = [str(c).split('_contig')[
-                    0] + separator + str(suffix) + '_contig' + str(c).split('_contig')[1] for c in data['contig_id']]
-                data['barcode'] = [str(b) + separator + str(suffix)
-                                   for b in data['barcode']]
+                data['contig_id'] = [
+                    str(c).split('_contig')[0] + separator + str(suffix) +
+                    '_contig' + str(c).split('_contig')[1]
+                    for c in data['contig_id']
+                ]
+                data['barcode'] = [
+                    str(b) + separator + str(suffix) for b in data['barcode']
+                ]
         else:
             data['contig_id'] = [str(c) for c in data['contig_id']]
             data['barcode'] = [str(b) for b in data['barcode']]
@@ -183,9 +232,14 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
     data.to_csv(out_anno, index=False)
 
 
-def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix: Union[None, Sequence] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None):
+def format_fastas(fastas: Sequence,
+                  prefix: Union[None, Sequence] = None,
+                  suffix: Union[None, Sequence] = None,
+                  sep: Union[None, str] = None,
+                  remove_trailing_hyphen_number: bool = True,
+                  outdir: Union[None, str] = None):
     """
-    Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
+    Add prefix to the headers/contig ids in cellranger fasta and annotation file.
 
     Parameters
     ----------
@@ -219,27 +273,65 @@ def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix
 
     for fasta in tqdm(fastas, desc='Formating fasta(s) '):
         if prefix is None and suffix is None:
-            format_fasta(fasta, prefix=None, suffix=None, sep=None,
-                         remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+            format_fasta(
+                fasta,
+                prefix=None,
+                suffix=None,
+                sep=None,
+                remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                outdir=outdir)
         elif prefix is not None:
             if suffix is not None:
-                format_fasta(fasta, prefix=prefix_dict[fasta], suffix=suffix_dict[fasta], sep=sep,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                format_fasta(
+                    fasta,
+                    prefix=prefix_dict[fasta],
+                    suffix=suffix_dict[fasta],
+                    sep=sep,
+                    remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    outdir=outdir)
             else:
-                format_fasta(fasta, prefix=prefix_dict[fasta], suffix=None, sep=sep,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                format_fasta(
+                    fasta,
+                    prefix=prefix_dict[fasta],
+                    suffix=None,
+                    sep=sep,
+                    remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    outdir=outdir)
         else:
             if suffix is not None:
-                format_fasta(fasta, prefix=None, suffix=suffix_dict[fasta], sep=sep,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                format_fasta(
+                    fasta,
+                    prefix=None,
+                    suffix=suffix_dict[fasta],
+                    sep=sep,
+                    remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    outdir=outdir)
             else:
-                format_fasta(fasta, prefix=None, suffix=None, sep=None,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                format_fasta(
+                    fasta,
+                    prefix=None,
+                    suffix=None,
+                    sep=None,
+                    remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    outdir=outdir)
 
 
-def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[Dict, None] = None, plot: bool = True, save_plot: bool = False, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
+def assign_isotype(fasta: Union[str, PathLike],
+                   fileformat: Literal['blast', 'changeo', 'airr'] = 'blast',
+                   org: Literal['human', 'mouse'] = 'human',
+                   correct_c_call: bool = True,
+                   correction_dict: Union[Dict, None] = None,
+                   plot: bool = True,
+                   save_plot: bool = False,
+                   figsize: Tuple[Union[int, float], Union[int,
+                                                           float]] = (4, 4),
+                   blastdb: Union[None, str] = None,
+                   allele: bool = False,
+                   parallel: bool = True,
+                   ncpu: Union[None, int] = None,
+                   verbose: bool = False):
     """
-    Annotate contigs with constant region call using blastn
+    Annotate contigs with constant region call using blastn.
 
     Parameters
     ----------
@@ -250,9 +342,10 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
     org : str
         organism of reference folder. Default is 'human'.
     correct_c_call : bool
-        whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option. Default is True.
+        whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
     correction_dict : Dict, optional
-        a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
+        a nested dictionary contain isotype/c_genes as keys and primer sequences as records.
+        Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
@@ -282,21 +375,21 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                 bdb = env['BLASTDB']
             except:
                 raise OSError(
-                    'Environmental variable BLASTDB must be set. Otherwise, please provide path to blast database')
+                    'Environmental variable BLASTDB must be set. Otherwise, please provide path to blast database'
+                )
             bdb = bdb + org + '/' + org + '_BCR_C.fasta'
         else:
             env['BLASTDB'] = blastdb
             bdb = blastdb
 
-        cmd = ['blastn',
-               '-db', bdb,
-               '-evalue', '0.001',
-               '-max_target_seqs', '1',
-               '-outfmt', '5',
-               '-query', fasta]
+        cmd = [
+            'blastn', '-db', bdb, '-evalue', '0.001', '-max_target_seqs', '1',
+            '-outfmt', '5', '-query', fasta
+        ]
 
-        blast_out = "{}/tmp/{}.xml".format(os.path.dirname(
-            fasta), os.path.basename(fasta).split('.fasta')[0] + fileformat)
+        blast_out = "{}/tmp/{}.xml".format(
+            os.path.dirname(fasta),
+            os.path.basename(fasta).split('.fasta')[0] + fileformat)
 
         if verbose:
             print('Running command: %s\n' % (' '.join(cmd)))
@@ -304,15 +397,9 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
             run(cmd, stdout=out, env=env)
 
     def _parse_BLAST(fasta, fileformat):
-        '''
-        Parses BLAST output from output files and writes formatted output to BLAST
-        output summary files
-        '''
-
+        """Parse BLAST output from output files and writes formatted output to BLAST output summary files."""
         def split_blast_file(filename):
-            '''
-            code adapted from http://stackoverflow.com/questions/19575702/pythonhow-to-split-file-into-chunks-by-the-occurrence-of-the-header-word
-            '''
+            """Code adatped from http://stackoverflow.com/questions/19575702/pythonhow-to-split-file-into-chunks-by-the-occurrence-of-the-header-word."""
             token = '<Iteration>'
             chunks = []
             current_chunk = []
@@ -336,14 +423,17 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
             info = info.split("<")[0]
             return (info)
 
-        input_file = "{}/tmp/{}.xml".format(os.path.dirname(
-            fasta), os.path.basename(fasta).split('.fasta')[0] + fileformat)
-        output_file = "{}/tmp/{}.blastsummary.txt".format(os.path.dirname(
-            fasta), os.path.basename(fasta).split('.fasta')[0] + fileformat)
+        input_file = "{}/tmp/{}.xml".format(
+            os.path.dirname(fasta),
+            os.path.basename(fasta).split('.fasta')[0] + fileformat)
+        output_file = "{}/tmp/{}.blastsummary.txt".format(
+            os.path.dirname(fasta),
+            os.path.basename(fasta).split('.fasta')[0] + fileformat)
 
         with open(output_file, 'w') as outfile:
             outfile.write(
-                "------------------\n##{}##\n------------------\n\n#BCR#\n\n".format(fasta))
+                "------------------\n##{}##\n------------------\n\n#BCR#\n\n".
+                format(fasta))
             # Split result file into chunks corresponding to results for each query sequence.
             if os.path.isfile(input_file):
                 blast_result_chunks = split_blast_file(input_file)
@@ -383,7 +473,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                             c_qseq = extract_blast_info(line_x)
                         elif line_x.startswith("<Hsp_hseq>"):
                             c_hseq = extract_blast_info(line_x)
-                        elif line_x.startswith("<Iteration_message>No hits found"):
+                        elif line_x.startswith(
+                                "<Iteration_message>No hits found"):
                             message = True
                             out_string = "##{blast_query_name}##\nNo C segment found\n\n".format(
                                 blast_query_name=blast_query_name)
@@ -391,9 +482,10 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                         # Create output string when reaching end of BLAST
                         # iteration result (marked by </Iteration>) and write
                         # to BLAST summary file
-                        elif line_x.startswith("</Iteration>") and message is not True:
-                            identity_pro = float(
-                                identity) / int(align_length) * 100
+                        elif line_x.startswith(
+                                "</Iteration>") and message is not True:
+                            identity_pro = float(identity) / int(
+                                align_length) * 100
                             identity_pro = format(identity_pro, '.2f')
                             mismatches = int(align_length) - int(identity)
                             # Account for reversed sequences
@@ -405,28 +497,42 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                                 s_start, s_end = s_end, s_start
                             intro_string = "##{}##\nC segment:\t{}\n\n".format(
                                 blast_query_name, C_segment)
-                            header_string = ("Segment\tquery_id\tsubject_id\t% identity\talignment length\t"
-                                             "mismatches\tgap opens\tgaps\tq start\tq end\ts start\ts end\t"
-                                             "evalue\tbit score\n")
-                            out_string = ("C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t{evalue}\t{bit_score}\t{q_seq}\t{h_seq}\n\n").format(
-                                blast_query_name=blast_query_name,
-                                C_segment=C_segment, identity_pro=identity_pro, align_length=align_length,
-                                evalue=evalue, mismatches=mismatches, gaps=gaps, q_start=q_start,
-                                q_end=q_end, s_start=s_start, s_end=s_end, bit_score=bit_score, q_seq=c_qseq, h_seq=c_hseq)
+                            header_string = (
+                                "Segment\tquery_id\tsubject_id\t% identity\talignment length\t"
+                                "mismatches\tgap opens\tgaps\tq start\tq end\ts start\ts end\t"
+                                "evalue\tbit score\n")
+                            out_string = (
+                                "C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t{evalue}\t{bit_score}\t{q_seq}\t{h_seq}\n\n"
+                            ).format(blast_query_name=blast_query_name,
+                                     C_segment=C_segment,
+                                     identity_pro=identity_pro,
+                                     align_length=align_length,
+                                     evalue=evalue,
+                                     mismatches=mismatches,
+                                     gaps=gaps,
+                                     q_start=q_start,
+                                     q_end=q_end,
+                                     s_start=s_start,
+                                     s_end=s_end,
+                                     bit_score=bit_score,
+                                     q_seq=c_qseq,
+                                     h_seq=c_hseq)
                             string_to_write = intro_string + header_string + out_string
                             outfile.write(string_to_write)
 
     def _get_C(fasta, fileformat, allele=False, parallel=True, ncpu=None):
-
         def _get_C_call(fasta, contig_name, fileformat, allele=False):
             blast_summary_file = "{}/tmp/{}.blastsummary.txt".format(
-                os.path.dirname(fasta), os.path.basename(fasta).split('.fasta')[0] + fileformat)
+                os.path.dirname(fasta),
+                os.path.basename(fasta).split('.fasta')[0] + fileformat)
 
             C_seq, C_germ, C_gene, C_ident, C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None, None, None, None, None
             with open(blast_summary_file, 'r') as input:
                 for line in input:
                     if line.startswith("C\t{contig_name}".format(
-                            contig_name=contig_name)) or line.startswith("C\treversed|{contig_name}".format(contig_name=contig_name)):
+                            contig_name=contig_name)) or line.startswith(
+                                "C\treversed|{contig_name}".format(
+                                    contig_name=contig_name)):
                         C_gene = line.split("\t")[2]
                         C_ident = line.split("\t")[3]
                         C_seq = line.split("\t")[14]
@@ -455,7 +561,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
             C_start[contig_name] = C_qstart
             C_end[contig_name] = C_qend
 
-            return(C_sequence, C_germline, C_call, C_identity, C_support, C_score, C_start, C_end)
+            return (C_sequence, C_germline, C_call, C_identity, C_support,
+                    C_score, C_start, C_end)
 
         fh = open(fasta, 'r')
         contigs = []
@@ -469,12 +576,17 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
             else:
                 num_cores = int(ncpu)
             results = ()
-            results = Parallel(n_jobs=num_cores)(delayed(_get_C_call)(fasta, c, fileformat, allele) for c in tqdm(
-                contigs, desc='Retrieving contant region calls, parallelizing with ' + str(num_cores) + ' cpus '))
+            results = Parallel(
+                n_jobs=num_cores
+            )(delayed(_get_C_call)(fasta, c, fileformat, allele) for c in tqdm(
+                contigs,
+                desc='Retrieving contant region calls, parallelizing with ' +
+                str(num_cores) + ' cpus '))
             # transform list of dicts to dict
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for r in range(0, len(results)):
-                _seq, _germ, _call, _ident, _support, _score, _start, _end = results[r]
+                _seq, _germ, _call, _ident, _support, _score, _start, _end = results[
+                    r]
                 seq.update(_seq)
                 germ.update(_germ)
                 call.update(_call)
@@ -486,24 +598,29 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
         else:
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for c in tqdm(contigs, desc='Retrieving contant region calls '):
-                seq[c], germ[c], call[c], ident[c], support[c], score[c], start[c], end[c] = _get_C_call(
-                    fasta, c, fileformat, allele)[c]
-        return(seq, germ, call, ident, support, score, start, end)
+                seq[c], germ[c], call[c], ident[c], support[c], score[
+                    c], start[c], end[c] = _get_C_call(fasta, c, fileformat,
+                                                       allele)[c]
+        return (seq, germ, call, ident, support, score, start, end)
 
     def _transfer_c(data, c_dict, colname):
         _data = load_data(data)
         if colname not in _data.columns:
-            _data = _data.merge(pd.DataFrame.from_dict(c_dict, orient='index', columns=[
-                                colname]), left_index=True, right_index=True)
+            _data = _data.merge(pd.DataFrame.from_dict(c_dict,
+                                                       orient='index',
+                                                       columns=[colname]),
+                                left_index=True,
+                                right_index=True)
         else:
             _data[colname] = pd.Series(c_dict)
-        return(_data)
+        return (_data)
 
     def _add_cell(data):
         _data = load_data(data)
-        _data['cell_id'] = [c.split('_contig')[0]
-                            for c in _data['sequence_id']]
-        return(_data)
+        _data['cell_id'] = [
+            c.split('_contig')[0] for c in _data['sequence_id']
+        ]
+        return (_data)
 
     aligner = Align.PairwiseAligner()
 
@@ -531,7 +648,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
         score2 = alignments2.score
         score3 = alignments3.score
         if score1 == score2 == score3:
-            self.at[i, 'c_call'] = str(key1) + ',' + str(key2) + ',' + str(key3)
+            self.at[i,
+                    'c_call'] = str(key1) + ',' + str(key2) + ',' + str(key3)
         elif score1 > score2 and score1 > score3:
             self.at[i, 'c_call'] = str(key1)
         elif score2 > score1 and score2 > score3:
@@ -557,8 +675,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
         score3 = alignments3.score
         score4 = alignments4.score
         if score1 == score2 == score3 == score4:
-            self.at[i, 'c_call'] = str(
-                key1) + ',' + str(key2) + ',' + str(key3) + ',' + str(key4)
+            self.at[i, 'c_call'] = str(key1) + ',' + str(key2) + ',' + str(
+                key3) + ',' + str(key4)
         elif score1 > score2 and score1 > score3 and score1 > score4:
             self.at[i, 'c_call'] = str(key1)
         elif score2 > score1 and score2 > score3 and score2 > score4:
@@ -580,40 +698,63 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
         elif score3 == score4 and score3 > score1 and score3 > score2:
             self.at[i, 'c_call'] = str(key3) + ',' + str(key4)
         elif score1 == score2 == score3 and score1 > score4:
-            self.at[i, 'c_call'] = str(key1) + ',' + str(key2) + ',' + str(key3)
+            self.at[i,
+                    'c_call'] = str(key1) + ',' + str(key2) + ',' + str(key3)
         elif score1 == score2 == score4 and score1 > score3:
-            self.at[i, 'c_call'] = str(key1) + ',' + str(key2) + ',' + str(key4)
+            self.at[i,
+                    'c_call'] = str(key1) + ',' + str(key2) + ',' + str(key4)
         elif score1 == score3 == score4 and score1 > score2:
-            self.at[i, 'c_call'] = str(key1) + ',' + str(key3) + ',' + str(key4)
+            self.at[i,
+                    'c_call'] = str(key1) + ',' + str(key3) + ',' + str(key4)
         elif score2 == score3 == score4 and score2 > score1:
-            self.at[i, 'c_call'] = str(key2) + ',' + str(key3) + ',' + str(key4)
+            self.at[i,
+                    'c_call'] = str(key2) + ',' + str(key3) + ',' + str(key4)
 
     def _correct_c_call(data, primers_dict=None):
         dat = data.copy()
         if primers_dict is None:
             primer_dict = {
                 'IGHG': {
-                    'IGHG1': 'GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCCTCCAAGAGCACCTCTGGGGGCACAGCGGCCCTGGGC',
-                    'IGHG2': 'GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCGGCCCTGGGC',
-                    'IGHG3': 'GCTTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCTGGGGGCACAGCGGCCCTGGGC',
-                    'IGHG4': 'GCTTCCACCAAGGGCCCATCCGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCCGCCCTGGGC'},
+                    'IGHG1':
+                    'GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCCTCCAAGAGCACCTCTGGGGGCACAGCGGCCCTGGGC',
+                    'IGHG2':
+                    'GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCGGCCCTGGGC',
+                    'IGHG3':
+                    'GCTTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCTGGGGGCACAGCGGCCCTGGGC',
+                    'IGHG4':
+                    'GCTTCCACCAAGGGCCCATCCGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCCGCCCTGGGC'
+                },
                 'IGHA': {
-                    'IGHA1': 'GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCTGCAGCACCCAGCCAGATGGGAACGTGGTCATCGCCTGC',
-                    'IGHA2': 'GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC'},
+                    'IGHA1':
+                    'GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCTGCAGCACCCAGCCAGATGGGAACGTGGTCATCGCCTGC',
+                    'IGHA2':
+                    'GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC'
+                },
                 'IGLC7': {
-                    'IGLC': 'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA',
-                    'IGLC7': 'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCGTAA'},
+                    'IGLC':
+                    'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA',
+                    'IGLC7':
+                    'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCGTAA'
+                },
                 'IGLC3': {
-                    'IGLC': 'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA',
-                    'IGLC3': 'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA'},
+                    'IGLC':
+                    'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA',
+                    'IGLC3':
+                    'GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA'
+                },
                 'IGLC6': {
-                    'IGLC': 'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA',
-                    'IGLC6': 'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA'}}
+                    'IGLC':
+                    'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA',
+                    'IGLC6':
+                    'TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA'
+                }
+            }
         else:
             primer_dict = primers_dict
 
         for i in dat.index:
-            if (dat.loc[i, 'c_call'] == dat.loc[i, 'c_call']) & (dat.loc[i, 'c_call'] is not None):
+            if (dat.loc[i, 'c_call'] == dat.loc[i, 'c_call']) & (
+                    dat.loc[i, 'c_call'] is not None):
                 for k in primer_dict:
                     if k in dat.loc[i, 'c_call']:
                         if len(primer_dict[k]) == 2:
@@ -622,11 +763,14 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                             three_gene_correction(dat, i, primer_dict[k])
                         elif len(primer_dict[k]) == 4:
                             four_gene_correction(dat, i, primer_dict[k])
-        return(dat)
+        return (dat)
 
     # main function from here
-    format_dict = {'changeo': '_igblast_db-pass',
-                   'blast': '_igblast_db-pass', 'airr': '_igblast_gap'}
+    format_dict = {
+        'changeo': '_igblast_db-pass',
+        'blast': '_igblast_db-pass',
+        'airr': '_igblast_gap'
+    }
 
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
@@ -636,7 +780,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
         for file in files:
             if os.path.isdir(fasta.rstrip('/') + '/' + os.path.basename(file)):
                 if file == 'dandelion':
-                    if 'data' in os.listdir(fasta.rstrip('/') + '/' + os.path.basename(file)):
+                    if 'data' in os.listdir(
+                            fasta.rstrip('/') + '/' + os.path.basename(file)):
                         out_ = fasta.rstrip('/') + '/' + \
                             os.path.basename(file) + '/data/'
                         for x in os.listdir(os.path.abspath(out_)):
@@ -649,7 +794,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
                             filePath = out_ + '/' + x
     if filePath is None:
         raise OSError(
-            'Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.')
+            'Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.'
+        )
 
     if verbose:
         print('Processing {} \n'.format(filePath))
@@ -667,12 +813,17 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
     c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(
         filePath, format_dict[fileformat], allele, parallel, ncpu)
 
-    _file = "{}/tmp/{}_genotyped.tsv".format(os.path.dirname(
-        filePath), os.path.basename(filePath).split('.fasta')[0] + format_dict[fileformat])
-    _airrfile = "{}/tmp/{}.tsv".format(os.path.dirname(filePath),
-                                       os.path.basename(filePath).split('.fasta')[0] + '_igblast')
-    _file2 = "{}/{}_genotyped.tsv".format(os.path.dirname(filePath), os.path.basename(
-        filePath).split('.fasta')[0] + format_dict[fileformat])
+    _file = "{}/tmp/{}_genotyped.tsv".format(
+        os.path.dirname(filePath),
+        os.path.basename(filePath).split('.fasta')[0] +
+        format_dict[fileformat])
+    _airrfile = "{}/tmp/{}.tsv".format(
+        os.path.dirname(filePath),
+        os.path.basename(filePath).split('.fasta')[0] + '_igblast')
+    _file2 = "{}/{}_genotyped.tsv".format(
+        os.path.dirname(filePath),
+        os.path.basename(filePath).split('.fasta')[0] +
+        format_dict[fileformat])
 
     if verbose:
         print('Loading 10X annotations \n')
@@ -692,8 +843,8 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
     res_blast = pd.DataFrame(dat['c_call'])
     res_blast = res_blast.fillna(value='None')
 
-    res_10x_sum = pd.DataFrame(
-        res_10x['c_call'].value_counts(normalize=True) * 100)
+    res_10x_sum = pd.DataFrame(res_10x['c_call'].value_counts(normalize=True) *
+                               100)
     res_blast_sum = pd.DataFrame(
         res_blast['c_call'].value_counts(normalize=True) * 100)
     res_10x_sum['group'] = '10X'
@@ -733,8 +884,12 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
     dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
-    cols_to_merge = ['junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa', 'cdr1_aa', 'cdr2_aa', 'cdr3_aa',
-                     'sequence_alignment_aa', 'v_sequence_alignment_aa', 'd_sequence_alignment_aa', 'j_sequence_alignment_aa']
+    cols_to_merge = [
+        'junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa',
+        'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa',
+        'v_sequence_alignment_aa', 'd_sequence_alignment_aa',
+        'j_sequence_alignment_aa'
+    ]
     for x in cols_to_merge:
         dat[x] = pd.Series(airr_output[x])
     dat.to_csv(_file2, sep='\t', index=False)
@@ -742,34 +897,43 @@ def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'ch
     if plot:
         options.figure_size = figsize
         if correct_c_call:
-            p = (ggplot(res, aes(x='c_call', y='counts', fill='group'))
-                 + coord_flip()
-                 + theme_classic()
-                 + xlab("c_call")
-                 + ylab("% c calls")
-                 + geom_col(stat="identity", position='dodge')
-                 + scale_fill_manual(values=('#79706e', '#86bcb6', '#F28e2b'))
-                 + theme(legend_title=element_blank()))
+            p = (ggplot(res, aes(x='c_call', y='counts', fill='group')) +
+                 coord_flip() + theme_classic() + xlab("c_call") +
+                 ylab("% c calls") +
+                 geom_col(stat="identity", position='dodge') +
+                 scale_fill_manual(values=('#79706e', '#86bcb6', '#F28e2b')) +
+                 theme(legend_title=element_blank()))
         else:
-            p = (ggplot(res, aes(x='c_call', y='counts', fill='group'))
-                 + coord_flip()
-                 + theme_classic()
-                 + xlab("c_call")
-                 + ylab("% c calls")
-                 + geom_col(stat="identity", position='dodge')
-                 + scale_fill_manual(values=('#79706e', '#86bcb6'))
-                 + theme(legend_title=element_blank()))
+            p = (ggplot(res, aes(x='c_call', y='counts', fill='group')) +
+                 coord_flip() + theme_classic() + xlab("c_call") +
+                 ylab("% c calls") +
+                 geom_col(stat="identity", position='dodge') +
+                 scale_fill_manual(values=('#79706e', '#86bcb6')) +
+                 theme(legend_title=element_blank()))
         if save_plot:
             _file3 = "{}/assign_isotype.pdf".format(os.path.dirname(filePath))
-            save_as_pdf_pages([p], filename = _file3)
+            save_as_pdf_pages([p], filename=_file3)
             print(p)
         else:
             print(p)
 
 
-def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[None, Dict] = None, plot: bool = True, save_plot: bool = False, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
+def assign_isotypes(fastas: Sequence,
+                    fileformat: Literal['blast', 'changeo', 'airr'] = 'blast',
+                    org: Literal['human', 'mouse'] = 'human',
+                    correct_c_call: bool = True,
+                    correction_dict: Union[None, Dict] = None,
+                    plot: bool = True,
+                    save_plot: bool = False,
+                    figsize: Tuple[Union[int, float], Union[int,
+                                                            float]] = (4, 4),
+                    blastdb: Union[None, str] = None,
+                    allele: bool = False,
+                    parallel: bool = True,
+                    ncpu: Union[None, int] = None,
+                    verbose: bool = False):
     """
-    Annotate contigs with constant region call using blastn
+    Annotate contigs with constant region call using blastn.
 
     Parameters
     ----------
@@ -811,11 +975,28 @@ def assign_isotypes(fastas: Sequence, fileformat: Literal['blast', 'changeo', 'a
         print('Assign isotypes \n')
 
     for fasta in fastas:
-        assign_isotype(fasta, fileformat=fileformat, org=org, correct_c_call=correct_c_call, correction_dict=correction_dict,
-                       plot=plot, save_plot=save_plot, figsize=figsize, blastdb=blastdb, allele=allele, parallel=parallel, ncpu=ncpu, verbose=verbose)
+        assign_isotype(fasta,
+                       fileformat=fileformat,
+                       org=org,
+                       correct_c_call=correct_c_call,
+                       correction_dict=correction_dict,
+                       plot=plot,
+                       save_plot=save_plot,
+                       figsize=figsize,
+                       blastdb=blastdb,
+                       allele=allele,
+                       parallel=parallel,
+                       ncpu=ncpu,
+                       verbose=verbose)
 
 
-def reannotate_genes(data: Sequence, igblast_db: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'ig'] = 'human', loci: Literal['ig', 'tr'] = 'ig', extended: bool = True, verbose: bool = False):
+def reannotate_genes(data: Sequence,
+                     igblast_db: Union[None, str] = None,
+                     germline: Union[None, str, PathLike] = None,
+                     org: Literal['human', 'ig'] = 'human',
+                     loci: Literal['ig', 'tr'] = 'ig',
+                     extended: bool = True,
+                     verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
 
@@ -852,7 +1033,8 @@ def reannotate_genes(data: Sequence, igblast_db: Union[None, str] = None, germli
             for file in files:
                 if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
                     if file == 'dandelion':
-                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
+                        if 'data' in os.listdir(
+                                s.rstrip('/') + '/' + os.path.basename(file)):
                             out_ = s.rstrip('/') + '/' + \
                                 os.path.basename(file) + '/data/'
                             for x in os.listdir(out_):
@@ -865,18 +1047,41 @@ def reannotate_genes(data: Sequence, igblast_db: Union[None, str] = None, germli
                                 filePath = out_ + '/' + x
         if filePath is None:
             raise OSError(
-                'Path to fasta file for {} is unknown. Please specify path to fasta file or folder containing fasta file.'.format(s))
+                'Path to fasta file for {} is unknown. Please specify path to fasta file or folder containing fasta file.'
+                .format(s))
 
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        assigngenes_igblast(filePath, igblast_db=igblast_db,
-                            org=org, loci=loci, verbose=verbose)
-        makedb_igblast(filePath, org=org, germline=germline,
-                       extended=extended, verbose=verbose)
+        assigngenes_igblast(filePath,
+                            igblast_db=igblast_db,
+                            org=org,
+                            loci=loci,
+                            verbose=verbose)
+        makedb_igblast(filePath,
+                       org=org,
+                       germline=germline,
+                       extended=extended,
+                       verbose=verbose)
 
 
-def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_germline: Union[None, str] = None, germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call_genotyped', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', novel: bool = True, cloned: bool = False, plot: bool = True, save_plot: bool = False, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3), sample_id_dictionary: Union[None, Dict] = None, verbose: bool = False):
+def reassign_alleles(data: Sequence,
+                     combined_folder: Union[str, PathLike],
+                     v_germline: Union[None, str] = None,
+                     germline: Union[None, str, PathLike] = None,
+                     org: Literal['human', 'mouse'] = 'human',
+                     v_field: Literal['v_call',
+                                      'v_call_genotyped'] = 'v_call_genotyped',
+                     germ_types: Literal['full', 'dmask', 'vonly',
+                                         'regions'] = 'dmask',
+                     novel: bool = True,
+                     cloned: bool = False,
+                     plot: bool = True,
+                     save_plot: bool = False,
+                     figsize: Tuple[Union[int, float], Union[int,
+                                                             float]] = (4, 3),
+                     sample_id_dictionary: Union[None, Dict] = None,
+                     verbose: bool = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles. It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of sequences derived from a single subject.
 
@@ -919,22 +1124,46 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
     if type(data) is not list:
         data = [data]
 
-    informat_dict = {'changeo': '_igblast_db-pass.tsv',
-                     'blast': '_igblast_db-pass.tsv', 'airr': '_igblast_gap.tsv'}
-    germpass_dict = {'changeo': '_igblast_db-pass_germ-pass.tsv',
-                     'blast': '_igblast_db-pass_germ-pass.tsv', 'airr': '_igblast_gap_germ-pass.tsv'}
-    heavy_dict = {'changeo': '_igblast_db-pass_heavy_parse-select.tsv',
-                  'blast': '_igblast_db-pass_heavy_parse-select.tsv', 'airr': '_igblast_gap_heavy_parse-select.tsv'}
-    light_dict = {'changeo': '_igblast_db-pass_light_parse-select.tsv',
-                  'blast': '_igblast_db-pass_light_parse-select.tsv', 'airr': '_igblast_gap_light_parse-select.tsv'}
-    fileformat_dict = {'changeo': '_igblast_db-pass_genotyped.tsv',
-                       'blast': '_igblast_db-pass_genotyped.tsv', 'airr': '_igblast_gap_genotyped.tsv'}
-    fileformat_passed_dict = {'changeo': '_igblast_db-pass_genotyped_germ-pass.tsv',
-                              'blast': '_igblast_db-pass_genotyped_germ-pass.tsv', 'airr': '_igblast_gap_genotyped_germ-pass.tsv'}
-    inferred_fileformat_dict = {'changeo': '_igblast_db-pass_inferredGenotype.txt',
-                                'blast': '_igblast_db-pass_inferredGenotype.txt', 'airr': '_igblast_gap_inferredGenotype.txt'}
-    germline_dict = {'changeo': '_igblast_db-pass_genotype.fasta',
-                     'blast': '_igblast_db-pass_genotype.fasta', 'airr': '_igblast_gap_genotype.fasta'}
+    informat_dict = {
+        'changeo': '_igblast_db-pass.tsv',
+        'blast': '_igblast_db-pass.tsv',
+        'airr': '_igblast_gap.tsv'
+    }
+    germpass_dict = {
+        'changeo': '_igblast_db-pass_germ-pass.tsv',
+        'blast': '_igblast_db-pass_germ-pass.tsv',
+        'airr': '_igblast_gap_germ-pass.tsv'
+    }
+    heavy_dict = {
+        'changeo': '_igblast_db-pass_heavy_parse-select.tsv',
+        'blast': '_igblast_db-pass_heavy_parse-select.tsv',
+        'airr': '_igblast_gap_heavy_parse-select.tsv'
+    }
+    light_dict = {
+        'changeo': '_igblast_db-pass_light_parse-select.tsv',
+        'blast': '_igblast_db-pass_light_parse-select.tsv',
+        'airr': '_igblast_gap_light_parse-select.tsv'
+    }
+    fileformat_dict = {
+        'changeo': '_igblast_db-pass_genotyped.tsv',
+        'blast': '_igblast_db-pass_genotyped.tsv',
+        'airr': '_igblast_gap_genotyped.tsv'
+    }
+    fileformat_passed_dict = {
+        'changeo': '_igblast_db-pass_genotyped_germ-pass.tsv',
+        'blast': '_igblast_db-pass_genotyped_germ-pass.tsv',
+        'airr': '_igblast_gap_genotyped_germ-pass.tsv'
+    }
+    inferred_fileformat_dict = {
+        'changeo': '_igblast_db-pass_inferredGenotype.txt',
+        'blast': '_igblast_db-pass_inferredGenotype.txt',
+        'airr': '_igblast_gap_inferredGenotype.txt'
+    }
+    germline_dict = {
+        'changeo': '_igblast_db-pass_genotype.fasta',
+        'blast': '_igblast_db-pass_genotype.fasta',
+        'airr': '_igblast_gap_genotype.fasta'
+    }
     fform_dict = {'blast': 'airr', 'airr': 'airr', 'changeo': 'changeo'}
 
     filepathlist_heavy = []
@@ -943,14 +1172,16 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
     sampleNames_dict = {}
     filePath_dict = {}
     for s in tqdm(data, desc='Processing data file(s) '):
-        if os.path.isfile(str(s)) and str(s).endswith(informat_dict[fileformat]):
+        if os.path.isfile(str(s)) and str(s).endswith(
+                informat_dict[fileformat]):
             filePath = s
         elif os.path.isdir(str(s)):
             files = os.listdir(s)
             for file in files:
                 if os.path.isdir(s.rstrip('/') + '/' + os.path.basename(file)):
                     if file == 'dandelion':
-                        if 'data' in os.listdir(s.rstrip('/') + '/' + os.path.basename(file)):
+                        if 'data' in os.listdir(
+                                s.rstrip('/') + '/' + os.path.basename(file)):
                             out_ = s + '/' + \
                                 os.path.basename(file) + '/data/tmp/'
                             for x in os.listdir(out_):
@@ -975,7 +1206,8 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
                                         informat_dict[fileformat], light_dict[fileformat])
         if filePath is None:
             raise OSError(
-                'Path to .tsv file for {} is unknown. Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'.format(s))
+                'Path to .tsv file for {} is unknown. Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
+                .format(s))
 
         if sample_id_dictionary is not None:
             sampleNames_dict[filePath] = sample_id_dictionary[s]
@@ -1000,15 +1232,19 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
     # concatenate
     if len(filepathlist_heavy) > 1:
         print('Concatenating objects')
-        cmd1 = ' '.join(['cat'] + [f for f in filepathlist_heavy] +
-                        ['>'] + [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
-        cmd2 = ' '.join(['cat'] + [f for f in filepathlist_light] +
-                        ['>'] + [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
+        cmd1 = ' '.join(
+            ['cat'] + [f for f in filepathlist_heavy] + ['>'] +
+            [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
+        cmd2 = ' '.join(
+            ['cat'] + [f for f in filepathlist_light] + ['>'] +
+            [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
     else:
-        cmd1 = ' '.join(['cat'] + [filepathlist_heavy[0]] + ['>'] +
-                        [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
-        cmd2 = ' '.join(['cat'] + [filepathlist_light[0]] + ['>'] +
-                        [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
+        cmd1 = ' '.join(
+            ['cat'] + [filepathlist_heavy[0]] + ['>'] +
+            [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
+        cmd2 = ' '.join(
+            ['cat'] + [filepathlist_light[0]] + ['>'] +
+            [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
 
     if verbose:
         print('Running command: %s\n' % (cmd1))
@@ -1020,58 +1256,130 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
     if novel:
         try:
             print('      Running tigger-genotype with novel allele discovery.')
-            tigger_genotype(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], v_germline=v_germline,
-                            fileformat=fform_dict[fileformat], novel_=novel_dict[novel], verbose=verbose)
-            creategermlines(outDir + '/' + outDir + '_heavy' + fileformat_dict[fileformat], germtypes=germ_types, mode='heavy', genotype_fasta=outDir +
-                            '/' + outDir + '_heavy' + germline_dict[fileformat], germline=germline, v_field=v_field, verbose=verbose, cloned=cloned)
+            tigger_genotype(outDir + '/' + outDir + '_heavy' +
+                            informat_dict[fileformat],
+                            v_germline=v_germline,
+                            fileformat=fform_dict[fileformat],
+                            novel_=novel_dict[novel],
+                            verbose=verbose)
+            creategermlines(outDir + '/' + outDir + '_heavy' +
+                            fileformat_dict[fileformat],
+                            germtypes=germ_types,
+                            mode='heavy',
+                            genotype_fasta=outDir + '/' + outDir + '_heavy' +
+                            germline_dict[fileformat],
+                            germline=germline,
+                            v_field=v_field,
+                            verbose=verbose,
+                            cloned=cloned)
             _ = load_data(outDir + '/' + outDir + '_heavy' +
                           fileformat_passed_dict[fileformat])
         except:
             try:
                 print('      Novel allele discovery execution halted.')
                 print(
-                    '      Attempting to run tigger-genotype without novel allele discovery.')
-                tigger_genotype(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], v_germline=v_germline,
-                                fileformat=fform_dict[fileformat], novel_=novel_dict[False], verbose=verbose)
-                creategermlines(outDir + '/' + outDir + '_heavy' + fileformat_dict[fileformat], germtypes=germ_types, mode='heavy', genotype_fasta=outDir +
-                                '/' + outDir + '_heavy' + germline_dict[fileformat], germline=germline, v_field=v_field, verbose=verbose, cloned=cloned)
+                    '      Attempting to run tigger-genotype without novel allele discovery.'
+                )
+                tigger_genotype(outDir + '/' + outDir + '_heavy' +
+                                informat_dict[fileformat],
+                                v_germline=v_germline,
+                                fileformat=fform_dict[fileformat],
+                                novel_=novel_dict[False],
+                                verbose=verbose)
+                creategermlines(outDir + '/' + outDir + '_heavy' +
+                                fileformat_dict[fileformat],
+                                germtypes=germ_types,
+                                mode='heavy',
+                                genotype_fasta=outDir + '/' + outDir +
+                                '_heavy' + germline_dict[fileformat],
+                                germline=germline,
+                                v_field=v_field,
+                                verbose=verbose,
+                                cloned=cloned)
                 _ = load_data(outDir + '/' + outDir + '_heavy' +
                               fileformat_passed_dict[fileformat])
             except:
                 print(
-                    '      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls.')
+                    '      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls.'
+                )
                 tigger_failed = ''
     else:
         try:
-            print('      Running tigger-genotype without novel allele discovery.')
-            tigger_genotype(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], v_germline=v_germline,
-                            fileformat=fform_dict[fileformat], novel_=novel_dict[False], verbose=verbose)
-            creategermlines(outDir + '/' + outDir + '_heavy' + fileformat_dict[fileformat], germtypes=germ_types, mode='heavy', genotype_fasta=outDir +
-                            '/' + outDir + '_heavy' + germline_dict[fileformat], germline=germline, v_field=v_field, verbose=verbose, cloned=cloned)
+            print(
+                '      Running tigger-genotype without novel allele discovery.'
+            )
+            tigger_genotype(outDir + '/' + outDir + '_heavy' +
+                            informat_dict[fileformat],
+                            v_germline=v_germline,
+                            fileformat=fform_dict[fileformat],
+                            novel_=novel_dict[False],
+                            verbose=verbose)
+            creategermlines(outDir + '/' + outDir + '_heavy' +
+                            fileformat_dict[fileformat],
+                            germtypes=germ_types,
+                            mode='heavy',
+                            genotype_fasta=outDir + '/' + outDir + '_heavy' +
+                            germline_dict[fileformat],
+                            germline=germline,
+                            v_field=v_field,
+                            verbose=verbose,
+                            cloned=cloned)
             _ = load_data(outDir + '/' + outDir + '_heavy' +
                           fileformat_passed_dict[fileformat])
         except:
-            print('      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls.')
+            print(
+                '      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls.'
+            )
             tigger_failed = ''
 
     if 'tigger_failed' in locals():
-        creategermlines(outDir + '/' + outDir + '_heavy' + informat_dict[fileformat], germtypes=germ_types, mode='heavy',
-                        genotype_fasta=None, germline=germline, v_field='v_call', verbose=verbose, cloned=cloned)
-        creategermlines(outDir + '/' + outDir + '_light' + informat_dict[fileformat], germtypes=germ_types, mode='light',
-                        genotype_fasta=None, germline=germline, v_field='v_call', verbose=verbose, cloned=cloned)
-        print('      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`.')
-        heavy = load_data(outDir + '/' + outDir + '_heavy' + germpass_dict[fileformat])
+        creategermlines(outDir + '/' + outDir + '_heavy' +
+                        informat_dict[fileformat],
+                        germtypes=germ_types,
+                        mode='heavy',
+                        genotype_fasta=None,
+                        germline=germline,
+                        v_field='v_call',
+                        verbose=verbose,
+                        cloned=cloned)
+        creategermlines(outDir + '/' + outDir + '_light' +
+                        informat_dict[fileformat],
+                        germtypes=germ_types,
+                        mode='light',
+                        genotype_fasta=None,
+                        germline=germline,
+                        v_field='v_call',
+                        verbose=verbose,
+                        cloned=cloned)
+        print(
+            '      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`.'
+        )
+        heavy = load_data(outDir + '/' + outDir + '_heavy' +
+                          germpass_dict[fileformat])
         heavy['v_call_genotyped'] = heavy['v_call']
-        print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
-        light = load_data(outDir + '/' + outDir + '_light' + germpass_dict[fileformat])
+        print(
+            '      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.'
+        )
+        light = load_data(outDir + '/' + outDir + '_light' +
+                          germpass_dict[fileformat])
         light['v_call_genotyped'] = light['v_call']
     else:
-        creategermlines(outDir + '/' + outDir + '_light' + informat_dict[fileformat], germtypes=germ_types, mode='light',
-                        genotype_fasta=None, germline=germline, v_field='v_call', verbose=verbose, cloned=cloned)
+        creategermlines(outDir + '/' + outDir + '_light' +
+                        informat_dict[fileformat],
+                        germtypes=germ_types,
+                        mode='light',
+                        genotype_fasta=None,
+                        germline=germline,
+                        v_field='v_call',
+                        verbose=verbose,
+                        cloned=cloned)
         heavy = load_data(outDir + '/' + outDir + '_heavy' +
                           fileformat_passed_dict[fileformat])
-        print('      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.')
-        light = load_data(outDir + '/' + outDir + '_light' + germpass_dict[fileformat])
+        print(
+            '      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`.'
+        )
+        light = load_data(outDir + '/' + outDir + '_light' +
+                          germpass_dict[fileformat])
         light['v_call_genotyped'] = light['v_call']
 
     sampledict = {}
@@ -1100,19 +1408,31 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
             try:
                 for samp in list(set(heavy['sample_id'])):
                     res_x = heavy[(heavy['sample_id'] == samp)]
-                    V_ = [re.sub('[*][0-9][0-9]', '', v)
-                          for v in res_x['v_call']]
-                    V_g = [re.sub('[*][0-9][0-9]', '', v)
-                           for v in res_x['v_call_genotyped']]
+                    V_ = [
+                        re.sub('[*][0-9][0-9]', '', v) for v in res_x['v_call']
+                    ]
+                    V_g = [
+                        re.sub('[*][0-9][0-9]', '', v)
+                        for v in res_x['v_call_genotyped']
+                    ]
                     s1 = set(
-                        list(','.join([','.join(list(set(v.split(',')))) for v in V_]).split(',')))
+                        list(','.join([
+                            ','.join(list(set(v.split(',')))) for v in V_
+                        ]).split(',')))
                     setdiff = s1 - s2
-                    ambiguous = (["," in i for i in V_].count(
-                        True) / len(V_) * 100, ["," in i for i in V_g].count(True) / len(V_g) * 100)
-                    not_in_genotype = ([i in setdiff for i in V_].count(
-                        True) / len(V_) * 100, [i in setdiff for i in V_g].count(True) / len(V_g) * 100)
-                    stats = pd.DataFrame([ambiguous, not_in_genotype], columns=[
-                        'ambiguous', 'not_in_genotype'], index=['before', 'after']).T
+                    ambiguous = (["," in i
+                                  for i in V_].count(True) / len(V_) * 100,
+                                 ["," in i
+                                  for i in V_g].count(True) / len(V_g) * 100)
+                    not_in_genotype = ([i in setdiff
+                                        for i in V_].count(True) / len(V_) *
+                                       100, [i in setdiff
+                                             for i in V_g].count(True) /
+                                       len(V_g) * 100)
+                    stats = pd.DataFrame(
+                        [ambiguous, not_in_genotype],
+                        columns=['ambiguous', 'not_in_genotype'],
+                        index=['before', 'after']).T
                     stats.index.set_names(['vgroup'], inplace=True)
                     stats.reset_index(drop=False, inplace=True)
                     stats['sample_id'] = samp
@@ -1120,37 +1440,38 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
                     results.append(stats)
                 results = pd.concat(results)
                 ambiguous_table = results[results['vgroup'] == 'ambiguous']
-                not_in_genotype_table = results[results['vgroup']
-                                                == 'not_in_genotype']
+                not_in_genotype_table = results[results['vgroup'] ==
+                                                'not_in_genotype']
                 ambiguous_table.reset_index(inplace=True, drop=True)
                 not_in_genotype_table.reset_index(inplace=True, drop=True)
                 # melting the dataframe
                 ambiguous_table_before = ambiguous_table.drop('after', axis=1)
-                ambiguous_table_before.rename(
-                    columns={"before": "var"}, inplace=True)
+                ambiguous_table_before.rename(columns={"before": "var"},
+                                              inplace=True)
                 ambiguous_table_before['var_group'] = 'before'
                 ambiguous_table_after = ambiguous_table.drop('before', axis=1)
-                ambiguous_table_after.rename(
-                    columns={"after": "var"}, inplace=True)
+                ambiguous_table_after.rename(columns={"after": "var"},
+                                             inplace=True)
                 ambiguous_table_after['var_group'] = 'after'
                 ambiguous_table = pd.concat(
                     [ambiguous_table_before, ambiguous_table_after])
                 not_in_genotype_table_before = not_in_genotype_table.drop(
                     'after', axis=1)
-                not_in_genotype_table_before.rename(
-                    columns={"before": "var"}, inplace=True)
+                not_in_genotype_table_before.rename(columns={"before": "var"},
+                                                    inplace=True)
                 not_in_genotype_table_before['var_group'] = 'before'
                 not_in_genotype_table_after = not_in_genotype_table.drop(
                     'before', axis=1)
-                not_in_genotype_table_after.rename(
-                    columns={"after": "var"}, inplace=True)
+                not_in_genotype_table_after.rename(columns={"after": "var"},
+                                                   inplace=True)
                 not_in_genotype_table_after['var_group'] = 'after'
-                not_in_genotype_table = pd.concat(
-                    [not_in_genotype_table_before, not_in_genotype_table_after])
-                ambiguous_table['var_group'] = ambiguous_table['var_group'].astype(
-                    'category')
-                not_in_genotype_table['var_group'] = not_in_genotype_table['var_group'].astype(
-                    'category')
+                not_in_genotype_table = pd.concat([
+                    not_in_genotype_table_before, not_in_genotype_table_after
+                ])
+                ambiguous_table['var_group'] = ambiguous_table[
+                    'var_group'].astype('category')
+                not_in_genotype_table['var_group'] = not_in_genotype_table[
+                    'var_group'].astype('category')
                 ambiguous_table['var_group'].cat.reorder_categories(
                     ['before', 'after'], inplace=True)
                 not_in_genotype_table['var_group'].cat.reorder_categories(
@@ -1159,44 +1480,56 @@ def reassign_alleles(data: Sequence, combined_folder: Union[str, PathLike], v_ge
                 options.figure_size = figsize
                 final_table = pd.concat(
                     [ambiguous_table, not_in_genotype_table])
-                p = (ggplot(final_table, aes(x='sample_id', y='var', fill='var_group'))
-                     + coord_flip()
-                     + theme_classic()
-                     + xlab("sample_id")
-                     + ylab("% allele calls")
-                     + ggtitle("Genotype reassignment with TIgGER")
-                     + geom_bar(stat="identity")
-                     + facet_grid('~' + str('vgroup'), scales="free_y")
-                     + scale_fill_manual(values=('#86bcb6', '#F28e2b'))
-                     + theme(legend_title=element_blank()))
+                p = (ggplot(final_table,
+                            aes(x='sample_id', y='var', fill='var_group')) +
+                     coord_flip() + theme_classic() + xlab("sample_id") +
+                     ylab("% allele calls") +
+                     ggtitle("Genotype reassignment with TIgGER") +
+                     geom_bar(stat="identity") +
+                     facet_grid('~' + str('vgroup'), scales="free_y") +
+                     scale_fill_manual(values=('#86bcb6', '#F28e2b')) +
+                     theme(legend_title=element_blank()))
                 if save_plot:
                     savefile = outDir + '/' + outDir + '_reassign_alleles.pdf'
-                    save_as_pdf_pages([p], filename = savefile)
+                    save_as_pdf_pages([p], filename=savefile)
                     print(p)
                 else:
                     print(p)
             except:
                 print('Error in plotting encountered. Skipping.')
-                pass                
+                pass
         else:
             pass
     sleep(0.5)
     # if split_write_out:
     if 'tigger_failed' in locals():
-        print('Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv` extension for convenience.')
+        print(
+            'Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv` extension for convenience.'
+        )
     for s in tqdm(data, desc='Writing out to individual folders '):
         if sample_id_dictionary is not None:
             out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
         else:
             out_file = dat_[dat_['sample_id'] == s]
         outfilepath = filePath_dict[s]
-        out_file.to_csv(outfilepath.replace(
-            '.tsv', '_genotyped.tsv'), index=False, sep='\t')
+        out_file.to_csv(outfilepath.replace('.tsv', '_genotyped.tsv'),
+                        index=False,
+                        sep='\t')
 
 
-def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[None, str, PathLike] = None, org: Literal['human', 'mouse'] = 'human', seq_field: Literal['sequence_alignment'] = 'sequence_alignment', v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call', d_field: Literal['d_call'] = 'd_call', j_field: Literal['j_call'] = 'j_call', germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask', fileformat: Literal['changeo', 'airr'] = 'airr', initialize_metadata: bool = False) -> Dandelion:
+def create_germlines(
+        self: Union[Dandelion, pd.DataFrame, str],
+        germline: Union[None, str, PathLike] = None,
+        org: Literal['human', 'mouse'] = 'human',
+        seq_field: Literal['sequence_alignment'] = 'sequence_alignment',
+        v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call',
+        d_field: Literal['d_call'] = 'd_call',
+        j_field: Literal['j_call'] = 'j_call',
+        germ_types: Literal['full', 'dmask', 'vonly', 'regions'] = 'dmask',
+        fileformat: Literal['changeo', 'airr'] = 'airr',
+        initialize_metadata: bool = False) -> Dandelion:
     """
-    Runs CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
+    Run CreateGermlines.py to reconstruct the germline V(D)J sequence, from which the Ig lineage and mutations can be inferred.
 
     Parameters
     ----------
@@ -1230,7 +1563,8 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             gml = env['GERMLINE']
         except:
             raise OSError(
-                'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.')
+                'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.'
+            )
         gml = gml + 'imgt/' + org + '/vdj/'
     else:
         if os.path.isdir(germline):
@@ -1239,7 +1573,7 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
 
     def _parseChangeO(record):
         """
-        Parses a dictionary to a Receptor object
+        Parse a dictionary to a Receptor object.
 
         Arguments:
           record : dict with fields and values in the Change-O format
@@ -1257,7 +1591,7 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
 
     def _parseAIRR(record):
         """
-        Parses a dictionary of AIRR records to a Receptor object
+        Parse a dictionary of AIRR records to a Receptor object.
 
         Arguments:
           record : dict with fields and values in the AIRR format.
@@ -1285,9 +1619,10 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
 
         return Receptor(result)
 
-    def _create_germlines_object(self, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
+    def _create_germlines_object(self, references, seq_field, v_field, d_field,
+                                 j_field, germ_types, fileformat):
         """
-        Write germline sequences to tab-delimited database file
+        Write germline sequences to tab-delimited database file.
 
         Arguments:
         self : dandelion_class object
@@ -1332,11 +1667,15 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             reference_dict = readGermlines(ref)
         # Check for IMGT-gaps in germlines
         if all('...' not in x for x in reference_dict.values()):
-            warnings.warn(UserWarning(
-                'Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
+            warnings.warn(
+                UserWarning(
+                    'Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'
+                ))
 
-        required = ['v_germ_start_imgt', 'd_germ_start',
-                    'j_germ_start', 'np1_length', 'np2_length']
+        required = [
+            'v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length',
+            'np2_length'
+        ]
 
         if self.__class__ == Dandelion:
             if isinstance(self.data, pd.DataFrame):
@@ -1346,14 +1685,12 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
                 except LookupError as e:
                     print(e)
 
-                # Count input
-                total_count = len(self.data)
-
                 # Check for existence of fields
                 for f in [v_field, d_field, j_field, seq_field]:
                     if f not in self.data.columns:
                         raise NameError(
-                            '%s field does not exist in input database file.' % f)
+                            '%s field does not exist in input database file.' %
+                            f)
                 # Translate to Receptor attribute names
                 v_field_ = schema.toReceptor(v_field)
                 d_field_ = schema.toReceptor(d_field)
@@ -1362,20 +1699,19 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
                 # clone_field = schema.toReceptor(clone_field)
 
                 # Define Receptor iterator
-                receptor_iter = (
-                    (self.data.loc[x, ].sequence_id, self.data.loc[x, ]) for x in self.data.index)
+                receptor_iter = ((self.data.loc[x, ].sequence_id,
+                                  self.data.loc[x, ]) for x in self.data.index)
 
             else:
                 raise LookupError(
-                    'Please initialise the Dandelion object with a dataframe in data slot.')
+                    'Please initialise the Dandelion object with a dataframe in data slot.'
+                )
         elif self.__class__ == pd.DataFrame:
             try:
                 checkFields(required, self.columns, schema=schema)
             except LookupError as e:
                 print(e)
 
-            # Count input
-            total_count = len(self)
             # Check for existence of fields
             for f in [v_field, d_field, j_field, seq_field]:
                 if f not in self.columns:
@@ -1388,23 +1724,35 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             seq_field_ = schema.toReceptor(seq_field)
             # clone_field = schema.toReceptor(clone_field)
             # Define Receptor iterator
-            receptor_iter = (
-                (self.loc[x, ].sequence_id, self.loc[x, ]) for x in self.index)
+            receptor_iter = ((self.loc[x, ].sequence_id, self.loc[x, ])
+                             for x in self.index)
 
         out = {}
         # Iterate over rows
-        for key, records in tqdm(receptor_iter, desc="   Building {} germline sequences".format(germ_types)):
+        for key, records in tqdm(
+                receptor_iter,
+                desc="   Building {} germline sequences".format(germ_types)):
             # Define iteration variables
             # Build germline for records
             if fileformat == 'airr':
-                germ_log, glines, genes = buildGermline(_parseAIRR(dict(
-                    records)), reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
+                germ_log, glines, genes = buildGermline(_parseAIRR(
+                    dict(records)),
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             elif fileformat == 'changeo':
-                germ_log, glines, genes = buildGermline(_parseChangeO(dict(
-                    records)), reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
+                germ_log, glines, genes = buildGermline(_parseChangeO(
+                    dict(records)),
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             else:
-                raise AttributeError(
-                    '%s is not acceptable file format.' % fileformat)
+                raise AttributeError('%s is not acceptable file format.' %
+                                     fileformat)
 
             if glines is not None:
                 # Add glines to Receptor record
@@ -1430,21 +1778,27 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
             try:
-                output = Dandelion(
-                    data=datx, germline=reference_dict, initialize=True)
+                output = Dandelion(data=datx,
+                                   germline=reference_dict,
+                                   initialize=True)
             except:
-                output = Dandelion(
-                    data=datx, germline=reference_dict, initialize=False)
-            return(output)
+                output = Dandelion(data=datx,
+                                   germline=reference_dict,
+                                   initialize=False)
+            return (output)
         sleep(0.5)
-        logg.info(' finished', time=start,
-                  deep=('Updated Dandelion object: \n'
-                        '   \'data\', updated germline alignment in contig-indexed clone table\n'
-                        '   \'germline\', updated germline reference\n'))
+        logg.info(
+            ' finished',
+            time=start,
+            deep=
+            ('Updated Dandelion object: \n'
+             '   \'data\', updated germline alignment in contig-indexed clone table\n'
+             '   \'germline\', updated germline reference\n'))
 
-    def _create_germlines_file(file, references, seq_field, v_field, d_field, j_field, germ_types, fileformat):
+    def _create_germlines_file(file, references, seq_field, v_field, d_field,
+                               j_field, germ_types, fileformat):
         """
-        Write germline sequences to tab-delimited database file
+        Write germline sequences to tab-delimited database file.
 
         Arguments:
         file : airr/changeo tsv file
@@ -1487,11 +1841,15 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             reference_dict = readGermlines(ref)
         # Check for IMGT-gaps in germlines
         if all('...' not in x for x in reference_dict.values()):
-            warnings.warn(UserWarning(
-                'Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'))
+            warnings.warn(
+                UserWarning(
+                    'Germline reference sequences do not appear to contain IMGT-numbering spacers. Results may be incorrect.'
+                ))
 
-        required = ['v_germ_start_imgt', 'd_germ_start',
-                    'j_germ_start', 'np1_length', 'np2_length']
+        required = [
+            'v_germ_start_imgt', 'd_germ_start', 'j_germ_start', 'np1_length',
+            'np2_length'
+        ]
 
         # Get repertoire and open Db reader
         db_handle = open(file, 'rt')
@@ -1501,8 +1859,7 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             checkFields(required, db_iter.fields, schema=schema)
         except LookupError as e:
             print(e)
-        # Count input
-        total_count = countDbFile(file)
+
         # Check for existence of fields
         for f in [v_field, d_field, j_field, seq_field]:
             if f not in db_iter.fields:
@@ -1519,13 +1876,19 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
 
         out = {}
         # Iterate over rows
-        for key, records in tqdm(receptor_iter, desc="   Building {} germline sequences".format(germ_types)):
+        for key, records in tqdm(
+                receptor_iter,
+                desc="   Building {} germline sequences".format(germ_types)):
             # Define iteration variables
             # Build germline for records
             # if not isinstance(self.data, pd.DataFrame):
             records = list(records)
-            germ_log, glines, genes = buildGermline(
-                records[0], reference_dict, seq_field=seq_field_, v_field=v_field_, d_field=d_field_, j_field=j_field_)
+            germ_log, glines, genes = buildGermline(records[0],
+                                                    reference_dict,
+                                                    seq_field=seq_field_,
+                                                    v_field=v_field_,
+                                                    d_field=d_field_,
+                                                    j_field=j_field_)
             if glines is not None:
                 # Add glines to Receptor record
                 annotations = {}
@@ -1541,44 +1904,72 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
         germline_df = pd.DataFrame.from_dict(out, orient='index')
 
         try:
-            out = Dandelion(data=file, germline=reference_dict,
+            out = Dandelion(data=file,
+                            germline=reference_dict,
                             initialize=True)
         except:
-            out = Dandelion(data=file, germline=reference_dict,
+            out = Dandelion(data=file,
+                            germline=reference_dict,
                             initialize=False)
         for x in germline_df.columns:
             out.data[x] = pd.Series(germline_df[x])
 
         if os.path.isfile(str(file)):
-            out.data.to_csv("{}/{}_germline_{}.tsv".format(os.path.dirname(file),
-                                                           os.path.basename(file).split('.tsv')[0], germ_types), sep='\t', index=False)
-        return(out)
+            out.data.to_csv("{}/{}_germline_{}.tsv".format(
+                os.path.dirname(file),
+                os.path.basename(file).split('.tsv')[0], germ_types),
+                sep='\t',
+                index=False)
+        return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
         if self.__class__ == Dandelion:
-            _create_germlines_object(
-                self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+            _create_germlines_object(self, germline, seq_field, v_field,
+                                     d_field, j_field, germ_types, fileformat)
         elif self.__class__ == pd.DataFrame:
-            return(_create_germlines_object(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return (_create_germlines_object(self, germline, seq_field,
+                                             v_field, d_field, j_field,
+                                             germ_types, fileformat))
         else:
-            return(_create_germlines_file(self, germline, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return (_create_germlines_file(self, germline, seq_field, v_field,
+                                           d_field, j_field, germ_types,
+                                           fileformat))
     else:
         if self.__class__ == Dandelion:
             if len(self.germline) != 0:
-                _create_germlines_object(
-                    self, self.germline, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+                _create_germlines_object(self, self.germline, seq_field,
+                                         v_field, d_field, j_field, germ_types,
+                                         fileformat)
             else:
-                _create_germlines_object(
-                    self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat)
+                _create_germlines_object(self, gml, seq_field, v_field,
+                                         d_field, j_field, germ_types,
+                                         fileformat)
         elif self.__class__ == pd.DataFrame:
-            return(_create_germlines_object(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return (_create_germlines_object(self, gml, seq_field, v_field,
+                                             d_field, j_field, germ_types,
+                                             fileformat))
         else:
-            return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
+            return (_create_germlines_file(self, gml, seq_field, v_field,
+                                           d_field, j_field, germ_types,
+                                           fileformat))
 
 
-def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_bcr: bool = True, filter_rna: bool = True, filter_poorqualitybcr: bool = False, rescue_igh: bool = True, umi_foldchange_cutoff: int = 2, filter_lightchains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
+def filter_bcr(data: Union[Dandelion, pd.DataFrame, str],
+               adata: AnnData,
+               filter_bcr: bool = True,
+               filter_rna: bool = True,
+               filter_poorqualitybcr: bool = False,
+               rescue_igh: bool = True,
+               umi_foldchange_cutoff: int = 2,
+               filter_lightchains: bool = True,
+               filter_missing: bool = True,
+               productive_only: bool = True,
+               parallel: bool = True,
+               ncpu: Union[None, int] = None,
+               save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
     """
-    Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
+    Filter doublets and poor quality cells and corresponding contigs based on provided V(D)J objects.
+    Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
     If there's multiple contigs that survive the 'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
     Lastly, contigs with no corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
@@ -1640,10 +2031,11 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     h_ccall = Tree()
     # l_ccall = Tree()
 
-    locus_dict = dict(zip(dat['sequence_id'], dat['locus']))
+    # locus_dict = dict(zip(dat['sequence_id'], dat['locus']))
     if 'cell_id' not in dat.columns:
         raise AttributeError(
-            "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering.")
+            "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering."
+        )
     if 'filter_rna' not in adata_.obs:
         adata_.obs['filter_rna'] = False
 
@@ -1667,7 +2059,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
 
     # rather than leaving a nan cell, i will create a 0 column for now
     if 'duplicate_count' in dat and 'umi_count' not in dat:
-        dat['umi_count'] = dat['duplicate_count']  # just do a simple swap?        
+        dat['umi_count'] = dat['duplicate_count']  # just do a simple swap?
     elif 'duplicate_count' not in dat and 'umi_count' in dat:
         dat['duplicate_count'] = dat['umi_count']
 
@@ -1676,25 +2068,38 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     def parallel_marking(b):
         poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
 
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'] == 'IGH')]['sequence_id'])
-        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                      & (dat['locus'] == 'IGH')]['umi_count']]
+        hc_id = list(dat[(dat['cell_id'].isin([b]))
+                         & (dat['locus'] == 'IGH')]['sequence_id'])
+        hc_umi = [
+            int(x) for x in dat[(dat['cell_id'].isin([b]))
+                                & (dat['locus'] == 'IGH')]['umi_count']
+        ]
         if 'sequence_alignment' in dat:
-            hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['sequence_alignment']]
-        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                      & (dat['locus'] == 'IGH')]['duplicate_count']]
-        hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'] == 'IGH')]['c_call']]
+            hc_seq = [
+                x for x in dat[(dat['cell_id'].isin([b]))
+                               & (dat['locus'] == 'IGH')]['sequence_alignment']
+            ]
+        hc_dup = [
+            int(x) for x in dat[(dat['cell_id'].isin([b]))
+                                & (dat['locus'] == 'IGH')]['duplicate_count']
+        ]
+        hc_ccall = [
+            x for x in dat[(dat['cell_id'].isin([b]))
+                           & (dat['locus'] == 'IGH')]['c_call']
+        ]
 
-        lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+        lc_id = list(dat[(dat['cell_id'].isin([b]))
+                         & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+        lc_umi = [
+            int(x)
+            for x in dat[(dat['cell_id'].isin([b]))
+                         & (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']
+        ]
         if 'sequence_alignment' in dat:
-            lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+            lc_seq = [
+                x for x in dat[(dat['cell_id'].isin([b])) & (
+                    dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']
+            ]
 
         h[b] = hc_id
         h_umi[b] = hc_umi
@@ -1713,20 +2118,27 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
             if 'sequence_alignment' in dat:
                 if len(list(set(h_seq[b]))) == 1:
                     highest_umi_h = max(h_umi[b])
-                    highest_umi_h_idx = [i for i, j in enumerate(
-                        h_umi[b]) if j == highest_umi_h]
+                    highest_umi_h_idx = [
+                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
+                    ]
                     keep_index_h = highest_umi_h_idx[0]
-                    drop_contig.append(
-                        h[b][:keep_index_h] + h[b][keep_index_h + 1:])
+                    drop_contig.append(h[b][:keep_index_h] +
+                                       h[b][keep_index_h + 1:])
                     keep_hc_contig = h[b][keep_index_h]
                     dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                        np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
-                    hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['sequence_id'])
-                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['umi_count']]
-                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['duplicate_count']]
+                        np.sum(h_umi[b][:keep_index_h] +
+                               h_umi[b][keep_index_h + 1:]))
+                    hc_id = list(dat[(dat['cell_id'].isin([b]))
+                                     & (dat['locus'] == 'IGH')]['sequence_id'])
+                    hc_umi = [
+                        int(x)
+                        for x in dat[(dat['cell_id'].isin([b]))
+                                     & (dat['locus'] == 'IGH')]['umi_count']
+                    ]
+                    hc_dup = [
+                        int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'] == 'IGH')]['duplicate_count']
+                    ]
                     h[b] = hc_id
                     h_umi[b] = hc_umi
                     h_dup[b] = hc_dup
@@ -1734,17 +2146,23 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
             if len(h[b]) > 1:
                 if rescue_igh:
                     highest_umi_h = max(h_umi[b])
-                    lowest_umi_h = min(h_umi[b])
-                    highest_umi_idx = [i for i, j in enumerate(
-                        h_umi[b]) if j == highest_umi_h]
+                    # lowest_umi_h = min(h_umi[b])
+                    highest_umi_idx = [
+                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
+                    ]
                     keep_index_h = highest_umi_idx[0]
-                    umi_test = [highest_umi_h / x < umi_foldchange_cutoff for x in h_umi[b]
-                                [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                    umi_test = [
+                        highest_umi_h / x < umi_foldchange_cutoff
+                        for x in h_umi[b][:keep_index_h] +
+                        h_umi[b][keep_index_h + 1:]
+                    ]
                     sum_umi = sum(h_umi[b] + h_dup[b])
-                    other_umi_idx = [i for i, j in enumerate(
-                        h_umi[b]) if j != highest_umi_h]
+                    other_umi_idx = [
+                        i for i, j in enumerate(h_umi[b]) if j != highest_umi_h
+                    ]
                     if 'IGHM' and 'IGHD' in h_ccall[b]:
-                        if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
+                        if all(cc_ == 'IGHM' or cc_ == 'IGHD'
+                               for cc_ in h_ccall[b]):
                             pass
                         else:
                             if len(highest_umi_idx) > 1:
@@ -1754,10 +2172,15 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                             if any(umi_test):
                                 h_doublet.append(b)
                             if len(highest_umi_idx) == 1:
-                                other_umi_idx = [i for i, j in enumerate(
-                                    h_umi[b]) if j != highest_umi_h]
-                                umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b]
-                                             [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                                other_umi_idx = [
+                                    i for i, j in enumerate(h_umi[b])
+                                    if j != highest_umi_h
+                                ]
+                                umi_test_ = [
+                                    highest_umi_h / x >= umi_foldchange_cutoff
+                                    for x in h_umi[b][:keep_index_h] +
+                                    h_umi[b][keep_index_h + 1:]
+                                ]
                                 umi_test_dict = dict(
                                     zip(other_umi_idx, umi_test_))
                                 for otherindex in umi_test_dict:
@@ -1771,10 +2194,15 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                         if any(umi_test):
                             h_doublet.append(b)
                         if len(highest_umi_idx) == 1:
-                            other_umi_idx = [i for i, j in enumerate(
-                                h_umi[b]) if j != highest_umi_h]
-                            umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b]
-                                         [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                            other_umi_idx = [
+                                i for i, j in enumerate(h_umi[b])
+                                if j != highest_umi_h
+                            ]
+                            umi_test_ = [
+                                highest_umi_h / x >= umi_foldchange_cutoff
+                                for x in h_umi[b][:keep_index_h] +
+                                h_umi[b][keep_index_h + 1:]
+                            ]
                             umi_test_dict = dict(zip(other_umi_idx, umi_test_))
                             for otherindex in umi_test_dict:
                                 if umi_test_dict[otherindex]:
@@ -1785,31 +2213,40 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
             if 'sequence_alignment' in dat:
                 if len(list(set(l_seq[b]))) == 1:
                     highest_umi_l = max(l_umi[b])
-                    highest_umi_l_idx = [i for i, j in enumerate(
-                        l_umi[b]) if j == highest_umi_l]
+                    highest_umi_l_idx = [
+                        i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
+                    ]
                     keep_index_l = highest_umi_l_idx[0]
-                    drop_contig.append(
-                        l[b][:keep_index_l] + l[b][keep_index_l + 1:])
+                    drop_contig.append(l[b][:keep_index_l] +
+                                       l[b][keep_index_l + 1:])
                     keep_lc_contig = l[b][keep_index_l]
                     dat.at[keep_lc_contig, 'duplicate_count'] = int(
-                        np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
+                        np.sum(l_umi[b][:keep_index_l] +
+                               l_umi[b][keep_index_l + 1:]))
                     lc_id = list(dat[(dat['cell_id'].isin([b])) & (
                         dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                    lc_umi = [
+                        int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                            dat['locus'].isin(['IGK', 'IGL']))]['umi_count']
+                    ]
                     l[b] = lc_id
                     l_umi[b] = lc_umi
                     l_seq[b] = lc_seq
             if len(list(set(l[b]))) > 1:
                 # also apply the same cut off to multiple light chains
                 highest_umi_l = max(l_umi[b])
-                highest_umi_l_idx = [i for i, j in enumerate(
-                    l_umi[b]) if j == highest_umi_l]
+                highest_umi_l_idx = [
+                    i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
+                ]
                 keep_index_l = highest_umi_l_idx[0]
-                other_umi_idx_l = [i for i, j in enumerate(
-                    l_umi[b]) if j != highest_umi_l]
-                umi_test_l = [highest_umi_l / x < umi_foldchange_cutoff for x in l_umi[b]
-                              [:keep_index_l] + l_umi[b][keep_index_l + 1:]]
+                other_umi_idx_l = [
+                    i for i, j in enumerate(l_umi[b]) if j != highest_umi_l
+                ]
+                umi_test_l = [
+                    highest_umi_l / x < umi_foldchange_cutoff
+                    for x in l_umi[b][:keep_index_l] +
+                    l_umi[b][keep_index_l + 1:]
+                ]
                 umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
                 for otherindex in umi_test_dict_l:
                     if umi_test_dict_l[otherindex]:
@@ -1915,7 +2352,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                     drop_contig.append(lx)  # no/wrong annotations at all
 
         poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
-        return(poor_qual_, h_doublet_, l_doublet_, drop_contig_)
+        return (poor_qual_, h_doublet_, l_doublet_, drop_contig_)
 
     if parallel:
         poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
@@ -1924,7 +2361,9 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
         else:
             ncpus = int(ncpu)
 
-        print('Scanning for poor quality/ambiguous contigs with {} cpus'.format(ncpus))
+        print(
+            'Scanning for poor quality/ambiguous contigs with {} cpus'.format(
+                ncpus))
         with multiprocessing.Pool(ncpus) as p:
             result = p.map(parallel_marking, iter(barcode))
             atexit.register(p.close)
@@ -1941,26 +2380,44 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     else:
         poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
 
-        for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
-            hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['sequence_id'])
-            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                          & (dat['locus'] == 'IGH')]['umi_count']]
+        for b in tqdm(barcode,
+                      desc='Scanning for poor quality/ambiguous contigs'):
+            hc_id = list(dat[(dat['cell_id'].isin([b]))
+                             & (dat['locus'] == 'IGH')]['sequence_id'])
+            hc_umi = [
+                int(x) for x in dat[(dat['cell_id'].isin([b]))
+                                    & (dat['locus'] == 'IGH')]['umi_count']
+            ]
             if 'sequence_alignment' in dat:
-                hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'] == 'IGH')]['sequence_alignment']]
-            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['duplicate_count']]
-            hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['c_call']]
+                hc_seq = [
+                    x
+                    for x in dat[(dat['cell_id'].isin([b])) &
+                                 (dat['locus'] == 'IGH')]['sequence_alignment']
+                ]
+            hc_dup = [
+                int(x)
+                for x in dat[(dat['cell_id'].isin([b]))
+                             & (dat['locus'] == 'IGH')]['duplicate_count']
+            ]
+            hc_ccall = [
+                x for x in dat[(dat['cell_id'].isin([b]))
+                               & (dat['locus'] == 'IGH')]['c_call']
+            ]
 
-            lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+            lc_id = list(
+                dat[(dat['cell_id'].isin([b]))
+                    & (dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
+            lc_umi = [
+                int(x)
+                for x in dat[(dat['cell_id'].isin([b])) &
+                             (dat['locus'].isin(['IGK', 'IGL']))]['umi_count']
+            ]
             if 'sequence_alignment' in dat:
-                lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+                lc_seq = [
+                    x for x in dat[(dat['cell_id'].isin([b]))
+                                   & (dat['locus'].isin(['IGK', 'IGL']))]
+                    ['sequence_alignment']
+                ]
 
             h[b] = hc_id
             h_umi[b] = hc_umi
@@ -1980,21 +2437,30 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 if 'sequence_alignment' in dat:
                     if len(list(set(h_seq[b]))) == 1:
                         highest_umi_h = max(h_umi[b])
-                        highest_umi_h_idx = [i for i, j in enumerate(
-                            h_umi[b]) if j == highest_umi_h]
+                        highest_umi_h_idx = [
+                            i for i, j in enumerate(h_umi[b])
+                            if j == highest_umi_h
+                        ]
                         keep_index_h = highest_umi_h_idx[0]
-                        drop_contig.append(
-                            h[b][:keep_index_h] + h[b][keep_index_h + 1:])
+                        drop_contig.append(h[b][:keep_index_h] +
+                                           h[b][keep_index_h + 1:])
                         keep_hc_contig = h[b][keep_index_h]
                         dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                            np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
+                            np.sum(h_umi[b][:keep_index_h] +
+                                   h_umi[b][keep_index_h + 1:]))
 
-                        hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'] == 'IGH')]['sequence_id'])
-                        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'] == 'IGH')]['umi_count']]
-                        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'] == 'IGH')]['duplicate_count']]
+                        hc_id = list(
+                            dat[(dat['cell_id'].isin([b]))
+                                & (dat['locus'] == 'IGH')]['sequence_id'])
+                        hc_umi = [
+                            int(x)
+                            for x in dat[(dat['cell_id'].isin([b])) &
+                                         (dat['locus'] == 'IGH')]['umi_count']
+                        ]
+                        hc_dup = [
+                            int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                                dat['locus'] == 'IGH')]['duplicate_count']
+                        ]
                         h[b] = hc_id
                         h_umi[b] = hc_umi
                         h_dup[b] = hc_dup
@@ -2002,16 +2468,22 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 if len(h[b]) > 1:
                     if rescue_igh:
                         highest_umi_h = max(h_umi[b])
-                        lowest_umi_h = min(h_umi[b])
-                        highest_umi_idx = [i for i, j in enumerate(
-                            h_umi[b]) if j == highest_umi_h]
+                        # lowest_umi_h = min(h_umi[b])
+                        highest_umi_idx = [
+                            i for i, j in enumerate(h_umi[b])
+                            if j == highest_umi_h
+                        ]
                         keep_index_h = highest_umi_idx[0]
 
-                        umi_test = [highest_umi_h / x < umi_foldchange_cutoff for x in h_umi[b]
-                                    [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                        umi_test = [
+                            highest_umi_h / x < umi_foldchange_cutoff
+                            for x in h_umi[b][:keep_index_h] +
+                            h_umi[b][keep_index_h + 1:]
+                        ]
                         sum_umi = sum(h_umi[b] + h_dup[b])
                         if 'IGHM' and 'IGHD' in h_ccall[b]:
-                            if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall[b]):
+                            if all(cc_ == 'IGHM' or cc_ == 'IGHD'
+                                   for cc_ in h_ccall[b]):
                                 pass
                             else:
                                 if len(highest_umi_idx) > 1:
@@ -2021,10 +2493,16 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                                 if any(umi_test):
                                     h_doublet.append(b)
                                 if len(highest_umi_idx) == 1:
-                                    other_umi_idx = [i for i, j in enumerate(
-                                        h_umi[b]) if j != highest_umi_h]
-                                    umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b]
-                                                 [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                                    other_umi_idx = [
+                                        i for i, j in enumerate(h_umi[b])
+                                        if j != highest_umi_h
+                                    ]
+                                    umi_test_ = [
+                                        highest_umi_h / x >=
+                                        umi_foldchange_cutoff
+                                        for x in h_umi[b][:keep_index_h] +
+                                        h_umi[b][keep_index_h + 1:]
+                                    ]
                                     umi_test_dict = dict(
                                         zip(other_umi_idx, umi_test_))
                                     for otherindex in umi_test_dict:
@@ -2039,10 +2517,15 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                             if any(umi_test):
                                 h_doublet.append(b)
                             if len(highest_umi_idx) == 1:
-                                other_umi_idx = [i for i, j in enumerate(
-                                    h_umi[b]) if j != highest_umi_h]
-                                umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b]
-                                             [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                                other_umi_idx = [
+                                    i for i, j in enumerate(h_umi[b])
+                                    if j != highest_umi_h
+                                ]
+                                umi_test_ = [
+                                    highest_umi_h / x >= umi_foldchange_cutoff
+                                    for x in h_umi[b][:keep_index_h] +
+                                    h_umi[b][keep_index_h + 1:]
+                                ]
                                 umi_test_dict = dict(
                                     zip(other_umi_idx, umi_test_))
                                 for otherindex in umi_test_dict:
@@ -2055,32 +2538,44 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 if 'sequence_alignment' in dat:
                     if len(list(set(l_seq[b]))) == 1:
                         highest_umi_l = max(l_umi[b])
-                        highest_umi_l_idx = [i for i, j in enumerate(
-                            l_umi[b]) if j == highest_umi_l]
+                        highest_umi_l_idx = [
+                            i for i, j in enumerate(l_umi[b])
+                            if j == highest_umi_l
+                        ]
                         keep_index_l = highest_umi_l_idx[0]
-                        drop_contig.append(
-                            l[b][:keep_index_l] + l[b][keep_index_l + 1:])
+                        drop_contig.append(l[b][:keep_index_l] +
+                                           l[b][keep_index_l + 1:])
                         keep_lc_contig = l[b][keep_index_l]
                         dat.at[keep_lc_contig, 'duplicate_count'] = int(
-                            np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
+                            np.sum(l_umi[b][:keep_index_l] +
+                                   l_umi[b][keep_index_l + 1:]))
                         lc_id = list(dat[(dat['cell_id'].isin([b])) & (
                             dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                        lc_umi = [
+                            int(x)
+                            for x in dat[(dat['cell_id'].isin([b]))
+                                         & (dat['locus'].isin(['IGK', 'IGL']))]
+                            ['umi_count']
+                        ]
                         l[b] = lc_id
                         l_umi[b] = lc_umi
                         l_seq[b] = lc_seq
                 if len(list(set(l[b]))) > 1:
                     # also apply the same cut off to multiple light chains
                     highest_umi_l = max(l_umi[b])
-                    highest_umi_l_idx = [i for i, j in enumerate(
-                        l_umi[b]) if j == highest_umi_l]
+                    highest_umi_l_idx = [
+                        i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
+                    ]
                     keep_index_l = highest_umi_l_idx[0]
 
-                    other_umi_idx_l = [i for i, j in enumerate(
-                        l_umi[b]) if j != highest_umi_l]
-                    umi_test_l = [highest_umi_l / x < umi_foldchange_cutoff for x in l_umi[b]
-                                  [:keep_index_l] + l_umi[b][keep_index_l + 1:]]
+                    other_umi_idx_l = [
+                        i for i, j in enumerate(l_umi[b]) if j != highest_umi_l
+                    ]
+                    umi_test_l = [
+                        highest_umi_l / x < umi_foldchange_cutoff
+                        for x in l_umi[b][:keep_index_l] +
+                        l_umi[b][keep_index_l + 1:]
+                    ]
                     umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
                     for otherindex in umi_test_dict_l:
                         if umi_test_dict_l[otherindex]:
@@ -2219,7 +2714,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 filter_ids = list(set(h_doublet + l_doublet))
 
         filter_ids = filter_ids + \
-            list(adata_[adata_.obs['filter_rna'] == True].obs_names)
+            list(adata_[adata_.obs['filter_rna'] is True].obs_names)
         filter_ids = list(set(filter_ids))
 
         if filter_missing:
@@ -2234,19 +2729,23 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
         barcodes_final = list(set(_dat['cell_id']))
         filter_ids2 = []
         for b in barcodes_final:
-            check_dat = _dat[(_dat['locus'].isin(['IGH'])) &
-                             (_dat['cell_id'].isin([b]))].copy()
+            check_dat = _dat[(_dat['locus'].isin(['IGH']))
+                             & (_dat['cell_id'].isin([b]))].copy()
             if check_dat.shape[0] < 1:
                 filter_ids2.append(b)
         _dat = _dat[~(_dat['cell_id'].isin(filter_ids2))].copy()
 
         if _dat.shape[0] == 0:
             raise IndexError(
-                'No BCRs passed filtering. Are you sure that the cell barcodes are matching?')
+                'No BCRs passed filtering. Are you sure that the cell barcodes are matching?'
+            )
 
         if os.path.isfile(str(data)):
-            _dat.to_csv("{}/{}_filtered.tsv".format(os.path.dirname(data),
-                                                    os.path.basename(data).split('.tsv')[0]), sep='\t', index=False)
+            _dat.to_csv("{}/{}_filtered.tsv".format(
+                os.path.dirname(data),
+                os.path.basename(data).split('.tsv')[0]),
+                sep='\t',
+                index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2286,18 +2785,26 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
 
     if filter_rna:
         # not saving the scanpy object because there's no need to at the moment
-        out_adata = adata_[adata_.obs['filter_bcr'] == False].copy()
+        out_adata = adata_[adata_.obs['filter_bcr'] is False].copy()
     else:
         out_adata = adata_.copy()
 
-    logg.info(' finished', time=start,
+    logg.info(' finished',
+              time=start,
               deep=('Returning Dandelion and AnnData objects: \n'))
-    return(out_dat, out_adata)
+    return (out_dat, out_adata)
 
 
-def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool = False, sequence_column: Union[None, str] = None, germline_column: Union[None, str] = None, region_definition: Union[None, str] = None, mutation_definition: Union[None, str] = None, frequency: bool = True, combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
+def quantify_mutations(self: Union[Dandelion, str, PathLike],
+                       split_locus: bool = False,
+                       sequence_column: Union[None, str] = None,
+                       germline_column: Union[None, str] = None,
+                       region_definition: Union[None, str] = None,
+                       mutation_definition: Union[None, str] = None,
+                       frequency: bool = True,
+                       combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
     """
-    Runs basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
+    Run basic mutation load analysis implemented in `shazam <https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/>`__.
 
     Parameters
     ----------
@@ -2324,12 +2831,13 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
     """
     start = logg.info('Quantifying mutations')
     try:
-        from rpy2.robjects.packages import importr, data
+        from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, StrVector, FloatVector
+        from rpy2.robjects import pandas2ri
     except:
-        raise(ImportError(
-            "Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
+        raise (ImportError(
+            "Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."
+        ))
 
     sh = importr('shazam')
     base = importr('base')
@@ -2371,8 +2879,13 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
             dat = dat.astype(str)
             dat_r = pandas2ri.py2rpy(dat)
 
-        results = sh.observedMutations(dat_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                       regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
+        results = sh.observedMutations(dat_r,
+                                       sequenceColumn=seq_,
+                                       germlineColumn=germline_,
+                                       regionDefinition=reg_d,
+                                       mutationDefinition=mut_d,
+                                       frequency=frequency,
+                                       combine=combine)
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
     else:
@@ -2393,10 +2906,20 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
             dat_l = dat_l.astype(str)
             dat_l_r = pandas2ri.py2rpy(dat_l)
 
-        results_h = sh.observedMutations(dat_h_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                         regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
-        results_l = sh.observedMutations(dat_l_r, sequenceColumn=seq_, germlineColumn=germline_,
-                                         regionDefinition=reg_d, mutationDefinition=mut_d, frequency=frequency, combine=combine)
+        results_h = sh.observedMutations(dat_h_r,
+                                         sequenceColumn=seq_,
+                                         germlineColumn=germline_,
+                                         regionDefinition=reg_d,
+                                         mutationDefinition=mut_d,
+                                         frequency=frequency,
+                                         combine=combine)
+        results_l = sh.observedMutations(dat_l_r,
+                                         sequenceColumn=seq_,
+                                         germlineColumn=germline_,
+                                         regionDefinition=reg_d,
+                                         mutationDefinition=mut_d,
+                                         frequency=frequency,
+                                         combine=combine)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace=True, drop=False)
@@ -2428,13 +2951,15 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
             metadata_ = metadata_.groupby(['locus', 'cell_id']).sum()
             metadatas = []
             for x in list(set(self.data['locus'])):
-                tmp = metadata_.iloc[metadata_.index.isin(
-                    [x], level='locus'), :]
+                tmp = metadata_.iloc[
+                    metadata_.index.isin([x], level='locus'), :]
                 tmp.index = tmp.index.droplevel()
                 tmp.columns = [c + '_' + str(x) for c in tmp.columns]
                 metadatas.append(tmp)
-            metadata_ = functools.reduce(lambda x, y: pd.merge(
-                x, y, left_index=True, right_index=True, how='outer'), metadatas)
+            metadata_ = functools.reduce(
+                lambda x, y: pd.merge(
+                    x, y, left_index=True, right_index=True, how='outer'),
+                metadatas)
 
         metadata_.index.name = None
 
@@ -2443,7 +2968,8 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
         else:
             for x in metadata_.columns:
                 self.metadata[x] = pd.Series(metadata_[x])
-        logg.info(' finished', time=start,
+        logg.info(' finished',
+                  time=start,
                   deep=('Updated Dandelion object: \n'
                         '   \'data\', contig-indexed clone table\n'
                         '   \'metadata\', cell-indexed clone table\n'))
@@ -2455,14 +2981,42 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike], split_locus: bool 
 
         if self.__class__ == pd.DataFrame:
             logg.info(' finished', time=start, deep=('Returning DataFrame\n'))
-            return(dat)
+            return (dat)
         elif os.path.isfile(self):
-            logg.info(' finished', time=start, deep=(
-                'saving DataFrame at {}\n'.format(str(self))))
+            logg.info(' finished',
+                      time=start,
+                      deep=('saving DataFrame at {}\n'.format(str(self))))
             dat.to_csv(self, sep='\t', index=False)
 
 
-def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_threshold: Union[None, float] = None, model: Union[None, Literal["ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat"]] = None, normalize_method: Union[None, Literal['len']] = None, threshold_method: Union[None, Literal['gmm', 'density']] = None, edge: Union[None, float] = None, cross: Union[None, Sequence] = None, subsample: Union[None, int] = None, threshold_model: Union[None, Literal["norm-norm", "norm-gamma", "gamma-norm", "gamma-gamma"]] = None, cutoff: Union[None, Literal["optimal", "intersect", "user"]] = None, sensitivity: Union[None, float] = None, specificity: Union[None, float] = None, ncpu: Union[None, int] = None, plot: bool = True, plot_group: Union[None, str] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (4.5, 2.5), *args) -> Dandelion:
+def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
+                        manual_threshold: Union[None, float] = None,
+                        model: Union[None,
+                                     Literal["ham", "aa", "hh_s1f", "hh_s5f",
+                                             "mk_rs1nf", "hs1f_compat",
+                                             "m1n_compat"]] = None,
+                        normalize_method: Union[None, Literal['len']] = None,
+                        threshold_method: Union[None,
+                                                Literal['gmm',
+                                                        'density']] = None,
+                        edge: Union[None, float] = None,
+                        cross: Union[None, Sequence] = None,
+                        subsample: Union[None, int] = None,
+                        threshold_model: Union[None,
+                                               Literal["norm-norm",
+                                                       "norm-gamma",
+                                                       "gamma-norm",
+                                                       "gamma-gamma"]] = None,
+                        cutoff: Union[None, Literal["optimal", "intersect",
+                                                    "user"]] = None,
+                        sensitivity: Union[None, float] = None,
+                        specificity: Union[None, float] = None,
+                        ncpu: Union[None, int] = None,
+                        plot: bool = True,
+                        plot_group: Union[None, str] = None,
+                        figsize: Tuple[Union[int, float],
+                                       Union[int, float]] = (4.5, 2.5),
+                        *args) -> Dandelion:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam <https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/>`__.
 
@@ -2518,12 +3072,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
     """
     start = logg.info('Calculating threshold')
     try:
-        from rpy2.robjects.packages import importr, data
+        from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, StrVector, FloatVector
+        from rpy2.robjects import pandas2ri, FloatVector
     except:
-        raise(ImportError(
-            "Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."))
+        raise (ImportError(
+            "Unable to initialise R instance. Please run this separately through R with Shazam's tutorial."
+        ))
 
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
@@ -2562,8 +3117,12 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
     except:
         dat_h = dat_h.astype(str)
         dat_h_r = pandas2ri.py2rpy(dat_h)
-    dist_ham = sh.distToNearest(
-        dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, nproc=ncpu_, *args)
+    dist_ham = sh.distToNearest(dat_h_r,
+                                vCallColumn=v_call,
+                                model=model_,
+                                normalize=norm_,
+                                nproc=ncpu_,
+                                *args)
     # Find threshold using density method
     dist = np.array(dist_ham['dist_nearest'])
     if threshold_method_ == 'density':
@@ -2571,12 +3130,15 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
             edge_ = 0.9
         else:
             edge_ = edge
-        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(
-            dist)]), method=threshold_method_, subsample=subsample_, edge=edge_)
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]),
+                                          method=threshold_method_,
+                                          subsample=subsample_,
+                                          edge=edge_)
         threshold = np.array(dist_threshold.slots['threshold'])[0]
         if np.isnan(threshold):
             print(
-                "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'.")
+                "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
+            )
             threshold_method_ = 'gmm'
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
@@ -2598,8 +3160,15 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
                 spc_ = NULL
             else:
                 spc_ = specificity
-            dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(
-                dist)]), method=threshold_method_, model=threshold_model_, cross=cross_, subsample=subsample_, cutoff=cutoff_, sen=sen_, spc=spc_)
+            dist_threshold = sh.findThreshold(FloatVector(
+                dist[~np.isnan(dist)]),
+                method=threshold_method_,
+                model=threshold_model_,
+                cross=cross_,
+                subsample=subsample_,
+                cutoff=cutoff_,
+                sen=sen_,
+                spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2622,12 +3191,19 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
             spc_ = NULL
         else:
             spc_ = specificity
-        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(
-            dist)]), method=threshold_method_, model=threshold_model_, cross=cross_, subsample=subsample_, cutoff=cutoff_, sen=sen_, spc=spc_)
+        dist_threshold = sh.findThreshold(FloatVector(dist[~np.isnan(dist)]),
+                                          method=threshold_method_,
+                                          model=threshold_model_,
+                                          cross=cross_,
+                                          subsample=subsample_,
+                                          cutoff=cutoff_,
+                                          sen=sen_,
+                                          spc=spc_)
         threshold = np.array(dist_threshold.slots['threshold'])[0]
     if np.isnan(threshold):
         raise ValueError(
-            "Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually.")
+            "Automatic thresholding failed. Please visually inspect the resulting distribution fits and choose a threshold value manually."
+        )
     # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
 
     if manual_threshold is None:
@@ -2642,26 +3218,32 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str], manual_thresh
         else:
             plot_group = plot_group
 
-        print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group)))
-               + theme_bw()
-               + xlab("Grouped Hamming distance")
-               + ylab("Count")
-               + geom_histogram(binwidth=0.01)
-               + geom_vline(xintercept=tr, linetype="dashed",
-                            color="blue", size=0.5)
-               + annotate('text', x=tr + 0.02, y=10, label='Threshold:\n' +
-                          str(np.around(tr, decimals=2)), size=8, color='Blue')
-               + facet_wrap('~' + str(plot_group), scales="free_y")
-               + theme(legend_position='none')))
+        print((ggplot(dist_ham, aes('dist_nearest', fill=str(plot_group))) +
+               theme_bw() + xlab("Grouped Hamming distance") + ylab("Count") +
+               geom_histogram(binwidth=0.01) + geom_vline(
+                   xintercept=tr, linetype="dashed", color="blue", size=0.5) +
+               annotate('text',
+                        x=tr + 0.02,
+                        y=10,
+                        label='Threshold:\n' + str(np.around(tr, decimals=2)),
+                        size=8,
+                        color='Blue') +
+               facet_wrap('~' + str(plot_group), scales="free_y") +
+               theme(legend_position='none')))
     else:
-        print("Automatic Threshold : " + str(np.around(threshold,
-                                                       decimals=2)) + "\n method = " + str(threshold_method_))
+        print("Automatic Threshold : " +
+              str(np.around(threshold, decimals=2)) + "\n method = " +
+              str(threshold_method_))
     if self.__class__ == Dandelion:
         self.threshold = tr
-        logg.info(' finished', time=start,
-                  deep=('Updated Dandelion object: \n'
-                        '   \'threshold\', threshold value for tuning clonal assignment\n'))
+        logg.info(
+            ' finished',
+            time=start,
+            deep=
+            ('Updated Dandelion object: \n'
+             '   \'threshold\', threshold value for tuning clonal assignment\n'
+             ))
     else:
         output = Dandelion(dat)
         output.threshold = tr
-        return(output)
+        return (output)
