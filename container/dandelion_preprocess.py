@@ -46,7 +46,7 @@ def main():
 		vals = list(meta['suffix'].values)
 		ddl.pp.format_fastas(samples, suffix=vals, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number)
 	else:
-		#neither. tag with the sample names as a 
+		#neither. tag with the sample names as default
 		ddl.pp.format_fastas(samples, prefix=samples, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number)
 	
 	#STEP TWO - ddl.pp.reannotate_genes()
