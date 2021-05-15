@@ -2,12 +2,12 @@
 # @Author: Kelvin
 # @Date:   2021-04-03 16:46:13
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-15 13:54:42
+# @Last Modified time: 2021-04-03 19:43:28
 
 try:
-    from .version import __version__
+	from .version import __version__
 except ImportError:
-    __version__ = ''
+	__version__ = ''
 
 __author__ = "Zewen Kelvin Tuong"
 __email__ = "kt16@sanger.ac.uk"
