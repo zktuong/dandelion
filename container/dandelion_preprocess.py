@@ -74,7 +74,7 @@ def main():
 		ddl.pp.reassign_alleles(samples, combined_folder='tigger', save_plot=True)
 		#remove if cleaning output - the important information is ported to sample folders already
 		if args.clean_output:
-			os.system('rm -r '+ind)
+			os.system('rm -r tigger')
 	
 	#STEP FOUR - ddl.pp.assign_isotypes()
 	#also no tricks here
