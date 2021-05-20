@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-04-03 11:55:58
+# @Last Modified time: 2021-05-20 12:19:22
 
 import os
 import pandas as pd
@@ -145,9 +145,9 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         graph0 = nx.from_pandas_adjacency(g_0)
         graph1 = nx.from_pandas_adjacency(g_1)
         for u, v, d in graph0.edges(data=True):
-            d['weight'] = d['weight']-1
+            d['weight'] = d['weight'] - 1
         for u, v, d in graph1.edges(data=True):
-            d['weight'] = d['weight']-1
+            d['weight'] = d['weight'] - 1
         graph = (graph0, graph1)
     except:
         pass
@@ -174,7 +174,7 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         distance = Tree()
         try:
             for d in hf['distance'].keys():
-                d_ = pd.read_hdf(filename, 'distance/'+d)
+                d_ = pd.read_hdf(filename, 'distance/' + d)
                 distance[d] = scipy.sparse.csr_matrix(d_.values)
         except:
             pass
@@ -210,7 +210,7 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     return(res)
 
 
-def read_10x_airr(file: str) -> Dandelion:
+def read_10x_airr(file: str, data_type: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig') -> Dandelion:
     """
     Reads the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
@@ -237,11 +237,19 @@ def read_10x_airr(file: str) -> Dandelion:
                 locus.append('IGK')
             elif all('IGL' in x for x in t if x == x):
                 locus.append('IGL')
+            elif all('TRA' in x for x in t if x == x):
+                locus.append('TRA')
+            elif all('TRB' in x for x in t if x == x):
+                locus.append('TRB')
+            elif all('TRD' in x for x in t if x == x):
+                locus.append('TRD')
+            elif all('TRG' in x for x in t if x == x):
+                locus.append('TRG')
             else:
                 locus.append(np.nan)
         dat['locus'] = locus
 
-    return(Dandelion(dat))
+    return(Dandelion(dat, locus = data_type))
 
 
 def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:

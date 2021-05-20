@@ -9,7 +9,7 @@ Preprocessing: `pp`
    assign_isotypes
    calculate_threshold
    create_germlines
-   filter_bcr
+   filter_contigs
    format_fasta
    format_fastas
    quantify_mutations
