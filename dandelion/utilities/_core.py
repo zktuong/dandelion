@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 12:36:19
+# @Last Modified time: 2021-05-20 15:19:23
 
 import os
 from collections import defaultdict
@@ -55,7 +55,14 @@ class Dandelion:
             self.n_contigs = self.data.shape[0]
             if metadata is None:
                 if initialize is True:
-                    update_metadata(self, **kwargs)
+                    try:
+                        update_metadata(self, **kwargs)
+                    except:
+                        update_metadata(self, locus = 'tr-ab', **kwargs)
+                        try:
+                            update_metadata(self, locus = 'tr-gd', **kwargs)
+                        except:
+                            raise OSError('Unable to read data. Are you sure this is an AIRR formatted data?')
                 try:
                     self.n_obs = self.metadata.shape[0]
                 except:
