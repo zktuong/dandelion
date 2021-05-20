@@ -76,6 +76,7 @@ Utilities: `utl`
    read_h5
    read_pkl
    read_10x_airr
+   read_10x_vdj
    update_metadata
    concat
    to_scirpy
