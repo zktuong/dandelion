@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 16:13:59
+# @Last Modified time: 2021-05-20 16:23:36
 
 import sys
 import os
@@ -1668,8 +1668,10 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
     # rather than leaving a nan cell, i will create a 0 column for now
     if 'duplicate_count' in dat and 'umi_count' not in dat:
         dat['umi_count'] = dat['duplicate_count']  # just do a simple swap?        
-    if 'duplicate_count' not in dat and 'umi_count' in dat:
+    elif 'duplicate_count' not in dat and 'umi_count' in dat:
         dat['duplicate_count'] = dat['umi_count']
+    elif 'duplicate_count' in dat and 'umi_count' in dat:
+        dat['umi_count'] = dat['duplicate_count']
 
     global parallel_marking
 
