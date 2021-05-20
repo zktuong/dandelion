@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 12:55:02
+# @Last Modified time: 2021-05-20 14:11:14
 
 import sys
 import os
@@ -1576,7 +1576,7 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
 
-def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_chain: bool = True, filter_rna: bool = True, filter_poorqualitychain: bool = False, rescue_vdj: bool = True, umi_foldchange_cutoff: int = 2, filter_vj_chains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
+def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_contig: bool = True, filter_rna: bool = True, filter_poorqualitycontig: bool = False, rescue_vdj: bool = True, umi_foldchange_cutoff: int = 2, filter_vj_chains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
     If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_vdj` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
@@ -1589,11 +1589,11 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
         V(D)J airr/changeo data to filter. Can be pandas `DataFrame` object or file path as string.
     adata : AnnData
         AnnData object to filter.
-    filter_chain : bool
+    filter_contig : bool
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
     filter_rna : bool
         If True, `AnnData` object returned will be filtered. Default is True.
-    filter_poorqualitychain : bool
+    filter_poorqualitycontig : bool
         If True, barcodes marked with poor quality contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.
     rescue_vdj : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
@@ -1649,14 +1649,14 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
 
     barcode = list(set(dat['cell_id']))
 
-    bcr_check = pd.DataFrame(index=adata_.obs_names)
+    contig_check = pd.DataFrame(index=adata_.obs_names)
     bc_ = {}
     for b in barcode:
         bc_.update({b: True})
-    bcr_check['has_bcr'] = pd.Series(bc_)
-    bcr_check.replace(np.nan, 'No_BCR', inplace=True)
-    adata_.obs['has_bcr'] = pd.Series(bcr_check['has_bcr'])
-    adata_.obs['has_bcr'] = adata_.obs['has_bcr'].astype('category')
+    contig_check['has_contig'] = pd.Series(bc_)
+    contig_check.replace(np.nan, 'No_contig', inplace=True)
+    adata_.obs['has_contig'] = pd.Series(contig_check['has_contig'])
+    adata_.obs['has_contig'] = adata_.obs['has_contig'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
@@ -1804,7 +1804,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
         # that were have conflicting assignment of locus and heavy/light V/J calls,
         # and also those that are missing either v or j calls.
         if len(h[b]) < 1:
-            if filter_poorqualitychain:
+            if filter_poorqualitycontig:
                 poor_qual.append(b)
             drop_contig.append(l[b])
         if len(hc_id) == 1:
@@ -1812,30 +1812,30 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
             j = j_dict[hc_id[0]]
             c = c_dict[hc_id[0]]
             if v == v:
-                if 'IGH' not in v:
-                    if filter_poorqualitychain:
+                if not re.search('IGH|TR[BD]', v):
+                    if filter_poorqualitycontig:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
             else:
-                if filter_poorqualitychain:
+                if filter_poorqualitycontig:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
                 drop_contig.append(h[b])
             if j == j:
-                if 'IGH' not in j:
-                    if filter_poorqualitychain:
+                if not re.search('IGH|TR[BD]', j):
+                    if filter_poorqualitycontig:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
             else:
-                if filter_poorqualitychain:
+                if filter_poorqualitycontig:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
                 drop_contig.append(h[b])
             if (c == c) and (c is not None):
-                if 'IGH' not in c:
-                    if filter_poorqualitychain:
+                if not re.search('IGH|TR[BD]', c):
+                    if filter_poorqualitycontig:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
@@ -1845,18 +1845,18 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                 j = j_dict[hx]
                 c = c_dict[hx]
                 if v == v:
-                    if 'IGH' not in v:
-                        if filter_poorqualitychain:
+                    if not re.search('IGH|TR[BD]', v):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(hx)
                 if j == j:
-                    if 'IGH' not in j:
-                        if filter_poorqualitychain:
+                    if not re.search('IGH|TR[BD]', j):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(hx)
                 if (c == c) and (c is not None):
-                    if 'IGH' not in c:
-                        if filter_poorqualitychain:
+                    if not re.search('IGH|TR[BD]', c):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(hx)
         if len(lc_id) > 0:
@@ -1866,34 +1866,56 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                 c = c_dict[lx]
                 if v == v:
                     if j == j:
-                        if 'IGH' in v:
-                            if filter_poorqualitychain:
+                        if re.search('IGH|TR[BD]', v):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)                        
+                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                            if filter_poorqualitycontig:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
-                        elif 'IGK' in v:
-                            if 'IGL' in j:
-                                if filter_poorqualitychain:
-                                    poor_qual.append(b)
-                                drop_contig.append(lx)
+                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                        elif (re.search('TRG', v) and not re.search('TRG', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
                 if j == j:
                     if v == v:
-                        if 'IGH' in j:
-                            if filter_poorqualitychain:
+                        if re.search('IGH|TR[BD]', j):
+                            if filter_poorqualitycontig:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
-                        elif 'IGL' in v:
-                            if 'IGK' in v:
-                                if filter_poorqualitychain:
-                                    poor_qual.append(b)
-                                drop_contig.append(lx)
+                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
+                        elif (re.search('TRG', v) and not re.search('TRG', j)):
+                            if filter_poorqualitycontig:
+                                poor_qual.append(b)
+                            drop_contig.append(lx)
                 if (c is not None) and (c == c):
-                    if 'IGH' in c:
-                        if filter_poorqualitychain:
+                    if re.search('IGH|TR[BD]', c):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(lx)
 
                 if (v != v) or (j != j) or (v is None) or (j is None):
-                    if filter_poorqualitychain:
+                    if filter_poorqualitycontig:
                         poor_qual.append(b)
                     drop_contig.append(lx)  # no/wrong annotations at all
 
@@ -1925,25 +1947,17 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
         poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
 
         for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
-            hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                          & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
+            hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
             if 'sequence_alignment' in dat:
-                hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
-            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
-            hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
+                hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
+            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+            hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
 
-            lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+            lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
             if 'sequence_alignment' in dat:
-                lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+                lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_alignment']]
 
             h[b] = hc_id
             h_umi[b] = hc_umi
@@ -1963,21 +1977,15 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                 if 'sequence_alignment' in dat:
                     if len(list(set(h_seq[b]))) == 1:
                         highest_umi_h = max(h_umi[b])
-                        highest_umi_h_idx = [i for i, j in enumerate(
-                            h_umi[b]) if j == highest_umi_h]
+                        highest_umi_h_idx = [i for i, j in enumerate(h_umi[b]) if j == highest_umi_h]
                         keep_index_h = highest_umi_h_idx[0]
-                        drop_contig.append(
-                            h[b][:keep_index_h] + h[b][keep_index_h + 1:])
+                        drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h + 1:])
                         keep_hc_contig = h[b][keep_index_h]
-                        dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                            np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
+                        dat.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
 
-                        hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-                        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
-                        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+                        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+                        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
+                        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
                         h[b] = hc_id
                         h_umi[b] = hc_umi
                         h_dup[b] = hc_dup
@@ -2038,32 +2046,24 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                 if 'sequence_alignment' in dat:
                     if len(list(set(l_seq[b]))) == 1:
                         highest_umi_l = max(l_umi[b])
-                        highest_umi_l_idx = [i for i, j in enumerate(
-                            l_umi[b]) if j == highest_umi_l]
+                        highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
                         keep_index_l = highest_umi_l_idx[0]
-                        drop_contig.append(
-                            l[b][:keep_index_l] + l[b][keep_index_l + 1:])
+                        drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l + 1:])
                         keep_lc_contig = l[b][keep_index_l]
-                        dat.at[keep_lc_contig, 'duplicate_count'] = int(
-                            np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
-                        lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                        dat.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
+                        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+                        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
                         l[b] = lc_id
                         l_umi[b] = lc_umi
                         l_seq[b] = lc_seq
                 if len(list(set(l[b]))) > 1:
                     # also apply the same cut off to multiple light chains
                     highest_umi_l = max(l_umi[b])
-                    highest_umi_l_idx = [i for i, j in enumerate(
-                        l_umi[b]) if j == highest_umi_l]
+                    highest_umi_l_idx = [i for i, j in enumerate(l_umi[b]) if j == highest_umi_l]
                     keep_index_l = highest_umi_l_idx[0]
 
-                    other_umi_idx_l = [i for i, j in enumerate(
-                        l_umi[b]) if j != highest_umi_l]
-                    umi_test_l = [highest_umi_l / x < umi_foldchange_cutoff for x in l_umi[b]
-                                  [:keep_index_l] + l_umi[b][keep_index_l + 1:]]
+                    other_umi_idx_l = [i for i, j in enumerate(l_umi[b]) if j != highest_umi_l]
+                    umi_test_l = [highest_umi_l / x < umi_foldchange_cutoff for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]]
                     umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
                     for otherindex in umi_test_dict_l:
                         if umi_test_dict_l[otherindex]:
@@ -2076,7 +2076,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
             # that were have conflicting assignment of locus and V/J calls,
             # and also those that are missing either v or j calls.
             if len(h[b]) < 1:
-                if filter_poorqualitychain:
+                if filter_poorqualitycontig:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
             if len(hc_id) == 1:
@@ -2084,20 +2084,20 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                 j = j_dict[hc_id[0]]
                 c = c_dict[hc_id[0]]
                 if v == v:
-                    if 'IGH' not in v:
-                        if filter_poorqualitychain:
+                    if not re.search('IGH|TR[BD]', v):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
                 if j == j:
-                    if 'IGH' not in j:
-                        if filter_poorqualitychain:
+                    if not re.search('IGH|TR[BD]', j):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
                 if (c == c) and (c is not None):
-                    if 'IGH' not in c:
-                        if filter_poorqualitychain:
+                    if not re.search('IGH|TR[BD]', c):
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
@@ -2107,18 +2107,18 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                     j = j_dict[hx]
                     c = c_dict[hx]
                     if v == v:
-                        if 'IGH' not in v:
-                            if filter_poorqualitychain:
+                        if not re.search('IGH|TR[BD]', v):
+                            if filter_poorqualitycontig:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
                     if j == j:
-                        if 'IGH' not in j:
-                            if filter_poorqualitychain:
+                        if not re.search('IGH|TR[BD]', j):
+                            if filter_poorqualitycontig:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
                     if (c == c) and (c is not None):
-                        if 'IGH' not in c:
-                            if filter_poorqualitychain:
+                        if not re.search('IGH|TR[BD]', c):
+                            if filter_poorqualitycontig:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
             if len(lc_id) > 0:
@@ -2126,33 +2126,59 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                     v = v_dict[lx]
                     j = j_dict[lx]
                     c = c_dict[lx]
-                    if 'IGH' in v:
-                        if filter_poorqualitychain:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif 'IGK' in v:
-                        if 'IGL' in j:
-                            if filter_poorqualitychain:
-                                poor_qual.append(b)
-                            drop_contig.append(lx)
+                    if v == v:
+                        if j == j:
+                            if re.search('IGH|TR[BD]', v):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('IGK', v) and re.search('IGL', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('IGL', v) and re.search('IGK', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('TRA', v) and not re.search('TRA', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('TRG', v) and not re.search('TRG', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                    if j == j:
+                        if v == v:
+                            if re.search('IGH|TR[BD]', j):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('IGK', v) and re.search('IGL', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('IGL', v) and re.search('IGK', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('TRA', v) and not re.search('TRA', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
+                            elif (re.search('TRG', v) and not re.search('TRG', j)):
+                                if filter_poorqualitycontig:
+                                    poor_qual.append(b)
+                                drop_contig.append(lx)
 
-                    if 'IGH' in j:
-                        if filter_poorqualitychain:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif 'IGL' in v:
-                        if 'IGK' in v:
-                            if filter_poorqualitychain:
-                                poor_qual.append(b)
-                            drop_contig.append(lx)
                     if (c is not None) and (c == c):
-                        if 'IGH' in c:
-                            if filter_poorqualitychain:
+                        if re.search('IGH|TR[BD]', c):
+                            if filter_poorqualitycontig:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
 
                     if (v != v) or (j != j) or (v is None) or (j is None):
-                        if filter_poorqualitychain:
+                        if filter_poorqualitycontig:
                             poor_qual.append(b)
                         drop_contig.append(lx)  # no/wrong annotations at all
 
@@ -2175,28 +2201,28 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
         else:
             ldoublet[c] = False
 
-    adata_.obs['filter_chain_quality'] = pd.Series(dict(poorqual))
-    adata_.obs['filter_chain_quality'] = adata_.obs['filter_chain_quality'].astype(
+    adata_.obs['filter_contig_quality'] = pd.Series(dict(poorqual))
+    adata_.obs['filter_contig_quality'] = adata_.obs['filter_contig_quality'].astype(
         'category')
-    adata_.obs['filter_chain_VDJ'] = pd.Series(dict(hdoublet))
-    adata_.obs['filter_chain_VDJ'] = adata_.obs['filter_chain_VDJ'].astype(
+    adata_.obs['filter_contig_VDJ'] = pd.Series(dict(hdoublet))
+    adata_.obs['filter_contig_VDJ'] = adata_.obs['filter_contig_VDJ'].astype(
         'category')
-    adata_.obs['filter_chain_VJ'] = pd.Series(dict(ldoublet))
-    adata_.obs['filter_chain_VJ'] = adata_.obs['filter_chain_VJ'].astype(
+    adata_.obs['filter_contig_VJ'] = pd.Series(dict(ldoublet))
+    adata_.obs['filter_contig_VJ'] = adata_.obs['filter_contig_VJ'].astype(
         'category')
 
     drop_contig = list(set(flatten(drop_contig)))
 
     filter_ids = []
-    if filter_chain:
+    if filter_contig:
         print('Finishing up filtering')
         if not filter_vj_chains:
-            if filter_poorqualitychain:
+            if filter_poorqualitycontig:
                 filter_ids = list(set(h_doublet + poor_qual))
             else:
                 filter_ids = list(set(h_doublet))
         else:
-            if filter_poorqualitychain:
+            if filter_poorqualitycontig:
                 filter_ids = list(set(h_doublet + l_doublet + poor_qual))
             else:
                 filter_ids = list(set(h_doublet + l_doublet))
@@ -2240,36 +2266,36 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
     else:
         _dat = dat.copy()
 
-    if filter_chain:
+    if filter_contig:
         barcode1 = list(set(dat['cell_id']))
 
     barcode2 = list(set(_dat['cell_id']))
 
-    if filter_chain:
+    if filter_contig:
         failed = list(set(barcode1) ^ set(barcode2))
 
     bc_2 = {}
     for b in barcode2:
         bc_2.update({b: True})
-    if filter_chain:
+    if filter_contig:
         for b in failed:
             bc_2.update({b: False})
-    bcr_check['chain_QC_pass'] = pd.Series(bc_2)
-    bcr_check.replace(np.nan, 'No_BCR', inplace=True)
-    adata_.obs['chain_QC_pass'] = pd.Series(bcr_check['chain_QC_pass'])
-    adata_.obs['chain_QC_pass'] = adata_.obs['chain_QC_pass'].astype('category')
+    contig_check['contig_QC_pass'] = pd.Series(bc_2)
+    contig_check.replace(np.nan, 'No_contig', inplace=True)
+    adata_.obs['contig_QC_pass'] = pd.Series(contig_check['contig_QC_pass'])
+    adata_.obs['contig_QC_pass'] = adata_.obs['contig_QC_pass'].astype('category')
 
     print('Initializing Dandelion object')
     out_dat = Dandelion(data=_dat)
     if data.__class__ == Dandelion:
         out_dat.germline = data.germline
 
-    adata_.obs['filter_chain'] = adata_.obs_names.isin(filter_ids)
-    adata_.obs['filter_chain'] = adata_.obs['filter_chain'].astype('category')
+    adata_.obs['filter_contig'] = adata_.obs_names.isin(filter_ids)
+    adata_.obs['filter_contig'] = adata_.obs['filter_contig'].astype('category')
 
     if filter_rna:
         # not saving the scanpy object because there's no need to at the moment
-        out_adata = adata_[adata_.obs['filter_chain'] == False].copy()
+        out_adata = adata_[adata_.obs['filter_contig'] == False].copy()
     else:
         out_adata = adata_.copy()
 
