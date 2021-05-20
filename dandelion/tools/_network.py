@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 14:05:26
+# @Last Modified time: 2021-05-20 16:57:25
 
 import pandas as pd
 import numpy as np
@@ -94,7 +94,10 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
         dat_ = dat.copy()
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
-    dat_seq = retrieve_metadata(dat_, query=key_, split=True, collapse=False)
+    try:
+        dat_seq = retrieve_metadata(dat_, query=key_, split=True, collapse=False)
+    except:
+        dat_seq = retrieve_metadata(dat_, query=key_, split=True, collapse=False, **kwargs)
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
