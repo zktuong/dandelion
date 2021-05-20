@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 16:23:36
+# @Last Modified time: 2021-05-20 16:36:27
 
 import sys
 import os
@@ -2244,7 +2244,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
         barcodes_final = list(set(_dat['cell_id']))
         filter_ids2 = []
         for b in barcodes_final:
-            check_dat = _dat[(_dat['locus'].isin(['IGH'])) &
+            check_dat = _dat[(_dat['locus'].isin(['IGH', 'TRB', 'TRD'])) &
                              (_dat['cell_id'].isin([b]))].copy()
             if check_dat.shape[0] < 1:
                 filter_ids2.append(b)
