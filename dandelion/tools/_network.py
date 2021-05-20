@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-03-04 13:12:41
+# @Last Modified time: 2021-05-20 14:05:26
 
 import pandas as pd
 import numpy as np
@@ -85,8 +85,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
         else:
             if verbose:
                 print('Downsampling to {} cells.'.format(str(downsample)))
-            dat_h = dat[dat['locus'] == 'IGH']
-            dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+            dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])]
+            dat_l = dat[dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])]
             dat_h = dat_h.sample(downsample)
             dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))]
             dat_ = dat_h.append(dat_l)
@@ -95,7 +95,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
     dat_seq = retrieve_metadata(dat_, query=key_, split=True, collapse=False)
-    dat_seq.columns = [re.sub(key_+'_', '', i) for i in dat_seq.columns]
+    dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
     dmat = Tree()
@@ -227,7 +227,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
     tmp_totaldiststack.index.names = [None, None]
     tmp_totaldiststack = tmp_totaldiststack.reset_index(drop=False)
     tmp_totaldiststack.columns = ['source', 'target', 'weight']
-    tmp_totaldiststack.index = [str(s)+'|'+str(t) for s, t in zip(
+    tmp_totaldiststack.index = [str(s) + '|' + str(t) for s, t in zip(
         tmp_totaldiststack['source'], tmp_totaldiststack['target'])]
     tmp_totaldiststack['keep'] = [False if len(
         list(set(i.split('|')))) == 1 else True for i in tmp_totaldiststack.index]
@@ -241,7 +241,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
                 G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
                 tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                 tmp_edge_list[c].index = [str(
-                    s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+                    s) + '|' + str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
                 tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
                 # keep only edges when there is 100% identity, to minimise crowding
                 tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]
@@ -253,7 +253,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
                 G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
                 tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                 tmp_edge_list[c].index = [str(
-                    s)+'|'+str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+                    s) + '|' + str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
                 tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
                 # keep only edges when there is 100% identity, to minimise crowding
                 tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]
@@ -264,12 +264,12 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
     try:
         edge_listx = pd.concat([edge_list[x] for x in edge_list])
         edge_listx.index = [
-            str(s)+'|'+str(t) for s, t in zip(edge_listx['source'], edge_listx['target'])]
+            str(s) + '|' + str(t) for s, t in zip(edge_listx['source'], edge_listx['target'])]
 
         tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
         tmp_edge_listx.drop('index', axis=1, inplace=True)
         tmp_edge_listx.index = [str(
-            s)+'|'+str(t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
+            s) + '|' + str(t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
 
         edge_list_final = edge_listx.combine_first(tmp_edge_listx)
         edge_list_final['weight'].update(tmp_totaldiststack['weight'])
