@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 14:11:14
+# @Last Modified time: 2021-05-20 16:13:59
 
 import sys
 import os
@@ -1668,7 +1668,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
     # rather than leaving a nan cell, i will create a 0 column for now
     if 'duplicate_count' in dat and 'umi_count' not in dat:
         dat['umi_count'] = dat['duplicate_count']  # just do a simple swap?        
-    elif 'duplicate_count' not in dat and 'umi_count' in dat:
+    if 'duplicate_count' not in dat and 'umi_count' in dat:
         dat['duplicate_count'] = dat['umi_count']
 
     global parallel_marking
@@ -1677,14 +1677,14 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
         poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
 
         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
+        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
         if 'sequence_alignment' in dat:
             hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
         hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
 
         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
-        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
+        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
         if 'sequence_alignment' in dat:
             lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_alignment']]
 
@@ -1711,11 +1711,10 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                     drop_contig.append(
                         h[b][:keep_index_h] + h[b][keep_index_h + 1:])
                     keep_hc_contig = h[b][keep_index_h]
-                    dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                        np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
+                    dat.at[keep_hc_contig, 'umi_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
                     hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
-                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
                     h[b] = hc_id
                     h_umi[b] = hc_umi
                     h_dup[b] = hc_dup
@@ -1777,10 +1776,10 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                     drop_contig.append(
                         l[b][:keep_index_l] + l[b][keep_index_l + 1:])
                     keep_lc_contig = l[b][keep_index_l]
-                    dat.at[keep_lc_contig, 'duplicate_count'] = int(
+                    dat.at[keep_lc_contig, 'umi_count'] = int(
                         np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
                     lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
-                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
+                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
                     l[b] = lc_id
                     l_umi[b] = lc_umi
                     l_seq[b] = lc_seq
@@ -1948,14 +1947,14 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
 
         for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
             hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
+            hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
             if 'sequence_alignment' in dat:
                 hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
-            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+            hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
             hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
 
             lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
-            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
+            lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
             if 'sequence_alignment' in dat:
                 lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_alignment']]
 
@@ -1981,11 +1980,11 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                         keep_index_h = highest_umi_h_idx[0]
                         drop_contig.append(h[b][:keep_index_h] + h[b][keep_index_h + 1:])
                         keep_hc_contig = h[b][keep_index_h]
-                        dat.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
+                        dat.at[keep_hc_contig, 'umi_count'] = int(np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
 
                         hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-                        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
-                        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+                        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+                        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
                         h[b] = hc_id
                         h_umi[b] = hc_umi
                         h_dup[b] = hc_dup
@@ -2050,9 +2049,9 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, fi
                         keep_index_l = highest_umi_l_idx[0]
                         drop_contig.append(l[b][:keep_index_l] + l[b][keep_index_l + 1:])
                         keep_lc_contig = l[b][keep_index_l]
-                        dat.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
+                        dat.at[keep_lc_contig, 'umi_count'] = int(np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
                         lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
-                        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
+                        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
                         l[b] = lc_id
                         l_umi[b] = lc_umi
                         l_seq[b] = lc_seq
