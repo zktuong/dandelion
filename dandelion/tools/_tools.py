@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 14:08:30
+# @Last Modified time: 2021-05-20 16:54:22
 
 import os
 import sys
@@ -165,7 +165,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame], identity: float = 0.85, ke
                         vj_len_grp[g][s][c] = seq[c]
     clones = Tree()
     # for each seq group, calculate the hamming distance matrix
-    for g in tqdm(seq_grp, desc='Finding clones based on heavy chains '):
+    for g in tqdm(seq_grp, desc='Finding clones based on VDJ chains '):
         for l in seq_grp[g]:
             seq_ = list(seq_grp[g][l])
             tdarray = np.array(seq_).reshape(-1, 1)
@@ -533,7 +533,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame], identity: float = 0.85, ke
             cellclonetree[c] = list(cellclonetree[c])
 
         fintree = Tree()
-        for c in tqdm(cellclonetree, desc='Refining clone assignment based on light chain pairing '):
+        for c in tqdm(cellclonetree, desc='Refining clone assignment based on VJ chain pairing '):
             suffix = [renamed_clone_dict_light[x]
                       for x in seqcellclonetree[c] if x in renamed_clone_dict_light]
             fintree[c] = []
@@ -590,17 +590,17 @@ def find_clones(self: Union[Dandelion, pd.DataFrame], identity: float = 0.85, ke
         if ('clone_id' in self.data.columns) and (key_added is None):
             # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
             self.__init__(data=dat_, germline=germline_, distance=dist_,
-                          edges=edge_, layout=layout_, graph=graph_)
-            update_metadata(self, reinitialize=True)
+                          edges=edge_, layout=layout_, graph=graph_, locus = locus)
+            update_metadata(self, reinitialize=True, locus = locus)
         elif ('clone_id' in self.data.columns) and (key_added is not None):
             self.__init__(data=dat_, germline=germline_, distance=dist_,
-                          edges=edge_, layout=layout_, graph=graph_)
+                          edges=edge_, layout=layout_, graph=graph_, locus = locus)
             update_metadata(self, reinitialize=True, clone_key='clone_id',
-                            retrieve=clone_key, split=False, collapse=True, combine=True)
+                            retrieve=clone_key, split=False, collapse=True, combine=True, locus = locus)
         else:
             self.__init__(data=dat_, germline=germline_, distance=dist_, edges=edge_,
-                          layout=layout_, graph=graph_, clone_key=clone_key)
-            update_metadata(self, reinitialize=True, clone_key=clone_key)
+                          layout=layout_, graph=graph_, clone_key=clone_key, locus = locus)
+            update_metadata(self, reinitialize=True, clone_key=clone_key, locus = locus)
         self.threshold = threshold_
 
     else:
