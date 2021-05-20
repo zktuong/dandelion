@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 15:19:23
+# @Last Modified time: 2021-05-20 15:52:33
 
 import os
 from collections import defaultdict
@@ -339,46 +339,6 @@ class Dandelion:
             if self.threshold is not None:
                 tr = self.threshold
                 hf.create_dataset('threshold', data=tr)
-
-
-def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool = True) -> Dandelion:
-    """
-    Concatenate dataframe and return as `Dandelion` object.
-
-    Parameters
-    ----------
-    arrays : Sequence
-        List of `Dandelion` class objects or pandas dataframe
-    check_unique : bool
-        Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
-
-    Returns
-    -------
-        `Dandelion` object
-    """
-    arrays = list(arrays)
-
-    try:
-        arrays_ = [x.data.copy() for x in arrays]
-    except:
-        arrays_ = [x.copy() for x in arrays]
-
-    if check_unique:
-        try:
-            df = pd.concat(arrays_, verify_integrity=True)
-        except:
-            for i in range(0, len(arrays)):
-                arrays_[i]['sequence_id'] = [x + '__' +
-                                             str(i) for x in arrays_[i]['sequence_id']]
-            arrays_ = [load_data(x) for x in arrays_]
-            df = pd.concat(arrays_, verify_integrity=True)
-    else:
-        df = pd.concat(arrays_)
-    try:
-        out = Dandelion(df)
-    except:
-        out = Dandelion(df, initialize=False)
-    return(out)
 
 
 def retrieve_metadata(data: pd.DataFrame, query: str, split: bool = True, collapse: bool = True, combine: bool = False, locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig', split_locus: bool = False, verbose: bool = False) -> pd.DataFrame:

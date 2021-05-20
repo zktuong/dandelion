@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 15:03:17
+# @Last Modified time: 2021-05-20 15:51:47
 
 import os
 import pandas as pd
@@ -210,7 +210,7 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     return(res)
 
 
-def read_10x_airr(file: str, data_type: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig') -> Dandelion:
+def read_10x_airr(file: str) -> Dandelion:
     """
     Reads the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
@@ -249,7 +249,7 @@ def read_10x_airr(file: str, data_type: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig') 
                 locus.append(np.nan)
         dat['locus'] = locus
 
-    return(Dandelion(dat, locus = data_type))
+    return(Dandelion(dat))
 
 
 def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
@@ -341,3 +341,43 @@ def read_10x_vdj(path: str, filtered: bool = True):
     adata = ir.io.read_10x_vdj(path, filtered=filtered)
 
     return(ir.io.to_dandelion(adata))
+
+
+def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool = True) -> Dandelion:
+    """
+    Concatenate dataframe and return as `Dandelion` object.
+
+    Parameters
+    ----------
+    arrays : Sequence
+        List of `Dandelion` class objects or pandas dataframe
+    check_unique : bool
+        Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
+
+    Returns
+    -------
+        `Dandelion` object
+    """
+    arrays = list(arrays)
+
+    try:
+        arrays_ = [x.data.copy() for x in arrays]
+    except:
+        arrays_ = [x.copy() for x in arrays]
+
+    if check_unique:
+        try:
+            df = pd.concat(arrays_, verify_integrity=True)
+        except:
+            for i in range(0, len(arrays)):
+                arrays_[i]['sequence_id'] = [x + '__' +
+                                             str(i) for x in arrays_[i]['sequence_id']]
+            arrays_ = [load_data(x) for x in arrays_]
+            df = pd.concat(arrays_, verify_integrity=True)
+    else:
+        df = pd.concat(arrays_)
+    try:
+        out = Dandelion(df)
+    except:
+        out = Dandelion(df, initialize=False)
+    return(out)
