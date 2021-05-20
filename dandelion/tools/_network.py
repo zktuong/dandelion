@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 16:57:25
+# @Last Modified time: 2021-05-20 17:28:38
 
 import pandas as pd
 import numpy as np
@@ -501,6 +501,7 @@ def _fruchterman_reingold_layout(
     center=None,
     dim=2,
     seed=None,
+    **kwargs,
 ):
     """Position nodes using Fruchterman-Reingold force-directed algorithm.
     The algorithm simulates a force-directed representation of the network
@@ -627,7 +628,7 @@ def _fruchterman_reingold_layout(
 
 @random_state(7)
 def _fruchterman_reingold(
-    A, k=None, pos=None, fixed=None, iterations=50, threshold=1e-4, dim=2, seed=None
+    A, k=None, pos=None, fixed=None, iterations=50, threshold=1e-4, dim=2, seed=None, **kwargs,
 ):
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
@@ -690,7 +691,7 @@ def _fruchterman_reingold(
 
 @random_state(7)
 def _sparse_fruchterman_reingold(
-    A, k=None, pos=None, fixed=None, iterations=50, threshold=1e-4, dim=2, seed=None
+    A, k=None, pos=None, fixed=None, iterations=50, threshold=1e-4, dim=2, seed=None, **kwargs,
 ):
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
