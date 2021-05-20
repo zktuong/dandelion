@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 12:19:22
+# @Last Modified time: 2021-05-20 15:03:17
 
 import os
 import pandas as pd
@@ -313,5 +313,31 @@ def from_scirpy(adata: AnnData, clone_key: Union[None, str] = None, key_added: U
         clonekey_d = 'clone_id'
     else:
         clonekey_d = key_added
+
+    return(ir.io.to_dandelion(adata))
+
+
+def read_10x_vdj(path: str, filtered: bool = True):
+    """
+    A wrapper from scirpy to read 10x's .csv and .json files directly to be formatted in dandelion.
+
+    Parameters
+    ----------
+    path : str
+        Path to `filterd_contig_annotations.csv`, `all_contig_annotations.csv` or `all_contig_annotations.json`.
+    filtered : bool
+        Only keep filtered contig annotations (i.e. `is_cell` and `high_confidence`).
+        If using `filtered_contig_annotations.csv` already, this option is futile.
+    Returns
+    -------
+    `Dandelion` object.
+
+    """
+    try:
+        import scirpy as ir
+    except:
+        raise ImportError('Please install scirpy. pip install scirpy')
+
+    adata = ir.io.read_10x_vdj(path, filtered=filtered)
 
     return(ir.io.to_dandelion(adata))
