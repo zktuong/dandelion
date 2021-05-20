@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-15 10:51:43
+# @Last Modified time: 2021-05-20 12:55:02
 
 import sys
 import os
@@ -1576,11 +1576,11 @@ def create_germlines(self: Union[Dandelion, pd.DataFrame, str], germline: Union[
             return(_create_germlines_file(self, gml, seq_field, v_field, d_field, j_field, germ_types, fileformat))
 
 
-def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_bcr: bool = True, filter_rna: bool = True, filter_poorqualitybcr: bool = False, rescue_igh: bool = True, umi_foldchange_cutoff: int = 2, filter_lightchains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
+def filter_contigs(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter_chain: bool = True, filter_rna: bool = True, filter_poorqualitychain: bool = False, rescue_vdj: bool = True, umi_foldchange_cutoff: int = 2, filter_vj_chains: bool = True, filter_missing: bool = True, productive_only: bool = True, parallel: bool = True, ncpu: Union[None, int] = None, save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
     """
     Filters doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData` objects. Depends on a `AnnData`.obs slot populated with 'filter_rna' column.
-    If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_igh` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
-    If there's multiple contigs that survive the 'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_lightchains to False will rescue the mutltiplet light chains.
+    If the aligned sequence is an exact match between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple contigs, cells with multiple IGH contigs are filtered unless `rescue_vdj` is True, where by the umi counts for each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default is empirically set at 5) from the lowest will be retained.
+    If there's multiple contigs that survive the 'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple lightchains but this may sometimes be a true biological occurrence; toggling filter_vj_chains to False will rescue the mutltiplet light chains.
     Lastly, contigs with no corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
     Parameters
@@ -1589,17 +1589,17 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
         V(D)J airr/changeo data to filter. Can be pandas `DataFrame` object or file path as string.
     adata : AnnData
         AnnData object to filter.
-    filter_bcr : bool
+    filter_chain : bool
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
     filter_rna : bool
         If True, `AnnData` object returned will be filtered. Default is True.
-    filter_poorqualitybcr : bool
-        If True, barcodes marked with poor quality BCR contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.
-    rescue_igh : bool
+    filter_poorqualitychain : bool
+        If True, barcodes marked with poor quality contigs will be filtered. Default is False; only relevant contigs are removed and RNA barcodes are kept.
+    rescue_vdj : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3 umi or all contigs will be filtered. Default is True.
     umi_foldchange_cutoff : int
         related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as doublets. Default is empirically set at 2-fold.
-    filter_lightchains : bool
+    filter_vj_chains : bool
         cells with multiple light chains will be marked to filter. Default is True.
     productive_only : bool
         whether or not to retain only productive contigs.
@@ -1676,25 +1676,17 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     def parallel_marking(b):
         poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
 
-        hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'] == 'IGH')]['sequence_id'])
-        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                      & (dat['locus'] == 'IGH')]['umi_count']]
+        hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+        hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
         if 'sequence_alignment' in dat:
-            hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['sequence_alignment']]
-        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                      & (dat['locus'] == 'IGH')]['duplicate_count']]
-        hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'] == 'IGH')]['c_call']]
+            hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
+        hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+        hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
 
-        lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+        lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+        lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
         if 'sequence_alignment' in dat:
-            lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'].isin(['IGK', 'IGL']))]['sequence_alignment']]
+            lc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_alignment']]
 
         h[b] = hc_id
         h_umi[b] = hc_umi
@@ -1721,25 +1713,21 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                     keep_hc_contig = h[b][keep_index_h]
                     dat.at[keep_hc_contig, 'duplicate_count'] = int(
                         np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
-                    hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['sequence_id'])
-                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['umi_count']]
-                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'] == 'IGH')]['duplicate_count']]
+                    hc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+                    hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
+                    hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
                     h[b] = hc_id
                     h_umi[b] = hc_umi
                     h_dup[b] = hc_dup
                     h_seq[b] = hc_seq
             if len(h[b]) > 1:
-                if rescue_igh:
+                if rescue_vdj:
                     highest_umi_h = max(h_umi[b])
                     lowest_umi_h = min(h_umi[b])
                     highest_umi_idx = [i for i, j in enumerate(
                         h_umi[b]) if j == highest_umi_h]
                     keep_index_h = highest_umi_idx[0]
-                    umi_test = [highest_umi_h / x < umi_foldchange_cutoff for x in h_umi[b]
-                                [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                    umi_test = [highest_umi_h / x < umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]]
                     sum_umi = sum(h_umi[b] + h_dup[b])
                     other_umi_idx = [i for i, j in enumerate(
                         h_umi[b]) if j != highest_umi_h]
@@ -1756,8 +1744,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                             if len(highest_umi_idx) == 1:
                                 other_umi_idx = [i for i, j in enumerate(
                                     h_umi[b]) if j != highest_umi_h]
-                                umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b]
-                                             [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                                umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]]
                                 umi_test_dict = dict(
                                     zip(other_umi_idx, umi_test_))
                                 for otherindex in umi_test_dict:
@@ -1773,8 +1760,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                         if len(highest_umi_idx) == 1:
                             other_umi_idx = [i for i, j in enumerate(
                                 h_umi[b]) if j != highest_umi_h]
-                            umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b]
-                                         [:keep_index_h] + h_umi[b][keep_index_h + 1:]]
+                            umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]]
                             umi_test_dict = dict(zip(other_umi_idx, umi_test_))
                             for otherindex in umi_test_dict:
                                 if umi_test_dict[otherindex]:
@@ -1793,10 +1779,8 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                     keep_lc_contig = l[b][keep_index_l]
                     dat.at[keep_lc_contig, 'duplicate_count'] = int(
                         np.sum(l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]))
-                    lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
-                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'].isin(['IGK', 'IGL']))]['umi_count']]
+                    lc_id = list(dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+                    lc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['umi_count']]
                     l[b] = lc_id
                     l_umi[b] = lc_umi
                     l_seq[b] = lc_seq
@@ -1808,8 +1792,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 keep_index_l = highest_umi_l_idx[0]
                 other_umi_idx_l = [i for i, j in enumerate(
                     l_umi[b]) if j != highest_umi_l]
-                umi_test_l = [highest_umi_l / x < umi_foldchange_cutoff for x in l_umi[b]
-                              [:keep_index_l] + l_umi[b][keep_index_l + 1:]]
+                umi_test_l = [highest_umi_l / x < umi_foldchange_cutoff for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]]
                 umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
                 for otherindex in umi_test_dict_l:
                     if umi_test_dict_l[otherindex]:
@@ -1821,7 +1804,7 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
         # that were have conflicting assignment of locus and heavy/light V/J calls,
         # and also those that are missing either v or j calls.
         if len(h[b]) < 1:
-            if filter_poorqualitybcr:
+            if filter_poorqualitychain:
                 poor_qual.append(b)
             drop_contig.append(l[b])
         if len(hc_id) == 1:
@@ -1830,29 +1813,29 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
             c = c_dict[hc_id[0]]
             if v == v:
                 if 'IGH' not in v:
-                    if filter_poorqualitybcr:
+                    if filter_poorqualitychain:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
             else:
-                if filter_poorqualitybcr:
+                if filter_poorqualitychain:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
                 drop_contig.append(h[b])
             if j == j:
                 if 'IGH' not in j:
-                    if filter_poorqualitybcr:
+                    if filter_poorqualitychain:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
             else:
-                if filter_poorqualitybcr:
+                if filter_poorqualitychain:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
                 drop_contig.append(h[b])
             if (c == c) and (c is not None):
                 if 'IGH' not in c:
-                    if filter_poorqualitybcr:
+                    if filter_poorqualitychain:
                         poor_qual.append(b)
                     drop_contig.append(l[b])
                     drop_contig.append(h[b])
@@ -1863,17 +1846,17 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 c = c_dict[hx]
                 if v == v:
                     if 'IGH' not in v:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(hx)
                 if j == j:
                     if 'IGH' not in j:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(hx)
                 if (c == c) and (c is not None):
                     if 'IGH' not in c:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(hx)
         if len(lc_id) > 0:
@@ -1884,33 +1867,33 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 if v == v:
                     if j == j:
                         if 'IGH' in v:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
                         elif 'IGK' in v:
                             if 'IGL' in j:
-                                if filter_poorqualitybcr:
+                                if filter_poorqualitychain:
                                     poor_qual.append(b)
                                 drop_contig.append(lx)
                 if j == j:
                     if v == v:
                         if 'IGH' in j:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
                         elif 'IGL' in v:
                             if 'IGK' in v:
-                                if filter_poorqualitybcr:
+                                if filter_poorqualitychain:
                                     poor_qual.append(b)
                                 drop_contig.append(lx)
                 if (c is not None) and (c == c):
                     if 'IGH' in c:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(lx)
 
                 if (v != v) or (j != j) or (v is None) or (j is None):
-                    if filter_poorqualitybcr:
+                    if filter_poorqualitychain:
                         poor_qual.append(b)
                     drop_contig.append(lx)  # no/wrong annotations at all
 
@@ -1943,16 +1926,16 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
 
         for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
             hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['sequence_id'])
+                dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
             hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b]))
-                                          & (dat['locus'] == 'IGH')]['umi_count']]
+                                          & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
             if 'sequence_alignment' in dat:
                 hc_seq = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                    dat['locus'] == 'IGH')]['sequence_alignment']]
+                    dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
             hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['duplicate_count']]
+                dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
             hc_ccall = [x for x in dat[(dat['cell_id'].isin([b])) & (
-                dat['locus'] == 'IGH')]['c_call']]
+                dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
 
             lc_id = list(dat[(dat['cell_id'].isin([b])) & (
                 dat['locus'].isin(['IGK', 'IGL']))]['sequence_id'])
@@ -1990,17 +1973,17 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                             np.sum(h_umi[b][:keep_index_h] + h_umi[b][keep_index_h + 1:]))
 
                         hc_id = list(dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'] == 'IGH')]['sequence_id'])
+                            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
                         hc_umi = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'] == 'IGH')]['umi_count']]
+                            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['umi_count']]
                         hc_dup = [int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                            dat['locus'] == 'IGH')]['duplicate_count']]
+                            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
                         h[b] = hc_id
                         h_umi[b] = hc_umi
                         h_dup[b] = hc_dup
                         h_seq[b] = hc_seq
                 if len(h[b]) > 1:
-                    if rescue_igh:
+                    if rescue_vdj:
                         highest_umi_h = max(h_umi[b])
                         lowest_umi_h = min(h_umi[b])
                         highest_umi_idx = [i for i, j in enumerate(
@@ -2090,10 +2073,10 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
             if (len(h[b]) == 1) & (len(l[b]) > 1):
                 l_doublet.append(b)
             # marking poor bcr quality, defined as those with only light chains, those
-            # that were have conflicting assignment of locus and heavy/light V/J calls,
+            # that were have conflicting assignment of locus and V/J calls,
             # and also those that are missing either v or j calls.
             if len(h[b]) < 1:
-                if filter_poorqualitybcr:
+                if filter_poorqualitychain:
                     poor_qual.append(b)
                 drop_contig.append(l[b])
             if len(hc_id) == 1:
@@ -2102,19 +2085,19 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                 c = c_dict[hc_id[0]]
                 if v == v:
                     if 'IGH' not in v:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
                 if j == j:
                     if 'IGH' not in j:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
                 if (c == c) and (c is not None):
                     if 'IGH' not in c:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(l[b])
                         drop_contig.append(h[b])
@@ -2125,17 +2108,17 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                     c = c_dict[hx]
                     if v == v:
                         if 'IGH' not in v:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
                     if j == j:
                         if 'IGH' not in j:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
                     if (c == c) and (c is not None):
                         if 'IGH' not in c:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(hx)
             if len(lc_id) > 0:
@@ -2144,32 +2127,32 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if 'IGH' in v:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(lx)
                     elif 'IGK' in v:
                         if 'IGL' in j:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
 
                     if 'IGH' in j:
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(lx)
                     elif 'IGL' in v:
                         if 'IGK' in v:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
                     if (c is not None) and (c == c):
                         if 'IGH' in c:
-                            if filter_poorqualitybcr:
+                            if filter_poorqualitychain:
                                 poor_qual.append(b)
                             drop_contig.append(lx)
 
                     if (v != v) or (j != j) or (v is None) or (j is None):
-                        if filter_poorqualitybcr:
+                        if filter_poorqualitychain:
                             poor_qual.append(b)
                         drop_contig.append(lx)  # no/wrong annotations at all
 
@@ -2192,28 +2175,28 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
         else:
             ldoublet[c] = False
 
-    adata_.obs['filter_bcr_quality'] = pd.Series(dict(poorqual))
-    adata_.obs['filter_bcr_quality'] = adata_.obs['filter_bcr_quality'].astype(
+    adata_.obs['filter_chain_quality'] = pd.Series(dict(poorqual))
+    adata_.obs['filter_chain_quality'] = adata_.obs['filter_chain_quality'].astype(
         'category')
-    adata_.obs['filter_bcr_heavy'] = pd.Series(dict(hdoublet))
-    adata_.obs['filter_bcr_heavy'] = adata_.obs['filter_bcr_heavy'].astype(
+    adata_.obs['filter_chain_VDJ'] = pd.Series(dict(hdoublet))
+    adata_.obs['filter_chain_VDJ'] = adata_.obs['filter_chain_VDJ'].astype(
         'category')
-    adata_.obs['filter_bcr_light'] = pd.Series(dict(ldoublet))
-    adata_.obs['filter_bcr_light'] = adata_.obs['filter_bcr_light'].astype(
+    adata_.obs['filter_chain_VJ'] = pd.Series(dict(ldoublet))
+    adata_.obs['filter_chain_VJ'] = adata_.obs['filter_chain_VJ'].astype(
         'category')
 
     drop_contig = list(set(flatten(drop_contig)))
 
     filter_ids = []
-    if filter_bcr:
+    if filter_chain:
         print('Finishing up filtering')
-        if not filter_lightchains:
-            if filter_poorqualitybcr:
+        if not filter_vj_chains:
+            if filter_poorqualitychain:
                 filter_ids = list(set(h_doublet + poor_qual))
             else:
                 filter_ids = list(set(h_doublet))
         else:
-            if filter_poorqualitybcr:
+            if filter_poorqualitychain:
                 filter_ids = list(set(h_doublet + l_doublet + poor_qual))
             else:
                 filter_ids = list(set(h_doublet + l_doublet))
@@ -2257,36 +2240,36 @@ def filter_bcr(data: Union[Dandelion, pd.DataFrame, str], adata: AnnData, filter
     else:
         _dat = dat.copy()
 
-    if filter_bcr:
+    if filter_chain:
         barcode1 = list(set(dat['cell_id']))
 
     barcode2 = list(set(_dat['cell_id']))
 
-    if filter_bcr:
+    if filter_chain:
         failed = list(set(barcode1) ^ set(barcode2))
 
     bc_2 = {}
     for b in barcode2:
         bc_2.update({b: True})
-    if filter_bcr:
+    if filter_chain:
         for b in failed:
             bc_2.update({b: False})
-    bcr_check['bcr_QC_pass'] = pd.Series(bc_2)
+    bcr_check['chain_QC_pass'] = pd.Series(bc_2)
     bcr_check.replace(np.nan, 'No_BCR', inplace=True)
-    adata_.obs['bcr_QC_pass'] = pd.Series(bcr_check['bcr_QC_pass'])
-    adata_.obs['bcr_QC_pass'] = adata_.obs['bcr_QC_pass'].astype('category')
+    adata_.obs['chain_QC_pass'] = pd.Series(bcr_check['chain_QC_pass'])
+    adata_.obs['chain_QC_pass'] = adata_.obs['chain_QC_pass'].astype('category')
 
     print('Initializing Dandelion object')
     out_dat = Dandelion(data=_dat)
     if data.__class__ == Dandelion:
         out_dat.germline = data.germline
 
-    adata_.obs['filter_bcr'] = adata_.obs_names.isin(filter_ids)
-    adata_.obs['filter_bcr'] = adata_.obs['filter_bcr'].astype('category')
+    adata_.obs['filter_chain'] = adata_.obs_names.isin(filter_ids)
+    adata_.obs['filter_chain'] = adata_.obs['filter_chain'].astype('category')
 
     if filter_rna:
         # not saving the scanpy object because there's no need to at the moment
-        out_adata = adata_[adata_.obs['filter_bcr'] == False].copy()
+        out_adata = adata_[adata_.obs['filter_chain'] == False].copy()
     else:
         out_adata = adata_.copy()
 
