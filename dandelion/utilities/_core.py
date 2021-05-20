@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 15:52:33
+# @Last Modified time: 2021-05-20 15:57:24
 
 import os
 from collections import defaultdict
@@ -1036,14 +1036,16 @@ def update_metadata(self: Dandelion, retrieve: Union[None, Sequence, str] = None
         clonekey = clone_key
 
     cols = ['sequence_id', 'cell_id', 'locus', 'productive',
-            'v_call', 'j_call', 'c_call', 'umi_count', 'junction_aa']
+            'v_call', 'j_call', 'c_call', 'duplicate_count', 'junction_aa']
 
-    if 'umi_count' not in self.data:
-        cols = list(map(lambda x: 'duplicate_count' if x ==
-                        'umi_count' else x, cols))
-        if 'duplicate_count' not in self.data:
-            raise ValueError(
-                "Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data.")
+    if 'duplicate_count' not in self.data:
+        try:
+            self.data['duplicate_count'] = self.data['umi_count']
+        except:
+            cols = list(map(lambda x: 'umi_count' if x == 'duplicate_count' else x, cols))
+            if 'umi_count' not in self.data:
+                raise ValueError(
+                    "Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data.")
 
     if not all([c in self.data for c in cols]):
         raise ValueError(
