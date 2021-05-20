@@ -61,7 +61,7 @@ def test_filter():
         "tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
     bcr.reset_index(inplace=True, drop=True)
     adata.obs["filter_rna"] = False
-    vdj, adata = ddl.pp.filter_bcr(bcr, adata)
+    vdj, adata = ddl.pp.filter_contigs(bcr, adata)
     adata.write("tests/sctest2.h5ad", compression="gzip")
     vdj.write_h5("tests/test2.h5", compression="bzip2")
     print(vdj)

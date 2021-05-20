@@ -31,7 +31,7 @@ def test_filter():
     adata = sc.read_10x_h5("tests/sctest.h5")
     test = ddl.read_h5("tests/test.h5")
     adata.obs["filter_rna"] = False
-    test, adata = ddl.pp.filter_bcr(test, adata)
+    test, adata = ddl.pp.filter_contigs(test, adata)
     adata.write("tests/sctest.h5ad", compression="gzip")
     test.write_h5("tests/test.h5", compression="bzip2")
     print(test)
