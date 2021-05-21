@@ -7,6 +7,7 @@ Welcome to dandelion's documentation!
    README.md
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Tutorial:
 
