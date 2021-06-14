@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 16:36:27
+# @Last Modified time: 2021-06-14 14:43:34
 
 import sys
 import os
@@ -34,7 +34,7 @@ from typing import Union, Sequence, Tuple
 from os import PathLike
 
 
-def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, suffix: Union[None, str] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None):
+def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, suffix: Union[None, str] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None, filename_prefix = None):
     """
     Add prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -57,6 +57,9 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
     -------
     Formatted fasta file with new headers containing prefix
     """
+    if filename_prefix is None:
+        filename_pre = 'filtered'
+
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
         filePath = fasta
@@ -64,7 +67,11 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
         files = os.listdir(fasta)
         for file in files:
             if os.path.isfile(fasta.rstrip('/') + '/' + os.path.basename(file)) and str(file).endswith(".fasta"):
-                filePath = fasta + '/' + os.path.basename(file)
+                if filename_prefix is not None:
+                    if str(file).split('.fasta')[0] == filename_pre + '_contig':
+                        filePath = fasta + '/' + os.path.basename(file)
+                else:
+                    filePath = fasta + '/' + os.path.basename(file)
     if filePath is None:
         raise OSError(
             'Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file. Starting folder should only contain 1 fasta file.')
@@ -183,7 +190,7 @@ def format_fasta(fasta: Union[str, PathLike], prefix: Union[None, str] = None, s
     data.to_csv(out_anno, index=False)
 
 
-def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix: Union[None, Sequence] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None):
+def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix: Union[None, Sequence] = None, sep: Union[None, str] = None, remove_trailing_hyphen_number: bool = True, outdir: Union[None, str] = None, filename_prefix: Union[None, str] = None):
     """
     Adds prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -220,21 +227,21 @@ def format_fastas(fastas: Sequence, prefix: Union[None, Sequence] = None, suffix
     for fasta in tqdm(fastas, desc='Formating fasta(s) '):
         if prefix is None and suffix is None:
             format_fasta(fasta, prefix=None, suffix=None, sep=None,
-                         remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                         remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir, filename_prefix = filename_prefix)
         elif prefix is not None:
             if suffix is not None:
                 format_fasta(fasta, prefix=prefix_dict[fasta], suffix=suffix_dict[fasta], sep=sep,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir, filename_prefix = filename_prefix)
             else:
                 format_fasta(fasta, prefix=prefix_dict[fasta], suffix=None, sep=sep,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir, filename_prefix = filename_prefix)
         else:
             if suffix is not None:
                 format_fasta(fasta, prefix=None, suffix=suffix_dict[fasta], sep=sep,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir, filename_prefix = filename_prefix)
             else:
                 format_fasta(fasta, prefix=None, suffix=None, sep=None,
-                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir)
+                             remove_trailing_hyphen_number=remove_trailing_hyphen_number, outdir=outdir, filename_prefix = filename_prefix)
 
 
 def assign_isotype(fasta: Union[str, PathLike], fileformat: Literal['blast', 'changeo', 'airr'] = 'blast', org: Literal['human', 'mouse'] = 'human', correct_c_call: bool = True, correction_dict: Union[Dict, None] = None, plot: bool = True, save_plot: bool = False, figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4), blastdb: Union[None, str] = None, allele: bool = False, parallel: bool = True, ncpu: Union[None, int] = None, verbose: bool = False):
