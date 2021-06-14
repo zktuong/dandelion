@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # basic requirements for test data
-import sys
-import os
+
 import dandelion as ddl
 import scanpy as sc
 import pandas as pd
 import requests
-from io import StringIO
-import warnings
 
 
 def test_setup():
@@ -51,14 +48,14 @@ def test_assign_isotype():
 
 
 def test_quantify_mut():
-    filePath = "tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv"
+    filePath = "tests/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv"
     ddl.pp.quantify_mutations(filePath)
 
 
 def test_filter():
     adata = sc.read_h5ad("tests/sctest2.h5ad")
     bcr = pd.read_csv(
-        "tests/dandelion/data/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
+        "tests/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv", sep="\t")
     bcr.reset_index(inplace=True, drop=True)
     adata.obs["filter_rna"] = False
     vdj, adata = ddl.pp.filter_contigs(bcr, adata)
