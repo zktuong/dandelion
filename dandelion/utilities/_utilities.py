@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-20 09:53:35
+# @Last Modified time: 2021-06-14 23:03:25
 
 import os
 from collections import defaultdict, Iterable
@@ -102,7 +102,9 @@ def flatten(l: Sequence) -> Sequence:
 
 def makeblastdb(ref: str):
     """
-    Runs makeblastdb on constant region fasta file
+    Run makeblastdb on constant region fasta file.
+
+    Wrapper for makeblastdb.
 
     Parameters
     ----------
@@ -142,10 +144,10 @@ def bh(pvalues: np.array) -> np.array:
     for i, vals in enumerate(values):
         rank = n - i
         pvalue, index = vals
-        new_values.append((n/rank) * pvalue)
-    for i in range(0, int(n)-1):
-        if new_values[i] < new_values[i+1]:
-            new_values[i+1] = new_values[i]
+        new_values.append((n / rank) * pvalue)
+    for i in range(0, int(n) - 1):
+        if new_values[i] < new_values[i + 1]:
+            new_values[i + 1] = new_values[i]
     for i, vals in enumerate(values):
         pvalue, index = vals
         new_pvalues[index] = new_values[i]
@@ -170,3 +172,59 @@ def isBZIP(filename: str) -> bool:
     if filename.split('.')[-1] == 'pbz2':
         return True
     return False
+
+
+def check_filepath(s, filename_prefix = None, endswith = None, subdir = None):
+    if filename_prefix is None:
+        filename_pre = 'filtered'
+    else:
+        filename_pre = filename_prefix
+
+    if endswith is None:
+        ends_with = ''
+    else:
+        ends_with = endswith
+
+    filePath = None
+    if os.path.isfile(str(s)) and str(s).endswith(ends_with):
+        filePath = s
+    elif os.path.isdir(str(s)):
+        files = os.listdir(s)
+        for file in files:
+            out_ = s.rstrip('/') + '/'
+            if os.path.isdir(out_ + os.path.basename(file)):
+                if file == 'dandelion':
+                    if subdir is None:
+                        out_ = out_ + os.path.basename(file) + '/'
+                    else:
+                        out_ = out_ + os.path.basename(file) + '/' + subdir + '/'
+                    for x in os.listdir(out_):
+                        if x.endswith(ends_with):
+                            if str(x).split(ends_with)[0] == filename_pre + '_contig':
+                                filePath = out_ + x
+                            else:
+                                continue
+            else:
+                continue
+    return(filePath)
+
+
+def check_fastapath(fasta, filename_prefix = None):
+    if filename_prefix is None:
+        filename_pre = 'filtered'
+    else:
+        filename_pre = filename_prefix
+
+    filePath = None
+    if os.path.isfile(str(fasta)) and str(fasta).endswith('.fasta'):
+        filePath = fasta
+    elif os.path.isdir(str(fasta)):
+        files = os.listdir(fasta)
+        for file in files:
+            out_ = fasta.rstrip('/') + '/'
+            if str(file).endswith(".fasta"):
+                if str(file).split('.fasta')[0] == filename_pre + '_contig':
+                    filePath = out_ + os.path.basename(file)
+                else:
+                    continue
+    return(filePath)
