@@ -5,7 +5,7 @@ import dandelion as ddl
 from pathlib import Path
 
 from fixtures import (fasta_10x, annotation_10x, create_testfolder,
-                      database_paths)
+                      database_paths, processed_files)
 
 
 @pytest.mark.parametrize("filename,expected",
@@ -87,3 +87,10 @@ def test_assignsisotypes(create_testfolder, database_paths, filename,
                             filename_prefix=filename,
                             plot=False)
     assert len(list((create_testfolder / 'dandelion').iterdir())) == expected
+
+
+@pytest.mark.parametrize("filename", ['all', 'filtered'])
+def test_checkccall(create_testfolder, processed_files, filename):
+    f = str(create_testfolder / 'dandelion/' + processed_files[filename])
+    dat = pd.read_csv(f, sep='\t')
+    assert not dat['c_call'].empty
