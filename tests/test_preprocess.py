@@ -24,6 +24,10 @@ def test_setup():
     print(adata)
 
 
+def test_reindex():
+    ddl.utl.makeblastdb('database/blast/human/human_BCR_C.fasta')
+
+
 def test_format_headers():
     samples = ["tests"]
     ddl.pp.format_fastas(samples, prefix="tests")
@@ -105,6 +109,7 @@ def test_transfer():
 
 if __name__ == "__main__":
     test_setup()
+    test_reindex()
     test_format_headers()
     test_reannotate()
     test_reassign()
