@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-14 23:15:39
+# @Last Modified time: 2021-06-15 09:38:17
 
 import os
 import pandas as pd
@@ -1080,6 +1080,8 @@ def reannotate_genes(data: Sequence,
                        germline=germline,
                        extended=extended,
                        verbose=verbose)
+    if loci == 'tr':
+        change_file_location(data, filename_prefix)
 
 
 def reassign_alleles(data: Sequence,
