@@ -2,14 +2,14 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-14 23:03:25
+# @Last Modified time: 2021-06-15 10:05:47
 
 import os
 from collections import defaultdict, Iterable
 import pandas as pd
 import numpy as np
 from subprocess import run
-from typing import Sequence, Tuple, Dict
+from typing import Sequence, Tuple, Dict, Union
 try:
     from typing import Literal
 except ImportError:
@@ -228,3 +228,53 @@ def check_fastapath(fasta, filename_prefix = None):
                 else:
                     continue
     return(filePath)
+
+
+def change_file_location(data: Sequence, filename_prefix: Union[None, Sequence, str] = None):
+    """
+    Move file from tmp folder to dandelion folder.
+
+    Only used for TCR data.
+
+    Parameters
+    ----------
+    data : Sequence
+        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
+        list; this allows for the function to be run on single/multiple samples.
+    filename_prefix : str, optional
+        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+
+    Returns
+    -------
+    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+    """
+    fileformat = 'blast'
+    if type(data) is not list:
+        data = [data]
+    if type(filename_prefix) is not list:
+        filename_prefix = [filename_prefix]
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+
+    informat_dict = {
+        'changeo': '_igblast_db-pass.tsv',
+        'blast': '_igblast_db-pass.tsv',
+        'airr': '_igblast_gap.tsv'
+    }
+
+    filePath = None
+
+    for i in range(0, len(data)):
+        filePath = check_filepath(data[i],
+                                  filename_prefix=filename_prefix[i],
+                                  endswith=informat_dict[fileformat],
+                                  subdir='tmp')
+        if filePath is None:
+            raise OSError(
+                'Path to .tsv file for {} is unknown. '.format(data[i]) +
+                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
+            )
+
+        cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
+
+        run(cmd)
