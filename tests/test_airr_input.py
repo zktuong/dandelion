@@ -7,6 +7,7 @@ import requests
 import pandas as pd
 import scanpy as sc
 import dandelion as ddl
+import multiprocessing
 
 
 def test_setup():
