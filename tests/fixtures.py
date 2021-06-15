@@ -15,9 +15,20 @@ def database_paths():
     db = {
         'igblast_db': "database/igblast/",
         'germline': "database/germlines/imgt/human/vdj/",
-        'blastdb': "database/blast/human/human_BCR_C.fasta",
+        'blastdb': "database/blast/human/",
+        'blastdb_fasta': "database/blast/human/human_BCR_C.fasta",
     }
     return (db)
+
+
+@pytest.fixture
+def processed_files():
+    """Database paths for tests."""
+    fl = {
+        'filtered': "filtered_contig_igblast_db-pass_genotyped.tsv",
+        'all': "all_contig_igblast_db-pass_genotyped.tsv",
+    }
+    return (fl)
 
 
 @pytest.fixture
