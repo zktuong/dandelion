@@ -24,7 +24,8 @@ jobs:
         config:
           - { python-version: 3.7, os: ubuntu-latest }
           - { python-version: 3.8, os: ubuntu-latest }
-          - { python-version: 3.9, os: ubuntu-latest }
+          # - { python-version: 3.9, os: ubuntu-latest }
+          # I think there's dependencies issues that's messing up this
           # 3.8 fails on macosx likely because of issue noted here:
           # https://github.com/scipy/scipy/issues/11835
           - { python-version: 3.7, os: macos-latest }
