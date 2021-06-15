@@ -65,7 +65,7 @@ def main():
 	#no tricks here
 	ddl.pp.reannotate_genes(samples, loci=args.chain, filename_prefix = args.file_prefix)
 	
-	#IG requires further preprocessing, TR is largely done now
+	#IG requires further preprocessing, TR is done now
 	if args.chain == 'ig':
 		#STEP THREE - ddl.pp.reassign_alleles()
 		#do we have individual information
@@ -87,13 +87,11 @@ def main():
 		#STEP FOUR - ddl.pp.assign_isotypes()
 		#also no tricks here
 		ddl.pp.assign_isotypes(samples, save_plot=True, filename_prefix = args.file_prefix)
-	else:
-		#TODO: copy over the TR output file
 	
 	#at this stage it's safe to remove the per-sample dandelion/data/tmp folder if need be
 	if args.clean_output:
 		for sample in samples:
-			os.system('rm -rf '+sample+'/dandelion/data/tmp')
+			os.system('rm -rf '+sample+'/dandelion/tmp')
 
 if __name__ == "__main__":
 	main()
