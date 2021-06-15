@@ -38,7 +38,7 @@ def test_write_annotation(create_testfolder, annotation_10x, filename,
     pytest.param('filtered', 2),
     pytest.param('all', 4)
 ])
-def test_formatfasta(create_testfolder, prefix, filename, expected):
+def test_formatfasta(create_testfolder, filename, expected):
     ddl.pp.format_fastas(str(create_testfolder), filename_prefix=filename)
     assert len(list((create_testfolder / 'dandelion').iterdir())) == expected
 
