@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 import dandelion as ddl
 from pathlib import Path
+import multiprocessing
 
 from fixtures import (fasta_10x, annotation_10x, create_testfolder,
                       database_paths, dummy_adata, processed_files)
