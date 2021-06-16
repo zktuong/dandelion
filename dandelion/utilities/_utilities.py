@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 18:31:13
+# @Last Modified time: 2021-06-16 18:32:23
 
 import os
 from collections import defaultdict, Iterable
@@ -617,7 +617,7 @@ class FilterContigs:
 
 
 def filtering(filterclass, cellbarcode, rescue_vdj, umi_foldchange_cutoff,
-              filter_poorqualitycontig):
+              filter_poorqualitycontig, v_dict, j_dict, c_dict):
     filterclass.run_scan(cellbarcode, rescue_vdj, umi_foldchange_cutoff,
-                         filter_poorqualitycontig)
+                         filter_poorqualitycontig, v_dict, j_dict, c_dict)
     return (filterclass)
