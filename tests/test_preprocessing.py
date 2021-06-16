@@ -102,3 +102,14 @@ def test_quantify_mut(create_testfolder, processed_files):
     dat = pd.read_csv(f, sep='\t')
     assert not dat['mu_count'].empty
     assert dat['mu_count'].dtype == float
+
+
+def test_filtercontigs(create_testfolder, processed_files, dummy_adata):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    dat = pd.read_csv(f, sep='\t')
+    dat.to_csv('test.tsv', sep='\t', index=False)
+    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata)
+    assert dat.shape[0] == 9
+    assert vdj.data.shape[0] == 7
+    assert vdj.metadata.shape[0] == 4
+    assert adata.n_obs == 5
