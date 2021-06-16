@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 18:31:04
+# @Last Modified time: 2021-06-16 20:31:56
 
 import os
 import pandas as pd
@@ -1757,19 +1757,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                                                        reference_dict,
-                                                        seq_field=seq_field_,
-                                                        v_field=v_field_,
-                                                        d_field=d_field_,
-                                                        j_field=j_field_)
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                                                        reference_dict,
-                                                        seq_field=seq_field_,
-                                                        v_field=v_field_,
-                                                        d_field=d_field_,
-                                                        j_field=j_field_)
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -1939,8 +1939,8 @@ def create_germlines(
             out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
                 os.path.basename(file).split('.tsv')[0], germ_types),
-                            sep='\t',
-                            index=False)
+                sep='\t',
+                index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -1985,8 +1985,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                    filter_vj_chains: bool = True,
                    filter_missing: bool = True,
                    productive_only: bool = True,
-                   parallel: bool = True,
-                   ncpu: Union[None, int] = None,
                    save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
     """
     Filter doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData`.
@@ -2029,11 +2027,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         whether or not to retain only productive contigs.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful
-        for toggling to False if integrating with bulk data.
-    parallel : bool
-        whether or not to use parallelization. Default is True.
-    ncpu : int
-        number of cores to use if parallel is True. Default is all available - 1.
+        for toggling to False if integrating with bulk data.    
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
 
@@ -2089,38 +2083,14 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     tofilter = FilterContigs(dat)
 
-    if parallel:
-        if ncpu is None:
-            ncpus = multiprocessing.cpu_count() - 1
-        else:
-            ncpus = int(ncpu)
+    for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
+        tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff, filter_poorqualitycontig, v_dict, j_dict, c_dict)
 
-        results = Parallel(n_jobs=ncpus)(delayed(filtering)(
-            b, tofilter, rescue_vdj, umi_foldchange_cutoff,
-            filter_poorqualitycontig, v_dict, j_dict, c_dict) for b in tqdm(
-                barcode,
-                desc='Scanning for poor quality/ambiguous contigs with {} cpus'
-                .format(ncpus)))
-
-        pq, hd, ld, dc, umiadj = [], [], [], [], {}
-        for r in results:
-            pq.append(r.poor_qual)
-            hd.append(r.h_doublet)
-            ld.append(r.l_doublet)
-            dc.append(r.drop_contig)
-            umiadj.update(r.umi_adjustment)
-
-        poor_qual, h_doublet, l_doublet, drop_contig, umi_adjustment = pq, hd, ld, dc, umiadj
-    else:
-        for b in tqdm(barcode):
-            tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
-                              filter_poorqualitycontig, v_dict, j_dict, c_dict)
-
-        poor_qual = tofilter.poor_qual
-        h_doublet = tofilter.h_doublet
-        l_doublet = tofilter.l_doublet
-        drop_contig = tofilter.drop_contig
-        umi_adjustment = tofilter.umi_adjustment
+    poor_qual = tofilter.poor_qual
+    h_doublet = tofilter.h_doublet
+    l_doublet = tofilter.l_doublet
+    drop_contig = tofilter.drop_contig
+    umi_adjustment = tofilter.umi_adjustment
 
     if len(umi_adjustment) > 0:
         dat['duplicate_count'].update(umi_adjustment)
@@ -2201,8 +2171,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                        sep='\t',
-                        index=False)
+                sep='\t',
+                index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2637,13 +2607,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                                              method=threshold_method_,
-                                              model=threshold_model_,
-                                              cross=cross_,
-                                              subsample=subsample_,
-                                              cutoff=cutoff_,
-                                              sen=sen_,
-                                              spc=spc_)
+                method=threshold_method_,
+                model=threshold_model_,
+                cross=cross_,
+                subsample=subsample_,
+                cutoff=cutoff_,
+                sen=sen_,
+                spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
