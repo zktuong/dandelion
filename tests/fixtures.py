@@ -1,5 +1,7 @@
 import pytest
 import pandas as pd
+import scanpy as sc
+import scipy.sparse
 
 
 @pytest.fixture(scope="session")
@@ -29,6 +31,29 @@ def processed_files():
         'all': "all_contig_igblast_db-pass_genotyped.tsv",
     }
     return (fl)
+
+
+@pytest.fixture
+def dummy_adata():
+    """Dummy anndata for tests."""
+    barcodes = [
+        'AAACCTGTCATATCGG-1',
+        'AAACCTGTCCGTTGTC-1',
+        'AAACCTGTCGAGAACG-1',
+        'AAACCTGTCTTGAGAC-1',
+        'AAACGGGAGCGACGTA-1',
+    ]
+    obs = pd.DataFrame(index=barcodes)
+    obs['filter_rna'] = False
+    n = obs.shape[0]
+
+    # just create a random matrix
+    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format='csr'), obs=obs)
+
+    # this is just to populate the neighbors slot
+    sc.pp.neighbors(adata)
+
+    return (adata)
 
 
 @pytest.fixture
