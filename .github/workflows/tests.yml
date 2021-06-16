@@ -118,7 +118,8 @@ jobs:
       run: |
         python setup.py install    
               
-    - name: install R dependencies
+    - name: Install ubuntu R dependencies
+      if: matrix.config.os == 'ubuntu-latest'
       run: |
         install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
@@ -127,25 +128,21 @@ jobs:
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
 
-    - name: Force installation of rpy2
-      uses: nick-invision/retry@v2
-      with:
-        timeout_seconds: 15
-        max_attempts: 3
-        command: |
-          pip install "rpy2>=3.4.0"
-        on_retry_command: |
-          pip install "rpy2>=3.4.0" -U
+    - name: Install macOS R dependencies
+      if: matrix.config.os != 'ubuntu-latest'
+      run: |
+        options(install.packages.compile.from.source = "never")
+        install.packages(c('RCurl','XML'))
+        remotes::install_cran("BiocManager")
+        BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
+        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+      shell: Rscript {0}
 
-    - name: Test if R dependencies are installed properly
-      uses: nick-invision/retry@v2
-      with:
-        timeout_seconds: 15
-        max_attempts: 3
-        command: |
-          Rscript tests/r_dependencies.R
-        on_retry_command: |
-          Rscript tests/r_install.R
+    - name: Test if R dependencies are installed properly      
+      run: |
+        Rscript tests/r_dependencies.R
+      shell: bash -l {0}
 
     - name: Test with pytest
       run: |
