@@ -9,3 +9,12 @@
 dist/*
 sc_dandelion.egg-info/*
 dandelion/logging/version.py
+tests/test_local.py
+tests/reassigned_all/reassigned_all_heavy_igblast_db-pass.tsv
+tests/reassigned_all/reassigned_all_heavy_igblast_db-pass_germ-pass.tsv
+tests/reassigned_all/reassigned_all_light_igblast_db-pass.tsv
+tests/reassigned_all/reassigned_all_light_igblast_db-pass_germ-pass.tsv
+tests/reassigned_filtered/reassigned_filtered_heavy_igblast_db-pass.tsv
+tests/reassigned_filtered/reassigned_filtered_heavy_igblast_db-pass_germ-pass.tsv
+tests/reassigned_filtered/reassigned_filtered_light_igblast_db-pass.tsv
+tests/reassigned_filtered/reassigned_filtered_light_igblast_db-pass_germ-pass.tsv
