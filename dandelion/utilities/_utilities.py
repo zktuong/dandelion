@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-15 10:05:47
+# @Last Modified time: 2021-06-16 16:59:11
 
 import os
 from collections import defaultdict, Iterable
@@ -16,11 +16,12 @@ except ImportError:
     try:
         from typing_extensions import Literal
     except ImportError:
+
         class LiteralMeta(type):
             def __getitem__(cls, values):
                 if not isinstance(values, tuple):
-                    values = (values,)
-                return type("Literal_", (Literal,), dict(__args__=values))
+                    values = (values, )
+                return type("Literal_", (Literal, ), dict(__args__=values))
 
         class Literal(metaclass=LiteralMeta):
             pass
@@ -60,7 +61,7 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
             sample_dict = dict(zip(meta_[columns[0]], meta_[columns[1]]))
 
     sample_dict = clean_nan_dict(sample_dict)
-    return(sample_dict)
+    return (sample_dict)
 
 
 def clean_nan_dict(d: Dict) -> Dict:
@@ -75,11 +76,7 @@ def clean_nan_dict(d: Dict) -> Dict:
         dictionary with no NAs.
     """
 
-    return {
-        k: v
-        for k, v in d.items()
-        if v is not np.nan
-    }
+    return {k: v for k, v in d.items() if v is not np.nan}
 
 
 def flatten(l: Sequence) -> Sequence:
@@ -116,10 +113,7 @@ def makeblastdb(ref: str):
 
     """
 
-    cmd = ['makeblastdb',
-           '-dbtype', 'nucl',
-           '-parse_seqids',
-           '-in', ref]
+    cmd = ['makeblastdb', '-dbtype', 'nucl', '-parse_seqids', '-in', ref]
     run(cmd)
 
 
@@ -159,7 +153,9 @@ def is_categorical(array_like) -> bool:
 
 
 def type_check(dataframe, key) -> bool:
-    return dataframe[key].dtype == str or dataframe[key].dtype == object or is_categorical(dataframe[key]) or dataframe[key].dtype == bool
+    return dataframe[key].dtype == str or dataframe[
+        key].dtype == object or is_categorical(
+            dataframe[key]) or dataframe[key].dtype == bool
 
 
 def isGZIP(filename: str) -> bool:
@@ -174,7 +170,7 @@ def isBZIP(filename: str) -> bool:
     return False
 
 
-def check_filepath(s, filename_prefix = None, endswith = None, subdir = None):
+def check_filepath(s, filename_prefix=None, endswith=None, subdir=None):
     if filename_prefix is None:
         filename_pre = 'filtered'
     else:
@@ -197,19 +193,21 @@ def check_filepath(s, filename_prefix = None, endswith = None, subdir = None):
                     if subdir is None:
                         out_ = out_ + os.path.basename(file) + '/'
                     else:
-                        out_ = out_ + os.path.basename(file) + '/' + subdir + '/'
+                        out_ = out_ + os.path.basename(
+                            file) + '/' + subdir + '/'
                     for x in os.listdir(out_):
                         if x.endswith(ends_with):
-                            if str(x).split(ends_with)[0] == filename_pre + '_contig':
+                            if str(x).split(
+                                    ends_with)[0] == filename_pre + '_contig':
                                 filePath = out_ + x
                             else:
                                 continue
             else:
                 continue
-    return(filePath)
+    return (filePath)
 
 
-def check_fastapath(fasta, filename_prefix = None):
+def check_fastapath(fasta, filename_prefix=None):
     if filename_prefix is None:
         filename_pre = 'filtered'
     else:
@@ -227,10 +225,11 @@ def check_fastapath(fasta, filename_prefix = None):
                     filePath = out_ + os.path.basename(file)
                 else:
                     continue
-    return(filePath)
+    return (filePath)
 
 
-def change_file_location(data: Sequence, filename_prefix: Union[None, Sequence, str] = None):
+def change_file_location(data: Sequence,
+                         filename_prefix: Union[None, Sequence, str] = None):
     """
     Move file from tmp folder to dandelion folder.
 
@@ -278,3 +277,323 @@ def change_file_location(data: Sequence, filename_prefix: Union[None, Sequence, 
         cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
 
         run(cmd)
+
+
+def marking(b, rescue_vdj, umi_foldchange_cutoff, filter_poorqualitycontig):
+    """Main workhorse of filter_contig."""
+    hc_id = list(
+        dat[(dat['cell_id'].isin([b]))
+            & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+    hc_umi = [
+        int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']
+    ]
+    if 'sequence_alignment' in dat:
+        hc_seq = [
+            x for x in dat[(dat['cell_id'].isin([b]))
+                           & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
+            ['sequence_alignment']
+        ]
+    hc_dup = [
+        int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']
+    ]
+    hc_ccall = [
+        x for x in dat[(dat['cell_id'].isin([b]))
+                       & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']
+    ]
+
+    lc_id = list(dat[(dat['cell_id'].isin([b])) & (
+        dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+    lc_umi = [
+        int(x)
+        for x in dat[(dat['cell_id'].isin([b]))
+                     & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+        ['duplicate_count']
+    ]
+    if 'sequence_alignment' in dat:
+        lc_seq = [
+            x for x in dat[(dat['cell_id'].isin([b]))
+                           & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+            ['sequence_alignment']
+        ]
+
+    h[b] = hc_id
+    h_umi[b] = hc_umi
+    if 'sequence_alignment' in dat:
+        h_seq[b] = hc_seq
+    h_dup[b] = hc_dup
+    h_ccall[b] = hc_ccall
+
+    l[b] = lc_id
+    l_umi[b] = lc_umi
+    if 'sequence_alignment' in dat:
+        l_seq[b] = lc_seq
+
+    # marking doublets defined by heavy chains
+    if len(h[b]) > 1:
+        if 'sequence_alignment' in dat:
+            if len(list(set(h_seq[b]))) == 1:
+                highest_umi_h = max(h_umi[b])
+                highest_umi_h_idx = [
+                    i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
+                ]
+                keep_index_h = highest_umi_h_idx[0]
+                drop_contig.append(h[b][:keep_index_h] +
+                                   h[b][keep_index_h + 1:])
+                keep_hc_contig = h[b][keep_index_h]
+                dat.at[keep_hc_contig, 'umi_count'] = int(
+                    np.sum(h_umi[b][:keep_index_h] +
+                           h_umi[b][keep_index_h + 1:]))
+                hc_id = list(dat[(dat['cell_id'].isin([b]))
+                                 & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
+                             ['sequence_id'])
+                hc_umi = [
+                    int(x)
+                    for x in dat[(dat['cell_id'].isin([b]))
+                                 & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
+                    ['duplicate_count']
+                ]
+                hc_dup = [
+                    int(x)
+                    for x in dat[(dat['cell_id'].isin([b]))
+                                 & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
+                    ['umi_count']
+                ]
+                h[b] = hc_id
+                h_umi[b] = hc_umi
+                h_dup[b] = hc_dup
+                h_seq[b] = hc_seq
+        if len(h[b]) > 1:
+            if rescue_vdj:
+                highest_umi_h = max(h_umi[b])
+                # lowest_umi_h = min(h_umi[b])
+                highest_umi_idx = [
+                    i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
+                ]
+                keep_index_h = highest_umi_idx[0]
+                umi_test = [
+                    highest_umi_h / x < umi_foldchange_cutoff
+                    for x in h_umi[b][:keep_index_h] +
+                    h_umi[b][keep_index_h + 1:]
+                ]
+                sum_umi = sum(h_umi[b] + h_dup[b])
+                other_umi_idx = [
+                    i for i, j in enumerate(h_umi[b]) if j != highest_umi_h
+                ]
+                if 'IGHM' and 'IGHD' in h_ccall[b]:
+                    if all(cc_ == 'IGHM' or cc_ == 'IGHD'
+                           for cc_ in h_ccall[b]):
+                        pass
+                    else:
+                        if len(highest_umi_idx) > 1:
+                            h_doublet.append(b)
+                        if sum_umi < 4:
+                            h_doublet.append(b)
+                        if any(umi_test):
+                            h_doublet.append(b)
+                        if len(highest_umi_idx) == 1:
+                            other_umi_idx = [
+                                i for i, j in enumerate(h_umi[b])
+                                if j != highest_umi_h
+                            ]
+                            umi_test_ = [
+                                highest_umi_h / x >= umi_foldchange_cutoff
+                                for x in h_umi[b][:keep_index_h] +
+                                h_umi[b][keep_index_h + 1:]
+                            ]
+                            umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                            for otherindex in umi_test_dict:
+                                if umi_test_dict[otherindex]:
+                                    drop_contig.append(h[b][otherindex])
+                else:
+                    if len(highest_umi_idx) > 1:
+                        h_doublet.append(b)
+                    if sum_umi < 4:
+                        h_doublet.append(b)
+                    if any(umi_test):
+                        h_doublet.append(b)
+                    if len(highest_umi_idx) == 1:
+                        other_umi_idx = [
+                            i for i, j in enumerate(h_umi[b])
+                            if j != highest_umi_h
+                        ]
+                        umi_test_ = [
+                            highest_umi_h / x >= umi_foldchange_cutoff
+                            for x in h_umi[b][:keep_index_h] +
+                            h_umi[b][keep_index_h + 1:]
+                        ]
+                        umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                        for otherindex in umi_test_dict:
+                            if umi_test_dict[otherindex]:
+                                drop_contig.append(h[b][otherindex])
+            else:
+                h_doublet.append(b)
+    if len(l[b]) > 1:
+        if 'sequence_alignment' in dat:
+            if len(list(set(l_seq[b]))) == 1:
+                highest_umi_l = max(l_umi[b])
+                highest_umi_l_idx = [
+                    i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
+                ]
+                keep_index_l = highest_umi_l_idx[0]
+                drop_contig.append(l[b][:keep_index_l] +
+                                   l[b][keep_index_l + 1:])
+                keep_lc_contig = l[b][keep_index_l]
+                dat.at[keep_lc_contig, 'umi_count'] = int(
+                    np.sum(l_umi[b][:keep_index_l] +
+                           l_umi[b][keep_index_l + 1:]))
+                lc_id = list(
+                    dat[(dat['cell_id'].isin([b]))
+                        & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+                    ['sequence_id'])
+                lc_umi = [
+                    int(x) for x in dat[(dat['cell_id'].isin([b])) & (
+                        dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+                    ['duplicate_count']
+                ]
+                l[b] = lc_id
+                l_umi[b] = lc_umi
+                l_seq[b] = lc_seq
+        if len(list(set(l[b]))) > 1:
+            # also apply the same cut off to multiple light chains
+            highest_umi_l = max(l_umi[b])
+            highest_umi_l_idx = [
+                i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
+            ]
+            keep_index_l = highest_umi_l_idx[0]
+            other_umi_idx_l = [
+                i for i, j in enumerate(l_umi[b]) if j != highest_umi_l
+            ]
+            umi_test_l = [
+                highest_umi_l / x < umi_foldchange_cutoff
+                for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]
+            ]
+            umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+            for otherindex in umi_test_dict_l:
+                if umi_test_dict_l[otherindex]:
+                    drop_contig.append(l[b][otherindex])
+    # marking doublets defined by light chains
+    if (len(h[b]) == 1) & (len(l[b]) > 1):
+        l_doublet.append(b)
+    # marking poor bcr quality, defined as those with only light chains, those
+    # that were have conflicting assignment of locus and heavy/light V/J calls,
+    # and also those that are missing either v or j calls.
+    if len(h[b]) < 1:
+        if filter_poorqualitycontig:
+            poor_qual.append(b)
+        drop_contig.append(l[b])
+    if len(hc_id) == 1:
+        v = v_dict[hc_id[0]]
+        j = j_dict[hc_id[0]]
+        c = c_dict[hc_id[0]]
+        if v == v:
+            if not re.search('IGH|TR[BD]', v):
+                if filter_poorqualitycontig:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
+        else:
+            if filter_poorqualitycontig:
+                poor_qual.append(b)
+            drop_contig.append(l[b])
+            drop_contig.append(h[b])
+        if j == j:
+            if not re.search('IGH|TR[BD]', j):
+                if filter_poorqualitycontig:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
+        else:
+            if filter_poorqualitycontig:
+                poor_qual.append(b)
+            drop_contig.append(l[b])
+            drop_contig.append(h[b])
+        if (c == c) and (c is not None):
+            if not re.search('IGH|TR[BD]', c):
+                if filter_poorqualitycontig:
+                    poor_qual.append(b)
+                drop_contig.append(l[b])
+                drop_contig.append(h[b])
+    if len(hc_id) > 1:
+        for hx in hc_id:
+            v = v_dict[hx]
+            j = j_dict[hx]
+            c = c_dict[hx]
+            if v == v:
+                if not re.search('IGH|TR[BD]', v):
+                    if filter_poorqualitycontig:
+                        poor_qual.append(b)
+                    drop_contig.append(hx)
+            if j == j:
+                if not re.search('IGH|TR[BD]', j):
+                    if filter_poorqualitycontig:
+                        poor_qual.append(b)
+                    drop_contig.append(hx)
+            if (c == c) and (c is not None):
+                if not re.search('IGH|TR[BD]', c):
+                    if filter_poorqualitycontig:
+                        poor_qual.append(b)
+                    drop_contig.append(hx)
+    if len(lc_id) > 0:
+        for lx in lc_id:
+            v = v_dict[lx]
+            j = j_dict[lx]
+            c = c_dict[lx]
+            if v == v:
+                if j == j:
+                    if re.search('IGH|TR[BD]', v):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('IGK', v) and re.search('IGL', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('IGL', v) and re.search('IGK', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('TRA', v) and not re.search('TRA', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('TRG', v) and not re.search('TRG', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+            if j == j:
+                if v == v:
+                    if re.search('IGH|TR[BD]', j):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('IGK', v) and re.search('IGL', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('IGL', v) and re.search('IGK', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('TRA', v) and not re.search('TRA', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+                    elif (re.search('TRG', v) and not re.search('TRG', j)):
+                        if filter_poorqualitycontig:
+                            poor_qual.append(b)
+                        drop_contig.append(lx)
+            if (c is not None) and (c == c):
+                if re.search('IGH|TR[BD]', c):
+                    if filter_poorqualitycontig:
+                        poor_qual.append(b)
+                    drop_contig.append(lx)
+
+            if (v != v) or (j != j) or (v is None) or (j is None):
+                if filter_poorqualitycontig:
+                    poor_qual.append(b)
+                drop_contig.append(lx)  # no/wrong annotations at all
+
+    poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
+    return (poor_qual_, h_doublet_, l_doublet_, drop_contig_)
