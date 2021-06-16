@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import rpy2
+import rpy2.robjects
 
 
 def test_importrpy2():
