@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 17:01:09
+# @Last Modified time: 2021-06-16 18:14:08
 
 import os
 import pandas as pd
@@ -2099,7 +2099,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     elif 'duplicate_count' in dat and 'umi_count' in dat:
         dat['umi_count'] = dat['duplicate_count']
 
-    poor_qual, h_doublet, l_doublet, drop_contig = [], [], [], []
+    tofilter = FilterContigs(dat)
 
     if parallel:
         if ncpu is None:
@@ -2107,30 +2107,36 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         else:
             ncpus = int(ncpu)
 
-        result = Parallel(n_jobs=ncpus)(
-            delayed(marking)(b, rescue_vdj, umi_foldchange_cutoff,
-                             filter_poorqualitycontig)
+        results = Parallel(n_jobs=ncpus)(
+            delayed(filtering)(b, tofilter, rescue_vdj, umi_foldchange_cutoff,
+                               filter_poorqualitycontig)
             for b in tqdm(
                 barcode,
                 desc='Scanning for poor quality/ambiguous contigs with {} cpus'
                 .format(ncpus)))
 
-        pq, hd, ld, dc = [], [], [], []
-        for r in result:
-            pq = pq + r[0]
-            hd = hd + r[1]
-            ld = ld + r[2]
-            dc = dc + r[3]
+        pq, hd, ld, dc, umiadj = [], [], [], [], {}
+        for r in results:
+            pq.append(r.poor_qual)
+            hd.append(r.h_doublet)
+            ld.append(r.l_doublet)
+            dc.append(r.drop_contig)
+            umiadj.update(r.umi_adjustment)
 
-        poor_qual, h_doublet, l_doublet, drop_contig = pq, hd, ld, dc
+        poor_qual, h_doublet, l_doublet, drop_contig, umi_adjustment = pq, hd, ld, dc, umiadj
     else:
         for b in tqdm(barcode):
-            r1, r2, r3, r4 = marking(b, rescue_vdj, umi_foldchange_cutoff,
-                                     filter_poorqualitycontig)
-            poor_qual = poor_qual + r1
-            h_doublet = h_doublet + r2
-            l_doublet = l_doublet + r3
-            drop_contig = drop_contig + r4
+            tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
+                              filter_poorqualitycontig)
+
+        poor_qual = tofilter.poor_qual
+        h_doublet = tofilter.h_doublet
+        l_doublet = tofilter.l_doublet
+        drop_contig = tofilter.drop_contig
+        umi_adjustment = tofilter.umi_adjustment
+
+    if len(umi_adjustment) > 0:
+        dat['duplicate_count'].update(umi_adjustment)
 
     poorqual = Tree()
     hdoublet = Tree()
