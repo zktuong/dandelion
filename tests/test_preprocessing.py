@@ -74,12 +74,12 @@ def test_reassignalleles(create_testfolder, database_paths, filename, combine,
 
 def test_updateblastdb(database_paths):
     ddl.utl.makeblastdb(database_paths['blastdb_fasta'])
-    assert len(Path(str(database_paths['blastdb'])).iterdir()) == 10
+    assert len(list(Path(database_paths['blastdb']).iterdir())) == 10
 
 
 @pytest.mark.parametrize("filename, expected",
-                         [pytest.param('filtered', 3),
-                          pytest.param('all', 6)])
+                         [pytest.param('filtered', 6),
+                          pytest.param('all', 7)])
 def test_assignsisotypes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.assign_isotypes(str(create_testfolder),
