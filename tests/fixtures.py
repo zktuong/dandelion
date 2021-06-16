@@ -44,14 +44,13 @@ def dummy_adata():
         'AAACGGGAGCGACGTA-1',
     ]
     obs = pd.DataFrame(index=barcodes)
-    obs['filter_rna'] = False
     n = obs.shape[0]
 
     # just create a random matrix
     adata = sc.AnnData(X=scipy.sparse.random(n, 100, format='csr'), obs=obs)
 
     # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata)
+    sc.pp.neighbors(adata, use_rep='X', n_neighbors = 3)
 
     return (adata)
 
