@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 18:14:08
+# @Last Modified time: 2021-06-16 18:31:04
 
 import os
 import pandas as pd
@@ -1757,19 +1757,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -1939,8 +1939,8 @@ def create_germlines(
             out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
                 os.path.basename(file).split('.tsv')[0], germ_types),
-                sep='\t',
-                index=False)
+                            sep='\t',
+                            index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2054,18 +2054,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     adata_ = adata.copy()
 
-    h = Tree()
-    l = Tree()
-    h_umi = Tree()
-    h_dup = Tree()
-    l_umi = Tree()
-    # l_dup = Tree()
-    h_seq = Tree()
-    l_seq = Tree()
-    h_ccall = Tree()
-    # l_ccall = Tree()
-
-    # locus_dict = dict(zip(dat['sequence_id'], dat['locus']))
     if 'cell_id' not in dat.columns:
         raise AttributeError(
             "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering."
@@ -2107,10 +2095,9 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         else:
             ncpus = int(ncpu)
 
-        results = Parallel(n_jobs=ncpus)(
-            delayed(filtering)(b, tofilter, rescue_vdj, umi_foldchange_cutoff,
-                               filter_poorqualitycontig)
-            for b in tqdm(
+        results = Parallel(n_jobs=ncpus)(delayed(filtering)(
+            b, tofilter, rescue_vdj, umi_foldchange_cutoff,
+            filter_poorqualitycontig, v_dict, j_dict, c_dict) for b in tqdm(
                 barcode,
                 desc='Scanning for poor quality/ambiguous contigs with {} cpus'
                 .format(ncpus)))
@@ -2127,7 +2114,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     else:
         for b in tqdm(barcode):
             tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
-                              filter_poorqualitycontig)
+                              filter_poorqualitycontig, v_dict, j_dict, c_dict)
 
         poor_qual = tofilter.poor_qual
         h_doublet = tofilter.h_doublet
@@ -2214,8 +2201,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                sep='\t',
-                index=False)
+                        sep='\t',
+                        index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2650,13 +2637,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                method=threshold_method_,
-                model=threshold_model_,
-                cross=cross_,
-                subsample=subsample_,
-                cutoff=cutoff_,
-                sen=sen_,
-                spc=spc_)
+                                              method=threshold_method_,
+                                              model=threshold_model_,
+                                              cross=cross_,
+                                              subsample=subsample_,
+                                              cutoff=cutoff_,
+                                              sen=sen_,
+                                              spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:

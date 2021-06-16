@@ -2,13 +2,14 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 18:25:49
+# @Last Modified time: 2021-06-16 18:31:13
 
 import os
 from collections import defaultdict, Iterable
 import pandas as pd
 import numpy as np
 from subprocess import run
+import re
 from typing import Sequence, Tuple, Dict, Union
 try:
     from typing import Literal
@@ -31,6 +32,7 @@ class Tree(defaultdict):
     '''
     Create a recursive defaultdict
     '''
+
     def __init__(self, value=None):
         super(Tree, self).__init__(Tree)
         self.value = value
@@ -288,8 +290,16 @@ class FilterContigs:
         self.umi_adjustment = {}
 
     def run_scan(self, b, rescue_vdj, umi_foldchange_cutoff,
-                 filter_poorqualitycontig):
+                 filter_poorqualitycontig, v_dict, j_dict, c_dict):
         """Main workhorse of filter_contig."""
+        h = Tree()
+        l = Tree()
+        h_umi = Tree()
+        l_umi = Tree()
+        h_seq = Tree()
+        l_seq = Tree()
+        h_ccall = Tree()
+
         hc_id = list(self.dat[
             (self.dat['cell_id'].isin([b]))
             & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
