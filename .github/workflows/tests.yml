@@ -102,17 +102,7 @@ jobs:
     
     - name: Install Dandelion
       run: |
-        python setup.py install
-
-    - name: Force installation of rpy2
-      uses: nick-invision/retry@v2
-      with:
-        timeout_seconds: 15
-        max_attempts: 3
-        command: |
-          pip install "rpy2>=3.4.0"
-        on_retry_command: |
-          pip install "rpy2>=3.4.0" -U
+        python setup.py install    
               
     - name: install R dependencies
       run: |
