@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 16:59:11
+# @Last Modified time: 2021-06-16 18:25:49
 
 import os
 from collections import defaultdict, Iterable
@@ -31,7 +31,6 @@ class Tree(defaultdict):
     '''
     Create a recursive defaultdict
     '''
-
     def __init__(self, value=None):
         super(Tree, self).__init__(Tree)
         self.value = value
@@ -279,119 +278,148 @@ def change_file_location(data: Sequence,
         run(cmd)
 
 
-def marking(b, rescue_vdj, umi_foldchange_cutoff, filter_poorqualitycontig):
-    """Main workhorse of filter_contig."""
-    hc_id = list(
-        dat[(dat['cell_id'].isin([b]))
-            & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-    hc_umi = [
-        int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']
-    ]
-    if 'sequence_alignment' in dat:
-        hc_seq = [
-            x for x in dat[(dat['cell_id'].isin([b]))
-                           & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-            ['sequence_alignment']
-        ]
-    hc_dup = [
-        int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-            dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']
-    ]
-    hc_ccall = [
-        x for x in dat[(dat['cell_id'].isin([b]))
-                       & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']
-    ]
+class FilterContigs:
+    def __init__(self, data):
+        self.dat = data
+        self.poor_qual = []
+        self.h_doublet = []
+        self.l_doublet = []
+        self.drop_contig = []
+        self.umi_adjustment = {}
 
-    lc_id = list(dat[(dat['cell_id'].isin([b])) & (
-        dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
-    lc_umi = [
-        int(x)
-        for x in dat[(dat['cell_id'].isin([b]))
-                     & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-        ['duplicate_count']
-    ]
-    if 'sequence_alignment' in dat:
-        lc_seq = [
-            x for x in dat[(dat['cell_id'].isin([b]))
-                           & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-            ['sequence_alignment']
+    def run_scan(self, b, rescue_vdj, umi_foldchange_cutoff,
+                 filter_poorqualitycontig):
+        """Main workhorse of filter_contig."""
+        hc_id = list(self.dat[
+            (self.dat['cell_id'].isin([b]))
+            & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+        hc_umi = [
+            int(x)
+            for x in self.dat[(self.dat['cell_id'].isin([b]))
+                              & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD'])
+                                 )]['duplicate_count']
+        ]
+        if 'sequence_alignment' in self.dat:
+            hc_seq = [
+                x for x in self.dat[
+                    (self.dat['cell_id'].isin([b]))
+                    & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
+                ['sequence_alignment']
+            ]
+        hc_ccall = [
+            x for x in self.dat[
+                (self.dat['cell_id'].isin([b]))
+                & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']
         ]
 
-    h[b] = hc_id
-    h_umi[b] = hc_umi
-    if 'sequence_alignment' in dat:
-        h_seq[b] = hc_seq
-    h_dup[b] = hc_dup
-    h_ccall[b] = hc_ccall
+        lc_id = list(
+            self.dat[(self.dat['cell_id'].isin([b]))
+                     & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+            ['sequence_id'])
+        lc_umi = [
+            int(x) for x in self.dat[
+                (self.dat['cell_id'].isin([b]))
+                & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+            ['duplicate_count']
+        ]
+        if 'sequence_alignment' in self.dat:
+            lc_seq = [
+                x for x in self.dat[
+                    (self.dat['cell_id'].isin([b]))
+                    & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+                ['sequence_alignment']
+            ]
 
-    l[b] = lc_id
-    l_umi[b] = lc_umi
-    if 'sequence_alignment' in dat:
-        l_seq[b] = lc_seq
+        h[b] = hc_id
+        h_umi[b] = hc_umi
+        if 'sequence_alignment' in self.dat:
+            h_seq[b] = hc_seq
+        h_ccall[b] = hc_ccall
 
-    # marking doublets defined by heavy chains
-    if len(h[b]) > 1:
-        if 'sequence_alignment' in dat:
-            if len(list(set(h_seq[b]))) == 1:
-                highest_umi_h = max(h_umi[b])
-                highest_umi_h_idx = [
-                    i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
-                ]
-                keep_index_h = highest_umi_h_idx[0]
-                drop_contig.append(h[b][:keep_index_h] +
-                                   h[b][keep_index_h + 1:])
-                keep_hc_contig = h[b][keep_index_h]
-                dat.at[keep_hc_contig, 'umi_count'] = int(
-                    np.sum(h_umi[b][:keep_index_h] +
-                           h_umi[b][keep_index_h + 1:]))
-                hc_id = list(dat[(dat['cell_id'].isin([b]))
-                                 & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                             ['sequence_id'])
-                hc_umi = [
-                    int(x)
-                    for x in dat[(dat['cell_id'].isin([b]))
-                                 & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                    ['duplicate_count']
-                ]
-                hc_dup = [
-                    int(x)
-                    for x in dat[(dat['cell_id'].isin([b]))
-                                 & (dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                    ['umi_count']
-                ]
-                h[b] = hc_id
-                h_umi[b] = hc_umi
-                h_dup[b] = hc_dup
-                h_seq[b] = hc_seq
+        l[b] = lc_id
+        l_umi[b] = lc_umi
+        if 'sequence_alignment' in self.dat:
+            l_seq[b] = lc_seq
+
+        # marking doublets defined by heavy chains
         if len(h[b]) > 1:
-            if rescue_vdj:
-                highest_umi_h = max(h_umi[b])
-                # lowest_umi_h = min(h_umi[b])
-                highest_umi_idx = [
-                    i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
-                ]
-                keep_index_h = highest_umi_idx[0]
-                umi_test = [
-                    highest_umi_h / x < umi_foldchange_cutoff
-                    for x in h_umi[b][:keep_index_h] +
-                    h_umi[b][keep_index_h + 1:]
-                ]
-                sum_umi = sum(h_umi[b] + h_dup[b])
-                other_umi_idx = [
-                    i for i, j in enumerate(h_umi[b]) if j != highest_umi_h
-                ]
-                if 'IGHM' and 'IGHD' in h_ccall[b]:
-                    if all(cc_ == 'IGHM' or cc_ == 'IGHD'
-                           for cc_ in h_ccall[b]):
-                        pass
+            if 'sequence_alignment' in self.dat:
+                if len(list(set(h_seq[b]))) == 1:
+                    highest_umi_h = max(h_umi[b])
+                    highest_umi_h_idx = [
+                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
+                    ]
+                    keep_index_h = highest_umi_h_idx[0]
+                    self.drop_contig.append(h[b][:keep_index_h] +
+                                            h[b][keep_index_h + 1:])
+                    keep_hc_contig = h[b][keep_index_h]
+                    self.dat.at[keep_hc_contig, 'duplicate_count'] = int(
+                        np.sum(h_umi[b][:keep_index_h] +
+                               h_umi[b][keep_index_h + 1:]))
+                    hc_id = list(
+                        self.dat[(self.dat['cell_id'].isin([b]))
+                                 & (self.dat['locus'].isin(
+                                     ['IGH', 'TRB', 'TRD']))]['sequence_id'])
+                    hc_umi = [
+                        int(x) for x in self.dat[
+                            (self.dat['cell_id'].isin([b]))
+                            & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
+                        ['duplicate_count']
+                    ]
+                    h[b] = hc_id
+                    h_umi[b] = hc_umi
+                    h_seq[b] = hc_seq
+            if len(h[b]) > 1:
+                if rescue_vdj:
+                    highest_umi_h = max(h_umi[b])
+                    # lowest_umi_h = min(h_umi[b])
+                    highest_umi_idx = [
+                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
+                    ]
+                    keep_index_h = highest_umi_idx[0]
+                    umi_test = [
+                        highest_umi_h / x < umi_foldchange_cutoff
+                        for x in h_umi[b][:keep_index_h] +
+                        h_umi[b][keep_index_h + 1:]
+                    ]
+                    sum_umi = sum(h_umi[b])
+                    other_umi_idx = [
+                        i for i, j in enumerate(h_umi[b]) if j != highest_umi_h
+                    ]
+                    if 'IGHM' and 'IGHD' in h_ccall[b]:
+                        if all(cc_ == 'IGHM' or cc_ == 'IGHD'
+                               for cc_ in h_ccall[b]):
+                            pass
+                        else:
+                            if len(highest_umi_idx) > 1:
+                                self.h_doublet.append(b)
+                            if sum_umi < 4:
+                                self.h_doublet.append(b)
+                            if any(umi_test):
+                                self.h_doublet.append(b)
+                            if len(highest_umi_idx) == 1:
+                                other_umi_idx = [
+                                    i for i, j in enumerate(h_umi[b])
+                                    if j != highest_umi_h
+                                ]
+                                umi_test_ = [
+                                    highest_umi_h / x >= umi_foldchange_cutoff
+                                    for x in h_umi[b][:keep_index_h] +
+                                    h_umi[b][keep_index_h + 1:]
+                                ]
+                                umi_test_dict = dict(
+                                    zip(other_umi_idx, umi_test_))
+                                for otherindex in umi_test_dict:
+                                    if umi_test_dict[otherindex]:
+                                        self.drop_contig.append(
+                                            h[b][otherindex])
                     else:
                         if len(highest_umi_idx) > 1:
-                            h_doublet.append(b)
+                            self.h_doublet.append(b)
                         if sum_umi < 4:
-                            h_doublet.append(b)
+                            self.h_doublet.append(b)
                         if any(umi_test):
-                            h_doublet.append(b)
+                            self.h_doublet.append(b)
                         if len(highest_umi_idx) == 1:
                             other_umi_idx = [
                                 i for i, j in enumerate(h_umi[b])
@@ -405,195 +433,181 @@ def marking(b, rescue_vdj, umi_foldchange_cutoff, filter_poorqualitycontig):
                             umi_test_dict = dict(zip(other_umi_idx, umi_test_))
                             for otherindex in umi_test_dict:
                                 if umi_test_dict[otherindex]:
-                                    drop_contig.append(h[b][otherindex])
+                                    self.drop_contig.append(h[b][otherindex])
                 else:
-                    if len(highest_umi_idx) > 1:
-                        h_doublet.append(b)
-                    if sum_umi < 4:
-                        h_doublet.append(b)
-                    if any(umi_test):
-                        h_doublet.append(b)
-                    if len(highest_umi_idx) == 1:
-                        other_umi_idx = [
-                            i for i, j in enumerate(h_umi[b])
-                            if j != highest_umi_h
-                        ]
-                        umi_test_ = [
-                            highest_umi_h / x >= umi_foldchange_cutoff
-                            for x in h_umi[b][:keep_index_h] +
-                            h_umi[b][keep_index_h + 1:]
-                        ]
-                        umi_test_dict = dict(zip(other_umi_idx, umi_test_))
-                        for otherindex in umi_test_dict:
-                            if umi_test_dict[otherindex]:
-                                drop_contig.append(h[b][otherindex])
-            else:
-                h_doublet.append(b)
-    if len(l[b]) > 1:
-        if 'sequence_alignment' in dat:
-            if len(list(set(l_seq[b]))) == 1:
+                    self.h_doublet.append(b)
+        if len(l[b]) > 1:
+            if 'sequence_alignment' in self.dat:
+                if len(list(set(l_seq[b]))) == 1:
+                    highest_umi_l = max(l_umi[b])
+                    highest_umi_l_idx = [
+                        i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
+                    ]
+                    keep_index_l = highest_umi_l_idx[0]
+                    self.drop_contig.append(l[b][:keep_index_l] +
+                                            l[b][keep_index_l + 1:])
+                    keep_lc_contig = l[b][keep_index_l]
+                    self.dat.at[keep_lc_contig, 'duplicate_count'] = int(
+                        np.sum(l_umi[b][:keep_index_l] +
+                               l_umi[b][keep_index_l + 1:]))
+                    lc_id = list(self.dat[
+                        (self.dat['cell_id'].isin([b]))
+                        & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])
+                           )]['sequence_id'])
+                    lc_umi = [
+                        int(x)
+                        for x in self.dat[(self.dat['cell_id'].isin([b]))
+                                          & (self.dat['locus'].isin(
+                                              ['IGK', 'IGL', 'TRA', 'TRG']))]
+                        ['duplicate_count']
+                    ]
+                    l[b] = lc_id
+                    l_umi[b] = lc_umi
+                    l_seq[b] = lc_seq
+            if len(list(set(l[b]))) > 1:
+                # also apply the same cut off to multiple light chains
                 highest_umi_l = max(l_umi[b])
                 highest_umi_l_idx = [
                     i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
                 ]
                 keep_index_l = highest_umi_l_idx[0]
-                drop_contig.append(l[b][:keep_index_l] +
-                                   l[b][keep_index_l + 1:])
-                keep_lc_contig = l[b][keep_index_l]
-                dat.at[keep_lc_contig, 'umi_count'] = int(
-                    np.sum(l_umi[b][:keep_index_l] +
-                           l_umi[b][keep_index_l + 1:]))
-                lc_id = list(
-                    dat[(dat['cell_id'].isin([b]))
-                        & (dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-                    ['sequence_id'])
-                lc_umi = [
-                    int(x) for x in dat[(dat['cell_id'].isin([b])) & (
-                        dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-                    ['duplicate_count']
+                other_umi_idx_l = [
+                    i for i, j in enumerate(l_umi[b]) if j != highest_umi_l
                 ]
-                l[b] = lc_id
-                l_umi[b] = lc_umi
-                l_seq[b] = lc_seq
-        if len(list(set(l[b]))) > 1:
-            # also apply the same cut off to multiple light chains
-            highest_umi_l = max(l_umi[b])
-            highest_umi_l_idx = [
-                i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
-            ]
-            keep_index_l = highest_umi_l_idx[0]
-            other_umi_idx_l = [
-                i for i, j in enumerate(l_umi[b]) if j != highest_umi_l
-            ]
-            umi_test_l = [
-                highest_umi_l / x < umi_foldchange_cutoff
-                for x in l_umi[b][:keep_index_l] + l_umi[b][keep_index_l + 1:]
-            ]
-            umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
-            for otherindex in umi_test_dict_l:
-                if umi_test_dict_l[otherindex]:
-                    drop_contig.append(l[b][otherindex])
-    # marking doublets defined by light chains
-    if (len(h[b]) == 1) & (len(l[b]) > 1):
-        l_doublet.append(b)
-    # marking poor bcr quality, defined as those with only light chains, those
-    # that were have conflicting assignment of locus and heavy/light V/J calls,
-    # and also those that are missing either v or j calls.
-    if len(h[b]) < 1:
-        if filter_poorqualitycontig:
-            poor_qual.append(b)
-        drop_contig.append(l[b])
-    if len(hc_id) == 1:
-        v = v_dict[hc_id[0]]
-        j = j_dict[hc_id[0]]
-        c = c_dict[hc_id[0]]
-        if v == v:
-            if not re.search('IGH|TR[BD]', v):
-                if filter_poorqualitycontig:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-        else:
+                umi_test_l = [
+                    highest_umi_l / x < umi_foldchange_cutoff
+                    for x in l_umi[b][:keep_index_l] +
+                    l_umi[b][keep_index_l + 1:]
+                ]
+                umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+                for otherindex in umi_test_dict_l:
+                    if umi_test_dict_l[otherindex]:
+                        self.drop_contig.append(l[b][otherindex])
+        # marking doublets defined by light chains
+        if (len(h[b]) == 1) & (len(l[b]) > 1):
+            self.l_doublet.append(b)
+        # marking poor bcr quality, defined as those with only light chains, those
+        # that were have conflicting assignment of locus and heavy/light V/J calls,
+        # and also those that are missing either v or j calls.
+        if len(h[b]) < 1:
             if filter_poorqualitycontig:
-                poor_qual.append(b)
-            drop_contig.append(l[b])
-            drop_contig.append(h[b])
-        if j == j:
-            if not re.search('IGH|TR[BD]', j):
-                if filter_poorqualitycontig:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-        else:
-            if filter_poorqualitycontig:
-                poor_qual.append(b)
-            drop_contig.append(l[b])
-            drop_contig.append(h[b])
-        if (c == c) and (c is not None):
-            if not re.search('IGH|TR[BD]', c):
-                if filter_poorqualitycontig:
-                    poor_qual.append(b)
-                drop_contig.append(l[b])
-                drop_contig.append(h[b])
-    if len(hc_id) > 1:
-        for hx in hc_id:
-            v = v_dict[hx]
-            j = j_dict[hx]
-            c = c_dict[hx]
+                self.poor_qual.append(b)
+            self.drop_contig.append(l[b])
+        if len(hc_id) == 1:
+            v = v_dict[hc_id[0]]
+            j = j_dict[hc_id[0]]
+            c = c_dict[hc_id[0]]
             if v == v:
                 if not re.search('IGH|TR[BD]', v):
                     if filter_poorqualitycontig:
-                        poor_qual.append(b)
-                    drop_contig.append(hx)
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(l[b])
+                    self.drop_contig.append(h[b])
+            else:
+                if filter_poorqualitycontig:
+                    self.poor_qual.append(b)
+                self.drop_contig.append(l[b])
+                self.drop_contig.append(h[b])
             if j == j:
                 if not re.search('IGH|TR[BD]', j):
                     if filter_poorqualitycontig:
-                        poor_qual.append(b)
-                    drop_contig.append(hx)
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(l[b])
+                    self.drop_contig.append(h[b])
+            else:
+                if filter_poorqualitycontig:
+                    self.poor_qual.append(b)
+                self.drop_contig.append(l[b])
+                self.drop_contig.append(h[b])
             if (c == c) and (c is not None):
                 if not re.search('IGH|TR[BD]', c):
                     if filter_poorqualitycontig:
-                        poor_qual.append(b)
-                    drop_contig.append(hx)
-    if len(lc_id) > 0:
-        for lx in lc_id:
-            v = v_dict[lx]
-            j = j_dict[lx]
-            c = c_dict[lx]
-            if v == v:
-                if j == j:
-                    if re.search('IGH|TR[BD]', v):
-                        if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('IGK', v) and re.search('IGL', j)):
-                        if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('IGL', v) and re.search('IGK', j)):
-                        if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('TRA', v) and not re.search('TRA', j)):
-                        if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('TRG', v) and not re.search('TRG', j)):
-                        if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-            if j == j:
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(l[b])
+                    self.drop_contig.append(h[b])
+        if len(hc_id) > 1:
+            for hx in hc_id:
+                v = v_dict[hx]
+                j = j_dict[hx]
+                c = c_dict[hx]
                 if v == v:
-                    if re.search('IGH|TR[BD]', j):
+                    if not re.search('IGH|TR[BD]', v):
                         if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('IGK', v) and re.search('IGL', j)):
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(hx)
+                if j == j:
+                    if not re.search('IGH|TR[BD]', j):
                         if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('IGL', v) and re.search('IGK', j)):
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(hx)
+                if (c == c) and (c is not None):
+                    if not re.search('IGH|TR[BD]', c):
                         if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('TRA', v) and not re.search('TRA', j)):
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(hx)
+        if len(lc_id) > 0:
+            for lx in lc_id:
+                v = v_dict[lx]
+                j = j_dict[lx]
+                c = c_dict[lx]
+                if v == v:
+                    if j == j:
+                        if re.search('IGH|TR[BD]', v):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRG', v) and not re.search('TRG', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                if j == j:
+                    if v == v:
+                        if re.search('IGH|TR[BD]', j):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRG', v) and not re.search('TRG', j)):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(lx)
+                if (c is not None) and (c == c):
+                    if re.search('IGH|TR[BD]', c):
                         if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-                    elif (re.search('TRG', v) and not re.search('TRG', j)):
-                        if filter_poorqualitycontig:
-                            poor_qual.append(b)
-                        drop_contig.append(lx)
-            if (c is not None) and (c == c):
-                if re.search('IGH|TR[BD]', c):
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(lx)
+
+                if (v != v) or (j != j) or (v is None) or (j is None):
                     if filter_poorqualitycontig:
-                        poor_qual.append(b)
-                    drop_contig.append(lx)
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(lx)  # no/wrong annotations at all
 
-            if (v != v) or (j != j) or (v is None) or (j is None):
-                if filter_poorqualitycontig:
-                    poor_qual.append(b)
-                drop_contig.append(lx)  # no/wrong annotations at all
 
-    poor_qual_, h_doublet_, l_doublet_, drop_contig_ = poor_qual, h_doublet, l_doublet, drop_contig
-    return (poor_qual_, h_doublet_, l_doublet_, drop_contig_)
+def filtering(filterclass, cellbarcode, rescue_vdj, umi_foldchange_cutoff,
+              filter_poorqualitycontig):
+    filterclass.run_scan(cellbarcode, rescue_vdj, umi_foldchange_cutoff,
+                         filter_poorqualitycontig)
+    return (filterclass)
