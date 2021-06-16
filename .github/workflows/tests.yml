@@ -25,9 +25,6 @@ jobs:
           - { python-version: 3.7, os: ubuntu-latest }
           - { python-version: 3.8, os: ubuntu-latest }
           - { python-version: 3.9, os: ubuntu-latest }
-          # I think there's dependencies issues that's messing up this
-          # 3.8 fails on macosx likely because of issue noted here:
-          # https://github.com/scipy/scipy/issues/11835
           - { python-version: 3.7, os: macos-latest }
           - { python-version: 3.8, os: macos-latest }
           - { python-version: 3.9, os: macos-latest }
@@ -46,21 +43,30 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
 
+    - id: R
+      name: check R version
+      run: |
+        R --version > VERSION        
+        echo "##[set-output name=version;]$(head -1 VERSION | awk '{print $3}')"
+      shell: bash -l {0}
+
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
-        r-version: '4.0.3'
-    - name: Setup r-lib/remotes
-      run:
-        install.packages('remotes')
-      shell: Rscript {0}
-    - name: Install system dependencies
+        r-version: ${{ steps.R.outputs.version}}
+
+    - name: Install ubuntu system dependencies
+      if: matrix.config.os == 'ubuntu-latest'
       run: |
         sudo apt-get install libcurl4-openssl-dev
-        sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04")), collapse = " "))')
+        sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04"), package = c('shazam', 'alakazam', 'tigger', 'airr', 'optparse', 'Biostrings', 'GenomicAlignments', 'IRanges', 'BiocManager', 'RCurl', 'XML')), collapse = " "))')
         echo $sysreqs
         sudo -s eval "$sysreqs"
-        
+    - name: Install macOS system dependencies
+      if: matrix.config.os == 'macos-latest'
+      run: |
+        brew install cairo pkg-config autoconf automake libtool
+
     - name: Cache conda
       uses: actions/cache@v1
       env:
@@ -112,6 +118,16 @@ jobs:
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
+
+    - name: Force installation of rpy2
+      uses: nick-invision/retry@v2
+      with:
+        timeout_seconds: 15
+        max_attempts: 3
+        command: |
+          pip install "rpy2>=3.4.0"
+        on_retry_command: |
+          pip install "rpy2>=3.4.0" -U
 
     - name: Test if R dependencies are installed properly
       uses: nick-invision/retry@v2
