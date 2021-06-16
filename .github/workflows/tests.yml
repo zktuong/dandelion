@@ -119,7 +119,7 @@ jobs:
       run: |
         install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
-        BiocManager::install(version = "3.12", ask = FALSE)
+        BiocManager::install(version = "3.13", ask = FALSE)
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
