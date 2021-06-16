@@ -3,7 +3,6 @@ import pytest
 import pandas as pd
 import dandelion as ddl
 from pathlib import Path
-import multiprocessing
 
 from fixtures import (fasta_10x, annotation_10x, create_testfolder,
                       database_paths, dummy_adata, processed_files)
@@ -95,6 +94,15 @@ def test_checkccall(create_testfolder, processed_files, filename):
     f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
     assert not dat['c_call'].empty
+
+
+def test_create_germlines(create_testfolder, processed_files, database_paths):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    ddl.pp.create_germlines(f, germline=database_paths['germline'])
+    f2 = create_testfolder / str('dandelion/' +
+                                 processed_files['germline-dmask'])
+    dat = pd.read_csv(f2, sep='\t')
+    assert not dat['germline_alignment_d_mask'].empty
 
 
 @pytest.mark.parametrize(
