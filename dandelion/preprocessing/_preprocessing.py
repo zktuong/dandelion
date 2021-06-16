@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 20:31:56
+# @Last Modified time: 2021-06-16 22:27:43
 
 import os
 import pandas as pd
@@ -1528,7 +1528,7 @@ def reassign_alleles(data: Sequence,
 
 
 def create_germlines(
-        self: Union[Dandelion, pd.DataFrame, str],
+        self: Union[Dandelion, pd.DataFrame, str, PathLike],
         germline: Union[None, str, PathLike] = None,
         org: Literal['human', 'mouse'] = 'human',
         seq_field: Literal['sequence_alignment'] = 'sequence_alignment',
@@ -2027,7 +2027,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         whether or not to retain only productive contigs.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful
-        for toggling to False if integrating with bulk data.    
+        for toggling to False if integrating with bulk data.
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
 
