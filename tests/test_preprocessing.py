@@ -96,11 +96,12 @@ def test_checkccall(create_testfolder, processed_files, filename):
     assert not dat['c_call'].empty
 
 
-@pytest.mark.parametrize("filename", ['all', 'filtered'])
-@pytest.mark.parametrize(
-    "freq,outname",
-    [pytest.param(True, 'mu_freq'),
-     pytest.param(False, 'mu_count')])
+@pytest.mark.parametrize("filename,freq,outname", [
+    pytest.param('all', True, 'mu_freq'),
+    pytest.param('all', False, 'mu_count'),
+    pytest.param('filtered', True, 'mu_freq'),
+    pytest.param('filtered', False, 'mu_count'),
+])
 def test_quantify_mut(create_testfolder, processed_files, filename, freq,
                       outname):
     f = create_testfolder / str('dandelion/' + processed_files[filename])
