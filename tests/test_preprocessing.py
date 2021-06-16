@@ -5,7 +5,7 @@ import dandelion as ddl
 from pathlib import Path
 
 from fixtures import (fasta_10x, annotation_10x, create_testfolder,
-                      database_paths, processed_files)
+                      database_paths, dummy_adata, processed_files)
 
 
 @pytest.mark.parametrize("filename,expected",
@@ -96,16 +96,9 @@ def test_checkccall(create_testfolder, processed_files, filename):
     assert not dat['c_call'].empty
 
 
-# def test_quantify_mut(create_testfolder, processed_files):
-#     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
-#     ddl.pp.quantify_mutations(f)
-#     dat = pd.read_csv(f, sep='\t')
-#     assert not dat['mu_count'].empty
-#     assert dat['mu_count'].dtype == float
-
-
-def test_filtercontigs(create_testfolder, processed_files, dummy_adata):
-    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+@pytest.mark.parametrize("filename", ['all', 'filtered'])
+def test_filtercontigs(create_testfolder, processed_files, dummy_adata, filename):
+    f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata)
     assert dat.shape[0] == 9
