@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 18:44:52
+# @Last Modified time: 2021-06-16 18:56:19
 
 import os
 from collections import defaultdict, Iterable
@@ -616,8 +616,8 @@ class FilterContigs:
                     self.drop_contig.append(lx)  # no/wrong annotations at all
 
 
-def filtering(cls, cellbarcode, rescue_vdj, umi_foldchange_cutoff,
+def filtering(self, cellbarcode, rescue_vdj, umi_foldchange_cutoff,
               filter_poorqualitycontig, v_dict, j_dict, c_dict):
-    cls.run_scan(cellbarcode, rescue_vdj, umi_foldchange_cutoff,
-                 filter_poorqualitycontig, v_dict, j_dict, c_dict)
-    return (cls)
+    self.run_scan(cellbarcode, rescue_vdj, umi_foldchange_cutoff,
+                  filter_poorqualitycontig, v_dict, j_dict, c_dict)
+    return (self)
