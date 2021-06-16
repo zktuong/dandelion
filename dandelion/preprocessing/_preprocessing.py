@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-15 09:38:17
+# @Last Modified time: 2021-06-16 07:38:06
 
 import os
 import pandas as pd
@@ -2910,7 +2910,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                        germline_column: Union[None, str] = None,
                        region_definition: Union[None, str] = None,
                        mutation_definition: Union[None, str] = None,
-                       frequency: bool = True,
+                       frequency: bool = False,
                        combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
     """
     Run basic mutation load analysis.

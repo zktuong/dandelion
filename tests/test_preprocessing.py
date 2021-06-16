@@ -94,3 +94,17 @@ def test_checkccall(create_testfolder, processed_files, filename):
     f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
     assert not dat['c_call'].empty
+
+
+@pytest.mark.parametrize("filename", ['all', 'filtered'])
+@pytest.mark.parametrize(
+    "freq,outname",
+    [pytest.param(True, 'mu_freq'),
+     pytest.param(False, 'mu_count')])
+def test_quantify_mut(create_testfolder, processed_files, filename, freq,
+                      outname):
+    f = create_testfolder / str('dandelion/' + processed_files[filename])
+    ddl.pp.quantify_mutations(f, frequency=freq)
+    dat = pd.read_csv(f, sep='\t')
+    assert not dat[outname].empty
+    assert dat[outname].dtype == float
