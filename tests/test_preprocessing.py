@@ -96,8 +96,21 @@ def test_checkccall(create_testfolder, processed_files, filename):
     assert not dat['c_call'].empty
 
 
+@pytest.mark.parametrize(
+    "freq,colname",
+    [pytest.param(True, 'mu_freq'),
+     pytest.param(False, 'mu_count')])
+def test_quantify_mut(create_testfolder, processed_files, freq, colname):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    ddl.pp.quantify_mutations(f, frequency=freq)
+    dat = pd.read_csv(f, sep='\t')
+    assert not dat[colname].empty
+    assert dat[colname].dtype == float
+
+
 @pytest.mark.parametrize("filename", ['all', 'filtered'])
-def test_filtercontigs(create_testfolder, processed_files, dummy_adata, filename):
+def test_filtercontigs(create_testfolder, processed_files, dummy_adata,
+                       filename):
     f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata)
