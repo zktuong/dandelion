@@ -90,7 +90,7 @@ def main():
         # also no tricks here
         ddl.pp.assign_isotypes(samples, save_plot=True, filename_prefix = args.file_prefix)
 
-    # at this stage it's safe to remove the per-sample dandelion/data/tmp folder if need be
+    # at this stage it's safe to remove the per-sample dandelion/tmp folder if need be
     if args.clean_output:
         for sample in samples:
             os.system('rm -rf ' + sample + '/dandelion/tmp')
