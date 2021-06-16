@@ -57,8 +57,8 @@ def test_reannotategenes(create_testfolder, database_paths, filename,
 
 
 @pytest.mark.parametrize("filename,combine,expected", [
-    pytest.param('filtered', 'reassigned_filtered', 11),
-    pytest.param('all', 'reassigned_all', 16)
+    pytest.param('filtered', 'reassigned_filtered', 9),
+    pytest.param('all', 'reassigned_all', 12)
 ])
 def test_reassignalleles(create_testfolder, database_paths, filename, combine,
                          expected):
@@ -74,7 +74,7 @@ def test_reassignalleles(create_testfolder, database_paths, filename, combine,
 
 def test_updateblastdb(database_paths):
     ddl.utl.makeblastdb(database_paths['blastdb_fasta'])
-    assert len(Path(database_paths['blastdb']).iterdir()) == 10
+    assert len(Path(str(database_paths['blastdb'])).iterdir()) == 10
 
 
 @pytest.mark.parametrize("filename, expected",
@@ -82,15 +82,15 @@ def test_updateblastdb(database_paths):
                           pytest.param('all', 6)])
 def test_assignsisotypes(create_testfolder, database_paths, filename,
                          expected):
-    ddl.utl.assign_isotypes(str(create_testfolder),
-                            blastdb=database_paths['blastdb_fasta'],
-                            filename_prefix=filename,
-                            plot=False)
+    ddl.pp.assign_isotypes(str(create_testfolder),
+                           blastdb=database_paths['blastdb_fasta'],
+                           filename_prefix=filename,
+                           plot=False)
     assert len(list((create_testfolder / 'dandelion').iterdir())) == expected
 
 
 @pytest.mark.parametrize("filename", ['all', 'filtered'])
 def test_checkccall(create_testfolder, processed_files, filename):
-    f = str(create_testfolder / 'dandelion/' + processed_files[filename])
+    f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
     assert not dat['c_call'].empty
