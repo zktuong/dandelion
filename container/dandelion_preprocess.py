@@ -34,7 +34,7 @@ def main():
     # do we have metadata?
     if args.meta is not None:
         # if so, read it and use the index as the sample list
-        meta = pd.read_csv(args.meta, index_col=0, sep = None)  # I'm sure Krzysztof wouldn't mind me making a little change here to make the dtype of the metafile guessable :P
+        meta = pd.read_csv(args.meta, index_col=0)
         samples = list(meta.index)
     else:
         # no metadata file. create empty data frame so we can easily check for column presence
