@@ -10,7 +10,7 @@ From: continuumio/miniconda3
     dandelion_preprocess.py /share/dandelion_preprocess.py
 
 %post
-    apt-get -y update && apt-get install -y curl r-base-core libcurl4-openssl-dev
+    apt-get -y update && apt-get install -y curl r-base-core libcurl4-openssl-dev rsync
     R --slave -e 'install.packages("remotes", repos="https://cloud.r-project.org/")'
     R --slave -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))'
 
