@@ -18,3 +18,17 @@ comment:
   layout: "reach,diff,flags,files,footer"
   behavior: default
   require_changes: no
+
+ignore:
+  - "bin/"
+  - "database/"
+  - "docs/"
+  - "*.ipynb"
+  - "*.md"
+  - "*.txt"
+  - "*.yml"
+  - "*.in"
+  - "*.yaml"
+  - "*.cfg"
+  - "LICENSE"
+  - ".git*"
