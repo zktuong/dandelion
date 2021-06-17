@@ -38,6 +38,16 @@ def processed_files():
 
 
 @pytest.fixture
+def processed_files_tr():
+    """Database paths for tests."""
+    fl = {
+        'filtered': "filtered_contig_igblast_db-pass.tsv",
+        'all': "all_contig_igblast_db-pass.tsv",
+    }
+    return (fl)
+
+
+@pytest.fixture
 def dummy_adata():
     """Dummy anndata for tests."""
     barcodes = [
@@ -46,6 +56,26 @@ def dummy_adata():
         'AAACCTGTCGAGAACG-1',
         'AAACCTGTCTTGAGAC-1',
         'AAACGGGAGCGACGTA-1',
+    ]
+    obs = pd.DataFrame(index=barcodes)
+    n = obs.shape[0]
+
+    # just create a random matrix
+    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format='csr'), obs=obs)
+
+    # this is just to populate the neighbors slot
+    sc.pp.neighbors(adata, use_rep='X', n_neighbors=3)
+
+    return (adata)
+
+
+@pytest.fixture
+def dummy_adata_tr():
+    """Dummy anndata for tests."""
+    barcodes = [
+        'AAGACCTCACTACAGT-1',
+        'AACTGGTTCTTTAGTC-1',
+        'AAAGATGCACCCTATC-1',
     ]
     obs = pd.DataFrame(index=barcodes)
     n = obs.shape[0]
@@ -616,3 +646,100 @@ def airr_reannotated():
                                  'mu_count'
     ])
     return (annotated)
+
+
+@pytest.fixture
+def fasta_10x_tr1():
+    """Standard cellranger fasta file to test the preprocessing."""
+    seq = {
+        'AACTGGTTCTTTAGTC-1_contig_2':
+        'AGGCAGAAGGTGGTTGAGAGGCAGAGCTGCCCCTGAGTGAGCCATGCAGAGGATCTCCTCCCTCATCCATCTCTCTCTCTTCTGGGCAGGAGTCATGTCAGCCATTGAGTTGGTGCCTGAACACCAAACAGTGCCTGTGTCAATAGGGGTCCCTGCCACCCTCAGGTGCTCCATGAAAGGAGAAGCGATCGGTAACTACTATATCAACTGGTACAGGAAGACCCAAGGTAACACAATGACTTTCATATACCGAGAAAAGGACATCTATGGCCCTGGTTTCAAAGACAATTTCCAAGGTGACATTGATATTGCAAAGAACCTGGCTGTACTTAAGATACTTGCACCATCAGAGAGAGATGAAGGGTCTTACTACTGTGCCTGTGACATTTTAGGGGATAAGGCCGATAAACTCATCTTTGGAAAAGGAACCCGTGTGACTGTGGAACCAAGAAGTCAGCCTCATACCAAACCATCCGTTTTTGTCATGAAAAATGGAACAAATGTCGCTTGTCTGGTGAAGGA',
+        'AAGACCTCACTACAGT-1_contig_1':
+        'GACTGAACTTTGAGCTTCAGGCAGCACAACTCACATTTGTGCAAAGAGCTACATGCCACATGCTGTTCTCCAGCCTGCTGTGTGTATTTGTGGCCTTCAGCTACTCTGGATCAAGTGTGGCCCAGAAGGTTACTCAAGCCCAGTCATCAGTATCCATGCCAGTGAGGAAAGCAGTCACCCTGAACTGCCTGTATGAAACAAGTTGGTGGTCATATTATATTTTTTGGTACAAGCAACTTCCCAGCAAAGAGATGATTTTCCTTATTCGCCAGGGTTCTGATGAACAGAATGCAAAAAGTGGTCGCTATTCTGTCAACTTCAAGAAAGCAGCGAAATCCGTCGCCTTAACCATTTCAGCCTTACAGCTAGAAGATTCAGCAAAGTACTTTTGTGCTCTTGGGGAACCCTTCCTCCCAGGGTGGGGCGATAAACTCATCTTTGGAAAAGGAACCCGTGTGACTGTGGAACCAAGAAGTCAGCCTCATACCAAACCATCCGTTTTTGTCATGAAAAATGGAACAAATGTCGCTTGTCTGGTGAAGGA',
+    }
+    return (seq)
+
+
+@pytest.fixture
+def fasta_10x_tr2():
+    """Standard cellranger fasta file to test the preprocessing."""
+    seq = {
+        'AAGACCTCACTACAGT-1_contig_1':
+        'GACTGAACTTTGAGCTTCAGGCAGCACAACTCACATTTGTGCAAAGAGCTACATGCCACATGCTGTTCTCCAGCCTGCTGTGTGTATTTGTGGCCTTCAGCTACTCTGGATCAAGTGTGGCCCAGAAGGTTACTCAAGCCCAGTCATCAGTATCCATGCCAGTGAGGAAAGCAGTCACCCTGAACTGCCTGTATGAAACAAGTTGGTGGTCATATTATATTTTTTGGTACAAGCAACTTCCCAGCAAAGAGATGATTTTCCTTATTCGCCAGGGTTCTGATGAACAGAATGCAAAAAGTGGTCGCTATTCTGTCAACTTCAAGAAAGCAGCGAAATCCGTCGCCTTAACCATTTCAGCCTTACAGCTAGAAGATTCAGCAAAGTACTTTTGTGCTCTTGGGGAACCCTTCCTCCCAGGGTGGGGCGATAAACTCATCTTTGGAAAAGGAACCCGTGTGACTGTGGAACCAAGAAGTCAGCCTCATACCAAACCATCCGTTTTTGTCATGAAAAATGGAACAAATGTCGCTTGTCTGGTGAAGGA',
+        'AACTGGTTCTTTAGTC-1_contig_2':
+        'AGGCAGAAGGTGGTTGAGAGGCAGAGCTGCCCCTGAGTGAGCCATGCAGAGGATCTCCTCCCTCATCCATCTCTCTCTCTTCTGGGCAGGAGTCATGTCAGCCATTGAGTTGGTGCCTGAACACCAAACAGTGCCTGTGTCAATAGGGGTCCCTGCCACCCTCAGGTGCTCCATGAAAGGAGAAGCGATCGGTAACTACTATATCAACTGGTACAGGAAGACCCAAGGTAACACAATGACTTTCATATACCGAGAAAAGGACATCTATGGCCCTGGTTTCAAAGACAATTTCCAAGGTGACATTGATATTGCAAAGAACCTGGCTGTACTTAAGATACTTGCACCATCAGAGAGAGATGAAGGGTCTTACTACTGTGCCTGTGACATTTTAGGGGATAAGGCCGATAAACTCATCTTTGGAAAAGGAACCCGTGTGACTGTGGAACCAAGAAGTCAGCCTCATACCAAACCATCCGTTTTTGTCATGAAAAATGGAACAAATGTCGCTTGTCTGGTGAAGGA',
+        'AAAGATGCACCCTATC-1_contig_2':
+        'TGGGGGAACTTTGAGCTTCAGGCAGCACAACTCACATTTGTGCAAAGAGCTACATGCCACATGCTGTTCTCCAGCCTGCTGTGTGTATTTGTGGCCTTCAGCTACTCTGGATCAAGTGTGGCCCAGAAGGTTACTCAAGCCCAGTCATCAGTATCCATGCCAGTGAGGAAAGCAGTCACCCTGAACTGCCTGTATGAAACAAGTTGGTGGTCATATTATATTTTTTGGTACAAGCAACTTCCCAGCAAAGAGATGATTTTCCTTATTCGCCAGGGTTCTGATGAACAGAATGCAAAAAGTGGTCGCTATTCTGTCAACTTCAAGAAAGCAGCGAAATCCGTCGCCTTAACCATTTCAGCCTTACAGCTAGAAGATTCAGCAAAGTACTTTTGTGCTCTTGGGGACCCCAGGCCTTCCTACAGGTACTGGGGGATACAGGGCGATAAACTCATCTTTGGAAAAGGAACCCGTGTGACTGTGGAACCAAGAAGTCAGCCTCATACCAAACCATCCGTTTTTGTCATGAAAAATGGAACAAATGTCGCTTGTCTGGTGAAGGA',
+    }
+    return (seq)
+
+
+@pytest.fixture
+def annotation_10x_tr1():
+    """Standard cellranger annotation file to test the preprocessing."""
+    annot = pd.DataFrame([
+        [
+            'AACTGGTTCTTTAGTC-1', 'false', 'AACTGGTTCTTTAGTC-1_contig_2',
+            'true', '522', 'TRD', 'TRDV2', '', 'TRDJ1', 'TRDC', 'true',
+            'false', '', '', '', '', '', '', '', '', '', '', 'CACDILGDKADKLIF',
+            'TGTGCCTGTGACATTTTAGGGGATAAGGCCGATAAACTCATCTTT', '', '', '1176',
+            '6', '', '', ''
+        ],
+        [
+            'AAGACCTCACTACAGT-1', 'false', 'AAGACCTCACTACAGT-1_contig_1',
+            'true', '544', 'TRD', 'TRDV1', '', 'TRDJ1', 'TRDC', 'true',
+            'false', '', '', '', '', '', '', '', '', '', '',
+            'CALGEPFLPGWGDKLIF',
+            'TGTGCTCTTGGGGAACCCTTCCTCCCAGGGTGGGGCGATAAACTCATCTTT', '', '',
+            '2932', '11', '', '', ''
+        ],
+    ],
+        columns=[
+        'barcode', 'is_cell', 'contig_id',
+        'high_confidence', 'length', 'chain', 'v_gene',
+        'd_gene', 'j_gene', 'c_gene', 'full_length',
+        'productive', 'fwr1', 'fwr1_nt', 'cdr1',
+        'cdr1_nt', 'fwr2', 'fwr2_nt', 'cdr2', 'cdr2_nt',
+        'fwr3', 'fwr3_nt', 'cdr3', 'cdr3_nt', 'fwr4',
+        'fwr4_nt', 'reads', 'umis', 'raw_clonotype_id',
+        'raw_consensus_id', 'exact_subclonotype_id'
+    ])
+
+    return (annot)
+
+
+@pytest.fixture
+def annotation_10x_tr2():
+    """Standard cellranger annotation file to test the preprocessing."""
+    annot = pd.DataFrame([
+        [
+            'AAGACCTCACTACAGT-1', 'False', 'AAGACCTCACTACAGT-1_contig_1',
+            'True', '544', 'TRD', 'TRDV1', 'None', 'TRDJ1', 'TRDC', 'True',
+            'False', 'CALGEPFLPGWGDKLIF',
+            'TGTGCTCTTGGGGAACCCTTCCTCCCAGGGTGGGGCGATAAACTCATCTTT', '2932',
+            '11', 'None', 'None'
+        ],
+        [
+            'AACTGGTTCTTTAGTC-1', 'False', 'AACTGGTTCTTTAGTC-1_contig_2',
+            'True', '522', 'TRD', 'TRDV2', 'None', 'TRDJ1', 'TRDC', 'True',
+            'False', 'CACDILGDKADKLIF',
+            'TGTGCCTGTGACATTTTAGGGGATAAGGCCGATAAACTCATCTTT', '1176', '6',
+            'None', 'None'
+        ],
+        [
+            'AAAGATGCACCCTATC-1', 'False', 'AAAGATGCACCCTATC-1_contig_2',
+            'True', '560', 'TRD', 'TRDV1', 'None', 'TRDJ1', 'TRDC', 'True',
+            'False', 'CALGDPRPSYRYWGIQGDKLIF',
+            'TGTGCTCTTGGGGACCCCAGGCCTTCCTACAGGTACTGGGGGATACAGGGCGATAAACTCATCTTT',
+            '1128', '3', 'None', 'None'
+        ],
+    ],
+        columns=[
+        'barcode', 'is_cell', 'contig_id',
+        'high_confidence', 'length', 'chain', 'v_gene',
+        'd_gene', 'j_gene', 'c_gene', 'full_length',
+        'productive', 'cdr3', 'cdr3_nt', 'reads', 'umis',
+        'raw_clonotype_id', 'raw_consensus_id'
+    ])
+
+    return (annot)
