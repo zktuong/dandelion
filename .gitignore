@@ -9,6 +9,8 @@
 *scmtag.py
 *dist
 *sc_dandelion.egg-info
+*.coverage
+*.coverage*
 dandelion/logging/version.py
 tests/test_local.py
 tests/reassigned_all/
