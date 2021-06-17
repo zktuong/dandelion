@@ -45,7 +45,7 @@ This can be used for the preprocessing steps by navigating to the data folder an
 ```bash
 singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess
 ```
-Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) for more information.
+Please refer to the [documentation](https://sc-dandelion.readthedocs.io/master/notebooks/singularity_preprocessing.html) for more information.
 
 For more fine control, as well as for the exploration steps, please install via following the instructions below.
 
