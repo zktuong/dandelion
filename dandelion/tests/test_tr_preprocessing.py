@@ -4,9 +4,9 @@ import pandas as pd
 import dandelion as ddl
 from pathlib import Path
 
-from dandelion.tests.fixtures(fasta_10x_tr1, fasta_10x_tr2, annotation_10x_tr1,
-                              processed_files_tr, annotation_10x_tr2,
-                              create_testfolder, database_paths, dummy_adata_tr)
+from dandelion.tests.fixtures import (fasta_10x_tr1, fasta_10x_tr2, annotation_10x_tr1,
+                                      processed_files_tr, annotation_10x_tr2,
+                                      create_testfolder, database_paths, dummy_adata_tr)
 
 
 def test_write_fasta_tr1(create_testfolder, fasta_10x_tr1):
