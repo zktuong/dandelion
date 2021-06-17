@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 17:28:38
+# @Last Modified time: 2021-06-17 14:12:38
 
 import pandas as pd
 import numpy as np
@@ -25,7 +25,15 @@ except ImportError:
 from typing import Union, Sequence, Tuple
 
 
-def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None, str] = None, clone_key: Union[None, str] = None, min_size: int = 2, downsample: Union[None, int] = None, verbose: bool = True, **kwargs)->Dandelion:
+def generate_network(self: Union[Dandelion, pd.DataFrame, str],
+                     key: Union[None, str] = None,
+                     clone_key: Union[None, str] = None,
+                     min_size: int = 2,
+                     downsample: Union[None, int] = None,
+                     verbose: bool = True,
+                     locus: Union[None, Literal['ig', 'tr-ab',
+                                                'tr-gd']] = None,
+                     **kwargs) -> Dandelion:
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix.
@@ -44,6 +52,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool
         whether or not to print the progress bars.
+    locus : str
+        Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
 
@@ -80,8 +90,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
         # if downsample >= dat_h.shape[0]:
         if downsample >= self.metadata.shape[0]:
             if verbose:
-                print('Cannot downsample to {} cells. Using all {} cells.'.format(
-                    str(downsample), self.metadata.shape[0]))
+                print('Cannot downsample to {} cells. Using all {} cells.'.
+                      format(str(downsample), self.metadata.shape[0]))
         else:
             if verbose:
                 print('Downsampling to {} cells.'.format(str(downsample)))
@@ -95,9 +105,16 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
 
     # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
     try:
-        dat_seq = retrieve_metadata(dat_, query=key_, split=True, collapse=False)
+        dat_seq = retrieve_metadata(dat_,
+                                    query=key_,
+                                    split=True,
+                                    collapse=False)
     except:
-        dat_seq = retrieve_metadata(dat_, query=key_, split=True, collapse=False, **kwargs)
+        dat_seq = retrieve_metadata(dat_,
+                                    query=key_,
+                                    split=True,
+                                    collapse=False,
+                                    **kwargs)
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
@@ -107,15 +124,19 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
         for x in tqdm(dat_seq.columns, desc='Calculating distances... '):
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
             # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) if (x[0] == x[0]) and (y[0] == y[0]) else 0])
-            d_mat = squareform(pdist(tdarray, lambda x, y: levenshtein(
-                x[0], y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))
+            d_mat = squareform(
+                pdist(
+                    tdarray, lambda x, y: levenshtein(x[0], y[0])
+                    if (x[0] == x[0]) and (y[0] == y[0]) else 0))
             dmat[x] = d_mat
     else:
         for x in dat_seq.columns:
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
             # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) if (x[0] == x[0]) and (y[0] == y[0]) else 0])
-            d_mat = squareform(pdist(tdarray, lambda x, y: levenshtein(
-                x[0], y[0]) if (x[0] == x[0]) and (y[0] == y[0]) else 0))
+            d_mat = squareform(
+                pdist(
+                    tdarray, lambda x, y: levenshtein(x[0], y[0])
+                    if (x[0] == x[0]) and (y[0] == y[0]) else 0))
             dmat[x] = d_mat
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
@@ -126,12 +147,13 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
     if self.__class__ == Dandelion:
         out = self.copy()
         if downsample is not None:
-            out = Dandelion(dat_)
+            out = Dandelion(dat_, locus=locus)
     else:  # re-initiate a Dandelion class object
-        out = Dandelion(dat_)
+        out = Dandelion(dat_, locus=locus)
 
-    tmp_totaldist = pd.DataFrame(
-        total_dist, index=dat_seq.index, columns=dat_seq.index)
+    tmp_totaldist = pd.DataFrame(total_dist,
+                                 index=dat_seq.index,
+                                 columns=dat_seq.index)
     tmp_clusterdist = Tree()
     overlap = []
     for i in out.metadata.index:
@@ -202,24 +224,26 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
                 if x in ol:
                     if len(tmp_clone_tree2[x]) > 1:
                         for x_ in tmp_clone_tree2[x]:
-                            tmp_clone_tree3_overlap['|'.join(
-                                ol)][''.join(x_)].value = 1
+                            tmp_clone_tree3_overlap['|'.join(ol)][''.join(
+                                x_)].value = 1
                     else:
                         tmp_clone_tree3_overlap['|'.join(ol)][''.join(
                             tmp_clone_tree2[x])].value = 1
         else:
-            tmp_ = pd.DataFrame(
-                index=tmp_clone_tree2[x], columns=tmp_clone_tree2[x])
-            tmp_ = pd.DataFrame(
-                np.tril(tmp_) + 1, index=tmp_clone_tree2[x], columns=tmp_clone_tree2[x])
+            tmp_ = pd.DataFrame(index=tmp_clone_tree2[x],
+                                columns=tmp_clone_tree2[x])
+            tmp_ = pd.DataFrame(np.tril(tmp_) + 1,
+                                index=tmp_clone_tree2[x],
+                                columns=tmp_clone_tree2[x])
             tmp_.fillna(0, inplace=True)
             tmp_clone_tree3[x] = tmp_
 
     for x in tmp_clone_tree3_overlap:  # repeat for the overlap clones
-        tmp_ = pd.DataFrame(
-            index=tmp_clone_tree3_overlap[x], columns=tmp_clone_tree3_overlap[x])
-        tmp_ = pd.DataFrame(np.tril(
-            tmp_) + 1, index=tmp_clone_tree3_overlap[x], columns=tmp_clone_tree3_overlap[x])
+        tmp_ = pd.DataFrame(index=tmp_clone_tree3_overlap[x],
+                            columns=tmp_clone_tree3_overlap[x])
+        tmp_ = pd.DataFrame(np.tril(tmp_) + 1,
+                            index=tmp_clone_tree3_overlap[x],
+                            columns=tmp_clone_tree3_overlap[x])
         tmp_.fillna(0, inplace=True)
         tmp_clone_tree3[x] = tmp_
 
@@ -230,10 +254,14 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
     tmp_totaldiststack.index.names = [None, None]
     tmp_totaldiststack = tmp_totaldiststack.reset_index(drop=False)
     tmp_totaldiststack.columns = ['source', 'target', 'weight']
-    tmp_totaldiststack.index = [str(s) + '|' + str(t) for s, t in zip(
-        tmp_totaldiststack['source'], tmp_totaldiststack['target'])]
-    tmp_totaldiststack['keep'] = [False if len(
-        list(set(i.split('|')))) == 1 else True for i in tmp_totaldiststack.index]
+    tmp_totaldiststack.index = [
+        str(s) + '|' + str(t) for s, t in zip(tmp_totaldiststack['source'],
+                                              tmp_totaldiststack['target'])
+    ]
+    tmp_totaldiststack['keep'] = [
+        False if len(list(set(i.split('|')))) == 1 else True
+        for i in tmp_totaldiststack.index
+    ]
     tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop(
         'keep', axis=1)
 
@@ -243,36 +271,44 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
             if len(tmp_clone_tree3[c]) > 1:
                 G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
                 tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-                tmp_edge_list[c].index = [str(
-                    s) + '|' + str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+                tmp_edge_list[c].index = [
+                    str(s) + '|' + str(t) for s, t in zip(
+                        tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])
+                ]
                 tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
                 # keep only edges when there is 100% identity, to minimise crowding
-                tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]
-                                                    ['weight'] == 0]
+                tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['weight']
+                                                    == 0]
                 tmp_edge_list[c].reset_index(inplace=True)
     else:
         for c in tmp_clone_tree3:
             if len(tmp_clone_tree3[c]) > 1:
                 G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
                 tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-                tmp_edge_list[c].index = [str(
-                    s) + '|' + str(t) for s, t in zip(tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])]
+                tmp_edge_list[c].index = [
+                    str(s) + '|' + str(t) for s, t in zip(
+                        tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])
+                ]
                 tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
                 # keep only edges when there is 100% identity, to minimise crowding
-                tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]
-                                                    ['weight'] == 0]
+                tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['weight']
+                                                    == 0]
                 tmp_edge_list[c].reset_index(inplace=True)
 
     # try to catch situations where there's no edge (only singletons)
     try:
         edge_listx = pd.concat([edge_list[x] for x in edge_list])
         edge_listx.index = [
-            str(s) + '|' + str(t) for s, t in zip(edge_listx['source'], edge_listx['target'])]
+            str(s) + '|' + str(t)
+            for s, t in zip(edge_listx['source'], edge_listx['target'])
+        ]
 
         tmp_edge_listx = pd.concat([tmp_edge_list[x] for x in tmp_edge_list])
         tmp_edge_listx.drop('index', axis=1, inplace=True)
-        tmp_edge_listx.index = [str(
-            s) + '|' + str(t) for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])]
+        tmp_edge_listx.index = [
+            str(s) + '|' + str(t)
+            for s, t in zip(tmp_edge_listx['source'], tmp_edge_listx['target'])
+        ]
 
         edge_list_final = edge_listx.combine_first(tmp_edge_listx)
         edge_list_final['weight'].update(tmp_totaldiststack['weight'])
@@ -285,8 +321,12 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
     vertice_list = list(out.metadata.index)
 
     # and now to actually generate the network
-    g, g_, lyt, lyt_ = generate_layout(
-        vertice_list, edge_list_final, min_size=min_size, weight=None, verbose=verbose, **kwargs)
+    g, g_, lyt, lyt_ = generate_layout(vertice_list,
+                                       edge_list_final,
+                                       min_size=min_size,
+                                       weight=None,
+                                       verbose=verbose,
+                                       **kwargs)
 
     # convert distance matrices to sparse
     for x in dmat:
@@ -294,14 +334,16 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
             dmat[x] = csr_matrix(dmat[x])
 
     if verbose:
-        logg.info(' finished', time=start,
-                  deep=('Updated Dandelion object: \n'
-                        '   \'data\', contig-indexed clone table\n'
-                        '   \'metadata\', cell-indexed clone table\n'
-                        '   \'distance\', heavy and light chain distance matrices\n'
-                        '   \'edges\', network edges\n'
-                        '   \'layout\', network layout\n'
-                        '   \'graph\', network'))
+        logg.info(
+            ' finished',
+            time=start,
+            deep=('Updated Dandelion object: \n'
+                  '   \'data\', contig-indexed clone table\n'
+                  '   \'metadata\', cell-indexed clone table\n'
+                  '   \'distance\', heavy and light chain distance matrices\n'
+                  '   \'edges\', network edges\n'
+                  '   \'layout\', network layout\n'
+                  '   \'graph\', network'))
     if self.__class__ == Dandelion:
         if self.germline is not None:
             germline_ = self.germline
@@ -313,19 +355,36 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str], key: Union[None,
             threshold_ = None
         if downsample is not None:
             # out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
-            out = Dandelion(data=dat_, distance=dmat, edges=edge_list_final, layout=(
-                lyt, lyt_), graph=(g, g_), germline=germline_)
+            out = Dandelion(data=dat_,
+                            distance=dmat,
+                            edges=edge_list_final,
+                            layout=(lyt, lyt_),
+                            graph=(g, g_),
+                            germline=germline_,
+                            locus=locus)
             out.threshold = threshold_
-            return(out)
+            return (out)
         else:
-            self.__init__(data=self.data, metadata=self.metadata, distance=dmat, edges=edge_list_final, layout=(
-                lyt, lyt_), graph=(g, g_), germline=germline_, initialize=False)
+            self.__init__(data=self.data,
+                          metadata=self.metadata,
+                          distance=dmat,
+                          edges=edge_list_final,
+                          layout=(lyt, lyt_),
+                          graph=(g, g_),
+                          germline=germline_,
+                          locus=locus,
+                          initialize=False)
             self.threshold = threshold_
     else:
         # out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
-        out = Dandelion(data=dat_, distance=dmat, edges=edge_list_final, layout=(
-            lyt, lyt_), graph=(g, g_), clone_key=clone_key)
-        return(out)
+        out = Dandelion(data=dat_,
+                        distance=dmat,
+                        edges=edge_list_final,
+                        layout=(lyt, lyt_),
+                        graph=(g, g_),
+                        clone_key=clone_key,
+                        locus=locus)
+        return (out)
 
 
 def mst(mat: dict) -> Tree:
@@ -343,12 +402,16 @@ def mst(mat: dict) -> Tree:
     """
     mst_tree = Tree()
     for c in mat:
-        mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(mat[c])).toarray(
-        ).astype(int), index=mat[c].index, columns=mat[c].columns)
-    return(mst_tree)
+        mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(
+            mat[c])).toarray().astype(int),
+            index=mat[c].index,
+            columns=mat[c].columns)
+    return (mst_tree)
 
 
-def clone_degree(self: Dandelion, weight: Union[None, str] = None, verbose: bool = True) -> Dandelion:
+def clone_degree(self: Dandelion,
+                 weight: Union[None, str] = None,
+                 verbose: bool = True) -> Dandelion:
     """
     Calculates node degree in BCR network.
 
@@ -371,12 +434,16 @@ def clone_degree(self: Dandelion, weight: Union[None, str] = None, verbose: bool
         try:
             G = self.graph[0]
         except:
-            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(
-                self.distance[x]) is csr_matrix], axis=0)
+            dist = np.sum([
+                self.distance[x].toarray()
+                for x in self.distance if type(self.distance[x]) is csr_matrix
+            ],
+                axis=0)
             A = csr_matrix(dist)
             G = nx.Graph()
             G.add_weighted_edges_from(
-                zip(list(self.metadata.index), list(self.metadata.index), A.data))
+                zip(list(self.metadata.index), list(self.metadata.index),
+                    A.data))
 
         if len(G) == 0:
             raise AttributeError(
@@ -386,7 +453,8 @@ def clone_degree(self: Dandelion, weight: Union[None, str] = None, verbose: bool
             cd.set_index(0, inplace=True)
             self.metadata['clone_degree'] = pd.Series(cd[1])
             if verbose:
-                logg.info(' finished', time=start,
+                logg.info(' finished',
+                          time=start,
                           deep=('Updated Dandelion metadata\n'))
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
@@ -413,30 +481,41 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
         try:
             G = self.graph[0]
         except:
-            dist = np.sum([self.distance[x].toarray() for x in self.distance if type(
-                self.distance[x]) is csr_matrix], axis=0)
+            dist = np.sum([
+                self.distance[x].toarray()
+                for x in self.distance if type(self.distance[x]) is csr_matrix
+            ],
+                axis=0)
             A = csr_matrix(dist)
             G = nx.Graph()
             G.add_weighted_edges_from(
-                zip(list(self.metadata.index), list(self.metadata.index), A.data))
+                zip(list(self.metadata.index), list(self.metadata.index),
+                    A.data))
 
         if len(G) == 0:
             raise AttributeError(
                 'Graph not found. Plase run tl.generate_network.')
         else:
             cc = nx.closeness_centrality(G)
-            cc = pd.DataFrame.from_dict(
-                cc, orient='index', columns=['clone_centrality'])
+            cc = pd.DataFrame.from_dict(cc,
+                                        orient='index',
+                                        columns=['clone_centrality'])
             self.metadata['clone_centrality'] = pd.Series(
                 cc['clone_centrality'])
             if verbose:
-                logg.info(' finished', time=start,
+                logg.info(' finished',
+                          time=start,
                           deep=('Updated Dandelion metadata\n'))
     else:
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def generate_layout(vertices: Sequence, edges: pd.DataFrame = None, min_size: int = 2, weight: Union[None, str] = None, verbose: bool = True, **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
+def generate_layout(vertices: Sequence,
+                    edges: pd.DataFrame = None,
+                    min_size: int = 2,
+                    weight: Union[None, str] = None,
+                    verbose: bool = True,
+                    **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
@@ -451,18 +530,21 @@ def generate_layout(vertices: Sequence, edges: pd.DataFrame = None, min_size: in
             pass
     elif min_size > 2:
         if edges is not None:
-            remove = [node for node, degree in dict(
-                G.degree()).items() if degree > min_size]
+            remove = [
+                node for node, degree in dict(G.degree()).items()
+                if degree > min_size
+            ]
             G_.remove_nodes_from(remove)
         else:
             pass
     # if edges is not None:
-        # edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
+    # edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
     if verbose:
         print('generating network layout')
     pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
     pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
-    return(G, G_, pos, pos_)
+    return (G, G_, pos, pos_)
+
 
 # when dealing with a lot of unconnected vertices, the pieces fly out to infinity and the original fr layout can't be used
 # work around from https://stackoverflow.com/questions/14283341/how-to-increase-node-spacing-for-networkx-spring-layout
@@ -608,18 +690,16 @@ def _fruchterman_reingold_layout(
             # We must adjust k by domain size for layouts not near 1x1
             nnodes, _ = A.shape
             k = dom_size / np.sqrt(nnodes)
-        pos = _sparse_fruchterman_reingold(
-            A, k, pos_arr, fixed, iterations, threshold, dim, seed
-        )
+        pos = _sparse_fruchterman_reingold(A, k, pos_arr, fixed, iterations,
+                                           threshold, dim, seed)
     except ValueError:
         A = nx.to_numpy_array(G, weight=weight)
         if k is None and fixed is not None:
             # We must adjust k by domain size for layouts not near 1x1
             nnodes, _ = A.shape
             k = dom_size / np.sqrt(nnodes)
-        pos = _fruchterman_reingold(
-            A, k, pos_arr, fixed, iterations, threshold, dim, seed
-        )
+        pos = _fruchterman_reingold(A, k, pos_arr, fixed, iterations,
+                                    threshold, dim, seed)
     if fixed is None and scale is not None:
         pos = _rescale_layout(pos, scale=scale) + center
     pos = dict(zip(G, pos))
@@ -628,7 +708,15 @@ def _fruchterman_reingold_layout(
 
 @random_state(7)
 def _fruchterman_reingold(
-    A, k=None, pos=None, fixed=None, iterations=50, threshold=1e-4, dim=2, seed=None, **kwargs,
+    A,
+    k=None,
+    pos=None,
+    fixed=None,
+    iterations=50,
+    threshold=1e-4,
+    dim=2,
+    seed=None,
+    **kwargs,
 ):
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
@@ -670,8 +758,8 @@ def _fruchterman_reingold(
         # enforce minimum distance of 0.01
         np.clip(distance, 0.001, None, out=distance)
         # displacement "force"
-        displacement = np.einsum(
-            "ijk,ij->ik", delta, (k * k / distance ** 2 - A * distance / k))
+        displacement = np.einsum("ijk,ij->ik", delta,
+                                 (k * k / distance**2 - A * distance / k))
         displacement = displacement - pos / (k * np.sqrt(nnodes))
         # update positions
         length = np.linalg.norm(displacement, axis=-1)
@@ -691,7 +779,15 @@ def _fruchterman_reingold(
 
 @random_state(7)
 def _sparse_fruchterman_reingold(
-    A, k=None, pos=None, fixed=None, iterations=50, threshold=1e-4, dim=2, seed=None, **kwargs,
+    A,
+    k=None,
+    pos=None,
+    fixed=None,
+    iterations=50,
+    threshold=1e-4,
+    dim=2,
+    seed=None,
+    **kwargs,
 ):
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
@@ -745,18 +841,19 @@ def _sparse_fruchterman_reingold(
             # difference between this row's node position and all others
             delta = (pos[i] - pos).T
             # distance between points
-            distance = np.sqrt((delta ** 2).sum(axis=0))
+            distance = np.sqrt((delta**2).sum(axis=0))
             # enforce minimum distance of 0.01
             distance = np.where(distance < 0.01, 0.01, distance)
             # the adjacency matrix row
             Ai = np.asarray(A.getrowview(i).toarray())
             # displacement "force"
-            displacement[:, i] += (
-                delta * (k * k / distance ** 2 - Ai * distance / k)
-            ).sum(axis=1)
+            displacement[:,
+                         i] += (delta *
+                                (k * k / distance**2 - Ai * distance / k)).sum(
+                                    axis=1)
         displacement = displacement - pos / (k * np.sqrt(nnodes))
         # update positions
-        length = np.sqrt((displacement ** 2).sum(axis=0))
+        length = np.sqrt((displacement**2).sum(axis=0))
         length = np.where(length < 0.01, 0.1, length)
         delta_pos = (displacement * t / length).T
         pos += delta_pos
@@ -803,7 +900,8 @@ def _rescale_layout(pos, scale=1):
     return pos
 
 
-def extract_edge_weights(self: Dandelion, expanded_only: bool = False) -> Sequence:
+def extract_edge_weights(self: Dandelion,
+                         expanded_only: bool = False) -> Sequence:
     """
     Retrieves edge weights (BCR levenshtein distance) from graph.
 
@@ -824,13 +922,15 @@ def extract_edge_weights(self: Dandelion, expanded_only: bool = False) -> Sequen
                 *nx.get_edge_attributes(self.graph[1], 'weight').items())
         except ValueError as e:
             print(
-                '{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'.format(e))
+                '{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'
+                .format(e))
     else:
         try:
             edges, weights = zip(
                 *nx.get_edge_attributes(self.graph[0], 'weight').items())
         except ValueError as e:
             print(
-                '{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'.format(e))
+                '{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'
+                .format(e))
     if 'weights' in locals():
-        return(weights)
+        return (weights)
