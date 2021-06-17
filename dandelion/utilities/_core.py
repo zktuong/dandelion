@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 23:03:37
+# @Last Modified time: 2021-06-17 11:25:01
 
 import os
 from collections import defaultdict
@@ -1003,7 +1003,7 @@ def update_metadata(self: Dandelion, retrieve: Union[None, Sequence, str] = None
     retrieve : str, sequence, optional
         Column name in `.data` slot to retrieve and update the metadata.
     locus : str, optional
-        Mode for creating metadata. None defaults to 'ig'. Currently only accepts 'ig'.
+        Mode for creating metadata. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     clone_key : str, optional
         Column name of clone id. None defaults to 'clone_id'.
     split : bool
