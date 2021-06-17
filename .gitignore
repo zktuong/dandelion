@@ -11,8 +11,10 @@
 *sc_dandelion.egg-info
 *.coverage
 *.coverage*
+*coverage.xml
+*coverage_code.xml
 dandelion/logging/version.py
-tests/test_local.py
-tests/reassigned_all/
-tests/reassigned_filtered/
-tests/test_local_tr.py
+*/tests/test_local.py
+*/tests/reassigned_all/
+*/tests/reassigned_filtered/
+*/tests/test_local_tr.py

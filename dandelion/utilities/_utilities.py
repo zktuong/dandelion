@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 20:32:07
+# @Last Modified time: 2021-06-17 17:58:19
 
 import os
 from collections import defaultdict, Iterable
@@ -171,7 +171,10 @@ def isBZIP(filename: str) -> bool:
     return False
 
 
-def check_filepath(s, filename_prefix=None, endswith=None, subdir=None):
+def check_filepath(s,
+                   filename_prefix: Union[None, str] = None,
+                   endswith: Union[None, str] = None,
+                   subdir: Union[None, str] = None):
     if filename_prefix is None:
         filename_pre = 'filtered'
     else:
@@ -208,7 +211,7 @@ def check_filepath(s, filename_prefix=None, endswith=None, subdir=None):
     return (filePath)
 
 
-def check_fastapath(fasta, filename_prefix=None):
+def check_fastapath(fasta, filename_prefix: Union[None, str] = None):
     if filename_prefix is None:
         filename_pre = 'filtered'
     else:
