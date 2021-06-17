@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-16 22:27:43
+# @Last Modified time: 2021-06-17 10:56:38
 
 import os
 import pandas as pd
@@ -1985,7 +1985,9 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                    filter_vj_chains: bool = True,
                    filter_missing: bool = True,
                    productive_only: bool = True,
-                   save: Union[None, str] = None) -> Tuple[Dandelion, AnnData]:
+                   locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                   save: Union[None, str] = None,
+                   **kwargs) -> Tuple[Dandelion, AnnData]:
     """
     Filter doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData`.
 
@@ -2028,8 +2030,12 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful
         for toggling to False if integrating with bulk data.
+    locus : str
+        Mode for filtering data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     save : str, optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
+    **kwargs
+        additional kwargs passed to `Dandelion.Dandelion`.
 
     Returns
     -------
@@ -2084,7 +2090,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     tofilter = FilterContigs(dat)
 
     for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
-        tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff, filter_poorqualitycontig, v_dict, j_dict, c_dict)
+        tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
+                          filter_poorqualitycontig, v_dict, j_dict, c_dict)
 
     poor_qual = tofilter.poor_qual
     h_doublet = tofilter.h_doublet
@@ -2204,7 +2211,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         'category')
 
     print('Initializing Dandelion object')
-    out_dat = Dandelion(data=_dat)
+    out_dat = Dandelion(data=_dat, locus=locus, **kwargs)
     if data.__class__ == Dandelion:
         out_dat.germline = data.germline
 
