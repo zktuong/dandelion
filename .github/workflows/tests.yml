@@ -147,13 +147,18 @@ jobs:
     - name: Test with pytest
       run: |
         pytest --cov=./ --cov-report=xml -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
-    
+        
+    - name: Run coverage
+      run: |
+        coverage xml --omit="*site-packages*","*envs*" -o ./coverage_code.xml
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
+        files: ./coverage.xml, ./coverage_code.xml
         directory: ./coverage/reports/
+        flags: unittests
         env_vars: OS,PYTHON
         name: codecov-umbrella
         fail_ci_if_error: true
