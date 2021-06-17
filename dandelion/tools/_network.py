@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-17 14:12:38
+# @Last Modified by:   kt16
+# @Last Modified time: 2021-06-17 15:05:26
 
 import pandas as pd
 import numpy as np
@@ -52,7 +52,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool
         whether or not to print the progress bars.
-    locus : str
+    locus : str, optional
         Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
