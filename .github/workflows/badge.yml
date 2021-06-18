@@ -8,6 +8,10 @@ on:
     branches:
       - "master"
       - "devel"
+  create:
+    tags:
+      - "*"
+
 
 jobs:
   devel:
