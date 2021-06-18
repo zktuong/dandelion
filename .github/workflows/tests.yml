@@ -53,12 +53,6 @@ jobs:
         echo "##[set-output name=biocversion;]$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')"
       shell: bash -l {0}
 
-    - name: Export environmental variables
-      run: |
-        export OS=${{ matrix.config.os }}
-        export PYTHON=${{ matrix.config.python-version }}
-      shell: bash -l {0}
-
     - name: Set up R
       uses: r-lib/actions/setup-r@v1
       with:
@@ -164,7 +158,9 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
         directory: ./coverage/reports/
-        env_vars: OS, PYTHON
+        env_vars: 
+          - OS=${{ matrix.config.os }}
+          - PYTHON=${{ matrix.config.python-version }}
         name: codecov-umbrella
         fail_ci_if_error: true
         path_to_write_report: ./coverage/codecov_report.txt
