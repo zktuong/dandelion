@@ -148,6 +148,10 @@ jobs:
       run: |
         pytest --cov=dandelion --cov-report=xml -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
+    - name: Show coverage
+      run: |
+        pytest --cov=dandelion -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
