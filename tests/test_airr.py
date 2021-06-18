@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import dandelion as ddl
 
-from dandelion.tests.fixtures import airr_10x, create_testfolder
+from fixtures import airr_10x, create_testfolder
 
 
 def test_write_airr(create_testfolder, airr_10x):

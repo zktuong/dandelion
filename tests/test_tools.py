@@ -4,7 +4,7 @@ import pandas as pd
 import dandelion as ddl
 from pathlib import Path
 
-from dandelion.tests.fixtures import (airr_reannotated, dummy_adata, create_testfolder)
+from fixtures import (airr_reannotated, dummy_adata, create_testfolder)
 
 
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
