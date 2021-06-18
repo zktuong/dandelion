@@ -154,7 +154,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
         directory: ./coverage/reports/
-        env_vars: OS,PYTHON
+        env_vars: ${{ matrix.config.os }},${{ matrix.config.python-version }}
         name: codecov-umbrella
         fail_ci_if_error: true
         path_to_write_report: ./coverage/codecov_report.txt
