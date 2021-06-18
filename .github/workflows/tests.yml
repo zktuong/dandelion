@@ -55,8 +55,8 @@ jobs:
 
     - name: Export environmental variables
       run: |
-        echo "export OS=${{ matrix.config.os }} >> ~/.bash_profile"
-        echo "export PYTHON=${{ matrix.config.python-version }} >> ~/.bash_profile"
+        export OS=${{ matrix.config.os }}
+        export PYTHON=${{ matrix.config.python-version }}
       shell: bash -l {0}
 
     - name: Set up R
