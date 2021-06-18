@@ -159,6 +159,7 @@ jobs:
         files: ./coverage.xml
         directory: ./coverage/reports/
         env_vars: ${{ format('OS={0},PYTHON={1}', matrix.config.os, matrix.config.python-version) }}
+        flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
         path_to_write_report: ./coverage/codecov_report.txt
