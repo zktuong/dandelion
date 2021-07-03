@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-14 23:59:30
+# @Last Modified time: 2021-07-03 17:17:11
 
 import os
 import pandas as pd
@@ -12,6 +12,7 @@ from datetime import timedelta
 from anndata import AnnData
 from time import time
 from collections import OrderedDict
+from sklearn import mixture
 from time import time
 from ...utilities._utilities import *
 import scanpy as sc
@@ -496,7 +497,7 @@ def tigger_genotype(data: Union[str, PathLike], v_germline: Union[None, PathLike
         print(msg)
 
 
-def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int = 2500, min_genes: int = 200, mito_cutoff: int = 5, pval_cutoff: float = 0.1, min_counts: Union[None, int] = None, max_counts: Union[None, int] = None, blacklist: Union[None, Sequence] = None, vdj_pattern: str = '^TR[AB][VDJ]|^IG[HKL][VDJC]') -> AnnData:
+def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int = 2500, min_genes: int = 200, mito_cutoff: Union[None, int] = 5, pval_cutoff: float = 0.1, min_counts: Union[None, int] = None, max_counts: Union[None, int] = None, blacklist: Union[None, Sequence] = None, vdj_pattern: str = '^TR[AB][VDJ]|^IG[HKL][VDJC]') -> AnnData:
     """
     Recipe for running a standard scanpy QC workflow.
 
@@ -541,6 +542,20 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
     sc.pp.filter_cells(_adata, min_genes=0)
     _adata.var['mt'] = _adata.var_names.str.startswith(mito_startswith)
     sc.pp.calculate_qc_metrics(_adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
+    # use a model-based method to determine the cut off for mitochondrial content
+    gmm = mixture.GaussianMixture(n_components=2, max_iter=1000, covariance_type='full')
+    X = _adata.obs[['pct_counts_mt', 'n_genes_by_counts']]
+    _adata.obs['gmm_pct_count_clusters'] = gmm.fit(X).predict(X)
+    # use a simple metric to workout which cluster is the one that contains lower mito content?
+    A1 = _adata[_adata.obs['gmm_pct_count_clusters'] == 0].obs['pct_counts_mt'].mean()
+    B1 = _adata[_adata.obs['gmm_pct_count_clusters'] == 1].obs['pct_counts_mt'].mean()
+    A2 = _adata[_adata.obs['gmm_pct_count_clusters'] == 0].obs['n_genes_by_counts'].mean()
+    B2 = _adata[_adata.obs['gmm_pct_count_clusters'] == 1].obs['n_genes_by_counts'].mean()
+    if ((A1 > B1) and (A2 < B2)):
+        keepdict = {0: False, 1: True}
+    else:
+        keepdict = {1: False, 0: True}
+    _adata.obs['gmm_pct_count_clusters_keep'] = [keepdict[x] for x in _adata.obs['gmm_pct_count_clusters_keep']]
     sc.pp.normalize_total(_adata, target_sum=1e4)
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(
@@ -581,11 +596,20 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
     # threshold the p-values to get doublet calls.
     _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
     _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
-    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-        (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
-        (_adata.obs['is_doublet'] == True)
+    if pct_counts_mt is not None:
+        _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
+            (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
+            (_adata.obs['is_doublet'] == True)
+    else:
+        _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
+            (_adata.obs.gmm_pct_count_clusters_keep) | \
+            (_adata.obs['is_doublet'] == True)
 
     # removing columns that probably don't need anymore
-    _adata.obs = _adata.obs.drop(
-        ['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval'], axis=1)
+    if pct_counts_mt is not None:
+        _adata.obs = _adata.obs.drop(
+            ['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval'], axis=1)
+    else:
+        _adata.obs = _adata.obs.drop(
+            ['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval', 'gmm_pct_count_clusters'], axis=1)
     self.obs = _adata.obs.copy()
