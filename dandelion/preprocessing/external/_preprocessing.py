@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-03 19:04:42
+# @Last Modified time: 2021-07-03 19:16:53
 
 import os
 import pandas as pd
@@ -596,7 +596,7 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
     # threshold the p-values to get doublet calls.
     _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
     _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
-    if pct_counts_mt is not None:
+    if mito_cutoff is not None:
         _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
             (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
             (_adata.obs['is_doublet'] == True)
@@ -606,7 +606,7 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
             (_adata.obs['is_doublet'] == True)
 
     # removing columns that probably don't need anymore
-    if pct_counts_mt is not None:
+    if mito_cutoff is not None:
         _adata.obs = _adata.obs.drop(
             ['leiden', 'leiden_R', 'scrublet_cluster_score', 'scrublet_score_bh_pval'], axis=1)
     else:
