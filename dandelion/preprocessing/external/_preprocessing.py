@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-03 19:16:53
+# @Last Modified time: 2021-07-03 20:28:04
 
 import os
 import pandas as pd
@@ -497,7 +497,7 @@ def tigger_genotype(data: Union[str, PathLike], v_germline: Union[None, PathLike
         print(msg)
 
 
-def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int = 2500, min_genes: int = 200, mito_cutoff: Union[None, int] = 5, pval_cutoff: float = 0.1, min_counts: Union[None, int] = None, max_counts: Union[None, int] = None, blacklist: Union[None, Sequence] = None, vdj_pattern: str = '^TR[AB][VDJ]|^IG[HKL][VDJC]') -> AnnData:
+def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int = 2500, min_genes: int = 200, mito_cutoff: Union[None, int] = None, pval_cutoff: float = 0.1, min_counts: Union[None, int] = None, max_counts: Union[None, int] = None, blacklist: Union[None, Sequence] = None, vdj_pattern: str = '^TR[AB][VDJ]|^IG[HKL][VDJC]') -> AnnData:
     """
     Recipe for running a standard scanpy QC workflow.
 
