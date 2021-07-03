@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-03 17:17:11
+# @Last Modified time: 2021-07-03 19:04:42
 
 import os
 import pandas as pd
@@ -555,7 +555,7 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
         keepdict = {0: False, 1: True}
     else:
         keepdict = {1: False, 0: True}
-    _adata.obs['gmm_pct_count_clusters_keep'] = [keepdict[x] for x in _adata.obs['gmm_pct_count_clusters_keep']]
+    _adata.obs['gmm_pct_count_clusters_keep'] = [keepdict[x] for x in _adata.obs['gmm_pct_count_clusters']]
     sc.pp.normalize_total(_adata, target_sum=1e4)
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(
