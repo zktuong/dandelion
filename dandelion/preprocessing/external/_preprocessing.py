@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-03 22:49:17
+# @Last Modified time: 2021-07-03 22:51:46
 
 import os
 import pandas as pd
@@ -594,8 +594,7 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
             _adata.obs['scrublet_cluster_score'], loc=med, scale=1.4826 * mad)
     _adata.obs['scrublet_score_bh_pval'] = bh(pvals)
     # threshold the p-values to get doublet calls.
-    _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
-    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
+    _adata.obs['is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff    
     if mito_cutoff is not None:
         if min_counts is None and max_counts is None:
             _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
@@ -642,6 +641,7 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
                         (pd.Series([n > max_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
                         ~(_adata.obs.gmm_pct_count_clusters_keep) | \
                         (_adata.obs.is_doublet)
+    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
 
     # removing columns that probably don't need anymore
     if mito_cutoff is not None:
