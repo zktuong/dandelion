@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-13 15:57:08
+# @Last Modified time: 2021-07-13 17:06:30
 
 import os
 from collections import defaultdict
@@ -867,8 +867,49 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
     tmp_metadata['productive_summary'] = [
         'Multi' if '|' in i else i for i in tmp_metadata['productive']]
 
-    conversion_dict = {'ighga': 'IgG', 'ighgc': 'IgG', 'ighgb': 'IgG', 'igha1': 'IgA', 'igha2': 'IgA', 'ighm': 'IgM', 'ighd': 'IgD', 'ighe': 'IgE', 'ighg1': 'IgG', 'ighg2': 'IgG', 'ighg3': 'IgG', 'ighg4': 'IgG', 'ighg2b': 'IgG','ighg2a': 'IgG','ighg2c': 'IgG','igkc': 'IgK', 'iglc1': 'IgL', 'iglc2': 'IgL', 'iglc3': 'IgL', 'iglc4': 'IgL', 'iglc5': 'IgL', 'iglc6': 'IgL', 'iglc7': 'IgL',
-                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'none': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}
+    conversion_dict = {
+        'igha': 'IgA',
+        'igha1': 'IgA',
+        'igha2': 'IgA',
+        'ighd': 'IgD',
+        'ighe': 'IgE',
+        'ighg': 'IgG',
+        'ighg1': 'IgG',
+        'ighg2': 'IgG',
+        'ighg3': 'IgG',
+        'ighg4': 'IgG',
+        'ighg2a': 'IgG',
+        'ighg2b': 'IgG',
+        'ighg2c': 'IgG',
+        'ighm': 'IgM',
+        'igkc': 'IgK',
+        'iglc': 'IgL',
+        'iglc1': 'IgL',
+        'iglc2': 'IgL',
+        'iglc3': 'IgL',
+        'iglc4': 'IgL',
+        'iglc5': 'IgL',
+        'iglc6': 'IgL',
+        'iglc7': 'IgL',
+        'na': 'unassigned',
+        'nan': 'unassigned',
+        '': 'unassigned',
+        'none': 'unassigned',
+        'trac': 'unassigned',
+        'trbc': 'unassigned',
+        'trbc1': 'unassigned',
+        'trbc2': 'unassigned',
+        'trdc': 'unassigned',
+        'trgc': 'unassigned',
+        'trgc1': 'unassigned',
+        'trgc2': 'unassigned',
+        'trgc3': 'unassigned',
+        'trgc4': 'unassigned',
+        'unassigned': 'unassigned',
+        None: 'unassigned',
+        np.nan: 'unassigned',
+    }
+
     isotype = []
     for k in tmp_metadata['c_call' + suffix_h]:
         if isinstance(k, str):
