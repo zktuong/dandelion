@@ -117,12 +117,18 @@ def test_quantify_mut(create_testfolder, processed_files, freq, colname):
     assert dat[colname].dtype == float
 
 
-@pytest.mark.parametrize("filename", ['all', 'filtered'])
+@pytest.mark.parametrize(
+    "filename,simple",
+    [pytest.param('filtered', True),
+     pytest.param('filtered', False),
+     pytest.param('all', True),
+     pytest.param('all', False),
+     ])
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata,
-                       filename):
+                       filename, simple):
     f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata)
+    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata, simple = simple)
     assert dat.shape[0] == 9
     assert vdj.data.shape[0] == 7
     assert vdj.metadata.shape[0] == 4
