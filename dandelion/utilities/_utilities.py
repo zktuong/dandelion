@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-13 20:44:59
+# @Last Modified time: 2021-07-13 21:55:41
 
 import os
 from collections import defaultdict, Iterable
@@ -569,11 +569,11 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                        elif (re.search('IGK', v) and not re.search('IGK', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                        elif (re.search('IGL', v) and not re.search('IGL', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
@@ -591,11 +591,11 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                        elif (re.search('IGK', v) and not re.search('IGK', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                        elif (re.search('IGL', v) and not re.search('IGL', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
@@ -737,7 +737,7 @@ class FilterContigs:
                     ]
                     l[b] = lc_id
                     l_umi[b] = lc_umi
-                    l_seq[b] = hc_seq
+                    l_seq[b] = lc_seq
 
         if len(hc_id) > 0:
             for hx in hc_id:
@@ -746,19 +746,15 @@ class FilterContigs:
                 c = c_dict[hx]
                 if v == v:
                     if j == j:
-                        if re.search('IGH|TR[BD]', v):
+                        if not re.search('IGH|TR[BD]', v):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
-                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                        elif (re.search('IGH', v) and not re.search('IGH', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
-                        elif (re.search('IGL', v) and re.search('IGK', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                        elif (re.search('TRB', v) and not re.search('TRB', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
@@ -768,36 +764,27 @@ class FilterContigs:
                             self.drop_contig.append(hx)
                 if j == j:
                     if v == v:
-                        if re.search('IGH|TR[BD]', j):
+                        if not re.search('IGH|TR[BD]', j):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
-                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                        elif (re.search('IGH', v) and not re.search('IGH', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
-                        elif (re.search('IGL', v) and re.search('IGK', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                        elif (re.search('TRB', v) and not re.search('TRB', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
                         elif (re.search('TRG', v) and not re.search('TRG', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
+                            self.drop_contig.append(hx)                        
                 if pd.notnull(c):
-                    if re.search('IGH|TR[BD]', c):
+                    if re.search('IG[KL]|TR[AG]', c):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
-
-                if any(pd.isnull([v, j])):
-                    if filter_poorqualitycontig:
-                        self.poor_qual.append(b)
-                    self.drop_contig.append(hx)  # no/wrong annotations at all
         if len(lc_id) > 0:
             for lx in lc_id:
                 v = v_dict[lx]
@@ -809,11 +796,11 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                        elif (re.search('IGK', v) and not re.search('IGK', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                        elif (re.search('IGL', v) and not re.search('IGL', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
@@ -831,11 +818,11 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and re.search('IGL', j)):
+                        elif (re.search('IGK', v) and not re.search('IGK', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and re.search('IGK', j)):
+                        elif (re.search('IGL', v) and not re.search('IGL', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
@@ -852,8 +839,3 @@ class FilterContigs:
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(lx)
-
-                if any(pd.isnull([v, j])):
-                    if filter_poorqualitycontig:
-                        self.poor_qual.append(b)
-                    self.drop_contig.append(lx)  # no/wrong annotations at all
