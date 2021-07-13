@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-13 21:55:41
+# @Last Modified time: 2021-07-13 22:07:45
 
 import os
 from collections import defaultdict, Iterable
@@ -510,7 +510,7 @@ class FilterContigs:
             v = v_dict[hc_id[0]]
             j = j_dict[hc_id[0]]
             c = c_dict[hc_id[0]]
-            if v == v:
+            if pd.notnull(v):
                 if not re.search('IGH|TR[BD]', v):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
@@ -521,7 +521,7 @@ class FilterContigs:
                     self.poor_qual.append(b)
                 self.drop_contig.append(l[b])
                 self.drop_contig.append(h[b])
-            if j == j:
+            if pd.notnull(j):
                 if not re.search('IGH|TR[BD]', j):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
@@ -532,7 +532,7 @@ class FilterContigs:
                     self.poor_qual.append(b)
                 self.drop_contig.append(l[b])
                 self.drop_contig.append(h[b])
-            if (c == c) and (c is not None):
+            if pd.notnull(c):
                 if not re.search('IGH|TR[BD]', c):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
@@ -543,17 +543,17 @@ class FilterContigs:
                 v = v_dict[hx]
                 j = j_dict[hx]
                 c = c_dict[hx]
-                if v == v:
+                if pd.notnull(v):
                     if not re.search('IGH|TR[BD]', v):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
-                if j == j:
+                if pd.notnull(j):
                     if not re.search('IGH|TR[BD]', j):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
-                if (c == c) and (c is not None):
+                if pd.notnull(c):
                     if not re.search('IGH|TR[BD]', c):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
@@ -563,8 +563,8 @@ class FilterContigs:
                 v = v_dict[lx]
                 j = j_dict[lx]
                 c = c_dict[lx]
-                if v == v:
-                    if j == j:
+                if pd.notnull(v):
+                    if pd.notnull(j):
                         if re.search('IGH|TR[BD]', v):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
@@ -585,8 +585,12 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                if j == j:
-                    if v == v:
+                    else:
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(lx)
+                if pd.notnull(j):
+                    if pd.notnull(v):
                         if re.search('IGH|TR[BD]', j):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
@@ -607,6 +611,11 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
+                else:
+                    if filter_poorqualitycontig:
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(lx)
+
                 if pd.notnull(c):
                     if re.search('IGH|TR[BD]', c):
                         if filter_poorqualitycontig:
@@ -744,8 +753,8 @@ class FilterContigs:
                 v = v_dict[hx]
                 j = j_dict[hx]
                 c = c_dict[hx]
-                if v == v:
-                    if j == j:
+                if pd.notnull(v):
+                    if pd.notnull(j):
                         if not re.search('IGH|TR[BD]', v):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
@@ -762,8 +771,8 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
-                if j == j:
-                    if v == v:
+                if pd.notnull(j):
+                    if pd.notnull(v):
                         if not re.search('IGH|TR[BD]', j):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
@@ -779,7 +788,7 @@ class FilterContigs:
                         elif (re.search('TRG', v) and not re.search('TRG', j)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(hx)                        
+                            self.drop_contig.append(hx)
                 if pd.notnull(c):
                     if re.search('IG[KL]|TR[AG]', c):
                         if filter_poorqualitycontig:
@@ -790,8 +799,8 @@ class FilterContigs:
                 v = v_dict[lx]
                 j = j_dict[lx]
                 c = c_dict[lx]
-                if v == v:
-                    if j == j:
+                if pd.notnull(v):
+                    if pd.notnull(j):
                         if re.search('IGH|TR[BD]', v):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
@@ -812,8 +821,12 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                if j == j:
-                    if v == v:
+                    else:
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(lx)
+                if pd.notnull(j):
+                    if pd.notnull(v):
                         if re.search('IGH|TR[BD]', j):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
@@ -834,6 +847,10 @@ class FilterContigs:
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
+                else:
+                    if filter_poorqualitycontig:
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(lx)
                 if pd.notnull(c):
                     if re.search('IGH|TR[BD]', c):
                         if filter_poorqualitycontig:
