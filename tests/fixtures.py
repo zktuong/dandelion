@@ -58,6 +58,13 @@ def dummy_adata():
         'AAACGGGAGCGACGTA-1',
     ]
     obs = pd.DataFrame(index=barcodes)
+    obs['group1'] = 'test'
+    obs['group1'] = obs['group1'].astype('category')
+    obs['group2'] = ['a', 'a', 'a', 'b', 'b']
+    obs['group2'] = obs['group2'].astype('category')
+    obs['group3'] = ['a', 'a', 'b', 'b', 'c']
+    obs['group3'] = obs['group3'].astype('category')
+
     n = obs.shape[0]
 
     # just create a random matrix
@@ -177,13 +184,13 @@ def annotation_10x():
             'False', 'None', 'None', '739', '8', 'clonotype13', 'None'
         ],
     ],
-                         columns=[
-                             'barcode', 'is_cell', 'contig_id',
-                             'high_confidence', 'length', 'chain', 'v_gene',
-                             'd_gene', 'j_gene', 'c_gene', 'full_length',
-                             'productive', 'cdr3', 'cdr3_nt', 'reads', 'umis',
-                             'raw_clonotype_id', 'raw_consensus_id'
-                         ])
+        columns=[
+        'barcode', 'is_cell', 'contig_id',
+        'high_confidence', 'length', 'chain', 'v_gene',
+        'd_gene', 'j_gene', 'c_gene', 'full_length',
+        'productive', 'cdr3', 'cdr3_nt', 'reads', 'umis',
+        'raw_clonotype_id', 'raw_consensus_id'
+    ])
 
     return (annot)
 
@@ -297,20 +304,20 @@ def airr_10x():
             '14', 'T'
         ],
     ],
-                        columns=[
-                            'cell_id', 'clone_id', 'sequence_id', 'sequence',
-                            'sequence_aa', 'productive', 'rev_comp', 'v_call',
-                            'v_cigar', 'd_call', 'd_cigar', 'j_call',
-                            'j_cigar', 'c_call', 'c_cigar',
-                            'sequence_alignment', 'germline_alignment',
-                            'junction', 'junction_aa', 'junction_length',
-                            'junction_aa_length', 'v_sequence_start',
-                            'v_sequence_end', 'd_sequence_start',
-                            'd_sequence_end', 'j_sequence_start',
-                            'j_sequence_end', 'c_sequence_start',
-                            'c_sequence_end', 'consensus_count',
-                            'duplicate_count', 'is_cell'
-                        ])
+        columns=[
+        'cell_id', 'clone_id', 'sequence_id', 'sequence',
+        'sequence_aa', 'productive', 'rev_comp', 'v_call',
+        'v_cigar', 'd_call', 'd_cigar', 'j_call',
+        'j_cigar', 'c_call', 'c_cigar',
+        'sequence_alignment', 'germline_alignment',
+        'junction', 'junction_aa', 'junction_length',
+        'junction_aa_length', 'v_sequence_start',
+        'v_sequence_end', 'd_sequence_start',
+        'd_sequence_end', 'j_sequence_start',
+        'j_sequence_end', 'c_sequence_start',
+        'c_sequence_end', 'consensus_count',
+        'duplicate_count', 'is_cell'
+    ])
     return (airr)
 
 
@@ -609,21 +616,21 @@ def airr_reannotated():
             'TEMP', 'GVRRRDQADRP', '0.003058104', '1'
         ],
     ],
-                             columns=[
-                                 'sequence_id', 'sequence', 'rev_comp',
-                                 'productive', 'v_call', 'd_call', 'j_call',
-                                 'sequence_alignment', 'germline_alignment',
-                                 'junction', 'junction_aa', 'v_cigar',
-                                 'd_cigar', 'j_cigar', 'stop_codon',
-                                 'vj_in_frame', 'locus', 'junction_length',
-                                 'np1_length', 'np2_length',
-                                 'v_sequence_start', 'v_sequence_end',
-                                 'v_germline_start', 'v_germline_end',
-                                 'd_sequence_start', 'd_sequence_end',
-                                 'd_germline_start', 'd_germline_end',
-                                 'j_sequence_start', 'j_sequence_end',
-                                 'j_germline_start', 'j_germline_end',
-                                 'v_score', 'v_identity', 'v_support',
+        columns=[
+        'sequence_id', 'sequence', 'rev_comp',
+        'productive', 'v_call', 'd_call', 'j_call',
+        'sequence_alignment', 'germline_alignment',
+        'junction', 'junction_aa', 'v_cigar',
+        'd_cigar', 'j_cigar', 'stop_codon',
+        'vj_in_frame', 'locus', 'junction_length',
+        'np1_length', 'np2_length',
+        'v_sequence_start', 'v_sequence_end',
+        'v_germline_start', 'v_germline_end',
+        'd_sequence_start', 'd_sequence_end',
+        'd_germline_start', 'd_germline_end',
+        'j_sequence_start', 'j_sequence_end',
+        'j_germline_start', 'j_germline_end',
+        'v_score', 'v_identity', 'v_support',
                                  'd_score', 'd_identity', 'd_support',
                                  'j_score', 'j_identity', 'j_support', 'fwr1',
                                  'fwr2', 'fwr3', 'fwr4', 'cdr1', 'cdr2',
@@ -644,7 +651,7 @@ def airr_reannotated():
                                  'd_sequence_alignment_aa',
                                  'j_sequence_alignment_aa', 'mu_freq',
                                  'mu_count'
-                             ])
+    ])
     return (annotated)
 
 
@@ -694,16 +701,16 @@ def annotation_10x_tr1():
             '2932', '11', '', '', ''
         ],
     ],
-                         columns=[
-                             'barcode', 'is_cell', 'contig_id',
-                             'high_confidence', 'length', 'chain', 'v_gene',
-                             'd_gene', 'j_gene', 'c_gene', 'full_length',
-                             'productive', 'fwr1', 'fwr1_nt', 'cdr1',
-                             'cdr1_nt', 'fwr2', 'fwr2_nt', 'cdr2', 'cdr2_nt',
-                             'fwr3', 'fwr3_nt', 'cdr3', 'cdr3_nt', 'fwr4',
-                             'fwr4_nt', 'reads', 'umis', 'raw_clonotype_id',
-                             'raw_consensus_id', 'exact_subclonotype_id'
-                         ])
+        columns=[
+        'barcode', 'is_cell', 'contig_id',
+        'high_confidence', 'length', 'chain', 'v_gene',
+        'd_gene', 'j_gene', 'c_gene', 'full_length',
+        'productive', 'fwr1', 'fwr1_nt', 'cdr1',
+        'cdr1_nt', 'fwr2', 'fwr2_nt', 'cdr2', 'cdr2_nt',
+        'fwr3', 'fwr3_nt', 'cdr3', 'cdr3_nt', 'fwr4',
+        'fwr4_nt', 'reads', 'umis', 'raw_clonotype_id',
+        'raw_consensus_id', 'exact_subclonotype_id'
+    ])
 
     return (annot)
 
@@ -734,13 +741,13 @@ def annotation_10x_tr2():
             '1128', '3', 'None', 'None'
         ],
     ],
-                         columns=[
-                             'barcode', 'is_cell', 'contig_id',
-                             'high_confidence', 'length', 'chain', 'v_gene',
-                             'd_gene', 'j_gene', 'c_gene', 'full_length',
-                             'productive', 'cdr3', 'cdr3_nt', 'reads', 'umis',
-                             'raw_clonotype_id', 'raw_consensus_id'
-                         ])
+        columns=[
+        'barcode', 'is_cell', 'contig_id',
+        'high_confidence', 'length', 'chain', 'v_gene',
+        'd_gene', 'j_gene', 'c_gene', 'full_length',
+        'productive', 'cdr3', 'cdr3_nt', 'reads', 'umis',
+        'raw_clonotype_id', 'raw_consensus_id'
+    ])
 
     return (annot)
 
