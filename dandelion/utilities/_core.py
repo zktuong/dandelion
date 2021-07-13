@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-17 11:25:01
+# @Last Modified time: 2021-07-13 15:57:08
 
 import os
 from collections import defaultdict
@@ -867,8 +867,8 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
     tmp_metadata['productive_summary'] = [
         'Multi' if '|' in i else i for i in tmp_metadata['productive']]
 
-    conversion_dict = {'igha1': 'IgA', 'igha2': 'IgA', 'ighm': 'IgM', 'ighd': 'IgD', 'ighe': 'IgE', 'ighg1': 'IgG', 'ighg2': 'IgG', 'ighg3': 'IgG', 'ighg4': 'IgG', 'igkc': 'IgK', 'iglc1': 'IgL', 'iglc2': 'IgL', 'iglc3': 'IgL', 'iglc4': 'IgL', 'iglc5': 'IgL', 'iglc6': 'IgL', 'iglc7': 'IgL',
-                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'trac': 'unassigned', 'trbc': 'unassigned', 'trgc': 'unassigned', 'trbc1': 'unassigned', 'trbc2': 'unassigned', 'trgc1': 'unassigned', 'trgc2': 'unassigned', 'trgc3': 'unassigned', 'trgc4': 'unassigned', 'trdc': 'unassigned', 'nan': 'unassigned', 'na': 'unassigned', 'none': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}
+    conversion_dict = {'ighga': 'IgG', 'ighgc': 'IgG', 'ighgb': 'IgG', 'igha1': 'IgA', 'igha2': 'IgA', 'ighm': 'IgM', 'ighd': 'IgD', 'ighe': 'IgE', 'ighg1': 'IgG', 'ighg2': 'IgG', 'ighg3': 'IgG', 'ighg4': 'IgG', 'ighg2b': 'IgG','ighg2a': 'IgG','ighg2c': 'IgG','igkc': 'IgK', 'iglc1': 'IgL', 'iglc2': 'IgL', 'iglc3': 'IgL', 'iglc4': 'IgL', 'iglc5': 'IgL', 'iglc6': 'IgL', 'iglc7': 'IgL',
+                       'igha': 'IgA', 'ighg': 'IgG', 'iglc': 'IgL', 'nan': 'unassigned', 'na': 'unassigned', 'none': 'unassigned', '': 'unassigned', 'unassigned': 'unassigned', np.nan: 'unassigned', None: 'unassigned'}
     isotype = []
     for k in tmp_metadata['c_call' + suffix_h]:
         if isinstance(k, str):
