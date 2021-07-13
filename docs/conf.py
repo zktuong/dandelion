@@ -10,9 +10,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import dandelion
 import os
 import sys
-from sphinx.deprecation import RemovedInSphinx40Warning
+# from sphinx.deprecation import RemovedInSphinx40Warning
 
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
@@ -21,7 +22,6 @@ with open("README.md", "r") as readme_file:
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
-import dandelion
 
 # -- Project information -----------------------------------------------------
 
