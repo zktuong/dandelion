@@ -2,6 +2,7 @@
 import pytest
 import pandas as pd
 import dandelion as ddl
+import scanpy as sc
 from pathlib import Path
 
 from fixtures import (airr_reannotated, dummy_adata, create_testfolder)
@@ -28,6 +29,15 @@ def test_find_clones(create_testfolder):
     assert not vdj.metadata.clone_id.empty
     assert len(set(x for x in vdj.metadata['clone_id'] if pd.notnull(x))) == 4
     vdj.write_h5(f)
+
+
+def test_clone_size(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    ddl.tl.clone_size(vdj)
+    assert not vdj.metadata.clone_id_size.empty
+    ddl.tl.clone_size(vdj, max_size = 3)
+    assert not vdj.metadata.clone_id_size.empty
 
 
 @pytest.mark.parametrize(
@@ -59,9 +69,11 @@ def test_transfer(create_testfolder, dummy_adata):
     ddl.tl.generate_network(vdj)
     ddl.tl.transfer(dummy_adata, vdj)
     assert 'X_vdj' in dummy_adata.obsm
+    f2 = create_testfolder / "test.h5ad"
+    dummy_adata.write_h5ad(f2)
 
 
-def test_diversity(create_testfolder):
+def test_diversity_gini(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ddl.tl.clone_diversity(vdj, groupby = 'sample_id')
@@ -71,3 +83,19 @@ def test_diversity(create_testfolder):
     ddl.tl.clone_diversity(vdj, groupby = 'sample_id', metric = 'clone_centrality')
     assert not vdj.metadata.clone_centrality_gini.empty
     assert not vdj.metadata.clone_size_gini.empty
+
+
+def test_diversity_chao(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', method = 'chao1')
+    assert not vdj.metadata.clone_size_chao1.empty
+
+
+def test_diversity_shannon(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', method = 'shannon')
+    assert not vdj.metadata.clone_size_normalized_shannon.empty
+    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', method = 'shannon', normalize = False)
+    assert not vdj.metadata.clone_size_normalized_shannon.empty
