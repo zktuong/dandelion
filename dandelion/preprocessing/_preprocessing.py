@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-17 10:56:38
+# @Last Modified time: 2021-07-13 20:51:13
 
 import os
 import pandas as pd
@@ -1985,6 +1985,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                    filter_vj_chains: bool = True,
                    filter_missing: bool = True,
                    productive_only: bool = True,
+                   simple: bool = False,
                    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
                    save: Union[None, str] = None,
                    **kwargs) -> Tuple[Dandelion, AnnData]:
@@ -2025,11 +2026,13 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         doublets. Default is empirically set at 2-fold.
     filter_vj_chains : bool
         cells with multiple light chains will be marked to filter. Default is True.
-    productive_only : bool
-        whether or not to retain only productive contigs.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful
         for toggling to False if integrating with bulk data.
+    productive_only : bool
+        whether or not to retain only productive contigs.
+    simple : bool
+        simple filtering mode where only checks for potential gene assignment mismatches.
     locus : str
         Mode for filtering data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     save : str, optional
@@ -2047,8 +2050,11 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     else:
         dat_ = load_data(data)
 
-    if productive_only:
-        dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE', True])].copy()
+    if not simple:
+        if productive_only:
+            dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE', True])].copy()
+        else:
+            dat = dat_.copy()
     else:
         dat = dat_.copy()
 
@@ -2089,9 +2095,13 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     tofilter = FilterContigs(dat)
 
-    for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
-        tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
-                          filter_poorqualitycontig, v_dict, j_dict, c_dict)
+    if not simple:
+        for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
+            tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
+                              filter_poorqualitycontig, v_dict, j_dict, c_dict)
+    else:
+        for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
+            tofilter.run_scan_lite(b, filter_poorqualitycontig, v_dict, j_dict, c_dict)
 
     poor_qual = tofilter.poor_qual
     h_doublet = tofilter.h_doublet
