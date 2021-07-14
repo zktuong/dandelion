@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-13 17:06:30
+# @Last Modified time: 2021-07-14 23:50:56
 
 import os
 from collections import defaultdict
@@ -797,6 +797,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
     if clonekey in init_dict:
         tmp_metadata[str(clonekey)] = tmp_metadata[str(
             clonekey)].replace('', 'unassigned')
+
         clones = tmp_metadata[str(clonekey)].str.split('|', expand=False)
         tmpclones = []
         for i in clones:
@@ -805,6 +806,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
                 if len(i) == 1:
                     break
             tmpclones.append(i)
+        tmpclones = [sorted(t, key=cmp_to_key(cmp_str_emptylast)) for t in tmpclones]
         tmpclones = ['|'.join(list(set(x))) for x in tmpclones]
         tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
         tmp_metadata[str(clonekey)] = pd.Series(tmpclonesdict)
@@ -1027,7 +1029,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
     tmp_metadata['vdj_status'] = pd.Series(multi)
     tmp_metadata['vdj_status_summary'] = [
         'Multi' if 'Multi' + suffix_h in i else 'Single' for i in tmp_metadata['vdj_status']]
-    tmp_metadata['VDJ_chain_status_summary'] = [
+    tmp_metadata['constant_status_summary'] = [
         'Multi' if 'Multi' + suffix_h in i else 'Single' for i in pd.Series(multic)]
 
     self.metadata = tmp_metadata.copy()
