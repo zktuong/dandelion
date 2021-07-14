@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-14 23:50:56
+# @Last Modified time: 2021-07-14 23:59:44
 
 import os
 from collections import defaultdict
@@ -806,8 +806,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str, collap
                 if len(i) == 1:
                     break
             tmpclones.append(i)
-        tmpclones = [sorted(t, key=cmp_to_key(cmp_str_emptylast)) for t in tmpclones]
-        tmpclones = ['|'.join(list(set(x))) for x in tmpclones]
+        tmpclones = ['|'.join(sorted(list(set(x)), key=cmp_to_key(cmp_str_emptylast))) for x in tmpclones]
         tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
         tmp_metadata[str(clonekey)] = pd.Series(tmpclonesdict)
         tmp = tmp_metadata[str(clonekey)].str.split('|', expand=True).stack()
