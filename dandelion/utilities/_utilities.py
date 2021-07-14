@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-13 22:07:45
+# @Last Modified time: 2021-07-14 23:49:36
 
 import os
 from collections import defaultdict, Iterable
@@ -856,3 +856,37 @@ class FilterContigs:
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(lx)
+
+
+def cmp_str_emptylast(s1, s2):
+    '''python2.x cmp function'''
+    if not s1 or not s2:
+        return bool(s2) - bool(s1)
+
+    return cmp(s1, s2)
+
+
+def cmp_to_key(mycmp):
+    '''Convert a cmp= function into a key= function'''
+    class K:
+        def __init__(self, obj, *args):
+            self.obj = obj
+
+        def __lt__(self, other):
+            return mycmp(self.obj, other.obj) < 0
+
+        def __gt__(self, other):
+            return mycmp(self.obj, other.obj) > 0
+
+        def __eq__(self, other):
+            return mycmp(self.obj, other.obj) == 0
+
+        def __le__(self, other):
+            return mycmp(self.obj, other.obj) <= 0
+
+        def __ge__(self, other):
+            return mycmp(self.obj, other.obj) >= 0
+
+        def __ne__(self, other):
+            return mycmp(self.obj, other.obj) != 0
+    return K
