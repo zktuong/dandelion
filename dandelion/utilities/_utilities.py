@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-14 23:49:36
+# @Last Modified time: 2021-07-14 23:57:19
 
 import os
 from collections import defaultdict, Iterable
@@ -858,8 +858,14 @@ class FilterContigs:
                         self.drop_contig.append(lx)
 
 
+def cmp(a, b):
+    '''Python2.x cmp function'''
+    return (a > b) - (a < b)
+
+
 def cmp_str_emptylast(s1, s2):
-    '''python2.x cmp function'''
+    '''Help sort empty string to last.'''
+
     if not s1 or not s2:
         return bool(s2) - bool(s1)
 
