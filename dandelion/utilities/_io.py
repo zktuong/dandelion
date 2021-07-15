@@ -2,25 +2,27 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 15:51:47
+# @Last Modified time: 2021-07-15 12:19:19
 
 import os
+import json
+import re
+import bz2
+import gzip
 import pandas as pd
 import numpy as np
 import scipy.sparse
 import networkx as nx
-import bz2
-import gzip
 import _pickle as cPickle
 from ..utilities._utilities import *
 from ..utilities._core import *
-from typing import Union, Sequence, Tuple
+from os import PathLike
+from typing import Union, Sequence
+from collections import defaultdict, OrderedDict
 
 
 def fasta_iterator(fh: str):
-    '''
-    Read in a fasta file as an iterator
-    '''
+    """Read in a fasta file as an iterator."""
     while True:
         line = fh.readline()
         if line.startswith('>'):
@@ -35,24 +37,22 @@ def fasta_iterator(fh: str):
             if line.startswith('>'):
                 break
             sequence += line.rstrip()
-        yield(header, sequence)
+        yield (header, sequence)
         if not line:
             return
 
 
 def Write_output(out: str, file: str):
-    '''
-    general line writer
-    '''
+    """General line writer."""
     fh = open(file, "a")
     fh.write(out)
     fh.close()
-    return()
+    return ()
 
 
 def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
     """
-    Reads in or copy dataframe object and set sequence_id as index without dropping.
+    Read in or copy dataframe object and set sequence_id as index without dropping.
 
     Parameters
     ----------
@@ -72,19 +72,20 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
         obj_ = obj.copy()
     else:
         raise TypeError(
-            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist.")
+            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
+        )
 
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop=False, inplace=True)
     else:
         raise KeyError("'sequence_id' not found in columns of input")
 
-    return(obj_)
+    return (obj_)
 
 
 def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
     """
-    Reads in and returns a `Dandelion` class saved using pickle format.
+    Read in and returns a `Dandelion` class saved using pickle format.
 
     Parameters
     ----------
@@ -104,12 +105,12 @@ def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
     else:
         with open(filename, 'rb') as f:
             data = cPickle.load(f)
-    return(data)
+    return (data)
 
 
 def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     """
-    Reads in and returns a `Dandelion` class from .h5 format.
+    Read in and returns a `Dandelion` class from .h5 format.
 
     Parameters
     ----------
@@ -207,12 +208,12 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         res.threshold = threshold
     else:
         pass
-    return(res)
+    return (res)
 
 
 def read_10x_airr(file: str) -> Dandelion:
     """
-    Reads the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
+    Read the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
     Parameters
     ----------
@@ -249,12 +250,12 @@ def read_10x_airr(file: str) -> Dandelion:
                 locus.append(np.nan)
         dat['locus'] = locus
 
-    return(Dandelion(dat))
+    return (Dandelion(dat))
 
 
 def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
     """
-    Converts a `Dandelion` object to scirpy's format.
+    Convert a `Dandelion` object to scirpy's format.
 
     Parameters
     ----------
@@ -276,23 +277,17 @@ def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
 
     if 'duplicate_count' not in data.data and 'umi_count' in data.data:
         data.data['duplicate_count'] = data.data['umi_count']
-    return(ir.io.from_dandelion(data, transfer))
+    return (ir.io.from_dandelion(data, transfer))
 
 
-def from_scirpy(adata: AnnData, clone_key: Union[None, str] = None, key_added: Union[None, str] = None, mapping_mode: Literal['chain', 'cell'] = 'chain') -> Dandelion:
+def from_scirpy(adata: AnnData) -> Dandelion:
     """
-    Reads a `scirpy` initialized `AnnData` oject and returns a `Dandelion` object.
+    Read a `scirpy` initialized `AnnData` oject and returns a `Dandelion` object.
 
     Parameters
     ----------
     adata : AnnData
         `scirpy` initialized `AnnData` object.
-    clone_key : str, optional
-        column name for `clone_id` in `AnnData`. None defaults to `clone_id` in `scirpy` initialized object.
-    key_added : str, optional
-        column name for `clone_id` in `Dandelion`. None defaults to `clone_id` in `dandelion` initialized object.
-    mapping_mode : str
-        mode for retrieving the clone_id calls, either based on cells (all chains/contigs have the same call) or chains (allow for different calls between chains).
 
     Returns
     -------
@@ -304,46 +299,11 @@ def from_scirpy(adata: AnnData, clone_key: Union[None, str] = None, key_added: U
     except:
         raise ImportError('Please install scirpy. pip install scirpy')
 
-    if clone_key is None:
-        clonekey_s = 'clone_id'
-    else:
-        clonekey_s = clone_key
-
-    if key_added is None:
-        clonekey_d = 'clone_id'
-    else:
-        clonekey_d = key_added
-
-    return(ir.io.to_dandelion(adata))
+    return (ir.io.to_dandelion(adata))
 
 
-def read_10x_vdj(path: str, filtered: bool = True):
-    """
-    A wrapper from scirpy to read 10x's .csv and .json files directly to be formatted in dandelion.
-
-    Parameters
-    ----------
-    path : str
-        Path to `filterd_contig_annotations.csv`, `all_contig_annotations.csv` or `all_contig_annotations.json`.
-    filtered : bool
-        Only keep filtered contig annotations (i.e. `is_cell` and `high_confidence`).
-        If using `filtered_contig_annotations.csv` already, this option is futile.
-    Returns
-    -------
-    `Dandelion` object.
-
-    """
-    try:
-        import scirpy as ir
-    except:
-        raise ImportError('Please install scirpy. pip install scirpy')
-
-    adata = ir.io.read_10x_vdj(path, filtered=filtered)
-
-    return(ir.io.to_dandelion(adata))
-
-
-def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool = True) -> Dandelion:
+def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
+           check_unique: bool = True) -> Dandelion:
     """
     Concatenate dataframe and return as `Dandelion` object.
 
@@ -352,7 +312,8 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool 
     arrays : Sequence
         List of `Dandelion` class objects or pandas dataframe
     check_unique : bool
-        Check the new index for duplicates. Otherwise defer the check until necessary. Setting to False will improve the performance of this method.
+        Check the new index for duplicates. Otherwise defer the check until necessary.
+        Setting to False will improve the performance of this method.
 
     Returns
     -------
@@ -370,8 +331,9 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool 
             df = pd.concat(arrays_, verify_integrity=True)
         except:
             for i in range(0, len(arrays)):
-                arrays_[i]['sequence_id'] = [x + '__' +
-                                             str(i) for x in arrays_[i]['sequence_id']]
+                arrays_[i]['sequence_id'] = [
+                    x + '__' + str(i) for x in arrays_[i]['sequence_id']
+                ]
             arrays_ = [load_data(x) for x in arrays_]
             df = pd.concat(arrays_, verify_integrity=True)
     else:
@@ -380,4 +342,373 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool 
         out = Dandelion(df)
     except:
         out = Dandelion(df, initialize=False)
-    return(out)
+    return (out)
+
+
+# def read_10x_vdj(path: str, filtered: bool = True):
+#     """
+#     A wrapper from scirpy to read 10x's .csv and .json files directly to be formatted in dandelion.
+
+#     Parameters
+#     ----------
+#     path : str
+#         Path to `filterd_contig_annotations.csv`, `all_contig_annotations.csv` or `all_contig_annotations.json`.
+#     filtered : bool
+#         Only keep filtered contig annotations (i.e. `is_cell` and `high_confidence`).
+#         If using `filtered_contig_annotations.csv` already, this option is futile.
+#     Returns
+#     -------
+#     `Dandelion` object.
+
+#     """
+#     try:
+#         import scirpy as ir
+#     except:
+#         raise ImportError('Please install scirpy. pip install scirpy')
+
+#     adata = ir.io.read_10x_vdj(path, filtered=filtered)
+
+#     return(ir.io.to_dandelion(adata))
+
+
+def read_10x_vdj(path: Union[str, PathLike],
+                 filename_prefix: Union[None, str] = None,
+                 return_dandelion: bool = True,
+                 verbose: bool = False) -> Union[Dandelion, pd.DataFrame]:
+    """
+    A parser to read .csv and .json files directly from folder containing 10x cellranger-outouts.
+
+    This function parses the 10x output files into an AIRR compatible format.
+
+    Minimum requirement is one of either {filename_prefix}_contig_annotations.csv or all_contig_annotations.json.
+
+    If .fasta, .json files are found in the same folder, additional info will be appended to the final table.
+
+    Parameters
+    ----------
+    path : str, PathLike
+        path to folder containing `.csv` and/or `.json` files, or path to files directly.
+    filename_prefix : str, optional
+        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+    return_dandelion : bool
+        whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
+        Default is True.
+    verbose : bool
+        whether or not to print which files are read/found. Default is False.
+    Returns
+    -------
+    `Dandelion` or pandas `DataFrame` object.
+
+    """
+    if filename_prefix is None:
+        filename_pre = 'filtered'
+    else:
+        filename_pre = filename_prefix
+
+    if os.path.isdir(str(path)):
+        files = os.listdir(path)
+        filelist = []
+        for fx in files:
+            if re.search(filename_pre + '_contig', fx):
+                if fx.endswith('.fasta') or fx.endswith('.csv'):
+                    filelist.append(fx)
+            if re.search('all_contig_annotations', fx):
+                if fx.endswith('.json'):
+                    filelist.append(fx)
+        csv_idx = [i for i, j in enumerate(filelist) if j.endswith('.csv')]
+        json_idx = [i for i, j in enumerate(filelist) if j.endswith('.json')]
+        if len(csv_idx) == 1:
+            file = str(path) + '/' + str(filelist[csv_idx[0]])
+            if verbose:
+                print("Reading {}".format(str(file)))
+            raw = pd.read_csv(str(file))
+            raw.set_index('contig_id', drop=False, inplace=True)
+            fasta_file = str(file).split('_annotations.csv')[0] + '.fasta'
+            json_file = re.sub(filename_pre + '_contig_annotations',
+                               'all_contig_annotations',
+                               str(file).split('.csv')[0] + '.json')
+            if os.path.exists(json_file):
+                if verbose:
+                    print(
+                        "Found {} file. Extracting extra information.".format(
+                            str(json_file)))
+                out = parse_annotation(raw)
+                with open(json_file) as f:
+                    raw_json = json.load(f)
+                out_json = parse_json(raw_json)
+                out.update(out_json)
+            elif os.path.exists(fasta_file):
+                if verbose:
+                    print(
+                        "Found {} file. Extracting extra information.".format(
+                            str(fasta_file)))
+                seqs = {}
+                fh = open(fasta_file, 'r')
+                for header, sequence in fasta_iterator(fh):
+                    seqs[header] = sequence
+                raw['sequence'] = pd.Series(seqs)
+                out = parse_annotation(raw)
+            else:
+                out = parse_annotation(raw)
+        elif len(csv_idx) < 1:
+            if len(json_idx) == 1:
+                json_file = str(path) + '/' + str(filelist[json_idx[0]])
+                if verbose:
+                    print("Reading {}".format(json_file))
+                if os.path.exists(json_file):
+                    with open(json_file) as f:
+                        raw = json.load(f)
+                    out = parse_json(raw)
+            else:
+                raise IOError(
+                    "{}_contig_annotations.csv and all_contig_annotations.json file(s) not found in {} folder."
+                    .format(str(filename_pre), str(path)))
+        elif len(csv_idx) > 1:
+            raise IOError(
+                "There are multiple input .csv files with the same filename prefix {} in {} folder."
+                .format(str(filename_pre), str(path)))
+    elif os.path.isfile(str(path)):
+        file = path
+        if str(file).endswith('.csv'):
+            if verbose:
+                print("Reading {}.".format(str(file)))
+            raw = pd.read_csv(str(file))
+            raw.set_index('contig_id', drop=False, inplace=True)
+            fasta_file = str(file).split('_annotations.csv')[0] + '.fasta'
+            json_file = re.sub(filename_pre + '_contig_annotations',
+                               'all_contig_annotations',
+                               str(file).split('.csv')[0] + '.json')
+            if os.path.exists(json_file):
+                if verbose:
+                    print(
+                        "Found {} file. Extracting extra information.".format(
+                            str(json_file)))
+                out = parse_annotation(raw)
+                with open(json_file) as f:
+                    raw_json = json.load(f)
+                out_json = parse_json(raw_json)
+                out.update(out_json)
+            elif os.path.exists(fasta_file):
+                if verbose:
+                    print(
+                        "Found {} file. Extracting extra information.".format(
+                            str(fasta_file)))
+                seqs = {}
+                fh = open(fasta_file, 'r')
+                for header, sequence in fasta_iterator(fh):
+                    seqs[header] = sequence
+                raw['sequence'] = pd.Series(seqs)
+                out = parse_annotation(raw)
+            else:
+                out = parse_annotation(raw)
+        elif str(file).endswith('.json'):
+            if os.path.exists(file):
+                if verbose:
+                    print("Reading {}".format(file))
+                with open(file) as f:
+                    raw = json.load(f)
+                out = parse_json(raw)
+            else:
+                raise IOError("{} not found.".format(file))
+    else:
+        raise IOError("{} not found.".format(path))
+    res = pd.DataFrame.from_dict(out, orient='index')
+    # quick check if locus is malformed
+    res = res[~res['locus'].str.contains('[|]')]
+    if return_dandelion:
+        return (Dandelion(res))
+    else:
+        return (res)
+
+
+def parse_json(data: list) -> defaultdict:
+    main_dict1 = {
+        "barcode": "cell_id",
+        "contig_name": "sequence_id",
+        "sequence": "sequence",
+        "aa_sequence": "sequence_aa",
+        "productive": 'productive',
+        "full_length": 'complete_vdj',
+        "frame": "vj_in_frame",
+        "cdr3_seq": "junction",
+        "cdr3": "junction_aa",
+    }
+    main_dict2 = {
+        "read_count": "consensus_count",
+        "umi_count": "duplicate_count",
+        "cdr3_start": "cdr3_start",
+        "cdr3_stop": "cdr3_end",
+    }
+    main_dict3 = {
+        "high_confidence": 'high_confidence_10x',
+        "filtered": 'filtered_10x',
+        "is_gex_cell": 'is_cell_10x',
+        "is_asm_cell": 'is_asm_cell_10x',
+    }
+    info_dict = {
+        "raw_clonotype_id": 'clone_id',
+        "raw_consensus_id": 'raw_consensus_id_10x',
+        "exact_subclonotype_id": 'exact_subclonotype_id_10x',
+    }
+    region_type_dict = {
+        'L-REGION+V-REGION': 'v_call',
+        'D-REGION': 'd_call',
+        'J-REGION': 'j_call',
+        'C-REGION': 'c_call',
+    }
+    required_calls = ['v_call', 'd_call', 'j_call', 'c_call']
+    region_keys = ['fwr1', 'cdr1', 'fwr2', 'cdr2', 'fwr3', 'fwr4']
+    out = defaultdict(OrderedDict)
+    for i in range(len(data)):
+        if data[i]['contig_name'] is not None:
+            key = data[i]['contig_name']
+        else:
+            continue
+        for k in main_dict1.keys():
+            if data[i][k] is not None:
+                out[key].update({main_dict1[k]: data[i][k]})
+            else:
+                out[key].update({main_dict1[k]: ''})
+        if data[i]['annotations'] is not None:
+            chains = []
+            for j in range(len(data[i]['annotations'])):
+                chains.append(data[i]['annotations'][j]['feature']['chain'])
+            out[key].update({'locus': '|'.join(list(set(chains)))})
+            for j in range(len(data[i]['annotations'])):
+                rtype = data[i]['annotations'][j]['feature']['region_type']
+                if rtype in region_type_dict.keys():
+                    call = region_type_dict[rtype]
+                else:
+                    continue
+                if data[i]['annotations'][j]['feature'][
+                        'gene_name'] is not None:
+                    out[key].update({
+                        call:
+                        data[i]['annotations'][j]['feature']['gene_name']
+                    })
+                else:
+                    out[key].update({call: ''})
+        for rc in required_calls:
+            if rc not in out[key]:
+                out[key].update({rc: ''})
+        for k in main_dict2.keys():
+            if data[i][k] is not None:
+                out[key].update({main_dict2[k]: data[i][k]})
+            else:
+                out[key].update({main_dict2[k]: np.nan})
+        for rk in region_keys:
+            if data[i][rk] is not None:
+                for k in data[i][rk]:
+                    if k == 'start':
+                        ka = rk + '_start'
+                    elif k == 'stop':
+                        ka = rk + '_end'
+                    elif k == 'nt_seq':
+                        ka = rk + ''
+                    elif k == 'aa_seq':
+                        ka = rk + '_aa'
+                    else:
+                        continue
+                    out[key].update({ka: data[i][rk][k]})
+            else:
+                for k in region_keys:
+                    out[key].update({k + '_start': np.nan})
+                    out[key].update({k + '_end': np.nan})
+                    out[key].update({k + '': ''})
+                    out[key].update({k + '_aa': ''})
+        if data[i]['info'] is not None:
+            for info in data[i]['info']:
+                if data[i]['info'][info] is not None:
+                    out[key].update({info_dict[info]: data[i]['info'][info]})
+                else:
+                    out[key].update({info_dict[info]: ''})
+        for k in main_dict3.keys():
+            if data[i][k] is not None:
+                out[key].update({main_dict3[k]: data[i][k]})
+            else:
+                out[key].update({main_dict3[k]: ''})
+    return (out)
+
+
+def parse_annotation(data: pd.DataFrame) -> defaultdict:
+    main_dict1 = {
+        "barcode": "cell_id",
+        "contig_id": "sequence_id",
+        "sequence": "sequence",
+        "aa_sequence": "sequence_aa",
+        "productive": 'productive',
+        "full_length": 'complete_vdj',
+        "frame": "vj_in_frame",
+        'chain': 'locus',
+        'v_gene': 'v_call',
+        'd_gene': 'd_call',
+        'j_gene': 'j_call',
+        'c_gene': 'c_call',
+        "cdr3_nt": "junction",
+        "cdr3": "junction_aa",
+    }
+
+    main_dict2 = {
+        "reads": "consensus_count",
+        "umis": "duplicate_count",
+        "cdr3_start": "cdr3_start",
+        "cdr3_stop": "cdr3_end",
+        "length": 'sequence_length_10x',
+    }
+
+    main_dict3 = {
+        "high_confidence": 'high_confidence_10x',
+        "is_cell": 'is_cell_10x',
+        'fwr1': 'fwr1_aa',
+        'fwr1_nt': 'fwr1',
+        'cdr1': 'cdr1_aa',
+        'cdr1_nt': 'cdr1',
+        'fwr2': 'fwr2_aa',
+        'fwr2_nt': 'fwr2',
+        'cdr2': 'cdr2_aa',
+        'cdr2_nt': 'cdr2',
+        'fwr3': 'fwr3_aa',
+        'fwr3_nt': 'fwr3',
+        'cdr3': 'cdr3_aa',
+        'cdr3_nt': 'cdr3',
+        'fwr4': 'fwr4_aa',
+        'fwr4_nt': 'fwr4',
+        "raw_clonotype_id": 'clone_id',
+        "raw_consensus_id": 'raw_consensus_id_10x',
+        "exact_subclonotype_id": 'exact_subclonotype_id_10x',
+    }
+
+    out = defaultdict(OrderedDict)
+    for _, row in data.iterrows():
+        if pd.notnull(row['contig_id']):
+            key = row['contig_id']
+        else:
+            continue
+        for c in main_dict1.keys():
+            if c in row.keys():
+                if pd.isnull(row[c]):
+                    out[key].update({main_dict1[c]: ''})
+                else:
+                    out[key].update({main_dict1[c]: row[c]})
+        for c in main_dict2.keys():
+            if c in row.keys():
+                if pd.isnull(row[c]):
+                    out[key].update({main_dict2[c]: np.nan})
+                else:
+                    out[key].update({main_dict2[c]: row[c]})
+        for c in main_dict3.keys():
+            if c in row.keys():
+                if pd.isnull(row[c]):
+                    out[key].update({main_dict3[c]: ''})
+                else:
+                    out[key].update({main_dict3[c]: row[c]})
+        if out[key]['locus'] == 'None' or out[key]['locus'] == '':
+            calls = []
+            for call in ['v_call', 'd_call', 'j_call', 'c_call']:
+                if out[key][call] != 'None' and out[key][call] != '':
+                    calls.append(out[key][call])
+            out[key]['locus'] = '|'.join(list(set([str(c)[:3]
+                                                   for c in calls])))
+        if out[key]['locus'] == 'None' or out[key]['locus'] == '':
+            out[key]['locus'] = '|'
+    return (out)
