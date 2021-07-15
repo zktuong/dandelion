@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-15 12:19:19
+# @Last Modified time: 2021-07-15 13:32:41
 
 import os
 import json
@@ -277,6 +277,17 @@ def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
 
     if 'duplicate_count' not in data.data and 'umi_count' in data.data:
         data.data['duplicate_count'] = data.data['umi_count']
+    for h in [
+            "sequence",
+            "rev_comp",
+            "sequence_alignment",
+            "germline_alignment",
+            "v_cigar",
+            "d_cigar",
+            "j_cigar",
+    ]:
+        if h not in data.data:
+            data.data[h] = None
     return (ir.io.from_dandelion(data, transfer))
 
 
