@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-13 20:51:13
+# @Last Modified time: 2021-07-15 22:34:43
 
 import os
 import pandas as pd
@@ -1980,7 +1980,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                    filter_contig: bool = True,
                    filter_rna: bool = False,
                    filter_poorqualitycontig: bool = False,
-                   rescue_vdj: bool = True,
+                   keep_highest_umi: bool = True,
                    umi_foldchange_cutoff: int = 2,
                    filter_vj_chains: bool = True,
                    filter_missing: bool = True,
@@ -1995,14 +1995,14 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     Depends on a `AnnData`.obs slot populated with 'filter_rna' column. If the aligned sequence is an exact match
     between contigs, the contigs will be merged into the one with the highest umi count, adding the summing the
     umi count of the duplicated contigs to duplicate_count column. After this check, if there are still multiple
-    contigs, cells with multiple IGH contigs are filtered unless `rescue_vdj` is True, where by the umi counts for
-    each IGH contig will then be compared. The contig with the highest umi that is > umi_foldchange_cutoff (default
-    is empirically set at 5) from the lowest will be retained. If there are multiple contigs that survive the
-    'rescue', then all contigs will be filtered. The default behaviour is to also filter cells with multiple
-    lightchains but this may sometimes be a true biological occurrence; toggling filter_vj_chains to False will
-    rescue the mutltiplet light chains. Lastly, contigs with no corresponding cell barcode in the AnnData object is
-    filtered if filter_missing is True. However, this may be useful to toggle to False if more contigs are
-    preferred to be kept or for integrating with bulk reperotire seq data.
+    contigs, cells with multiple contigs are filtered unless `keep_highest_umi` is False, where by the umi counts for
+    each contig will then be compared and only the highest is retained. The contig with the highest umi that is
+    > umi_foldchange_cutoff (default is empirically set at 2) will be retained. For productive heavy/long chains,
+    if there are multiple contigs that survive the umi testing, then all contigs will be filtered. The default behaviour
+    is to also filter cells with multiple light/short chains but this may sometimes be a true biological occurrence;
+    toggling filter_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no corresponding
+    cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to
+    False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
     Parameters
     ----------
@@ -2017,7 +2017,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     filter_poorqualitycontig : bool
         If True, barcodes marked with poor quality contigs will be filtered. Default is False; only relevant contigs are
         removed and RNA barcodes are kept.
-    rescue_vdj : bool
+    keep_highest_umi : bool
         If True, rescues IGH contigs with highest umi counts with a requirement that it passes the
         `umi_foldchange_cutoff` option. In addition, the sum of the all the heavy chain contigs must be greater than 3
         umi or all contigs will be filtered. Default is True.
@@ -2082,6 +2082,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
     else:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call']))
+    d_dict = dict(zip(dat['sequence_id'], dat['d_call']))
     j_dict = dict(zip(dat['sequence_id'], dat['j_call']))
     c_dict = dict(zip(dat['sequence_id'], dat['c_call']))
 
@@ -2097,11 +2098,11 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     if not simple:
         for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
-            tofilter.run_scan(b, rescue_vdj, umi_foldchange_cutoff,
-                              filter_poorqualitycontig, v_dict, j_dict, c_dict)
+            tofilter.run_scan(b, keep_highest_umi, umi_foldchange_cutoff,
+                              filter_poorqualitycontig, v_dict, d_dict, j_dict, c_dict)
     else:
         for b in tqdm(barcode, desc='Scanning for poor quality/ambiguous contigs'):
-            tofilter.run_scan_lite(b, filter_poorqualitycontig, v_dict, j_dict, c_dict)
+            tofilter.run_scan_lite(b, v_dict, d_dict, j_dict, c_dict)
 
     poor_qual = tofilter.poor_qual
     h_doublet = tofilter.h_doublet

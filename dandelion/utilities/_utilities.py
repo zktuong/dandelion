@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-14 23:57:19
+# @Last Modified time: 2021-07-15 23:01:41
 
 import os
 from collections import defaultdict, Iterable
@@ -19,7 +19,10 @@ except ImportError:
     except ImportError:
 
         class LiteralMeta(type):
-            def __getitem__(cls, values):
+            """LiteralMeta class."""
+
+            def __getitem__(self, values):
+                """Return Literal."""
                 if not isinstance(values, tuple):
                     values = (values, )
                 return type("Literal_", (Literal, ), dict(__args__=values))
@@ -29,9 +32,7 @@ except ImportError:
 
 
 class Tree(defaultdict):
-    '''
-    Create a recursive defaultdict
-    '''
+    """Create a recursive defaultdict."""
 
     def __init__(self, value=None):
         super(Tree, self).__init__(Tree)
@@ -40,7 +41,8 @@ class Tree(defaultdict):
 
 def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
     """
-    Generates a dictionary from a dataframe
+    Generate a dictionary from a dataframe.
+
     Parameters
     ----------
     meta
@@ -67,6 +69,8 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
 
 def clean_nan_dict(d: Dict) -> Dict:
     """
+    Remove nan from dictionary.
+
     Parameters
     ----------
     d : Dict
@@ -76,12 +80,13 @@ def clean_nan_dict(d: Dict) -> Dict:
     -------
         dictionary with no NAs.
     """
-
     return {k: v for k, v in d.items() if v is not np.nan}
 
 
 def flatten(l: Sequence) -> Sequence:
     """
+    Flatten a list-in-list-in-list.
+
     Parameters
     ----------
     l : Sequence
@@ -108,19 +113,14 @@ def makeblastdb(ref: str):
     ----------
     ref : str
         constant region fasta file
-    Returns
-    -------
-
-
     """
-
     cmd = ['makeblastdb', '-dbtype', 'nucl', '-parse_seqids', '-in', ref]
     run(cmd)
 
 
 def bh(pvalues: np.array) -> np.array:
     """
-    Computes the Benjamini-Hochberg FDR correction.
+    Compute the Benjamini-Hochberg FDR correction.
 
     Parameters
     ----------
@@ -285,565 +285,363 @@ def change_file_location(data: Sequence,
 
 class FilterContigs:
     def __init__(self, data):
-        self.dat = data
+        self.data = data
         self.poor_qual = []
         self.h_doublet = []
         self.l_doublet = []
         self.drop_contig = []
         self.umi_adjustment = {}
 
-    def run_scan(self, b, rescue_vdj, umi_foldchange_cutoff,
-                 filter_poorqualitycontig, v_dict, j_dict, c_dict):
+    def run_scan(self, b, keep_highest_umi, umi_foldchange_cutoff, filter_poorqualitycontig, v_dict, d_dict, j_dict, c_dict):
         """Main workhorse of filter_contig."""
-        h = Tree()
-        l = Tree()
-        h_umi = Tree()
-        l_umi = Tree()
-        h_seq = Tree()
-        l_seq = Tree()
-        h_ccall = Tree()
+        h = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+        h_umi = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+        if 'sequence_alignment' in self.data:
+            h_seq = [x for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
+        h_ccall = [x for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']]
 
-        hc_id = list(self.dat[
-            (self.dat['cell_id'].isin([b]))
-            & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-        hc_umi = [
-            int(x)
-            for x in self.dat[(self.dat['cell_id'].isin([b]))
-                              & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD'])
-                                 )]['duplicate_count']
-        ]
-        if 'sequence_alignment' in self.dat:
-            hc_seq = [
-                x for x in self.dat[
-                    (self.dat['cell_id'].isin([b]))
-                    & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                ['sequence_alignment']
-            ]
-        hc_ccall = [
-            x for x in self.dat[
-                (self.dat['cell_id'].isin([b]))
-                & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']
-        ]
+        l = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+        l_umi = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
+        if 'sequence_alignment' in self.data:
+            l_seq = [x for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_alignment']]
 
-        lc_id = list(
-            self.dat[(self.dat['cell_id'].isin([b]))
-                     & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-            ['sequence_id'])
-        lc_umi = [
-            int(x) for x in self.dat[
-                (self.dat['cell_id'].isin([b]))
-                & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-            ['duplicate_count']
-        ]
-        if 'sequence_alignment' in self.dat:
-            lc_seq = [
-                x for x in self.dat[
-                    (self.dat['cell_id'].isin([b]))
-                    & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-                ['sequence_alignment']
-            ]
-
-        h[b] = hc_id
-        h_umi[b] = hc_umi
-        if 'sequence_alignment' in self.dat:
-            h_seq[b] = hc_seq
-        h_ccall[b] = hc_ccall
-
-        l[b] = lc_id
-        l_umi[b] = lc_umi
-        if 'sequence_alignment' in self.dat:
-            l_seq[b] = lc_seq
+        # split to productive vs non-productive
+        h_p = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([True]))]['sequence_id'])
+        h_umi_p = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([True]))]['duplicate_count']]
+        h_np = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([False]))]['sequence_id'])
+        h_umi_np = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([False]))]['duplicate_count']]
+        l_p = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([True]))]['sequence_id'])
+        l_umi_p = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([True]))]['duplicate_count']]
+        l_np = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([False]))]['sequence_id'])
+        l_umi_np = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([False]))]['duplicate_count']]
 
         # marking doublets defined by heavy chains
-        if len(h[b]) > 1:
-            if 'sequence_alignment' in self.dat:
-                if len(list(set(h_seq[b]))) == 1:
-                    highest_umi_h = max(h_umi[b])
-                    highest_umi_h_idx = [
-                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
-                    ]
+        if len(h) > 1:
+            if 'sequence_alignment' in self.data:
+                if len(list(set(h_seq))) == 1:
+                    highest_umi_h = max(h_umi)
+                    highest_umi_h_idx = [i for i, j in enumerate(h_umi) if j == highest_umi_h]
                     keep_index_h = highest_umi_h_idx[0]
-                    self.drop_contig.append(h[b][:keep_index_h] +
-                                            h[b][keep_index_h + 1:])
-                    keep_hc_contig = h[b][keep_index_h]
-                    self.dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                        np.sum(h_umi[b][:keep_index_h] +
-                               h_umi[b][keep_index_h + 1:]))
-                    hc_id = list(
-                        self.dat[(self.dat['cell_id'].isin([b]))
-                                 & (self.dat['locus'].isin(
-                                     ['IGH', 'TRB', 'TRD']))]['sequence_id'])
-                    hc_umi = [
-                        int(x) for x in self.dat[
-                            (self.dat['cell_id'].isin([b]))
-                            & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                        ['duplicate_count']
-                    ]
-                    h[b] = hc_id
-                    h_umi[b] = hc_umi
-                    h_seq[b] = hc_seq
-            if len(h[b]) > 1:
-                if rescue_vdj:
-                    highest_umi_h = max(h_umi[b])
-                    # lowest_umi_h = min(h_umi[b])
-                    highest_umi_idx = [
-                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
-                    ]
-                    keep_index_h = highest_umi_idx[0]
-                    umi_test = [
-                        highest_umi_h / x < umi_foldchange_cutoff
-                        for x in h_umi[b][:keep_index_h] +
-                        h_umi[b][keep_index_h + 1:]
-                    ]
-                    sum_umi = sum(h_umi[b])
-                    other_umi_idx = [
-                        i for i, j in enumerate(h_umi[b]) if j != highest_umi_h
-                    ]
-                    if 'IGHM' and 'IGHD' in h_ccall[b]:
-                        if all(cc_ == 'IGHM' or cc_ == 'IGHD'
-                               for cc_ in h_ccall[b]):
-                            pass
-                        else:
-                            if len(highest_umi_idx) > 1:
-                                self.h_doublet.append(b)
-                            if sum_umi < 4:
-                                self.h_doublet.append(b)
-                            if any(umi_test):
-                                self.h_doublet.append(b)
-                            if len(highest_umi_idx) == 1:
-                                other_umi_idx = [
-                                    i for i, j in enumerate(h_umi[b])
-                                    if j != highest_umi_h
-                                ]
-                                umi_test_ = [
-                                    highest_umi_h / x >= umi_foldchange_cutoff
-                                    for x in h_umi[b][:keep_index_h] +
-                                    h_umi[b][keep_index_h + 1:]
-                                ]
-                                umi_test_dict = dict(
-                                    zip(other_umi_idx, umi_test_))
-                                for otherindex in umi_test_dict:
-                                    if umi_test_dict[otherindex]:
-                                        self.drop_contig.append(
-                                            h[b][otherindex])
-                    else:
-                        if len(highest_umi_idx) > 1:
-                            self.h_doublet.append(b)
-                        if sum_umi < 4:
-                            self.h_doublet.append(b)
-                        if any(umi_test):
-                            self.h_doublet.append(b)
-                        if len(highest_umi_idx) == 1:
-                            other_umi_idx = [
-                                i for i, j in enumerate(h_umi[b])
-                                if j != highest_umi_h
-                            ]
-                            umi_test_ = [
-                                highest_umi_h / x >= umi_foldchange_cutoff
-                                for x in h_umi[b][:keep_index_h] +
-                                h_umi[b][keep_index_h + 1:]
-                            ]
-                            umi_test_dict = dict(zip(other_umi_idx, umi_test_))
-                            for otherindex in umi_test_dict:
-                                if umi_test_dict[otherindex]:
-                                    self.drop_contig.append(h[b][otherindex])
+                    self.drop_contig.append(h[:keep_index_h] + h[keep_index_h + 1:])
+                    keep_hc_contig = h[keep_index_h]
+                    self.data.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[:keep_index_h] + h_umi[keep_index_h + 1:]))
+                    self.umi_adjustment.update({keep_hc_contig: int(np.sum(h_umi[:keep_index_h] + h_umi[keep_index_h + 1:]))})
+                    h = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+
+                    # refresh
+                    h_p = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([True]))]['sequence_id'])
+                    h_umi_p = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([True]))]['duplicate_count']]
+                    h_np = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([False]))]['sequence_id'])
+                    h_umi_np = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([False]))]['duplicate_count']]
+            if len(h_p) > 1:
+                highest_umi_h = max(h_umi_p)
+                highest_umi_idx = [i for i, j in enumerate(h_umi_p) if j == highest_umi_h]
+                keep_index_h = highest_umi_idx[0]
+                umi_test = [highest_umi_h / x < umi_foldchange_cutoff for x in h_umi_p[:keep_index_h] + h_umi_p[keep_index_h + 1:]]
+                sum_umi = sum(h_umi_p)
+                if 'IGHM' and 'IGHD' in h_ccall:
+                    if all(cc_ == 'IGHM' or cc_ == 'IGHD' for cc_ in h_ccall):
+                        pass
                 else:
-                    self.h_doublet.append(b)
-        if len(l[b]) > 1:
-            if 'sequence_alignment' in self.dat:
-                if len(list(set(l_seq[b]))) == 1:
-                    highest_umi_l = max(l_umi[b])
-                    highest_umi_l_idx = [
-                        i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
-                    ]
+                    if len(highest_umi_idx) > 1:
+                        self.h_doublet.append(b)
+                    if sum_umi < 4:
+                        self.h_doublet.append(b)
+                    if any(umi_test):
+                        self.h_doublet.append(b)
+                    if len(highest_umi_idx) == 1:
+                        other_umi_idx = [i for i, j in enumerate(h_umi_p)if j != highest_umi_h]
+                        umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi_p[:keep_index_h] + h_umi_p[keep_index_h + 1:]]
+                        umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                        for otherindex in umi_test_dict:
+                            if umi_test_dict[otherindex]:
+                                if keep_highest_umi:
+                                    self.drop_contig.append(h_p[otherindex])
+                                    # refresh
+                                    h_p = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([True]))]['sequence_id'])
+
+            # tries to keep most non-productive contigs but if there is a dominant contig, drop other contigs.
+            if len(h_np) > 1:
+                highest_umi_h = max(h_umi_np)
+                highest_umi_idx = [i for i, j in enumerate(h_umi_np) if j == highest_umi_h]
+                if len(highest_umi_idx) == 1:
+                    keep_index_h = highest_umi_idx[0]
+                    other_umi_idx = [i for i, j in enumerate(h_umi_np)if j != highest_umi_h]
+                    umi_test_ = [highest_umi_h / x >= umi_foldchange_cutoff for x in h_umi_np[:keep_index_h] + h_umi_np[keep_index_h + 1:]]
+                    umi_test_dict = dict(zip(other_umi_idx, umi_test_))
+                    for otherindex in umi_test_dict:
+                        if umi_test_dict[otherindex]:
+                            self.drop_contig.append(h_np[otherindex])
+                            # refresh
+                            h_np = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD'])) & (self.data['productive'].isin([False]))]['sequence_id'])
+        if len(l) > 1:
+            if 'sequence_alignment' in self.data:
+                if len(list(set(l_seq))) == 1:
+                    highest_umi_l = max(l_umi)
+                    highest_umi_l_idx = [i for i, j in enumerate(l_umi) if j == highest_umi_l]
                     keep_index_l = highest_umi_l_idx[0]
-                    self.drop_contig.append(l[b][:keep_index_l] +
-                                            l[b][keep_index_l + 1:])
-                    keep_lc_contig = l[b][keep_index_l]
-                    self.dat.at[keep_lc_contig, 'duplicate_count'] = int(
-                        np.sum(l_umi[b][:keep_index_l] +
-                               l_umi[b][keep_index_l + 1:]))
-                    lc_id = list(self.dat[
-                        (self.dat['cell_id'].isin([b]))
-                        & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])
-                           )]['sequence_id'])
-                    lc_umi = [
-                        int(x)
-                        for x in self.dat[(self.dat['cell_id'].isin([b]))
-                                          & (self.dat['locus'].isin(
-                                              ['IGK', 'IGL', 'TRA', 'TRG']))]
-                        ['duplicate_count']
-                    ]
-                    l[b] = lc_id
-                    l_umi[b] = lc_umi
-                    l_seq[b] = lc_seq
-            if len(list(set(l[b]))) > 1:
-                # also apply the same cut off to multiple light chains
-                highest_umi_l = max(l_umi[b])
-                highest_umi_l_idx = [
-                    i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
-                ]
+                    self.drop_contig.append(l[:keep_index_l] + l[keep_index_l + 1:])
+                    keep_lc_contig = l[keep_index_l]
+                    self.data.at[keep_lc_contig, 'duplicate_count'] = int(np.sum(l_umi[:keep_index_l] + l_umi[keep_index_l + 1:]))
+                    self.umi_adjustment.update({keep_lc_contig: int(np.sum(l_umi[:keep_index_l] + l_umi[keep_index_l + 1:]))})
+                    l = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+
+                    # refresh
+                    l_p = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([True]))]['sequence_id'])
+                    l_umi_p = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([True]))]['duplicate_count']]
+                    l_np = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([False]))]['sequence_id'])
+                    l_umi_np = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([False]))]['duplicate_count']]
+            if len(l_p) > 1:
+                highest_umi_l = max(l_umi_p)
+                highest_umi_l_idx = [i for i, j in enumerate(l_umi_p) if j == highest_umi_l]
                 keep_index_l = highest_umi_l_idx[0]
-                other_umi_idx_l = [
-                    i for i, j in enumerate(l_umi[b]) if j != highest_umi_l
-                ]
-                umi_test_l = [
-                    highest_umi_l / x < umi_foldchange_cutoff
-                    for x in l_umi[b][:keep_index_l] +
-                    l_umi[b][keep_index_l + 1:]
-                ]
-                umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
-                for otherindex in umi_test_dict_l:
-                    if umi_test_dict_l[otherindex]:
-                        self.drop_contig.append(l[b][otherindex])
-        # marking doublets defined by light chains
-        if (len(h[b]) == 1) & (len(l[b]) > 1):
+                umi_test = [highest_umi_l / x < umi_foldchange_cutoff for x in h_umi_p[:keep_index_l] + h_umi_p[keep_index_l + 1:]]
+                sum_umi = sum(l_umi_p)
+                if len(highest_umi_l_idx) > 1:
+                    self.l_doublet.append(b)
+                if sum_umi < 4:
+                    self.l_doublet.append(b)
+                if any(umi_test):
+                    self.l_doublet.append(b)
+                if len(highest_umi_l_idx) == 1:
+                    keep_index_l = highest_umi_l_idx[0]
+                    other_umi_idx_l = [i for i, j in enumerate(l_umi_p) if j != highest_umi_l]
+                    umi_test_l = [highest_umi_l / x >= umi_foldchange_cutoff for x in l_umi_p[:keep_index_l] + l_umi_p[keep_index_l + 1:]]
+                    umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+                    for otherindex in umi_test_dict_l:
+                        if umi_test_dict_l[otherindex]:
+                            if keep_highest_umi:
+                                self.drop_contig.append(l_p[otherindex])
+                                # refresh
+                                l_p = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([True]))]['sequence_id'])
+
+            # tries to keep most non-productive contigs but if there is a dominant contig, drop other contigs.
+            if len(l_np) > 1:
+                highest_umi_l = max(l_umi_np)
+                highest_umi_l_idx = [i for i, j in enumerate(l_umi_np) if j == highest_umi_l]
+                keep_index_l = highest_umi_l_idx[0]
+                other_umi_idx_l = [i for i, j in enumerate(l_umi_np) if j != highest_umi_l]
+                umi_test_l = [highest_umi_l / x >= umi_foldchange_cutoff for x in l_umi_np[:keep_index_l] + l_umi_np[keep_index_l + 1:]]
+                if len(highest_umi_l_idx) == 1:
+                    umi_test_dict_l = dict(zip(other_umi_idx_l, umi_test_l))
+                    for otherindex in umi_test_dict_l:
+                        if umi_test_dict_l[otherindex]:
+                            if keep_highest_umi:
+                                self.drop_contig.append(l_np[otherindex])
+                                # refresh
+                                l_np = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])) & (self.data['productive'].isin([False]))]['sequence_id'])
+
+        # marking doublets defined by VJ chains
+        if (len(h_p) == 1) & (len(l_p) > 1):
             self.l_doublet.append(b)
-        # marking poor bcr quality, defined as those with only light chains, those
-        # that were have conflicting assignment of locus and heavy/light V/J calls,
-        # and also those that are missing either v or j calls.
-        if len(h[b]) < 1:
+
+        # marking poor bcr quality, defined as those with only VJ chains, those
+        # that were have conflicting assignment of locus and V(D)J v-, d-, j- and c- calls,
+        # and also those that are missing j calls (to catch non-productive).
+        if len(h) < 1:
             if filter_poorqualitycontig:
                 self.poor_qual.append(b)
-            self.drop_contig.append(l[b])
-        if len(hc_id) == 1:
-            v = v_dict[hc_id[0]]
-            j = j_dict[hc_id[0]]
-            c = c_dict[hc_id[0]]
-            if pd.notnull(v):
+            self.drop_contig.append(l)
+        if len(h_p) == 1:
+            v = v_dict[h_p[0]]
+            j = j_dict[h_p[0]]
+            d = d_dict[h_p[0]]
+            c = c_dict[h_p[0]]
+            if pd.notnull(v) and v != '':
                 if not re.search('IGH|TR[BD]', v):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
-                    self.drop_contig.append(l[b])
-                    self.drop_contig.append(h[b])
-            else:
-                if filter_poorqualitycontig:
-                    self.poor_qual.append(b)
-                self.drop_contig.append(l[b])
-                self.drop_contig.append(h[b])
-            if pd.notnull(j):
+                    self.drop_contig.append(l_p)
+                    self.drop_contig.append(h_p)
+            if pd.notnull(d) and d != '':
+                if not re.search('IGH|TR[BD]', d):
+                    if filter_poorqualitycontig:
+                        self.poor_qual.append(b)
+                    self.drop_contig.append(l_p)
+                    self.drop_contig.append(h_p)
+            if pd.notnull(j) and j != '':
                 if not re.search('IGH|TR[BD]', j):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
-                    self.drop_contig.append(l[b])
-                    self.drop_contig.append(h[b])
-            else:
-                if filter_poorqualitycontig:
-                    self.poor_qual.append(b)
-                self.drop_contig.append(l[b])
-                self.drop_contig.append(h[b])
-            if pd.notnull(c):
+                    self.drop_contig.append(l_p)
+                    self.drop_contig.append(h_p)
+            if pd.notnull(c) and c != '':
                 if not re.search('IGH|TR[BD]', c):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
-                    self.drop_contig.append(l[b])
-                    self.drop_contig.append(h[b])
-        if len(hc_id) > 1:
-            for hx in hc_id:
+                    self.drop_contig.append(l_p)
+                    self.drop_contig.append(h_p)
+
+            if pd.notnull(j) and j != '':
+                if pd.notnull(v) and v != '':
+                    if (re.search('IGH', v) and not re.search('IGH', j)) or (re.search('IGH', j) and not re.search('IGH', v)):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                    elif (re.search('TRB', v) and not re.search('TRB', j)) or (re.search('TRB', j) and not re.search('TRB', v)):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                    elif (re.search('TRD', v) and not re.search('TRD', j)) or (re.search('TRD', j) and not re.search('TRD', v)):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+
+                if pd.notnull(d) and d != '':
+                    if (re.search('IGH', d) and not re.search('IGH', j)) or (re.search('IGH', d) and not re.search('IGH', v)):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                    elif (re.search('TRB', d) and not re.search('TRB', j)) or (re.search('TRB', d) and not re.search('TRB', v)):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                    elif (re.search('TRD', d) and not re.search('TRD', j)) or (re.search('TRD', d) and not re.search('TRD', v)):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+            else:
+                if filter_poorqualitycontig:
+                    self.poor_qual.append(b)
+                self.drop_contig.append(l_p)
+                self.drop_contig.append(h_p)
+
+        if len(h_p) > 1:
+            for hx in h_p:
                 v = v_dict[hx]
+                d = d_dict[hx]
                 j = j_dict[hx]
                 c = c_dict[hx]
-                if pd.notnull(v):
+                if pd.notnull(v) and v != '':
                     if not re.search('IGH|TR[BD]', v):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
-                if pd.notnull(j):
+                if pd.notnull(d) and d != '':
+                    if not re.search('IGH|TR[BD]', d):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(hx)
+                if pd.notnull(j) and j != '':
                     if not re.search('IGH|TR[BD]', j):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
-                if pd.notnull(c):
+                if pd.notnull(c) and c != '':
                     if not re.search('IGH|TR[BD]', c):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
-        if len(lc_id) > 0:
-            for lx in lc_id:
-                v = v_dict[lx]
-                j = j_dict[lx]
-                c = c_dict[lx]
-                if pd.notnull(v):
-                    if pd.notnull(j):
-                        if re.search('IGH|TR[BD]', v):
+                if pd.notnull(j) and j != '':
+                    if pd.notnull(v) and v != '':
+                        if (re.search('IGH', v) and not re.search('IGH', j)) or (re.search('IGH', j) and not re.search('IGH', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and not re.search('IGK', j)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRB', v) and not re.search('TRB', j)) or (re.search('TRB', j) and not re.search('TRB', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and not re.search('IGL', j)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRD', v) and not re.search('TRD', j)) or (re.search('TRD', j) and not re.search('TRD', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRA', v) and not re.search('TRA', j)):
+                            self.drop_contig.append(hx)
+                    if pd.notnull(d) and d != '':
+                        if (re.search('IGH', d) and not re.search('IGH', j)) or (re.search('IGH', d) and not re.search('IGH', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRG', v) and not re.search('TRG', j)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRB', d) and not re.search('TRB', j)) or (re.search('TRB', d) and not re.search('TRB', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                    else:
-                        if filter_poorqualitycontig:
-                            self.poor_qual.append(b)
-                        self.drop_contig.append(lx)
-                if pd.notnull(j):
-                    if pd.notnull(v):
-                        if re.search('IGH|TR[BD]', j):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRD', d) and not re.search('TRD', j)) or (re.search('TRD', d) and not re.search('TRD', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and not re.search('IGK', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and not re.search('IGL', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRA', v) and not re.search('TRA', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRG', v) and not re.search('TRG', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
+                            self.drop_contig.append(hx)
                 else:
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
-                    self.drop_contig.append(lx)
+                    self.drop_contig.append(hx)
 
-                if pd.notnull(c):
-                    if re.search('IGH|TR[BD]', c):
-                        if filter_poorqualitycontig:
-                            self.poor_qual.append(b)
-                        self.drop_contig.append(lx)
-
-                if any(pd.isnull([v, j])):
-                    if filter_poorqualitycontig:
-                        self.poor_qual.append(b)
-                    self.drop_contig.append(lx)  # no/wrong annotations at all
-
-    def run_scan_lite(self, b, filter_poorqualitycontig, v_dict, j_dict,
-                      c_dict):
-        """A 'lite' version of filter_contig where it does not impose the 1 VDJ + 1 VJ filtering."""
-        h = Tree()
-        l = Tree()
-        h_umi = Tree()
-        l_umi = Tree()
-        h_seq = Tree()
-        l_seq = Tree()
-        h_ccall = Tree()
-
-        hc_id = list(self.dat[
-            (self.dat['cell_id'].isin([b]))
-            & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
-        hc_umi = [
-            int(x)
-            for x in self.dat[(self.dat['cell_id'].isin([b]))
-                              & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD'])
-                                 )]['duplicate_count']
-        ]
-        if 'sequence_alignment' in self.dat:
-            hc_seq = [
-                x for x in self.dat[
-                    (self.dat['cell_id'].isin([b]))
-                    & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                ['sequence_alignment']
-            ]
-        hc_ccall = [
-            x for x in self.dat[
-                (self.dat['cell_id'].isin([b]))
-                & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]['c_call']
-        ]
-
-        lc_id = list(
-            self.dat[(self.dat['cell_id'].isin([b]))
-                     & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-            ['sequence_id'])
-        lc_umi = [
-            int(x) for x in self.dat[
-                (self.dat['cell_id'].isin([b]))
-                & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-            ['duplicate_count']
-        ]
-        if 'sequence_alignment' in self.dat:
-            lc_seq = [
-                x for x in self.dat[
-                    (self.dat['cell_id'].isin([b]))
-                    & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
-                ['sequence_alignment']
-            ]
-
-        h[b] = hc_id
-        h_umi[b] = hc_umi
-        if 'sequence_alignment' in self.dat:
-            h_seq[b] = hc_seq
-        h_ccall[b] = hc_ccall
-
-        l[b] = lc_id
-        l_umi[b] = lc_umi
-        if 'sequence_alignment' in self.dat:
-            l_seq[b] = lc_seq
-
-        # marking poor bcr quality, defined as contigs
-        # that have conflicting assignments of locus and heavy/light V/J calls,
-        # and also those that are missing either V or J calls.
-        if len(h[b]) > 1:
-            if 'sequence_alignment' in self.dat:
-                if len(list(set(h_seq[b]))) == 1:
-                    highest_umi_h = max(h_umi[b])
-                    highest_umi_h_idx = [
-                        i for i, j in enumerate(h_umi[b]) if j == highest_umi_h
-                    ]
-                    keep_index_h = highest_umi_h_idx[0]
-                    self.drop_contig.append(h[b][:keep_index_h] +
-                                            h[b][keep_index_h + 1:])
-                    keep_hc_contig = h[b][keep_index_h]
-                    self.dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                        np.sum(h_umi[b][:keep_index_h] +
-                               h_umi[b][keep_index_h + 1:]))
-                    hc_id = list(
-                        self.dat[(self.dat['cell_id'].isin([b]))
-                                 & (self.dat['locus'].isin(
-                                     ['IGH', 'TRB', 'TRD']))]['sequence_id'])
-                    hc_umi = [
-                        int(x) for x in self.dat[
-                            (self.dat['cell_id'].isin([b]))
-                            & (self.dat['locus'].isin(['IGH', 'TRB', 'TRD']))]
-                        ['duplicate_count']
-                    ]
-                    h[b] = hc_id
-                    h_umi[b] = hc_umi
-                    h_seq[b] = hc_seq
-        if len(l[b]) > 1:
-            if 'sequence_alignment' in self.dat:
-                if len(list(set(l_seq[b]))) == 1:
-                    highest_umi_l = max(l_umi[b])
-                    highest_umi_l_idx = [
-                        i for i, j in enumerate(l_umi[b]) if j == highest_umi_l
-                    ]
-                    keep_index_l = highest_umi_l_idx[0]
-                    self.drop_contig.append(l[b][:keep_index_l] +
-                                            l[b][keep_index_l + 1:])
-                    keep_hc_contig = l[b][keep_index_l]
-                    self.dat.at[keep_hc_contig, 'duplicate_count'] = int(
-                        np.sum(l_umi[b][:keep_index_l] +
-                               l_umi[b][keep_index_l + 1:]))
-                    lc_id = list(self.dat[
-                        (self.dat['cell_id'].isin([b]))
-                        & (self.dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])
-                           )]['sequence_id'])
-                    lc_umi = [
-                        int(x)
-                        for x in self.dat[(self.dat['cell_id'].isin([b]))
-                                          & (self.dat['locus'].isin(
-                                              ['IGK', 'IGL', 'TRA', 'TRG']))]
-                        ['duplicate_count']
-                    ]
-                    l[b] = lc_id
-                    l_umi[b] = lc_umi
-                    l_seq[b] = lc_seq
-
-        if len(hc_id) > 0:
-            for hx in hc_id:
+        if len(h_np) > 0:
+            for hx in h_np:
                 v = v_dict[hx]
+                d = d_dict[hx]
                 j = j_dict[hx]
                 c = c_dict[hx]
-                if pd.notnull(v):
-                    if pd.notnull(j):
-                        if not re.search('IGH|TR[BD]', v):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('IGH', v) and not re.search('IGH', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('TRB', v) and not re.search('TRB', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('TRG', v) and not re.search('TRG', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                if pd.notnull(j):
-                    if pd.notnull(v):
-                        if not re.search('IGH|TR[BD]', j):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('IGH', v) and not re.search('IGH', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('TRB', v) and not re.search('TRB', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                        elif (re.search('TRG', v) and not re.search('TRG', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
-                if pd.notnull(c):
-                    if re.search('IG[KL]|TR[AG]', c):
-                        if filter_poorqualitycontig:
-                            self.poor_qual.append(b)
+                if pd.notnull(v) and v != '':
+                    if not re.search('IGH|TR[BD]', v):
                         self.drop_contig.append(hx)
-        if len(lc_id) > 0:
-            for lx in lc_id:
+                if pd.notnull(d) and d != '':
+                    if not re.search('IGH|TR[BD]', d):
+                        self.drop_contig.append(hx)
+                if pd.notnull(j) and j != '':
+                    if not re.search('IGH|TR[BD]', j):
+                        self.drop_contig.append(hx)
+                if pd.notnull(c) and c != '':
+                    if not re.search('IGH|TR[BD]', c):
+                        self.drop_contig.append(hx)
+
+                if pd.notnull(j) and j != '':
+                    if pd.notnull(v) and v != '':
+                        if (re.search('IGH', v) and not re.search('IGH', j)) or (re.search('IGH', j) and not re.search('IGH', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRB', v) and not re.search('TRB', j)) or (re.search('TRB', j) and not re.search('TRB', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRD', v) and not re.search('TRD', j)) or (re.search('TRD', j) and not re.search('TRD', v)):
+                            self.drop_contig.append(hx)
+                    if pd.notnull(d) and d != '':
+                        if (re.search('IGH', d) and not re.search('IGH', j)) or (re.search('IGH', d) and not re.search('IGH', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRB', d) and not re.search('TRB', j)) or (re.search('TRB', d) and not re.search('TRB', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRD', d) and not re.search('TRD', j)) or (re.search('TRD', d) and not re.search('TRD', v)):
+                            self.drop_contig.append(hx)
+                else:
+                    self.drop_contig.append(hx)
+        if len(l_p) > 0:
+            for lx in l_p:
                 v = v_dict[lx]
                 j = j_dict[lx]
                 c = c_dict[lx]
-                if pd.notnull(v):
-                    if pd.notnull(j):
-                        if re.search('IGH|TR[BD]', v):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and not re.search('IGK', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and not re.search('IGL', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRA', v) and not re.search('TRA', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRG', v) and not re.search('TRG', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                    else:
+                if pd.notnull(v) and v != '':
+                    if re.search('IGH|TR[BD]', v):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(lx)
-                if pd.notnull(j):
-                    if pd.notnull(v):
-                        if re.search('IGH|TR[BD]', j):
+                if pd.notnull(j) and j != '':
+                    if re.search('IGH|TR[BD]', j):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(lx)
+                if pd.notnull(c) and c != '':
+                    if re.search('IGH|TR[BD]', c):
+                        if filter_poorqualitycontig:
+                            self.poor_qual.append(b)
+                        self.drop_contig.append(lx)
+
+                if pd.notnull(j) and j != '':
+                    if pd.notnull(v) and v != '':
+                        if (re.search('IGK', v) and not re.search('IGK', j)) or (re.search('IGK', j) and not re.search('IGK', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGK', v) and not re.search('IGK', j)):
+                        if (re.search('IGL', v) and not re.search('IGL', j)) or (re.search('IGL', j) and not re.search('IGL', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('IGL', v) and not re.search('IGL', j)):
+                        elif (re.search('TRA', v) and not re.search('TRA', j)) or (re.search('TRA', j) and not re.search('TRA', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
-                        elif (re.search('TRA', v) and not re.search('TRA', j)):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(lx)
-                        elif (re.search('TRG', v) and not re.search('TRG', j)):
+                        elif (re.search('TRG', v) and not re.search('TRG', j)) or (re.search('TRG', j) and not re.search('TRG', v)):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(lx)
@@ -851,21 +649,145 @@ class FilterContigs:
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
                     self.drop_contig.append(lx)
-                if pd.notnull(c):
-                    if re.search('IGH|TR[BD]', c):
-                        if filter_poorqualitycontig:
-                            self.poor_qual.append(b)
+
+        if len(l_np) > 0:
+            for lx in l_np:
+                v = v_dict[lx]
+                j = j_dict[lx]
+                c = c_dict[lx]
+                if pd.notnull(v) and v != '':
+                    if re.search('IGH|TR[BD]', v):
                         self.drop_contig.append(lx)
+                if pd.notnull(j) and j != '':
+                    if re.search('IGH|TR[BD]', j):
+                        self.drop_contig.append(lx)
+                if pd.notnull(c) and c != '':
+                    if re.search('IGH|TR[BD]', c):
+                        self.drop_contig.append(lx)
+
+                if pd.notnull(j) and j != '':
+                    if pd.notnull(v) and v != '':
+                        if (re.search('IGK', v) and not re.search('IGK', j)) or (re.search('IGK', j) and not re.search('IGK', v)):
+                            self.drop_contig.append(lx)
+                        if (re.search('IGL', v) and not re.search('IGL', j)) or (re.search('IGL', j) and not re.search('IGL', v)):
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRA', v) and not re.search('TRA', j)) or (re.search('TRA', j) and not re.search('TRA', v)):
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRG', v) and not re.search('TRG', j)) or (re.search('TRG', j) and not re.search('TRG', v)):
+                            self.drop_contig.append(lx)
+                else:
+                    self.drop_contig.append(lx)
+
+    def run_scan_lite(self, b, v_dict, d_dict, j_dict, c_dict):
+        """A 'lite' version of filter_contig where it does not impose the 1 VDJ + 1 VJ filtering."""
+        h = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+        h_umi = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+        if 'sequence_alignment' in self.data:
+            h_seq = [x for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_alignment']]
+
+        l = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+        l_umi = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
+        if 'sequence_alignment' in self.data:
+            l_seq = [x for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_alignment']]
+
+        if len(h) > 1:
+            if 'sequence_alignment' in self.data:
+                if len(list(set(h_seq))) == 1:
+                    highest_umi_h = max(h_umi)
+                    highest_umi_h_idx = [i for i, j in enumerate(h_umi) if j == highest_umi_h]
+                    keep_index_h = highest_umi_h_idx[0]
+                    self.drop_contig.append(h[:keep_index_h] + h[keep_index_h + 1:])
+                    keep_hc_contig = h[keep_index_h]
+                    self.data.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(h_umi[:keep_index_h] + h_umi[keep_index_h + 1:]))
+                    self.umi_adjustment.update({keep_hc_contig: int(np.sum(h_umi[:keep_index_h] + h_umi[keep_index_h + 1:]))})
+                    h = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['sequence_id'])
+                    h_umi = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGH', 'TRB', 'TRD']))]['duplicate_count']]
+
+        if len(l) > 1:
+            if 'sequence_alignment' in self.data:
+                if len(list(set(l_seq))) == 1:
+                    highest_umi_l = max(l_umi)
+                    highest_umi_l_idx = [i for i, j in enumerate(l_umi) if j == highest_umi_l]
+                    keep_index_l = highest_umi_l_idx[0]
+                    self.drop_contig.append(l[:keep_index_l] + l[keep_index_l + 1:])
+                    keep_hc_contig = l[keep_index_l]
+                    self.data.at[keep_hc_contig, 'duplicate_count'] = int(np.sum(l_umi[:keep_index_l] + l_umi[keep_index_l + 1:]))
+                    self.umi_adjustment.update({keep_lc_contig: int(np.sum(l_umi[:keep_index_l] + l_umi[keep_index_l + 1:]))})
+                    l = list(self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['sequence_id'])
+                    l_umi = [int(x) for x in self.data[(self.data['cell_id'].isin([b])) & (self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]['duplicate_count']]
+
+        if len(h) > 0:
+            for hx in h:
+                v = v_dict[hx]
+                d = d_dict[hx]
+                j = j_dict[hx]
+                c = c_dict[hx]
+                if pd.notnull(v) and v != '':
+                    if not re.search('IGH|TR[BD]', v):
+                        self.drop_contig.append(hx)
+                if pd.notnull(d) and d != '':
+                    if not re.search('IGH|TR[BD]', d):
+                        self.drop_contig.append(hx)
+                if pd.notnull(j) and j != '':
+                    if not re.search('IGH|TR[BD]', j):
+                        self.drop_contig.append(hx)
+                if pd.notnull(c) and c != '':
+                    if not re.search('IGH|TR[BD]', c):
+                        self.drop_contig.append(hx)
+
+                if pd.notnull(j) and j != '':
+                    if pd.notnull(v) and v != '':
+                        if (re.search('IGH', v) and not re.search('IGH', j)) or (re.search('IGH', j) and not re.search('IGH', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRB', v) and not re.search('TRB', j)) or (re.search('TRB', j) and not re.search('TRB', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRD', v) and not re.search('TRD', j)) or (re.search('TRD', j) and not re.search('TRD', v)):
+                            self.drop_contig.append(hx)
+                    if pd.notnull(d) and d != '':
+                        if (re.search('IGH', d) and not re.search('IGH', j)) or (re.search('IGH', d) and not re.search('IGH', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRB', d) and not re.search('TRB', j)) or (re.search('TRB', d) and not re.search('TRB', v)):
+                            self.drop_contig.append(hx)
+                        elif (re.search('TRD', d) and not re.search('TRD', j)) or (re.search('TRD', d) and not re.search('TRD', v)):
+                            self.drop_contig.append(hx)
+                else:
+                    self.drop_contig.append(hx)
+        if len(l) > 0:
+            for lx in l:
+                v = v_dict[lx]
+                j = j_dict[lx]
+                c = c_dict[lx]
+                if pd.notnull(v) and v != '':
+                    if re.search('IGH|TR[BD]', v):
+                        self.drop_contig.append(lx)
+                if pd.notnull(j) and j != '':
+                    if re.search('IGH|TR[BD]', j):
+                        self.drop_contig.append(lx)
+                if pd.notnull(c) and c != '':
+                    if re.search('IGH|TR[BD]', c):
+                        self.drop_contig.append(lx)
+
+                if pd.notnull(j) and j != '':
+                    if pd.notnull(v) and v != '':
+                        if (re.search('IGK', v) and not re.search('IGK', j)) or (re.search('IGK', j) and not re.search('IGK', v)):
+                            self.drop_contig.append(lx)
+                        if (re.search('IGL', v) and not re.search('IGL', j)) or (re.search('IGL', j) and not re.search('IGL', v)):
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRA', v) and not re.search('TRA', j)) or (re.search('TRA', j) and not re.search('TRA', v)):
+                            self.drop_contig.append(lx)
+                        elif (re.search('TRG', v) and not re.search('TRG', j)) or (re.search('TRG', j) and not re.search('TRG', v)):
+                            self.drop_contig.append(lx)
+                else:
+                    self.drop_contig.append(lx)
 
 
 def cmp(a, b):
-    '''Python2.x cmp function'''
+    """Python2.x cmp function."""
     return (a > b) - (a < b)
 
 
 def cmp_str_emptylast(s1, s2):
-    '''Help sort empty string to last.'''
-
+    """Help sort empty string to last."""
     if not s1 or not s2:
         return bool(s2) - bool(s1)
 
@@ -873,7 +795,7 @@ def cmp_str_emptylast(s1, s2):
 
 
 def cmp_to_key(mycmp):
-    '''Convert a cmp= function into a key= function'''
+    """Convert a cmp= function into a key= function."""
     class K:
         def __init__(self, obj, *args):
             self.obj = obj
@@ -895,4 +817,5 @@ def cmp_to_key(mycmp):
 
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
+
     return K
