@@ -12,6 +12,7 @@ Welcome to dandelion's documentation!
    :caption: Tutorial:
 
    notebooks/singularity_preprocessing.ipynb
+   notebooks/gamma_delta.ipynb
    tutorial_short.rst
    notebooks/7_dandelion_TCR_data_10x_data.ipynb
 
