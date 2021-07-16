@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 22:38:11
+# @Last Modified time: 2021-07-16 22:48:09
 
 import os
 import pandas as pd
@@ -2617,17 +2617,33 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         except:
             dat = dat.astype(str)
             dat_r = pandas2ri.py2rpy(dat)
-
-        dist_ham = sh.distToNearest(dat_r,
-                                    cellIdColumn="cell_id",
-                                    locusColumn="locus",
-                                    VJthenLen=VJthenLen,
-                                    vCallColumn=v_call,
-                                    onlyHeavy=onlyHeavy,
-                                    normalize=norm_,
-                                    model=model_,
-                                    nproc=ncpu_,
-                                    **kwargs)
+        try:
+            dist_ham = sh.distToNearest(dat_r,
+                                        cellIdColumn="cell_id",
+                                        locusColumn="locus",
+                                        VJthenLen=VJthenLen,
+                                        vCallColumn=v_call,
+                                        onlyHeavy=onlyHeavy,
+                                        normalize=norm_,
+                                        model=model_,
+                                        nproc=ncpu_,
+                                        **kwargs)
+        except:
+            print(("2 cell(s) with multiple heavy chains found. One heavy chain per cell is expected.\n"+
+                   "Rerun this after filtering. For now, wwitching to heavy mode."))
+            dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
+            try:
+                dat_h_r = pandas2ri.py2rpy(dat_h)
+            except:
+                dat_h = dat_h.astype(str)
+                dat_h_r = pandas2ri.py2rpy(dat_h)
+    
+            dist_ham = sh.distToNearest(dat_h_r,
+                                        vCallColumn=v_call,
+                                        model=model_,
+                                        normalize=norm_,
+                                        nproc=ncpu_,
+                                        **kwargs)
     # Find threshold using density method
     dist = np.array(dist_ham['dist_nearest'])
     if threshold_method_ == 'density':
