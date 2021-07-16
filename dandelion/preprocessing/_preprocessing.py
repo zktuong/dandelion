@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 16:38:08
+# @Last Modified time: 2021-07-16 20:15:31
 
 import os
 import pandas as pd
@@ -2117,24 +2117,24 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     if len(umi_adjustment) > 0:
         dat['duplicate_count'].update(umi_adjustment)
 
-    poorqual = Tree()
-    hdoublet = Tree()
-    ldoublet = Tree()
+    poorqual = {}
+    hdoublet = {}
+    ldoublet = {}
     for c in tqdm(adata_.obs_names, desc='Annotating in anndata obs slot '):
         if c in poor_qual:
-            poorqual[c] = True
+            poorqual.update({c: True})
         else:
-            poorqual[c] = False
+            poorqual.update({c: False})
 
         if c in h_doublet:
-            hdoublet[c] = True
+            hdoublet.update({c: True})
         else:
-            hdoublet[c] = False
+            hdoublet.update({c: False})
 
         if c in l_doublet:
-            ldoublet[c] = True
+            ldoublet.update({c: True})
         else:
-            ldoublet[c] = False
+            ldoublet.update({c: False})
 
     adata_.obs['filter_contig_quality'] = pd.Series(dict(poorqual))
     adata_.obs['filter_contig_quality'] = adata_.obs[
