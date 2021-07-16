@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.preprocessing.format_fastas &mdash; dandelion 0.1.0 documentation</title>
+  <title>dandelion.preprocessing.format_fastas &mdash; dandelion  documentation</title>
   
 
   
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -119,7 +121,7 @@
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_contigs.html">dandelion.preprocessing.filter_contigs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.format_fastas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
@@ -230,8 +232,8 @@
 <h1>dandelion.preprocessing.format_fastas<a class="headerlink" href="#dandelion-preprocessing-format-fastas" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.preprocessing.format_fastas">
-<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">format_fastas</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fastas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_trailing_hyphen_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#format_fastas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.format_fastas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds prefix to the headers/contig ids in cellranger fasta and annotation file.</p>
+<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">format_fastas</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fastas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_trailing_hyphen_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#format_fastas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.format_fastas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add prefix to the headers/contig ids in cellranger fasta and annotation file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -240,7 +242,8 @@
 <li><p><strong>suffix</strong> (<em>str, optional</em>) – list of suffixes to append to headers/contig ids in each fasta file.</p></li>
 <li><p><strong>sep</strong> (<em>str, optional</em>) – separator after prefix or before suffix to append to the headers/contig ids.</p></li>
 <li><p><strong>remove_trailing_hyphen_number</strong> (<em>bool</em>) – whether or not to remove the trailing hyphen number e.g. ‘-1’ from the cell/contig barcodes.</p></li>
-<li><p><strong>outdir</strong> (<em>str, optional</em>) – path to out put location. Default is None, which is ‘dandelion/data’.</p></li>
+<li><p><strong>outdir</strong> (<em>str, optional</em>) – path to out put location. Default is None, which is ‘dandelion’.</p></li>
+<li><p><strong>filename_prefix</strong> (<em>str, optional</em>) – list of prefixes of file names preceding ‘_contig’. None defaults to ‘filtered’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

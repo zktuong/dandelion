@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Running from R &mdash; dandelion 0.1.0 documentation</title>
+  <title>Running from R &mdash; dandelion  documentation</title>
   
 
   
@@ -43,7 +43,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Preprocessing: pp" href="../api.html" />
+    <link rel="next" title="Analyzing TCR data" href="7_dandelion_TCR_data_10x_data.html" />
     <link rel="prev" title="Dandelion class" href="0_dandelion_primer.html" /> 
 </head>
 
@@ -99,23 +99,24 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Running from R</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Foreword">Foreword</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Pre-processing">Pre-processing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file">Step 1: Formatting the headers of the cellranger fasta file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Step-1:-Formatting-the-headers-of-the-Cell-Ranger-fasta-file">Step 1: Formatting the headers of the Cell Ranger fasta file</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Step-2:-Reannotate-the-V/D/J-genes-with-igblastn.">Step 2: Reannotate the V/D/J genes with <em>igblastn</em>.</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)">Step 3 : Reassigning heavy chain V gene alleles <em>(optional but recommended)</em></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Step-4:-Assigning-constant-region-calls">Step 4: Assigning constant region calls</a></li>
@@ -123,16 +124,19 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#Filtering">Filtering</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Run-ddl$pp$filter_bcr">Run <code class="docutils literal notranslate"><span class="pre">ddl$pp$filter_bcr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Run-ddl$pp$filter_contigs">Run <code class="docutils literal notranslate"><span class="pre">ddl$pp$filter_contigs</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#Finding-clones">Finding clones</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Calculating-size-of-clones">Calculating size of clones</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Generate-BCR-network-visualization">Generate BCR network visualization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Integrating-with-Seurat">Integrating with Seurat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Transfer-Dandelion-to-AnnData">Transfer <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">AnnData</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#New-Session:-Transfer-AnnData-to-Seurat">New Session: Transfer <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> to <code class="docutils literal notranslate"><span class="pre">Seurat</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Plotting-BCR-network">Plotting BCR network</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -190,6 +194,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
         
       <li>Running from R</li>
     
@@ -487,9 +493,9 @@ div.rendered_html tbody tr:hover {
 <h2>Foreword<a class="headerlink" href="#Foreword" title="Permalink to this headline">¶</a></h2>
 <p><strong>dandelion</strong> is written in <code class="docutils literal notranslate"><span class="pre">python==3.7.6</span></code> and it is primarily a single-cell BCR-seq analysis package. It makes use of some tools from the fantastic <a class="reference external" href="https://immcantation.readthedocs.io/">immcantation suite</a> and the main idea is that it implements a workflow for the pre-processing and exploratory stages with integrated use of tools from <em>immcantation</em> for the BCR side of things and analysis tools from <a class="reference external" href="https://scanpy.readthedocs.io/">scanpy</a> for the RNA-seq side of things. I hope to be
 able to introduce some new single-cell BCR-seq exploratory tools down the road through <em>dandelion</em>.</p>
-<p><strong>dandelion</strong> can be run in <code class="docutils literal notranslate"><span class="pre">R</span></code> through <code class="docutils literal notranslate"><span class="pre">reticulate</span></code>. This notebook will try to replicate the examples in notebooks 1-3 entirely in R.</p>
+<p><strong>dandelion</strong> can be run in <code class="docutils literal notranslate"><span class="pre">R</span></code> through <code class="docutils literal notranslate"><span class="pre">reticulate</span></code>. This section will try to replicate the examples using <code class="docutils literal notranslate"><span class="pre">R</span></code>.</p>
 <p>There are some issues with the conversion of dataframes between python and R so I would <strong>not</strong> recommend saving the final <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object as a final out file, but only use this to help generate the intermediate files from the BCR processing and the plots. Please store your original analysis some where safe. I would also skip quantify mutation step due to conflicts between rpy2 and reticulate.</p>
-<p>For more details, please refer to the original python notebooks.</p>
+<p>For more details, please refer to the original python tutorial.</p>
 <p>Let’s start!</p>
 <p>First, install reticulate via if you don’t already have it:</p>
 <div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">install.packages</span><span class="p">(</span><span class="s">&#39;reticulate&#39;</span><span class="p">)</span>
@@ -528,7 +534,7 @@ libpython:      /Users/kt16/miniconda3/envs/dandelion/lib/libpython3.7m.dylib
 pythonhome:     /Users/kt16/miniconda3/envs/dandelion:/Users/kt16/miniconda3/envs/dandelion
 version:        3.7.8 | packaged by conda-forge | (default, Nov 17 2020, 23:22:07)  [Clang 10.0.1 ]
 numpy:          /Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/numpy
-numpy_version:  1.19.4
+numpy_version:  1.20.1
 
 NOTE: Python version was forced by RETICULATE_PYTHON
 </pre></div></div>
@@ -540,7 +546,7 @@ NOTE: Python version was forced by RETICULATE_PYTHON
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># change directory to somewhere more workable</span>
-<span class="nf">setwd</span><span class="p">(</span><span class="s">&#39;/Users/kt16/Downloads/dandelion_tutorial_R/&#39;</span><span class="p">)</span>
+<span class="nf">setwd</span><span class="p">(</span><span class="s">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">)</span>
 <span class="n">ddl</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&#39;dandelion&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -554,8 +560,8 @@ NOTE: Python version was forced by RETICULATE_PYTHON
 <span class="go">filtered_contig_annotations.csv</span>
 </pre></div>
 </div>
-<div class="section" id="Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file">
-<h3>Step 1: Formatting the headers of the cellranger fasta file<a class="headerlink" href="#Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="Step-1:-Formatting-the-headers-of-the-Cell-Ranger-fasta-file">
+<h3>Step 1: Formatting the headers of the Cell Ranger fasta file<a class="headerlink" href="#Step-1:-Formatting-the-headers-of-the-Cell-Ranger-fasta-file" title="Permalink to this headline">¶</a></h3>
 <p>This will do the following: 1) add the prefix provided to every sequence header</p>
 <ol class="arabic simple" start="2">
 <li><p>add the prefix provided to every contig_id in the annotation.csv file</p></li>
@@ -681,7 +687,7 @@ run, toggle:</p>
 </div>
 <div class="section" id="Step-5:-Quantify-mutations-(optional).">
 <h3>Step 5: Quantify mutations <em>(optional)</em>.<a class="headerlink" href="#Step-5:-Quantify-mutations-(optional)." title="Permalink to this headline">¶</a></h3>
-<p>In my original notebook, at this stage, I quantified the basic mutational load with <code class="docutils literal notranslate"><span class="pre">ddl.pp.quantify_mutations</span></code> before subsequent analyses. This would not run properly within this R session due to rpy2/reticulate conflict. Instead, i’d recommend you to run this separately on the. <code class="docutils literal notranslate"><span class="pre">*_igblast_gap_genotyped.tsv</span></code> file that was generated in the previous step, by following <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/">Shazam’s tutorial</a> on basic mutational analysis,
+<p>In the python tutorial, at this stage, I quantified the basic mutational load with <code class="docutils literal notranslate"><span class="pre">ddl.pp.quantify_mutations</span></code> before subsequent analyses. This would not run properly within this R session due to rpy2/reticulate conflict. Instead, i’d recommend you to run this separately on the. <code class="docutils literal notranslate"><span class="pre">*_igblast_gap_genotyped.tsv</span></code> file that was generated in the previous step, by following <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/Mutation-Vignette/">Shazam’s tutorial</a> on basic mutational analysis,
 before continuing to step 6.</p>
 </div>
 </div>
@@ -694,11 +700,12 @@ before continuing to step 6.</p>
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="nf">library</span><span class="p">(</span><span class="n">Seurat</span><span class="p">)</span>
+<span></span><span class="nf">setwd</span><span class="p">(</span><span class="s">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">)</span>
+<span class="nf">library</span><span class="p">(</span><span class="n">Seurat</span><span class="p">)</span>
 <span class="n">samples</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;sc5p_v2_hs_PBMC_1k&#39;</span><span class="p">,</span> <span class="s">&#39;sc5p_v2_hs_PBMC_10k&#39;</span><span class="p">,</span> <span class="s">&#39;vdj_v1_hs_pbmc3&#39;</span><span class="p">,</span> <span class="s">&#39;vdj_nextgem_hs_pbmc3&#39;</span><span class="p">)</span>
 <span class="n">seurat_objects</span> <span class="o">=</span> <span class="nf">list</span><span class="p">()</span>
 <span class="nf">for </span><span class="p">(</span><span class="n">i</span> <span class="n">in</span> <span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">samples</span><span class="p">)){</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;_filtered_feature_bc_matrix.h5&quot;</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&#39;/filtered_feature_bc_matrix.h5&#39;</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">&lt;-</span> <span class="nf">Read10X_h5</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
     <span class="n">seurat_objects</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span> <span class="o">&lt;-</span> <span class="nf">CreateSeuratObject</span><span class="p">(</span><span class="n">counts</span> <span class="o">=</span> <span class="n">data</span><span class="o">$</span><span class="n">`Gene Expression`</span><span class="p">)</span>
 <span class="p">}</span>
@@ -710,12 +717,20 @@ before continuing to step 6.</p>
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
+Warning message in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x = counts[]), :
+“&#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &#34;T&#34;&#39; for you”
 Genome matrix has multiple modalities, returning a list of matrices for this genome
 
+Warning message in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x = counts[]), :
+“&#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &#34;T&#34;&#39; for you”
 Genome matrix has multiple modalities, returning a list of matrices for this genome
 
+Warning message in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x = counts[]), :
+“&#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &#34;T&#34;&#39; for you”
 Genome matrix has multiple modalities, returning a list of matrices for this genome
 
+Warning message in sparseMatrix(i = indices[] + 1, p = indptr[], x = as.numeric(x = counts[]), :
+“&#39;giveCsparse&#39; has been deprecated; setting &#39;repr = &#34;T&#34;&#39; for you”
 Genome matrix has multiple modalities, returning a list of matrices for this genome
 
 </pre></div></div>
@@ -745,19 +760,19 @@ Genome matrix has multiple modalities, returning a list of matrices for this gen
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<table>
+<table class="dataframe">
 <caption>A data.frame: 6 × 3</caption>
 <thead>
     <tr><th></th><th scope=col>orig.ident</th><th scope=col>nCount_RNA</th><th scope=col>nFeature_RNA</th></tr>
     <tr><th></th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;int&gt;</th></tr>
 </thead>
 <tbody>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGCAGCCTGTG-1</th><td>SeuratProject</td><td>5029</td><td>1819</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACGGGTCGCTGATA-1</th><td>SeuratProject</td><td>4343</td><td>1738</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAAGATGTCCTCGCAT-1</th><td>SeuratProject</td><td> 898</td><td> 554</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAAGCAAAGTATGACA-1</th><td>SeuratProject</td><td>4999</td><td>1796</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAAGCAATCCATTCTA-1</th><td>SeuratProject</td><td> 601</td><td> 416</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAATGCCCACTTAAGC-1</th><td>SeuratProject</td><td>4998</td><td>1530</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGATCTGAA-1</th><td>SeuratProject</td><td>4386</td><td>1206</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGGAACTGC-1</th><td>SeuratProject</td><td>6258</td><td>1723</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGGAGTCTG-1</th><td>SeuratProject</td><td>4243</td><td>1404</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGGCTCTTA-1</th><td>SeuratProject</td><td>5205</td><td>1622</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGTACGTTC-1</th><td>SeuratProject</td><td>7098</td><td>2123</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGGTATCACCA-1</th><td>SeuratProject</td><td>1095</td><td> 604</td></tr>
 </tbody>
 </table></div>
 </div>
@@ -779,7 +794,7 @@ Genome matrix has multiple modalities, returning a list of matrices for this gen
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 An object of class Seurat
-38224 features across 30471 samples within 1 assay
+38224 features across 36730 samples within 1 assay
 Active assay: RNA (38224 features, 0 variable features)
 </pre></div></div>
 </div>
@@ -809,40 +824,40 @@ Active assay: RNA (38224 features, 0 variable features)
 Centering and scaling data matrix
 
 PC_ 1
-Positive:  LYZ, S100A9, FCN1, S100A8, CST3, VCAN, MNDA, IFI30, SPI1, SERPINA1
-           S100A12, CSTA, TYMP, CTSS, CD14, LST1, CYBB, FTL, MS4A6A, CSF3R
-           TYROBP, CD68, TNFAIP2, CFD, NCF2, CD36, CEBPD, AIF1, GRN, LILRB2
-Negative:  IFITM1, RPS27, IL32, LTB, RPS12, RPS18, IL7R, TCF7, CD7, TRBC2
-           NOSIP, RPS29, LEF1, LINC00861, ETS1, CD247, CCR7, LIME1, CD2, MAL
-           SELL, GZMM, TRBC1, AQP3, OXNAD1, AES, CD69, ARL4C, PIM2, TRAC
+Positive:  IFITM1, RPS27, IL32, LTB, RPS18, IL7R, TRBC2, TCF7, CD7, RPS29
+           NOSIP, LEF1, CD247, ETS1, AES, CCR7, MAL, LIME1, CD2, TRBC1
+           SELL, CD69, GZMM, AQP3, OXNAD1, SEPT6, SEPT1, ARL4C, PIM2, TRAC
+Negative:  LYZ, S100A9, FCN1, S100A8, CST3, VCAN, MNDA, IFI30, SPI1, SERPINA1
+           S100A12, CSTA, CD14, TYMP, LST1, CTSS, CYBB, MS4A6A, CSF3R, CD68
+           TYROBP, NCF2, CFD, TNFAIP2, FTL, CD36, CEBPD, AIF1, GRN, LILRB2
 PC_ 2
 Positive:  MS4A1, CD79A, BANK1, LINC00926, IGHM, HLA-DQA1, FCER2, HLA-DQB1, TCL1A, CD79B
-           FCRLA, CD19, VPREB3, RALGPS2, CD22, HLA-DRA, FCRL1, HLA-DOB, AFF3, NIBAN3
-           IGHD, POU2AF1, BLNK, BLK, HLA-DPB1, SPIB, IGKC, ADAM28, CD24, HVCN1
-Negative:  NKG7, HCST, CST7, PRF1, GZMA, GNLY, CTSW, KLRD1, IFITM1, FGFBP2
-           FCGR3A, KLRF1, SPON2, S100A4, HOPX, GZMB, SRGN, IFITM2, CCL5, CLIC3
-           CD7, MATK, ITGB2, TBX21, IL2RB, CD247, KLRB1, GZMM, SH2D1B, S1PR5
+           FCRLA, CD19, VPREB3, RALGPS2, CD22, FCRL1, HLA-DRA, HLA-DOB, AFF3, IGHD
+           BLNK, POU2AF1, NIBAN3, IGKC, CD24, SPIB, BLK, ADAM28, HLA-DPB1, TSPAN13
+Negative:  NKG7, CST7, GZMA, PRF1, GNLY, HCST, KLRD1, CTSW, FGFBP2, FCGR3A
+           KLRF1, HOPX, SPON2, GZMB, CLIC3, IFITM1, CCL5, MATK, TBX21, IFITM2
+           IL2RB, SH2D1B, SRGN, S100A4, S1PR5, KLRB1, MYOM2, ITGB2, ADGRG1, PTGDR
 PC_ 3
-Positive:  NKG7, GNLY, GZMB, CST7, PRF1, KLRD1, GZMA, FCGR3A, FGFBP2, KLRF1
-           SPON2, CLIC3, HOPX, SH2D1B, TBX21, CCL4, ADGRG1, S1PR5, MATK, PTGDR
-           MYOM2, IL2RB, TTC38, CCL5, PRSS23, GZMH, CTSW, XCL2, CXXC5, PLEK
-Negative:  TCF7, LEF1, TPT1, IL7R, VIM, RPS12, CCR7, RPL36A, MAL, NOSIP
-           RGS10, SNHG29, PRKCQ-AS1, TRABD2A, RPL17, EEF1G, GAS5, OXNAD1, GIMAP5, RPS4Y1
-           RGCC, BCL11B, ACTN1, TRAT1, RPS29, LTB, AL138963.4, GIMAP1, PCED1B-AS1, NELL2
+Positive:  TCF7, LEF1, IL7R, TPT1, VIM, CCR7, MAL, NOSIP, RPL36A, OXNAD1
+           ACTN1, RGCC, PRKCQ-AS1, RPL17, AQP3, LTB, BCL11B, GIMAP5, SNHG29, INPP4B
+           NELL2, RPS18, EEF1G, GIMAP1, GAS5, RPS29, RPS4Y1, LRRN3, AIF1, CD40LG
+Negative:  NKG7, GZMB, GNLY, CST7, PRF1, KLRD1, FCGR3A, GZMA, KLRF1, CLIC3
+           FGFBP2, SPON2, HOPX, SH2D1B, TBX21, CCL4, ADGRG1, S1PR5, MYOM2, MATK
+           PTGDR, TTC38, IL2RB, CXXC5, PRSS23, CTSW, GZMH, CCL5, PLEK, CX3CR1
 PC_ 4
-Positive:  CAVIN2, PPBP, TUBB1, PF4, GNG11, SPARC, GP9, CLU, MPIG6B, TREML1
-           PRKAR2B, NRGN, ITGA2B, CMTM5, PTGS1, MMD, MYL9, AC147651.1, TRIM58, ACRBP
-           MAP3K7CL, AL731557.1, DMTN, C2orf88, RGS18, CD9, TSC22D1, MTURN, THBS1, TMEM40
-Negative:  AES, RPS12, SEPT9, RARRES3, SEPT6, JUNB, SEPT7, SEPT1, RPS18, AL138963.3
-           DUSP1, JUN, KIAA1551, FOS, VIM, CD74, TPT1, S100A4, S100A10, S100A6
-           HLA-DQA2, CD69, HLA-DRB5, NFKBIA, CD37, RPS27, DUSP2, HLA-DRA, RETN, ATP6V0B
+Positive:  TLE5, RPS4Y1, EEF1G, SNHG29, GAS5, PCED1B-AS1, SNHG6, SEPTIN9, SEPTIN7, PLAAT4
+           LINC01578, SEPTIN1, IL2RG, AL138963.4, SEPTIN6, SNHG5, RPL17, TOMM6, JUND, GIMAP5
+           RESF1, PRKCQ-AS1, CD81, MICOS10, RBIS, ATP5PO, KLF2, RNASEK, GNAS, RPS17
+Negative:  AES, SEPT9, SEPT6, SEPT1, RARRES3, AL138963.3, KIAA1551, JUNB, DUSP1, FOS
+           FTH1, JUN, GAPDH, MTRNR2L12, HLA-DQA2, RETN, CD69, COTL1, HLA-DRB5, FAM129C
+           SAT1, VIM, NFKBIA, DUSP2, PPP1R15A, TNFAIP3, LGALS3, LTB, NR4A1, AL121748.1
 PC_ 5
-Positive:  RPS4Y1, TLE5, EEF1G, SNHG29, GAS5, SEPTIN9, SNHG6, PCED1B-AS1, IL2RG, RPL17
-           PLAAT4, SEPTIN7, SEPTIN1, LINC01578, JUND, AL138963.4, TOMM6, SNHG5, CD81, SEPTIN6
-           KLF2, RESF1, GIMAP5, ATP5PO, MICOS10, RPS17, RBIS, RNASEK, PRKCQ-AS1, RPL36A
-Negative:  AES, SEPT9, SEPT6, SEPT1, SEPT7, RARRES3, AL138963.3, KIAA1551, GNG11, CLU
-           CAVIN2, TUBB1, SPARC, PF4, PPBP, JUNB, GP9, CDKN1A, MPIG6B, TREML1
-           LMNA, ITGA2B, PTGS1, CMTM5, MAP3K7CL, CD9, DUSP1, PRKAR2B, ACRBP, FTH1
+Positive:  CAVIN2, GNG11, PPBP, TUBB1, PF4, SPARC, MPIG6B, CLU, GP9, TREML1
+           ITGA2B, CMTM5, PTGS1, PRKAR2B, NRGN, AL731557.1, MYL9, MAP3K7CL, MMD, TRIM58
+           F13A1, ACRBP, AC147651.1, AP001189.1, THBS1, TMEM40, CD9, C2orf88, PTCRA, MGLL
+Negative:  RPS18, MALAT1, RPS27, TPT1, CYBA, RPS29, CD37, ITGB2, RPL36A, CD74
+           JUN, RPL17, IER2, JUNB, VIM, S100A6, IFITM2, NKG7, DUSP1, ZFP36
+           S100A4, GSTP1, FGR, EFHD2, TYROBP, S100A10, KLF2, PRF1, GZMA, CST7
 
 Computing nearest neighbor graph
 
@@ -857,11 +872,11 @@ Computing SNN
 <div class="highlight"><pre>
 Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 
-Number of nodes: 18634
-Number of edges: 807300
+Number of nodes: 20766
+Number of edges: 928189
 
 Running Louvain algorithm...
-Maximum modularity in 10 random starts: 0.9222
+Maximum modularity in 10 random starts: 0.9138
 Number of communities: 24
 Elapsed time: 2 seconds
 </pre></div></div>
@@ -875,13 +890,13 @@ Warning message:
 “The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
 To use Python UMAP via reticulate, set umap.method to &#39;umap-learn&#39; and metric to &#39;correlation&#39;
 This message will be shown once per session”
-19:22:49 UMAP embedding parameters a = 0.9922 b = 1.112
+23:51:32 UMAP embedding parameters a = 0.9922 b = 1.112
 
-19:22:49 Read 18634 rows and found 50 numeric columns
+23:51:32 Read 20766 rows and found 50 numeric columns
 
-19:22:49 Using Annoy for neighbor search, n_neighbors = 30
+23:51:32 Using Annoy for neighbor search, n_neighbors = 30
 
-19:22:49 Building Annoy index with metric = cosine, n_trees = 50
+23:51:32 Building Annoy index with metric = cosine, n_trees = 50
 
 0%   10   20   30   40   50   60   70   80   90   100%
 
@@ -939,19 +954,19 @@ This message will be shown once per session”
 *
 |
 
-19:22:52 Writing NN index file to temp file /var/folders/nb/wrd6px6171j52lqpmkljt6vw000l2l/T//Rtmp467IqC/file92ce5a22d886
+23:51:34 Writing NN index file to temp file /var/folders/nb/wrd6px6171j52lqpmkljt6vw000l2l/T//RtmpKTzwsS/filee47b1be59093
 
-19:22:52 Searching Annoy index using 1 thread, search_k = 3000
+23:51:35 Searching Annoy index using 1 thread, search_k = 3000
 
-19:22:59 Annoy recall = 100%
+23:51:41 Annoy recall = 100%
 
-19:22:59 Commencing smooth kNN distance calibration using 1 thread
+23:51:41 Commencing smooth kNN distance calibration using 1 thread
 
-19:23:00 Initializing from normalized Laplacian + noise
+23:51:42 Initializing from normalized Laplacian + noise
 
-19:23:05 Commencing optimization for 200 epochs, with 832510 positive edges
+23:51:49 Commencing optimization for 200 epochs, with 905388 positive edges
 
-19:23:16 Optimization finished
+23:52:02 Optimization finished
 
 </pre></div></div>
 </div>
@@ -960,7 +975,8 @@ This message will be shown once per session”
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">reduction</span> <span class="o">=</span> <span class="s">&quot;umap&quot;</span><span class="p">)</span>
+<span></span><span class="nf">options</span><span class="p">(</span><span class="n">repr.plot.width</span> <span class="o">=</span> <span class="m">6</span><span class="p">,</span> <span class="n">repr.plot.height</span> <span class="o">=</span> <span class="m">4</span><span class="p">)</span>
+<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">reduction</span> <span class="o">=</span> <span class="s">&quot;umap&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -968,7 +984,7 @@ This message will be shown once per session”
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_6_dandelion_running_from_R-10x_data_32_0.png" class="no-scaled-link" src="../_images/notebooks_6_dandelion_running_from_R-10x_data_32_0.png" style="width: 420px; height: 420px;" />
+<img alt="../_images/notebooks_6_dandelion_running_from_R-10x_data_32_0.png" class="no-scaled-link" src="../_images/notebooks_6_dandelion_running_from_R-10x_data_32_0.png" style="width: 360px; height: 240px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -986,7 +1002,7 @@ This message will be shown once per session”
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 An object of class Seurat
-38224 features across 18634 samples within 1 assay
+38224 features across 20766 samples within 1 assay
 Active assay: RNA (38224 features, 2000 variable features)
  2 dimensional reductions calculated: pca, umap
 </pre></div></div>
@@ -1009,7 +1025,8 @@ Active assay: RNA (38224 features, 2000 variable features)
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&quot;scanpy&quot;</span><span class="p">)</span>
+<span></span><span class="nf">library</span><span class="p">(</span><span class="n">reticulate</span><span class="p">)</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&quot;scanpy&quot;</span><span class="p">)</span>
 <span class="c1"># convert the meta.data slot to a python friendly object</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="nf">r_to_py</span><span class="p">(</span><span class="n">merged</span><span class="o">@</span><span class="n">meta.data</span><span class="p">)</span>
 <span class="n">normcounts</span> <span class="o">=</span> <span class="nf">r_to_py</span><span class="p">(</span><span class="n">Matrix</span><span class="o">::</span><span class="nf">t</span><span class="p">(</span><span class="nf">GetAssayData</span><span class="p">(</span><span class="n">merged</span><span class="p">)))</span>
@@ -1031,7 +1048,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 18634 × 38224
+AnnData object with n_obs × n_vars = 20766 × 38224
     obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;
 </pre></div></div>
 </div>
@@ -1051,7 +1068,7 @@ AnnData object with n_obs × n_vars = 18634 × 38224
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 18634 × 38224
+AnnData object with n_obs × n_vars = 20766 × 38224
     obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;
     uns: &#39;neighbors&#39;
     obsm: &#39;X_pca&#39;
@@ -1066,7 +1083,7 @@ AnnData object with n_obs × n_vars = 18634 × 38224
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
 <span></span><span class="n">files</span> <span class="o">=</span> <span class="nf">list</span><span class="p">()</span>
 <span class="nf">for </span><span class="p">(</span><span class="n">i</span> <span class="n">in</span> <span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">samples</span><span class="p">)){</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&#39;/dandelion/data/&#39;</span><span class="p">,</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;_b_filtered_contig_igblast_gap_genotyped.tsv&quot;</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="nf">paste0</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&#39;/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv&#39;</span><span class="p">)</span>
     <span class="n">files</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span> <span class="o">&lt;-</span> <span class="n">readr</span><span class="o">::</span><span class="nf">read_tsv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="n">combined_bcr</span> <span class="o">=</span> <span class="nf">do.call</span><span class="p">(</span><span class="n">rbind</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span>
@@ -1083,119 +1100,119 @@ Registered S3 method overwritten by &#39;cli&#39;:
   method     from
   print.boxx spatstat
 
-<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 cols(
-  .default = col_double(),
-  sequence_id = <span class="ansi-red-fg">col_character()</span>,
-  sequence = <span class="ansi-red-fg">col_character()</span>,
+  .default = col_character(),
   rev_comp = <span class="ansi-yellow-fg">col_logical()</span>,
   productive = <span class="ansi-yellow-fg">col_logical()</span>,
-  v_call = <span class="ansi-red-fg">col_character()</span>,
-  d_call = <span class="ansi-red-fg">col_character()</span>,
-  j_call = <span class="ansi-red-fg">col_character()</span>,
-  sequence_alignment = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment = <span class="ansi-red-fg">col_character()</span>,
-  junction = <span class="ansi-red-fg">col_character()</span>,
-  junction_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_cigar = <span class="ansi-red-fg">col_character()</span>,
-  d_cigar = <span class="ansi-red-fg">col_character()</span>,
-  j_cigar = <span class="ansi-red-fg">col_character()</span>,
-  locus = <span class="ansi-red-fg">col_character()</span>,
   stop_codon = <span class="ansi-yellow-fg">col_logical()</span>,
   vj_in_frame = <span class="ansi-yellow-fg">col_logical()</span>,
-  sequence_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_sequence_alignment = <span class="ansi-red-fg">col_character()</span>
-  # ... with 36 more columns
+  junction_length = <span class="ansi-green-fg">col_double()</span>,
+  np1_length = <span class="ansi-green-fg">col_double()</span>,
+  np2_length = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  v_score = <span class="ansi-green-fg">col_double()</span>
+  # ... with 16 more columns
 )
-<span class="ansi-cyan-fg">ℹ</span> Use <span style="color: rgb(38,38,38); background-color: rgb(218,218,218)">`spec()`</span> for the full column specifications.
+<span class="ansi-cyan-fg">ℹ</span> Use <span class="ansi-black-fg ansi-white-bg">`spec()`</span> for the full column specifications.
 
 
 
-<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 cols(
-  .default = col_double(),
-  sequence_id = <span class="ansi-red-fg">col_character()</span>,
-  sequence = <span class="ansi-red-fg">col_character()</span>,
+  .default = col_character(),
   rev_comp = <span class="ansi-yellow-fg">col_logical()</span>,
   productive = <span class="ansi-yellow-fg">col_logical()</span>,
-  v_call = <span class="ansi-red-fg">col_character()</span>,
-  d_call = <span class="ansi-red-fg">col_character()</span>,
-  j_call = <span class="ansi-red-fg">col_character()</span>,
-  sequence_alignment = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment = <span class="ansi-red-fg">col_character()</span>,
-  junction = <span class="ansi-red-fg">col_character()</span>,
-  junction_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_cigar = <span class="ansi-red-fg">col_character()</span>,
-  d_cigar = <span class="ansi-red-fg">col_character()</span>,
-  j_cigar = <span class="ansi-red-fg">col_character()</span>,
-  locus = <span class="ansi-red-fg">col_character()</span>,
   stop_codon = <span class="ansi-yellow-fg">col_logical()</span>,
   vj_in_frame = <span class="ansi-yellow-fg">col_logical()</span>,
-  sequence_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_sequence_alignment = <span class="ansi-red-fg">col_character()</span>
-  # ... with 36 more columns
+  junction_length = <span class="ansi-green-fg">col_double()</span>,
+  np1_length = <span class="ansi-green-fg">col_double()</span>,
+  np2_length = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  v_score = <span class="ansi-green-fg">col_double()</span>
+  # ... with 16 more columns
 )
-<span class="ansi-cyan-fg">ℹ</span> Use <span style="color: rgb(38,38,38); background-color: rgb(218,218,218)">`spec()`</span> for the full column specifications.
+<span class="ansi-cyan-fg">ℹ</span> Use <span class="ansi-black-fg ansi-white-bg">`spec()`</span> for the full column specifications.
 
 
 
-<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 cols(
-  .default = col_double(),
-  sequence_id = <span class="ansi-red-fg">col_character()</span>,
-  sequence = <span class="ansi-red-fg">col_character()</span>,
+  .default = col_character(),
   rev_comp = <span class="ansi-yellow-fg">col_logical()</span>,
   productive = <span class="ansi-yellow-fg">col_logical()</span>,
-  v_call = <span class="ansi-red-fg">col_character()</span>,
-  d_call = <span class="ansi-red-fg">col_character()</span>,
-  j_call = <span class="ansi-red-fg">col_character()</span>,
-  sequence_alignment = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment = <span class="ansi-red-fg">col_character()</span>,
-  junction = <span class="ansi-red-fg">col_character()</span>,
-  junction_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_cigar = <span class="ansi-red-fg">col_character()</span>,
-  d_cigar = <span class="ansi-red-fg">col_character()</span>,
-  j_cigar = <span class="ansi-red-fg">col_character()</span>,
-  locus = <span class="ansi-red-fg">col_character()</span>,
   stop_codon = <span class="ansi-yellow-fg">col_logical()</span>,
   vj_in_frame = <span class="ansi-yellow-fg">col_logical()</span>,
-  sequence_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_sequence_alignment = <span class="ansi-red-fg">col_character()</span>
-  # ... with 36 more columns
+  junction_length = <span class="ansi-green-fg">col_double()</span>,
+  np1_length = <span class="ansi-green-fg">col_double()</span>,
+  np2_length = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  v_score = <span class="ansi-green-fg">col_double()</span>
+  # ... with 16 more columns
 )
-<span class="ansi-cyan-fg">ℹ</span> Use <span style="color: rgb(38,38,38); background-color: rgb(218,218,218)">`spec()`</span> for the full column specifications.
+<span class="ansi-cyan-fg">ℹ</span> Use <span class="ansi-black-fg ansi-white-bg">`spec()`</span> for the full column specifications.
 
 
 
-<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-cyan-fg">──</span> <span class="ansi-bold">Column specification</span> <span class="ansi-cyan-fg">─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
 cols(
-  .default = col_double(),
-  sequence_id = <span class="ansi-red-fg">col_character()</span>,
-  sequence = <span class="ansi-red-fg">col_character()</span>,
+  .default = col_character(),
   rev_comp = <span class="ansi-yellow-fg">col_logical()</span>,
   productive = <span class="ansi-yellow-fg">col_logical()</span>,
-  v_call = <span class="ansi-red-fg">col_character()</span>,
-  d_call = <span class="ansi-red-fg">col_character()</span>,
-  j_call = <span class="ansi-red-fg">col_character()</span>,
-  sequence_alignment = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment = <span class="ansi-red-fg">col_character()</span>,
-  junction = <span class="ansi-red-fg">col_character()</span>,
-  junction_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_cigar = <span class="ansi-red-fg">col_character()</span>,
-  d_cigar = <span class="ansi-red-fg">col_character()</span>,
-  j_cigar = <span class="ansi-red-fg">col_character()</span>,
-  locus = <span class="ansi-red-fg">col_character()</span>,
   stop_codon = <span class="ansi-yellow-fg">col_logical()</span>,
   vj_in_frame = <span class="ansi-yellow-fg">col_logical()</span>,
-  sequence_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  germline_alignment_aa = <span class="ansi-red-fg">col_character()</span>,
-  v_sequence_alignment = <span class="ansi-red-fg">col_character()</span>
-  # ... with 36 more columns
+  junction_length = <span class="ansi-green-fg">col_double()</span>,
+  np1_length = <span class="ansi-green-fg">col_double()</span>,
+  np2_length = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  v_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  v_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  d_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  d_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_start = <span class="ansi-green-fg">col_double()</span>,
+  j_sequence_end = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_start = <span class="ansi-green-fg">col_double()</span>,
+  j_germline_end = <span class="ansi-green-fg">col_double()</span>,
+  v_score = <span class="ansi-green-fg">col_double()</span>
+  # ... with 16 more columns
 )
-<span class="ansi-cyan-fg">ℹ</span> Use <span style="color: rgb(38,38,38); background-color: rgb(218,218,218)">`spec()`</span> for the full column specifications.
+<span class="ansi-cyan-fg">ℹ</span> Use <span class="ansi-black-fg ansi-white-bg">`spec()`</span> for the full column specifications.
 
 
 </pre></div></div>
@@ -1204,36 +1221,31 @@ cols(
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<table>
-<caption>A tibble: 6 × 106</caption>
+<table class="dataframe">
+<caption>A tibble: 6 × 80</caption>
 <thead>
-    <tr><th scope=col>sequence_id</th><th scope=col>sequence</th><th scope=col>rev_comp</th><th scope=col>productive</th><th scope=col>v_call</th><th scope=col>d_call</th><th scope=col>j_call</th><th scope=col>sequence_alignment</th><th scope=col>germline_alignment</th><th scope=col>junction</th><th scope=col>⋯</th><th scope=col>c_sequence_alignment</th><th scope=col>c_germline_alignment</th><th scope=col>c_sequence_start</th><th scope=col>c_sequence_end</th><th scope=col>c_score</th><th scope=col>c_identity</th><th scope=col>c_support</th><th scope=col>sample_id</th><th scope=col>v_call_genotyped</th><th scope=col>germline_alignment_d_mask</th></tr>
-    <tr><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;lgl&gt;</th><th scope=col>&lt;lgl&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>⋯</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th></tr>
+    <tr><th scope=col>sequence_id</th><th scope=col>sequence</th><th scope=col>rev_comp</th><th scope=col>productive</th><th scope=col>v_call</th><th scope=col>d_call</th><th scope=col>j_call</th><th scope=col>sequence_alignment</th><th scope=col>germline_alignment</th><th scope=col>junction</th><th scope=col>⋯</th><th scope=col>fwr2_aa</th><th scope=col>fwr3_aa</th><th scope=col>fwr4_aa</th><th scope=col>cdr1_aa</th><th scope=col>cdr2_aa</th><th scope=col>cdr3_aa</th><th scope=col>sequence_alignment_aa</th><th scope=col>v_sequence_alignment_aa</th><th scope=col>d_sequence_alignment_aa</th><th scope=col>j_sequence_alignment_aa</th></tr>
+    <tr><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;lgl&gt;</th><th scope=col>&lt;lgl&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>⋯</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;chr&gt;</th></tr>
 </thead>
 <tbody>
-    <tr><td>sc5p_v2_hs_PBMC_1k_AACTCCCAGGCTAGGT-1_contig_1</td><td>ACTGCGGGGGTAAGAGGTTGTGTCCACCATGGCCTGGACTCCTCTCCTCCTCCTGTTCCTCTCTCACTGCACAGGTTCCCTCTCGCAGGCTGTGCTGACTCAGCCGTCTTCCCTCTCTGCATCTCCTGGAGCATCAGCCAGTCTCACCTGCACCTTGCGCAGTGGCATCAATGTTGGTACCTACAGGATATACTGGTACCAGCAGAAGCCAGGGAGTCCTCCCCAGTATCTCCTGAGGTACAAATCAGACTCAGATAAGCAGCAGGGCTCTGGAGTCCCCAGCCGCTTCTCTGGATCCAAAGATGCTTCGGCCAATGCAGGGATTTTACTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGTATGATTTGGCACAGCAGCGCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAGGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA                                                                                                              </td><td>FALSE</td><td> TRUE</td><td>IGLV5-45*03</td><td>NA         </td><td>IGLJ3*02</td><td>CAGGCTGTGCTGACTCAGCCGTCTTCC...CTCTCTGCATCTCCTGGAGCATCAGCCAGTCTCACCTGCACCTTGCGCAGTGGCATCAATGTT.........GGTACCTACAGGATATACTGGTACCAGCAGAAGCCAGGGAGTCCTCCCCAGTATCTCCTGAGGTACAAATCAGAC.........TCAGATAAGCAGCAGGGCTCTGGAGTCCCC...AGCCGCTTCTCTGGATCCAAAGATGCTTCGGCCAATGCAGGGATTTTACTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGTATGATTTGGCACAGCAGCGCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                          </td><td>CAGGCTGTGCTGACTCAGCCGTCTTCC...CTCTCTGCATCTCCTGGAGCATCAGCCAGTCTCACCTGCACCTTGCGCAGTGGCATCAATGTT.........GGTACCTACAGGATATACTGGTACCAGCAGAAGCCAGGGAGTCCTCCCCAGTATCTCCTGAGGTACAAATCAGAC.........TCAGATAAGCAGCAGGGCTCTGGAGTCCCC...AGCCGCTTCTCTGGATCCAAAGATGCTTCGGCCAATGCAGGGATTTTACTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                             </td><td>TGTATGATTTGGCACAGCAGCGCTTGGGTGTTC                        </td><td>⋯</td><td>GGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA</td><td>GGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA
-</td><td>431</td><td>642</td><td>392.610</td><td>100</td><td>1e-111</td><td>sc5p_v2_hs_PBMC_1k</td><td>IGLV5-45*03</td><td>CAGGCTGTGCTGACTCAGCCGTCTTCC...CTCTCTGCATCTCCTGGAGCATCAGCCAGTCTCACCTGCACCTTGCGCAGTGGCATCAATGTT.........GGTACCTACAGGATATACTGGTACCAGCAGAAGCCAGGGAGTCCTCCCCAGTATCTCCTGAGGTACAAATCAGAC.........TCAGATAAGCAGCAGGGCTCTGGAGTCCCC...AGCCGCTTCTCTGGATCCAAAGATGCTTCGGCCAATGCAGGGATTTTACTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGTATGATTTGGCACAGCAGCGCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                          </td></tr>
-    <tr><td>sc5p_v2_hs_PBMC_1k_AACTCCCAGGCTAGGT-1_contig_2</td><td>ATACTTTCTGAGAGTCCTGGACCTCCTGTGCAAGAACATGAAACATCTGTGGTTCTTCCTCCTCCTGGTGGCAGCTCCCAGATGGGTCCTGTCCCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCACAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGCAGTGGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATATCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCAGACACGGCCGTGTATTACTGTGCGAGAGAAAATTACGATTTTTGGAGTGGTTATTACCACGGTGCGGACGTCTGGGGCCAAGGGACCACGGTCACCGTCTCCTCAGGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG                                                                                                                                                                                                                   </td><td>FALSE</td><td> TRUE</td><td>IGHV4-61*02</td><td>IGHD3-3*01 </td><td>IGHJ6*02</td><td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTTCACAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGC......AGTGGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGT.........GGGAGCACCAACTACAACCCCTCCCTCAAG...AGTCGAGTCACCATATCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCAGACACGGCCGTGTATTACTGTGCGAGAGAAAATTACGATTTTTGGAGTGGTTATTACCACGGTGCGGACGTCTGGGGCCAAGGGACCACGGTCACCGTCTCCTCA</td><td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTTCACAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGC......AGTGGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGT.........GGGAGCACCAACTACAACCCCTCCCTCAAG...AGTCGAGTCACCATATCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCAGACACGGCNNATTACGATTTTTGGAGTGGTTATTACTACGGTATGGACGTCTGGGGCCAAGGGACCACGGTCACCGTCTCCTCA</td><td>TGTGCGAGAGAAAATTACGATTTTTGGAGTGGTTATTACCACGGTGCGGACGTCTGG</td><td>⋯</td><td>GGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG                                                                                                                                            </td><td>GGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG
-                                                                                                                                            </td><td>470</td><td>541</td><td>134.079</td><td>100</td><td> 7e-34</td><td>sc5p_v2_hs_PBMC_1k</td><td>IGHV4-61*02</td><td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTTCACAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGC......AGTGGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGT.........GGGAGCACCAACTACAACCCCTCCCTCAAG...AGTCGAGTCACCATATCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCAGACACGGCCGTGTATTACTGTGCGAGAGANNNNNNNNNNNNNNNNNNNNNNNNNTACTACGGTATGGACGTCTGGGGCCAAGGGACCACGGTCACCGTCTCCTCA</td></tr>
-    <tr><td>sc5p_v2_hs_PBMC_1k_AACTCCCAGGCTAGGT-1_contig_3</td><td>GGCTGGGGTCTCAGGAGGCAGCGCTCTGGGGACGTCTCCACCATGGCCTGGGCTCTGCTCCTCCTCACCTCCTCACTCAGGGCACAGGCTCTTGGGCCCAGTCTGCCCTGATTCAGCCTCCCTCCGTGTCCGGGTCTCCTGGACAGTCAGTCACCATCTCCTGCACTGGAACCAGCAGTGATGTTGGGAGTTATGACTATGTCTCCTGGTACCAACAGCACCCAGGCACAGTCCCCAAACCCATGATCTACAATGTCAATACTCAGCCCTCAGGGGTCCCTGATCGTTTCTCTGGCTCCAAGTCTGGCAATACGGCCTCCATGACCATCTCTGGACTCCAGGCTGAGGACGAGGCTGATTATTAGTGCTGCTCATATACAAGCAGTGCCACTTTCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAGGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA                                                                                                            </td><td>FALSE</td><td>FALSE</td><td>IGLV2-5*01 </td><td>NA         </td><td>IGLJ3*02</td><td>CAGTCTGCCCTGATTCAGCCTCCCTCC...GTGTCCGGGTCTCCTGGACAGTCAGTCACCATCTCCTGCACTGGAACCAGCAGTGATGTTGGG.........AGTTATGACTATGTCTCCTGGTACCAACAGCACCCAGGCACAGTCCCCAAACCCATGATCTACAATGTC.....................AATACTCAGCCCTCAGGGGTCCCT...GATCGTTTCTCTGGCTCCAAG......TCTGGCAATACGGCCTCCATGACCATCTCTGGACTCCAGGCTGAGGACGAGGCTGATTATTAGTGCTGCTCATATACAAGCAGTGCCACTTTCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                   </td><td>CAGTCTGCCCTGATTCAGCCTCCCTCC...GTGTCCGGGTCTCCTGGACAGTCAGTCACCATCTCCTGCACTGGAACCAGCAGTGATGTTGGG.........AGTTATGACTATGTCTCCTGGTACCAACAGCACCCAGGCACAGTCCCCAAACCCATGATCTACAATGTC.....................AATACTCAGCCCTCAGGGGTCCCT...GATCGTTTCTCTGGCTCCAAG......TCTGGCAATACGGCCTCCATGACCATCTCTGGACTCCAGGCTGAGGACGNNTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                                        </td><td>TGCTGCTCATATACAAGCAGTGCCACTTTCTTGGGTGTTC                 </td><td>⋯</td><td>GGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA</td><td>GGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA
-</td><td>433</td><td>644</td><td>392.610</td><td>100</td><td>1e-111</td><td>sc5p_v2_hs_PBMC_1k</td><td>IGLV2-5*01 </td><td>CAGTCTGCCCTGATTCAGCCTCCCTCC...GTGTCCGGGTCTCCTGGACAGTCAGTCACCATCTCCTGCACTGGAACCAGCAGTGATGTTGGG.........AGTTATGACTATGTCTCCTGGTACCAACAGCACCCAGGCACAGTCCCCAAACCCATGATCTACAATGTC.....................AATACTCAGCCCTCAGGGGTCCCT...GATCGTTTCTCTGGCTCCAAG......TCTGGCAATACGGCCTCCATGACCATCTCTGGACTCCAGGCTGAGGACGAGGCTGATTATTAGTGCTGCTCATATACAAGCAGTGCCACTTNNTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                   </td></tr>
-    <tr><td>sc5p_v2_hs_PBMC_1k_AACTCTTGTCATCGGC-1_contig_1</td><td>AGAGCTCTGGGGAGTCTGCACCATGGCTTGGACCCCACTCCTCTTCCTCACCCTCCTCCTCCACTGCACAGGGTCTCTCTCCCAGCTTGTGCTGACTCAATCGCCCTCTGCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGCAGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGATGGCAGCCACAGCAAGGGGGACGGGATCCCTGATCGCTTCTCAGGCTCCAGCTCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGCTGACTATTACTGTCAGACCTGGGGCACTGGCATTTATGTCTTCGGAACTGGGACCAAGGTCACCGTCCTAGGTCAGCCCAAGGCCAACCCCACTGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTCCAAGCCAACAAGGCCACACTAGTGTGTCTGATCAGTGACTTCTACCCGGGAGCTGTGACAGTGGCCTGGAAGGCAGATGGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCAAACCCTCCAAACAGAGCAACAACAAGTACGCGGCCAGCAGCTA                                                                                                                             </td><td>FALSE</td><td> TRUE</td><td>IGLV4-69*01</td><td>NA         </td><td>IGLJ1*01</td><td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGC...............AGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGAT.........GGCAGCCACAGCAAGGGGGACGGGATCCCT...GATCGCTTCTCAGGCTCCAGC......TCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGCTGACTATTACTGTCAGACCTGGGGCACTGGCATTTATGTCTTCGGAACTGGGACCAAGGTCACCGTCCTAG                          </td><td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGC...............AGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGAT.........GGCAGCCACAGCAAGGGGGACGGGATCCCT...GATCGCTTCTCAGGCTCCAGC......TCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGTATGTCTTCGGAACTGGGACCAAGGTCACCGTCCTAG                                         </td><td>TGTCAGACCTGGGGCACTGGCATTTATGTCTTC                        </td><td>⋯</td><td>GGTCAGCCCAAGGCCAACCCCACTGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTCCAAGCCAACAAGGCCACACTAGTGTGTCTGATCAGTGACTTCTACCCGGGAGCTGTGACAGTGGCCTGGAAGGCAGATGGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCAAACCCTCCAAACAGAGCAACAACAAGTACGCGGCCAGCAGCTA</td><td>GGTCAGCCCAAGGCCAACCCCACTGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTCCAAGCCAACAAGGCCACACTAGTGTGTCTGATCAGTGACTTCTACCCGGGAGCTGTGACAGTGGCCTGGAAGGCAGATGGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCAAACCCTCCAAACAGAGCAACAACAAGTACGCGGCCAGCAGCTA
-</td><td>416</td><td>627</td><td>392.610</td><td>100</td><td>1e-111</td><td>sc5p_v2_hs_PBMC_1k</td><td>IGLV4-69*01</td><td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGC...............AGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGAT.........GGCAGCCACAGCAAGGGGGACGGGATCCCT...GATCGCTTCTCAGGCTCCAGC......TCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGCTGACTATTACTGTCAGACCTGGGGCACTGGCATTTATGTCTTCGGAACTGGGACCAAGGTCACCGTCCTAG                          </td></tr>
-    <tr><td>sc5p_v2_hs_PBMC_1k_AACTCTTGTCATCGGC-1_contig_2</td><td>AGCTCTGAGAGAGGAGCCTTAGCCCTGGATTCCAAGGCCTATCCACTTGGTGATCAGCACTGAGCACCGAGGATTCACCATGGAACTGGGGCTCCGCTGGGTTTTCCTTGTTGCTATTTTAGAAGGTGTCCAGTGTGAGGTGCAGCTGGTGGAGTCTGGGGGAGGCCTGGTCAAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTTCAGTAGCTATAGCATGAACTGGGTCCGCCAGGCTCCAGGGAAGGGGCTGGAGTGGGTCTCATCCATTAGTAGTAGTAGTAGTTACATATACTACGCAGACTCAGTGAAGGGCCGATTCACCATCTCCAGAGACAACGCCAAGAACTCACTGTATCTGCAAATGAACAGCCTGAGAGCCGAGGACACGGCTGTGTATTACTGTGCGAGACGTTACTATGATAGTAGTGGTTATTCCGCAAACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG                                                                                                                                                                               </td><td>FALSE</td><td> TRUE</td><td>IGHV3-21*01</td><td>IGHD3-22*01</td><td>IGHJ4*02</td><td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTTC............AGTAGCTATAGCATGAACTGGGTCCGCCAGGCTCCAGGGAAGGGGCTGGAGTGGGTCTCATCCATTAGTAGTAGT......AGTAGTTACATATACTACGCAGACTCAGTGAAG...GGCCGATTCACCATCTCCAGAGACAACGCCAAGAACTCACTGTATCTGCAAATGAACAGCCTGAGAGCCGAGGACACGGCTGTGTATTACTGTGCGAGACGTTACTATGATAGTAGTGGTTATTCCGCAAACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAG  </td><td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTTC............AGTAGCTATAGCATGAACTGGGTCCGCCAGGCTCCAGGGAAGGGGCTGGAGTGGGTCTCATCCATTAGTAGTAGT......AGTAGTTACATATACTACGCAGACTCAGTGAAG...GGCCGATTCACCATCTCCAGAGACAACGCCAAGAACTCACTGTATCTGCAAATGAACAGCCTGAGAGCCGAGGACNNTTACTATGATAGTAGTGGTTATTNNNNNNACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAG     </td><td>TGTGCGAGACGTTACTATGATAGTAGTGGTTATTCCGCAAACTTTGACTACTGG   </td><td>⋯</td><td>GGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG                                                                                                                                            </td><td>GGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG
-                                                                                                                                            </td><td>506</td><td>577</td><td>134.079</td><td>100</td><td> 7e-34</td><td>sc5p_v2_hs_PBMC_1k</td><td>IGHV3-21*01</td><td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTTC............AGTAGCTATAGCATGAACTGGGTCCGCCAGGCTCCAGGGAAGGGGCTGGAGTGGGTCTCATCCATTAGTAGTAGT......AGTAGTTACATATACTACGCAGACTCAGTGAAG...GGCCGATTCACCATCTCCAGAGACAACGCCAAGAACTCACTGTATCTGCAAATGAACAGCCTGAGAGCCGAGGACACGGCTGTGTATTACTGTGCGAGANNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAG  </td></tr>
-    <tr><td>sc5p_v2_hs_PBMC_1k_AACTCTTGTCATCGGC-1_contig_3</td><td>AGCAGAGCTCTGGGGAGTCTGCACCATGGCTTGGACCCCACTCCTCTTCCTCACCCTCCTCCTCCACTGCACAGGTCAGGATGGCCCTCAGCACCCTGACCTCCAGCTCACTGATACCACCTCCCAAACTTATGCCAGGAATGTCCTTCCCTCTTTTCTTGACTCCAGCCGGTAATGGGTGTCTGTGTTTTCAGGGTCTCTCTCCCAGCTTGTGCTGACTCAATCGCCCTCTGCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGCAGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGATGGCAGCCACAGCAAGGGGGACGGGATCCCTGATCGCTTCTCAGGCTCCAGCTCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGCTGACTATTACTGTCAGACCTGGGGCACTGGCATTCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAGGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA</td><td>FALSE</td><td>FALSE</td><td>IGLV4-69*01</td><td>NA         </td><td>IGLJ3*02</td><td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGC...............AGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGAT.........GGCAGCCACAGCAAGGGGGACGGGATCCCT...GATCGCTTCTCAGGCTCCAGC......TCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGCTGACTATTACTGTCAGACCTGGGGCACTGGCATTCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                        </td><td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGC...............AGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGAT.........GGCAGCCACAGCAAGGGGGACGGGATCCCT...GATCGCTTCTCAGGCTCCAGC......TCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                                       </td><td>TGTCAGACCTGGGGCACTGGCATTCTTGGGTGTTC                      </td><td>⋯</td><td>GGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA</td><td>GGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCCTGGAAGGCAGATAGCAGCCCCGTCAAGGCGGGAGTGGAGACCACCACACCCTCCAAACAAAGCAACAACAAGTACGCGGCCAGCAGCTA
-</td><td>541</td><td>752</td><td>392.610</td><td>100</td><td>1e-111</td><td>sc5p_v2_hs_PBMC_1k</td><td>IGLV4-69*01</td><td>CAGCTTGTGCTGACTCAATCGCCCTCT...GCCTCTGCCTCCCTGGGAGCCTCGGTCAAGCTCACCTGCACTCTGAGCAGTGGGCACAGC...............AGCTACGCCATCGCATGGCATCAGCAGCAGCCAGAGAAGGGCCCTCGGTACTTGATGAAGCTTAACAGTGAT.........GGCAGCCACAGCAAGGGGGACGGGATCCCT...GATCGCTTCTCAGGCTCCAGC......TCTGGGGCTGAGCGCTACCTCACCATCTCCAGCCTCCAGTCTGAGGATGAGGCTGACTATTACTGTCAGACCTGGGGCACTGGCATTCTTGGGTGTTCGGCGGAGGGACCAAGCTGACCGTCCTAG                        </td></tr>
+    <tr><td>sc5p_v2_hs_PBMC_1k_AAACCTGTCACTGGGC_contig_2</td><td>GGGGACTTTCTGAGAGTCCTGGACCTCCTGCACAAGAACATGAAACACCTGTGGTTCTTCCTCCTCCTGGTGGCAGCTCCCAGATGGGTCCTGTCCCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGGAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATATTAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAATTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGGCGGGAACAGTGGCTTAGACCCCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGGGAGTGCATCCGCCCCAACCCTTTTCCCCCTCGTCTCCTGTGAGAATTCCCCGTCGGATACGAGCAGCGTG                                                     </td><td>FALSE</td><td> TRUE</td><td>IGHV4-4*07                          </td><td>IGHD6-19*01</td><td>IGHJ5*02         </td><td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATC............AGGAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATATTAGT.........GGGAGCACCAACTACAACCCCTCCCTCAAG...AGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAATTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGGCGGGAACAGTGGCTTAGACCCCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAG</td><td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATC............AGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGT.........GGGAGCACCAACTACAACCCCTCCCTCAAG...AGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGNNNNNNNCAGTGGCTNNGACCCCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAG</td><td>TGTGCGAGAGGCGGGAACAGTGGCTTAGACCCCTGG</td><td>⋯</td><td>WSWIRQPAGKGLEWIGR</td><td>NYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYC</td><td>WGQGTLVTVSS</td><td>GGSIRSYY   </td><td>IYISGST</td><td>ARGGNSGLDP</td><td>QVQLQESGPGLVKPSETLSLTCTVSGGSIRSYYWSWIRQPAGKGLEWIGRIYISGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARGGNSGLDPWGQGTLVTVSS</td><td>QVQLQESGPGLVKPSETLSLTCTVSGGSIRSYYWSWIRQPAGKGLEWIGRIYISGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCAR       </td><td>SG</td><td>DPWGQGTLVTVSS</td></tr>
+    <tr><td>sc5p_v2_hs_PBMC_1k_AAACCTGTCACTGGGC_contig_3</td><td>GGGGACTGATCAGGACTCCTCAGTTCACCTTCTCACAATGAGGCTCCCTGCTCAGCTCCTGGGGCTGCTAATGCTCTGGGTCCCAGGATCCAGTGGGGATGTTGTGATGACTCAGTCTCCACTCTCCCTGCCCGTCACCCTTGGACAGCCGGCCTCCATCTCCTGCAGGTCTAGTCAAAGCCTCGTATACAGTGATGGAAACACCTACTTGAATTGGTTTCAGCAGAGGCCAGGCCAATCTCCAAGGCGCCTAATTTATAAGTTTTCTAACTGGGACTCTGGGGTCCCAGACAGATTCAGCGGCAGTGGGTCAGGCACTGATTTCACACTGAAAATCAGCAGGGTGGAGGCTGAGGATGTTGGGGTTTATTACTGCATGCAAGGTACACACTGGCCTGGACGTTCGGCCAAGGGACCAAGGTGGAAATCAAACGAACTGTGGCTGCACCATCTGTCTTCATCTTCCCGCCATCTGATGAGCAGTTGAAATCTGGAACTGCCTCTGTTGTGTGCCTGCTGAATAACTTCTATCCCAGAGAGGCCAAAGTACAGTGGAAGGTGGATAACGC</td><td>FALSE</td><td>FALSE</td><td>IGKV2D-30*01                        </td><td>NA         </td><td>IGKJ1*01         </td><td>GATGTTGTGATGACTCAGTCTCCACTCTCCCTGCCCGTCACCCTTGGACAGCCGGCCTCCATCTCCTGCAGGTCTAGTCAAAGCCTCGTATACAGT...GATGGAAACACCTACTTGAATTGGTTTCAGCAGAGGCCAGGCCAATCTCCAAGGCGCCTAATTTATAAGTTT.....................TCTAACTGGGACTCTGGGGTCCCA...GACAGATTCAGCGGCAGTGGG......TCAGGCACTGATTTCACACTGAAAATCAGCAGGGTGGAGGCTGAGGATGTTGGGGTTTATTACTGCATGCAAGGTACACACTGGCCTGGACGTTCGGCCAAGGGACCAAGGTGGAAATCAAAC       </td><td>GATGTTGTGATGACTCAGTCTCCACTCTCCCTGCCCGTCACCCTTGGACAGCCGGCCTCCATCTCCTGCAGGTCTAGTCAAAGCCTCGTATACAGT...GATGGAAACACCTACTTGAATTGGTTTCAGCAGAGGCCAGGCCAATCTCCAAGGCGCCTAATTTATAAGGTT.....................TCTAACTGGGACTCTGGGGTCCCA...GACAGATTCAGCGGCAGTGGG......TCAGGCACTGATTTCACACTGAAAATCAGCAGGGTGGAGGCTGAGGATGTTGGGGTTTATTACTGCATGCAAGGTACACACTGGCCTGGACGTTCGGCCAAGGGACCAAGGTGGAAATCAAAC       </td><td>TGCATGCAAGGTACACACTGGCCTGGACGTTC    </td><td>⋯</td><td>LNWFQQRPGQSPRRLIY</td><td>NWDSGVPDRFSGSGSGTDFTLKISRVEAEDVGVYYC  </td><td>SAKGPRWKS  </td><td>QSLVYSDGNTY</td><td>KFS    </td><td>MQGTHWPGR </td><td>DVVMTQSPLSLPVTLGQPASISCRSSQSLVYSDGNTYLNWFQQRPGQSPRRLIYKFSNWDSGVPDRFSGSGSGTDFTLKISRVEAEDVGVYYCMQGTHWPGRSAKGPRWKSN    </td><td>DVVMTQSPLSLPVTLGQPASISCRSSQSLVYSDGNTYLNWFQQRPGQSPRRLIYKFSNWDSGVPDRFSGSGSGTDFTLKISRVEAEDVGVYYCMQGTHWP    </td><td>NA</td><td>GRSAKGPRWKSN </td></tr>
+    <tr><td>sc5p_v2_hs_PBMC_1k_AAACCTGTCACTGGGC_contig_1</td><td>GGGGGAGGAGTCAGTCCCAACCAGGACACAGCATGGACATGAGGGTCCCTGCTCAGCTCCTGGGGCTCCTGCTGCTCTGGCTCTCAGGTGCCAGATGTGCCATCCAGATGACCCAGTCTCCATCCTCCCTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGCCAGGCGAGTCAGGACATTAGCAACTATTTAAATTGGTATCAGCAGAAACCAGGGAAAGCCCCTAAGCTCCTGATCTACGATGCATCCAATTTGGAAGCAGGGGTCCCATCAAGGTTCAGTGGAAGTGGATCTGGGACAGATTTTACTTTCACCATCAGCAGCCTGCAGCCTGAAGATATTGCAACATATTACTGTCAACAGTATGATAATCTCCCGCTCACTTTCGGCGGAGGGACCAAGGTGGAGATCAAACGAACTGTGGCTGCACCATCTGTCTTCATCTTCCCGCCATCTGATGAGCAGTTGAAATCTGGAACTGCCTCTGTTGTGTGCCTGCTGAATAACTTCTATCCCAGAGAGGCCAAAGTACAGTGGAAGGTGGATAACGC             </td><td>FALSE</td><td> TRUE</td><td>IGKV1-33*01,IGKV1D-33*01            </td><td>NA         </td><td>IGKJ4*01         </td><td>..CATCCAGATGACCCAGTCTCCATCCTCCCTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGCCAGGCGAGTCAGGACATT..................AGCAACTATTTAAATTGGTATCAGCAGAAACCAGGGAAAGCCCCTAAGCTCCTGATCTACGATGCA.....................TCCAATTTGGAAGCAGGGGTCCCA...TCAAGGTTCAGTGGAAGTGGA......TCTGGGACAGATTTTACTTTCACCATCAGCAGCCTGCAGCCTGAAGATATTGCAACATATTACTGTCAACAGTATGATAATCTCCCGCTCACTTTCGGCGGAGGGACCAAGGTGGAGATCAAAC      </td><td>GACATCCAGATGACCCAGTCTCCATCCTCCCTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGCCAGGCGAGTCAGGACATT..................AGCAACTATTTAAATTGGTATCAGCAGAAACCAGGGAAAGCCCCTAAGCTCCTGATCTACGATGCA.....................TCCAATTTGGAAACAGGGGTCCCA...TCAAGGTTCAGTGGAAGTGGA......TCTGGGACAGATTTTACTTTCACCATCAGCAGCCTGCAGCCTGAAGATATTGCAACATATTACTGTCAACAGTATGATAATCTCCCGCTCACTTTCGGCGGAGGGACCAAGGTGGAGATCAAAC      </td><td>TGTCAACAGTATGATAATCTCCCGCTCACTTTC   </td><td>⋯</td><td>LNWYQQKPGKAPKLLIY</td><td>NLEAGVPSRFSGSGSGTDFTFTISSLQPEDIATYYC  </td><td>FGGGTKVEIK </td><td>QDISNY     </td><td>DAS    </td><td>QQYDNLPLT </td><td>IQMTQSPSSLSASVGDRVTITCQASQDISNYLNWYQQKPGKAPKLLIYDASNLEAGVPSRFSGSGSGTDFTFTISSLQPEDIATYYCQQYDNLPLTFGGGTKVEIK          </td><td>IQMTQSPSSLSASVGDRVTITCQASQDISNYLNWYQQKPGKAPKLLIYDASNLEAGVPSRFSGSGSGTDFTFTISSLQPEDIATYYCQQYDNLP          </td><td>NA</td><td>LTFGGGTKVEIK </td></tr>
+    <tr><td>sc5p_v2_hs_PBMC_1k_AAACCTGTCAGGTAAA_contig_1</td><td>AGGAGTCAGACCCAGTCAGGACACAGCATGGACATGAGGGTCCCCGCTCAGCTCCTGGGGCTCCTGCTGCTCTGGTTCCCAGGTTCCAGATGCGACATCCAGATGACCCAGTCTCCATCTTCCGTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGTCGGGCGAGTCAGGGTATTAGCGACTGGTTAGCCTGGTATCAGCAGAAGCCAGGGAAAGCCCCTAAGTTCCTGATCTATGCTGCATCCACTTTGCAAAGTGGGGTCCCATCAAGGTTCAGCGGCAGTGGATCTGGGACAGATTTCACTCTCACCATCAGCCTGCAGCCTGAAGATTTTGCAACTTACTATTGTCAACAGGCTAACAGTTTCCCGCTCACTTTCGGCGGAGGGACCAAGGTGGAGATCAAACGAACTGTGGCTGCACCATCTGTCTTCATCTTCCCGCCATCTGATGAGCAGTTGAAATCTGGAACTGCCTCTGTTGTGTGCCTGCTGAATAACTTCTATCCCAGAGAGGCCAAAGTACAGTGGAAGGTGGATAACGC                     </td><td>FALSE</td><td> TRUE</td><td>IGKV1-12*01,IGKV1-12*02,IGKV1D-12*02</td><td>NA         </td><td>IGKJ4*01         </td><td>GACATCCAGATGACCCAGTCTCCATCTTCCGTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGTCGGGCGAGTCAGGGTATT..................AGCGACTGGTTAGCCTGGTATCAGCAGAAGCCAGGGAAAGCCCCTAAGTTCCTGATCTATGCTGCA.....................TCCACTTTGCAAAGTGGGGTCCCA...TCAAGGTTCAGCGGCAGTGGA......TCTGGGACAGATTTCACTCTCACCAT---CAGCCTGCAGCCTGAAGATTTTGCAACTTACTATTGTCAACAGGCTAACAGTTTCCCGCTCACTTTCGGCGGAGGGACCAAGGTGGAGATCAAAC      </td><td>GACATCCAGATGACCCAGTCTCCATCTTCCGTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGTCGGGCGAGTCAGGGTATT..................AGCAGCTGGTTAGCCTGGTATCAGCAGAAACCAGGGAAAGCCCCTAAGCTCCTGATCTATGCTGCA.....................TCCAGTTTGCAAAGTGGGGTCCCA...TCAAGGTTCAGCGGCAGTGGA......TCTGGGACAGATTTCACTCTCACCATCAGCAGCCTGCAGCCTGAAGATTTTGCAACTTACTATTGTCAACAGGCTAACAGTTTCCCGCTCACTTTCGGCGGAGGGACCAAGGTGGAGATCAAAC      </td><td>TGTCAACAGGCTAACAGTTTCCCGCTCACTTTC   </td><td>⋯</td><td>LAWYQQKPGKAPKFLIY</td><td>TLQSGVPSRFSGSGSGTDFTLTISLQPEDFATYYC   </td><td>FGGGTKVEIK </td><td>QGISDW     </td><td>AAS    </td><td>QQANSFPLT </td><td>DIQMTQSPSSVSASVGDRVTITCRASQGISDWLAWYQQKPGKAPKFLIYAASTLQSGVPSRFSGSGSGTDFTLTISLQPEDFATYYCQQANSFPLTFGGGTKVEIK          </td><td>DIQMTQSPSSVSASVGDRVTITCRASQGISDWLAWYQQKPGKAPKFLIYAASTLQSGVPSRFSGSGSGTDFTLTISLQPEDFATYYCQQANSFP          </td><td>NA</td><td>LTFGGGTKVEIK </td></tr>
+    <tr><td>sc5p_v2_hs_PBMC_1k_AAACCTGTCAGGTAAA_contig_2</td><td>GGAGGAACTGCTCAGTTAGGACCCAGACGGAACCATGGAAGCCCCAGCGCAGCTTCTCTTCCTCCTGCTACTCTGGCTCCCAGATACCACTGGAGAAATAGTGATGACGCAGTCTCCAGCCACCCTGTCTGTGTCTCCAGGGGAAAGAGCCACCCTCTCCTGCAGGGCCAGTCAGAGTGTTAGCAGCAACTTGGCCTGGTACCAGCAGAAACCTGGCCAGGCTCCCAGGCTCCTCATCTATGGTACATCCACCAGGGCCACTGGTATCCCAGCCAGGTTCAGTGGCAGTGGGTCTGGGACAGAGTTCACTCTCACCATCAGCAGCCTGCAGTCTGAAGATTTTGCAGTTTATTACTGTCAGCAGTATGATAACTGGCCTCCGTACACTTTTGGCCAGGGGACCAAGCTGGAGATCAAACGAACTGTGGCTGCACCATCTGTCTTCATCTTCCCGCCATCTGATGAGCAGTTGAAATCTGGAACTGCCTCTGTTGTGTGCCTGCTGAATAACTTCTATCCCAGAGAGGCCAAAGTACAGTGGAAGGTGGATAACGC              </td><td>FALSE</td><td> TRUE</td><td>IGKV3-15*01                         </td><td>NA         </td><td>IGKJ2*01         </td><td>GAAATAGTGATGACGCAGTCTCCAGCCACCCTGTCTGTGTCTCCAGGGGAAAGAGCCACCCTCTCCTGCAGGGCCAGTCAGAGTGTT..................AGCAGCAACTTGGCCTGGTACCAGCAGAAACCTGGCCAGGCTCCCAGGCTCCTCATCTATGGTACA.....................TCCACCAGGGCCACTGGTATCCCA...GCCAGGTTCAGTGGCAGTGGG......TCTGGGACAGAGTTCACTCTCACCATCAGCAGCCTGCAGTCTGAAGATTTTGCAGTTTATTACTGTCAGCAGTATGATAACTGGCCTCCGTACACTTTTGGCCAGGGGACCAAGCTGGAGATCAAAC   </td><td>GAAATAGTGATGACGCAGTCTCCAGCCACCCTGTCTGTGTCTCCAGGGGAAAGAGCCACCCTCTCCTGCAGGGCCAGTCAGAGTGTT..................AGCAGCAACTTAGCCTGGTACCAGCAGAAACCTGGCCAGGCTCCCAGGCTCCTCATCTATGGTGCA.....................TCCACCAGGGCCACTGGTATCCCA...GCCAGGTTCAGTGGCAGTGGG......TCTGGGACAGAGTTCACTCTCACCATCAGCAGCCTGCAGTCTGAAGATTTTGCAGTTTATTACTGTCAGCAGTATAATAACTGGCCTCCGTACACTTTTGGCCAGGGGACCAAGCTGGAGATCAAAC   </td><td>TGTCAGCAGTATGATAACTGGCCTCCGTACACTTTT</td><td>⋯</td><td>LAWYQQKPGQAPRLLIY</td><td>TRATGIPARFSGSGSGTEFTLTISSLQSEDFAVYYC  </td><td>FGQGTKLEIK </td><td>QSVSSN     </td><td>GTS    </td><td>QQYDNWPPYT</td><td>EIVMTQSPATLSVSPGERATLSCRASQSVSSNLAWYQQKPGQAPRLLIYGTSTRATGIPARFSGSGSGTEFTLTISSLQSEDFAVYYCQQYDNWPPYTFGQGTKLEIK        </td><td>EIVMTQSPATLSVSPGERATLSCRASQSVSSNLAWYQQKPGQAPRLLIYGTSTRATGIPARFSGSGSGTEFTLTISSLQSEDFAVYYCQQYDNWPP        </td><td>NA</td><td>YTFGQGTKLEIK </td></tr>
+    <tr><td>sc5p_v2_hs_PBMC_1k_AAACCTGTCAGGTAAA_contig_3</td><td>GGAATCCTCTCCTCCTCCTGTTCCTCTCTCACTGCACAGGTTCCCTCTCGCAGCCTGTGCTGACTCAGCCAACTTCCCTCTCAGCATCTCCTGGAGCATCAGCCAGACTCACCTGCACCTTGCGCAGTGGCATCAATCTTGGTAGCTACAGGATATTCTGGTACCAGCAGAAGCCAGAGAGCCCTCCCCGGTATCTCCTGAGCTACTACTCAGACTCAAGTAAGCATCAGGGCTCTGGAGTCCCCAGCCGCTTCTCTGGATCCAAAGATGCTTCGAGCAATGCAGGGATTTTAGTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGTATGATTTGGCACAGCAGTGCTTCGGTATTCGGCGGAGGGACCAAGCTGACCGTCCTAGGTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAAGTGACTTCTACCCGGGAGCCGTGACAGTGGCC                                                   </td><td>FALSE</td><td> TRUE</td><td>IGLV5-48*01                         </td><td>NA         </td><td>IGLJ2*01,IGLJ3*01</td><td>CAGCCTGTGCTGACTCAGCCAACTTCC...CTCTCAGCATCTCCTGGAGCATCAGCCAGACTCACCTGCACCTTGCGCAGTGGCATCAATCTT.........GGTAGCTACAGGATATTCTGGTACCAGCAGAAGCCAGAGAGCCCTCCCCGGTATCTCCTGAGCTACTACTCAGAC.........TCAAGTAAGCATCAGGGCTCTGGAGTCCCC...AGCCGCTTCTCTGGATCCAAAGATGCTTCGAGCAATGCAGGGATTTTAGTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGTATGATTTGGCACAGCAGTGCTTCGGTATTCGGCGGAGGGACCAAGCTGACCGTCCTAG      </td><td>CAGCCTGTGCTGACTCAGCCAACTTCC...CTCTCAGCATCTCCTGGAGCATCAGCCAGACTCACCTGCACCTTGCGCAGTGGCATCAATCTT.........GGTAGCTACAGGATATTCTGGTACCAGCAGAAGCCAGAGAGCCCTCCCCGGTATCTCCTGAGCTACTACTCAGAC.........TCAAGTAAGCATCAGGGCTCTGGAGTCCCC...AGCCGCTTCTCTGGATCCAAAGATGCTTCGAGCAATGCAGGGATTTTAGTCATCTCTGGGCTCCAGTCTGAGGATGAGGCTGACTATTACTGTATGATTTGGCACAGCAGTGCTTCGGTATTCGGCGGAGGGACCAAGCTGACCGTCCTAG      </td><td>TGTATGATTTGGCACAGCAGTGCTTCGGTATTC   </td><td>⋯</td><td>IFWYQQKPESPPRYLLS</td><td>HQGSGVPSRFSGSKDASSNAGILVISGLQSEDEADYYC</td><td>FGGGTKLTVL </td><td>SGINLGSYR  </td><td>YYSDSSK</td><td>MIWHSSASV </td><td>QPVLTQPTSLSASPGASARLTCTLRSGINLGSYRIFWYQQKPESPPRYLLSYYSDSSKHQGSGVPSRFSGSKDASSNAGILVISGLQSEDEADYYCMIWHSSASVFGGGTKLTVL </td><td>QPVLTQPTSLSASPGASARLTCTLRSGINLGSYRIFWYQQKPESPPRYLLSYYSDSSKHQGSGVPSRFSGSKDASSNAGILVISGLQSEDEADYYCMIWHSSAS</td><td>NA</td><td>VFGGGTKLTVL  </td></tr>
 </tbody>
 </table></div>
 </div>
-<div class="section" id="Run-ddl$pp$filter_bcr">
-<h3>Run <code class="docutils literal notranslate"><span class="pre">ddl$pp$filter_bcr</span></code><a class="headerlink" href="#Run-ddl$pp$filter_bcr" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="Run-ddl$pp$filter_contigs">
+<h3>Run <code class="docutils literal notranslate"><span class="pre">ddl$pp$filter_contigs</span></code><a class="headerlink" href="#Run-ddl$pp$filter_contigs" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj_results_list</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">$</span><span class="n">pp</span><span class="o">$</span><span class="nf">filter_bcr</span><span class="p">(</span><span class="n">combined_bcr</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+<span></span><span class="n">ddl</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&#39;dandelion&#39;</span><span class="p">)</span>
+<span class="n">vdj_results_list</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">$</span><span class="n">pp</span><span class="o">$</span><span class="nf">filter_contigs</span><span class="p">(</span><span class="n">combined_bcr</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
 <span class="n">vdj_results_list</span>
 </pre></div>
 </div>
@@ -1244,17 +1256,17 @@ cols(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 [[1]]
-Dandelion class object with n_obs = 971 and n_contigs = 1959
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;locus&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;sequence_alignment_aa&#39;, &#39;germline_alignment_aa&#39;, &#39;v_alignment_start&#39;, &#39;v_alignment_end&#39;, &#39;d_alignment_start&#39;, &#39;d_alignment_end&#39;, &#39;j_alignment_start&#39;, &#39;j_alignment_end&#39;, &#39;v_sequence_alignment&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;v_germline_alignment&#39;, &#39;v_germline_alignment_aa&#39;, &#39;d_sequence_alignment&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;d_germline_alignment&#39;, &#39;d_germline_alignment_aa&#39;, &#39;j_sequence_alignment&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;j_germline_alignment&#39;, &#39;j_germline_alignment_aa&#39;, &#39;fwr1&#39;, &#39;fwr1_aa&#39;, &#39;cdr1&#39;, &#39;cdr1_aa&#39;, &#39;fwr2&#39;, &#39;fwr2_aa&#39;, &#39;cdr2&#39;, &#39;cdr2_aa&#39;, &#39;fwr3&#39;, &#39;fwr3_aa&#39;, &#39;fwr4&#39;, &#39;fwr4_aa&#39;, &#39;cdr3&#39;, &#39;cdr3_aa&#39;, &#39;junction_length&#39;, &#39;v_score&#39;, &#39;d_score&#39;, &#39;j_score&#39;, &#39;v_support&#39;, &#39;d_support&#39;, &#39;j_support&#39;, &#39;v_identity&#39;, &#39;d_identity&#39;, &#39;j_identity&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;fwr1_start&#39;, &#39;fwr1_end&#39;, &#39;cdr1_start&#39;, &#39;cdr1_end&#39;, &#39;fwr2_start&#39;, &#39;fwr2_end&#39;, &#39;cdr2_start&#39;, &#39;cdr2_end&#39;, &#39;fwr3_start&#39;, &#39;fwr3_end&#39;, &#39;fwr4_start&#39;, &#39;fwr4_end&#39;, &#39;cdr3_start&#39;, &#39;cdr3_end&#39;, &#39;np1&#39;, &#39;np1_length&#39;, &#39;np2&#39;, &#39;np2_length&#39;, &#39;junction_aa_length&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;sample_id&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;duplicate_count&#39;
-    metadata: &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 1123 and n_contigs = 2254
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;duplicate_count&#39;
+    metadata: &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
     graph: None
 
 [[2]]
-AnnData object with n_obs × n_vars = 18413 × 38224
-    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;
+AnnData object with n_obs × n_vars = 20766 × 38224
+    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;
     uns: &#39;neighbors&#39;
     obsm: &#39;X_pca&#39;
     obsp: &#39;distances&#39;, &#39;connectivities&#39;
@@ -1262,11 +1274,11 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 </pre></div></div>
 </div>
 <p>This returns a two level list in R. The first level is the VDJ results, stored as a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> python-class object and the second level is the accompanying <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class is structured like a multi-slot object and the two data frames below are linked: 1) data &lt;- BCR table with row names as individual vdj contigs</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class is structured like a multi-slot object and the two data frames below are linked: 1) data &lt;- AIRR table with row names as individual vdj contigs</p>
 <ol class="arabic simple" start="2">
-<li><p>metadata &lt;- BCR table collapsed to cell barcodes as row names</p></li>
+<li><p>metadata &lt;- AIRR table collapsed to cell barcodes as row names</p></li>
 </ol>
-<p>More details on the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class are in my python notebooks. The most important slot for now, is the <code class="docutils literal notranslate"><span class="pre">metadata</span></code> slot within <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code>.</p>
+<p>More details on the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class are in my python tutorials. The most important slot for now, is the <code class="docutils literal notranslate"><span class="pre">metadata</span></code> slot within <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code>.</p>
 <p>In order for the <code class="docutils literal notranslate"><span class="pre">metadata</span></code> to form properly, there must not be any duplicate barcodes, or incorrectly retrieved information from the <code class="docutils literal notranslate"><span class="pre">data</span></code> slot. If you end up with a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object that only contains the <code class="docutils literal notranslate"><span class="pre">data</span></code> slot filled, it means one of the two conditions happened. In those situations, I would recommend you to send me a copy of the file so I can check why it’s failing; it is usually due to coding eror that arise from string and float incompatibilities when constructing the
 object.</p>
 <p>To save the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object, you can do the following:</p>
@@ -1306,9 +1318,9 @@ object.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 971 and n_contigs = 1959
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;locus&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;sequence_alignment_aa&#39;, &#39;germline_alignment_aa&#39;, &#39;v_alignment_start&#39;, &#39;v_alignment_end&#39;, &#39;d_alignment_start&#39;, &#39;d_alignment_end&#39;, &#39;j_alignment_start&#39;, &#39;j_alignment_end&#39;, &#39;v_sequence_alignment&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;v_germline_alignment&#39;, &#39;v_germline_alignment_aa&#39;, &#39;d_sequence_alignment&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;d_germline_alignment&#39;, &#39;d_germline_alignment_aa&#39;, &#39;j_sequence_alignment&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;j_germline_alignment&#39;, &#39;j_germline_alignment_aa&#39;, &#39;fwr1&#39;, &#39;fwr1_aa&#39;, &#39;cdr1&#39;, &#39;cdr1_aa&#39;, &#39;fwr2&#39;, &#39;fwr2_aa&#39;, &#39;cdr2&#39;, &#39;cdr2_aa&#39;, &#39;fwr3&#39;, &#39;fwr3_aa&#39;, &#39;fwr4&#39;, &#39;fwr4_aa&#39;, &#39;cdr3&#39;, &#39;cdr3_aa&#39;, &#39;junction_length&#39;, &#39;v_score&#39;, &#39;d_score&#39;, &#39;j_score&#39;, &#39;v_support&#39;, &#39;d_support&#39;, &#39;j_support&#39;, &#39;v_identity&#39;, &#39;d_identity&#39;, &#39;j_identity&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;fwr1_start&#39;, &#39;fwr1_end&#39;, &#39;cdr1_start&#39;, &#39;cdr1_end&#39;, &#39;fwr2_start&#39;, &#39;fwr2_end&#39;, &#39;cdr2_start&#39;, &#39;cdr2_end&#39;, &#39;fwr3_start&#39;, &#39;fwr3_end&#39;, &#39;fwr4_start&#39;, &#39;fwr4_end&#39;, &#39;cdr3_start&#39;, &#39;cdr3_end&#39;, &#39;np1&#39;, &#39;np1_length&#39;, &#39;np2&#39;, &#39;np2_length&#39;, &#39;junction_aa_length&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;sample_id&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;duplicate_count&#39;
-    metadata: &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 1123 and n_contigs = 2254
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;duplicate_count&#39;
+    metadata: &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -1331,9 +1343,9 @@ Dandelion class object with n_obs = 971 and n_contigs = 1959
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 971 and n_contigs = 1959
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;locus&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;sequence_alignment_aa&#39;, &#39;germline_alignment_aa&#39;, &#39;v_alignment_start&#39;, &#39;v_alignment_end&#39;, &#39;d_alignment_start&#39;, &#39;d_alignment_end&#39;, &#39;j_alignment_start&#39;, &#39;j_alignment_end&#39;, &#39;v_sequence_alignment&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;v_germline_alignment&#39;, &#39;v_germline_alignment_aa&#39;, &#39;d_sequence_alignment&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;d_germline_alignment&#39;, &#39;d_germline_alignment_aa&#39;, &#39;j_sequence_alignment&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;j_germline_alignment&#39;, &#39;j_germline_alignment_aa&#39;, &#39;fwr1&#39;, &#39;fwr1_aa&#39;, &#39;cdr1&#39;, &#39;cdr1_aa&#39;, &#39;fwr2&#39;, &#39;fwr2_aa&#39;, &#39;cdr2&#39;, &#39;cdr2_aa&#39;, &#39;fwr3&#39;, &#39;fwr3_aa&#39;, &#39;fwr4&#39;, &#39;fwr4_aa&#39;, &#39;cdr3&#39;, &#39;cdr3_aa&#39;, &#39;junction_length&#39;, &#39;v_score&#39;, &#39;d_score&#39;, &#39;j_score&#39;, &#39;v_support&#39;, &#39;d_support&#39;, &#39;j_support&#39;, &#39;v_identity&#39;, &#39;d_identity&#39;, &#39;j_identity&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;fwr1_start&#39;, &#39;fwr1_end&#39;, &#39;cdr1_start&#39;, &#39;cdr1_end&#39;, &#39;fwr2_start&#39;, &#39;fwr2_end&#39;, &#39;cdr2_start&#39;, &#39;cdr2_end&#39;, &#39;fwr3_start&#39;, &#39;fwr3_end&#39;, &#39;fwr4_start&#39;, &#39;fwr4_end&#39;, &#39;cdr3_start&#39;, &#39;cdr3_end&#39;, &#39;np1&#39;, &#39;np1_length&#39;, &#39;np2&#39;, &#39;np2_length&#39;, &#39;junction_aa_length&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;sample_id&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;duplicate_count&#39;
-    metadata: &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 1123 and n_contigs = 2254
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;duplicate_count&#39;
+    metadata: &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -1393,9 +1405,9 @@ Dandelion class object with n_obs = 971 and n_contigs = 1959
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 971 and n_contigs = 1959
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;locus&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;sequence_alignment_aa&#39;, &#39;germline_alignment_aa&#39;, &#39;v_alignment_start&#39;, &#39;v_alignment_end&#39;, &#39;d_alignment_start&#39;, &#39;d_alignment_end&#39;, &#39;j_alignment_start&#39;, &#39;j_alignment_end&#39;, &#39;v_sequence_alignment&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;v_germline_alignment&#39;, &#39;v_germline_alignment_aa&#39;, &#39;d_sequence_alignment&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;d_germline_alignment&#39;, &#39;d_germline_alignment_aa&#39;, &#39;j_sequence_alignment&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;j_germline_alignment&#39;, &#39;j_germline_alignment_aa&#39;, &#39;fwr1&#39;, &#39;fwr1_aa&#39;, &#39;cdr1&#39;, &#39;cdr1_aa&#39;, &#39;fwr2&#39;, &#39;fwr2_aa&#39;, &#39;cdr2&#39;, &#39;cdr2_aa&#39;, &#39;fwr3&#39;, &#39;fwr3_aa&#39;, &#39;fwr4&#39;, &#39;fwr4_aa&#39;, &#39;cdr3&#39;, &#39;cdr3_aa&#39;, &#39;junction_length&#39;, &#39;v_score&#39;, &#39;d_score&#39;, &#39;j_score&#39;, &#39;v_support&#39;, &#39;d_support&#39;, &#39;j_support&#39;, &#39;v_identity&#39;, &#39;d_identity&#39;, &#39;j_identity&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;fwr1_start&#39;, &#39;fwr1_end&#39;, &#39;cdr1_start&#39;, &#39;cdr1_end&#39;, &#39;fwr2_start&#39;, &#39;fwr2_end&#39;, &#39;cdr2_start&#39;, &#39;cdr2_end&#39;, &#39;fwr3_start&#39;, &#39;fwr3_end&#39;, &#39;fwr4_start&#39;, &#39;fwr4_end&#39;, &#39;cdr3_start&#39;, &#39;cdr3_end&#39;, &#39;np1&#39;, &#39;np1_length&#39;, &#39;np2&#39;, &#39;np2_length&#39;, &#39;junction_aa_length&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;sample_id&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3.0&#39;
+Dandelion class object with n_obs = 1123 and n_contigs = 2254
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3.0&#39;
     distance: None
     edges: None
     layout: None
@@ -1441,14 +1453,16 @@ Dandelion class object with n_obs = 971 and n_contigs = 1959
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 18413 × 38224
-    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;
+AnnData object with n_obs × n_vars = 20766 × 38224
+    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;
     uns: &#39;neighbors&#39;
     obsm: &#39;X_pca&#39;
     obsp: &#39;distances&#39;, &#39;connectivities&#39;
 </pre></div></div>
 </div>
-<p><strong>Transfer ``Dandelion`` to ``AnnData``</strong></p>
+</div>
+<div class="section" id="Transfer-Dandelion-to-AnnData">
+<h2>Transfer <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">AnnData</span></code><a class="headerlink" href="#Transfer-Dandelion-to-AnnData" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ddl$tl$transfer</span></code> will act to transfer the metadata and graph slots from <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object to <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
@@ -1474,11 +1488,11 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 18413 × 38224
-    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3.0&#39;
+AnnData object with n_obs × n_vars = 20766 × 38224
+    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3.0&#39;
     uns: &#39;neighbors&#39;, &#39;rna_neighbors&#39;
-    obsm: &#39;X_pca&#39;, &#39;X_bcr&#39;
-    obsp: &#39;distances&#39;, &#39;connectivities&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;bcr_connectivities&#39;, &#39;bcr_distances&#39;
+    obsm: &#39;X_pca&#39;, &#39;X_vdj&#39;
+    obsp: &#39;distances&#39;, &#39;connectivities&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;vdj_connectivities&#39;, &#39;vdj_distances&#39;
 </pre></div></div>
 </div>
 <p><strong>Saving</strong></p>
@@ -1510,14 +1524,16 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 </pre></div>
 </div>
 </div>
-<p><strong>New Session: Transfer ``AnnData`` to ``Seurat``</strong></p>
+</div>
+<div class="section" id="New-Session:-Transfer-AnnData-to-Seurat">
+<h2>New Session: Transfer <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> to <code class="docutils literal notranslate"><span class="pre">Seurat</span></code><a class="headerlink" href="#New-Session:-Transfer-AnnData-to-Seurat" title="Permalink to this headline">¶</a></h2>
 <p>We start a new session and read in the files.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="nf">setwd</span><span class="p">(</span><span class="s">&#39;/Users/kt16/Downloads/dandelion_tutorial_R/&#39;</span><span class="p">)</span>
+<span></span><span class="nf">setwd</span><span class="p">(</span><span class="s">&#39;/Users/kt16/Downloads/dandelion_tutorial/&#39;</span><span class="p">)</span>
 <span class="nf">library</span><span class="p">(</span><span class="n">reticulate</span><span class="p">)</span>
 <span class="n">ddl</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&#39;dandelion&#39;</span><span class="p">)</span>
 <span class="n">sc</span> <span class="o">=</span> <span class="nf">import</span><span class="p">(</span><span class="s">&#39;scanpy&#39;</span><span class="p">)</span>
@@ -1551,11 +1567,11 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 18413 × 38224
-    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3.0&#39;
+AnnData object with n_obs × n_vars = 20766 × 38224
+    obs: &#39;orig.ident&#39;, &#39;nCount_RNA&#39;, &#39;nFeature_RNA&#39;, &#39;percent.mt&#39;, &#39;RNA_snn_res.0.8&#39;, &#39;seurat_clusters&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;clone_id_size&#39;, &#39;clone_id_size_max_3.0&#39;
     uns: &#39;neighbors&#39;, &#39;rna_neighbors&#39;
-    obsm: &#39;X_bcr&#39;, &#39;X_pca&#39;
-    obsp: &#39;bcr_connectivities&#39;, &#39;bcr_distances&#39;, &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;
+    obsm: &#39;X_pca&#39;, &#39;X_vdj&#39;
+    obsp: &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;vdj_connectivities&#39;, &#39;vdj_distances&#39;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1573,7 +1589,7 @@ AnnData object with n_obs × n_vars = 18413 × 38224
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 An object of class Seurat
-38224 features across 18634 samples within 1 assay
+38224 features across 20766 samples within 1 assay
 Active assay: RNA (38224 features, 2000 variable features)
  2 dimensional reductions calculated: pca, umap
 </pre></div></div>
@@ -1593,19 +1609,19 @@ Active assay: RNA (38224 features, 2000 variable features)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<table>
+<table class="dataframe">
 <caption>A data.frame: 6 × 7</caption>
 <thead>
     <tr><th></th><th scope=col>orig.ident</th><th scope=col>nCount_RNA</th><th scope=col>nFeature_RNA</th><th scope=col>percent.mt</th><th scope=col>RNA_snn_res.0.8</th><th scope=col>seurat_clusters</th><th scope=col>filter_rna</th></tr>
     <tr><th></th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;int&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;fct&gt;</th><th scope=col>&lt;fct&gt;</th><th scope=col>&lt;lgl&gt;</th></tr>
 </thead>
 <tbody>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGCAGCCTGTG</th><td>SeuratProject</td><td>5029</td><td>1819</td><td>3.579240</td><td>19</td><td>19</td><td>FALSE</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACGGGTCGCTGATA</th><td>SeuratProject</td><td>4343</td><td>1738</td><td>2.440709</td><td>5 </td><td>5 </td><td>FALSE</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAAGCAAAGTATGACA</th><td>SeuratProject</td><td>4999</td><td>1796</td><td>2.880576</td><td>5 </td><td>5 </td><td>FALSE</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAATGCCCACTTAAGC</th><td>SeuratProject</td><td>4998</td><td>1530</td><td>3.281313</td><td>2 </td><td>2 </td><td>FALSE</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AACACGTCAACAACCT</th><td>SeuratProject</td><td>4818</td><td>1579</td><td>2.283105</td><td>2 </td><td>2 </td><td>FALSE</td></tr>
-    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AACACGTGTTATCCGA</th><td>SeuratProject</td><td>7564</td><td>2220</td><td>2.525119</td><td>5 </td><td>5 </td><td>FALSE</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGATCTGAA</th><td>SeuratProject</td><td>4386</td><td>1206</td><td>2.507980</td><td>1</td><td>1</td><td>FALSE</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGGAACTGC</th><td>SeuratProject</td><td>6258</td><td>1723</td><td>4.873762</td><td>0</td><td>0</td><td>FALSE</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGGAGTCTG</th><td>SeuratProject</td><td>4243</td><td>1404</td><td>4.572237</td><td>0</td><td>0</td><td>FALSE</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACCTGAGGCTCTTA</th><td>SeuratProject</td><td>5205</td><td>1622</td><td>4.591739</td><td>0</td><td>0</td><td>FALSE</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACGGGAGACATAAC</th><td>SeuratProject</td><td>5775</td><td>1444</td><td>3.307359</td><td>0</td><td>0</td><td>FALSE</td></tr>
+    <tr><th scope=row>sc5p_v2_hs_PBMC_1k_AAACGGGCAGATGAGC</th><td>SeuratProject</td><td>4607</td><td>1268</td><td>4.167571</td><td>1</td><td>1</td><td>FALSE</td></tr>
 </tbody>
 </table></div>
 </div>
@@ -1639,7 +1655,7 @@ Warning message in (function (..., deparse.level = 1) :
 </pre></div></div>
 </div>
 <p>If you run into issues with the conversion, unfortunately there’s not much I can do about it. One alternative is to just transfer the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot from the dandelion object one by one as above into the seurat object.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
@@ -1648,60 +1664,8 @@ Warning message in (function (..., deparse.level = 1) :
 <span class="n">merged_data</span> <span class="o">&lt;-</span> <span class="nf">as.data.frame</span><span class="p">(</span><span class="nf">merge</span><span class="p">(</span><span class="n">merged_meta</span><span class="p">,</span> <span class="n">adata_meta</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="m">0</span><span class="p">,</span> <span class="n">all</span><span class="o">=</span><span class="kc">TRUE</span><span class="p">))</span>
 <span class="nf">rownames</span><span class="p">(</span><span class="n">merged_data</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="n">merged_data</span><span class="p">[,</span><span class="m">1</span><span class="p">]</span>
 <span class="n">merged_data</span><span class="p">[,</span><span class="m">1</span><span class="p">]</span> <span class="o">&lt;-</span> <span class="kc">NULL</span>
-<span class="nf">head</span><span class="p">(</span><span class="n">merged_data</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-ERROR while rich displaying an object: Error in as.character.factor(x): malformed factor
-
-Traceback:
-1. FUN(X[[i]], ...)
-2. tryCatch(withCallingHandlers({
- .     if (!mime %in% names(repr::mime2repr))
- .         stop(&#34;No repr_* for mimetype &#34;, mime, &#34; in repr::mime2repr&#34;)
- .     rpr &lt;- repr::mime2repr[[mime]](obj)
- .     if (is.null(rpr))
- .         return(NULL)
- .     prepare_content(is.raw(rpr), rpr)
- . }, error = error_handler), error = outer_handler)
-3. tryCatchList(expr, classes, parentenv, handlers)
-4. tryCatchOne(expr, names, parentenv, handlers[[1L]])
-5. doTryCatch(return(expr), name, parentenv, handler)
-6. withCallingHandlers({
- .     if (!mime %in% names(repr::mime2repr))
- .         stop(&#34;No repr_* for mimetype &#34;, mime, &#34; in repr::mime2repr&#34;)
- .     rpr &lt;- repr::mime2repr[[mime]](obj)
- .     if (is.null(rpr))
- .         return(NULL)
- .     prepare_content(is.raw(rpr), rpr)
- . }, error = error_handler)
-7. repr::mime2repr[[mime]](obj)
-8. repr_text.data.frame(obj)
-9. ellip_limit_arr(obj, rows, cols)
-10. arr_parts_format(parts)
-11. structure(lapply(parts, arr_part_format), omit = attr(parts,
-  .     &#34;omit&#34;))
-12. lapply(parts, arr_part_format)
-13. FUN(X[[i]], ...)
-14. vapply(part, function(col) {
-  .     if (is.matrix(col))
-  .         apply(apply(col, 2L, format), 1L, paste, collapse = &#34;, &#34;)
-  .     else format(col)
-  . }, character(nrow(part)))
-15. FUN(X[[i]], ...)
-16. format(col)
-17. format.factor(col)
-18. format(structure(as.character(x), names = names(x), dim = dim(x),
-  .     dimnames = dimnames(x)), ...)
-19. structure(as.character(x), names = names(x), dim = dim(x), dimnames = dimnames(x))
-20. as.character(x)
-21. as.character.factor(x)
-</pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -1719,7 +1683,7 @@ Traceback:
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
 <span></span><span class="nf">options</span><span class="p">(</span><span class="n">repr.plot.width</span> <span class="o">=</span> <span class="m">6</span><span class="p">,</span> <span class="n">repr.plot.height</span> <span class="o">=</span> <span class="m">12</span><span class="p">,</span> <span class="n">repr.plot.res</span> <span class="o">=</span> <span class="m">200</span><span class="p">)</span>
-<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">group.by</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;bcr_QC_pass&#39;</span><span class="p">,</span> <span class="s">&#39;isotype&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">),</span> <span class="n">ncol</span> <span class="o">=</span> <span class="m">1</span><span class="p">)</span>
+<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">group.by</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;contig_QC_pass&#39;</span><span class="p">,</span> <span class="s">&#39;isotype&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">),</span> <span class="n">ncol</span> <span class="o">=</span> <span class="m">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1736,7 +1700,7 @@ Traceback:
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="n">merged_bcr</span> <span class="o">=</span> <span class="nf">subset</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">subset</span> <span class="o">=</span> <span class="n">bcr_QC_pass</span> <span class="o">==</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
+<span></span><span class="n">merged_bcr</span> <span class="o">=</span> <span class="nf">subset</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">subset</span> <span class="o">=</span> <span class="n">contig_QC_pass</span> <span class="o">==</span> <span class="s">&#39;True&#39;</span><span class="p">)</span>
 <span class="n">merged_bcr</span>
 </pre></div>
 </div>
@@ -1747,7 +1711,7 @@ Traceback:
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 An object of class Seurat
-38224 features across 971 samples within 1 assay
+38224 features across 1123 samples within 1 assay
 Active assay: RNA (38224 features, 2000 variable features)
  2 dimensional reductions calculated: pca, umap
 </pre></div></div>
@@ -1760,13 +1724,13 @@ Active assay: RNA (38224 features, 2000 variable features)
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="n">X_bcr</span> <span class="o">=</span> <span class="n">adata</span><span class="o">$</span><span class="n">obsm</span><span class="p">[</span><span class="s">&#39;X_bcr&#39;</span><span class="p">]</span>
-<span class="n">X_bcr</span> <span class="o">&lt;-</span> <span class="nf">apply</span><span class="p">(</span><span class="n">X_bcr</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="nf">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="nf">gsub</span><span class="p">(</span><span class="s">&#39;NaN&#39;</span><span class="p">,</span> <span class="kc">NA</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="c1"># convert python NAs to R NAs</span>
-<span class="n">X_bcr</span> <span class="o">&lt;-</span> <span class="nf">apply</span><span class="p">(</span><span class="n">X_bcr</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="nf">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="nf">as.numeric</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="c1"># Make sure they are actually numbers</span>
-<span class="n">X_bcr</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="n">X_bcr</span><span class="p">)</span>
-<span class="nf">row.names</span><span class="p">(</span><span class="n">X_bcr</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="nf">row.names</span><span class="p">(</span><span class="n">adata</span><span class="o">$</span><span class="n">obs</span><span class="p">)</span> <span class="c1"># will not work if the anndata .obs slot is malformed. the row.names for adata$obs and row.names(merged_bcr@meta.data) should be identical anyway, so just replace with row.names(merged_bcr@meta.data)</span>
-<span class="n">X_bcr</span> <span class="o">&lt;-</span> <span class="n">X_bcr</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">X_bcr</span><span class="p">[,</span><span class="m">1</span><span class="p">]),</span> <span class="p">]</span>
-<span class="nf">colnames</span><span class="p">(</span><span class="n">X_bcr</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;BCR_1&#39;</span><span class="p">,</span> <span class="s">&#39;BCR_2&#39;</span><span class="p">)</span>
+<span></span><span class="n">X_vdj</span> <span class="o">=</span> <span class="n">adata</span><span class="o">$</span><span class="n">obsm</span><span class="p">[</span><span class="s">&#39;X_vdj&#39;</span><span class="p">]</span>
+<span class="n">X_vdj</span> <span class="o">&lt;-</span> <span class="nf">apply</span><span class="p">(</span><span class="n">X_vdj</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="nf">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="nf">gsub</span><span class="p">(</span><span class="s">&#39;NaN&#39;</span><span class="p">,</span> <span class="kc">NA</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="c1"># convert python NAs to R NAs</span>
+<span class="n">X_vdj</span> <span class="o">&lt;-</span> <span class="nf">apply</span><span class="p">(</span><span class="n">X_vdj</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="nf">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="nf">as.numeric</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="c1"># Make sure they are actually numbers</span>
+<span class="n">X_vdj</span> <span class="o">&lt;-</span> <span class="nf">as.matrix</span><span class="p">(</span><span class="n">X_vdj</span><span class="p">)</span>
+<span class="nf">row.names</span><span class="p">(</span><span class="n">X_vdj</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="nf">row.names</span><span class="p">(</span><span class="n">adata</span><span class="o">$</span><span class="n">obs</span><span class="p">)</span> <span class="c1"># will not work if the anndata .obs slot is malformed. the row.names for adata$obs and row.names(merged_bcr@meta.data) should be identical anyway, so just replace with row.names(merged_bcr@meta.data)</span>
+<span class="n">X_vdj</span> <span class="o">&lt;-</span> <span class="n">X_vdj</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">X_vdj</span><span class="p">[,</span><span class="m">1</span><span class="p">]),</span> <span class="p">]</span>
+<span class="nf">colnames</span><span class="p">(</span><span class="n">X_vdj</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;VDJ_1&#39;</span><span class="p">,</span> <span class="s">&#39;VDJ_2&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1775,7 +1739,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="n">merged_bcr</span><span class="p">[[</span><span class="s">&quot;BCR&quot;</span><span class="p">]]</span> <span class="o">&lt;-</span> <span class="nf">CreateDimReducObject</span><span class="p">(</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">X_bcr</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;BCR_&quot;</span><span class="p">,</span> <span class="n">assay</span> <span class="o">=</span> <span class="nf">DefaultAssay</span><span class="p">(</span><span class="n">merged_bcr</span><span class="p">))</span>
+<span></span><span class="n">merged_bcr</span><span class="p">[[</span><span class="s">&quot;VDJ&quot;</span><span class="p">]]</span> <span class="o">&lt;-</span> <span class="nf">CreateDimReducObject</span><span class="p">(</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">X_vdj</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="s">&quot;VDJ_&quot;</span><span class="p">,</span> <span class="n">assay</span> <span class="o">=</span> <span class="nf">DefaultAssay</span><span class="p">(</span><span class="n">merged_bcr</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1794,9 +1758,9 @@ Active assay: RNA (38224 features, 2000 variable features)
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 An object of class Seurat
-38224 features across 971 samples within 1 assay
+38224 features across 1123 samples within 1 assay
 Active assay: RNA (38224 features, 2000 variable features)
- 3 dimensional reductions calculated: pca, umap, BCR
+ 3 dimensional reductions calculated: pca, umap, VDJ
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1805,7 +1769,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
 <span></span><span class="nf">options</span><span class="p">(</span><span class="n">repr.plot.width</span> <span class="o">=</span> <span class="m">6</span><span class="p">,</span> <span class="n">repr.plot.height</span> <span class="o">=</span> <span class="m">5</span><span class="p">,</span> <span class="n">repr.plot.res</span> <span class="o">=</span> <span class="m">200</span><span class="p">)</span>
-<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged_bcr</span><span class="p">,</span> <span class="n">reduction</span> <span class="o">=</span> <span class="s">&#39;BCR&#39;</span><span class="p">)</span>
+<span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged_bcr</span><span class="p">,</span> <span class="n">reduction</span> <span class="o">=</span> <span class="s">&#39;VDJ&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1821,7 +1785,7 @@ Active assay: RNA (38224 features, 2000 variable features)
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre>
-<span></span><span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged_bcr</span><span class="p">,</span> <span class="n">reduction</span> <span class="o">=</span> <span class="s">&#39;BCR&#39;</span><span class="p">,</span> <span class="n">group.by</span> <span class="o">=</span> <span class="s">&#39;isotype&#39;</span><span class="p">)</span>
+<span></span><span class="nf">DimPlot</span><span class="p">(</span><span class="n">merged_bcr</span><span class="p">,</span> <span class="n">reduction</span> <span class="o">=</span> <span class="s">&#39;VDJ&#39;</span><span class="p">,</span> <span class="n">group.by</span> <span class="o">=</span> <span class="s">&#39;isotype&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1863,44 +1827,46 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base
 
 other attached packages:
-[1] Seurat_3.9.9.9010 reticulate_1.18
+[1] Seurat_3.2.3    reticulate_1.18
 
 loaded via a namespace (and not attached):
-  [1] nlme_3.1-148          matrixStats_0.57.0    RcppAnnoy_0.0.17
-  [4] RColorBrewer_1.1-2    httr_1.4.2            repr_1.1.0
-  [7] sctransform_0.3.1     tools_4.0.2           R6_2.5.0
- [10] irlba_2.3.3           rpart_4.1-15          KernSmooth_2.23-17
- [13] uwot_0.1.9            mgcv_1.8-31           lazyeval_0.2.2
- [16] colorspace_2.0-0      tidyselect_1.1.0      gridExtra_2.3
- [19] compiler_4.0.2        plotly_4.9.2.1        labeling_0.4.2
- [22] scales_1.1.1          lmtest_0.9-38         spatstat.data_1.5-2
- [25] ggridges_0.5.2        pbapply_1.4-3         goftest_1.2-2
- [28] spatstat_1.64-1       pbdZMQ_0.3-4          stringr_1.4.0
- [31] digest_0.6.27         spatstat.utils_1.17-0 base64enc_0.1-3
- [34] pkgconfig_2.0.3       htmltools_0.5.1.1     parallelly_1.21.0
- [37] fastmap_1.0.1         htmlwidgets_1.5.2     rlang_0.4.9
- [40] shiny_1.5.0           farver_2.0.3          generics_0.1.0
- [43] zoo_1.8-8             jsonlite_1.7.1        ica_1.0-2
- [46] dplyr_1.0.2           magrittr_2.0.1        patchwork_0.0.1.9000
- [49] Matrix_1.2-18         Rcpp_1.0.5            IRkernel_1.1.1
- [52] munsell_0.5.0         abind_1.4-5           lifecycle_0.2.0
- [55] stringi_1.5.3         MASS_7.3-51.6         Rtsne_0.15
- [58] plyr_1.8.6            grid_4.0.2            parallel_4.0.2
- [61] listenv_0.8.0         promises_1.1.1        ggrepel_0.8.2
- [64] crayon_1.3.4          deldir_0.2-3          miniUI_0.1.1.1
- [67] lattice_0.20-41       IRdisplay_0.7.0       cowplot_1.1.0
- [70] splines_4.0.2         tensor_1.5            pillar_1.4.7
- [73] igraph_1.2.6          uuid_0.1-4            future.apply_1.6.0
- [76] reshape2_1.4.4        codetools_0.2-16      leiden_0.3.6
- [79] glue_1.4.2            evaluate_0.14         data.table_1.13.2
- [82] vctrs_0.3.5           png_0.1-7             httpuv_1.5.4
- [85] polyclip_1.10-0       gtable_0.3.0          RANN_2.6.1
- [88] purrr_0.3.4           tidyr_1.1.2           future_1.20.1
- [91] ggplot2_3.3.2         rsvd_1.0.3            mime_0.9
- [94] xtable_1.8-4          later_1.1.0.1         survival_3.1-12
- [97] viridisLite_0.3.0     tibble_3.0.4          cluster_2.1.0
-[100] globals_0.14.0        fitdistrplus_1.1-3    ellipsis_0.3.1
-[103] ROCR_1.0-11
+  [1] nlme_3.1-148         matrixStats_0.58.0   RcppAnnoy_0.0.18
+  [4] RColorBrewer_1.1-2   httr_1.4.2           repr_1.1.3
+  [7] sctransform_0.3.2    tools_4.0.2          utf8_1.2.1
+ [10] R6_2.5.0             irlba_2.3.3          rpart_4.1-15
+ [13] KernSmooth_2.23-17   uwot_0.1.10          mgcv_1.8-31
+ [16] DBI_1.1.1            lazyeval_0.2.2       colorspace_2.0-0
+ [19] gridExtra_2.3        tidyselect_1.1.1     compiler_4.0.2
+ [22] Cairo_1.5-12.2       plotly_4.9.3         labeling_0.4.2
+ [25] scales_1.1.1         spatstat.data_2.1-0  lmtest_0.9-38
+ [28] ggridges_0.5.3       pbapply_1.4-3        goftest_1.2-2
+ [31] spatstat_1.64-1      pbdZMQ_0.3-5         stringr_1.4.0
+ [34] digest_0.6.27        spatstat.utils_2.1-0 base64enc_0.1-3
+ [37] pkgconfig_2.0.3      htmltools_0.5.1.1    parallelly_1.23.0
+ [40] fastmap_1.1.0        htmlwidgets_1.5.3    rlang_0.4.11
+ [43] shiny_1.6.0          farver_2.1.0         generics_0.1.0
+ [46] zoo_1.8-9            jsonlite_1.7.2       ica_1.0-2
+ [49] dplyr_1.0.6          magrittr_2.0.1       patchwork_1.1.1
+ [52] Matrix_1.3-2         Rcpp_1.0.6           IRkernel_1.1.1
+ [55] munsell_0.5.0        fansi_0.5.0          abind_1.4-5
+ [58] lifecycle_1.0.0      stringi_1.6.2        MASS_7.3-51.6
+ [61] Rtsne_0.15           plyr_1.8.6           grid_4.0.2
+ [64] parallel_4.0.2       listenv_0.8.0        promises_1.2.0.1
+ [67] ggrepel_0.9.1        crayon_1.4.1         deldir_0.2-10
+ [70] miniUI_0.1.1.1       lattice_0.20-41      IRdisplay_1.0
+ [73] cowplot_1.1.1        splines_4.0.2        tensor_1.5
+ [76] pillar_1.6.1         igraph_1.2.6         uuid_0.1-4
+ [79] future.apply_1.7.0   reshape2_1.4.4       codetools_0.2-16
+ [82] leiden_0.3.7         glue_1.4.2           evaluate_0.14
+ [85] data.table_1.14.0    vctrs_0.3.8          png_0.1-7
+ [88] httpuv_1.5.5         polyclip_1.10-0      gtable_0.3.0
+ [91] RANN_2.6.1           purrr_0.3.4          tidyr_1.1.3
+ [94] scattermore_0.7      future_1.21.0        assertthat_0.2.1
+ [97] ggplot2_3.3.3        rsvd_1.0.3           mime_0.10
+[100] xtable_1.8-4         later_1.1.0.1        survival_3.1-12
+[103] viridisLite_0.3.0    tibble_3.1.2         cluster_2.1.0
+[106] globals_0.14.0       fitdistrplus_1.1-3   ellipsis_0.3.2
+[109] ROCR_1.0-11
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -1921,7 +1887,7 @@ loaded via a namespace (and not attached):
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../api.html" class="btn btn-neutral float-right" title="Preprocessing: pp" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="7_dandelion_TCR_data_10x_data.html" class="btn btn-neutral float-right" title="Analyzing TCR data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="0_dandelion_primer.html" class="btn btn-neutral float-left" title="Dandelion class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

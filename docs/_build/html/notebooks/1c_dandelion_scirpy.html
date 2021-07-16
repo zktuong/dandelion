@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Interoperability with scirpy &mdash; dandelion 0.1.0 documentation</title>
+  <title>Interoperability with scirpy &mdash; dandelion  documentation</title>
   
 
   
@@ -97,29 +97,35 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#dandelion-:-Converting-dandelion-to-scirpy"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dandelion-:-Converting-scirpy-to-dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ddl.to_scirpy-:-Converting-dandelion-to-scirpy"><code class="docutils literal notranslate"><span class="pre">ddl.to_scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ddl.from_scirpy-:-Converting-scirpy-to-dandelion"><code class="docutils literal notranslate"><span class="pre">ddl.from_scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#scirpy-:-Converting-dandelion-to-scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#scirpy-:-Converting-scirpy-to-dandelion"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#scirpy-:-Read-from-scirpy,-convert-to-dandelion"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code> : Read from <code class="docutils literal notranslate"><span class="pre">scirpy</span></code>, convert to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ir.io.from_dandelion-:-Converting-dandelion-to-scirpy"><code class="docutils literal notranslate"><span class="pre">ir.io.from_dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ir.io.to_dandelion-:-Converting-scirpy-to-dandelion"><code class="docutils literal notranslate"><span class="pre">ir.io.to_dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Example-of-reading-with-scirpy-followed-by-conversion-to-dandelion">Example of reading with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> followed by conversion to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -177,6 +183,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
         
       <li>Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></li>
     
@@ -470,7 +478,7 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Interoperability-with-scirpy">
 <h1>Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#Interoperability-with-scirpy" title="Permalink to this headline">¶</a></h1>
 <img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" />
-<p>It is now possible to convert the file formats between <code class="docutils literal notranslate"><span class="pre">dandelion&gt;=0.1.0</span></code> and <code class="docutils literal notranslate"><span class="pre">scirpy&gt;=0.6.2.dev104</span></code> to enhance the collaboration between the analysis toolkits.</p>
+<p>It is now possible to convert the file formats between <code class="docutils literal notranslate"><span class="pre">dandelion&gt;=0.1.1</span></code> and <code class="docutils literal notranslate"><span class="pre">scirpy&gt;=0.6.2</span></code> to enhance the collaboration between the analysis toolkits.</p>
 <p>We will download the <em>airr_rearrangement.tsv</em> file from here:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># bash</span>
 wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_airr_rearrangement.tsv
@@ -495,7 +503,7 @@ wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-dandelion==0.1.0 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
+dandelion==0.1.3.post2.dev62 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -514,12 +522,11 @@ dandelion==0.1.0 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 sci
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&#39;0.6.2.dev105&#39;
+&#39;0.7.2.dev30&#39;
 </pre></div></div>
 </div>
-</div>
 <div class="section" id="dandelion">
-<h1><code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#dandelion" title="Permalink to this headline">¶</a></h1>
+<h2><code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#dandelion" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -540,7 +547,7 @@ dandelion==0.1.0 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 sci
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 978 and n_contigs = 2093
     data: &#39;cell_id&#39;, &#39;clone_id&#39;, &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_length&#39;, &#39;junction_aa_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;is_cell&#39;, &#39;locus&#39;
-    metadata: &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;duplicate_count_heavy_0&#39;, &#39;duplicate_count_heavy_1&#39;, &#39;duplicate_count_light_0&#39;, &#39;duplicate_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    metadata: &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -562,12 +569,12 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Finding clones based on heavy chains : 100%|██████████| 157/157 [00:00&lt;00:00, 960.80it/s]
-Refining clone assignment based on light chain pairing : 100%|██████████| 978/978 [00:00&lt;00:00, 295983.07it/s]
+Finding clones based on VDJ chains : 100%|██████████| 157/157 [00:00&lt;00:00, 2010.91it/s]
+Refining clone assignment based on VJ chain pairing : 100%|██████████| 978/978 [00:00&lt;00:00, 178761.03it/s]
 </pre></div></div>
 </div>
-<div class="section" id="dandelion-:-Converting-dandelion-to-scirpy">
-<h2><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#dandelion-:-Converting-dandelion-to-scirpy" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ddl.to_scirpy-:-Converting-dandelion-to-scirpy">
+<h3><code class="docutils literal notranslate"><span class="pre">ddl.to_scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#ddl.to_scirpy-:-Converting-dandelion-to-scirpy" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -578,79 +585,6 @@ Refining clone assignment based on light chain pairing : 100%|██████
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/anndata/_core/anndata.py:1192: FutureWarning: is_categorical is deprecated and will be removed in a future version.  Use is_categorical_dtype instead
-... storing &#39;extra_chains&#39; as categorical
-... storing &#39;IR_VJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_junction&#39; as categorical
-... storing &#39;IR_VJ_2_junction&#39; as categorical
-... storing &#39;IR_VDJ_1_junction&#39; as categorical
-... storing &#39;IR_VDJ_2_junction&#39; as categorical
-... storing &#39;IR_VJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_1_productive&#39; as categorical
-... storing &#39;IR_VJ_2_productive&#39; as categorical
-... storing &#39;IR_VDJ_1_productive&#39; as categorical
-... storing &#39;IR_VDJ_2_productive&#39; as categorical
-... storing &#39;IR_VJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_1_sequence&#39; as categorical
-... storing &#39;IR_VJ_2_sequence&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_v_cigar&#39; as categorical
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -658,7 +592,8 @@ Refining clone assignment based on light chain pairing : 100%|██████
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 994 × 0
-    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_c_cigar&#39;, &#39;IR_VJ_2_c_cigar&#39;, &#39;IR_VDJ_1_c_cigar&#39;, &#39;IR_VDJ_2_c_cigar&#39;, &#39;IR_VJ_1_c_sequence_end&#39;, &#39;IR_VJ_2_c_sequence_end&#39;, &#39;IR_VDJ_1_c_sequence_end&#39;, &#39;IR_VDJ_2_c_sequence_end&#39;, &#39;IR_VJ_1_c_sequence_start&#39;, &#39;IR_VJ_2_c_sequence_start&#39;, &#39;IR_VDJ_1_c_sequence_start&#39;, &#39;IR_VDJ_2_c_sequence_start&#39;, &#39;IR_VJ_1_clone_id&#39;, &#39;IR_VJ_2_clone_id&#39;, &#39;IR_VDJ_1_clone_id&#39;, &#39;IR_VDJ_2_clone_id&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_d_cigar&#39;, &#39;IR_VJ_2_d_cigar&#39;, &#39;IR_VDJ_1_d_cigar&#39;, &#39;IR_VDJ_2_d_cigar&#39;, &#39;IR_VJ_1_d_sequence_end&#39;, &#39;IR_VJ_2_d_sequence_end&#39;, &#39;IR_VDJ_1_d_sequence_end&#39;, &#39;IR_VDJ_2_d_sequence_end&#39;, &#39;IR_VJ_1_d_sequence_start&#39;, &#39;IR_VJ_2_d_sequence_start&#39;, &#39;IR_VDJ_1_d_sequence_start&#39;, &#39;IR_VDJ_2_d_sequence_start&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_germline_alignment&#39;, &#39;IR_VJ_2_germline_alignment&#39;, &#39;IR_VDJ_1_germline_alignment&#39;, &#39;IR_VDJ_2_germline_alignment&#39;, &#39;IR_VJ_1_is_cell&#39;, &#39;IR_VJ_2_is_cell&#39;, &#39;IR_VDJ_1_is_cell&#39;, &#39;IR_VDJ_2_is_cell&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_j_cigar&#39;, &#39;IR_VJ_2_j_cigar&#39;, &#39;IR_VDJ_1_j_cigar&#39;, &#39;IR_VDJ_2_j_cigar&#39;, &#39;IR_VJ_1_j_sequence_end&#39;, &#39;IR_VJ_2_j_sequence_end&#39;, &#39;IR_VDJ_1_j_sequence_end&#39;, &#39;IR_VDJ_2_j_sequence_end&#39;, &#39;IR_VJ_1_j_sequence_start&#39;, &#39;IR_VJ_2_j_sequence_start&#39;, &#39;IR_VDJ_1_j_sequence_start&#39;, &#39;IR_VDJ_2_j_sequence_start&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_junction_aa_length&#39;, &#39;IR_VJ_2_junction_aa_length&#39;, &#39;IR_VDJ_1_junction_aa_length&#39;, &#39;IR_VDJ_2_junction_aa_length&#39;, &#39;IR_VJ_1_junction_length&#39;, &#39;IR_VJ_2_junction_length&#39;, &#39;IR_VDJ_1_junction_length&#39;, &#39;IR_VDJ_2_junction_length&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_rev_comp&#39;, &#39;IR_VJ_2_rev_comp&#39;, &#39;IR_VDJ_1_rev_comp&#39;, &#39;IR_VDJ_2_rev_comp&#39;, &#39;IR_VJ_1_sequence&#39;, &#39;IR_VJ_2_sequence&#39;, &#39;IR_VDJ_1_sequence&#39;, &#39;IR_VDJ_2_sequence&#39;, &#39;IR_VJ_1_sequence_aa&#39;, &#39;IR_VJ_2_sequence_aa&#39;, &#39;IR_VDJ_1_sequence_aa&#39;, &#39;IR_VDJ_2_sequence_aa&#39;, &#39;IR_VJ_1_sequence_alignment&#39;, &#39;IR_VJ_2_sequence_alignment&#39;, &#39;IR_VDJ_1_sequence_alignment&#39;, &#39;IR_VDJ_2_sequence_alignment&#39;, &#39;IR_VJ_1_sequence_id&#39;, &#39;IR_VJ_2_sequence_id&#39;, &#39;IR_VDJ_1_sequence_id&#39;, &#39;IR_VDJ_2_sequence_id&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;IR_VJ_1_v_cigar&#39;, &#39;IR_VJ_2_v_cigar&#39;, &#39;IR_VDJ_1_v_cigar&#39;, &#39;IR_VDJ_2_v_cigar&#39;, &#39;IR_VJ_1_v_sequence_end&#39;, &#39;IR_VJ_2_v_sequence_end&#39;, &#39;IR_VDJ_1_v_sequence_end&#39;, &#39;IR_VDJ_2_v_sequence_end&#39;, &#39;IR_VJ_1_v_sequence_start&#39;, &#39;IR_VJ_2_v_sequence_start&#39;, &#39;IR_VDJ_1_v_sequence_start&#39;, &#39;IR_VDJ_2_v_sequence_start&#39;, &#39;has_ir&#39;
+    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;has_ir&#39;
+    uns: &#39;scirpy_version&#39;
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> is mapped to <code class="docutils literal notranslate"><span class="pre">IR_VJ_1_clone_id</span></code> column.</p>
@@ -673,78 +608,6 @@ AnnData object with n_obs × n_vars = 994 × 0
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-... storing &#39;extra_chains&#39; as categorical
-... storing &#39;IR_VJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_junction&#39; as categorical
-... storing &#39;IR_VJ_2_junction&#39; as categorical
-... storing &#39;IR_VDJ_1_junction&#39; as categorical
-... storing &#39;IR_VDJ_2_junction&#39; as categorical
-... storing &#39;IR_VJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_1_productive&#39; as categorical
-... storing &#39;IR_VJ_2_productive&#39; as categorical
-... storing &#39;IR_VDJ_1_productive&#39; as categorical
-... storing &#39;IR_VDJ_2_productive&#39; as categorical
-... storing &#39;IR_VJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_1_sequence&#39; as categorical
-... storing &#39;IR_VJ_2_sequence&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_v_cigar&#39; as categorical
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -752,12 +615,13 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 994 × 0
-    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_c_cigar&#39;, &#39;IR_VJ_2_c_cigar&#39;, &#39;IR_VDJ_1_c_cigar&#39;, &#39;IR_VDJ_2_c_cigar&#39;, &#39;IR_VJ_1_c_sequence_end&#39;, &#39;IR_VJ_2_c_sequence_end&#39;, &#39;IR_VDJ_1_c_sequence_end&#39;, &#39;IR_VDJ_2_c_sequence_end&#39;, &#39;IR_VJ_1_c_sequence_start&#39;, &#39;IR_VJ_2_c_sequence_start&#39;, &#39;IR_VDJ_1_c_sequence_start&#39;, &#39;IR_VDJ_2_c_sequence_start&#39;, &#39;IR_VJ_1_clone_id&#39;, &#39;IR_VJ_2_clone_id&#39;, &#39;IR_VDJ_1_clone_id&#39;, &#39;IR_VDJ_2_clone_id&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_d_cigar&#39;, &#39;IR_VJ_2_d_cigar&#39;, &#39;IR_VDJ_1_d_cigar&#39;, &#39;IR_VDJ_2_d_cigar&#39;, &#39;IR_VJ_1_d_sequence_end&#39;, &#39;IR_VJ_2_d_sequence_end&#39;, &#39;IR_VDJ_1_d_sequence_end&#39;, &#39;IR_VDJ_2_d_sequence_end&#39;, &#39;IR_VJ_1_d_sequence_start&#39;, &#39;IR_VJ_2_d_sequence_start&#39;, &#39;IR_VDJ_1_d_sequence_start&#39;, &#39;IR_VDJ_2_d_sequence_start&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_germline_alignment&#39;, &#39;IR_VJ_2_germline_alignment&#39;, &#39;IR_VDJ_1_germline_alignment&#39;, &#39;IR_VDJ_2_germline_alignment&#39;, &#39;IR_VJ_1_is_cell&#39;, &#39;IR_VJ_2_is_cell&#39;, &#39;IR_VDJ_1_is_cell&#39;, &#39;IR_VDJ_2_is_cell&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_j_cigar&#39;, &#39;IR_VJ_2_j_cigar&#39;, &#39;IR_VDJ_1_j_cigar&#39;, &#39;IR_VDJ_2_j_cigar&#39;, &#39;IR_VJ_1_j_sequence_end&#39;, &#39;IR_VJ_2_j_sequence_end&#39;, &#39;IR_VDJ_1_j_sequence_end&#39;, &#39;IR_VDJ_2_j_sequence_end&#39;, &#39;IR_VJ_1_j_sequence_start&#39;, &#39;IR_VJ_2_j_sequence_start&#39;, &#39;IR_VDJ_1_j_sequence_start&#39;, &#39;IR_VDJ_2_j_sequence_start&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_junction_aa_length&#39;, &#39;IR_VJ_2_junction_aa_length&#39;, &#39;IR_VDJ_1_junction_aa_length&#39;, &#39;IR_VDJ_2_junction_aa_length&#39;, &#39;IR_VJ_1_junction_length&#39;, &#39;IR_VJ_2_junction_length&#39;, &#39;IR_VDJ_1_junction_length&#39;, &#39;IR_VDJ_2_junction_length&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_rev_comp&#39;, &#39;IR_VJ_2_rev_comp&#39;, &#39;IR_VDJ_1_rev_comp&#39;, &#39;IR_VDJ_2_rev_comp&#39;, &#39;IR_VJ_1_sequence&#39;, &#39;IR_VJ_2_sequence&#39;, &#39;IR_VDJ_1_sequence&#39;, &#39;IR_VDJ_2_sequence&#39;, &#39;IR_VJ_1_sequence_aa&#39;, &#39;IR_VJ_2_sequence_aa&#39;, &#39;IR_VDJ_1_sequence_aa&#39;, &#39;IR_VDJ_2_sequence_aa&#39;, &#39;IR_VJ_1_sequence_alignment&#39;, &#39;IR_VJ_2_sequence_alignment&#39;, &#39;IR_VDJ_1_sequence_alignment&#39;, &#39;IR_VDJ_2_sequence_alignment&#39;, &#39;IR_VJ_1_sequence_id&#39;, &#39;IR_VJ_2_sequence_id&#39;, &#39;IR_VDJ_1_sequence_id&#39;, &#39;IR_VDJ_2_sequence_id&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;IR_VJ_1_v_cigar&#39;, &#39;IR_VJ_2_v_cigar&#39;, &#39;IR_VDJ_1_v_cigar&#39;, &#39;IR_VDJ_2_v_cigar&#39;, &#39;IR_VJ_1_v_sequence_end&#39;, &#39;IR_VJ_2_v_sequence_end&#39;, &#39;IR_VDJ_1_v_sequence_end&#39;, &#39;IR_VDJ_2_v_sequence_end&#39;, &#39;IR_VJ_1_v_sequence_start&#39;, &#39;IR_VJ_2_v_sequence_start&#39;, &#39;IR_VDJ_1_v_sequence_start&#39;, &#39;IR_VDJ_2_v_sequence_start&#39;, &#39;has_ir&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;duplicate_count_heavy_0&#39;, &#39;duplicate_count_heavy_1&#39;, &#39;duplicate_count_light_0&#39;, &#39;duplicate_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;has_ir&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
+    uns: &#39;scirpy_version&#39;
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="dandelion-:-Converting-scirpy-to-dandelion">
-<h2><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#dandelion-:-Converting-scirpy-to-dandelion" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ddl.from_scirpy-:-Converting-scirpy-to-dandelion">
+<h3><code class="docutils literal notranslate"><span class="pre">ddl.from_scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#ddl.from_scirpy-:-Converting-scirpy-to-dandelion" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -775,8 +639,8 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 978 and n_contigs = 2093
-    data: &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;c_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;clone_id&#39;, &#39;consensus_count&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;d_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;germline_alignment&#39;, &#39;is_cell&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;j_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_aa_length&#39;, &#39;junction_length&#39;, &#39;locus&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;sequence_alignment&#39;, &#39;sequence_id&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;v_sequence_end&#39;, &#39;v_sequence_start&#39;, &#39;cell_id&#39;, &#39;umi_count&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_heavy_1&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;locus&#39;, &#39;cell_id&#39;, &#39;multi_chain&#39;
+    metadata: &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -815,18 +679,18 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>clone_id</th>
-      <th>clone_id_by_size</th>
-      <th>locus_heavy</th>
-      <th>locus_light</th>
-      <th>productive_heavy</th>
-      <th>productive_light</th>
-      <th>v_call_heavy</th>
-      <th>v_call_light</th>
-      <th>j_call_heavy</th>
-      <th>j_call_light</th>
+      <th>locus_VDJ</th>
+      <th>locus_VJ</th>
+      <th>productive_VDJ</th>
+      <th>productive_VJ</th>
+      <th>v_call_VDJ</th>
+      <th>v_call_VJ</th>
+      <th>j_call_VDJ</th>
+      <th>j_call_VJ</th>
+      <th>c_call_VDJ</th>
+      <th>c_call_VJ</th>
       <th>...</th>
-      <th>junction_aa_light</th>
+      <th>junction_aa_VJ</th>
       <th>status</th>
       <th>status_summary</th>
       <th>productive</th>
@@ -835,28 +699,28 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
       <th>isotype_summary</th>
       <th>vdj_status</th>
       <th>vdj_status_summary</th>
-      <th>heavychain_status_summary</th>
+      <th>constant_status_summary</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>AAACCTGTCCGTTGTC-1</th>
-      <td>148_3_1_266</td>
-      <td>1066</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV1-69D</td>
       <td>IGKV1-8</td>
       <td>IGHJ3</td>
       <td>IGKJ1</td>
+      <td>IGHM</td>
+      <td>IGKC</td>
       <td>...</td>
       <td>CQQYYSYPRTF</td>
       <td>IGH + IGK</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -865,22 +729,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>AAACCTGTCGAGAACG-1</th>
-      <td>92_4_1_47</td>
-      <td>1065</td>
       <td>IGH</td>
       <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV1-2</td>
       <td>IGLV5-45</td>
       <td>IGHJ3</td>
       <td>IGLJ3</td>
+      <td>IGHM</td>
+      <td>IGLC3</td>
       <td>...</td>
       <td>CMIWHSSAWVV</td>
       <td>IGH + IGL</td>
       <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -889,22 +753,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>AAACCTGTCTTGAGAC-1</th>
-      <td>149_1_2_419</td>
-      <td>166</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV5-51</td>
       <td>IGKV1D-8</td>
       <td>IGHJ3</td>
       <td>IGKJ2</td>
+      <td>IGHM</td>
+      <td>IGKC</td>
       <td>...</td>
       <td>CQQYYSFPYTF</td>
       <td>IGH + IGK</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -913,22 +777,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>AAACGGGAGCGACGTA-1</th>
-      <td>82_1_2_2</td>
-      <td>600</td>
       <td>IGH</td>
       <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV4-59</td>
       <td>IGLV3-19</td>
       <td>IGHJ3</td>
       <td>IGLJ2</td>
+      <td>IGHM</td>
+      <td>IGLC2</td>
       <td>...</td>
       <td>CNSRDSSGNHVVF</td>
       <td>IGH + IGL</td>
       <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -937,22 +801,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>AAACGGGCACTGTTAG-1</th>
-      <td>70_1_1_92</td>
-      <td>1075</td>
       <td>IGH</td>
       <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV4-39</td>
       <td>IGLV3-21</td>
       <td>IGHJ3</td>
       <td>IGLJ2</td>
+      <td>IGHM</td>
+      <td>IGLC2</td>
       <td>...</td>
       <td>CQVWDSSSDHVVF</td>
       <td>IGH + IGL</td>
       <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -985,22 +849,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>TTTGCGCTCTAACGGT-1</th>
-      <td>138_3_1_217</td>
-      <td>156</td>
       <td>IGH</td>
       <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV3-43</td>
       <td>IGLV2-8</td>
       <td>IGHJ6</td>
       <td>IGLJ3</td>
+      <td>IGHM</td>
+      <td>IGLC2</td>
       <td>...</td>
       <td>CGSFAGSNIWVF</td>
       <td>IGH + IGL</td>
       <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -1009,22 +873,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>TTTGGTTGTAGCCTAT-1</th>
-      <td>85_1_1_240</td>
-      <td>506</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV4-39</td>
       <td>IGKV6-21</td>
       <td>IGHJ2</td>
       <td>IGKJ4</td>
+      <td>IGHM</td>
+      <td>IGKC</td>
       <td>...</td>
       <td>CHQSSSLPLTF</td>
       <td>IGH + IGK</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -1033,22 +897,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>TTTGGTTTCAGAGCTT-1</th>
-      <td>117_5_2_232</td>
-      <td>563</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV7-4-1</td>
       <td>IGKV3-11</td>
       <td>IGHJ4</td>
       <td>IGKJ5</td>
+      <td>IGHM</td>
+      <td>IGKC</td>
       <td>...</td>
       <td>CQQRSNWLTF</td>
       <td>IGH + IGK</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -1057,22 +921,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>TTTGGTTTCAGTGTTG-1</th>
-      <td>12_1_1_329</td>
-      <td>820</td>
       <td>IGH</td>
       <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV2-5</td>
       <td>IGLV2-23</td>
       <td>IGHJ4</td>
       <td>IGLJ2</td>
+      <td>IGHM</td>
+      <td>IGLC2</td>
       <td>...</td>
       <td>CCSYAGSSTFEVF</td>
       <td>IGH + IGL</td>
       <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -1081,22 +945,22 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
     <tr>
       <th>TTTGGTTTCGGTGTCG-1</th>
-      <td>140_1_1_82</td>
-      <td>210</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV3-21</td>
       <td>IGKV3-11</td>
       <td>IGHJ2</td>
       <td>IGKJ4</td>
+      <td>IGHM</td>
+      <td>IGKC</td>
       <td>...</td>
       <td>CQQRSNWPRLTF</td>
       <td>IGH + IGK</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>T + T</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
@@ -1105,15 +969,15 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
     </tr>
   </tbody>
 </table>
-<p>978 rows × 27 columns</p>
+<p>978 rows × 25 columns</p>
 </div></div>
 </div>
 </div>
 </div>
 <div class="section" id="scirpy">
-<h1><code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#scirpy" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="scirpy-:-Converting-dandelion-to-scirpy">
-<h2><code class="docutils literal notranslate"><span class="pre">scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#scirpy-:-Converting-dandelion-to-scirpy" title="Permalink to this headline">¶</a></h2>
+<h2><code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#scirpy" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ir.io.from_dandelion-:-Converting-dandelion-to-scirpy">
+<h3><code class="docutils literal notranslate"><span class="pre">ir.io.from_dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> to <code class="docutils literal notranslate"><span class="pre">scirpy</span></code><a class="headerlink" href="#ir.io.from_dandelion-:-Converting-dandelion-to-scirpy" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -1124,79 +988,6 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/anndata/_core/anndata.py:1192: FutureWarning: is_categorical is deprecated and will be removed in a future version.  Use is_categorical_dtype instead
-... storing &#39;extra_chains&#39; as categorical
-... storing &#39;IR_VJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_junction&#39; as categorical
-... storing &#39;IR_VJ_2_junction&#39; as categorical
-... storing &#39;IR_VDJ_1_junction&#39; as categorical
-... storing &#39;IR_VDJ_2_junction&#39; as categorical
-... storing &#39;IR_VJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_1_productive&#39; as categorical
-... storing &#39;IR_VJ_2_productive&#39; as categorical
-... storing &#39;IR_VDJ_1_productive&#39; as categorical
-... storing &#39;IR_VDJ_2_productive&#39; as categorical
-... storing &#39;IR_VJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_1_sequence&#39; as categorical
-... storing &#39;IR_VJ_2_sequence&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_v_cigar&#39; as categorical
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -1204,7 +995,8 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 994 × 0
-    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_c_cigar&#39;, &#39;IR_VJ_2_c_cigar&#39;, &#39;IR_VDJ_1_c_cigar&#39;, &#39;IR_VDJ_2_c_cigar&#39;, &#39;IR_VJ_1_c_sequence_end&#39;, &#39;IR_VJ_2_c_sequence_end&#39;, &#39;IR_VDJ_1_c_sequence_end&#39;, &#39;IR_VDJ_2_c_sequence_end&#39;, &#39;IR_VJ_1_c_sequence_start&#39;, &#39;IR_VJ_2_c_sequence_start&#39;, &#39;IR_VDJ_1_c_sequence_start&#39;, &#39;IR_VDJ_2_c_sequence_start&#39;, &#39;IR_VJ_1_clone_id&#39;, &#39;IR_VJ_2_clone_id&#39;, &#39;IR_VDJ_1_clone_id&#39;, &#39;IR_VDJ_2_clone_id&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_d_cigar&#39;, &#39;IR_VJ_2_d_cigar&#39;, &#39;IR_VDJ_1_d_cigar&#39;, &#39;IR_VDJ_2_d_cigar&#39;, &#39;IR_VJ_1_d_sequence_end&#39;, &#39;IR_VJ_2_d_sequence_end&#39;, &#39;IR_VDJ_1_d_sequence_end&#39;, &#39;IR_VDJ_2_d_sequence_end&#39;, &#39;IR_VJ_1_d_sequence_start&#39;, &#39;IR_VJ_2_d_sequence_start&#39;, &#39;IR_VDJ_1_d_sequence_start&#39;, &#39;IR_VDJ_2_d_sequence_start&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_germline_alignment&#39;, &#39;IR_VJ_2_germline_alignment&#39;, &#39;IR_VDJ_1_germline_alignment&#39;, &#39;IR_VDJ_2_germline_alignment&#39;, &#39;IR_VJ_1_is_cell&#39;, &#39;IR_VJ_2_is_cell&#39;, &#39;IR_VDJ_1_is_cell&#39;, &#39;IR_VDJ_2_is_cell&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_j_cigar&#39;, &#39;IR_VJ_2_j_cigar&#39;, &#39;IR_VDJ_1_j_cigar&#39;, &#39;IR_VDJ_2_j_cigar&#39;, &#39;IR_VJ_1_j_sequence_end&#39;, &#39;IR_VJ_2_j_sequence_end&#39;, &#39;IR_VDJ_1_j_sequence_end&#39;, &#39;IR_VDJ_2_j_sequence_end&#39;, &#39;IR_VJ_1_j_sequence_start&#39;, &#39;IR_VJ_2_j_sequence_start&#39;, &#39;IR_VDJ_1_j_sequence_start&#39;, &#39;IR_VDJ_2_j_sequence_start&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_junction_aa_length&#39;, &#39;IR_VJ_2_junction_aa_length&#39;, &#39;IR_VDJ_1_junction_aa_length&#39;, &#39;IR_VDJ_2_junction_aa_length&#39;, &#39;IR_VJ_1_junction_length&#39;, &#39;IR_VJ_2_junction_length&#39;, &#39;IR_VDJ_1_junction_length&#39;, &#39;IR_VDJ_2_junction_length&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_rev_comp&#39;, &#39;IR_VJ_2_rev_comp&#39;, &#39;IR_VDJ_1_rev_comp&#39;, &#39;IR_VDJ_2_rev_comp&#39;, &#39;IR_VJ_1_sequence&#39;, &#39;IR_VJ_2_sequence&#39;, &#39;IR_VDJ_1_sequence&#39;, &#39;IR_VDJ_2_sequence&#39;, &#39;IR_VJ_1_sequence_aa&#39;, &#39;IR_VJ_2_sequence_aa&#39;, &#39;IR_VDJ_1_sequence_aa&#39;, &#39;IR_VDJ_2_sequence_aa&#39;, &#39;IR_VJ_1_sequence_alignment&#39;, &#39;IR_VJ_2_sequence_alignment&#39;, &#39;IR_VDJ_1_sequence_alignment&#39;, &#39;IR_VDJ_2_sequence_alignment&#39;, &#39;IR_VJ_1_sequence_id&#39;, &#39;IR_VJ_2_sequence_id&#39;, &#39;IR_VDJ_1_sequence_id&#39;, &#39;IR_VDJ_2_sequence_id&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;IR_VJ_1_v_cigar&#39;, &#39;IR_VJ_2_v_cigar&#39;, &#39;IR_VDJ_1_v_cigar&#39;, &#39;IR_VDJ_2_v_cigar&#39;, &#39;IR_VJ_1_v_sequence_end&#39;, &#39;IR_VJ_2_v_sequence_end&#39;, &#39;IR_VDJ_1_v_sequence_end&#39;, &#39;IR_VDJ_2_v_sequence_end&#39;, &#39;IR_VJ_1_v_sequence_start&#39;, &#39;IR_VJ_2_v_sequence_start&#39;, &#39;IR_VDJ_1_v_sequence_start&#39;, &#39;IR_VDJ_2_v_sequence_start&#39;, &#39;has_ir&#39;
+    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;has_ir&#39;
+    uns: &#39;scirpy_version&#39;
 </pre></div></div>
 </div>
 <p>likewise, <code class="docutils literal notranslate"><span class="pre">transfer</span> <span class="pre">=</span> <span class="pre">True</span></code> will perform dandelion’s <code class="docutils literal notranslate"><span class="pre">tl.transfer</span></code>.</p>
@@ -1218,78 +1010,6 @@ AnnData object with n_obs × n_vars = 994 × 0
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-... storing &#39;extra_chains&#39; as categorical
-... storing &#39;IR_VJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_junction&#39; as categorical
-... storing &#39;IR_VJ_2_junction&#39; as categorical
-... storing &#39;IR_VDJ_1_junction&#39; as categorical
-... storing &#39;IR_VDJ_2_junction&#39; as categorical
-... storing &#39;IR_VJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_1_productive&#39; as categorical
-... storing &#39;IR_VJ_2_productive&#39; as categorical
-... storing &#39;IR_VDJ_1_productive&#39; as categorical
-... storing &#39;IR_VDJ_2_productive&#39; as categorical
-... storing &#39;IR_VJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_1_sequence&#39; as categorical
-... storing &#39;IR_VJ_2_sequence&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_v_cigar&#39; as categorical
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -1297,12 +1017,13 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 994 × 0
-    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_c_cigar&#39;, &#39;IR_VJ_2_c_cigar&#39;, &#39;IR_VDJ_1_c_cigar&#39;, &#39;IR_VDJ_2_c_cigar&#39;, &#39;IR_VJ_1_c_sequence_end&#39;, &#39;IR_VJ_2_c_sequence_end&#39;, &#39;IR_VDJ_1_c_sequence_end&#39;, &#39;IR_VDJ_2_c_sequence_end&#39;, &#39;IR_VJ_1_c_sequence_start&#39;, &#39;IR_VJ_2_c_sequence_start&#39;, &#39;IR_VDJ_1_c_sequence_start&#39;, &#39;IR_VDJ_2_c_sequence_start&#39;, &#39;IR_VJ_1_clone_id&#39;, &#39;IR_VJ_2_clone_id&#39;, &#39;IR_VDJ_1_clone_id&#39;, &#39;IR_VDJ_2_clone_id&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_d_cigar&#39;, &#39;IR_VJ_2_d_cigar&#39;, &#39;IR_VDJ_1_d_cigar&#39;, &#39;IR_VDJ_2_d_cigar&#39;, &#39;IR_VJ_1_d_sequence_end&#39;, &#39;IR_VJ_2_d_sequence_end&#39;, &#39;IR_VDJ_1_d_sequence_end&#39;, &#39;IR_VDJ_2_d_sequence_end&#39;, &#39;IR_VJ_1_d_sequence_start&#39;, &#39;IR_VJ_2_d_sequence_start&#39;, &#39;IR_VDJ_1_d_sequence_start&#39;, &#39;IR_VDJ_2_d_sequence_start&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_germline_alignment&#39;, &#39;IR_VJ_2_germline_alignment&#39;, &#39;IR_VDJ_1_germline_alignment&#39;, &#39;IR_VDJ_2_germline_alignment&#39;, &#39;IR_VJ_1_is_cell&#39;, &#39;IR_VJ_2_is_cell&#39;, &#39;IR_VDJ_1_is_cell&#39;, &#39;IR_VDJ_2_is_cell&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_j_cigar&#39;, &#39;IR_VJ_2_j_cigar&#39;, &#39;IR_VDJ_1_j_cigar&#39;, &#39;IR_VDJ_2_j_cigar&#39;, &#39;IR_VJ_1_j_sequence_end&#39;, &#39;IR_VJ_2_j_sequence_end&#39;, &#39;IR_VDJ_1_j_sequence_end&#39;, &#39;IR_VDJ_2_j_sequence_end&#39;, &#39;IR_VJ_1_j_sequence_start&#39;, &#39;IR_VJ_2_j_sequence_start&#39;, &#39;IR_VDJ_1_j_sequence_start&#39;, &#39;IR_VDJ_2_j_sequence_start&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_junction_aa_length&#39;, &#39;IR_VJ_2_junction_aa_length&#39;, &#39;IR_VDJ_1_junction_aa_length&#39;, &#39;IR_VDJ_2_junction_aa_length&#39;, &#39;IR_VJ_1_junction_length&#39;, &#39;IR_VJ_2_junction_length&#39;, &#39;IR_VDJ_1_junction_length&#39;, &#39;IR_VDJ_2_junction_length&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_rev_comp&#39;, &#39;IR_VJ_2_rev_comp&#39;, &#39;IR_VDJ_1_rev_comp&#39;, &#39;IR_VDJ_2_rev_comp&#39;, &#39;IR_VJ_1_sequence&#39;, &#39;IR_VJ_2_sequence&#39;, &#39;IR_VDJ_1_sequence&#39;, &#39;IR_VDJ_2_sequence&#39;, &#39;IR_VJ_1_sequence_aa&#39;, &#39;IR_VJ_2_sequence_aa&#39;, &#39;IR_VDJ_1_sequence_aa&#39;, &#39;IR_VDJ_2_sequence_aa&#39;, &#39;IR_VJ_1_sequence_alignment&#39;, &#39;IR_VJ_2_sequence_alignment&#39;, &#39;IR_VDJ_1_sequence_alignment&#39;, &#39;IR_VDJ_2_sequence_alignment&#39;, &#39;IR_VJ_1_sequence_id&#39;, &#39;IR_VJ_2_sequence_id&#39;, &#39;IR_VDJ_1_sequence_id&#39;, &#39;IR_VDJ_2_sequence_id&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;IR_VJ_1_v_cigar&#39;, &#39;IR_VJ_2_v_cigar&#39;, &#39;IR_VDJ_1_v_cigar&#39;, &#39;IR_VDJ_2_v_cigar&#39;, &#39;IR_VJ_1_v_sequence_end&#39;, &#39;IR_VJ_2_v_sequence_end&#39;, &#39;IR_VDJ_1_v_sequence_end&#39;, &#39;IR_VDJ_2_v_sequence_end&#39;, &#39;IR_VJ_1_v_sequence_start&#39;, &#39;IR_VJ_2_v_sequence_start&#39;, &#39;IR_VDJ_1_v_sequence_start&#39;, &#39;IR_VDJ_2_v_sequence_start&#39;, &#39;has_ir&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;duplicate_count_heavy_0&#39;, &#39;duplicate_count_heavy_1&#39;, &#39;duplicate_count_light_0&#39;, &#39;duplicate_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;has_ir&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
+    uns: &#39;scirpy_version&#39;
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="scirpy-:-Converting-scirpy-to-dandelion">
-<h2><code class="docutils literal notranslate"><span class="pre">scirpy</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#scirpy-:-Converting-scirpy-to-dandelion" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ir.io.to_dandelion-:-Converting-scirpy-to-dandelion">
+<h3><code class="docutils literal notranslate"><span class="pre">ir.io.to_dandelion</span></code> : Converting <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#ir.io.to_dandelion-:-Converting-scirpy-to-dandelion" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -1320,8 +1041,8 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 978 and n_contigs = 2093
-    data: &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;c_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;clone_id&#39;, &#39;consensus_count&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;d_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;germline_alignment&#39;, &#39;is_cell&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;j_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_aa_length&#39;, &#39;junction_length&#39;, &#39;locus&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;sequence_alignment&#39;, &#39;sequence_id&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;v_sequence_end&#39;, &#39;v_sequence_start&#39;, &#39;cell_id&#39;, &#39;umi_count&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_heavy_1&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;locus&#39;, &#39;cell_id&#39;, &#39;multi_chain&#39;
+    metadata: &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -1329,8 +1050,8 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="scirpy-:-Read-from-scirpy,-convert-to-dandelion">
-<h2><code class="docutils literal notranslate"><span class="pre">scirpy</span></code> : Read from <code class="docutils literal notranslate"><span class="pre">scirpy</span></code>, convert to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#scirpy-:-Read-from-scirpy,-convert-to-dandelion" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Example-of-reading-with-scirpy-followed-by-conversion-to-dandelion">
+<h3>Example of reading with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code> followed by conversion to <code class="docutils literal notranslate"><span class="pre">dandelion</span></code><a class="headerlink" href="#Example-of-reading-with-scirpy-followed-by-conversion-to-dandelion" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
@@ -1346,86 +1067,9 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
+<div class="output_area docutils container">
 <div class="highlight"><pre>
-/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/anndata/_core/anndata.py:1192: FutureWarning: is_categorical is deprecated and will be removed in a future version.  Use is_categorical_dtype instead
-... storing &#39;extra_chains&#39; as categorical
-... storing &#39;IR_VJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_c_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_c_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_c_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_2_c_sequence_end&#39; as categorical
-... storing &#39;IR_VDJ_1_c_sequence_end&#39; as categorical
-... storing &#39;IR_VDJ_2_c_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_1_c_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_2_c_sequence_start&#39; as categorical
-... storing &#39;IR_VDJ_1_c_sequence_start&#39; as categorical
-... storing &#39;IR_VDJ_2_c_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_1_clone_id&#39; as categorical
-... storing &#39;IR_VDJ_2_clone_id&#39; as categorical
-... storing &#39;IR_VJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_d_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_d_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_end&#39; as categorical
-... storing &#39;IR_VJ_1_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_2_d_sequence_start&#39; as categorical
-... storing &#39;IR_VJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_germline_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_germline_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_1_is_cell&#39; as categorical
-... storing &#39;IR_VDJ_2_is_cell&#39; as categorical
-... storing &#39;IR_VJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_j_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_j_cigar&#39; as categorical
-... storing &#39;IR_VJ_1_junction&#39; as categorical
-... storing &#39;IR_VJ_2_junction&#39; as categorical
-... storing &#39;IR_VDJ_1_junction&#39; as categorical
-... storing &#39;IR_VDJ_2_junction&#39; as categorical
-... storing &#39;IR_VJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_junction_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_junction_aa&#39; as categorical
-... storing &#39;IR_VJ_1_junction_aa_length&#39; as categorical
-... storing &#39;IR_VJ_2_junction_aa_length&#39; as categorical
-... storing &#39;IR_VDJ_1_junction_aa_length&#39; as categorical
-... storing &#39;IR_VDJ_2_junction_aa_length&#39; as categorical
-... storing &#39;IR_VJ_1_productive&#39; as categorical
-... storing &#39;IR_VJ_2_productive&#39; as categorical
-... storing &#39;IR_VDJ_1_productive&#39; as categorical
-... storing &#39;IR_VDJ_2_productive&#39; as categorical
-... storing &#39;IR_VJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_1_rev_comp&#39; as categorical
-... storing &#39;IR_VDJ_2_rev_comp&#39; as categorical
-... storing &#39;IR_VJ_1_sequence&#39; as categorical
-... storing &#39;IR_VJ_2_sequence&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_aa&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_aa&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_alignment&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_alignment&#39; as categorical
-... storing &#39;IR_VJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_1_sequence_id&#39; as categorical
-... storing &#39;IR_VDJ_2_sequence_id&#39; as categorical
-... storing &#39;IR_VJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VJ_2_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_1_v_cigar&#39; as categorical
-... storing &#39;IR_VDJ_2_v_cigar&#39; as categorical
+WARNING: `locus` column not found in input data. The locus is being inferred from the {v,d,j,c}_call columns.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1435,7 +1079,8 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 994 × 0
-    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_c_cigar&#39;, &#39;IR_VJ_2_c_cigar&#39;, &#39;IR_VDJ_1_c_cigar&#39;, &#39;IR_VDJ_2_c_cigar&#39;, &#39;IR_VJ_1_c_sequence_end&#39;, &#39;IR_VJ_2_c_sequence_end&#39;, &#39;IR_VDJ_1_c_sequence_end&#39;, &#39;IR_VDJ_2_c_sequence_end&#39;, &#39;IR_VJ_1_c_sequence_start&#39;, &#39;IR_VJ_2_c_sequence_start&#39;, &#39;IR_VDJ_1_c_sequence_start&#39;, &#39;IR_VDJ_2_c_sequence_start&#39;, &#39;IR_VJ_1_clone_id&#39;, &#39;IR_VJ_2_clone_id&#39;, &#39;IR_VDJ_1_clone_id&#39;, &#39;IR_VDJ_2_clone_id&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_d_cigar&#39;, &#39;IR_VJ_2_d_cigar&#39;, &#39;IR_VDJ_1_d_cigar&#39;, &#39;IR_VDJ_2_d_cigar&#39;, &#39;IR_VJ_1_d_sequence_end&#39;, &#39;IR_VJ_2_d_sequence_end&#39;, &#39;IR_VDJ_1_d_sequence_end&#39;, &#39;IR_VDJ_2_d_sequence_end&#39;, &#39;IR_VJ_1_d_sequence_start&#39;, &#39;IR_VJ_2_d_sequence_start&#39;, &#39;IR_VDJ_1_d_sequence_start&#39;, &#39;IR_VDJ_2_d_sequence_start&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_germline_alignment&#39;, &#39;IR_VJ_2_germline_alignment&#39;, &#39;IR_VDJ_1_germline_alignment&#39;, &#39;IR_VDJ_2_germline_alignment&#39;, &#39;IR_VJ_1_is_cell&#39;, &#39;IR_VJ_2_is_cell&#39;, &#39;IR_VDJ_1_is_cell&#39;, &#39;IR_VDJ_2_is_cell&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_j_cigar&#39;, &#39;IR_VJ_2_j_cigar&#39;, &#39;IR_VDJ_1_j_cigar&#39;, &#39;IR_VDJ_2_j_cigar&#39;, &#39;IR_VJ_1_j_sequence_end&#39;, &#39;IR_VJ_2_j_sequence_end&#39;, &#39;IR_VDJ_1_j_sequence_end&#39;, &#39;IR_VDJ_2_j_sequence_end&#39;, &#39;IR_VJ_1_j_sequence_start&#39;, &#39;IR_VJ_2_j_sequence_start&#39;, &#39;IR_VDJ_1_j_sequence_start&#39;, &#39;IR_VDJ_2_j_sequence_start&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_junction_aa_length&#39;, &#39;IR_VJ_2_junction_aa_length&#39;, &#39;IR_VDJ_1_junction_aa_length&#39;, &#39;IR_VDJ_2_junction_aa_length&#39;, &#39;IR_VJ_1_junction_length&#39;, &#39;IR_VJ_2_junction_length&#39;, &#39;IR_VDJ_1_junction_length&#39;, &#39;IR_VDJ_2_junction_length&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_rev_comp&#39;, &#39;IR_VJ_2_rev_comp&#39;, &#39;IR_VDJ_1_rev_comp&#39;, &#39;IR_VDJ_2_rev_comp&#39;, &#39;IR_VJ_1_sequence&#39;, &#39;IR_VJ_2_sequence&#39;, &#39;IR_VDJ_1_sequence&#39;, &#39;IR_VDJ_2_sequence&#39;, &#39;IR_VJ_1_sequence_aa&#39;, &#39;IR_VJ_2_sequence_aa&#39;, &#39;IR_VDJ_1_sequence_aa&#39;, &#39;IR_VDJ_2_sequence_aa&#39;, &#39;IR_VJ_1_sequence_alignment&#39;, &#39;IR_VJ_2_sequence_alignment&#39;, &#39;IR_VDJ_1_sequence_alignment&#39;, &#39;IR_VDJ_2_sequence_alignment&#39;, &#39;IR_VJ_1_sequence_id&#39;, &#39;IR_VJ_2_sequence_id&#39;, &#39;IR_VDJ_1_sequence_id&#39;, &#39;IR_VDJ_2_sequence_id&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;IR_VJ_1_v_cigar&#39;, &#39;IR_VJ_2_v_cigar&#39;, &#39;IR_VDJ_1_v_cigar&#39;, &#39;IR_VDJ_2_v_cigar&#39;, &#39;IR_VJ_1_v_sequence_end&#39;, &#39;IR_VJ_2_v_sequence_end&#39;, &#39;IR_VDJ_1_v_sequence_end&#39;, &#39;IR_VDJ_2_v_sequence_end&#39;, &#39;IR_VJ_1_v_sequence_start&#39;, &#39;IR_VJ_2_v_sequence_start&#39;, &#39;IR_VDJ_1_v_sequence_start&#39;, &#39;IR_VDJ_2_v_sequence_start&#39;, &#39;has_ir&#39;
+    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;has_ir&#39;
+    uns: &#39;scirpy_version&#39;
 </pre></div></div>
 </div>
 <p>This time, find clones with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code>’s method.</p>
@@ -1455,43 +1100,19 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "0c4cf542ef25480c971c1de4baeca3c0", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "0cbf8ba9cf56443b8c36ad43e9f9e2e4", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-
-</pre></div></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "d37e897001344da6ba969f2e1a1c89d1", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "5cbd9e6ad45941dfb0f0db20b72fe499", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "6b1e510985694170bb109bf64fd4dc5f", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-
-</pre></div></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "aa333df3a64847f09f43c65b15f2552a", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
@@ -1500,8 +1121,8 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 994 × 0
-    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_c_cigar&#39;, &#39;IR_VJ_2_c_cigar&#39;, &#39;IR_VDJ_1_c_cigar&#39;, &#39;IR_VDJ_2_c_cigar&#39;, &#39;IR_VJ_1_c_sequence_end&#39;, &#39;IR_VJ_2_c_sequence_end&#39;, &#39;IR_VDJ_1_c_sequence_end&#39;, &#39;IR_VDJ_2_c_sequence_end&#39;, &#39;IR_VJ_1_c_sequence_start&#39;, &#39;IR_VJ_2_c_sequence_start&#39;, &#39;IR_VDJ_1_c_sequence_start&#39;, &#39;IR_VDJ_2_c_sequence_start&#39;, &#39;IR_VJ_1_clone_id&#39;, &#39;IR_VJ_2_clone_id&#39;, &#39;IR_VDJ_1_clone_id&#39;, &#39;IR_VDJ_2_clone_id&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_d_cigar&#39;, &#39;IR_VJ_2_d_cigar&#39;, &#39;IR_VDJ_1_d_cigar&#39;, &#39;IR_VDJ_2_d_cigar&#39;, &#39;IR_VJ_1_d_sequence_end&#39;, &#39;IR_VJ_2_d_sequence_end&#39;, &#39;IR_VDJ_1_d_sequence_end&#39;, &#39;IR_VDJ_2_d_sequence_end&#39;, &#39;IR_VJ_1_d_sequence_start&#39;, &#39;IR_VJ_2_d_sequence_start&#39;, &#39;IR_VDJ_1_d_sequence_start&#39;, &#39;IR_VDJ_2_d_sequence_start&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_germline_alignment&#39;, &#39;IR_VJ_2_germline_alignment&#39;, &#39;IR_VDJ_1_germline_alignment&#39;, &#39;IR_VDJ_2_germline_alignment&#39;, &#39;IR_VJ_1_is_cell&#39;, &#39;IR_VJ_2_is_cell&#39;, &#39;IR_VDJ_1_is_cell&#39;, &#39;IR_VDJ_2_is_cell&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_j_cigar&#39;, &#39;IR_VJ_2_j_cigar&#39;, &#39;IR_VDJ_1_j_cigar&#39;, &#39;IR_VDJ_2_j_cigar&#39;, &#39;IR_VJ_1_j_sequence_end&#39;, &#39;IR_VJ_2_j_sequence_end&#39;, &#39;IR_VDJ_1_j_sequence_end&#39;, &#39;IR_VDJ_2_j_sequence_end&#39;, &#39;IR_VJ_1_j_sequence_start&#39;, &#39;IR_VJ_2_j_sequence_start&#39;, &#39;IR_VDJ_1_j_sequence_start&#39;, &#39;IR_VDJ_2_j_sequence_start&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_junction_aa_length&#39;, &#39;IR_VJ_2_junction_aa_length&#39;, &#39;IR_VDJ_1_junction_aa_length&#39;, &#39;IR_VDJ_2_junction_aa_length&#39;, &#39;IR_VJ_1_junction_length&#39;, &#39;IR_VJ_2_junction_length&#39;, &#39;IR_VDJ_1_junction_length&#39;, &#39;IR_VDJ_2_junction_length&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_rev_comp&#39;, &#39;IR_VJ_2_rev_comp&#39;, &#39;IR_VDJ_1_rev_comp&#39;, &#39;IR_VDJ_2_rev_comp&#39;, &#39;IR_VJ_1_sequence&#39;, &#39;IR_VJ_2_sequence&#39;, &#39;IR_VDJ_1_sequence&#39;, &#39;IR_VDJ_2_sequence&#39;, &#39;IR_VJ_1_sequence_aa&#39;, &#39;IR_VJ_2_sequence_aa&#39;, &#39;IR_VDJ_1_sequence_aa&#39;, &#39;IR_VDJ_2_sequence_aa&#39;, &#39;IR_VJ_1_sequence_alignment&#39;, &#39;IR_VJ_2_sequence_alignment&#39;, &#39;IR_VDJ_1_sequence_alignment&#39;, &#39;IR_VDJ_2_sequence_alignment&#39;, &#39;IR_VJ_1_sequence_id&#39;, &#39;IR_VJ_2_sequence_id&#39;, &#39;IR_VDJ_1_sequence_id&#39;, &#39;IR_VDJ_2_sequence_id&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;IR_VJ_1_v_cigar&#39;, &#39;IR_VJ_2_v_cigar&#39;, &#39;IR_VDJ_1_v_cigar&#39;, &#39;IR_VDJ_2_v_cigar&#39;, &#39;IR_VJ_1_v_sequence_end&#39;, &#39;IR_VJ_2_v_sequence_end&#39;, &#39;IR_VDJ_1_v_sequence_end&#39;, &#39;IR_VDJ_2_v_sequence_end&#39;, &#39;IR_VJ_1_v_sequence_start&#39;, &#39;IR_VJ_2_v_sequence_start&#39;, &#39;IR_VDJ_1_v_sequence_start&#39;, &#39;IR_VDJ_2_v_sequence_start&#39;, &#39;has_ir&#39;, &#39;receptor_type&#39;, &#39;receptor_subtype&#39;, &#39;chain_pairing&#39;, &#39;clonotype&#39;, &#39;clonotype_size&#39;
-    uns: &#39;ir_dist_aa_hamming&#39;, &#39;ir_dist_nt_identity&#39;, &#39;clonotype&#39;
+    obs: &#39;multi_chain&#39;, &#39;extra_chains&#39;, &#39;IR_VJ_1_c_call&#39;, &#39;IR_VJ_2_c_call&#39;, &#39;IR_VDJ_1_c_call&#39;, &#39;IR_VDJ_2_c_call&#39;, &#39;IR_VJ_1_consensus_count&#39;, &#39;IR_VJ_2_consensus_count&#39;, &#39;IR_VDJ_1_consensus_count&#39;, &#39;IR_VDJ_2_consensus_count&#39;, &#39;IR_VJ_1_d_call&#39;, &#39;IR_VJ_2_d_call&#39;, &#39;IR_VDJ_1_d_call&#39;, &#39;IR_VDJ_2_d_call&#39;, &#39;IR_VJ_1_duplicate_count&#39;, &#39;IR_VJ_2_duplicate_count&#39;, &#39;IR_VDJ_1_duplicate_count&#39;, &#39;IR_VDJ_2_duplicate_count&#39;, &#39;IR_VJ_1_j_call&#39;, &#39;IR_VJ_2_j_call&#39;, &#39;IR_VDJ_1_j_call&#39;, &#39;IR_VDJ_2_j_call&#39;, &#39;IR_VJ_1_junction&#39;, &#39;IR_VJ_2_junction&#39;, &#39;IR_VDJ_1_junction&#39;, &#39;IR_VDJ_2_junction&#39;, &#39;IR_VJ_1_junction_aa&#39;, &#39;IR_VJ_2_junction_aa&#39;, &#39;IR_VDJ_1_junction_aa&#39;, &#39;IR_VDJ_2_junction_aa&#39;, &#39;IR_VJ_1_locus&#39;, &#39;IR_VJ_2_locus&#39;, &#39;IR_VDJ_1_locus&#39;, &#39;IR_VDJ_2_locus&#39;, &#39;IR_VJ_1_productive&#39;, &#39;IR_VJ_2_productive&#39;, &#39;IR_VDJ_1_productive&#39;, &#39;IR_VDJ_2_productive&#39;, &#39;IR_VJ_1_v_call&#39;, &#39;IR_VJ_2_v_call&#39;, &#39;IR_VDJ_1_v_call&#39;, &#39;IR_VDJ_2_v_call&#39;, &#39;has_ir&#39;, &#39;receptor_type&#39;, &#39;receptor_subtype&#39;, &#39;chain_pairing&#39;, &#39;clone_id&#39;, &#39;clone_id_size&#39;
+    uns: &#39;scirpy_version&#39;, &#39;ir_dist_aa_hamming&#39;, &#39;ir_dist_nt_identity&#39;, &#39;clone_id&#39;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1521,36 +1142,8 @@ AnnData object with n_obs × n_vars = 994 × 0
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 978 and n_contigs = 2093
-    data: &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;c_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;clone_id&#39;, &#39;consensus_count&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;d_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;germline_alignment&#39;, &#39;is_cell&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;j_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_aa_length&#39;, &#39;junction_length&#39;, &#39;locus&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;sequence_alignment&#39;, &#39;sequence_id&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;v_sequence_end&#39;, &#39;v_sequence_start&#39;, &#39;cell_id&#39;, &#39;umi_count&#39;
-    metadata: &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_heavy_1&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
-    distance: None
-    edges: None
-    layout: None
-    graph: None
-</pre></div></div>
-</div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> column is missing.</p>
-<p>As [&#64;grst](<a class="reference external" href="https://github.com/grst">https://github.com/grst</a>) has <a class="reference external" href="https://github.com/icbi-lab/scirpy/pull/241#discussion_r604135056">noted</a>, <em>‘Currently only the chain-specific attributes get exported (i.e. all scirpy columns that start with IR_). In principle, it probably makes sense to write out the clonotype column to clone_id. But then again, scirpy allows different versions of clonal assignments…’</em>. What this means is that unless the <code class="docutils literal notranslate"><span class="pre">IR_*_clone_id</span> <span class="pre">columns</span></code> are populated, this will not be transferred over.</p>
-<p>You can manually parse that over or use <code class="docutils literal notranslate"><span class="pre">ddl.from_scirpy</span></code>’s conversion method which will use the <code class="docutils literal notranslate"><span class="pre">clonotype</span></code> column (or <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> column if already present) from the scirpy initialized <code class="docutils literal notranslate"><span class="pre">AnnData.obs</span></code> as the default <code class="docutils literal notranslate"><span class="pre">clone_id</span></code>. <code class="docutils literal notranslate"><span class="pre">clone_key</span></code> and <code class="docutils literal notranslate"><span class="pre">key_added</span></code> options can be toggled to adjust this behavior.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vdj5</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">from_scirpy</span><span class="p">(</span><span class="n">irdata_s</span><span class="p">)</span>
-<span class="n">vdj5</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Dandelion class object with n_obs = 978 and n_contigs = 2093
-    data: &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;c_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;clone_id&#39;, &#39;consensus_count&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;d_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;germline_alignment&#39;, &#39;is_cell&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;j_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_aa_length&#39;, &#39;junction_length&#39;, &#39;locus&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;sequence_alignment&#39;, &#39;sequence_id&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;v_sequence_end&#39;, &#39;v_sequence_start&#39;, &#39;cell_id&#39;, &#39;umi_count&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_heavy_1&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;locus&#39;, &#39;cell_id&#39;, &#39;multi_chain&#39;, &#39;chain_pairing&#39;, &#39;receptor_type&#39;, &#39;clone_id_size&#39;, &#39;clone_id&#39;, &#39;receptor_subtype&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -1564,6 +1157,7 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span>
 </pre></div>
+</div>
 </div>
 </div>
 </div>

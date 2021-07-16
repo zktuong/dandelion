@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>BCR clustering &mdash; dandelion 0.1.0 documentation</title>
+  <title>BCR clustering &mdash; dandelion  documentation</title>
   
 
   
@@ -42,7 +42,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Interoperability with scirpy" href="1c_dandelion_scirpy.html" />
-    <link rel="prev" title="Cellranger V4 onwards" href="1b_dandelion_noreannotation-10x_data.html" /> 
+    <link rel="prev" title="Reading 10X Cell Ranger output directly" href="1b_dandelion_noreannotation-10x_data.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -97,28 +97,30 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">BCR clustering</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Finding-clones">Finding clones</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Running-tl.find_clones">Running <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Alternative-:-Running-tl.define_clones">Alternative : Running <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#Generation-of-BCR-network">Generation of BCR network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Generation-of-V(D)J-network">Generation of V(D)J network</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -176,6 +178,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
         
       <li>BCR clustering</li>
     
@@ -489,7 +493,7 @@ the whole BCR V(D)J sequence to define clones as shown in this recent <a class="
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 scipy==1.5.3 skbio==0.5.6
+dandelion==0.1.3.post2.dev62 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -513,11 +517,11 @@ dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 sci
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.4 scikit-learn==0.23.2 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
+scanpy==1.6.0 anndata==0.7.6 umap==0.4.6 numpy==1.20.1 scipy==1.6.1 pandas==1.2.3 scikit-learn==0.24.1 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
 </pre></div></div>
 </div>
 <p><strong>Read in the previously saved files</strong></p>
-<p>I will work with the same example from the previous notebook since I have the filtered V(D)J data stored in a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class.</p>
+<p>I will work with the same example from the previous section since I have the filtered V(D)J data stored in a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -534,9 +538,9 @@ scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;
-    metadata: &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 562 and n_contigs = 1130
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;
+    metadata: &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -575,6 +579,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">by_alleles</span> <span class="o">=</span> <span class="kc">True</span>
 </pre></div>
 </div>
+<p>Clustering TCR is potentially possible with the same setup, although some parameters may need to be tweaked.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -598,8 +603,8 @@ Finding clonotypes
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Finding clones based on heavy chains : 100%|██████████| 176/176 [00:00&lt;00:00, 2821.65it/s]
-Refining clone assignment based on light chain pairing : 100%|██████████| 819/819 [00:00&lt;00:00, 1216.02it/s]
+Finding clones based on VDJ chains : 100%|██████████| 153/153 [00:00&lt;00:00, 4781.42it/s]
+Refining clone assignment based on VJ chain pairing : 100%|██████████| 562/562 [00:00&lt;00:00, 426796.82it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -610,7 +615,7 @@ Refining clone assignment based on light chain pairing : 100%|██████
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:01)
+ (0:00:00)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -619,9 +624,9 @@ Refining clone assignment based on light chain pairing : 100%|██████
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 562 and n_contigs = 1130
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -664,145 +669,145 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
       <th>clone_id</th>
       <th>clone_id_by_size</th>
       <th>sample_id</th>
-      <th>locus_heavy</th>
-      <th>locus_light</th>
-      <th>productive_heavy</th>
-      <th>productive_light</th>
-      <th>v_call_genotyped_heavy</th>
-      <th>v_call_genotyped_light</th>
-      <th>j_call_heavy</th>
+      <th>locus_VDJ</th>
+      <th>locus_VJ</th>
+      <th>productive_VDJ</th>
+      <th>productive_VJ</th>
+      <th>v_call_genotyped_VDJ</th>
+      <th>v_call_genotyped_VJ</th>
+      <th>j_call_VDJ</th>
       <th>...</th>
-      <th>umi_count_light_0</th>
-      <th>umi_count_light_1</th>
-      <th>umi_count_light_2</th>
-      <th>junction_aa_heavy</th>
-      <th>junction_aa_light</th>
+      <th>junction_aa_VJ</th>
       <th>status</th>
+      <th>status_summary</th>
       <th>productive</th>
+      <th>productive_summary</th>
       <th>isotype</th>
-      <th>vdj_status_detail</th>
+      <th>isotype_summary</th>
       <th>vdj_status</th>
+      <th>vdj_status_summary</th>
+      <th>constant_status_summary</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCCGTTGTC</th>
-      <td>140_3_1</td>
-      <td>362</td>
-      <td>sc5p_v2_hs_PBMC_10k</td>
+      <th>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG</th>
+      <td>131_4_1_58</td>
+      <td>2</td>
+      <td>sc5p_v2_hs_PBMC_1k</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV1-69</td>
-      <td>IGKV1-8</td>
-      <td>IGHJ3</td>
-      <td>...</td>
-      <td>43.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CATTYYYDSSGYYQNDAFDIW</td>
-      <td>CQQYYSYPRTF</td>
-      <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>IgM</td>
-      <td>Single + Single</td>
-      <td>Single</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCGAGAACG</th>
-      <td>88_4_1</td>
-      <td>278</td>
-      <td>sc5p_v2_hs_PBMC_10k</td>
-      <td>IGH</td>
-      <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV1-2</td>
-      <td>IGLV5-45</td>
-      <td>IGHJ3</td>
-      <td>...</td>
-      <td>90.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CAREIEGDGVFEIW</td>
-      <td>CMIWHSSAWVV</td>
-      <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>IgM</td>
-      <td>Single + Single</td>
-      <td>Single</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_AAACCTGTCTTGAGAC</th>
-      <td>98_2_2</td>
-      <td>726</td>
-      <td>sc5p_v2_hs_PBMC_10k</td>
-      <td>IGH</td>
-      <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV5-51</td>
-      <td>IGKV1D-8</td>
-      <td>IGHJ3</td>
-      <td>...</td>
-      <td>22.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CARHIRGNRFGNDAFDIW</td>
-      <td>CQQYYSFPYTF</td>
-      <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>IgM</td>
-      <td>Single + Single</td>
-      <td>Single</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_AAAGATGGTCGAATCT</th>
-      <td>64_8_1</td>
-      <td>645</td>
-      <td>sc5p_v2_hs_PBMC_10k</td>
-      <td>IGH</td>
-      <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV3-15</td>
-      <td>IGLV6-57</td>
-      <td>IGHJ4</td>
-      <td>...</td>
-      <td>40.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CTTDDEKRPYSGSYLPFDYW</td>
-      <td>CQSYDSSNVVF</td>
-      <td>IGH + IGL</td>
-      <td>T + T</td>
-      <td>IgM</td>
-      <td>Single + Multi_light_j</td>
-      <td>Single</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_AACCATGCAAGCTGTT</th>
-      <td>9_4_1</td>
-      <td>677</td>
-      <td>sc5p_v2_hs_PBMC_10k</td>
-      <td>IGH</td>
-      <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV3-33</td>
-      <td>IGLV2-14</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV4-59</td>
+      <td>IGKV4-1</td>
       <td>IGHJ6</td>
       <td>...</td>
-      <td>36.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CARDWVRGVNDMDVW</td>
-      <td>CSSYTSSSTRVF</td>
-      <td>IGH + IGL</td>
-      <td>T + T</td>
+      <td>CQQYYSTPRTF</td>
+      <td>IGH + IGK</td>
+      <td>IGH + IGK</td>
+      <td>True + True</td>
+      <td>True + True</td>
+      <td>IgM</td>
       <td>IgM</td>
       <td>Single + Single</td>
+      <td>Single</td>
+      <td>Single</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC</th>
+      <td>17_1_1_163</td>
+      <td>4</td>
+      <td>sc5p_v2_hs_PBMC_1k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV3-15</td>
+      <td>IGLV2-23</td>
+      <td>IGHJ3</td>
+      <td>...</td>
+      <td>CCAYAGSSTFPYVF</td>
+      <td>IGH + IGL</td>
+      <td>IGH + IGL</td>
+      <td>True + True</td>
+      <td>True + True</td>
+      <td>IgM</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
+      <td>Single</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CGATCGGAGATGTCGG</th>
+      <td>146_2_1_38</td>
+      <td>8</td>
+      <td>sc5p_v2_hs_PBMC_1k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV4-39</td>
+      <td>IGLV3-21</td>
+      <td>IGHJ5</td>
+      <td>...</td>
+      <td>CQIWHDNYHVVF</td>
+      <td>IGH + IGL</td>
+      <td>IGH + IGL</td>
+      <td>True + True</td>
+      <td>True + True</td>
+      <td>IgA</td>
+      <td>IgA</td>
+      <td>Single + Multi_VJ_j</td>
+      <td>Single</td>
+      <td>Single</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CGGACGTGTTGATTCG</th>
+      <td>22_2_1_55</td>
+      <td>11</td>
+      <td>sc5p_v2_hs_PBMC_1k</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV1-3</td>
+      <td>IGLV1-51</td>
+      <td>IGHJ6</td>
+      <td>...</td>
+      <td>CGTWDSSLSASF</td>
+      <td>IGH + IGL</td>
+      <td>IGH + IGL</td>
+      <td>True + True</td>
+      <td>True + True</td>
+      <td>IgM</td>
+      <td>IgM</td>
+      <td>Single + Multi_VJ_j</td>
+      <td>Single</td>
+      <td>Single</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_GTACGTACAGCCTATA</th>
+      <td>59_3_2_308</td>
+      <td>10</td>
+      <td>sc5p_v2_hs_PBMC_1k</td>
+      <td>IGH</td>
+      <td>IGK</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV4-59</td>
+      <td>IGKV3-15</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CQQYDNWPRTF</td>
+      <td>IGH + IGK</td>
+      <td>IGH + IGK</td>
+      <td>True + True</td>
+      <td>True + True</td>
+      <td>IgM</td>
+      <td>IgM</td>
+      <td>Single + Single</td>
+      <td>Single</td>
       <td>Single</td>
     </tr>
     <tr>
@@ -830,135 +835,135 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
       <td>...</td>
     </tr>
     <tr>
-      <th>vdj_v1_hs_pbmc3_TCTTCGGTCCTAAGTG</th>
-      <td>63_8_2</td>
-      <td>181</td>
-      <td>vdj_v1_hs_pbmc3</td>
+      <th>vdj_nextgem_hs_pbmc3_TTCTCAACACATCTTT</th>
+      <td>116_2_1_191</td>
+      <td>353</td>
+      <td>vdj_nextgem_hs_pbmc3</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV4-59</td>
-      <td>IGKV1-12</td>
-      <td>IGHJ4</td>
-      <td>...</td>
-      <td>33.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CARVNVGGIAVAGYFDYW</td>
-      <td>CQQANSFPLTF</td>
-      <td>IGH + IGK</td>
-      <td>T + T</td>
-      <td>IgM</td>
-      <td>Single + Single</td>
-      <td>Single</td>
-    </tr>
-    <tr>
-      <th>vdj_v1_hs_pbmc3_TGCACCTCAGACAAAT</th>
-      <td>128_8_1</td>
-      <td>723</td>
-      <td>vdj_v1_hs_pbmc3</td>
-      <td>IGH</td>
-      <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV3-21</td>
-      <td>IGKV3-20</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV3-15</td>
+      <td>IGKV2-28|IGKV2D-28</td>
       <td>IGHJ6</td>
       <td>...</td>
-      <td>18.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CARVRQEYYDFWSGYPAEVYYYMDVW</td>
-      <td>CQQYGSSPLFTF</td>
+      <td>CMQALQTRYTF</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
+      <td>IGH + IGK</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
-      <td>Single + Single</td>
+      <td>IgM</td>
+      <td>Single + Multi_VJ_v</td>
+      <td>Single</td>
       <td>Single</td>
     </tr>
     <tr>
-      <th>vdj_v1_hs_pbmc3_TGTATTCTCTGTTGAG</th>
-      <td>146_7_2</td>
-      <td>799</td>
-      <td>vdj_v1_hs_pbmc3</td>
+      <th>vdj_nextgem_hs_pbmc3_TTCTCCTAGGGCACTA</th>
+      <td>40_5_2_289</td>
+      <td>382</td>
+      <td>vdj_nextgem_hs_pbmc3</td>
       <td>IGH</td>
       <td>IGL</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV3-48</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV1-2</td>
       <td>IGLV2-14</td>
       <td>IGHJ4</td>
       <td>...</td>
-      <td>80.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CAREKYDFWSGDSYYFDYW</td>
-      <td>CSSYTSSSTRVF</td>
+      <td>CSSYASSSTVVF</td>
       <td>IGH + IGL</td>
-      <td>T + T</td>
+      <td>IGH + IGL</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
-      <td>Single + Single</td>
+      <td>IgM</td>
+      <td>Single + Multi_VJ_j</td>
+      <td>Single</td>
       <td>Single</td>
     </tr>
     <tr>
-      <th>vdj_v1_hs_pbmc3_TTTATGCTCAGGATCT</th>
-      <td>145_4_2</td>
-      <td>276</td>
-      <td>vdj_v1_hs_pbmc3</td>
+      <th>vdj_nextgem_hs_pbmc3_TTCTTAGCAAACGCGA</th>
+      <td>71_7_1_249</td>
+      <td>481</td>
+      <td>vdj_nextgem_hs_pbmc3</td>
       <td>IGH</td>
       <td>IGK</td>
-      <td>T</td>
-      <td>T</td>
-      <td>IGHV4-34</td>
-      <td>IGKV1-39|IGKV1D-39</td>
-      <td>IGHJ3</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV3-15</td>
+      <td>IGKV1D-39|IGKV1-39</td>
+      <td>IGHJ4</td>
       <td>...</td>
-      <td>5.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>CARRRLTYYYDSSGPLSAFDIW</td>
-      <td>CQQSYSTPRTF</td>
+      <td>CQQSYSMSTF</td>
       <td>IGH + IGK</td>
-      <td>T + T</td>
+      <td>IGH + IGK</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
-      <td>Single + Multi_light_v</td>
+      <td>IgM</td>
+      <td>Single + Multi_VJ_v</td>
+      <td>Single</td>
       <td>Single</td>
     </tr>
     <tr>
-      <th>vdj_v1_hs_pbmc3_TTTATGCTCCTAGAAC</th>
-      <td>124_4_1_1|124_4_1_2</td>
-      <td>635|368</td>
-      <td>vdj_v1_hs_pbmc3</td>
+      <th>vdj_nextgem_hs_pbmc3_TTTATGCTCCGCATAA</th>
+      <td>117_3_2_56</td>
+      <td>463</td>
+      <td>vdj_nextgem_hs_pbmc3</td>
       <td>IGH</td>
-      <td>IGL|IGL</td>
-      <td>T</td>
-      <td>T|F</td>
-      <td>IGHV4-4</td>
-      <td>IGLV1-40|IGLV1-51</td>
-      <td>IGHJ5</td>
+      <td>IGL</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV3-7</td>
+      <td>IGLV1-51</td>
+      <td>IGHJ6</td>
       <td>...</td>
-      <td>58.0</td>
-      <td>15.0</td>
-      <td>NaN</td>
-      <td>CARGGVSTAFWFDPW</td>
-      <td>CQSYDRSLGGHYVF|CGTWDSSLSAGCA</td>
-      <td>IGH + IGL|IGL</td>
-      <td>T + T|F</td>
+      <td>CGTWDSSLSAVVF</td>
+      <td>IGH + IGL</td>
+      <td>IGH + IGL</td>
+      <td>True + True</td>
+      <td>True + True</td>
       <td>IgM</td>
-      <td>Single + Multi_light_v|Multi_light_j</td>
-      <td>Multi</td>
+      <td>IgM</td>
+      <td>Single + Multi_VJ_j</td>
+      <td>Single</td>
+      <td>Single</td>
+    </tr>
+    <tr>
+      <th>vdj_nextgem_hs_pbmc3_TTTGCGCTCCAGTATG</th>
+      <td>34_1_1_127</td>
+      <td>402</td>
+      <td>vdj_nextgem_hs_pbmc3</td>
+      <td>IGH</td>
+      <td>IGL</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV2-5</td>
+      <td>IGLV1-47</td>
+      <td>IGHJ4</td>
+      <td>...</td>
+      <td>CAAWDDSLTGVVF</td>
+      <td>IGH + IGL</td>
+      <td>IGH + IGL</td>
+      <td>True + True</td>
+      <td>True + True</td>
+      <td>IgM</td>
+      <td>IgM</td>
+      <td>Single + Multi_VJ_j</td>
+      <td>Single</td>
+      <td>Single</td>
     </tr>
   </tbody>
 </table>
-<p>838 rows × 24 columns</p>
+<p>562 rows × 29 columns</p>
 </div></div>
 </div>
 </div>
 <div class="section" id="Alternative-:-Running-tl.define_clones">
 <h3>Alternative : Running <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code><a class="headerlink" href="#Alternative-:-Running-tl.define_clones" title="Permalink to this headline">¶</a></h3>
 <p>Alternatively, a wrapper to call <em>changeo’s</em> <code class="docutils literal notranslate"><span class="pre">DefineClones.py</span></code> is also included. To run it, you need to choose the distance threshold for clonal assignment. To facilitate this, the function <code class="docutils literal notranslate"><span class="pre">pp.calculate_threshold</span></code> will run <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/distToNearest/">shazam’s distToNearest</a> function and return a plot showing the length normalized hamming distance distribution and automated threshold value.</p>
-<p>Again, <code class="docutils literal notranslate"><span class="pre">pp.calculate_threshold</span></code> will take a file path, pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object as input. If a dandelion object is provided, the threshold value will be inserted into the <code class="docutils literal notranslate"><span class="pre">.threshold</span></code> slot. For more fine control, please use the <code class="docutils literal notranslate"><span class="pre">DefineClones.py</span></code> function <a class="reference external" href="https://immcantation.readthedocs.io/en/stable/tutorials/10x_tutorial.html">directly</a>.</p>
+<p>Again, <code class="docutils literal notranslate"><span class="pre">pp.calculate_threshold</span></code> will take a file path, pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object as input. If a dandelion object is provided, the threshold value will be inserted into the <code class="docutils literal notranslate"><span class="pre">.threshold</span></code> slot. For more fine control, please use <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/distToNearest/">shazam’s distToNearest</a> and <a class="reference external" href="https://immcantation.readthedocs.io/en/stable/tutorials/10x_tutorial.html">changeo’s DefineClones.py</a> functions directly.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -974,6 +979,24 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Calculating threshold
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+R[write to console]: Error in (function (db, sequenceColumn = &#34;junction&#34;, vCallColumn = &#34;v_call&#34;,  :
+  2 cell(s) with multiple heavy chains found. One heavy chain per cell is expected.
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Rerun this after filtering. For now, switching to heavy mode.
       Threshold method &#39;density&#39; did not return with any values. Switching to method = &#39;gmm&#39;.
 </pre></div></div>
 </div>
@@ -981,7 +1004,7 @@ Calculating threshold
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones-10x_data_13_1.png" src="../_images/notebooks_3_dandelion_findingclones-10x_data_13_1.png" />
+<img alt="../_images/notebooks_3_dandelion_findingclones-10x_data_13_3.png" src="../_images/notebooks_3_dandelion_findingclones-10x_data_13_3.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -989,10 +1012,10 @@ Calculating threshold
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (360081101)&gt;
+&lt;ggplot: (348688929)&gt;
  finished: Updated Dandelion object:
    &#39;threshold&#39;, threshold value for tuning clonal assignment
- (0:00:43)
+ (0:03:08)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1011,10 +1034,10 @@ Calculating threshold
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.21354295894548617
+0.3984713368194217
 </pre></div></div>
 </div>
-<p>You can also manually select a value as the threshold if you wish.</p>
+<p>You can also manually select a value as the threshold if you wish. Note that rerunning this with <code class="docutils literal notranslate"><span class="pre">manual_threshold</span></code> is just for reproducing the plot but with the line at 0.1 in this tutorial. You can just edit <code class="docutils literal notranslate"><span class="pre">vdj.threshold</span></code> directly if you wish.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -1030,6 +1053,24 @@ Calculating threshold
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Calculating threshold
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+R[write to console]: Error in (function (db, sequenceColumn = &#34;junction&#34;, vCallColumn = &#34;v_call&#34;,  :
+  2 cell(s) with multiple heavy chains found. One heavy chain per cell is expected.
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Rerun this after filtering. For now, switching to heavy mode.
       Threshold method &#39;density&#39; did not return with any values. Switching to method = &#39;gmm&#39;.
 </pre></div></div>
 </div>
@@ -1037,7 +1078,7 @@ Calculating threshold
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_3_dandelion_findingclones-10x_data_16_1.png" src="../_images/notebooks_3_dandelion_findingclones-10x_data_16_1.png" />
+<img alt="../_images/notebooks_3_dandelion_findingclones-10x_data_16_3.png" src="../_images/notebooks_3_dandelion_findingclones-10x_data_16_3.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1045,10 +1086,10 @@ Calculating threshold
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (360720905)&gt;
+&lt;ggplot: (357826549)&gt;
  finished: Updated Dandelion object:
    &#39;threshold&#39;, threshold value for tuning clonal assignment
- (0:00:26)
+ (0:04:38)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1090,7 +1131,7 @@ Finding clones
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:09)
+ (0:00:05)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1099,9 +1140,9 @@ Finding clones
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;
+Dandelion class object with n_obs = 562 and n_contigs = 1130
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;
     distance: None
     edges: None
     layout: None
@@ -1111,8 +1152,8 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 <p>Note that I specified the option <code class="docutils literal notranslate"><span class="pre">key_added</span></code> and this adds the output from <code class="docutils literal notranslate"><span class="pre">tl.define_clones</span></code> into a separate column. If left as default (<code class="docutils literal notranslate"><span class="pre">None</span></code>), it will write into <code class="docutils literal notranslate"><span class="pre">clone_id</span></code> column. The same option can be specified in <code class="docutils literal notranslate"><span class="pre">tl.find_clones</span></code> earlier.</p>
 </div>
 </div>
-<div class="section" id="Generation-of-BCR-network">
-<h2>Generation of BCR network<a class="headerlink" href="#Generation-of-BCR-network" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Generation-of-V(D)J-network">
+<h2>Generation of V(D)J network<a class="headerlink" href="#Generation-of-V(D)J-network" title="Permalink to this headline">¶</a></h2>
 <p><em>dandelion</em> generates a network to facilitate visualisation of results. This uses the full V(D)J contig sequences instead of just the junctional sequences to chart a tree-like network for each clone. The actual visualization will be achieved through <code class="docutils literal notranslate"><span class="pre">scanpy</span></code> later.</p>
 <p><strong>tl.generate_network</strong></p>
 <p>First we need to generate the network. <code class="docutils literal notranslate"><span class="pre">tl.generate_network</span></code> will take a V(D)J table that has clones defined, specifically under the <code class="docutils literal notranslate"><span class="pre">'clone_id'</span></code> column. The default mode is to use amino acid sequences for constructing Levenshtein distance matrices, but can be toggled using the <code class="docutils literal notranslate"><span class="pre">key</span></code> option.</p>
@@ -1140,9 +1181,9 @@ Generating network
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Calculating distances... : 100%|██████████| 4/4 [00:03&lt;00:00,  1.15it/s]
-Generating edge list : 100%|██████████| 7/7 [00:00&lt;00:00, 848.90it/s]
-Linking edges : 100%|██████████| 821/821 [00:00&lt;00:00, 5324.08it/s]
+Calculating distances... : 100%|██████████| 5/5 [00:01&lt;00:00,  3.24it/s]
+Generating edge list : 100%|██████████| 12/12 [00:00&lt;00:00, 884.50it/s]
+Linking edges : 100%|██████████| 545/545 [00:00&lt;00:00, 5747.54it/s]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1157,7 +1198,7 @@ generating network layout
    &#39;distance&#39;, heavy and light chain distance matrices
    &#39;edges&#39;, network edges
    &#39;layout&#39;, network layout
-   &#39;graph&#39;, network (0:00:10)
+   &#39;graph&#39;, network (0:00:06)
 </pre></div></div>
 </div>
 <p>This step works reasonably fast here but will take quite a while when a lot of contigs are provided.</p>
@@ -1186,9 +1227,9 @@ Downsampling to 500 cells.
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Calculating distances... : 100%|██████████| 4/4 [00:01&lt;00:00,  3.40it/s]
-Generating edge list : 100%|██████████| 2/2 [00:00&lt;00:00, 757.03it/s]
-Linking edges : 100%|██████████| 492/492 [00:00&lt;00:00, 6924.50it/s]
+Calculating distances... : 100%|██████████| 4/4 [00:01&lt;00:00,  3.35it/s]
+Generating edge list : 100%|██████████| 11/11 [00:00&lt;00:00, 901.70it/s]
+Linking edges : 100%|██████████| 483/483 [00:00&lt;00:00, 1622.05it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -1212,13 +1253,13 @@ generating network layout
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 500 and n_contigs = 1016
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
-    distance: &#39;heavy_0&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+Dandelion class object with n_obs = 498 and n_contigs = 1001
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
+    distance: &#39;VDJ_0&#39;, &#39;VDJ_1&#39;, &#39;VJ_0&#39;, &#39;VJ_1&#39;
     edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
-    layout: layout for 500 vertices, layout for 10 vertices
-    graph: networkx graph of 500 vertices, networkx graph of 10 vertices
+    layout: layout for 498 vertices, layout for 26 vertices
+    graph: networkx graph of 498 vertices, networkx graph of 26 vertices
 </pre></div></div>
 </div>
 <p><strong>check the newly re-initialized Dandelion object</strong></p>
@@ -1237,13 +1278,13 @@ Dandelion class object with n_obs = 500 and n_contigs = 1016
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;
-    distance: &#39;heavy_0&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+Dandelion class object with n_obs = 562 and n_contigs = 1130
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;
+    distance: &#39;VDJ_0&#39;, &#39;VDJ_1&#39;, &#39;VDJ_2&#39;, &#39;VJ_0&#39;, &#39;VJ_1&#39;
     edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
-    layout: layout for 838 vertices, layout for 24 vertices
-    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+    layout: layout for 562 vertices, layout for 29 vertices
+    graph: networkx graph of 562 vertices, networkx graph of 29 vertices
 </pre></div></div>
 </div>
 <p>The graph/networks can be accessed through the <code class="docutils literal notranslate"><span class="pre">.graph</span></code> slot as an <code class="docutils literal notranslate"><span class="pre">networkx</span></code> graph object if you want to extract the data for network statistics or make any changes to the network.</p>
@@ -1276,7 +1317,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="1c_dandelion_scirpy.html" class="btn btn-neutral float-right" title="Interoperability with scirpy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="1b_dandelion_noreannotation-10x_data.html" class="btn btn-neutral float-left" title="Cellranger V4 onwards" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="1b_dandelion_noreannotation-10x_data.html" class="btn btn-neutral float-left" title="Reading 10X Cell Ranger output directly" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

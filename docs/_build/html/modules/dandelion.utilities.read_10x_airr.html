@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.utilities.read_10x_airr &mdash; dandelion 0.1.0 documentation</title>
+  <title>dandelion.utilities.read_10x_airr &mdash; dandelion  documentation</title>
   
 
   
@@ -41,7 +41,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="dandelion.utilities.update_metadata" href="dandelion.utilities.update_metadata.html" />
+    <link rel="next" title="dandelion.utilities.read_10x_vdj" href="dandelion.utilities.read_10x_vdj.html" />
     <link rel="prev" title="dandelion.utilities.read_pkl" href="dandelion.utilities.read_pkl.html" /> 
 </head>
 
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -124,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_h5.html">dandelion.utilities.read_h5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_pkl.html">dandelion.utilities.read_pkl</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.utilities.read_10x_airr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.read_10x_vdj.html">dandelion.utilities.read_10x_vdj</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.update_metadata.html">dandelion.utilities.update_metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.concat.html">dandelion.utilities.concat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.utilities.to_scirpy.html">dandelion.utilities.to_scirpy</a></li>
@@ -230,7 +233,7 @@
 <dl class="py function">
 <dt id="dandelion.utilities.read_10x_airr">
 <code class="sig-prename descclassname"><span class="pre">dandelion.utilities.</span></code><code class="sig-name descname"><span class="pre">read_10x_airr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/utilities/_io.html#read_10x_airr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.utilities.read_10x_airr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads the 10x AIRR rearrangement .tsv directly and returns a <cite>Dandelion</cite> object.</p>
+<dd><p>Read the 10x AIRR rearrangement .tsv directly and returns a <cite>Dandelion</cite> object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>file</strong> (<em>str</em>) – path to <cite>airr_rearrangement.tsv</cite></p>
@@ -252,7 +255,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="dandelion.utilities.update_metadata.html" class="btn btn-neutral float-right" title="dandelion.utilities.update_metadata" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dandelion.utilities.read_10x_vdj.html" class="btn btn-neutral float-right" title="dandelion.utilities.read_10x_vdj" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="dandelion.utilities.read_pkl.html" class="btn btn-neutral float-left" title="dandelion.utilities.read_pkl" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

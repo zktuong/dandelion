@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.preprocessing.calculate_threshold &mdash; dandelion 0.1.0 documentation</title>
+  <title>dandelion.preprocessing.calculate_threshold &mdash; dandelion  documentation</title>
   
 
   
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -119,7 +121,7 @@
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">dandelion.preprocessing.calculate_threshold</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_contigs.html">dandelion.preprocessing.filter_contigs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
@@ -230,35 +232,58 @@
 <h1>dandelion.preprocessing.calculate_threshold<a class="headerlink" href="#dandelion-preprocessing-calculate-threshold" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.preprocessing.calculate_threshold">
-<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">calculate_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manual_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specificity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(4.5,</span> <span class="pre">2.5)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#calculate_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.calculate_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculating nearest neighbor distances for tuning clonal assignment with <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">shazam</a>.</p>
-<p>Runs the following:</p>
+<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">calculate_threshold</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'single-cell'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manual_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VJthenLen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onlyHeavy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specificity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(4.5,</span> <span class="pre">2.5)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#calculate_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.calculate_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculating nearest neighbor distances for tuning clonal assignment with <cite>shazam</cite>.</p>
+<p>&lt;<a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/</a>&gt;`__.
+Runs the following:</p>
 <dl class="simple">
-<dt>distToNearest</dt><dd><p>Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and light chains sharing the same heavy chain VJL and light chain VJL combinations.</p>
+<dt>distToNearest</dt><dd><p>Get non-zero distance of every heavy chain (IGH) sequence (as defined by sequenceColumn) to its nearest sequence
+in a partition of heavy chains sharing the same V gene, J gene, and junction length (VJL), or in a partition of
+single cells with heavy chains sharing the same heavy chain VJL combination, or of single cells with heavy and
+light chains sharing the same heavy chain VJL and light chain VJL combinations.</p>
 </dd>
-<dt>findThreshold</dt><dd><p>automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit (threshold_method=”gmm”) or kernel density fit (threshold_method=”density”).</p>
+<dt>findThreshold</dt><dd><p>automtically determines an optimal threshold for clonal assignment of Ig sequences using a vector of nearest
+neighbor distances. It provides two alternative methods using either a Gamma/Gaussian Mixture Model fit
+(threshold_method=”gmm”) or kernel density fit (threshold_method=”density”).</p>
 </dd>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>Dandelion, DataFrame, str</em>) – <cite>Dandelion</cite> object, pandas <cite>DataFrame</cite> in changeo/airr format, or file path to changeo/airr file after clones have been determined.</p></li>
+<li><p><strong>self</strong> (<em>Dandelion, DataFrame, str</em>) – <cite>Dandelion</cite> object, pandas <cite>DataFrame</cite> in changeo/airr format, or file path to changeo/airr file after clones
+have been determined.</p></li>
+<li><p><strong>mode</strong> (<em>Literal, str</em>) – accepts one of “heavy” or “single-cell”.
+Refer to <a class="reference external" href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette">https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette</a>.</p></li>
 <li><p><strong>manual_threshold</strong> (<em>float, optional</em>) – value to manually plot in histogram.</p></li>
-<li><p><strong>model</strong> (<em>str, optional</em>) – underlying SHM model, which must be one of c(“ham”, “aa”, “hh_s1f”, “hh_s5f”, “mk_rs1nf”, “hs1f_compat”, “m1n_compat”).</p></li>
-<li><p><strong>normalize_method</strong> (<em>str, optional</em>) – method of normalization. The default is “len”, which divides the distance by the length of the sequence group. If “none” then no normalization if performed.</p></li>
+<li><p><strong>VJthenLen</strong> (<em>bool</em>) – logical value specifying whether to perform partitioning as a 2-stage process.
+If True, partitions are made first based on V and J gene, and then further split
+based on junction lengths corresponding to sequenceColumn.
+If False, perform partition as a 1-stage process during which V gene, J gene, and junction length
+are used to create partitions simultaneously.
+Defaults to False.</p></li>
+<li><p><strong>onlyHeavy</strong> (<em>bool</em>) – use only the IGH (BCR) or TRB/TRD (TCR) sequences for grouping. Only applicable to single-cell mode.
+See groupGenes for further details.</p></li>
+<li><p><strong>model</strong> (<em>str, optional</em>) – underlying SHM model, which must be one of “ham”,”aa”,”hh_s1f”,”hh_s5f”,”mk_rs1nf”,”hs1f_compat”,”m1n_compat”.</p></li>
+<li><p><strong>normalize_method</strong> (<em>str, optional</em>) – method of normalization. The default is “len”, which divides the distance by the length of the sequence group.
+If “none” then no normalization if performed.</p></li>
 <li><p><strong>threshold_method</strong> (<em>str, optional</em>) – string defining the method to use for determining the optimal threshold. One of “gmm” or “density”.</p></li>
-<li><p><strong>edge</strong> (<em>float, optional</em>) – upper range as a fraction of the data density to rule initialization of Gaussian fit parameters. Default value is 0.9 (or 90). Applies only when threshold_method=”density”.</p></li>
-<li><p><strong>cross</strong> (<em>Sequence, optional</em>) – supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit parameters. Applies only when method=”gmm”.</p></li>
+<li><p><strong>edge</strong> (<em>float, optional</em>) – upper range as a fraction of the data density to rule initialization of Gaussian fit parameters.
+Default value is 0.9 (or 90). Applies only when threshold_method=”density”.</p></li>
+<li><p><strong>cross</strong> (<em>Sequence, optional</em>) – supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit
+parameters. Applies only when method=”gmm”.</p></li>
 <li><p><strong>subsample</strong> (<em>int, optional</em>) – maximum number of distances to subsample to before threshold detection.</p></li>
-<li><p><strong>threshold_model</strong> (<em>str, optional</em>) – allows the user to choose among four possible combinations of fitting curves: “norm-norm”, “norm-gamma”, “gamma-norm”, and “gamma-gamma”. Applies only when method=”gmm”.</p></li>
-<li><p><strong>cutoff</strong> (<em>str, optional</em>) – method to use for threshold selection: the optimal threshold “optimal”, the intersection point of the two fitted curves “intersect”, or a value defined by user for one of the sensitivity or specificity “user”. Applies only when method=”gmm”.</p></li>
+<li><p><strong>threshold_model</strong> (<em>str, optional</em>) – allows the user to choose among four possible combinations of fitting curves: “norm-norm”, “norm-gamma”,
+“gamma-norm”, and “gamma-gamma”. Applies only when method=”gmm”.</p></li>
+<li><p><strong>cutoff</strong> (<em>str, optional</em>) – method to use for threshold selection: the optimal threshold “optimal”, the intersection point of the two fitted
+curves “intersect”, or a value defined by user for one of the sensitivity or specificity “user”. Applies only
+when method=”gmm”.</p></li>
 <li><p><strong>sensitivity</strong> (<em>float, optional</em>) – sensitivity required. Applies only when method=”gmm” and cutoff=”user”.</p></li>
 <li><p><strong>specificity</strong> (<em>float, optional</em>) – specificity required. Applies only when method=”gmm” and cutoff=”user”.</p></li>
 <li><p><strong>ncpu</strong> (<em>int, optional</em>) – number of cpus for parallelization. Default is all available cpus.</p></li>
 <li><p><strong>plot</strong> (<em>bool</em>) – whether or not to return plot.</p></li>
 <li><p><strong>plot_group</strong> (<em>str, optional</em>) – determines the fill color and facets.</p></li>
 <li><p><strong>figsize</strong> (<em>Tuple[Union[int,float], Union[int,float]]</em>) – size of plot. Default is (4.5, 2.5).</p></li>
-<li><p><strong>*args</strong> – passed to shazam’s <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/distToNearest/">distToNearest</a>.</p></li>
+<li><p><strong>**kwargs</strong> – passed to shazam’s <a class="reference external" href="https://shazam.readthedocs.io/en/stable/topics/distToNearest/">distToNearest</a>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Index &mdash; dandelion 0.1.0 documentation</title>
+  <title>Index &mdash; dandelion  documentation</title>
   
 
   
@@ -95,20 +95,22 @@
 <li class="toctree-l1"><a class="reference internal" href="README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -188,8 +190,7 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#_"><strong>_</strong></a>
- | <a href="#A"><strong>A</strong></a>
+ <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
@@ -207,14 +208,6 @@
  | <a href="#W"><strong>W</strong></a>
  
 </div>
-<h2 id="_">_</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules/dandelion.utilities.Dandelion.html#dandelion.utilities.Dandelion.__init__">__init__() (dandelion.utilities.Dandelion method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -280,8 +273,6 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules/dandelion.utilities.Dandelion.html#dandelion.utilities.Dandelion">Dandelion (class in dandelion.utilities)</a>
-</li>
       <li>
     dandelion.Dandelion
 
@@ -349,7 +340,7 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules/dandelion.preprocessing.filter_bcr.html#dandelion.preprocessing.filter_bcr">filter_bcr() (in module dandelion.preprocessing)</a>
+      <li><a href="modules/dandelion.preprocessing.filter_contigs.html#dandelion.preprocessing.filter_contigs">filter_contigs() (in module dandelion.preprocessing)</a>
 </li>
       <li><a href="modules/dandelion.tools.find_clones.html#dandelion.tools.find_clones">find_clones() (in module dandelion.tools)</a>
 </li>
@@ -438,12 +429,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/dandelion.utilities.read_10x_airr.html#dandelion.utilities.read_10x_airr">read_10x_airr() (in module dandelion.utilities)</a>
 </li>
-      <li><a href="modules/dandelion.utilities.read_h5.html#dandelion.utilities.read_h5">read_h5() (in module dandelion.utilities)</a>
+      <li><a href="modules/dandelion.utilities.read_10x_vdj.html#dandelion.utilities.read_10x_vdj">read_10x_vdj() (in module dandelion.utilities)</a>
 </li>
-      <li><a href="modules/dandelion.utilities.read_pkl.html#dandelion.utilities.read_pkl">read_pkl() (in module dandelion.utilities)</a>
+      <li><a href="modules/dandelion.utilities.read_h5.html#dandelion.utilities.read_h5">read_h5() (in module dandelion.utilities)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dandelion.utilities.read_pkl.html#dandelion.utilities.read_pkl">read_pkl() (in module dandelion.utilities)</a>
+</li>
       <li><a href="modules/dandelion.preprocessing.reannotate_genes.html#dandelion.preprocessing.reannotate_genes">reannotate_genes() (in module dandelion.preprocessing)</a>
 </li>
       <li><a href="modules/dandelion.preprocessing.reassign_alleles.html#dandelion.preprocessing.reassign_alleles">reassign_alleles() (in module dandelion.preprocessing)</a>

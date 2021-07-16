@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.tools.find_clones &mdash; dandelion 0.1.0 documentation</title>
+  <title>dandelion.tools.find_clones &mdash; dandelion  documentation</title>
   
 
   
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -239,7 +241,7 @@
 <li><p><strong>self</strong> (<em>Dandelion, DataFrame, str</em>) – <cite>Dandelion</cite> object, pandas <cite>DataFrame</cite> in changeo/airr format, or file path to changeo/airr file after clones have been determined.</p></li>
 <li><p><strong>identity</strong> (<em>float</em>) – Junction similarity parameter. Default 0.85</p></li>
 <li><p><strong>key</strong> (<em>str, optional</em>) – column name for performing clone clustering. None defaults to ‘junction_aa’.</p></li>
-<li><p><strong>locus</strong> (<em>str, optional</em>) – placeholder to allow for future tcr analysis mode for performing clustering. None defaults to ‘bcr’.</p></li>
+<li><p><strong>locus</strong> (<em>str, optional</em>) – Mode of data. Accepts one of ‘ig’, ‘tr-ab’ or ‘tr-gd’. None defaults to ‘ig’.</p></li>
 <li><p><strong>by_alleles</strong> (<em>bool</em>) – Whether or not to collapse alleles to genes. None defaults to False.</p></li>
 <li><p><strong>key_added</strong> (<em>str, optional</em>) – If specified, this will be the column name for clones. None defaults to ‘clone_id’</p></li>
 <li><p><strong>recalculate_length</strong> (<em>bool</em>) – Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is wrong). Default is True</p></li>

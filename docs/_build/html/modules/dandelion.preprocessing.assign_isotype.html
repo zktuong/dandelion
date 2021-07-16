@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.preprocessing.assign_isotype &mdash; dandelion 0.1.0 documentation</title>
+  <title>dandelion.preprocessing.assign_isotype &mdash; dandelion  documentation</title>
   
 
   
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -119,7 +121,7 @@
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.assign_isotypes.html">dandelion.preprocessing.assign_isotypes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.calculate_threshold.html">dandelion.preprocessing.calculate_threshold</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.create_germlines.html">dandelion.preprocessing.create_germlines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_bcr.html">dandelion.preprocessing.filter_bcr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.filter_contigs.html">dandelion.preprocessing.filter_contigs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fasta.html">dandelion.preprocessing.format_fasta</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.format_fastas.html">dandelion.preprocessing.format_fastas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dandelion.preprocessing.quantify_mutations.html">dandelion.preprocessing.quantify_mutations</a></li>
@@ -230,22 +232,26 @@
 <h1>dandelion.preprocessing.assign_isotype<a class="headerlink" href="#dandelion-preprocessing-assign-isotype" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.preprocessing.assign_isotype">
-<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">assign_isotype</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'blast'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'human'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_c_call</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(4,</span> <span class="pre">4)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blastdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allele</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#assign_isotype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.assign_isotype" title="Permalink to this definition">¶</a></dt>
-<dd><p>Annotate contigs with constant region call using blastn</p>
+<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.</span></code><code class="sig-name descname"><span class="pre">assign_isotype</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fasta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'blast'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'human'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_c_call</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(4,</span> <span class="pre">4)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blastdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allele</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/_preprocessing.html#assign_isotype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.assign_isotype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Annotate contigs with constant region call using blastn.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>fasta</strong> (<em>str</em>) – path to fasta file.</p></li>
+<li><p><strong>fasta</strong> (<em>str, PathLike</em>) – path to fasta file.</p></li>
 <li><p><strong>fileformat</strong> (<em>str</em>) – format of V(D)J file/objects. Default is ‘blast’. Also accepts ‘changeo’ (same behaviour as ‘blast’) and ‘airr’.</p></li>
 <li><p><strong>org</strong> (<em>str</em>) – organism of reference folder. Default is ‘human’.</p></li>
-<li><p><strong>correct_c_call</strong> (<em>bool</em>) – whether or not to adjust the c_calls after blast based on provided primers specified in <cite>primer_dict</cite> option. Default is True.</p></li>
-<li><p><strong>correction_dict</strong> (<em>Dict, optional</em>) – a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.</p></li>
+<li><p><strong>correct_c_call</strong> (<em>bool</em>) – whether or not to adjust the c_calls after blast based on provided primers specified in <cite>primer_dict</cite> option.
+Default is True.</p></li>
+<li><p><strong>correction_dict</strong> (<em>Dict, optional</em>) – a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting
+annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.</p></li>
 <li><p><strong>plot</strong> (<em>bool</em>) – whether or not to plot reassignment summary metrics. Default is True.</p></li>
+<li><p><strong>save_plot</strong> (<em>bool</em>) – whether or not to save plot.</p></li>
 <li><p><strong>figsize</strong> (<em>Tuple[Union[int,float], Union[int,float]]</em>) – size of figure. Default is (4, 4).</p></li>
 <li><p><strong>blastdb</strong> (<em>str, optional</em>) – path to blast database. Defaults to <cite>$BLASTDB</cite> environmental variable.</p></li>
 <li><p><strong>allele</strong> (<em>bool</em>) – whether or not to return allele calls. Default is False.</p></li>
 <li><p><strong>parallel</strong> (<em>bool</em>) – whether or not to use parallelization. Default is True.</p></li>
 <li><p><strong>ncpu</strong> (<em>int</em>) – number of cores to use if parallel is True. Default is all available minus 1.</p></li>
+<li><p><strong>filename_prefix</strong> (<em>str, optional</em>) – prefix of file name preceding ‘_contig’. None defaults to ‘filtered’.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em>) – whether or not to print the blast command in terminal. Default is False.</p></li>
 </ul>
 </dd>

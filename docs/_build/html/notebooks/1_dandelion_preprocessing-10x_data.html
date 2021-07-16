@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Pre-processing &mdash; dandelion 0.1.0 documentation</title>
+  <title>Pre-processing (Re-annotation) &mdash; dandelion  documentation</title>
   
 
   
@@ -42,7 +42,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Filtering" href="2_dandelion_filtering-10x_data.html" />
-    <link rel="prev" title="Overview" href="../README.html" /> 
+    <link rel="prev" title="&lt;no title&gt;" href="../tutorial_short.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -97,12 +97,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Pre-processing</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pre-processing (Re-annotation)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Foreword">Foreword</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file">Step 1: Formatting the headers of the cellranger fasta file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Step-1:-Formatting-the-headers-of-the-Cell-Ranger-fasta-file">Step 1: Formatting the headers of the Cell Ranger fasta file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Step-2:-Reannotate-the-V/D/J-genes-with-igblastn">Step 2: Reannotate the V/D/J genes with <em>igblastn</em></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)">Step 3 : Reassigning heavy chain V gene alleles <em>(optional but recommended)</em></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Step-4:-Assigning-constant-region-calls">Step 4: Assigning constant region calls</a></li>
@@ -110,15 +113,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -177,7 +179,9 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Pre-processing</li>
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
+        
+      <li>Pre-processing (Re-annotation)</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -466,14 +470,15 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Pre-processing">
-<h1>Pre-processing<a class="headerlink" href="#Pre-processing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Pre-processing-(Re-annotation)">
+<h1>Pre-processing (Re-annotation)<a class="headerlink" href="#Pre-processing-(Re-annotation)" title="Permalink to this headline">¶</a></h1>
 <img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" />
 <div class="section" id="Foreword">
 <h2>Foreword<a class="headerlink" href="#Foreword" title="Permalink to this headline">¶</a></h2>
 <p><strong>dandelion</strong> is written in <code class="docutils literal notranslate"><span class="pre">python=3.7.6</span></code> and is primarily a single-cell BCR-seq analysis package. It makes use of some tools from the fantastic <a class="reference external" href="https://immcantation.readthedocs.io/">immcantation suite</a>, implementing a workflow to streamline the pre-processing and exploratory stages for analyzing single-cell BCR-seq data from 10X Genomics. Post-processed data from <strong>dandelion</strong> can be smoothly transferred to <a class="reference external" href="https://scanpy.readthedocs.io/">scanpy</a>/AnnData object for integration and
 exploration of BCR-seq data and RNA-seq data. I hope to be able to introduce some new single-cell BCR-seq exploratory tools down the road through <em>dandelion</em>.</p>
-<p>This notebook will cover the initial pre-processing of files after 10X’s <code class="docutils literal notranslate"><span class="pre">cellranger</span> <span class="pre">vdj</span></code> immune profiling data analysis pipeline. We will download the 10x data sets to process for this tutorial:</p>
+<p>This section will cover the initial pre-processing of files after 10X’s <code class="docutils literal notranslate"><span class="pre">Cell</span> <span class="pre">Ranger</span> <span class="pre">vdj</span></code> immune profiling data analysis pipeline <strong>manually</strong>. As mentioned, there is now a <a class="reference external" href="https://sc-dandelion.readthedocs.io/en/master/notebooks/singularity_preprocessing.html">singularity container</a> that can automate the first few steps outlined below.</p>
+<p>We will download the 10X data sets to process for this tutorial:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create sub-folders</span>
 mkdir -p dandelion_tutorial/vdj_nextgem_hs_pbmc3
 mkdir -p dandelion_tutorial/vdj_v1_hs_pbmc3
@@ -482,28 +487,28 @@ mkdir -p dandelion_tutorial/sc5p_v2_hs_PBMC_1k
 
 <span class="c1"># change into each directory and download the necessary files</span>
 <span class="nb">cd</span> dandelion_tutorial/vdj_v1_hs_pbmc3<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_v1_hs_pbmc3/vdj_v1_hs_pbmc3_filtered_feature_bc_matrix.h5<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_v1_hs_pbmc3/vdj_v1_hs_pbmc3_b_filtered_contig_annotations.csv<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_v1_hs_pbmc3/vdj_v1_hs_pbmc3_b_filtered_contig.fasta<span class="p">;</span>
+wget -O filtered_feature_bc_matrix.h5 https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_v1_hs_pbmc3/vdj_v1_hs_pbmc3_filtered_feature_bc_matrix.h5<span class="p">;</span>
+wget -O filtered_contig_annotations.csv https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_v1_hs_pbmc3/vdj_v1_hs_pbmc3_b_filtered_contig_annotations.csv<span class="p">;</span>
+wget -O filtered_contig.fasta https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_v1_hs_pbmc3/vdj_v1_hs_pbmc3_b_filtered_contig.fasta<span class="p">;</span>
 
 <span class="nb">cd</span> ../vdj_nextgem_hs_pbmc3
-wget https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_nextgem_hs_pbmc3/vdj_nextgem_hs_pbmc3_filtered_feature_bc_matrix.h5<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_nextgem_hs_pbmc3/vdj_nextgem_hs_pbmc3_b_filtered_contig.fasta<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_nextgem_hs_pbmc3/vdj_nextgem_hs_pbmc3_b_filtered_contig_annotations.csv<span class="p">;</span>
+wget -O filtered_feature_bc_matrix.h5 https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_nextgem_hs_pbmc3/vdj_nextgem_hs_pbmc3_filtered_feature_bc_matrix.h5<span class="p">;</span>
+wget -O filtered_contig_annotations.csv https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_nextgem_hs_pbmc3/vdj_nextgem_hs_pbmc3_b_filtered_contig_annotations.csv<span class="p">;</span>
+wget -O filtered_contig.fasta https://cf.10xgenomics.com/samples/cell-vdj/3.1.0/vdj_nextgem_hs_pbmc3/vdj_nextgem_hs_pbmc3_b_filtered_contig.fasta<span class="p">;</span>
 
 <span class="nb">cd</span> ../sc5p_v2_hs_PBMC_10k<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_filtered_feature_bc_matrix.h5<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_filtered_contig_annotations.csv<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_filtered_contig.fasta<span class="p">;</span>
+wget -O filtered_feature_bc_matrix.h5 https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_filtered_feature_bc_matrix.h5<span class="p">;</span>
+wget -O filtered_contig_annotations.csv https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_filtered_contig_annotations.csv<span class="p">;</span>
+wget -O filtered_contig.fasta https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_filtered_contig.fasta<span class="p">;</span>
 
 <span class="nb">cd</span> ../sc5p_v2_hs_PBMC_1k<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v2_hs_PBMC_1k_filtered_feature_bc_matrix.h5<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v2_hs_PBMC_1k_b_filtered_contig_annotations.csv<span class="p">;</span>
-wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v2_hs_PBMC_1k_b_filtered_contig.fasta<span class="p">;</span>
+wget -O filtered_feature_bc_matrix.h5 wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v2_hs_PBMC_1k_filtered_feature_bc_matrix.h5<span class="p">;</span>
+wget -O filtered_contig_annotations.csv wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v2_hs_PBMC_1k_b_filtered_contig_annotations.csv<span class="p">;</span>
+wget -O filtered_contig.fasta https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_1k/sc5p_v2_hs_PBMC_1k_b_filtered_contig.fasta<span class="p">;</span>
 </pre></div>
 </div>
-<p><strong>dandelion</strong> requires the cellranger fasta files and annotation files to start, particularly either <em>all_contig.fasta</em> or <em>filtered_contig.fasta</em> and corresponding <em>all_contig_annotations.csv</em> and <em>filtered_contig_annotations.csv</em>.</p>
-<p>In this notebook, I’m running everything with the <em>filtered_contig</em> files as a standard analysis set up. I’m using a standard laptop for the analysis here: entry level 2017 Macbook Pro with 2.3 GHz Intel Core i5 processor and 16 GB 2133 MHz LPDDR3 ram.</p>
+<p><strong>dandelion</strong>’s reannotation workflow requires the Cell Ranger fasta files and annotation files to start, particularly either <em>all_contig.fasta</em> or <em>filtered_contig.fasta</em> and corresponding <em>all_contig_annotations.csv</em> and <em>filtered_contig_annotations.csv</em>.</p>
+<p>I’m running everything with the <em>filtered_contig</em> files as a standard analysis set up. I’m using a standard laptop for the analysis here: entry level 2017 Macbook Pro with 2.3 GHz Intel Core i5 processor and 16 GB 2133 MHz LPDDR3 ram.</p>
 <p>If you followed the installation instructions, you should have the requisite auxillary softwares installed already. Otherwise, you can download them manually: <a class="reference external" href="https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/">blast+</a> and <a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/">igblast</a>. For tigger-genotype, you can download it <a class="reference external" href="https://bitbucket.org/kleinstein/immcantation/src/default/pipelines/">here</a>. Just note that I made some minor modifications to this
 file, hence there is a version that comes with this package.</p>
 <p>For convenience, in <strong>shell</strong>, export the path to the database folders like as follows:</p>
@@ -511,12 +516,12 @@ file, hence there is a version that comes with this package.</p>
 <span class="nb">echo</span> <span class="s2">&quot;export GERMLINE=/Users/kt16/Documents/Github/dandelion/database/germlines/&quot;</span> &gt;&gt; ~/.bash_profile
 <span class="nb">echo</span> <span class="s2">&quot;export IGDATA=/Users/kt16/Documents/Github/dandelion/database/igblast/&quot;</span> &gt;&gt; ~/.bash_profile
 <span class="nb">echo</span> <span class="s2">&quot;export BLASTDB=/Users/kt16/Documents/Github/dandelion/database/blast/&quot;</span> &gt;&gt; ~/.bash_profile
-<span class="nb">echo</span> <span class="s2">&quot;export PATH=/Users/kt16/Documents/Github/dandelion/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span> &gt;&gt; ~/.bash_profile
 <span class="c1"># reload</span>
 <span class="nb">source</span> ~/.bash_profile
 </pre></div>
 </div>
 <p>The databases for igblast are basically setup using <a class="reference external" href="https://changeo.readthedocs.io/en/stable/examples/igblast.html">changeo’s instructions</a>.</p>
+<p>If you are using a jupyter notebook initialized via jupyterhub instance, you might want to try the fix to a known issue where pathing requires some adjustments <a class="reference external" href="https://github.com/zktuong/dandelion/issues/66">https://github.com/zktuong/dandelion/issues/66</a>.</p>
 <p>For reannotation of constant genes, reference fasta files were downloaded from IMGT and only sequences corresponding to <em>CH1</em> region for each constant gene/allele were retained. The headers were trimmed to only keep the gene and allele information. Links to find the sequences can be found here : <a class="reference external" href="http://www.imgt.org/genedb/GENElect?query=7.2+IGHC&amp;species=Homo+sapiens">human</a> and <a class="reference external" href="http://www.imgt.org/genedb/GENElect?query=7.2+IGHC&amp;species=Mus">mouse</a>.</p>
 <p>The utility function <code class="docutils literal notranslate"><span class="pre">utl.makeblastdb</span></code> is a wrapper for:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># bash/shell</span>
@@ -529,7 +534,7 @@ makeblastdb -dbtype nucl -parse_seqids -in <span class="nv">$BLASTDB</span>/huma
 </pre></div>
 </div>
 <p>If you have cloned the directory from dandelion’s github, you should have all the databases ready to go and would not need to run makeblastdb.</p>
-<p>This notebook will now demonstrate how I batch process multiple samples/files from the same donor, as it will become important later on.</p>
+<p>This section will now demonstrate how I batch process multiple samples/files from the same donor, as it will become important later on.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -548,7 +553,7 @@ makeblastdb -dbtype nucl -parse_seqids -in <span class="nv">$BLASTDB</span>/huma
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 scipy==1.5.3 skbio==0.5.6
+dandelion==0.1.3.post2.dev62 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -573,34 +578,36 @@ dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 sci
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file">
-<h2>Step 1: Formatting the headers of the cellranger fasta file<a class="headerlink" href="#Step-1:-Formatting-the-headers-of-the-cellranger-fasta-file" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Step-1:-Formatting-the-headers-of-the-Cell-Ranger-fasta-file">
+<h2>Step 1: Formatting the headers of the Cell Ranger fasta file<a class="headerlink" href="#Step-1:-Formatting-the-headers-of-the-Cell-Ranger-fasta-file" title="Permalink to this headline">¶</a></h2>
 <p>Here, I’m adding a prefix to the headers of each contig in the fasta files, via the function <code class="docutils literal notranslate"><span class="pre">pp.format_fastas</span></code>. The prefix is basically just the folder name, so in this case it’s: <code class="docutils literal notranslate"><span class="pre">sc5p_v2_hs_PBMC_1k</span></code>, <code class="docutils literal notranslate"><span class="pre">sc5p_v2_hs_PBMC_10k</span></code>, <code class="docutils literal notranslate"><span class="pre">vdj_v1_hs_pbmc3</span></code> and <code class="docutils literal notranslate"><span class="pre">vdj_nextgem_hs_pbmc3</span></code>.</p>
 <p>The function will also create sub-folders where a new fasta file and all subsequent files will be located. The function will also add the prefix to the corresponding annotation file automatically and create a copy in the same folder as the formated fasta file.</p>
-<p>This is to ensure that the barcodes are consistent throughout so as not to interfere with subsequent integration with the gene expression data, which will be covered in notebooks 2 and 3.</p>
+<p>This is to ensure that the barcodes are consistent throughout so as not to interfere with subsequent integration with the gene expression data, which will be covered in subsequent sections.</p>
 <p>The file structure should look something like this later on if the settings are left as default. The tmp directory can be deleted once the initial preprocessing has completed.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>bash/shell
 <span class="gp gp-VirtualEnv">(dandelion)</span> <span class="gp">mib113557i:dandelion_tutorial kt16$ </span>tree sc5p_v2_hs_PBMC_1k
 <span class="go">sc5p_v2_hs_PBMC_1k</span>
 <span class="go">├── dandelion</span>
-<span class="go">│   └── data</span>
-<span class="go">│       ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig.fasta</span>
-<span class="go">│       ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_annotations.csv</span>
-<span class="go">│       ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_igblast_db-pass_genotyped.tsv</span>
-<span class="go">│       └── tmp</span>
-<span class="go">│           ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_igblast.fmt7</span>
-<span class="go">│           ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_igblast.tsv</span>
-<span class="go">│           ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_igblast_db-pass.blastsummary.txt</span>
-<span class="go">│           ├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_igblast_db-pass.tsv</span>
-<span class="go">│           └── sc5p_v2_hs_PBMC_1k_b_filtered_contig_igblast_db-pass.xml</span>
-<span class="go">├── sc5p_v2_hs_PBMC_1k_b_filtered_contig.fasta</span>
-<span class="go">├── sc5p_v2_hs_PBMC_1k_b_filtered_contig_annotations.csv</span>
-<span class="go">└── sc5p_v2_hs_PBMC_1k_filtered_feature_bc_matrix.h5</span>
+<span class="go">│   ├── filtered_contig.fasta</span>
+<span class="go">│   ├── filtered_contig_annotations.csv</span>
+<span class="go">│   ├── filtered_contig_igblast_db-pass_genotyped.tsv</span>
+<span class="go">│   └── tmp</span>
+<span class="go">│       ├── filtered_contig_igblast.fmt7</span>
+<span class="go">│       ├── filtered_contig_igblast.tsv</span>
+<span class="go">│       ├── filtered_contig_igblast_db-pass.blastsummary.txt</span>
+<span class="go">│       ├── filtered_contig_igblast_db-pass.tsv</span>
+<span class="go">│       ├── filtered_contig_igblast_db-pass.xml</span>
+<span class="go">│       ├── filtered_contig_igblast_db-pass_genotyped.tsv</span>
+<span class="go">│       ├── filtered_contig_igblast_db-pass_heavy_parse-select.tsv</span>
+<span class="go">│       └── filtered_contig_igblast_db-pass_light_parse-select.tsv</span>
+<span class="go">├── filtered_contig.fasta</span>
+<span class="go">├── filtered_contig_annotations.csv</span>
+<span class="go">└── filtered_feature_bc_matrix.h5</span>
 </pre></div>
 </div>
 <p>The first option of <code class="docutils literal notranslate"><span class="pre">pp.format_fastas</span></code> accepts a list of the fasta file paths to reformat, or list of names of folders containing the fasta files; each folder should only contain 1 fasta file, and 1 contig_annotation.csv. Make sure there’s no hidden files and delete those if present.</p>
 <p>You can provide <code class="docutils literal notranslate"><span class="pre">prefixes</span></code> and/or <code class="docutils literal notranslate"><span class="pre">suffixes</span></code> to add the the cell/contig barcodes as a list and they will be formatted accordingly. The prefixes/suffixes will be separated by an underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>) if left as default but that can be adjusted with the <code class="docutils literal notranslate"><span class="pre">sep</span></code> option.</p>
-<p>If you choose not to provide a prefix/suffix, then the function will simply make a copy of the original files and place it in the <code class="docutils literal notranslate"><span class="pre">dandelion/data</span></code> sub-folders.</p>
+<p>If you choose not to provide a prefix/suffix, then the function will simply make a copy of the original files and place it in the <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> sub-folders.</p>
 <p>For more complex experimental setups, such as with data from multiplexed experiments, please contact me (<a class="reference external" href="mailto:kt16&#37;&#52;&#48;sanger&#46;ac&#46;uk">kt16<span>&#64;</span>sanger<span>&#46;</span>ac<span>&#46;</span>uk</a>) and I can walk you through a slightly more advanced set up.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -618,13 +625,19 @@ dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 sci
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Formating fasta(s) : 100%|██████████| 4/4 [00:02&lt;00:00,  1.66it/s]
+Formating fasta(s) : 100%|██████████| 4/4 [00:01&lt;00:00,  3.23it/s]
 </pre></div></div>
 </div>
+<hr class="docutils" />
+<p><strong>Non-standard (filtered) input files</strong>:</p>
+<p>If you are not using <code class="docutils literal notranslate"><span class="pre">filtered</span></code> files, e.g. <code class="docutils literal notranslate"><span class="pre">all_contig.fasta</span></code>, please specify the <code class="docutils literal notranslate"><span class="pre">filename_prefix</span></code> option for all preprocessing functions below (except for quantify_mutations).</p>
+<p>For example, use <code class="docutils literal notranslate"><span class="pre">filename_prefix</span> <span class="pre">=</span> <span class="pre">'all'</span></code> for <code class="docutils literal notranslate"><span class="pre">all_contig.fasta</span></code>, or <code class="docutils literal notranslate"><span class="pre">filename_prefix</span> <span class="pre">=</span> <span class="pre">&lt;insertprefix&gt;</span></code> for any files that are named <code class="docutils literal notranslate"><span class="pre">&lt;insertprefix&gt;_contig.fasta</span></code>.</p>
+<p>If you are running more than 1 sample and if each filename prefix needs to be specified, <code class="docutils literal notranslate"><span class="pre">filename_prefix</span></code> in <code class="docutils literal notranslate"><span class="pre">ddl.pp.format_fastas</span></code> will accept a list of prefixes i.e. <code class="docutils literal notranslate"><span class="pre">filename_prefix</span> <span class="pre">=</span> <span class="pre">['all',</span> <span class="pre">'filtered',</span> <span class="pre">...]</span></code>.</p>
+<hr class="docutils" />
 </div>
 <div class="section" id="Step-2:-Reannotate-the-V/D/J-genes-with-igblastn">
 <h2>Step 2: Reannotate the V/D/J genes with <em>igblastn</em><a class="headerlink" href="#Step-2:-Reannotate-the-V/D/J-genes-with-igblastn" title="Permalink to this headline">¶</a></h2>
-<p>Like immcantation, we will reannotate the V(D)J genes with igblastn using the latest IMGT reference databases. <code class="docutils literal notranslate"><span class="pre">pp.reannotate_genes</span></code> uses <a class="reference external" href="https://changeo.readthedocs.io/en/stable/examples/10x.html">changeo</a>’s <code class="docutils literal notranslate"><span class="pre">AssignGenes.py</span></code> and <code class="docutils literal notranslate"><span class="pre">MakeDB.py</span></code> to call <em>igblastn</em> to reannotate the fasta files. With the recent update to changeo v1.0.0, all the column headers are now adhereing to the <a class="reference external" href="http://docs.airr-community.org/">AIRR</a> standard.</p>
+<p>Like immcantation, we will reannotate the V(D)J genes with igblastn using the latest IMGT reference databases. <code class="docutils literal notranslate"><span class="pre">pp.reannotate_genes</span></code> uses <a class="reference external" href="https://changeo.readthedocs.io/en/stable/examples/10x.html">changeo</a>’s <code class="docutils literal notranslate"><span class="pre">AssignGenes.py</span></code> and <code class="docutils literal notranslate"><span class="pre">MakeDB.py</span></code> to call <em>igblastn</em> to reannotate the fasta files. All the column headers are now adhereing to the <a class="reference external" href="http://docs.airr-community.org/">AIRR</a> standard.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -639,7 +652,7 @@ Formating fasta(s) : 100%|██████████| 4/4 [00:02&lt;00:00,  
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Assigning genes : 100%|██████████| 4/4 [06:17&lt;00:00, 94.40s/it]
+Assigning genes : 100%|██████████| 4/4 [07:19&lt;00:00, 109.87s/it]
 </pre></div></div>
 </div>
 <p>If you did not set a path to the igblast or germline paths in the environment above, you need to specify the path to the folders containing the fasta files directly.</p>
@@ -649,7 +662,6 @@ Assigning genes : 100%|██████████| 4/4 [06:17&lt;00:00, 94.4
 </div>
 <div class="section" id="Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)">
 <h2>Step 3 : Reassigning heavy chain V gene alleles <em>(optional but recommended)</em><a class="headerlink" href="#Step-3-:-Reassigning-heavy-chain-V-gene-alleles-(optional-but-recommended)" title="Permalink to this headline">¶</a></h2>
-<p><em>Please note that prior to v0.0.25, this was step 4. The order is now switched to run this first.</em></p>
 <p>Next, we use <em>immcantation’s TIgGER</em> method to reassign allelic calls for heavy chain V genes with <code class="docutils literal notranslate"><span class="pre">pp.reassign_alleles</span></code>. As stated in TIgGER’s <a class="reference external" href="https://tigger.readthedocs.io/en/stable/">website</a> and <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/25675496/">manuscript</a>, <em>‘TIgGER is a computational method that significantly improves V(D)J allele assignments by first determining the complete set of gene segments carried by an individual (including novel alleles) from V(D)J-rearrange sequences. TIgGER
 can then infer a subject’s genotype from these sequences, and use this genotype to correct the initial V(D)J allele assignments.’</em></p>
 <p>This impacts on how contigs are chosen for finding clones later. It is also important when considering to do mutational analysis. For convenience, germline sequences are reconstructed at this step using the corrected V-gene alleles. Therefore, it is highly recommended to run it.</p>
@@ -670,7 +682,7 @@ can then infer a subject’s genotype from these sequences, and use this genotyp
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Processing data file(s) : 100%|██████████| 2/2 [00:01&lt;00:00,  1.32it/s]
+Processing data file(s) : 100%|██████████| 2/2 [00:02&lt;00:00,  1.27s/it]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -690,8 +702,17 @@ Returning summary plot
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/plotnine/facets/facet_grid.py:136: FutureWarning: Index.__and__ operating as a set operation is deprecated, in the future this will be a logical operation matching Series.__and__.  Use index.intersection(other) instead
+/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/plotnine/facets/facet_grid.py:137: FutureWarning: Index.__and__ operating as a set operation is deprecated, in the future this will be a logical operation matching Series.__and__.  Use index.intersection(other) instead
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_9_2.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_9_2.png" />
+<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_10_3.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_10_3.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -699,7 +720,7 @@ Returning summary plot
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (348121353)&gt;
+&lt;ggplot: (342143629)&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -707,7 +728,7 @@ Returning summary plot
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Writing out to individual folders : 100%|██████████| 2/2 [00:00&lt;00:00, 10.24it/s]
+Writing out to individual folders : 100%|██████████| 2/2 [00:00&lt;00:00,  5.94it/s]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -725,7 +746,7 @@ Writing out to individual folders : 100%|██████████| 2/2 [00
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Processing data file(s) : 100%|██████████| 2/2 [00:01&lt;00:00,  1.05it/s]
+Processing data file(s) : 100%|██████████| 2/2 [00:01&lt;00:00,  1.04it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -745,8 +766,17 @@ Returning summary plot
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/plotnine/facets/facet_grid.py:136: FutureWarning: Index.__and__ operating as a set operation is deprecated, in the future this will be a logical operation matching Series.__and__.  Use index.intersection(other) instead
+/Users/kt16/miniconda3/envs/dandelion/lib/python3.7/site-packages/plotnine/facets/facet_grid.py:137: FutureWarning: Index.__and__ operating as a set operation is deprecated, in the future this will be a logical operation matching Series.__and__.  Use index.intersection(other) instead
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_10_2.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_10_2.png" />
+<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_11_3.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_11_3.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -754,7 +784,7 @@ Returning summary plot
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (351177137)&gt;
+&lt;ggplot: (344788537)&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -762,7 +792,7 @@ Returning summary plot
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Writing out to individual folders : 100%|██████████| 2/2 [00:00&lt;00:00,  5.86it/s]
+Writing out to individual folders : 100%|██████████| 2/2 [00:00&lt;00:00,  3.90it/s]
 </pre></div></div>
 </div>
 <p>We can see that most of the original ambiguous V calls have now been corrected and only a few remain.</p>
@@ -773,10 +803,12 @@ Writing out to individual folders : 100%|██████████| 2/2 [00
 </div>
 <div class="section" id="Step-4:-Assigning-constant-region-calls">
 <h2>Step 4: Assigning constant region calls<a class="headerlink" href="#Step-4:-Assigning-constant-region-calls" title="Permalink to this headline">¶</a></h2>
-<p>10X’s annotation files provides a <em>c_gene</em> column, but rather than simply relying on 10x’s annotation, <a class="reference external" href="https://twitter.com/hamish_king">hk6</a> recommended using <a class="reference external" href="https://presto.readthedocs.io/en/version-0.5.3---license-change/tools/MaskPrimers.html">immcantation-presto’s MaskPrimers.py</a> with his custom primer list.</p>
-<p>As an alternative, <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> includes a pre-processing function, <code class="docutils literal notranslate"><span class="pre">pp.assign_isotypes</span></code>, to use <em>blast</em> to annotate constant region calls for all contigs and retrieves the call, merging it with the tsv files. This function will overwrite the output from previous steps and add a <em>c_call</em> column at the end, or replace the existing column if it already exists. The 10x calls are returned as <code class="docutils literal notranslate"><span class="pre">c_call_10x</span></code>.</p>
-<p>Further, to deal with incorrect constant gene calls due to insufficient length, a pairwise alignment will be run against <a class="reference external" href="https://twitter.com/hamish_king">hk6</a>’s curated sequences that were deemed to be highly specific in distinguishing IGHA1-2, IGHG1-4. I have also curated sets of sequences that should help deal with IGLC3/6/7 as these are problematic too. If there is insufficient info, the <code class="docutils literal notranslate"><span class="pre">c_call</span></code> will be returned as a combination of the most aligned sets of sequences. Because of how
-similar the lambda light chains are, extremely ambiguous calls (only able to map to a common sequence across the light chains) will be returned as <code class="docutils literal notranslate"><span class="pre">IGLC</span></code>. This typically occurs when the constant sequence is very short. Those that have equal alignment scores between <code class="docutils literal notranslate"><span class="pre">IGLC3/6/7</span></code> sequences and the common sequence will be returned as a concatenated call; for example, a contig initially annotated as <code class="docutils literal notranslate"><span class="pre">IGLC3</span></code> will be returned as <code class="docutils literal notranslate"><span class="pre">IGLC,IGLC3</span></code>.</p>
+<p>Cell Ranger’s annotation files provides a <em>c_gene</em> column, but rather than simply relying on Cell Ranger’s annotation, it is common to use <a class="reference external" href="https://presto.readthedocs.io/en/version-0.5.3---license-change/tools/MaskPrimers.html">immcantation-presto’s MaskPrimers.py</a> with a custom primer list.</p>
+<p>As an alternative, <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> includes a pre-processing function, <code class="docutils literal notranslate"><span class="pre">pp.assign_isotypes</span></code>, to use <em>blast</em> to annotate constant region calls for all contigs and retrieves the call, merging it with the tsv files. This function will overwrite the output from previous steps and add a <em>c_call</em> column at the end, or replace the existing column if it already exists. The Cell Ranger calls are returned as <code class="docutils literal notranslate"><span class="pre">c_call_10x</span></code>.</p>
+<p>Further, to deal with incorrect constant gene calls due to insufficient length, a pairwise alignment will be run against <a class="reference external" href="https://immunology.sciencemag.org/content/6/56/eabe6291">curated sequences</a> that were deemed to be highly specific in distinguishing <code class="docutils literal notranslate"><span class="pre">IGHA1</span></code> vs <code class="docutils literal notranslate"><span class="pre">IGHA2</span></code>, and <code class="docutils literal notranslate"><span class="pre">IGHG1</span></code> to <code class="docutils literal notranslate"><span class="pre">IGHG4</span></code>. I have also curated sets of sequences that should help deal with <code class="docutils literal notranslate"><span class="pre">IGLC3/6/7</span></code> as these are problematic too. If there is insufficient info, the <code class="docutils literal notranslate"><span class="pre">c_call</span></code> will be returned as a combination
+of the most aligned sets of sequences. Because of how similar the lambda light chains are, extremely ambiguous calls (only able to map to a common sequence across the light chains) will be returned as <code class="docutils literal notranslate"><span class="pre">IGLC</span></code>. This typically occurs when the constant sequence is very short. Those that have equal alignment scores between <code class="docutils literal notranslate"><span class="pre">IGLC3/6/7</span></code> sequences and the common sequence will be returned as a concatenated call; for example, a contig initially annotated as <code class="docutils literal notranslate"><span class="pre">IGLC3</span></code> will be returned as
+<code class="docutils literal notranslate"><span class="pre">IGLC,IGLC3</span></code>.</p>
+<hr class="docutils" />
 <p>The curated sequences can be updated/replaced with a dict-of-dict-of-dict style dictionary via the option <code class="docutils literal notranslate"><span class="pre">correction_dict</span></code>. The provided dictionary should be a nested dictionary like the following:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">primer_dict</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;IGHG&#39;</span><span class="p">:{</span>
@@ -787,6 +819,7 @@ similar the lambda light chains are, extremely ambiguous calls (only able to map
 </pre></div>
 </div>
 <p>The key for the first level of the dictionary is used for searching whether the string pattern exists in the <code class="docutils literal notranslate"><span class="pre">c_call</span></code>, and the second level holds the dictionary for the the reference sequences to align to. The keys in the second level are used for replacing the existing <code class="docutils literal notranslate"><span class="pre">c_call</span></code> annotation if it is returned with the highest alignment score. The function currently only accepts 2-4 reference sequences for the pairwise alignment.</p>
+<hr class="docutils" />
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -801,14 +834,14 @@ similar the lambda light chains are, extremely ambiguous calls (only able to map
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 202/202 [00:00&lt;00:00, 322.42it/s]
+Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 2059/2059 [00:18&lt;00:00, 113.46it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_1.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_1.png" />
+<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_1.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_1.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -816,7 +849,7 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (346976021)&gt;
+&lt;ggplot: (349671201)&gt;
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -824,14 +857,14 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 2601/2601 [00:25&lt;00:00, 103.89it/s]
+Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 2601/2601 [00:28&lt;00:00, 90.70it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_4.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_4.png" />
+<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_4.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_4.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -839,7 +872,7 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (345615521)&gt;
+&lt;ggplot: (349452577)&gt;
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -847,14 +880,14 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 2059/2059 [00:15&lt;00:00, 130.87it/s]
+Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 2059/2059 [00:18&lt;00:00, 113.83it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_7.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_7.png" />
+<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_7.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_7.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -862,7 +895,7 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (347305873)&gt;
+&lt;ggplot: (347611561)&gt;
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -870,14 +903,14 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 3222/3222 [00:38&lt;00:00, 84.48it/s]
+Retrieving contant region calls, parallelizing with 3 cpus : 100%|██████████| 3222/3222 [00:42&lt;00:00, 75.61it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_10.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_14_10.png" />
+<img alt="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_10.png" src="../_images/notebooks_1_dandelion_preprocessing-10x_data_15_10.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -885,11 +918,11 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (354112573)&gt;
+&lt;ggplot: (352347573)&gt;
 </pre></div></div>
 </div>
 <p>Should you want to use a different reference fasta file for this step, run with the following option:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">assign_isotypes</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">blastdb</span> <span class="o">=</span> <span class="s2">&quot;path/to/custome_BCR_constant.fasta&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">assign_isotypes</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">blastdb</span> <span class="o">=</span> <span class="s2">&quot;path/to/custom_BCR_constant.fasta&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This may take a while when dealing with large files; the number of cpus to size of file isn’t exactly linear. Nevertheless, I have enabled parallelization as default because there were noticeable improvements in processing speeds with the smaller files. It should work faster with more cpus. The default option will return a summary plot that can be disabled with <code class="docutils literal notranslate"><span class="pre">plot</span> <span class="pre">=</span> <span class="pre">False</span></code>.</p>
@@ -897,7 +930,7 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="section" id="Step-5:-Quantify-mutations-(optional).">
 <h2>Step 5: Quantify mutations <em>(optional)</em>.<a class="headerlink" href="#Step-5:-Quantify-mutations-(optional)." title="Permalink to this headline">¶</a></h2>
-<p>At this stage, with all the necessary columns in the files, you can quantify the basic mutational load with <code class="docutils literal notranslate"><span class="pre">pp.quantify_mutations</span></code> before subsequent analyses. This will be covered again in notebook-3.</p>
+<p>At this stage, with all the necessary columns in the files, you can quantify the basic mutational load with <code class="docutils literal notranslate"><span class="pre">pp.quantify_mutations</span></code>, a wrapper of <code class="docutils literal notranslate"><span class="pre">SHaZaM</span></code>’s basic mutational analysis in R, before subsequent analyses. This will be covered again later in the <code class="docutils literal notranslate"><span class="pre">Calculating</span> <span class="pre">diversity</span> <span class="pre">and</span> <span class="pre">mutation</span></code> section.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -906,7 +939,7 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 <span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="c1"># quantify mutations</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;Basic mutational load analysis &#39;</span><span class="p">):</span>
-    <span class="n">filePath</span> <span class="o">=</span> <span class="n">s</span><span class="o">+</span><span class="s1">&#39;/dandelion/data/&#39;</span><span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="s1">&#39;_b_filtered_contig_igblast_db-pass_genotyped.tsv&#39;</span>
+    <span class="n">filePath</span> <span class="o">=</span> <span class="n">s</span><span class="o">+</span><span class="s1">&#39;/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv&#39;</span>
     <span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">quantify_mutations</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -916,7 +949,7 @@ Retrieving contant region calls, parallelizing with 3 cpus : 100%|████�
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Basic mutational load analysis : 100%|██████████| 4/4 [00:28&lt;00:00,  7.03s/it]
+Basic mutational load analysis : 100%|██████████| 4/4 [00:42&lt;00:00, 10.74s/it]
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -938,7 +971,7 @@ Basic mutational load analysis : 100%|██████████| 4/4 [00:28
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="2_dandelion_filtering-10x_data.html" class="btn btn-neutral float-right" title="Filtering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../README.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tutorial_short.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
