@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
-# @Last Modified by:   kt16
-# @Last Modified time: 2021-06-17 15:05:26
+# @Last Modified by:   Kelvin
+# @Last Modified time: 2021-07-17 00:12:40
 
 import pandas as pd
 import numpy as np
@@ -95,35 +95,40 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         else:
             if verbose:
                 print('Downsampling to {} cells.'.format(str(downsample)))
-            dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])]
-            dat_l = dat[dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])]
+            dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
+            dat_l = dat[dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])].copy()
             dat_h = dat_h.sample(downsample)
-            dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))]
+            dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))].copy()
             dat_ = dat_h.append(dat_l)
     else:
         dat_ = dat.copy()
 
-    # So first, create a data frame to hold all possible (full) sequences split by heavy (only 1 possible for now) and light (multiple possible)
+    # So first, create a data frame to hold all possible (full) sequences split by 
+    # heavy (only 1 possible for now) and light (multiple possible)
     try:
         dat_seq = retrieve_metadata(dat_,
                                     query=key_,
                                     split=True,
-                                    collapse=False)
+                                    collapse=False,
+                                    locus=locus)
     except:
         dat_seq = retrieve_metadata(dat_,
                                     query=key_,
                                     split=True,
                                     collapse=False,
+                                    locus=locus,
                                     **kwargs)
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
 
-    # calculate a distance matrix for all vs all and this can be referenced later on to extract the distance between the right pairs
+    # calculate a distance matrix for all vs all and this can be referenced later on to 
+    # extract the distance between the right pairs
     dmat = Tree()
     sleep(0.5)
     if verbose:
         for x in tqdm(dat_seq.columns, desc='Calculating distances... '):
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
-            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) if (x[0] == x[0]) and (y[0] == y[0]) else 0])
+            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) 
+            # if (x[0] == x[0]) and (y[0] == y[0]) else 0])
             d_mat = squareform(
                 pdist(
                     tdarray, lambda x, y: levenshtein(x[0], y[0])
@@ -132,7 +137,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     else:
         for x in dat_seq.columns:
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
-            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) if (x[0] == x[0]) and (y[0] == y[0]) else 0])
+            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) 
+            #                      if (x[0] == x[0]) and (y[0] == y[0]) else 0])
             d_mat = squareform(
                 pdist(
                     tdarray, lambda x, y: levenshtein(x[0], y[0])
