@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Visualizing BCR data &mdash; dandelion 0.1.0 documentation</title>
+  <title>Visualizing BCR data &mdash; dandelion  documentation</title>
   
 
   
@@ -97,16 +97,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Visualizing BCR data</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Integration-with-scanpy">Integration with <code class="docutils literal notranslate"><span class="pre">scanpy</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#tl.transfer"><code class="docutils literal notranslate"><span class="pre">tl.transfer</span></code></a></li>
@@ -133,6 +134,7 @@
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -190,6 +192,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
         
       <li>Visualizing BCR data</li>
     
@@ -505,7 +509,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 scipy==1.5.3 skbio==0.5.6
+dandelion==0.1.3.post2.dev62 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -529,11 +533,11 @@ dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 sci
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.4 scikit-learn==0.23.2 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
+scanpy==1.6.0 anndata==0.7.6 umap==0.4.6 numpy==1.20.1 scipy==1.6.1 pandas==1.2.3 scikit-learn==0.24.1 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
 </pre></div></div>
 </div>
 <p><strong>Read in the previously saved files</strong></p>
-<p>I will work with the same example from the previous notebook since I have the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object saved and vdj table filtered.</p>
+<p>I will work with the same example from the previous section since I have the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object saved and vdj table filtered.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -559,13 +563,13 @@ scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;
-    distance: &#39;heavy_0&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+Dandelion class object with n_obs = 562 and n_contigs = 1130
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;
+    distance: &#39;VDJ_0&#39;, &#39;VDJ_1&#39;, &#39;VDJ_2&#39;, &#39;VJ_0&#39;, &#39;VJ_1&#39;
     edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
-    layout: layout for 838 vertices, layout for 24 vertices
-    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+    layout: layout for 562 vertices, layout for 29 vertices
+    graph: networkx graph of 562 vertices, networkx graph of 29 vertices
 </pre></div></div>
 </div>
 <div class="section" id="tl.transfer">
@@ -592,7 +596,7 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:16)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:19)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -601,16 +605,16 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 16492 × 1497
-    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;leiden&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;
+AnnData object with n_obs × n_vars = 15175 × 1439
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;n_genes_by_counts&#39;, &#39;total_counts&#39;, &#39;total_counts_mt&#39;, &#39;pct_counts_mt&#39;, &#39;gmm_pct_count_clusters&#39;, &#39;gmm_pct_count_clusters_keep&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;, &#39;leiden&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;
     var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;, &#39;n_cells&#39;, &#39;highly_variable&#39;, &#39;means&#39;, &#39;dispersions&#39;, &#39;dispersions_norm&#39;, &#39;mean&#39;, &#39;std&#39;
-    uns: &#39;bcr_QC_pass_colors&#39;, &#39;clone_id_by_size_colors&#39;, &#39;hvg&#39;, &#39;isotype_colors&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;rna_neighbors&#39;, &#39;sampleid_colors&#39;, &#39;status_colors&#39;, &#39;umap&#39;, &#39;vdj_status_colors&#39;
-    obsm: &#39;X_bcr&#39;, &#39;X_pca&#39;, &#39;X_umap&#39;
+    uns: &#39;contig_QC_pass_colors&#39;, &#39;hvg&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;umap&#39;, &#39;rna_neighbors&#39;
+    obsm: &#39;X_pca&#39;, &#39;X_umap&#39;, &#39;X_vdj&#39;
     varm: &#39;PCs&#39;
-    obsp: &#39;bcr_connectivities&#39;, &#39;bcr_distances&#39;, &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;
+    obsp: &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;vdj_connectivities&#39;, &#39;vdj_distances&#39;
 </pre></div></div>
 </div>
-<p>if the a column with the same name between <code class="docutils literal notranslate"><span class="pre">Dandelion.metadata</span></code> and <code class="docutils literal notranslate"><span class="pre">AnnData.obs</span></code> slots already exists, <code class="docutils literal notranslate"><span class="pre">tl.transfer</span></code> will not overwrite the column in the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object. This can be toggled to overwrite all with <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">['column_name1',</span> <span class="pre">'column_name2',</span> <span class="pre">...]</span></code> if only some columns are to be overwritten.</p>
+<p>If a column with the same name between <code class="docutils literal notranslate"><span class="pre">Dandelion.metadata</span></code> and <code class="docutils literal notranslate"><span class="pre">AnnData.obs</span></code> already exists, <code class="docutils literal notranslate"><span class="pre">tl.transfer</span></code> will not overwrite the column in the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object. This can be toggled to overwrite all with <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">overwrite</span> <span class="pre">=</span> <span class="pre">['column_name1',</span> <span class="pre">'column_name2',</span> <span class="pre">...]</span></code> if only some columns are to be overwritten.</p>
 <p>You can see that <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object now contains a couple more columns in the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> slot, corresponding to the metadata that is returned after <code class="docutils literal notranslate"><span class="pre">tl.generate_network</span></code>, and newly populated <code class="docutils literal notranslate"><span class="pre">.obsm</span></code> and <code class="docutils literal notranslate"><span class="pre">.obsp</span></code> slots. The original RNA connectivities and distances are now added into the <code class="docutils literal notranslate"><span class="pre">.obsp</span></code> slot as well.</p>
 </div>
 </div>
@@ -628,15 +632,46 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 <span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
                      <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">],</span>
                      <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-                     <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+... storing &#39;clone_id&#39; as categorical
+... storing &#39;sample_id&#39; as categorical
+... storing &#39;locus_VDJ&#39; as categorical
+... storing &#39;locus_VJ&#39; as categorical
+... storing &#39;productive_VDJ&#39; as categorical
+... storing &#39;productive_VJ&#39; as categorical
+... storing &#39;v_call_genotyped_VDJ&#39; as categorical
+... storing &#39;v_call_genotyped_VJ&#39; as categorical
+... storing &#39;j_call_VDJ&#39; as categorical
+... storing &#39;j_call_VJ&#39; as categorical
+... storing &#39;c_call_VDJ&#39; as categorical
+... storing &#39;c_call_VJ&#39; as categorical
+... storing &#39;junction_aa_VDJ&#39; as categorical
+... storing &#39;junction_aa_VJ&#39; as categorical
+... storing &#39;status&#39; as categorical
+... storing &#39;status_summary&#39; as categorical
+... storing &#39;productive&#39; as categorical
+... storing &#39;productive_summary&#39; as categorical
+... storing &#39;isotype&#39; as categorical
+... storing &#39;isotype_summary&#39; as categorical
+... storing &#39;vdj_status&#39; as categorical
+... storing &#39;vdj_status_summary&#39; as categorical
+... storing &#39;constant_status_summary&#39; as categorical
+... storing &#39;changeo_clone_id&#39; as categorical
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_13_0.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_13_0.png" style="width: 472px; height: 296px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_13_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_13_1.png" style="width: 472px; height: 296px;" />
 </div>
 </div>
 </div>
@@ -653,7 +688,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
                      <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;isotype&#39;</span><span class="p">],</span>
                      <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                      <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span>
-                     <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -674,7 +709,15 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 <span></span><span class="kn">from</span> <span class="nn">scanpy.plotting.palettes</span> <span class="kn">import</span> <span class="n">default_28</span><span class="p">,</span> <span class="n">default_102</span>
 <span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
 <span class="c1"># plot the 3 largest clones by size</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span> <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span><span class="p">)</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span>
+                     <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">],</span>
+                     <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                     <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span>
+                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                     <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+                     <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -683,7 +726,7 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-WARNING: Length of palette colors is smaller than the number of categories (palette length: 28, categories length: 821. Some categories will have the same color.
+WARNING: Length of palette colors is smaller than the number of categories (palette length: 28, categories length: 545. Some categories will have the same color.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -699,7 +742,12 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mf">4.5</span><span class="p">])</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_status&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;vdj_status&#39;</span><span class="p">],</span>
+                     <span class="n">ncols</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                     <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -707,7 +755,7 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_20_0.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_20_0.png" style="width: 464px; height: 643px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_20_0.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_20_0.png" style="width: 591px; height: 643px;" />
 </div>
 </div>
 <p>By specifying <code class="docutils literal notranslate"><span class="pre">expanded_only=True</span></code>, you will transfer the graph of only expanded clones (&gt; 1 cell in a clone).</p>
@@ -719,7 +767,13 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 <span></span><span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
 <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">,</span> <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 <span class="n">edgeweights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">e</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">extract_edge_weights</span><span class="p">(</span><span class="n">vdj</span><span class="p">)]</span> <span class="c1"># add 1 to each edge weight (e) so that distance of 0 becomes the thickest edge</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span> <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">],</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_by_size&#39;</span><span class="p">],</span>
+                     <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">],</span>
+                     <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;on data&#39;</span><span class="p">,</span>
+                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                     <span class="n">edges_width</span> <span class="o">=</span> <span class="n">edgeweights</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -734,7 +788,7 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:16)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:20)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -784,7 +838,7 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:17)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:19)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -792,7 +846,12 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">],</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">],</span>
+                     <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                     <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 <span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -801,14 +860,14 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_26_0.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_26_0.png" style="width: 297px; height: 296px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_26_0.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_26_0.png" style="width: 289px; height: 296px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_26_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_26_1.png" style="width: 297px; height: 296px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_26_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_26_1.png" style="width: 289px; height: 296px;" />
 </div>
 </div>
 <p>You can also specify <code class="docutils literal notranslate"><span class="pre">max_size</span></code> to clip off the calculation at a fixed value.</p>
@@ -836,7 +895,7 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:18)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:16)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -844,8 +903,16 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size_max_3&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">],</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
-<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size_max_3&#39;</span><span class="p">],</span> <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">])</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size_max_3&#39;</span><span class="p">],</span>
+                     <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                     <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">],</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_contig&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">],</span>
+           <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id_size_max_3&#39;</span><span class="p">],</span>
+           <span class="n">palette</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -885,7 +952,9 @@ Trying to set attribute `.uns` of view, copying.
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
 <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">rcParamsDefault</span><span class="p">)</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+               <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+               <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -896,14 +965,14 @@ Trying to set attribute `.uns` of view, copying.
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (&lt;Figure size 1200x400 with 1 Axes&gt;,
- &lt;AxesSubplot:title={&#39;center&#39;:&#39;v call genotyped heavy usage&#39;}, ylabel=&#39;proportion&#39;&gt;)
+ &lt;AxesSubplot:title={&#39;center&#39;:&#39;v call genotyped VDJ usage&#39;}, ylabel=&#39;proportion&#39;&gt;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_31_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_31_1.png" style="width: 1005px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_31_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_31_1.png" style="width: 1005px; height: 485px;" />
 </div>
 </div>
 <p>You can prevent it from sorting by specifying <code class="docutils literal notranslate"><span class="pre">sort_descending</span> <span class="pre">=</span> <span class="pre">None</span></code>. Colours can be changed with <code class="docutils literal notranslate"><span class="pre">palette</span></code> option.</p>
@@ -912,7 +981,11 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;tab20&#39;</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+               <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+               <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+               <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;tab20&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -923,14 +996,14 @@ Trying to set attribute `.uns` of view, copying.
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (&lt;Figure size 1200x400 with 1 Axes&gt;,
- &lt;AxesSubplot:title={&#39;center&#39;:&#39;v call genotyped heavy usage&#39;}, ylabel=&#39;proportion&#39;&gt;)
+ &lt;AxesSubplot:title={&#39;center&#39;:&#39;v call genotyped VDJ usage&#39;}, ylabel=&#39;proportion&#39;&gt;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_33_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_33_1.png" style="width: 1005px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_33_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_33_1.png" style="width: 1005px; height: 485px;" />
 </div>
 </div>
 <p>Specifying <code class="docutils literal notranslate"><span class="pre">normalize</span> <span class="pre">=</span> <span class="pre">False</span></code> will change the y-axis to counts.</p>
@@ -939,7 +1012,12 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;tab20&#39;</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+               <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+               <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+               <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+               <span class="n">sort_descending</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">palette</span> <span class="o">=</span> <span class="s1">&#39;tab20&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -950,14 +1028,14 @@ Trying to set attribute `.uns` of view, copying.
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (&lt;Figure size 1200x400 with 1 Axes&gt;,
- &lt;AxesSubplot:title={&#39;center&#39;:&#39;v call genotyped heavy usage&#39;}, ylabel=&#39;count&#39;&gt;)
+ &lt;AxesSubplot:title={&#39;center&#39;:&#39;v call genotyped VDJ usage&#39;}, ylabel=&#39;count&#39;&gt;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_35_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_35_1.png" style="width: 993px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_35_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_35_1.png" style="width: 993px; height: 485px;" />
 </div>
 </div>
 </div>
@@ -970,8 +1048,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">xtick_rotation</span> <span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                      <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">,</span>
+                      <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span>
+                      <span class="n">xtick_rotation</span> <span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -981,14 +1065,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x14f3dfed0&gt;
+&lt;matplotlib.legend.Legend at 0x14e2c8b10&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_37_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_37_1.png" style="width: 554px; height: 371px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_37_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_37_1.png" style="width: 530px; height: 371px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -996,8 +1080,12 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                      <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+                      <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1007,14 +1095,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x2ac8db810&gt;
+&lt;matplotlib.legend.Legend at 0x161debf10&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_38_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_38_1.png" style="width: 1121px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_38_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_38_1.png" style="width: 1121px; height: 485px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1022,8 +1110,13 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                      <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+                      <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;isotype&#39;</span><span class="p">,</span>
+                      <span class="n">normalize</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1033,14 +1126,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x165fb8690&gt;
+&lt;matplotlib.legend.Legend at 0x1618da290&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_39_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_39_1.png" style="width: 1125px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_39_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_39_1.png" style="width: 1125px; height: 485px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1048,8 +1141,12 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;vdj_status&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                      <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+                      <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;vdj_status&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1059,14 +1156,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x166be8450&gt;
+&lt;matplotlib.legend.Legend at 0x161a7a750&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_40_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_40_1.png" style="width: 1089px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_40_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_40_1.png" style="width: 1290px; height: 485px;" />
 </div>
 </div>
 <p>It’s obviously more useful if you don’t have too many groups, but you could try and plot everything and jiggle the legend options and color.</p>
@@ -1075,8 +1172,12 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_heavy&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">stackedbarplot</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                      <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;v_call_genotyped_VDJ&#39;</span><span class="p">,</span>
+                      <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1086,14 +1187,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x1661a60d0&gt;
+&lt;matplotlib.legend.Legend at 0x161e645d0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_42_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_42_1.png" style="width: 1203px; height: 432px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_42_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_42_1.png" style="width: 1203px; height: 485px;" />
 </div>
 </div>
 </div>
@@ -1105,8 +1206,14 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;junction_length&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="n">locus</span><span class="o">=</span><span class="s1">&#39;IGH&#39;</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mf">2.3</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                   <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;junction_length&#39;</span><span class="p">,</span>
+                   <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span>
+                   <span class="n">locus</span><span class="o">=</span><span class="s1">&#39;IGH&#39;</span><span class="p">,</span>
+                   <span class="n">width</span> <span class="o">=</span> <span class="mf">2.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1116,14 +1223,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x166c583d0&gt;
+&lt;matplotlib.legend.Legend at 0x154716510&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_44_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_44_1.png" style="width: 656px; height: 369px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_44_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_44_1.png" style="width: 629px; height: 369px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1131,8 +1238,13 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;junction_aa_length&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="n">locus</span><span class="o">=</span><span class="s1">&#39;IGH&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                   <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;junction_aa_length&#39;</span><span class="p">,</span>
+                   <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span>
+                   <span class="n">locus</span><span class="o">=</span><span class="s1">&#39;IGH&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1142,14 +1254,14 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x1664f6390&gt;
+&lt;matplotlib.legend.Legend at 0x160b2f090&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_45_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_45_1.png" style="width: 656px; height: 369px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_45_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_45_1.png" style="width: 629px; height: 369px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1157,8 +1269,13 @@ Trying to set attribute `.uns` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="s1">&#39;junction_aa_length&#39;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span> <span class="n">locus</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;IGK&#39;</span><span class="p">,</span><span class="s1">&#39;IGL&#39;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spectratype</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                   <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;junction_aa_length&#39;</span><span class="p">,</span>
+                   <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;c_call&#39;</span><span class="p">,</span>
+                   <span class="n">locus</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;IGK&#39;</span><span class="p">,</span><span class="s1">&#39;IGL&#39;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+           <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span>
+           <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1168,26 +1285,28 @@ Trying to set attribute `.uns` of view, copying.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.legend.Legend at 0x16860ec90&gt;
+&lt;matplotlib.legend.Legend at 0x1641f1ed0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_46_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_46_1.png" style="width: 669px; height: 369px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_46_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_46_1.png" style="width: 633px; height: 369px;" />
 </div>
 </div>
 </div>
 <div class="section" id="pl.clone_overlap">
 <h3><code class="docutils literal notranslate"><span class="pre">pl.clone_overlap</span></code><a class="headerlink" href="#pl.clone_overlap" title="Permalink to this headline">¶</a></h3>
-<p>There is now a circos-style clone overlap function where it looks for whather different samples share a clone. If they do, an arc/connection will be drawn between them. This requires the python module <code class="docutils literal notranslate"><span class="pre">nxviz</span></code> to be installed; at the writing of this notebook, there are some dependencies issues with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nxviz</span></code>, therefore I’ve adjusted the requirements in a forked repository which you can install via: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/zktuong/nxviz.git</span></code></p>
+<p>There is now a circos-style clone overlap function where it looks for whather different samples share a clone. If they do, an arc/connection will be drawn between them. This requires the python module <code class="docutils literal notranslate"><span class="pre">nxviz</span></code> to be installed; at the start of the writing of this tutorial, there were some dependencies issues with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nxviz</span></code>, therefore I’ve adjusted the requirements in a forked repository which you can install via: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/zktuong/nxviz.git</span></code></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_overlap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">colorby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_overlap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span>
+                     <span class="n">colorby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1206,7 +1325,11 @@ Finding clones
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_overlap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">colorby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">return_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_label_offset</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_overlap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span>
+                     <span class="n">colorby</span> <span class="o">=</span> <span class="s1">&#39;leiden&#39;</span><span class="p">,</span>
+                     <span class="n">return_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">group_label_offset</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1216,14 +1339,14 @@ Finding clones
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;nxviz.plots.CircosPlot at 0x165c299d0&gt;
+&lt;nxviz.plots.CircosPlot at 0x1633e6d50&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_49_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_49_1.png" style="width: 667px; height: 687px;" />
+<img alt="../_images/notebooks_4_dandelion_visualization-10x_data_49_1.png" class="no-scaled-link" src="../_images/notebooks_4_dandelion_visualization-10x_data_49_1.png" style="width: 672px; height: 697px;" />
 </div>
 </div>
 <p>Other use cases for this would be, for example, to plot nodes as individual samples and the colors as group classifications of the samples. As long as this information is found in the <code class="docutils literal notranslate"><span class="pre">.obs</span></code> column in the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code>, or even <code class="docutils literal notranslate"><span class="pre">Dandelion.metadata</span></code>, this will work.</p>

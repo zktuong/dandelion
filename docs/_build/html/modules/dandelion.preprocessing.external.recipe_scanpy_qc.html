@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>dandelion.preprocessing.external.recipe_scanpy_qc &mdash; dandelion 0.1.0 documentation</title>
+  <title>dandelion.preprocessing.external.recipe_scanpy_qc &mdash; dandelion  documentation</title>
   
 
   
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul class="current">
@@ -227,12 +229,13 @@
 <h1>dandelion.preprocessing.external.recipe_scanpy_qc<a class="headerlink" href="#dandelion-preprocessing-external-recipe-scanpy-qc" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="dandelion.preprocessing.external.recipe_scanpy_qc">
-<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.external.</span></code><code class="sig-name descname"><span class="pre">recipe_scanpy_qc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_genes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_genes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mito_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pval_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blacklist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/external/_preprocessing.html#recipe_scanpy_qc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.external.recipe_scanpy_qc" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">dandelion.preprocessing.external.</span></code><code class="sig-name descname"><span class="pre">recipe_scanpy_qc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mito_startswith</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_genes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_genes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mito_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pval_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blacklist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdj_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^TR[AB][VDJ]|^IG[HKL][VDJC]'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dandelion/preprocessing/external/_preprocessing.html#recipe_scanpy_qc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dandelion.preprocessing.external.recipe_scanpy_qc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Recipe for running a standard scanpy QC workflow.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>adata</strong> (<em>AnnData</em>) – annotated data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.</p></li>
+<li><p><strong>mito_startswith</strong> (<em>str</em>) – string pattern used for searching mitochondrial genes.</p></li>
 <li><p><strong>max_genes</strong> (<em>int</em>) – naximum number of genes expressed required for a cell to pass filtering. Default is 2500.</p></li>
 <li><p><strong>min_genes</strong> (<em>int</em>) – minimum number of genes expressed  required for a cell to pass filtering. Default is 200.</p></li>
 <li><p><strong>mito_cutoff</strong> (<em>float</em>) – maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.</p></li>
@@ -240,6 +243,7 @@
 <li><p><strong>min_counts</strong> (<em>int, optional</em>) – minimum number of counts required for a cell to pass filtering. Default is None.</p></li>
 <li><p><strong>max_counts</strong> (<em>int, optional</em>) – maximum number of counts required for a cell to pass filtering. Default is None.</p></li>
 <li><p><strong>blacklist</strong> (<em>sequence, optional</em>) – if provided, will exclude these genes from highly variable genes list.</p></li>
+<li><p><strong>vdj_pattern</strong> (<em>str</em>) – string pattern for search VDJ genes to exclude from highly variable genes.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Overview &mdash; dandelion 0.1.0 documentation</title>
+  <title>Overview &mdash; dandelion  documentation</title>
   
 
   
@@ -41,7 +41,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Pre-processing" href="notebooks/1_dandelion_preprocessing-10x_data.html" />
+    <link rel="next" title="Dandelion preprocessing with Singularity" href="notebooks/singularity_preprocessing.html" />
     <link rel="prev" title="Welcome to dandelion’s documentation!" href="index.html" /> 
 </head>
 
@@ -92,25 +92,35 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#singularity-container">Singularity container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#manual">Manual</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#python-conda">python/conda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#r">R</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="#required-database">Required database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -217,11 +227,10 @@
 <a class="reference external" href="https://github.com/zktuong/dandelion/tree/master"><img alt="https://byob.yarr.is/zktuong/dandelion/master-version" src="https://byob.yarr.is/zktuong/dandelion/master-version" /></a>
 <img alt="master" src="https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master" />
 <a class="reference external" href="https://github.com/zktuong/dandelion/tree/devel"><img alt="https://byob.yarr.is/zktuong/dandelion/devel-version" src="https://byob.yarr.is/zktuong/dandelion/devel-version" /></a>
-<img alt="tests" src="https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel" /></p>
+<img alt="tests" src="https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel" />
+<a class="reference external" href="https://codecov.io/gh/zktuong/dandelion"><img alt="codecov" src="https://codecov.io/gh/zktuong/dandelion/branch/master/graph/badge.svg?token=661BMU1FBO" /></a></p>
 <p><img alt="_images/dandelion_logo_illustration.png" src="_images/dandelion_logo_illustration.png" /></p>
 <p>Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5’ solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization.</p>
-<p><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> is now included in a preprint:</p>
-<p><em>Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka, Katarzyna Kania, Justin Engelbert, Bayanne Olabi, Jarmila Stremenova Spegarova, Nicola K Wilson, Nicole Mende, Laura Jardine, Louis CS Gardner, Issac Goh, Dave Horsfall, Jim McGrath, Simone Webb, Michael W Mather, Rik GH Lindeboom, Emma Dann, Ni Huang, Krzysztof Polanski, Elena Prigmore, Florian Gothe, Jonathan Scott, Rebecca P Payne, Kenneth F Baker, Aidan T Hanrath, Ina CD Schim van der Loeff, Andrew S Barr, Amada Sanchez-Gonzalez, Laura Bergamaschi, Federica Mescia, Josephine L Barnes, Eliz Kilich, Angus de Wilton, Anita Saigal, Aarash Saleh, Sam M Janes, Claire M Smith, Nusayhah Gopee, Caroline Wilson, Paul Coupland, Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.</em> <em><strong>The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres</strong></em>. <em>medRxiv 2021.01.13.21249725; doi: https://doi.org/10.1101/2021.01.13.21249725</em></p>
 <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <p><img alt="_images/dandelion_overview.png" src="_images/dandelion_overview.png" /></p>
@@ -232,31 +241,57 @@
 </div>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="singularity-container">
+<h2>Singularity container<a class="headerlink" href="#singularity-container" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> now comes ready in the form of a singularity container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>singularity pull library://kt16/default/sc-dandelion:latest
+singularity shell sc-dandelion_latest.sif
+</pre></div>
+</div>
+<p>This will load up a conda-environment that has all the required dependencies installed.
+This can be used for the preprocessing steps by navigating to the data folder and use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>singularity run -B <span class="nv">$PWD</span> sc-dandelion_latest.sif dandelion-preprocess
+</pre></div>
+</div>
+<p>Please refer to the <a class="reference external" href="https://sc-dandelion.readthedocs.io/en/master/notebooks/singularity_preprocessing.html">tutorial</a> for more information.</p>
+<p>For more fine control, as well as for the exploration steps, please install via following the instructions below.</p>
+</div>
+<div class="section" id="manual">
+<h2>Manual<a class="headerlink" href="#manual" title="Permalink to this headline">¶</a></h2>
 <p>I would reccomend installing this in order:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># in bash/zsh terminal</span>
 <span class="c1"># create a conda environment with specific modules</span>
-conda create --name dandelion <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7 <span class="c1"># or 3.8</span>
+conda create --name dandelion <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7 <span class="c1"># or 3.8, 3.9</span>
 conda activate dandelion
 </pre></div>
 </div>
-<p>First, install <a class="reference external" href="https://scanpy.readthedocs.io/en/latest/installation.html">scanpy</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># these are required by dandelion</span>
-conda install -c conda-forge distance joblib plotnine adjustText
+<div class="section" id="python-conda">
+<h3>python/conda<a class="headerlink" href="#python-conda" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install scanpy https://scanpy.readthedocs.io/en/latest/installation.html</span>
+conda install seaborn scikit-learn statsmodels numba pytables
+conda install -c conda-forge python-igraph leidenalg
+pip install scanpy
+
+<span class="c1"># skip if doing pre-processing via container</span>
 conda install -c bioconda igblast blast <span class="c1"># if this doesn&#39;t work, download them manually (see below)</span>
-conda install -c conda-forge <span class="s2">&quot;rpy2&gt;=3.4&quot;</span> <span class="c1"># to make compatible for R version 4</span>
-<span class="c1"># or pip install rpy2&gt;=3.4</span>
+
+<span class="c1"># optional: installing rpy2 (if not doing pre-processing)</span>
+<span class="c1"># This is optional because it&#39;s only used for interaction with some of the R packages from the immcantation suite. Skip if prefer keeping it simple and run the different tools separately</span>
+<span class="c1"># if you just want to stick with the base R</span>
+pip install <span class="s2">&quot;rpy2&gt;=3.4&quot;</span> <span class="c1"># or if you don&#39;t mind having conda manage R: conda install -c conda-forge &quot;rpy2&gt;=3.4&quot;</span>
+<span class="c1"># make sure not to use the same R package folder or you will end up with major issues later.</span>
 
 <span class="c1"># Use pip to install the following with --no-cache-dir --upgrade if necessary</span>
 <span class="c1"># and then lastly install this</span>
 pip install sc-dandelion
-<span class="c1"># or</span>
-pip install git+https://github.com/zktuong/dandelion.git
-
-<span class="c1"># for the development branch, run this:</span>
-pip install git+https://github.com/zktuong/dandelion.git@devel
+<span class="c1"># or pip install git+https://github.com/zktuong/dandelion.git</span>
+<span class="c1"># for the development branch, run this: pip install git+https://github.com/zktuong/dandelion.git@devel</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> also requires some R packages intalled.</p>
+</div>
+<div class="section" id="r">
+<h3>R<a class="headerlink" href="#r" title="Permalink to this headline">¶</a></h3>
+<p>If doing pre-preprocessing, <code class="docutils literal notranslate"><span class="pre">dandelion</span></code> requires some R packages intalled.</p>
 <div class="highlight-R notranslate"><div class="highlight"><pre><span></span><span class="c1"># in R</span>
 <span class="nf">install.packages</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="s">&quot;optparse&quot;</span><span class="p">,</span> <span class="s">&quot;alakazam&quot;</span><span class="p">,</span> <span class="s">&quot;tigger&quot;</span><span class="p">,</span> <span class="s">&quot;airr&quot;</span><span class="p">,</span> <span class="s">&quot;shazam&quot;</span><span class="p">))</span>
 </pre></div>
@@ -272,6 +307,8 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 </pre></div>
 </div>
 </div>
+</div>
+</div>
 <div class="section" id="required-database">
 <h1>Required database<a class="headerlink" href="#required-database" title="Permalink to this headline">¶</a></h1>
 <p>Last but not least, you will need to download the database folder in this repository and place them somewhere accessible. The igblast and germline database folders were originally downloaded with <a class="reference external" href="https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html">immcantation’s</a> docker image (4.1.0). The blast database were downloaded from IMGT and manually curated. I have uploaded a copy of the required databases in a separate <a class="reference external" href="https://github.com/zktuong/databases_for_vdj">repository</a> (Last update: 28/11/2020). Once you’ve unpacked the folders, export the the path to the database folders as environmental variables in your <code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.zshenv</span></code> like below. This will allow dandelion to access them easily. In the future, the databases will have to be updated accordingly.</p>
@@ -284,6 +321,8 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <span class="nb">source</span> ~/.bash_profile <span class="c1"># or ~/.zshenv</span>
 </pre></div>
 </div>
+<p>see https://github.com/zktuong/dandelion/issues/66 for a known issue if you are using a notebook via jupyterhub.</p>
+<p>This is already available in the singularity container under <code class="docutils literal notranslate"><span class="pre">/share/database/</span></code>.</p>
 </div>
 <div class="section" id="external-softwares">
 <h1>External softwares<a class="headerlink" href="#external-softwares" title="Permalink to this headline">¶</a></h1>
@@ -294,6 +333,7 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <span class="nb">source</span> ~/.bash_profile <span class="c1"># or ~/.zshenv</span>
 </pre></div>
 </div>
+<p>This is already available in the singularity container under <code class="docutils literal notranslate"><span class="pre">/share/</span></code>.</p>
 </div>
 <div class="section" id="basic-requirements">
 <h1>Basic requirements<a class="headerlink" href="#basic-requirements" title="Permalink to this headline">¶</a></h1>
@@ -304,7 +344,7 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <span class="n">pandas</span><span class="o">&gt;=</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">3</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">distance</span><span class="o">&gt;=</span><span class="mf">0.1</span><span class="o">.</span><span class="mi">3</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">joblib</span><span class="o">&gt;=</span><span class="mf">0.14</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
-<span class="n">jupyter</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
+<span class="n">jupyter</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span> <span class="c1"># if running via a notebook</span>
 <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span><span class="o">&gt;=</span><span class="mf">0.23</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">numba</span><span class="o">&gt;=</span><span class="mf">0.48</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 <span class="n">pytables</span><span class="o">&gt;=</span><span class="mf">3.6</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
@@ -313,7 +353,7 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <span class="n">plotnine</span><span class="o">&gt;=</span><span class="mf">0.6</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="p">)</span>
 
 <span class="c1"># Other executables (through conda)</span>
-<span class="n">blast</span><span class="o">&gt;=</span><span class="mf">2.10</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">bioconda</span><span class="p">)</span> <span class="c1"># depends on the database version as well</span>
+<span class="n">blast</span><span class="o">&gt;=</span><span class="mf">2.10</span><span class="o">.</span><span class="mi">1</span> <span class="p">(</span><span class="n">bioconda</span><span class="p">)</span>
 <span class="n">igblast</span><span class="o">&gt;=</span><span class="mf">1.15</span><span class="o">.</span><span class="mi">0</span> <span class="p">(</span><span class="n">bioconda</span><span class="p">)</span>
 
 <span class="c1"># pip</span>
@@ -343,6 +383,13 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
 <p>I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi and Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.</p>
 <p>If there are any ideas, comments, suggestions, thing you would like to know more etc., please feel free to email me at kt16&#64;sanger.ac.uk or post in the issue tracker and I will get back to you.</p>
 </div>
+<div class="section" id="citation">
+<h1>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">dandelion</span></code> is now included in the the following manuscript published in <a class="reference external" href="https://www.nature.com/articles/s41591-021-01329-2"><em><strong>Nature Medicine</strong></em></a>:</p>
+<p><em>Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka, Katarzyna Kania, Justin Engelbert, Bayanne Olabi, Jarmila Stremenova Spegarova, Nicola K Wilson, Nicole Mende, Laura Jardine, Louis CS Gardner, Issac Goh, Dave Horsfall, Jim McGrath, Simone Webb, Michael W Mather, Rik GH Lindeboom, Emma Dann, Ni Huang, Krzysztof Polanski, Elena Prigmore, Florian Gothe, Jonathan Scott, Rebecca P Payne, Kenneth F Baker, Aidan T Hanrath, Ina CD Schim van der Loeff, Andrew S Barr, Amada Sanchez-Gonzalez, Laura Bergamaschi, Federica Mescia, Josephine L Barnes, Eliz Kilich, Angus de Wilton, Anita Saigal, Aarash Saleh, Sam M Janes, Claire M Smith, Nusayhah Gopee, Caroline Wilson, Paul Coupland, Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.</em> <em><strong>Single-cell multi-omics analysis of the immune response in COVID-19</strong></em>. <em>Nature Medicine 2021.04.20; doi: https://dx.doi.org/10.1038/s41591-021-01329-2</em></p>
+<p>Original preprint:</p>
+<p><em>Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka, Katarzyna Kania, Justin Engelbert, Bayanne Olabi, Jarmila Stremenova Spegarova, Nicola K Wilson, Nicole Mende, Laura Jardine, Louis CS Gardner, Issac Goh, Dave Horsfall, Jim McGrath, Simone Webb, Michael W Mather, Rik GH Lindeboom, Emma Dann, Ni Huang, Krzysztof Polanski, Elena Prigmore, Florian Gothe, Jonathan Scott, Rebecca P Payne, Kenneth F Baker, Aidan T Hanrath, Ina CD Schim van der Loeff, Andrew S Barr, Amada Sanchez-Gonzalez, Laura Bergamaschi, Federica Mescia, Josephine L Barnes, Eliz Kilich, Angus de Wilton, Anita Saigal, Aarash Saleh, Sam M Janes, Claire M Smith, Nusayhah Gopee, Caroline Wilson, Paul Coupland, Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.</em> <em><strong>The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres</strong></em>. <em>medRxiv 2021.01.13.21249725; doi: https://doi.org/10.1101/2021.01.13.21249725</em></p>
+</div>
 
 
            </div>
@@ -350,7 +397,7 @@ python -m ipykernel install --user --name dandelion --display-name <span class="
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="notebooks/1_dandelion_preprocessing-10x_data.html" class="btn btn-neutral float-right" title="Pre-processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="notebooks/singularity_preprocessing.html" class="btn btn-neutral float-right" title="Dandelion preprocessing with Singularity" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to dandelion’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

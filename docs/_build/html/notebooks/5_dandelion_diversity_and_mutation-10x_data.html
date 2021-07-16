@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Calculating diversity and mutation &mdash; dandelion 0.1.0 documentation</title>
+  <title>Calculating diversity and mutation &mdash; dandelion  documentation</title>
   
 
   
@@ -97,16 +97,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Cellranger V4 onwards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1b_dandelion_noreannotation-10x_data.html">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Calculating diversity and mutation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Calculating-mutational-load">Calculating mutational load</a><ul>
@@ -120,6 +121,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -177,6 +179,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
         
       <li>Calculating diversity and mutation</li>
     
@@ -492,7 +496,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 scipy==1.5.3 skbio==0.5.6
+dandelion==0.1.3.post2.dev62 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -516,7 +520,7 @@ dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 sci
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.4 scikit-learn==0.23.2 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
+scanpy==1.6.0 anndata==0.7.6 umap==0.4.6 numpy==1.20.1 scipy==1.6.1 pandas==1.2.3 scikit-learn==0.24.1 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
 </pre></div></div>
 </div>
 <p><strong>Read in the previously saved files</strong></p>
@@ -536,13 +540,13 @@ scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 16492 × 1497
-    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;, &#39;leiden&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;
+AnnData object with n_obs × n_vars = 15175 × 1439
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;n_genes_by_counts&#39;, &#39;total_counts&#39;, &#39;total_counts_mt&#39;, &#39;pct_counts_mt&#39;, &#39;gmm_pct_count_clusters&#39;, &#39;gmm_pct_count_clusters_keep&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;, &#39;leiden&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;
     var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;, &#39;n_cells&#39;, &#39;highly_variable&#39;, &#39;means&#39;, &#39;dispersions&#39;, &#39;dispersions_norm&#39;, &#39;mean&#39;, &#39;std&#39;
-    uns: &#39;bcr_QC_pass_colors&#39;, &#39;clone_id_by_size_colors&#39;, &#39;hvg&#39;, &#39;isotype_colors&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;rna_neighbors&#39;, &#39;sampleid_colors&#39;, &#39;status_colors&#39;, &#39;umap&#39;, &#39;vdj_status_colors&#39;
-    obsm: &#39;X_bcr&#39;, &#39;X_pca&#39;, &#39;X_umap&#39;
+    uns: &#39;clone_id_by_size_colors&#39;, &#39;contig_QC_pass_colors&#39;, &#39;hvg&#39;, &#39;isotype_colors&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;rna_neighbors&#39;, &#39;sampleid_colors&#39;, &#39;status_colors&#39;, &#39;umap&#39;, &#39;vdj_status_colors&#39;
+    obsm: &#39;X_pca&#39;, &#39;X_umap&#39;, &#39;X_vdj&#39;
     varm: &#39;PCs&#39;
-    obsp: &#39;bcr_connectivities&#39;, &#39;bcr_distances&#39;, &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;
+    obsp: &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;vdj_connectivities&#39;, &#39;vdj_distances&#39;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -561,13 +565,13 @@ AnnData object with n_obs × n_vars = 16492 × 1497
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 838 and n_contigs = 1700
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;, &#39;changeo_clone_id&#39;
-    distance: &#39;heavy_0&#39;, &#39;light_0&#39;, &#39;light_1&#39;, &#39;light_2&#39;
+Dandelion class object with n_obs = 562 and n_contigs = 1130
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;
+    distance: &#39;VDJ_0&#39;, &#39;VDJ_1&#39;, &#39;VDJ_2&#39;, &#39;VJ_0&#39;, &#39;VJ_1&#39;
     edges: &#39;source&#39;, &#39;target&#39;, &#39;weight&#39;
-    layout: layout for 838 vertices, layout for 24 vertices
-    graph: networkx graph of 838 vertices, networkx graph of 24 vertices
+    layout: layout for 562 vertices, layout for 29 vertices
+    graph: networkx graph of 562 vertices, networkx graph of 29 vertices
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -621,7 +625,7 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
       <th>v_sequence_alignment_aa</th>
       <th>d_sequence_alignment_aa</th>
       <th>j_sequence_alignment_aa</th>
-      <th>mu_freq</th>
+      <th>mu_count</th>
       <th>duplicate_count</th>
       <th>clone_id</th>
       <th>changeo_clone_id</th>
@@ -653,124 +657,124 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_1</th>
-      <td>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_1</td>
-      <td>CTGGGCCTCAGGAAGCAGCATCGGAGGTGCCTCAGCCATGGCATGG...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGLV3-1*01</td>
-      <td></td>
-      <td>IGLJ2*01,IGLJ3*01</td>
-      <td>TCCTATGAGCTGACTCAGCCACCCTCA...GTGTCCGTGTCCCCAG...</td>
-      <td>TCCTATGAGCTGACTCAGCCACCCTCA...GTGTCCGTGTCCCCAG...</td>
-      <td>TGTCAGGCGTGGGACAGCAGCAATGTGGTATTC</td>
-      <td>...</td>
-      <td>QDN</td>
-      <td>QAWDSSNVV</td>
-      <td>SYELTQPPSVSVSPGQTASITCSGDKLGHKYACWYQQKPGQSPVLV...</td>
-      <td>SYELTQPPSVSVSPGQTASITCSGDKLGHKYACWYQQKPGQSPVLV...</td>
-      <td></td>
-      <td>VFGGGTKLTVL</td>
-      <td>0.009434</td>
-      <td>0</td>
-      <td>64_8_3</td>
-      <td>55_0</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_2</th>
-      <td>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_2</td>
-      <td>AGCTCTGGGAGAGGAGCCCCAGCCTTGGGATTCCCAAGTGTTTTCA...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGHV3-15*01</td>
-      <td>IGHD4-23*01</td>
-      <td>IGHJ4*02</td>
-      <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTAAAGCCTG...</td>
-      <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTAAAGCCTG...</td>
-      <td>TGTACCACAGAAGCTTTAGACTACGGTGCTAACTCGCGATCCCCGA...</td>
-      <td>...</td>
-      <td>IKSNTDGATT</td>
-      <td>TTEALDYGANSRSPNFDY</td>
-      <td>EVQLVESGGGLVKPGGSLRLSCAASGFIFSNAWMSWVRQAPGKGLE...</td>
-      <td>EVQLVESGGGLVKPGGSLRLSCAASGFIFSNAWMSWVRQAPGKGLE...</td>
-      <td>DYGANS</td>
-      <td>FDYWGQGTLVTVSS</td>
-      <td>0.008671</td>
-      <td>0</td>
-      <td>64_8_3</td>
-      <td>55_0</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_1</th>
-      <td>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_1</td>
-      <td>AGAGCTCTGGAGAAGAGCTGCTCAGTTAGGACCCAGAGGGAACCAT...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGKV3-20*01</td>
-      <td></td>
-      <td>IGKJ3*01</td>
-      <td>GAAATTGTGTTGACGCAGTCTCCAGGCACCCTGTCTTTGTCTCCAG...</td>
-      <td>GAAATTGTGTTGACGCAGTCTCCAGGCACCCTGTCTTTGTCTCCAG...</td>
-      <td>TGTCAGCAGTATGGTAGCTCACCTCCATTCACTTTC</td>
-      <td>...</td>
-      <td>GAS</td>
-      <td>QQYGSSPPFT</td>
-      <td>EIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPR...</td>
-      <td>EIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPR...</td>
-      <td></td>
-      <td>FTFGPGTKVDIK</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>116_6_2</td>
-      <td>76_1</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_2</th>
-      <td>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_2</td>
-      <td>GAGCTCTGGGAGAGGAGCCCAGCACTAGAAGTCGGCGGTGTTTCCA...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGHV3-30*02,IGHV3-30-5*02</td>
-      <td>IGHD1-26*01</td>
-      <td>IGHJ6*02</td>
-      <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
-      <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
-      <td>TGTGCGAAAGATACTGAAGTGGGAGCGAGCCGATACTACTACTACT...</td>
-      <td>...</td>
-      <td>IRYDGSNK</td>
-      <td>AKDTEVGASRYYYYYGMDV</td>
-      <td>QVQLVESGGGVVQPGGSLRLSCAASGFTFSSYGMHWVRQAPGKGLE...</td>
-      <td>QVQLVESGGGVVQPGGSLRLSCAASGFTFSSYGMHWVRQAPGKGLE...</td>
-      <td>VGA</td>
-      <td>YYYYYGMDVWGQGTTVTVSS</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>116_6_2</td>
-      <td>76_1</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AATCGGTGTTAGGGTG_contig_1</th>
-      <td>sc5p_v2_hs_PBMC_1k_AATCGGTGTTAGGGTG_contig_1</td>
+      <th>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG_contig_1</th>
+      <td>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG_contig_1</td>
       <td>GAGCTACAACAGGCAGGCAGGGGCAGCAAGATGGTGTTGCAGACCC...</td>
-      <td>F</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGKV4-1*01</td>
       <td></td>
-      <td>IGKJ5*01</td>
+      <td>IGKJ2*01,IGKJ2*02</td>
       <td>GACATCGTGATGACCCAGTCTCCAGACTCCCTGGCTGTGTCTCTGG...</td>
       <td>GACATCGTGATGACCCAGTCTCCAGACTCCCTGGCTGTGTCTCTGG...</td>
-      <td>TGTCAGCAATATTATAGTACTCCGATCACCTTC</td>
+      <td>TGTCAGCAATATTATAGTACTCCTCGGACTTTT</td>
       <td>...</td>
       <td>WAS</td>
-      <td>QQYYSTPIT</td>
+      <td>QQYYSTPRT</td>
       <td>DIVMTQSPDSLAVSLGERATINCKSSQSVLYSSNNKNYLAWYQQKP...</td>
       <td>DIVMTQSPDSLAVSLGERATINCKSSQSVLYSSNNKNYLAWYQQKP...</td>
       <td></td>
-      <td>ITFGQGTRLEIK</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>134_3_1</td>
-      <td>185_2</td>
+      <td>TFGQGTKLEIK</td>
+      <td>0.0</td>
+      <td>45</td>
+      <td>131_4_1_58</td>
+      <td>8_0</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG_contig_2</th>
+      <td>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG_contig_2</td>
+      <td>ACATTTCCTTAAATTCAGGGTCCAGCTCACATGGGAAATACTTTCT...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV4-59*01</td>
+      <td>IGHD2-15*01</td>
+      <td>IGHJ6*03</td>
+      <td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTT...</td>
+      <td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTT...</td>
+      <td>TGTGCGAGAGCGTGTGGATCGCGTAGTGGTGGTAGCTGCTACGGTT...</td>
+      <td>...</td>
+      <td>IYYSGST</td>
+      <td>ARACGSRSGGSCYGYMDV</td>
+      <td>QVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPPGKGLE...</td>
+      <td>QVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPPGKGLE...</td>
+      <td>SGGSCY</td>
+      <td>YMDVWGKGTTVTVSS</td>
+      <td>0.0</td>
+      <td>8</td>
+      <td>131_4_1_58</td>
+      <td>8_0</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC_contig_2</th>
+      <td>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC_contig_2</td>
+      <td>AGCTCTGGGAGAGGAGCCCCAGCCTTGGGATTCCCAAGTGTTTTCA...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV3-15*01</td>
+      <td>IGHD1-14*01,IGHD1-20*01,IGHD1-7*01</td>
+      <td>IGHJ3*02</td>
+      <td>..GGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTAAAGCCTG...</td>
+      <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTAAAGCCTG...</td>
+      <td>TGTGCCAAATATAATTCTAGGGATGCTTTTGATATCTGG</td>
+      <td>...</td>
+      <td>IRSKGDGGTT</td>
+      <td>AKYNSRDAFDI</td>
+      <td>VQLVESGGGLVKPGGSLRLSCAVSGLTVTNTWMSWVRQAPGKGLEW...</td>
+      <td>VQLVESGGGLVKPGGSLRLSCAVSGLTVTNTWMSWVRQAPGKGLEW...</td>
+      <td>Y</td>
+      <td>DAFDIWGQGTMVIVSS</td>
+      <td>13.0</td>
+      <td>9</td>
+      <td>17_1_1_163</td>
+      <td>63_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC_contig_1</th>
+      <td>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC_contig_1</td>
+      <td>GGGGTCACAAGAGGCAGCGCTCTCGGGACGTCTCCACCATGGCCTG...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGLV2-23*02</td>
+      <td></td>
+      <td>IGLJ1*01</td>
+      <td>CAGTCTGCCCTGACTCAGCCTGCCTCC...GTGTCTGGGTCTCCTG...</td>
+      <td>CAGTCTGCCCTGACTCAGCCTGCCTCC...GTGTCTGGGTCTCCTG...</td>
+      <td>TGTTGCGCATATGCAGGTAGTAGCACTTTCCCTTATGTCTTC</td>
+      <td>...</td>
+      <td>EVS</td>
+      <td>CAYAGSSTFPYV</td>
+      <td>QSALTQPASVSGSPGQSITISCTGTSSDVGSYDLVSWYQQNPGKAP...</td>
+      <td>QSALTQPASVSGSPGQSITISCTGTSSDVGSYDLVSWYQQNPGKAP...</td>
+      <td></td>
+      <td>YVFGTGTKVTVL</td>
+      <td>6.0</td>
+      <td>74</td>
+      <td>17_1_1_163</td>
+      <td>63_1</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CGATCGGAGATGTCGG_contig_1</th>
+      <td>sc5p_v2_hs_PBMC_1k_CGATCGGAGATGTCGG_contig_1</td>
+      <td>AGTCTGGGCCTAAGGAAGCAGCACTGGTGGTGCCTCAGCCATGGCC...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGLV3-21*02</td>
+      <td></td>
+      <td>IGLJ2*01,IGLJ3*01</td>
+      <td>TCCTACGTGCTGACTCAGCCACCCTCG...GTGTCAGTGGCCCCAG...</td>
+      <td>TCCTATGTGCTGACTCAGCCACCCTCG...GTGTCAGTGGCCCCAG...</td>
+      <td>TGTCAGATATGGCATGATAATTATCATGTGGTATTC</td>
+      <td>...</td>
+      <td>DGK</td>
+      <td>QIWHDNYHVV</td>
+      <td>SYVLTQPPSVSVAPGQTATITCGASNYVHWYQQKPGQAPVLVIYDG...</td>
+      <td>SYVLTQPPSVSVAPGQTATITCGASNYVHWYQQKPGQAPVLVIYDG...</td>
+      <td></td>
+      <td>VVFGGGTKLTVL</td>
+      <td>20.0</td>
+      <td>1365</td>
+      <td>146_2_1_38</td>
+      <td>67_2</td>
     </tr>
     <tr>
       <th>...</th>
@@ -797,11 +801,107 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
       <td>...</td>
     </tr>
     <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTACTGCAGATAATG_contig_1</th>
+      <td>sc5p_v2_hs_PBMC_10k_TTTACTGCAGATAATG_contig_1</td>
+      <td>CGAGCCCAGCACTGGAAGTCGCCGGTGTTTCCATTCGGTGATCATC...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV3-30-3*01</td>
+      <td>IGHD6-19*01</td>
+      <td>IGHJ4*02</td>
+      <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
+      <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
+      <td>TGTGCGAGAGATCAGCAGTGGCTGGGGGACTTTGACTACTGG</td>
+      <td>...</td>
+      <td>ISYDGSNK</td>
+      <td>ARDQQWLGDFDY</td>
+      <td>QVQLVESGGGVVQPGRSLRLSCAASGFTFSSYAMHWVRQAPGKGLE...</td>
+      <td>QVQLVESGGGVVQPGRSLRLSCAASGFTFSSYAMHWVRQAPGKGLE...</td>
+      <td>QWL</td>
+      <td>FDYWGQGTLVTVSS</td>
+      <td>0.0</td>
+      <td>35</td>
+      <td>8_2_1_11</td>
+      <td>322_333</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTATGCGTTGGGACA_contig_1</th>
+      <td>sc5p_v2_hs_PBMC_10k_TTTATGCGTTGGGACA_contig_1</td>
+      <td>AGGAGTCAGACCCTGTCAGGACACAGCATAGACATGAGGGTCCCCG...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGKV1-8*01</td>
+      <td></td>
+      <td>IGKJ1*01</td>
+      <td>GCCATCCGGATGACCCAGTCTCCATCCTCATTCTCTGCATCTACAG...</td>
+      <td>GCCATCCGGATGACCCAGTCTCCATCCTCATTCTCTGCATCTACAG...</td>
+      <td>TGTCAACAGTATTATAGTTACCCTCGAACGTTC</td>
+      <td>...</td>
+      <td>AAS</td>
+      <td>QQYYSYPRT</td>
+      <td>AIRMTQSPSSFSASTGDRVTITCRASQGISSYLAWYQQKPGKAPKL...</td>
+      <td>AIRMTQSPSSFSASTGDRVTITCRASQGISSYLAWYQQKPGKAPKL...</td>
+      <td></td>
+      <td>TFGQGTKVEIK</td>
+      <td>0.0</td>
+      <td>45</td>
+      <td>42_3_1_323</td>
+      <td>65_334</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTATGCGTTGGGACA_contig_2</th>
+      <td>sc5p_v2_hs_PBMC_10k_TTTATGCGTTGGGACA_contig_2</td>
+      <td>AGTGCTTTCTGAGAGTCATGGACCTCCTGCACAAGAACATGAAACA...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGHV4-34*01</td>
+      <td>IGHD2-15*01</td>
+      <td>IGHJ5*02</td>
+      <td>CAGGTGCAGCTACAGCAGTGGGGCGCA...GGACTGTTGAAGCCTT...</td>
+      <td>CAGGTGCAGCTACAGCAGTGGGGCGCA...GGACTGTTGAAGCCTT...</td>
+      <td>TGTGCGAGAGGCAGTCCTTATTGTAGTGGTGGTAGCTGCTACCTGA...</td>
+      <td>...</td>
+      <td>INHSGST</td>
+      <td>ARGSPYCSGGSCYLNWFDP</td>
+      <td>QVQLQQWGAGLLKPSETLSLTCAVYGGSFSGYYWSWIRQPPGKGLE...</td>
+      <td>QVQLQQWGAGLLKPSETLSLTCAVYGGSFSGYYWSWIRQPPGKGLE...</td>
+      <td>YCSGGSCY</td>
+      <td>NWFDPWGQGTLVTVSS</td>
+      <td>0.0</td>
+      <td>37</td>
+      <td>42_3_1_323</td>
+      <td>65_334</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTCCTCTCTTCAACT_contig_2</th>
+      <td>sc5p_v2_hs_PBMC_10k_TTTCCTCTCTTCAACT_contig_2</td>
+      <td>AGGAGTCAGACCCTGTCAGGACACAGCATAGACATGAGGGTCCCCG...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>IGKV1-8*01</td>
+      <td></td>
+      <td>IGKJ4*01</td>
+      <td>GCCATCCGGATGACCCAGTCTCCATCCTCATTCTCTGCATCTACAG...</td>
+      <td>GCCATCCGGATGACCCAGTCTCCATCCTCATTCTCTGCATCTACAG...</td>
+      <td>TGTCAACAGTATTATAGTTACCCTCTCACTTTC</td>
+      <td>...</td>
+      <td>AAS</td>
+      <td>QQYYSYPLT</td>
+      <td>AIRMTQSPSSFSASTGDRVTITCRASQGISSYLAWYQQKPGKAPKL...</td>
+      <td>AIRMTQSPSSFSASTGDRVTITCRASQGISSYLAWYQQKPGKAPKL...</td>
+      <td></td>
+      <td>TFGGGTKVEIK</td>
+      <td>0.0</td>
+      <td>19</td>
+      <td>145_1_1_77</td>
+      <td>522_335</td>
+    </tr>
+    <tr>
       <th>sc5p_v2_hs_PBMC_10k_TTTCCTCTCTTCAACT_contig_1</th>
       <td>sc5p_v2_hs_PBMC_10k_TTTCCTCTCTTCAACT_contig_1</td>
       <td>TTTCCTCTCTTCAACTGCGAACCGACTTTCTGCGATGGGGACTCAA...</td>
-      <td>F</td>
-      <td>T</td>
+      <td>True</td>
+      <td>True</td>
       <td>IGHV1-8*01</td>
       <td>IGHD2-2*02</td>
       <td>IGHJ6*02</td>
@@ -815,110 +915,14 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
       <td>QVQLVQSGAEVKKPGASVKVSCKASGYTFTSYDINWVRQATGQGLE...</td>
       <td>YCSSTSCYT</td>
       <td>YYYYYGMDVWGQGTTVTVSS</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>36_6_1</td>
-      <td>758_448</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_2</th>
-      <td>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_2</td>
-      <td>GGGAGAGCCCTGGGGAGGAACTGCTCAGTTAGGACCCAGAGGGAAC...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGKV3-11*01</td>
-      <td></td>
-      <td>IGKJ5*01</td>
-      <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
-      <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
-      <td>TGTCAGCAGCGTAGCAACTGGCTCACCTTC</td>
-      <td>...</td>
-      <td>DAS</td>
-      <td>QQRSNWLT</td>
-      <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
-      <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
-      <td></td>
-      <td>TFGQGTRLEIK</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>155_2_1</td>
-      <td>432_449</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_1</th>
-      <td>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_1</td>
-      <td>ACAACCACACCCCTCCTAAGAAGAAGCCCCTAGACCACAGCTCCAC...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGHV7-4-1*02</td>
-      <td>IGHD3-10*01</td>
-      <td>IGHJ5*02</td>
-      <td>CAGGTGCAGCTGGTGCAATCTGGGTCT...GAGTTGAAGAAGCCTG...</td>
-      <td>CAGGTGCAGCTGGTGCAATCTGGGTCT...GAGTTGAAGAAGCCTG...</td>
-      <td>TGTGCGAGAGTTTTTAGACGCTATGGTTCGGGGAGTTATTATAACC...</td>
-      <td>...</td>
-      <td>INTNTGNP</td>
-      <td>ARVFRRYGSGSYYNL</td>
-      <td>QVQLVQSGSELKKPGASVKVSCKASGYTFTSYAMNWVRQAPGQGLE...</td>
-      <td>QVQLVQSGSELKKPGASVKVSCKASGYTFTSYAMNWVRQAPGQGLE...</td>
-      <td>YGSGSYY</td>
-      <td>LWGQGTLVTVSS</td>
-      <td>0.003003</td>
-      <td>0</td>
-      <td>155_2_1</td>
-      <td>432_449</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_1</th>
-      <td>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_1</td>
-      <td>GAGAGAGGAGCCTTAGCCCTGGATTCCAAGGCCTATCCACTTGGTG...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGHV3-21*01</td>
-      <td>IGHD4-17*01</td>
-      <td>IGHJ2*01</td>
-      <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTG...</td>
-      <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTG...</td>
-      <td>TGTGCGAGAGATCCCGGTGACTACGTAGAAATTGAGTGGTACTTCG...</td>
-      <td>...</td>
-      <td>ISSSSSYI</td>
-      <td>ARDPGDYVEIEWYFDL</td>
-      <td>EVQLVESGGGLVKPGGSLRLSCAASGFTFSSYSMNWVRQAPGKGLE...</td>
-      <td>EVQLVESGGGLVKPGGSLRLSCAASGFTFSSYSMNWVRQAPGKGLE...</td>
-      <td>GDY</td>
-      <td>WYFDLWGRGTLVTVSS</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>52_1_1</td>
-      <td>357_450</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_2</th>
-      <td>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_2</td>
-      <td>GGGAGAGCCCTGGGGAGGAACTGCTCAGTTAGGACCCAGAGGGAAC...</td>
-      <td>F</td>
-      <td>T</td>
-      <td>IGKV3-11*01</td>
-      <td></td>
-      <td>IGKJ4*01</td>
-      <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
-      <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
-      <td>TGTCAGCAGCGTAGCAACTGGCCTAGGCTCACTTTC</td>
-      <td>...</td>
-      <td>DAS</td>
-      <td>QQRSNWPRLT</td>
-      <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
-      <td>EIVLTQSPATLSLSPGERATLSCRASQSVSSYLAWYQQKPGQAPRL...</td>
-      <td></td>
-      <td>LTFGGGTKVEIK</td>
-      <td>0.000000</td>
-      <td>0</td>
-      <td>52_1_1</td>
-      <td>357_450</td>
+      <td>0.0</td>
+      <td>36</td>
+      <td>145_1_1_77</td>
+      <td>522_335</td>
     </tr>
   </tbody>
 </table>
-<p>926 rows × 84 columns</p>
+<p>682 rows × 84 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -938,9 +942,9 @@ Dandelion class object with n_obs = 838 and n_contigs = 1700
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 454 and n_contigs = 926
-    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_freq&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
-    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_genotyped_heavy&#39;, &#39;v_call_genotyped_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;umi_count_light_2&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 339 and n_contigs = 682
+    data: &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;rev_comp&#39;, &#39;productive&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;v_cigar&#39;, &#39;d_cigar&#39;, &#39;j_cigar&#39;, &#39;stop_codon&#39;, &#39;vj_in_frame&#39;, &#39;locus&#39;, &#39;junction_length&#39;, &#39;np1_length&#39;, &#39;np2_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;v_germline_start&#39;, &#39;v_germline_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;d_germline_start&#39;, &#39;d_germline_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;j_germline_start&#39;, &#39;j_germline_end&#39;, &#39;v_score&#39;, &#39;v_identity&#39;, &#39;v_support&#39;, &#39;d_score&#39;, &#39;d_identity&#39;, &#39;d_support&#39;, &#39;j_score&#39;, &#39;j_identity&#39;, &#39;j_support&#39;, &#39;fwr1&#39;, &#39;fwr2&#39;, &#39;fwr3&#39;, &#39;fwr4&#39;, &#39;cdr1&#39;, &#39;cdr2&#39;, &#39;cdr3&#39;, &#39;cell_id&#39;, &#39;c_call&#39;, &#39;consensus_count&#39;, &#39;umi_count&#39;, &#39;v_call_10x&#39;, &#39;d_call_10x&#39;, &#39;j_call_10x&#39;, &#39;junction_10x&#39;, &#39;junction_10x_aa&#39;, &#39;v_call_genotyped&#39;, &#39;germline_alignment_d_mask&#39;, &#39;sample_id&#39;, &#39;c_sequence_alignment&#39;, &#39;c_germline_alignment&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;c_score&#39;, &#39;c_identity&#39;, &#39;c_support&#39;, &#39;c_call_10x&#39;, &#39;junction_aa_length&#39;, &#39;fwr1_aa&#39;, &#39;fwr2_aa&#39;, &#39;fwr3_aa&#39;, &#39;fwr4_aa&#39;, &#39;cdr1_aa&#39;, &#39;cdr2_aa&#39;, &#39;cdr3_aa&#39;, &#39;sequence_alignment_aa&#39;, &#39;v_sequence_alignment_aa&#39;, &#39;d_sequence_alignment_aa&#39;, &#39;j_sequence_alignment_aa&#39;, &#39;mu_count&#39;, &#39;duplicate_count&#39;, &#39;clone_id&#39;, &#39;changeo_clone_id&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -975,7 +979,7 @@ Updating germline reference
 <div class="section" id="pp.create_germlines">
 <h3><code class="docutils literal notranslate"><span class="pre">pp.create_germlines</span></code><a class="headerlink" href="#pp.create_germlines" title="Permalink to this headline">¶</a></h3>
 <p>Then we run <code class="docutils literal notranslate"><span class="pre">pp.create_germline</span></code> to (re)create the <code class="docutils literal notranslate"><span class="pre">germline_alignment_d_mask</span></code> column in the data. If <code class="docutils literal notranslate"><span class="pre">update_germline</span></code> was run like above, there’s no need to specify the <code class="docutils literal notranslate"><span class="pre">germline</span></code> option as the function will simply retrieve it from the <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object.</p>
-<p><em>Note: the ability to run the original CreateGermlines.py with –cloned option is not currently possible through pp.create_germlines(). This is possible with pp.external.creategermlines but requires a physical file for CreateGermlines.py to work on. Thus, I would reccomend for you to run CreateGermlines.py separately if you intend to use the –cloned option. See [(https://changeo.readthedocs.io/en/stable/examples/germlines.html)] for more info.</em></p>
+<p><em>Note: the ability to run the original CreateGermlines.py with –cloned option is not currently possible through pp.create_germlines(). This is possible with pp.external.creategermlines but requires a physical file for CreateGermlines.py to work on. Thus, I would reccomend for you to run CreateGermlines.py separately if you intend to use the –cloned option. See [https://changeo.readthedocs.io/en/stable/examples/germlines.html] for more info.</em></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -998,7 +1002,7 @@ Reconstructing germline sequences
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-   Building dmask germline sequences: 926it [00:01, 739.83it/s]
+   Building dmask germline sequences: 682it [00:00, 912.18it/s]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1056,29 +1060,29 @@ Reconstructing germline sequences
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_1</th>
-      <td>IGLV3-1*01</td>
-      <td>TCCTATGAGCTGACTCAGCCACCCTCA...GTGTCCGTGTCCCCAG...</td>
+      <th>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG_contig_1</th>
+      <td>IGKV4-1*01</td>
+      <td>GACATCGTGATGACCCAGTCTCCAGACTCCCTGGCTGTGTCTCTGG...</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AACTGGTTCTCTAAGG_contig_2</th>
+      <th>sc5p_v2_hs_PBMC_1k_ACACTGATCGGTTCGG_contig_2</th>
+      <td>IGHV4-59*01</td>
+      <td>CAGGTGCAGCTGCAGGAGTCGGGCCCA...GGACTGGTGAAGCCTT...</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC_contig_2</th>
       <td>IGHV3-15*01</td>
       <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCTTGGTAAAGCCTG...</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_1</th>
-      <td>IGKV3-20*01</td>
-      <td>GAAATTGTGTTGACGCAGTCTCCAGGCACCCTGTCTTTGTCTCCAG...</td>
+      <th>sc5p_v2_hs_PBMC_1k_CCGGTAGGTCAGAAGC_contig_1</th>
+      <td>IGLV2-23*02</td>
+      <td>CAGTCTGCCCTGACTCAGCCTGCCTCC...GTGTCTGGGTCTCCTG...</td>
     </tr>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AATCCAGTCAGTTGAC_contig_2</th>
-      <td>IGHV3-30*02</td>
-      <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_1k_AATCGGTGTTAGGGTG_contig_1</th>
-      <td>IGKV4-1*01</td>
-      <td>GACATCGTGATGACCCAGTCTCCAGACTCCCTGGCTGTGTCTCTGG...</td>
+      <th>sc5p_v2_hs_PBMC_1k_CGATCGGAGATGTCGG_contig_1</th>
+      <td>IGLV3-21*02</td>
+      <td>TCCTATGTGCTGACTCAGCCACCCTCG...GTGTCAGTGGCCCCAG...</td>
     </tr>
     <tr>
       <th>...</th>
@@ -1086,33 +1090,33 @@ Reconstructing germline sequences
       <td>...</td>
     </tr>
     <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTACTGCAGATAATG_contig_1</th>
+      <td>IGHV3-30-3*01</td>
+      <td>CAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCGTGGTCCAGCCTG...</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTATGCGTTGGGACA_contig_1</th>
+      <td>IGKV1-8*01</td>
+      <td>GCCATCCGGATGACCCAGTCTCCATCCTCATTCTCTGCATCTACAG...</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTATGCGTTGGGACA_contig_2</th>
+      <td>IGHV4-34*01</td>
+      <td>CAGGTGCAGCTACAGCAGTGGGGCGCA...GGACTGTTGAAGCCTT...</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_10k_TTTCCTCTCTTCAACT_contig_2</th>
+      <td>IGKV1-8*01</td>
+      <td>GCCATCCGGATGACCCAGTCTCCATCCTCATTCTCTGCATCTACAG...</td>
+    </tr>
+    <tr>
       <th>sc5p_v2_hs_PBMC_10k_TTTCCTCTCTTCAACT_contig_1</th>
       <td>IGHV1-8*01</td>
       <td>CAGGTGCAGCTGGTGCAGTCTGGGGCT...GAGGTGAAGAAGCCTG...</td>
     </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_2</th>
-      <td>IGKV3-11*01</td>
-      <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCAGAGCTT_contig_1</th>
-      <td>IGHV7-4-1*02</td>
-      <td>CAGGTGCAGCTGGTGCAATCTGGGTCT...GAGTTGAAGAAGCCTG...</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_1</th>
-      <td>IGHV3-21*01</td>
-      <td>GAGGTGCAGCTGGTGGAGTCTGGGGGA...GGCCTGGTCAAGCCTG...</td>
-    </tr>
-    <tr>
-      <th>sc5p_v2_hs_PBMC_10k_TTTGGTTTCGGTGTCG_contig_2</th>
-      <td>IGKV3-11*01</td>
-      <td>GAAATTGTGTTGACACAGTCTCCAGCCACCCTGTCTTTGTCTCCAG...</td>
-    </tr>
   </tbody>
 </table>
-<p>926 rows × 2 columns</p>
+<p>682 rows × 2 columns</p>
 </div></div>
 </div>
 <p>The default behaviour is to mask the D region with Ns with option <code class="docutils literal notranslate"><span class="pre">germ_types</span> <span class="pre">=</span> <span class="pre">'dmask'</span></code>. See <a class="reference external" href="https://changeo.readthedocs.io/en/stable/methods/germlines.html">here</a> for more info.</p>
@@ -1140,7 +1144,7 @@ Quantifying mutations
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:08)
+ (0:00:13)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1161,7 +1165,7 @@ Quantifying mutations
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:05)
+ (0:00:03)
 </pre></div></div>
 </div>
 <p>Specifying <code class="docutils literal notranslate"><span class="pre">split_locus</span> <span class="pre">=</span> <span class="pre">True</span></code> will split up the results for the different chains.</p>
@@ -1183,7 +1187,7 @@ Quantifying mutations
  finished: Updated Dandelion object:
    &#39;data&#39;, contig-indexed clone table
    &#39;metadata&#39;, cell-indexed clone table
- (0:00:07)
+ (0:00:04)
 </pre></div></div>
 </div>
 <p>To update the <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object, simply rerun <code class="docutils literal notranslate"><span class="pre">tl.transfer</span></code>.</p>
@@ -1207,7 +1211,7 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:31)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:18)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1215,9 +1219,41 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">adata</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 15175 × 1439
+    obs: &#39;sampleid&#39;, &#39;batch&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;n_genes_by_counts&#39;, &#39;total_counts&#39;, &#39;total_counts_mt&#39;, &#39;pct_counts_mt&#39;, &#39;gmm_pct_count_clusters&#39;, &#39;gmm_pct_count_clusters_keep&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;, &#39;leiden&#39;, &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;sample_id&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_genotyped_VDJ&#39;, &#39;v_call_genotyped_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;, &#39;changeo_clone_id&#39;, &#39;mu_count&#39;, &#39;mu_count_seq_r&#39;, &#39;mu_count_seq_s&#39;, &#39;mu_count_seq_r_IGH&#39;, &#39;mu_count_seq_s_IGH&#39;, &#39;mu_count_IGH&#39;, &#39;mu_count_seq_r_IGL&#39;, &#39;mu_count_seq_s_IGL&#39;, &#39;mu_count_IGL&#39;, &#39;mu_count_seq_r_IGK&#39;, &#39;mu_count_seq_s_IGK&#39;, &#39;mu_count_IGK&#39;
+    var: &#39;feature_types&#39;, &#39;genome&#39;, &#39;gene_ids-0&#39;, &#39;gene_ids-1&#39;, &#39;gene_ids-2&#39;, &#39;gene_ids-3&#39;, &#39;n_cells&#39;, &#39;highly_variable&#39;, &#39;means&#39;, &#39;dispersions&#39;, &#39;dispersions_norm&#39;, &#39;mean&#39;, &#39;std&#39;
+    uns: &#39;clone_id_by_size_colors&#39;, &#39;contig_QC_pass_colors&#39;, &#39;hvg&#39;, &#39;isotype_colors&#39;, &#39;leiden&#39;, &#39;leiden_colors&#39;, &#39;neighbors&#39;, &#39;pca&#39;, &#39;rna_neighbors&#39;, &#39;sampleid_colors&#39;, &#39;status_colors&#39;, &#39;umap&#39;, &#39;vdj_status_colors&#39;
+    obsm: &#39;X_pca&#39;, &#39;X_umap&#39;, &#39;X_vdj&#39;
+    varm: &#39;PCs&#39;
+    obsp: &#39;connectivities&#39;, &#39;distances&#39;, &#39;rna_connectivities&#39;, &#39;rna_distances&#39;, &#39;vdj_connectivities&#39;, &#39;vdj_distances&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">scanpy.plotting.palettes</span> <span class="kn">import</span> <span class="n">default_28</span><span class="p">,</span> <span class="n">default_102</span>
 <span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
-<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_seq_r&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_seq_s&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_IGH&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_freq_IGL&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span> <span class="o">+</span> <span class="n">default_102</span><span class="p">,</span> <span class="n">color_map</span> <span class="o">=</span> <span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_id&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_count&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_count_seq_r&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_count_seq_s&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_count_IGH&#39;</span><span class="p">,</span> <span class="s1">&#39;mu_count_IGL&#39;</span><span class="p">],</span>
+                     <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                     <span class="n">legend_loc</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+                     <span class="n">legend_fontoutline</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                     <span class="n">edges_width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="n">palette</span> <span class="o">=</span> <span class="n">default_28</span> <span class="o">+</span> <span class="n">default_102</span><span class="p">,</span>
+                     <span class="n">color_map</span> <span class="o">=</span> <span class="s1">&#39;viridis&#39;</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1226,14 +1262,14 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-WARNING: Length of palette colors is smaller than the number of categories (palette length: 130, categories length: 822. Some categories will have the same color.
+WARNING: Length of palette colors is smaller than the number of categories (palette length: 130, categories length: 546. Some categories will have the same color.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_24_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_24_1.png" style="width: 681px; height: 856px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_25_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_25_1.png" style="width: 659px; height: 856px;" />
 </div>
 </div>
 </div>
@@ -1244,11 +1280,11 @@ WARNING: Length of palette colors is smaller than the number of categories (pale
 <p><code class="docutils literal notranslate"><span class="pre">tl.clone_rarefaction</span></code> and <code class="docutils literal notranslate"><span class="pre">pl.clone_rarefaction</span></code></p>
 <p>We can use <code class="docutils literal notranslate"><span class="pre">pl.clone_rarefaction</span></code> to generate rarefaction curves for the clones. <code class="docutils literal notranslate"><span class="pre">tl.clone_rarefaction</span></code> will populate the <code class="docutils literal notranslate"><span class="pre">.uns</span></code> slot with the results. <code class="docutils literal notranslate"><span class="pre">groupby</span></code> option must be specified. In this case, I decided to group by sample. The function will only work on an <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object and not a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> object.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_rarefaction</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sampleid&#39;</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_rarefaction</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;sampleid&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1265,23 +1301,23 @@ removing due to zero counts:
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Calculating rarefaction curve : 100%|██████████| 4/4 [00:00&lt;00:00, 15.28it/s]
+Calculating rarefaction curve : 100%|██████████| 4/4 [00:00&lt;00:00, 30.97it/s]
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_26_2.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_26_2.png" style="width: 753px; height: 393px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_27_2.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_27_2.png" style="width: 753px; height: 393px;" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;ggplot: (343225997)&gt;
+&lt;ggplot: (346148341)&gt;
 </pre></div></div>
 </div>
 <p><strong>tl.clone_diversity</strong></p>
@@ -1314,7 +1350,7 @@ method for bulk BCR-seq as described above. This option can be toggled by <code 
 <p>The diversity functions also have the option to perform downsampling to a fixed number of cells, or to the smallest sample size specified via <code class="docutils literal notranslate"><span class="pre">groupby</span></code> (default) so that sample sizes are even when comparing between groups.</p>
 <p>if <code class="docutils literal notranslate"><span class="pre">update_obs_meta=False</span></code>, a data frame is returned; otherwise, the value gets added to the <code class="docutils literal notranslate"><span class="pre">AnnData.obs</span></code> or <code class="docutils literal notranslate"><span class="pre">Dandelion.metadata</span></code> accordingly.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1332,7 +1368,7 @@ method for bulk BCR-seq as described above. This option can be toggled by <code 
 Calculating Gini indices
 Computing Gini indices for cluster and vertex size using network.
  finished: updated `.metadata` with Gini indices.
- (0:00:14)
+ (0:00:10)
 Calculating Gini indices
 Computing gini indices for clone size using metadata and node closeness centrality using network.
 Calculating node closeness centrality
@@ -1346,15 +1382,21 @@ Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:22)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:18)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_size_gini&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_centrality_gini&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;clone_network_vertex_size_gini&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;clone_size_gini&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;clone_centrality_gini&#39;</span><span class="p">],</span>
+                     <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1362,16 +1404,22 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_30_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_30_0.png" style="width: 681px; height: 577px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_31_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_31_0.png" style="width: 681px; height: 577px;" />
 </div>
 </div>
 <p>With these particular samples, because there is not many expanded clones in general, the gini indices are quite low when calculated within each sample. We can re-run it by specifying <code class="docutils literal notranslate"><span class="pre">expanded_only</span> <span class="pre">=</span> <span class="pre">True</span></code> to only factor in expanded_clones. We also specify the key_added option to create a new column instead of writing over the original columns.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_network&#39;</span><span class="p">,</span> <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">key_added</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">])</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                       <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                       <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span>
+                       <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_network&#39;</span><span class="p">,</span>
+                       <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                       <span class="n">key_added</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">])</span>
 <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">vdj</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1384,22 +1432,26 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 Calculating Gini indices
 Computing Gini indices for cluster and vertex size using network.
  finished: updated `.metadata` with Gini indices.
- (0:00:14)
+ (0:00:12)
 Transferring network
 converting matrices
 Updating anndata slots
  finished: updated `.obs` with `.metadata`
 added to `.uns[&#39;neighbors&#39;]` and `.obsp`
    &#39;distances&#39;, cluster-weighted adjacency matrix
-   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:20)
+   &#39;connectivities&#39;, cluster-weighted adjacency matrix (0:00:17)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">clone_network</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span>
+                     <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">],</span>
+                     <span class="n">ncols</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                     <span class="n">size</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1407,12 +1459,12 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_33_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_33_0.png" style="width: 678px; height: 299px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_34_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_34_0.png" style="width: 678px; height: 299px;" />
 </div>
 </div>
 <p>We can also choose not to update the metadata to return a pandas dataframe.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1428,11 +1480,11 @@ added to `.uns[&#39;neighbors&#39;]` and `.obsp`
 <div class="highlight"><pre>
 Calculating Gini indices
 Computing Gini indices for cluster and vertex size using network.
- finished (0:00:16)
+ finished (0:00:11)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1460,35 +1512,41 @@ Computing Gini indices for cluster and vertex size using network.
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>0.029412</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
       <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.048583</td>
-      <td>0.021134</td>
+      <td>0.046017</td>
+      <td>0.018605</td>
     </tr>
     <tr>
       <th>vdj_v1_hs_pbmc3</th>
-      <td>0.026316</td>
+      <td>0.111111</td>
       <td>0.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
-      <td>0.004739</td>
-      <td>0.001584</td>
+      <td>0.003012</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>0.111111</td>
+      <td>0.000000</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">gini2</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">key_added</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">])</span>
+<span></span><span class="n">gini2</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                               <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                               <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span>
+                               <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                               <span class="n">expanded_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                               <span class="n">key_added</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">])</span>
 <span class="n">gini2</span>
 </pre></div>
 </div>
@@ -1500,11 +1558,11 @@ Computing Gini indices for cluster and vertex size using network.
 <div class="highlight"><pre>
 Calculating Gini indices
 Computing Gini indices for cluster and vertex size using network.
- finished (0:00:15)
+ finished (0:00:11)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1532,31 +1590,31 @@ Computing Gini indices for cluster and vertex size using network.
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>0.029412</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
       <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.467532</td>
-      <td>0.333333</td>
+      <td>0.430769</td>
+      <td>0.307692</td>
     </tr>
     <tr>
       <th>vdj_v1_hs_pbmc3</th>
-      <td>0.026316</td>
+      <td>0.111111</td>
       <td>0.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
+      <td>0.003012</td>
       <td>0.000000</td>
-      <td>0.333333</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>0.111111</td>
+      <td>0.000000</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1568,23 +1626,27 @@ Computing Gini indices for cluster and vertex size using network.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_37_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_37_0.png" style="width: 472px; height: 296px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_38_0.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_38_0.png" style="width: 472px; height: 296px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_network_cluster_size_gini&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_network_vertex_size_gini&#39;</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">gini</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_network_cluster_size_gini&#39;</span><span class="p">,</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_network_vertex_size_gini&#39;</span><span class="p">,</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">gini</span><span class="p">,</span>
+                    <span class="n">hue</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                    <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
 <span class="n">p</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">p</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1596,22 +1658,26 @@ Computing Gini indices for cluster and vertex size using network.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_38_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_38_1.png" style="width: 329px; height: 306px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_39_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_39_1.png" style="width: 329px; height: 306px;" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">p2</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">gini2</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span> <span class="n">gini2</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
+<span></span><span class="n">p2</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_network_cluster_size_gini_expanded&#39;</span><span class="p">,</span>
+                     <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_network_vertex_size_gini_expanded&#39;</span><span class="p">,</span>
+                     <span class="n">data</span> <span class="o">=</span> <span class="n">gini2</span><span class="p">,</span>
+                     <span class="n">hue</span> <span class="o">=</span> <span class="n">gini2</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                     <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
 <span class="n">p2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">p2</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1623,16 +1689,20 @@ Computing Gini indices for cluster and vertex size using network.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_39_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_39_1.png" style="width: 339px; height: 327px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_40_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_40_1.png" style="width: 339px; height: 327px;" />
 </div>
 </div>
 <p>We can also visualise what the results for the clone centrality gini indices.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">gini</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">gini</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                              <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                              <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gini&#39;</span><span class="p">,</span>
+                              <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality&#39;</span><span class="p">,</span>
+                              <span class="n">update_obs_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">gini</span>
 </pre></div>
 </div>
@@ -1651,7 +1721,7 @@ Calculating node closeness centrality
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1679,23 +1749,23 @@ Calculating node closeness centrality
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>0.029412</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
       <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.048583</td>
-      <td>0.045455</td>
+      <td>0.046017</td>
+      <td>0.038462</td>
     </tr>
     <tr>
       <th>vdj_v1_hs_pbmc3</th>
-      <td>0.026316</td>
+      <td>0.111111</td>
       <td>0.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
-      <td>0.004739</td>
+      <td>0.003012</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>0.111111</td>
       <td>0.000000</td>
     </tr>
   </tbody>
@@ -1703,19 +1773,23 @@ Calculating node closeness centrality
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># not a great example because there&#39;s only 1 big clone in 1 sample.</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_size_gini&#39;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality_gini&#39;</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">gini</span><span class="p">,</span> <span class="n">hue</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s1">&#39;clone_size_gini&#39;</span><span class="p">,</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="s1">&#39;clone_centrality_gini&#39;</span><span class="p">,</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">gini</span><span class="p">,</span>
+                    <span class="n">hue</span> <span class="o">=</span> <span class="n">gini</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                    <span class="n">palette</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sampleid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;sampleid_colors&#39;</span><span class="p">])))</span>
 <span class="n">p</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">p</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1727,16 +1801,19 @@ Calculating node closeness centrality
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_42_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_42_1.png" style="width: 329px; height: 306px;" />
+<img alt="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_43_1.png" class="no-scaled-link" src="../_images/notebooks_5_dandelion_diversity_and_mutation-10x_data_43_1.png" style="width: 329px; height: 306px;" />
 </div>
 </div>
 <p>Chao1 is an estimator based on abundance</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;chao1&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                       <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                       <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;chao1&#39;</span><span class="p">,</span>
+                       <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1750,7 +1827,7 @@ Calculating Chao1 estimates
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1777,32 +1854,35 @@ Calculating Chao1 estimates
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>561.0</td>
-    </tr>
-    <tr>
       <th>vdj_nextgem_hs_pbmc3</th>
-      <td>9106.0</td>
+      <td>5281.25</td>
     </tr>
     <tr>
       <th>vdj_v1_hs_pbmc3</th>
-      <td>703.0</td>
+      <td>36.00</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
-      <td>44205.5</td>
+      <td>54946.00</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>36.00</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>For Shannon Entropy, we can calculate a normalized (inspired by <code class="docutils literal notranslate"><span class="pre">scirpy</span></code>’s <a class="reference external" href="https://icbi-lab.github.io/scirpy/generated/scirpy.tl.alpha_diversity.html?highlight=diversity#scirpy.tl.alpha_diversity">function</a>) and non-normalized value.</p>
+<p>For Shannon Entropy, we can calculate a normalized (inspired by <a class="reference external" href="https://icbi-lab.github.io/scirpy/generated/scirpy.tl.alpha_diversity.html?highlight=diversity#scirpy.tl.alpha_diversity">scirpy’s function</a>) and non-normalized value.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;shannon&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                       <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                       <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;shannon&#39;</span><span class="p">,</span>
+                       <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1816,7 +1896,7 @@ Calculating Shannon entropy
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1843,12 +1923,8 @@ Calculating Shannon entropy
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>1.000000</td>
-    </tr>
-    <tr>
       <th>vdj_nextgem_hs_pbmc3</th>
-      <td>0.989883</td>
+      <td>0.992504</td>
     </tr>
     <tr>
       <th>vdj_v1_hs_pbmc3</th>
@@ -1856,18 +1932,26 @@ Calculating Shannon entropy
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
-      <td>0.999849</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>1.000000</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;shannon&#39;</span><span class="p">,</span> <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">ddl</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">clone_diversity</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span>
+                       <span class="n">groupby</span> <span class="o">=</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                       <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;shannon&#39;</span><span class="p">,</span>
+                       <span class="n">update_obs_meta</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">normalize</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1881,7 +1965,7 @@ Calculating Shannon entropy
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1908,20 +1992,20 @@ Calculating Shannon entropy
   </thead>
   <tbody>
     <tr>
-      <th>sc5p_v2_hs_PBMC_1k</th>
-      <td>5.044394</td>
-    </tr>
-    <tr>
       <th>vdj_nextgem_hs_pbmc3</th>
-      <td>8.285998</td>
+      <td>7.628884</td>
     </tr>
     <tr>
       <th>vdj_v1_hs_pbmc3</th>
-      <td>5.209453</td>
+      <td>3.000000</td>
     </tr>
     <tr>
       <th>sc5p_v2_hs_PBMC_10k</th>
-      <td>8.712926</td>
+      <td>8.370687</td>
+    </tr>
+    <tr>
+      <th>sc5p_v2_hs_PBMC_1k</th>
+      <td>3.000000</td>
     </tr>
   </tbody>
 </table>

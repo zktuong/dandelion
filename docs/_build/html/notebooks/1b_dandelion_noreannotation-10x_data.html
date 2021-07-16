@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Cellranger V4 onwards &mdash; dandelion 0.1.0 documentation</title>
+  <title>Reading 10X Cell Ranger output directly &mdash; dandelion  documentation</title>
   
 
   
@@ -97,20 +97,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../README.html#external-softwares">External softwares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#basic-requirements">Basic requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html#acknowledgements">Acknowledgements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorial:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="singularity_preprocessing.html">Dandelion preprocessing with Singularity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_delta.html">Dandelion for TCR gamma/delta reannotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="1_dandelion_preprocessing-10x_data.html">Pre-processing (Re-annotation)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="2_dandelion_filtering-10x_data.html">Filtering</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Cellranger V4 onwards</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reading 10X Cell Ranger output directly</a></li>
 <li class="toctree-l1"><a class="reference internal" href="3_dandelion_findingclones-10x_data.html">BCR clustering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html">Interoperability with <code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#dandelion"><code class="docutils literal notranslate"><span class="pre">dandelion</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="1c_dandelion_scirpy.html#scirpy"><code class="docutils literal notranslate"><span class="pre">scirpy</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="4_dandelion_visualization-10x_data.html">Visualizing BCR data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="5_dandelion_diversity_and_mutation-10x_data.html">Calculating diversity and mutation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="0_dandelion_primer.html"><em>Dandelion</em> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="6_dandelion_running_from_R-10x_data.html">Running from R</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_dandelion_TCR_data_10x_data.html">Analyzing TCR data</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API:</span></p>
 <ul>
@@ -169,7 +171,9 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Cellranger V4 onwards</li>
+          <li><a href="../tutorial_short.html">&lt;no title&gt;</a> &raquo;</li>
+        
+      <li>Reading 10X Cell Ranger output directly</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -458,12 +462,17 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Cellranger-V4-onwards">
-<h1>Cellranger V4 onwards<a class="headerlink" href="#Cellranger-V4-onwards" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Reading-10X-Cell-Ranger-output-directly">
+<h1>Reading 10X Cell Ranger output directly<a class="headerlink" href="#Reading-10X-Cell-Ranger-output-directly" title="Permalink to this headline">¶</a></h1>
 <img alt="dandelion_logo" src="../_images/dandelion_logo_illustration.png" />
-<p>From <strong>cellranger V4</strong> onwards, there is now an <code class="docutils literal notranslate"><span class="pre">airr_rearrangement.tsv</span></code> file that can be used directly with <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code>. However, doing so will miss out on the reannotation steps but that is entirely up to you.</p>
+<p>If for whatever reason you’ve decided to skip the reannotation/preprocessing, you can read the files directly from the Cell Ranger output folder with <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code>’s <code class="docutils literal notranslate"><span class="pre">ddl.read_10x_vdj</span></code>, which accepts the <code class="docutils literal notranslate"><span class="pre">*_contig_annotations.csv</span></code> or <code class="docutils literal notranslate"><span class="pre">all_contig_annotations.json</span></code> file(s) as input. If reading with the <code class="docutils literal notranslate"><span class="pre">.csv</span></code> file, and the <code class="docutils literal notranslate"><span class="pre">.fasta</span></code> file and/or <code class="docutils literal notranslate"><span class="pre">.json</span></code> file(s) are in the same folder, <code class="docutils literal notranslate"><span class="pre">ddl.read_10x_vdj</span></code> will try to extract additional information not found in the <code class="docutils literal notranslate"><span class="pre">.csv</span></code> file
+e.g. contig sequences.</p>
+<p>From <strong>Cell Ranger V4</strong> onwards, there is also an <code class="docutils literal notranslate"><span class="pre">airr_rearrangement.tsv</span></code> file that can be used directly with <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code>. However, doing so will miss out on the reannotation steps but that is entirely up to you.</p>
 <p>We will download the <em>airr_rearrangement.tsv</em> file from here:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># bash</span>
+wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_filtered_contig_annotations.csv
+wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_filtered_contig.fasta
+<span class="c1"># wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_all_contig_annotations.json</span>
 wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_b_airr_rearrangement.tsv
 </pre></div>
 </div>
@@ -486,12 +495,40 @@ wget https://cf.10xgenomics.com/samples/cell-vdj/4.0.0/sc5p_v2_hs_PBMC_10k/sc5p_
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 scipy==1.5.3 skbio==0.5.6
+dandelion==0.1.3.post2.dev62 pandas==1.2.3 numpy==1.20.1 matplotlib==3.3.4 networkx==2.5 scipy==1.6.1 skbio==0.5.6
 </pre></div></div>
 </div>
-<p>Basically it’s as simple as doing this:</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">ddl.read_10x_vdj</span></code>:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">folder_location</span> <span class="o">=</span> <span class="s1">&#39;sc5p_v2_hs_PBMC_10k&#39;</span>
+<span class="c1"># or file_location = &#39;sc5p_v2_hs_PBMC_10k/&#39;</span>
+<span class="n">vdj</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">read_10x_vdj</span><span class="p">(</span><span class="n">folder_location</span><span class="p">,</span> <span class="n">filename_prefix</span><span class="o">=</span><span class="s1">&#39;sc5p_v2_hs_PBMC_10k_b_filtered&#39;</span><span class="p">)</span>
+<span class="n">vdj</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Dandelion class object with n_obs = 985 and n_contigs = 2601
+    data: &#39;cell_id&#39;, &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;productive&#39;, &#39;complete_vdj&#39;, &#39;locus&#39;, &#39;v_call&#39;, &#39;d_call&#39;, &#39;j_call&#39;, &#39;c_call&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;sequence_length_10x&#39;, &#39;high_confidence_10x&#39;, &#39;is_cell_10x&#39;, &#39;cdr3_aa&#39;, &#39;cdr3&#39;, &#39;clone_id&#39;, &#39;raw_consensus_id_10x&#39;
+    metadata: &#39;clone_id&#39;, &#39;clone_id_by_size&#39;, &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VDJ_2&#39;, &#39;duplicate_count_VDJ_3&#39;, &#39;duplicate_count_VDJ_4&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;duplicate_count_VJ_2&#39;, &#39;duplicate_count_VJ_3&#39;, &#39;duplicate_count_VJ_4&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
+    distance: None
+    edges: None
+    layout: None
+    graph: None
+</pre></div></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">ddl.read_10x_airr</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -503,14 +540,14 @@ dandelion==0.1.0 pandas==1.1.4 numpy==1.19.4 matplotlib==3.3.3 networkx==2.5 sci
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Dandelion class object with n_obs = 978 and n_contigs = 2093
     data: &#39;cell_id&#39;, &#39;clone_id&#39;, &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_length&#39;, &#39;junction_aa_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;is_cell&#39;, &#39;locus&#39;
-    metadata: &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;duplicate_count_heavy_0&#39;, &#39;duplicate_count_heavy_1&#39;, &#39;duplicate_count_light_0&#39;, &#39;duplicate_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;heavychain_status_summary&#39;
+    metadata: &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VDJ_1&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -520,7 +557,7 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 <p>We will continue with the rest of the filtering part of the analysis to show how it slots smoothly with the rest of the workflow.</p>
 <p><strong>Import modules for use with scanpy</strong></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -543,16 +580,16 @@ Dandelion class object with n_obs = 978 and n_contigs = 2093
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-scanpy==1.6.0 anndata==0.7.4 umap==0.4.6 numpy==1.19.4 scipy==1.5.3 pandas==1.1.4 scikit-learn==0.23.2 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
+scanpy==1.6.0 anndata==0.7.6 umap==0.4.6 numpy==1.20.1 scipy==1.6.1 pandas==1.2.3 scikit-learn==0.24.1 statsmodels==0.12.1 python-igraph==0.8.3 leidenalg==0.8.3
 </pre></div></div>
 </div>
 <p><strong>Import the transcriptome data</strong></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_10x_h5</span><span class="p">(</span><span class="s1">&#39;sc5p_v2_hs_PBMC_10k/sc5p_v2_hs_PBMC_10k_filtered_feature_bc_matrix.h5&#39;</span><span class="p">,</span> <span class="n">gex_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_10x_h5</span><span class="p">(</span><span class="s1">&#39;sc5p_v2_hs_PBMC_10k/filtered_feature_bc_matrix.h5&#39;</span><span class="p">,</span> <span class="n">gex_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;sc5p_v2_hs_PBMC_10k&#39;</span>
 <span class="n">adata</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
 <span class="n">adata</span>
@@ -569,7 +606,7 @@ Variable names are not unique. To make them unique, call `.var_names_make_unique
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -581,7 +618,7 @@ AnnData object with n_obs × n_vars = 10553 × 36601
 </div>
 <p>Run QC on the transcriptome data.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -591,13 +628,13 @@ AnnData object with n_obs × n_vars = 10553 × 36601
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 AnnData object with n_obs × n_vars = 10553 × 36601
-    obs: &#39;sample_id&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;
+    obs: &#39;sample_id&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;n_genes_by_counts&#39;, &#39;total_counts&#39;, &#39;total_counts_mt&#39;, &#39;pct_counts_mt&#39;, &#39;gmm_pct_count_clusters&#39;, &#39;gmm_pct_count_clusters_keep&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;
     var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;
 </pre></div></div>
 </div>
@@ -608,24 +645,17 @@ AnnData object with n_obs × n_vars = 10553 × 36601
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># The function will return both objects.</span>
-<span class="n">vdj</span><span class="p">,</span> <span class="n">adata</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_bcr</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">vdj</span><span class="p">,</span> <span class="n">adata</span> <span class="o">=</span> <span class="n">ddl</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_contigs</span><span class="p">(</span><span class="n">vdj</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Scanning for poor quality/ambiguous contigs with 3 cpus
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Annotating in anndata obs slot : 100%|██████████| 10553/10553 [00:00&lt;00:00, 512178.78it/s]
+Scanning for poor quality/ambiguous contigs: 100%|██████████| 994/994 [00:17&lt;00:00, 57.38it/s]
+Annotating in anndata obs slot : 100%|██████████| 10553/10553 [00:00&lt;00:00, 329689.70it/s]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -638,7 +668,7 @@ Initializing Dandelion object
 </pre></div></div>
 </div>
 <p><strong>Check the output V(D)J table</strong></p>
-<p>The vdj table is returned as a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class object in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot (described in further detail in the next notebook); if a file was provided for <code class="docutils literal notranslate"><span class="pre">filter_bcr</span></code> above, a new file will be created in the same folder with the <code class="docutils literal notranslate"><span class="pre">filtered</span></code> prefix. Note that this <code class="docutils literal notranslate"><span class="pre">vdj</span></code> table is indexed based on contigs (sequence_id).</p>
+<p>The vdj table is returned as a <code class="docutils literal notranslate"><span class="pre">Dandelion</span></code> class object in the <code class="docutils literal notranslate"><span class="pre">.data</span></code> slot; if a file was provided for <code class="docutils literal notranslate"><span class="pre">filter_bcr</span></code> above, a new file will be created in the same folder with the <code class="docutils literal notranslate"><span class="pre">filtered</span></code> prefix. Note that this V(D)J table is indexed based on contigs (sequence_id).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -654,9 +684,9 @@ Initializing Dandelion object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Dandelion class object with n_obs = 515 and n_contigs = 1031
-    data: &#39;cell_id&#39;, &#39;clone_id&#39;, &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_length&#39;, &#39;junction_aa_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;is_cell&#39;, &#39;sample_id&#39;, &#39;locus&#39;, &#39;umi_count&#39;
-    metadata: &#39;sample_id&#39;, &#39;locus_heavy&#39;, &#39;locus_light&#39;, &#39;productive_heavy&#39;, &#39;productive_light&#39;, &#39;v_call_heavy&#39;, &#39;v_call_light&#39;, &#39;j_call_heavy&#39;, &#39;j_call_light&#39;, &#39;c_call_heavy&#39;, &#39;c_call_light&#39;, &#39;umi_count_heavy_0&#39;, &#39;umi_count_light_0&#39;, &#39;umi_count_light_1&#39;, &#39;junction_aa_heavy&#39;, &#39;junction_aa_light&#39;, &#39;status&#39;, &#39;productive&#39;, &#39;isotype&#39;, &#39;vdj_status_detail&#39;, &#39;vdj_status&#39;
+Dandelion class object with n_obs = 346 and n_contigs = 692
+    data: &#39;cell_id&#39;, &#39;clone_id&#39;, &#39;sequence_id&#39;, &#39;sequence&#39;, &#39;sequence_aa&#39;, &#39;productive&#39;, &#39;rev_comp&#39;, &#39;v_call&#39;, &#39;v_cigar&#39;, &#39;d_call&#39;, &#39;d_cigar&#39;, &#39;j_call&#39;, &#39;j_cigar&#39;, &#39;c_call&#39;, &#39;c_cigar&#39;, &#39;sequence_alignment&#39;, &#39;germline_alignment&#39;, &#39;junction&#39;, &#39;junction_aa&#39;, &#39;junction_length&#39;, &#39;junction_aa_length&#39;, &#39;v_sequence_start&#39;, &#39;v_sequence_end&#39;, &#39;d_sequence_start&#39;, &#39;d_sequence_end&#39;, &#39;j_sequence_start&#39;, &#39;j_sequence_end&#39;, &#39;c_sequence_start&#39;, &#39;c_sequence_end&#39;, &#39;consensus_count&#39;, &#39;duplicate_count&#39;, &#39;is_cell&#39;, &#39;locus&#39;, &#39;umi_count&#39;
+    metadata: &#39;locus_VDJ&#39;, &#39;locus_VJ&#39;, &#39;productive_VDJ&#39;, &#39;productive_VJ&#39;, &#39;v_call_VDJ&#39;, &#39;v_call_VJ&#39;, &#39;j_call_VDJ&#39;, &#39;j_call_VJ&#39;, &#39;c_call_VDJ&#39;, &#39;c_call_VJ&#39;, &#39;duplicate_count_VDJ_0&#39;, &#39;duplicate_count_VJ_0&#39;, &#39;duplicate_count_VJ_1&#39;, &#39;junction_aa_VDJ&#39;, &#39;junction_aa_VJ&#39;, &#39;status&#39;, &#39;status_summary&#39;, &#39;productive&#39;, &#39;productive_summary&#39;, &#39;isotype&#39;, &#39;isotype_summary&#39;, &#39;vdj_status&#39;, &#39;vdj_status_summary&#39;, &#39;constant_status_summary&#39;
     distance: None
     edges: None
     layout: None
@@ -680,8 +710,8 @@ Dandelion class object with n_obs = 515 and n_contigs = 1031
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-AnnData object with n_obs × n_vars = 7331 × 36601
-    obs: &#39;sample_id&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;percent_mito&#39;, &#39;n_counts&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_bcr&#39;, &#39;filter_bcr_quality&#39;, &#39;filter_bcr_heavy&#39;, &#39;filter_bcr_light&#39;, &#39;bcr_QC_pass&#39;, &#39;filter_bcr&#39;
+AnnData object with n_obs × n_vars = 10553 × 36601
+    obs: &#39;sample_id&#39;, &#39;scrublet_score&#39;, &#39;n_genes&#39;, &#39;n_genes_by_counts&#39;, &#39;total_counts&#39;, &#39;total_counts_mt&#39;, &#39;pct_counts_mt&#39;, &#39;gmm_pct_count_clusters&#39;, &#39;gmm_pct_count_clusters_keep&#39;, &#39;is_doublet&#39;, &#39;filter_rna&#39;, &#39;has_contig&#39;, &#39;filter_contig_quality&#39;, &#39;filter_contig_VDJ&#39;, &#39;filter_contig_VJ&#39;, &#39;contig_QC_pass&#39;, &#39;filter_contig&#39;
     var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;
 </pre></div></div>
 </div>
@@ -691,7 +721,7 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_bcr&#39;</span><span class="p">])</span>
+<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_contig&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_contig&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -717,22 +747,26 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>filter_bcr</th>
+      <th>filter_contig</th>
       <th>False</th>
+      <th>True</th>
     </tr>
     <tr>
-      <th>has_bcr</th>
+      <th>has_contig</th>
+      <th></th>
       <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>True</th>
-      <td>522</td>
+      <td>349</td>
+      <td>635</td>
     </tr>
     <tr>
-      <th>No_BCR</th>
-      <td>6809</td>
+      <th>No_contig</th>
+      <td>6327</td>
+      <td>3242</td>
     </tr>
   </tbody>
 </table>
@@ -743,7 +777,7 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_bcr&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">])</span>
+<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;has_contig&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;contig_QC_pass&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -769,13 +803,13 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>bcr_QC_pass</th>
+      <th>contig_QC_pass</th>
       <th>False</th>
       <th>True</th>
-      <th>No_BCR</th>
+      <th>No_contig</th>
     </tr>
     <tr>
-      <th>has_bcr</th>
+      <th>has_contig</th>
       <th></th>
       <th></th>
       <th></th>
@@ -784,15 +818,15 @@ AnnData object with n_obs × n_vars = 7331 × 36601
   <tbody>
     <tr>
       <th>True</th>
-      <td>7</td>
-      <td>515</td>
+      <td>638</td>
+      <td>346</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>No_BCR</th>
+      <th>No_contig</th>
       <td>0</td>
       <td>0</td>
-      <td>6809</td>
+      <td>9569</td>
     </tr>
   </tbody>
 </table>
@@ -803,7 +837,7 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_bcr&#39;</span><span class="p">])</span>
+<span></span><span class="n">pd</span><span class="o">.</span><span class="n">crosstab</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;contig_QC_pass&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;filter_contig&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -829,26 +863,31 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>filter_bcr</th>
+      <th>filter_contig</th>
       <th>False</th>
+      <th>True</th>
     </tr>
     <tr>
-      <th>bcr_QC_pass</th>
+      <th>contig_QC_pass</th>
+      <th></th>
       <th></th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>False</th>
-      <td>7</td>
+      <td>3</td>
+      <td>635</td>
     </tr>
     <tr>
       <th>True</th>
-      <td>515</td>
+      <td>346</td>
+      <td>0</td>
     </tr>
     <tr>
-      <th>No_BCR</th>
-      <td>6809</td>
+      <th>No_contig</th>
+      <td>6327</td>
+      <td>3242</td>
     </tr>
   </tbody>
 </table>
@@ -887,7 +926,7 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_25_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_25_0.png" />
+<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_27_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_27_0.png" />
 </div>
 </div>
 <p><strong>Filter the genes to only those marked as highly-variable</strong></p>
@@ -906,7 +945,7 @@ AnnData object with n_obs × n_vars = 7331 × 36601
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">regress_out</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;n_counts&#39;</span><span class="p">,</span> <span class="s1">&#39;percent_mito&#39;</span><span class="p">])</span>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">regress_out</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;total_counts&#39;</span><span class="p">,</span> <span class="s1">&#39;pct_counts_mt&#39;</span><span class="p">])</span>
 <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -939,7 +978,7 @@ Trying to set attribute `.var` of view, copying.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_31_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_31_0.png" />
+<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_33_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_33_0.png" />
 </div>
 </div>
 <p><strong>Computing the neighborhood graph, umap and clusters</strong></p>
@@ -963,7 +1002,7 @@ Trying to set attribute `.var` of view, copying.
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="s1">&#39;bcr_QC_pass&#39;</span><span class="p">])</span>
+<span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="s1">&#39;contig_QC_pass&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -971,7 +1010,7 @@ Trying to set attribute `.var` of view, copying.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_35_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_35_0.png" />
+<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_37_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_37_0.png" />
 </div>
 </div>
 <p><strong>Visualizing some B cell genes</strong></p>
@@ -988,7 +1027,7 @@ Trying to set attribute `.var` of view, copying.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_37_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_37_0.png" />
+<img alt="../_images/notebooks_1b_dandelion_noreannotation-10x_data_39_0.png" src="../_images/notebooks_1b_dandelion_noreannotation-10x_data_39_0.png" />
 </div>
 </div>
 <p><strong>Save AnnData</strong></p>
