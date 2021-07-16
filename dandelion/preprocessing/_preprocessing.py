@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 20:15:31
+# @Last Modified time: 2021-07-16 21:26:36
 
 import os
 import pandas as pd
@@ -37,8 +37,13 @@ from Bio import Align
 from typing import Union, Sequence, Tuple
 from os import PathLike
 
+TRUES = ['T', 'True', 'true', 'TRUE', True]
+FALSES = ['F', 'False', 'false', 'FALSE', False]
+HEAVYLONG = ['IGH', 'TRB', 'TRD']
+LIGHTSHORT = ['IGK', 'IGL', 'TRA', 'TRG']
 
-def format_fasta(fasta: Union[str, PathLike],
+
+def format_fasta(fasta: Union[PathLike, str],
                  prefix: Union[None, str] = None,
                  suffix: Union[None, str] = None,
                  sep: Union[None, str] = None,
@@ -2052,8 +2057,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     if not simple:
         if productive_only:
-            dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE',
-                                                True])].copy()
+            dat = dat_[dat_['productive'].isin(TRUES)].copy()
         else:
             dat = dat_.copy()
     else:
@@ -2108,11 +2112,11 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                       desc='Scanning for poor quality/ambiguous contigs'):
             tofilter.run_scan_lite(b, v_dict, d_dict, j_dict, c_dict)
 
-    poor_qual = tofilter.poor_qual
-    h_doublet = tofilter.h_doublet
-    l_doublet = tofilter.l_doublet
-    drop_contig = tofilter.drop_contig
-    umi_adjustment = tofilter.umi_adjustment
+    poor_qual = tofilter.poor_qual.copy()
+    h_doublet = tofilter.h_doublet.copy()
+    l_doublet = tofilter.l_doublet.copy()
+    drop_contig = tofilter.drop_contig.copy()
+    umi_adjustment = tofilter.umi_adjustment.copy()
 
     if len(umi_adjustment) > 0:
         dat['duplicate_count'].update(umi_adjustment)
@@ -2136,13 +2140,13 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         else:
             ldoublet.update({c: False})
 
-    adata_.obs['filter_contig_quality'] = pd.Series(dict(poorqual))
+    adata_.obs['filter_contig_quality'] = pd.Series(poorqual)
     adata_.obs['filter_contig_quality'] = adata_.obs[
         'filter_contig_quality'].astype('category')
-    adata_.obs['filter_contig_VDJ'] = pd.Series(dict(hdoublet))
+    adata_.obs['filter_contig_VDJ'] = pd.Series(hdoublet)
     adata_.obs['filter_contig_VDJ'] = adata_.obs['filter_contig_VDJ'].astype(
         'category')
-    adata_.obs['filter_contig_VJ'] = pd.Series(dict(ldoublet))
+    adata_.obs['filter_contig_VJ'] = pd.Series(ldoublet)
     adata_.obs['filter_contig_VJ'] = adata_.obs['filter_contig_VJ'].astype(
         'category')
 
@@ -2163,7 +2167,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                 filter_ids = list(set(h_doublet + l_doublet))
 
         filter_ids = filter_ids + \
-            list(adata_[adata_.obs['filter_rna'].isin([True, 'True'])].obs_names)
+            list(adata_[adata_.obs['filter_rna'].isin(TRUES)].obs_names)
         filter_ids = list(set(filter_ids))
 
         if filter_missing:
@@ -2178,7 +2182,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         barcodes_final = list(set(_dat['cell_id']))
         filter_ids2 = []
         for b in barcodes_final:
-            check_dat = _dat[(_dat['locus'].isin(['IGH', 'TRB', 'TRD']))
+            check_dat = _dat[(_dat['locus'].isin(HEAVYLONG))
                              & (_dat['cell_id'].isin([b]))].copy()
             if check_dat.shape[0] < 1:
                 filter_ids2.append(b)
@@ -2236,8 +2240,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     if filter_rna:
         # not saving the scanpy object because there's no need to at the moment
-        out_adata = adata_[adata_.obs['filter_contig'].isin([False,
-                                                             'False'])].copy()
+        out_adata = adata_[adata_.obs['filter_contig'].isin(FALSES)].copy()
     else:
         out_adata = adata_.copy()
 
@@ -2737,80 +2740,79 @@ class FilterContigs:
         """Main workhorse of filter_contig."""
         h = _select_info(self,
                          fields=['cell_id', 'locus'],
-                         subset=[b, ['IGH', 'TRB', 'TRD']],
+                         subset=[b, HEAVYLONG],
                          query='sequence_id')
         h_umi = _select_info(self,
                              fields=['cell_id', 'locus'],
-                             subset=[b, ['IGH', 'TRB', 'TRD']],
+                             subset=[b, HEAVYLONG],
                              query='duplicate_count',
                              numeric=True)
         if 'sequence_alignment' in self.data:
             h_seq = _select_info(self,
                                  fields=['cell_id', 'locus'],
-                                 subset=[b, ['IGH', 'TRB', 'TRD']],
+                                 subset=[b, HEAVYLONG],
                                  query='sequence_alignment')
         h_ccall = _select_info(self,
                                fields=['cell_id', 'locus'],
-                               subset=[b, ['IGH', 'TRB', 'TRD']],
+                               subset=[b, HEAVYLONG],
                                query='c_call')
 
         l = _select_info(self,
                          fields=['cell_id', 'locus'],
-                         subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                         subset=[b, LIGHTSHORT],
                          query='sequence_id')
         l_umi = _select_info(self,
                              fields=['cell_id', 'locus'],
-                             subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                             subset=[b, LIGHTSHORT],
                              query='duplicate_count',
                              numeric=True)
         if 'sequence_alignment' in self.data:
             l_seq = _select_info(self,
                                  fields=['cell_id', 'locus'],
-                                 subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                                 subset=[b, LIGHTSHORT],
                                  query='sequence_alignment')
 
         # split to productive vs non-productive
         h_p = _select_info(self,
                            fields=['cell_id', 'locus', 'productive'],
-                           subset=[b, ['IGH', 'TRB', 'TRD'], True],
+                           subset=[b, HEAVYLONG, TRUES],
                            query='sequence_id')
         h_umi_p = _select_info(self,
                                fields=['cell_id', 'locus', 'productive'],
-                               subset=[b, ['IGH', 'TRB', 'TRD'], True],
+                               subset=[b, HEAVYLONG, TRUES],
                                query='duplicate_count',
                                numeric=True)
         h_ccall_p = _select_info(self,
                                  fields=['cell_id', 'locus', 'productive'],
-                                 subset=[b, ['IGH', 'TRB', 'TRD'], True],
+                                 subset=[b, HEAVYLONG, TRUES],
                                  query='c_call')
         h_np = _select_info(self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGH', 'TRB', 'TRD'], False],
+                            subset=[b, HEAVYLONG, FALSES],
                             query='sequence_id')
         h_umi_np = _select_info(self,
                                 fields=['cell_id', 'locus', 'productive'],
-                                subset=[b, ['IGH', 'TRB', 'TRD'], False],
+                                subset=[b, HEAVYLONG, FALSES],
                                 query='duplicate_count',
                                 numeric=True)
         l_p = _select_info(self,
                            fields=['cell_id', 'locus', 'productive'],
-                           subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], True],
+                           subset=[b, LIGHTSHORT, TRUES],
                            query='sequence_id')
         l_umi_p = _select_info(self,
                                fields=['cell_id', 'locus', 'productive'],
-                               subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], True],
+                               subset=[b, LIGHTSHORT, TRUES],
                                query='duplicate_count',
                                numeric=True)
         l_np = _select_info(self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], False],
+                            subset=[b, LIGHTSHORT, FALSES],
                             query='sequence_id')
-        l_umi_np = _select_info(
-            self,
-            fields=['cell_id', 'locus', 'productive'],
-            subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], False],
-            query='duplicate_count',
-            numeric=True)
+        l_umi_np = _select_info(self,
+                                fields=['cell_id', 'locus', 'productive'],
+                                subset=[b, LIGHTSHORT, FALSES],
+                                query='duplicate_count',
+                                numeric=True)
 
         # marking doublets defined by heavy chains
         if len(h) > 1:
@@ -2841,28 +2843,28 @@ class FilterContigs:
                         h_p = _select_info(
                             self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGH', 'TRB', 'TRD'], True],
+                            subset=[b, HEAVYLONG, TRUES],
                             query='sequence_id')
                         h_umi_p = _select_info(
                             self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGH', 'TRB', 'TRD'], True],
+                            subset=[b, HEAVYLONG, TRUES],
                             query='duplicate_count',
                             numeric=True)
                         h_ccall_p = _select_info(
                             self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGH', 'TRB', 'TRD'], True],
+                            subset=[b, HEAVYLONG, TRUES],
                             query='c_call')
                         h_np = _select_info(
                             self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGH', 'TRB', 'TRD'], False],
+                            subset=[b, HEAVYLONG, FALSES],
                             query='sequence_id')
                         h_umi_np = _select_info(
                             self,
                             fields=['cell_id', 'locus', 'productive'],
-                            subset=[b, ['IGH', 'TRB', 'TRD'], False],
+                            subset=[b, HEAVYLONG, FALSES],
                             query='duplicate_count',
                             numeric=True)
             if len(h_p) > 1:
@@ -2909,9 +2911,7 @@ class FilterContigs:
                                         fields=[
                                             'cell_id', 'locus', 'productive'
                                         ],
-                                        subset=[
-                                            b, ['IGH', 'TRB', 'TRD'], True
-                                        ],
+                                        subset=[b, HEAVYLONG, TRUES],
                                         query='sequence_id')
             # tries to keep most non-productive contigs but if there is a dominant contig, drop other contigs.
             if len(h_np) > 1:
@@ -2937,7 +2937,7 @@ class FilterContigs:
                             h_np = _select_info(
                                 self,
                                 fields=['cell_id', 'locus', 'productive'],
-                                subset=[b, ['IGH', 'TRB', 'TRD'], False],
+                                subset=[b, HEAVYLONG, FALSES],
                                 query='sequence_id')
         if len(l) > 1:
             if 'sequence_alignment' in self.data:
@@ -2960,30 +2960,30 @@ class FilterContigs:
                                    l_umi[keep_index_l + 1:]))
                     })
                     # l = list(self.data[(self.data['cell_id'].isin([b])) & (
-                    #     self.data['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG']))]
+                    #     self.data['locus'].isin(LIGHTSHORT))]
                     #          ['sequence_id'])
 
                     # refresh
                     l_p = _select_info(
                         self,
                         fields=['cell_id', 'locus', 'productive'],
-                        subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], True],
+                        subset=[b, LIGHTSHORT, TRUES],
                         query='sequence_id')
                     l_umi_p = _select_info(
                         self,
                         fields=['cell_id', 'locus', 'productive'],
-                        subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], True],
+                        subset=[b, LIGHTSHORT, TRUES],
                         query='duplicate_count',
                         numeric=True)
                     l_np = _select_info(
                         self,
                         fields=['cell_id', 'locus', 'productive'],
-                        subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], False],
+                        subset=[b, LIGHTSHORT, FALSES],
                         query='sequence_id')
                     l_umi_np = _select_info(
                         self,
                         fields=['cell_id', 'locus', 'productive'],
-                        subset=[b, ['IGK', 'IGL', 'TRA', 'TRG'], False],
+                        subset=[b, LIGHTSHORT, FALSES],
                         query='duplicate_count',
                         numeric=True)
             if len(l_p) > 1:
@@ -3023,9 +3023,7 @@ class FilterContigs:
                                 l_p = _select_info(
                                     self,
                                     fields=['cell_id', 'locus', 'productive'],
-                                    subset=[
-                                        b, ['IGK', 'IGL', 'TRA', 'TRG'], True
-                                    ],
+                                    subset=[b, LIGHTSHORT, TRUES],
                                     query='sequence_id')
 
             # tries to keep most non-productive contigs but if there is a dominant contig, drop other contigs.
@@ -3053,9 +3051,7 @@ class FilterContigs:
                                 l_np = _select_info(
                                     self,
                                     fields=['cell_id', 'locus', 'productive'],
-                                    subset=[
-                                        b, ['IGK', 'IGL', 'TRA', 'TRG'], False
-                                    ],
+                                    subset=[b, LIGHTSHORT, FALSES],
                                     query='sequence_id')
 
         # marking doublets defined by VJ chains
@@ -3309,32 +3305,32 @@ class FilterContigs:
         """A 'lite' version of filter_contig where it does not impose the 1 VDJ + 1 VJ filtering."""
         h = _select_info(self,
                          fields=['cell_id', 'locus'],
-                         subset=[b, ['IGH', 'TRB', 'TRD']],
+                         subset=[b, HEAVYLONG],
                          query='sequence_id')
         h_umi = _select_info(self,
                              fields=['cell_id', 'locus'],
-                             subset=[b, ['IGH', 'TRB', 'TRD']],
+                             subset=[b, HEAVYLONG],
                              query='duplicate_count',
                              numeric=True)
         if 'sequence_alignment' in self.data:
             h_seq = _select_info(self,
                                  fields=['cell_id', 'locus'],
-                                 subset=[b, ['IGH', 'TRB', 'TRD']],
+                                 subset=[b, HEAVYLONG],
                                  query='sequence_alignment')
 
         l = _select_info(self,
                          fields=['cell_id', 'locus'],
-                         subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                         subset=[b, LIGHTSHORT],
                          query='sequence_id')
         l_umi = _select_info(self,
                              fields=['cell_id', 'locus'],
-                             subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                             subset=[b, LIGHTSHORT],
                              query='duplicate_count',
                              numeric=True)
         if 'sequence_alignment' in self.data:
             l_seq = _select_info(self,
                                  fields=['cell_id', 'locus'],
-                                 subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                                 subset=[b, LIGHTSHORT],
                                  query='sequence_alignment')
 
         if len(h) > 1:
@@ -3359,11 +3355,11 @@ class FilterContigs:
                     })
                     h = _select_info(self,
                                      fields=['cell_id', 'locus'],
-                                     subset=[b, ['IGH', 'TRB', 'TRD']],
+                                     subset=[b, HEAVYLONG],
                                      query='sequence_id')
                     h_umi = _select_info(self,
                                          fields=['cell_id', 'locus'],
-                                         subset=[b, ['IGH', 'TRB', 'TRD']],
+                                         subset=[b, HEAVYLONG],
                                          query='duplicate_count',
                                          numeric=True)
 
@@ -3389,14 +3385,13 @@ class FilterContigs:
                     })
                     l = _select_info(self,
                                      fields=['cell_id', 'locus'],
-                                     subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
+                                     subset=[b, LIGHTSHORT],
                                      query='sequence_id')
-                    l_umi = _select_info(
-                        self,
-                        fields=['cell_id', 'locus'],
-                        subset=[b, ['IGK', 'IGL', 'TRA', 'TRG']],
-                        query='duplicate_count',
-                        numeric=True)
+                    l_umi = _select_info(self,
+                                         fields=['cell_id', 'locus'],
+                                         subset=[b, LIGHTSHORT],
+                                         query='duplicate_count',
+                                         numeric=True)
 
         if len(h) > 0:
             for hx in h:
