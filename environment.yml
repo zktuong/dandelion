@@ -22,6 +22,6 @@ dependencies:
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
-  - -r file:requirements_dev.txt
+  - -r file:requirements.txt
   - rpy2>=3.4.0
   - pytest-cov

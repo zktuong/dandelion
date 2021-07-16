@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-with open("requirements_dev.txt", "rt", encoding="utf-8") as fh:
+with open("requirements.txt", "rt", encoding="utf-8") as fh:
     requirements = [line.strip() for line in fh.readlines()]
 
 setup(
