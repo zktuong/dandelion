@@ -1,5 +1,1 @@
-recursive-include bin igblastn
-recursive-include bin blastn
-recursive-include bin makeblastdb
 recursive-include bin tigger-genotype.R
-
