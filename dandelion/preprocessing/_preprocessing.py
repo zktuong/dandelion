@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 21:26:36
+# @Last Modified time: 2021-07-16 22:38:11
 
 import os
 import pandas as pd
@@ -2447,7 +2447,10 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
 
 
 def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
+                        mode: Literal["single-cell", "heavy"] = "single-cell",
                         manual_threshold: Union[None, float] = None,
+                        VJthenLen: bool = False,
+                        onlyHeavy: bool = False,
                         model: Union[None,
                                      Literal["ham", "aa", "hh_s1f", "hh_s5f",
                                              "mk_rs1nf", "hs1f_compat",
@@ -2473,7 +2476,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                         plot_group: Union[None, str] = None,
                         figsize: Tuple[Union[int, float],
                                        Union[int, float]] = (4.5, 2.5),
-                        *args) -> Dandelion:
+                        **kwargs) -> Dandelion:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam`.
 
@@ -2495,8 +2498,21 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     self : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
         have been determined.
+    mode : Literal, str
+        accepts one of "heavy" or "single-cell". 
+        Refer to https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette.
     manual_threshold : float, optional
         value to manually plot in histogram.
+    VJthenLen : bool
+        logical value specifying whether to perform partitioning as a 2-stage process. 
+        If True, partitions are made first based on V and J gene, and then further split 
+        based on junction lengths corresponding to sequenceColumn. 
+        If False, perform partition as a 1-stage process during which V gene, J gene, and junction length 
+        are used to create partitions simultaneously.
+        Defaults to False.
+    onlyHeavy : bool
+        use only the IGH (BCR) or TRB/TRD (TCR) sequences for grouping. Only applicable to single-cell mode.
+        See groupGenes for further details.
     model : str, optional
         underlying SHM model, which must be one of "ham","aa","hh_s1f","hh_s5f","mk_rs1nf","hs1f_compat","m1n_compat".
     normalize_method : str, optional
@@ -2531,7 +2547,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         determines the fill color and facets.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of plot. Default is (4.5, 2.5).
-    *args
+    **kwargs
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
 
     Returns
@@ -2581,18 +2597,37 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         ncpu_ = multiprocessing.cpu_count() - 1
     else:
         ncpu_ = ncpu
-    dat_h = dat[dat['locus'] == 'IGH']
-    try:
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-    except:
-        dat_h = dat_h.astype(str)
-        dat_h_r = pandas2ri.py2rpy(dat_h)
-    dist_ham = sh.distToNearest(dat_h_r,
-                                vCallColumn=v_call,
-                                model=model_,
-                                normalize=norm_,
-                                nproc=ncpu_,
-                                *args)
+    if mode == 'heavy':
+        dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
+        try:
+            dat_h_r = pandas2ri.py2rpy(dat_h)
+        except:
+            dat_h = dat_h.astype(str)
+            dat_h_r = pandas2ri.py2rpy(dat_h)
+
+        dist_ham = sh.distToNearest(dat_h_r,
+                                    vCallColumn=v_call,
+                                    model=model_,
+                                    normalize=norm_,
+                                    nproc=ncpu_,
+                                    **kwargs)
+    elif mode == 'single-cell':
+        try:
+            dat_r = pandas2ri.py2rpy(dat)
+        except:
+            dat = dat.astype(str)
+            dat_r = pandas2ri.py2rpy(dat)
+
+        dist_ham = sh.distToNearest(dat_r,
+                                    cellIdColumn="cell_id",
+                                    locusColumn="locus",
+                                    VJthenLen=VJthenLen,
+                                    vCallColumn=v_call,
+                                    onlyHeavy=onlyHeavy,
+                                    normalize=norm_,
+                                    model=model_,
+                                    nproc=ncpu_,
+                                    **kwargs)
     # Find threshold using density method
     dist = np.array(dist_ham['dist_nearest'])
     if threshold_method_ == 'density':
