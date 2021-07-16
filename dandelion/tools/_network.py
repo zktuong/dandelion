@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-17 00:12:40
+# @Last Modified time: 2021-07-17 00:40:06
 
 import pandas as pd
 import numpy as np
@@ -83,6 +83,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     if clonekey not in dat:
         raise ValueError(
             'Data does not contain clone information. Please run find_clones.')
+
+    if locus is None:
+        locus = 'ig'
 
     # calculate distance
 
