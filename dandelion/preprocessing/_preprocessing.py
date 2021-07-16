@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 22:48:09
+# @Last Modified time: 2021-07-16 22:48:14
 
 import os
 import pandas as pd
@@ -2629,7 +2629,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                         nproc=ncpu_,
                                         **kwargs)
         except:
-            print(("2 cell(s) with multiple heavy chains found. One heavy chain per cell is expected.\n"+
+            print(("2 cell(s) with multiple heavy chains found. One heavy chain per cell is expected.\n" +
                    "Rerun this after filtering. For now, wwitching to heavy mode."))
             dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
             try:
@@ -2637,7 +2637,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
             except:
                 dat_h = dat_h.astype(str)
                 dat_h_r = pandas2ri.py2rpy(dat_h)
-    
+
             dist_ham = sh.distToNearest(dat_h_r,
                                         vCallColumn=v_call,
                                         model=model_,
