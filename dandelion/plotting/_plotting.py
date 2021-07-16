@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-05-20 14:21:45
+# @Last Modified time: 2021-07-17 00:43:35
 
 import seaborn as sns
 import pandas as pd
@@ -459,7 +459,7 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
 
     Returns
     -------
-    sectratype plot
+    spectratype plot
     """
 
     if clone_key is None:
