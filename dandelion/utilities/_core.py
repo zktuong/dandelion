@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 13:58:08
+# @Last Modified time: 2021-07-16 16:39:43
 
 import os
 from collections import defaultdict
@@ -420,7 +420,7 @@ def sanitize_data(data):
     for d in data:
         if data[d].dtype == 'object':
             data[d].replace(to_replace=[None, np.nan], value='', inplace=True)
-    return(data)
+    return (data)
 
 
 def retrieve_metadata(data: pd.DataFrame,
