@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 16:39:43
+# @Last Modified time: 2021-07-17 00:35:14
 
 import os
 from collections import defaultdict
@@ -454,8 +454,7 @@ def retrieve_metadata(data: pd.DataFrame,
                 if tmp.shape[0] > 0:
                     dat_dict[loci] = tmp.copy()
         else:
-            tmp3 = data_tmp[data_tmp['locus'].isin([locus_dict1[locus]
-                                                    ])].copy()
+            tmp3 = data_tmp[data_tmp['locus'].isin([locus_dict1[locus]])].copy()
             tmp4 = data_tmp[data_tmp['locus'].isin(locus_dict2[locus])].copy()
             if tmp3.shape[0] > 0:
                 dat_dict[locus_dict3[locus]] = tmp3.copy()
