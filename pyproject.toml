@@ -1,0 +1,67 @@
+[build-system]
+requires = [
+    'flit_core >=2,<4',
+    'setuptools_scm',
+    'pytoml',
+    'wheel',
+    'importlib_metadata>=0.7; python_version < "3.8"'
+]
+build-backend = 'flit_core.buildapi'
+
+[metadata]
+description-file = "DESCRIPTION.md"
+
+[tool.flit.metadata]
+module = 'dandelion'
+author = 'Zewen Kelvin tuong'
+author-email = 'kt16@sanger.ac.uk'
+home-page = 'https://github.com/zktuong/dandelion'
+documentation = 'https://sc-dandelion.readthedocs.io'
+description-file = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: R",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+]
+requires-python = '>= 3.7'
+requires = [
+    "numpy>=1.18.4",
+    "pandas>=1.0.3",
+    "changeo>=1.0.0",
+    "anndata>=0.7.6",
+    "scanpy>=1.4.6",
+    "scikit-learn>=0.23.0",
+    "scikit-bio>=0.5.6",
+    "scipy>=1.4.1",
+    "numba>=0.48.0",
+    "seaborn>=0.10.1",
+    "networkx>=2.4",
+    "leidenalg>=0.8.0",
+    "polyleven>=0.5",
+    "h5py>=3.2.1",
+    "adjustText>=0.7",
+    "distance>=0.1.3",
+    "joblib>=0.14.1",
+    "plotnine>=0.6.0",
+    # for getting the version
+    'setuptools_scm',
+    'pytoml',
+    'importlib_metadata>=0.7; python_version < "3.8"',
+]
+package_data={'dandelion': ['bin/tigger-genotype.R']},
+data_files=[('bin', ['bin/tigger-genotype.R'])],
+
+[tool.flit.metadata.urls]
+Documentation = "https://sc-dandelion.readthedocs.io"
+Legacy = "https://github.com/clatworthylab/dandelion"
+
+[tool.flit.scripts]
+flit = "flit:main"
+
+[tool.flit.sdist]
+include = ["bin/tigger-genotype.R"]
+
+[tool.setuptools_scm]
+git_describe_command = "git describe --dirty --tags --long --match v*.*.*"
