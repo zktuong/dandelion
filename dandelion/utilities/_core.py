@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-17 00:35:14
+# @Last Modified time: 2021-07-18 11:22:29
 
 import os
 from collections import defaultdict
@@ -408,8 +408,8 @@ def sanitize_dandelion(self: Dandelion,
             if d in boolean_columns:
                 self.data[d] = self.data[d].astype(bool)
         else:
-            self.data[d].replace(to_replace=[None, np.nan],
-                                 value='',
+            self.data[d].replace(to_replace=[None, ''],
+                                 value=np.nan,
                                  inplace=True)
 
 
@@ -419,7 +419,13 @@ def sanitize_data(data):
     data = data.infer_objects()
     for d in data:
         if data[d].dtype == 'object':
-            data[d].replace(to_replace=[None, np.nan], value='', inplace=True)
+            try:
+                data[d].replace('', np.nan, inplace=True)
+                data[d] = pd.to_numeric(data[d])
+            except:
+                data[d].replace(to_replace=[None, np.nan],
+                                value='',
+                                inplace=True)
     return (data)
 
 
@@ -454,7 +460,8 @@ def retrieve_metadata(data: pd.DataFrame,
                 if tmp.shape[0] > 0:
                     dat_dict[loci] = tmp.copy()
         else:
-            tmp3 = data_tmp[data_tmp['locus'].isin([locus_dict1[locus]])].copy()
+            tmp3 = data_tmp[data_tmp['locus'].isin([locus_dict1[locus]
+                                                    ])].copy()
             tmp4 = data_tmp[data_tmp['locus'].isin(locus_dict2[locus])].copy()
             if tmp3.shape[0] > 0:
                 dat_dict[locus_dict3[locus]] = tmp3.copy()

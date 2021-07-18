@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 15:50:04
+# @Last Modified time: 2021-07-18 11:01:30
 
 import os
 from collections import defaultdict, Iterable
@@ -331,4 +331,21 @@ def not_same_call(a, b, pattern):
 
 def present(x):
     """Utility function to check if x is not null or blank."""
-    return(pd.notnull(x) and x != '')
+    return (pd.notnull(x) and x != '')
+
+
+def check_mix_dtype(data):
+    """Utility function to check if mixed dtypes."""
+    return (any([
+        True for c in data.columns
+        if pd.api.types.infer_dtype(data[c]).startswith("mixed")
+    ]))
+
+
+def return_mix_dtype(data):
+    """Utility function to return mixed dtypes columns."""
+    check = [
+        c for c in data.columns
+        if pd.api.types.infer_dtype(data[c]).startswith("mixed")
+    ]
+    return (check)
