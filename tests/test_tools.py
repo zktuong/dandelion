@@ -36,7 +36,7 @@ def test_clone_size(create_testfolder):
     vdj = ddl.read_h5(f)
     ddl.tl.clone_size(vdj)
     assert not vdj.metadata.clone_id_size.empty
-    ddl.tl.clone_size(vdj, max_size = 3)
+    ddl.tl.clone_size(vdj, max_size=3)
     assert not vdj.metadata.clone_id_size.empty
 
 
@@ -57,8 +57,22 @@ def test_generate_network(create_testfolder, resample, expected):
     assert vdj.graph is not None
     vdj.data['clone_id'] = '1'
     vdj = ddl.Dandelion(vdj.data)
+    assert vdj.data.clone_id.dtype == 'object'
     ddl.tl.generate_network(vdj)
     assert vdj.edges is not None
+
+
+def test_find_clones_key(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    ddl.tl.find_clones(vdj, key_added='test_clone')
+    assert not vdj.metadata.test_clone.empty
+    assert vdj.data.test_clone.dtype == 'object'
+    ddl.tl.generate_network(vdj, clone_key='test_clone')
+    assert vdj.distance is not None
+    assert vdj.edges is None
+    assert vdj.layout is not None
+    assert vdj.graph is not None
 
 
 def test_transfer(create_testfolder, dummy_adata):
@@ -76,11 +90,11 @@ def test_transfer(create_testfolder, dummy_adata):
 def test_diversity_gini(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
-    ddl.tl.clone_diversity(vdj, groupby = 'sample_id')
+    ddl.tl.clone_diversity(vdj, groupby='sample_id')
     assert not vdj.metadata.clone_network_vertex_size_gini.empty
     assert not vdj.metadata.clone_network_cluster_size_gini.empty
     ddl.tl.generate_network(vdj)
-    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', metric = 'clone_centrality')
+    ddl.tl.clone_diversity(vdj, groupby='sample_id', metric='clone_centrality')
     assert not vdj.metadata.clone_centrality_gini.empty
     assert not vdj.metadata.clone_size_gini.empty
 
@@ -88,14 +102,17 @@ def test_diversity_gini(create_testfolder):
 def test_diversity_chao(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
-    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', method = 'chao1')
+    ddl.tl.clone_diversity(vdj, groupby='sample_id', method='chao1')
     assert not vdj.metadata.clone_size_chao1.empty
 
 
 def test_diversity_shannon(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
-    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', method = 'shannon')
+    ddl.tl.clone_diversity(vdj, groupby='sample_id', method='shannon')
     assert not vdj.metadata.clone_size_normalized_shannon.empty
-    ddl.tl.clone_diversity(vdj, groupby = 'sample_id', method = 'shannon', normalize = False)
+    ddl.tl.clone_diversity(vdj,
+                           groupby='sample_id',
+                           method='shannon',
+                           normalize=False)
     assert not vdj.metadata.clone_size_normalized_shannon.empty
