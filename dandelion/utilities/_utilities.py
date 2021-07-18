@@ -2,10 +2,11 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 11:01:30
+# @Last Modified time: 2021-07-18 14:51:32
 
 import os
 from collections import defaultdict, Iterable
+from airr import RearrangementSchema
 import pandas as pd
 import numpy as np
 from subprocess import run
@@ -349,3 +350,50 @@ def return_mix_dtype(data):
         if pd.api.types.infer_dtype(data[c]).startswith("mixed")
     ]
     return (check)
+
+
+def sanitize_data(data, ignore = 'clone_id'):
+    """Quick sanitize dtypes."""
+    data = data.astype('object')
+    data = data.infer_objects()
+    for d in data:
+        if data[d].dtype == "float64":
+            try:
+                data[d].replace(np.nan, pd.NA, inplace=True)
+                data[d] = data[d].astype("Int64")
+            except:
+                pass
+        if data[d].dtype == 'object':
+            if d != ignore:
+                try:
+                    data[d].replace([None, np.nan, ''], pd.NA, inplace=True)
+                    data[d] = pd.to_numeric(data[d])
+                    try:
+                        data[d].replace(np.nan, pd.NA, inplace=True)
+                        data[d] = data[d].astype("Int64")
+                    except:
+                        data[d] = data[d].astype("Float64")
+                except:
+                    data[d].replace(to_replace=[None, np.nan, pd.NA],
+                                    value='',
+                                    inplace=True)
+
+    # check if airr-standards is happy
+    validate_airr(data)
+    return (data)
+
+
+def validate_airr(data):
+    """Validate dtypes in airr table."""
+    for _, row in data.iterrows():
+        contig = dict(row)
+        for k, v in contig.items():
+            if data[k].dtype == 'Int64':
+                if pd.isnull(v):
+                    contig.update({k: str('')})
+            if data[k].dtype == 'Float64':
+                if pd.isnull(v):
+                    contig.update({k: np.nan})
+    # check if airr-standards is happy
+    RearrangementSchema.validate_header(contig.keys())
+    RearrangementSchema.validate_row(contig)

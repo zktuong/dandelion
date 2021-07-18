@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 11:22:29
+# @Last Modified time: 2021-07-18 14:52:37
 
 import os
 from collections import defaultdict
@@ -297,35 +297,34 @@ class Dandelion:
             )
 
         # now to actually saving
-        for col in self.data.columns:
-            weird = (self.data[[col]].applymap(type) !=
-                     self.data[[col]].iloc[0].apply(type)).any(axis=1)
-            if len(self.data[weird]) > 0:
-                self.data[col] = self.data[col].where(
-                    pd.notnull(self.data[col]), '')
-        self.data.to_hdf(filename,
-                         "data",
-                         complib=comp,
-                         complevel=compression_level,
-                         **kwargs)
+        data = self.data.copy()
+        for col in data.columns:
+            weird = (data[[col]].applymap(type) !=
+                     data[[col]].iloc[0].apply(type)).any(axis=1)
+            if len(data[weird]) > 0:
+                data[col] = data[col].astype(float).where(
+                    pd.notnull(data[col]), np.nan)
+        data.to_hdf(filename,
+                    "data",
+                    complib=comp,
+                    complevel=compression_level,
+                    **kwargs)
 
         if self.metadata is not None:
-            for col in self.metadata.columns:
-                weird = (self.metadata[[col]].applymap(type) !=
-                         self.metadata[[col]].iloc[0].apply(type)).any(axis=1)
-                if len(self.metadata[weird]) > 0:
-                    self.metadata[col] = self.metadata[col].where(
-                        pd.notnull(self.metadata[col]), '')
-            self.metadata.to_hdf(filename,
-                                 "metadata",
-                                 complib=comp,
-                                 complevel=compression_level,
-                                 format='table',
-                                 nan_rep=np.nan,
-                                 **kwargs)
-        # except:
-        #     warnings.warn("`metadata` slot not saved. Please check if there is incompatible dtypes in the metadata table.")
-        #     pass
+            metadata = self.metadata.copy()
+            for col in metadata.columns:
+                weird = (metadata[[col]].applymap(type) !=
+                         metadata[[col]].iloc[0].apply(type)).any(axis=1)
+                if len(metadata[weird]) > 0:
+                    metadata[col] = metadata[col].where(
+                        pd.notnull(metadata[col]), '')
+            metadata.to_hdf(filename,
+                            "metadata",
+                            complib=comp,
+                            complevel=compression_level,
+                            format='table',
+                            nan_rep=np.nan,
+                            **kwargs)
         try:
             if 'index' in self.edges.columns:
                 self.edges.drop('index', axis=1, inplace=True)
@@ -363,15 +362,6 @@ class Dandelion:
             pass
 
         with h5py.File(filename, "a") as hf:
-            # try:
-            #     for d in self.distance:
-            #         hf.create_dataset('distance/'+d+'/data', data=self.distance[d].data, compression = compression, compression_opts = compression_level)
-            #         hf.create_dataset('distance/'+d+'/indptr', data=self.distance[d].indptr, compression = compression, compression_opts = compression_level)
-            #         hf.create_dataset('distance/'+d+'/indices', data=self.distance[d].indices, compression = compression, compression_opts = compression_level)
-            #         hf['distance/'+d].attrs['shape'] = self.distance[d].shape
-            # except:
-            #     pass
-
             try:
                 layout_counter = 0
                 for l in self.layout:
@@ -398,46 +388,18 @@ class Dandelion:
                 hf.create_dataset('threshold', data=tr)
 
 
-def sanitize_dandelion(self: Dandelion,
-                       boolean_columns: Sequence[str] = BOOLEAN_COLUMNS):
-    """Quick sanitize dtypes."""
-    self.data = self.data.astype('object')
-    self.data = self.data.infer_objects()
-    for d in self.data:
-        if self.data[d].dtype == 'object':
-            if d in boolean_columns:
-                self.data[d] = self.data[d].astype(bool)
-        else:
-            self.data[d].replace(to_replace=[None, ''],
-                                 value=np.nan,
-                                 inplace=True)
-
-
-def sanitize_data(data):
-    """Quick sanitize dtypes."""
-    data = data.astype('object')
-    data = data.infer_objects()
-    for d in data:
-        if data[d].dtype == 'object':
-            try:
-                data[d].replace('', np.nan, inplace=True)
-                data[d] = pd.to_numeric(data[d])
-            except:
-                data[d].replace(to_replace=[None, np.nan],
-                                value='',
-                                inplace=True)
-    return (data)
-
-
-def retrieve_metadata(data: pd.DataFrame,
-                      query: str,
-                      split: bool = True,
-                      collapse: bool = True,
-                      combine: bool = False,
-                      locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig',
-                      split_locus: bool = False,
-                      verbose: bool = False) -> pd.DataFrame:
-    data_tmp = sanitize_data(data.copy())
+def retrieve_metadata(
+    data: pd.DataFrame,
+    query: str,
+    split: bool = True,
+    collapse: bool = True,
+    combine: bool = False,
+    locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig',
+    split_locus: bool = False,
+    verbose: bool = False,
+    ignore: str = 'clone_id',
+) -> pd.DataFrame:
+    data_tmp = sanitize_data(data.copy(), ignore = ignore)
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
@@ -1002,7 +964,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
                 'collapse': True,
                 'combine': False,
                 'locus': locus_,
-                'split_locus': False
+                'split_locus': False,
             }
         })
     if clonekey in init_dict:
@@ -1012,7 +974,8 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
                 'collapse': True,
                 'combine': True,
                 'locus': locus_,
-                'split_locus': False
+                'split_locus': False,
+                'ignore': clonekey,
             }
         })
     if 'sample_id' in init_dict:
@@ -1022,7 +985,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
                 'collapse': True,
                 'combine': True,
                 'locus': locus_,
-                'split_locus': False
+                'split_locus': False,
             }
         })
     meta_ = defaultdict(dict)
@@ -1501,3 +1464,17 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
         raise KeyError("'sequence_id' not found in columns of input")
 
     return (obj_)
+
+
+def sanitize_dandelion(
+    self: Dandelion,
+    boolean_columns: Sequence[str] = BOOLEAN_COLUMNS,
+):
+    """Quick sanitize dtypes."""
+    self.data = self.data.infer_objects()
+    for d in self.data:
+        if self.data[d].dtype == 'object':
+            if d in boolean_columns:
+                self.data[d] = self.data[d].astype(bool)
+    self.data = sanitize_data(self.data)
+    validate_airr(self.data)

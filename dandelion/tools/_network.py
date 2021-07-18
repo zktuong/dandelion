@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 12:44:23
+# @Last Modified time: 2021-07-18 14:52:53
 
 import pandas as pd
 import numpy as np
@@ -87,6 +87,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     if locus is None:
         locus = 'ig'
 
+    dat = sanitize_data(dat, ignore=clonekey)
+
     # calculate distance
 
     if downsample is not None:
@@ -103,34 +105,37 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             dat_h = dat_h.sample(downsample)
             dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))].copy()
             dat_ = dat_h.append(dat_l)
+            dat_ = sanitize_data(dat_, ignore=clonekey)
     else:
         dat_ = dat.copy()
 
-    # So first, create a data frame to hold all possible (full) sequences split by 
+    # So first, create a data frame to hold all possible (full) sequences split by
     # heavy (only 1 possible for now) and light (multiple possible)
     try:
         dat_seq = retrieve_metadata(dat_,
                                     query=key_,
                                     split=True,
                                     collapse=False,
-                                    locus=locus)
+                                    locus=locus,
+                                    ignore=clonekey)
     except:
         dat_seq = retrieve_metadata(dat_,
                                     query=key_,
                                     split=True,
                                     collapse=False,
                                     locus=locus,
+                                    ignore=clonekey,
                                     **kwargs)
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
 
-    # calculate a distance matrix for all vs all and this can be referenced later on to 
+    # calculate a distance matrix for all vs all and this can be referenced later on to
     # extract the distance between the right pairs
     dmat = Tree()
     sleep(0.5)
     if verbose:
         for x in tqdm(dat_seq.columns, desc='Calculating distances... '):
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
-            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) 
+            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)
             # if (x[0] == x[0]) and (y[0] == y[0]) else 0])
             d_mat = squareform(
                 pdist(
@@ -140,7 +145,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     else:
         for x in dat_seq.columns:
             tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
-            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2) 
+            # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)
             #                      if (x[0] == x[0]) and (y[0] == y[0]) else 0])
             d_mat = squareform(
                 pdist(
