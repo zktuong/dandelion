@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-17 00:40:06
+# @Last Modified time: 2021-07-18 12:44:23
 
 import pandas as pd
 import numpy as np
@@ -328,7 +328,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
     # and finally the vertex list which is super easy
     vertice_list = list(out.metadata.index)
-
+    sleep(0.5)
     # and now to actually generate the network
     g, g_, lyt, lyt_ = generate_layout(vertice_list,
                                        edge_list_final,
