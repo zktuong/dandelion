@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-17 15:06:05
+# @Last Modified time: 2021-07-18 16:55:33
 
 import os
 import sys
@@ -784,6 +784,8 @@ def transfer(self: AnnData,
             self.obs[x] = pd.Series(dandelion.metadata[x])
         if type_check(dandelion.metadata, x):
             self.obs[x].replace(np.nan, 'No_contig', inplace=True)
+        if self.obs[x].dtype == 'bool':
+            self.obs[x] = [str(x) for x in self.obs[x]]
 
     if overwrite is not None and overwrite is not True:
         if not type(overwrite) is list:

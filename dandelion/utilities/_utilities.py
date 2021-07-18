@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 14:51:32
+# @Last Modified time: 2021-07-18 16:39:06
 
 import os
 from collections import defaultdict, Iterable
@@ -335,6 +335,11 @@ def present(x):
     return (pd.notnull(x) and x != '')
 
 
+def all_missing(x):
+    """Utility function to check if all x is not null or blank."""
+    return (all(pd.isnull(x)) or all(x == ''))
+
+
 def check_mix_dtype(data):
     """Utility function to check if mixed dtypes."""
     return (any([
@@ -352,7 +357,7 @@ def return_mix_dtype(data):
     return (check)
 
 
-def sanitize_data(data, ignore = 'clone_id'):
+def sanitize_data(data, ignore='clone_id'):
     """Quick sanitize dtypes."""
     data = data.astype('object')
     data = data.infer_objects()
@@ -394,6 +399,12 @@ def validate_airr(data):
             if data[k].dtype == 'Float64':
                 if pd.isnull(v):
                     contig.update({k: np.nan})
+        for required in [
+                'sequence', 'rev_comp', 'sequence_alignment', 'germline_alignment',
+                'v_cigar', 'd_cigar', 'j_cigar'
+        ]:
+            if required not in contig:
+                contig.update({required: ''})
     # check if airr-standards is happy
     RearrangementSchema.validate_header(contig.keys())
     RearrangementSchema.validate_row(contig)

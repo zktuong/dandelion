@@ -19,7 +19,7 @@ def test_read10xairr(create_testfolder):
     airr_file = str(create_testfolder) + "/test_airr_rearrangements.tsv"
     vdj = ddl.read_10x_airr(airr_file)
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 33
+    assert vdj.data.shape[1] == 32
     assert vdj.metadata.shape[0] == 4
     assert vdj.metadata.shape[1] == 23
 
