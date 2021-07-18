@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-04-03 16:46:13
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 17:28:37
+# @Last Modified time: 2021-07-18 17:29:33
 
 # try:
 #   from .version import __version__
@@ -15,7 +15,7 @@ here = Path(__file__).parent
 try:
     from setuptools_scm import get_version
     import pytoml
-    proj = pytoml.loads((here / "pyproject.toml").read_text())
+    proj = pytoml.loads((here.parent / "pyproject.toml").read_text())
 
     __version__ = get_version(root="..", relative_to=__file__, **proj["tool"]["setuptools_scm"])
     __author__ = "Zewen Kelvin Tuong"
