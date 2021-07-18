@@ -1,0 +1,2 @@
+[tool.setuptools_scm]
+git_describe_command = "git describe --dirty --tags --long --match v*.*.*"
