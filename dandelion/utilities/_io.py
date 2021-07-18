@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 13:55:43
+# @Last Modified time: 2021-07-18 16:39:26
 
 import os
 import json
@@ -127,7 +127,7 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
 
         if check_mix_dtype(data):
             for x in return_mix_dtype(data):
-                data[x].replace('', pd.NA, inplace = True)
+                data[x].replace('', pd.NA, inplace=True)
             data = sanitize_data(data)
     except:
         raise AttributeError(
@@ -238,23 +238,26 @@ def read_10x_airr(file: str) -> Dandelion:
             dat['v_call'], dat['d_call'], dat['j_call'], dat['c_call'])]
         locus = []
         for t in tmp:
-            if all('IGH' in x for x in t if x == x):
+            if all('IGH' in x for x in t if pd.notnull(x)):
                 locus.append('IGH')
-            elif all('IGK' in x for x in t if x == x):
+            elif all('IGK' in x for x in t if pd.notnull(x)):
                 locus.append('IGK')
-            elif all('IGL' in x for x in t if x == x):
+            elif all('IGL' in x for x in t if pd.notnull(x)):
                 locus.append('IGL')
-            elif all('TRA' in x for x in t if x == x):
+            elif all('TRA' in x for x in t if pd.notnull(x)):
                 locus.append('TRA')
-            elif all('TRB' in x for x in t if x == x):
+            elif all('TRB' in x for x in t if pd.notnull(x)):
                 locus.append('TRB')
-            elif all('TRD' in x for x in t if x == x):
+            elif all('TRD' in x for x in t if pd.notnull(x)):
                 locus.append('TRD')
-            elif all('TRG' in x for x in t if x == x):
+            elif all('TRG' in x for x in t if pd.notnull(x)):
                 locus.append('TRG')
             else:
                 locus.append(np.nan)
         dat['locus'] = locus
+    null_columns = [col for col in dat.columns if all_missing(dat[col])]
+    if len(null_columns) > 0:
+        dat.drop(null_columns, inplace=True, axis=1)
 
     return (Dandelion(dat))
 

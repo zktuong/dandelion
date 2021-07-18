@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 22:51:39
+# @Last Modified time: 2021-07-18 17:00:10
 
 import os
 import pandas as pd
@@ -2070,7 +2070,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering."
         )
     if 'filter_rna' not in adata_.obs:
-        adata_.obs['filter_rna'] = False
+        adata_.obs['filter_rna'] = 'False'
 
     barcode = list(set(dat['cell_id']))
 
@@ -2081,7 +2081,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     contig_check['has_contig'] = pd.Series(bc_)
     contig_check.replace(np.nan, 'No_contig', inplace=True)
     adata_.obs['has_contig'] = pd.Series(contig_check['has_contig'])
-    adata_.obs['has_contig'] = adata_.obs['has_contig'].astype('category')
 
     if 'v_call_genotyped' in dat.columns:
         v_dict = dict(zip(dat['sequence_id'], dat['v_call_genotyped']))
@@ -2126,29 +2125,23 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     ldoublet = {}
     for c in tqdm(adata_.obs_names, desc='Annotating in anndata obs slot '):
         if c in poor_qual:
-            poorqual.update({c: True})
+            poorqual.update({c: 'True'})
         else:
-            poorqual.update({c: False})
+            poorqual.update({c: 'False'})
 
         if c in h_doublet:
-            hdoublet.update({c: True})
+            hdoublet.update({c: 'True'})
         else:
-            hdoublet.update({c: False})
+            hdoublet.update({c: 'False'})
 
         if c in l_doublet:
-            ldoublet.update({c: True})
+            ldoublet.update({c: 'True'})
         else:
-            ldoublet.update({c: False})
+            ldoublet.update({c: 'False'})
 
     adata_.obs['filter_contig_quality'] = pd.Series(poorqual)
-    adata_.obs['filter_contig_quality'] = adata_.obs[
-        'filter_contig_quality'].astype('category')
     adata_.obs['filter_contig_VDJ'] = pd.Series(hdoublet)
-    adata_.obs['filter_contig_VDJ'] = adata_.obs['filter_contig_VDJ'].astype(
-        'category')
     adata_.obs['filter_contig_VJ'] = pd.Series(ldoublet)
-    adata_.obs['filter_contig_VJ'] = adata_.obs['filter_contig_VJ'].astype(
-        'category')
 
     drop_contig = list(set(flatten(drop_contig)))
 
@@ -2219,15 +2212,13 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     bc_2 = {}
     for b in barcode2:
-        bc_2.update({b: True})
+        bc_2.update({b: 'True'})
     if filter_contig:
         for b in failed:
-            bc_2.update({b: False})
+            bc_2.update({b: 'False'})
     contig_check['contig_QC_pass'] = pd.Series(bc_2)
     contig_check.replace(np.nan, 'No_contig', inplace=True)
     adata_.obs['contig_QC_pass'] = pd.Series(contig_check['contig_QC_pass'])
-    adata_.obs['contig_QC_pass'] = adata_.obs['contig_QC_pass'].astype(
-        'category')
 
     print('Initializing Dandelion object')
     out_dat = Dandelion(data=_dat, locus=locus, **kwargs)
@@ -2235,8 +2226,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         out_dat.germline = data.germline
 
     adata_.obs['filter_contig'] = adata_.obs_names.isin(filter_ids)
-    adata_.obs['filter_contig'] = adata_.obs['filter_contig'].astype(
-        'category')
 
     if filter_rna:
         # not saving the scanpy object because there's no need to at the moment
