@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 17:00:10
+# @Last Modified time: 2021-07-18 19:47:24
 
 import os
 import pandas as pd
@@ -28,10 +28,7 @@ from changeo.IO import getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 import re
 import functools
-try:
-    from scanpy import logging as logg
-except ImportError:
-    pass
+from scanpy import logging as logg
 import numpy as np
 from Bio import Align
 from typing import Union, Sequence, Tuple
@@ -2488,15 +2485,15 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
         have been determined.
     mode : Literal, str
-        accepts one of "heavy" or "single-cell". 
+        accepts one of "heavy" or "single-cell".
         Refer to https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette.
     manual_threshold : float, optional
         value to manually plot in histogram.
     VJthenLen : bool
-        logical value specifying whether to perform partitioning as a 2-stage process. 
-        If True, partitions are made first based on V and J gene, and then further split 
-        based on junction lengths corresponding to sequenceColumn. 
-        If False, perform partition as a 1-stage process during which V gene, J gene, and junction length 
+        logical value specifying whether to perform partitioning as a 2-stage process.
+        If True, partitions are made first based on V and J gene, and then further split
+        based on junction lengths corresponding to sequenceColumn.
+        If False, perform partition as a 1-stage process during which V gene, J gene, and junction length
         are used to create partitions simultaneously.
         Defaults to False.
     onlyHeavy : bool

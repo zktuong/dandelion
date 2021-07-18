@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 16:55:33
+# @Last Modified time: 2021-07-18 19:47:37
 
 import os
 import sys
@@ -25,10 +25,7 @@ import networkx as nx
 from time import sleep
 import copy
 import functools
-try:
-    from scanpy import logging as logg
-except ImportError:
-    pass
+from scanpy import logging as logg
 import warnings
 from subprocess import run
 import multiprocessing

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-17 00:43:35
+# @Last Modified time: 2021-07-18 21:02:14
 
 import seaborn as sns
 import pandas as pd
@@ -62,7 +62,8 @@ def clone_rarefaction(self: Union[AnnData, Dandelion], color: str, clone_key: Un
 
     groups = list(set(metadata[color]))
     metadata = metadata[metadata['contig_QC_pass'].isin([True, 'True'])]
-    metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
+    if type(metadata[clonekey]) == 'category':
+        metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
         _metadata = metadata[metadata[color] == g]
