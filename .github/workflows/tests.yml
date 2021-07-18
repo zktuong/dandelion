@@ -146,6 +146,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+        pip install git+https://www.github.com/zktuong/nxviz.git
         pip install scirpy
         pytest --cov=dandelion --cov-report=xml -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
