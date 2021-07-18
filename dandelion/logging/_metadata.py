@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-04-03 16:46:13
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 10:09:52
+# @Last Modified time: 2021-07-18 17:08:47
 
 # try:
 # 	from .version import __version__
@@ -10,7 +10,10 @@
 # 	__version__ = ''
 
 from setuptools_scm import get_version
-__version__ = get_version(root="../..", relative_to=__file__).split('+')[0]
+try:
+    __version__ = get_version(root="../..", relative_to=__file__).split('+')[0]
+except:
+    __version__ = get_version().split('+')[0]
 __author__ = "Zewen Kelvin Tuong"
 __email__ = "kt16@sanger.ac.uk"
 __url__ = "https://www.github.com/zktuong/dandelion/"
