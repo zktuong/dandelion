@@ -2,12 +2,12 @@
 # @Author: kt16
 # @Date:   2020-05-12 18:11:20
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 17:21:33
+# @Last Modified time: 2021-07-18 17:51:51
 
 from . import preprocessing as pp
 from . import utilities as utl
 from . import tools as tl
 from . import plotting as pl
 from .utilities import read_pkl, read_h5, read_10x_airr, read_10x_vdj, from_scirpy, to_scirpy, Dandelion, update_metadata, concat, load_data
-from ._metadata import __version__, __author__, __email__, __classifiers__
+from .logging import __version__, __author__, __email__, __classifiers__
 from . import logging
