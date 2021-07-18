@@ -30,7 +30,7 @@ jobs:
         run: |
           pip install setuptools wheel setuptools_scm numpy
           pip install git+https://www.github.com/zktuong/dandelion@devel
-          echo "##[set-output name=version;]$(python dandelion/_badge.py)"
+          echo "##[set-output name=version;]$(python dandelion/logging/_badge.py)"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
@@ -57,7 +57,7 @@ jobs:
         run: |
           pip install setuptools wheel setuptools_scm numpy
           pip install git+https://www.github.com/zktuong/dandelion.git
-          echo "##[set-output name=version;]$(python dandelion/_badge.py)"
+          echo "##[set-output name=version;]$(python dandelion/logging/_badge.py)"
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.0
         with:
