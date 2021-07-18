@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 14:52:37
+# @Last Modified time: 2021-07-18 19:48:17
 
 import os
 from collections import defaultdict
@@ -18,10 +18,7 @@ import bz2
 import gzip
 from anndata import AnnData
 import _pickle as cPickle
-try:
-    from scanpy import logging as logg
-except ImportError:
-    pass
+from scanpy import logging as logg
 from ..utilities._utilities import *
 from ..utilities._io import *
 from typing import Union, Sequence, Tuple, Dict

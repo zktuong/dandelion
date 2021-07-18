@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-06-17 15:20:30
+# @Last Modified time: 2021-07-18 21:10:39
 
 import pandas as pd
 import numpy as np
@@ -16,10 +16,7 @@ from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
 from tqdm import tqdm
 from time import sleep
-try:
-    from scanpy import logging as logg
-except ImportError:
-    pass
+from scanpy import logging as logg
 from typing import Union, Sequence, Tuple, Dict
 import warnings
 
@@ -51,6 +48,9 @@ def clone_rarefaction(
 
     if self.__class__ == AnnData:
         metadata = self.obs.copy()
+    elif self.__class__ == Dandelion:
+        metadata = self.metadata.copy()
+
     if clone_key is None:
         clonekey = 'clone_id'
     else:
@@ -58,7 +58,8 @@ def clone_rarefaction(
 
     groups = list(set(metadata[groupby]))
     metadata = metadata[metadata['contig_QC_pass'].isin([True, 'True'])]
-    metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
+    if type(metadata[clonekey]) == 'category':
+        metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
         _metadata = metadata[metadata[groupby] == g]
@@ -115,7 +116,7 @@ def clone_diversity(
     self: Union[Dandelion, AnnData],
     groupby: str,
     method: Literal['gini', 'chao1', 'shannon'] = 'gini',
-    metric: Literal['clone_vertexsize', 'clone_degree',
+    metric: Literal['clone_network', 'clone_degree',
                     'clone_centrality'] = None,
     clone_key: Union[None, str] = None,
     update_obs_meta: bool = True,
@@ -128,7 +129,8 @@ def clone_diversity(
     expanded_only: bool = False,
     use_contracted: bool = False,
     key_added: Union[None, str] = None,
-    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None
+    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
+    **kwargs,
 ) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
@@ -142,31 +144,41 @@ def clone_diversity(
     method : str
         Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
     metric : str, optional
-        Metric to use for calculating Gini indices of clones. Accepts one of ['clone_vertexsize', 'clone_degree', 'clone_centrality']. `None` defaults to 'clone_vertexsize'.
+        Metric to use for calculating Gini indices of clones.
+        Accepts one of ['clone_network', 'clone_degree', 'clone_centrality'].
+        `None` defaults to 'clone_network'.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
-        If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
+        If True, a `pandas` dataframe is returned.
+        If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str, optional
         key for 'diversity' results in `.uns`.
     downsample : int, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
+        Whether or not to randomly sample cells without replacement to
+        the minimum size of groups for the diversity calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     normalize : bool
-        Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
+        Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172.
+        Default is True.
     reconstruct_network : bool
-        Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.
+        Whether or not to reconstruct the network for Gini Index based measures.
+        Default is True and will reconstruct for each group specified by groupby option.
     expanded_only : bool
         Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.
     use_contracted : bool
-        Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.
+        Whether or not to perform the gini calculation after contraction of clone network.
+        Only applies to calculation of clone size gini index. Default is False.
+        This is to try and preserve the single-cell properties of the network.
     key_added : str, list, optional
         column names for output.
     locus : str
         Mode of data. Only used for method = 'gini', Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
+    **kwargs
+        passed to dandelion.tl.generate_nework
     Returns
     -------
     `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
@@ -188,7 +200,8 @@ def clone_diversity(
                            expanded_only=expanded_only,
                            use_contracted=use_contracted,
                            key_added=key_added,
-                           locus=locus)
+                           locus=locus,
+                           **kwargs)
         else:
             return (diversity_gini(self,
                                    groupby=groupby,
@@ -203,7 +216,8 @@ def clone_diversity(
                                    expanded_only=expanded_only,
                                    use_contracted=use_contracted,
                                    key_added=key_added,
-                                   locus=locus))
+                                   locus=locus,
+                                   **kwargs))
     if method == 'chao1':
         if update_obs_meta:
             diversity_chao1(self,
@@ -349,22 +363,21 @@ def clone_networkstats(self: Dandelion,
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def diversity_gini(
-    self: Union[Dandelion, AnnData],
-    groupby: str,
-    metric: Union[None, str] = None,
-    clone_key: Union[None, str] = None,
-    update_obs_meta: bool = False,
-    diversity_key: Union[None, str] = None,
-    resample: bool = False,
-    n_resample: int = 50,
-    downsample: Union[None, int] = None,
-    reconstruct_network: bool = True,
-    expanded_only: bool = False,
-    use_contracted: bool = False,
-    key_added: Union[None, str] = None,
-    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None
-) -> Union[pd.DataFrame, Dandelion]:
+def diversity_gini(self: Union[Dandelion, AnnData],
+                   groupby: str,
+                   metric: Union[None, str] = None,
+                   clone_key: Union[None, str] = None,
+                   update_obs_meta: bool = False,
+                   diversity_key: Union[None, str] = None,
+                   resample: bool = False,
+                   n_resample: int = 50,
+                   downsample: Union[None, int] = None,
+                   reconstruct_network: bool = True,
+                   expanded_only: bool = False,
+                   use_contracted: bool = False,
+                   key_added: Union[None, str] = None,
+                   locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                   **kwargs) -> Union[pd.DataFrame, Dandelion]:
     """
     Compute B cell clones Gini indices.
 
@@ -375,50 +388,59 @@ def diversity_gini(
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
     metric : str, optional
-        Metric to use for calculating Gini indices of clones. Accepts 'clone_degree' and 'clone_centrality'. Defaults to 'clone_centrality'.
+        Metric to use for calculating Gini indices of clones.
+        Accepts one of ['clone_network', 'clone_degree', 'clone_centrality'].
+        Defaults to 'clone_centrality'.
     clone_key : str, optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
-        If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
+        If True, a `pandas` dataframe is returned.
+        If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str, optional
         Key for 'diversity' results in `.uns`.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False. Resampling will automatically trigger reconstruction of network.
+        Whether or not to randomly sample cells without replacement to
+        the minimum size of groups for the diversity calculation.
+        Default is False. Resampling will automatically trigger reconstruction of network.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     downsample : int, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
     reconstruct_network : bool
-        Whether or not to reconstruct the network for Gini Index based measures. Default is True and will reconstruct for each group specified by groupby option.
+        Whether or not to reconstruct the network for Gini Index based measures.
+        Default is True and will reconstruct for each group specified by groupby option.
     expanded_only : bool
         Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.
     use_contracted : bool
-        Whether or not to perform the gini calculation after contraction of clone network. Only applies to calculation of clone size gini index. Default is False. This is to try and preserve the single-cell properties of the network.
+        Whether or not to perform the gini calculation after contraction of clone network.
+        Only applies to calculation of clone size gini index. Default is False.
+        This is to try and preserve the single-cell properties of the network.
     key_added : str, list, optional
         column names for output.
     locus : str
         Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
-
+    **kwargs
+        passed to dandelion.tl.generate_nework
     Returns
     -------
     `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.
     """
     start = logg.info('Calculating Gini indices')
 
-    def gini_indices(
-        self: Dandelion,
-        groupby: str,
-        metric: Union[None, str] = None,
-        clone_key: Union[None, str] = None,
-        resample: bool = False,
-        n_resample: int = 50,
-        downsample: Union[None, int] = None,
-        reconstruct_network: bool = True,
-        expanded_only: bool = False,
-        contracted: bool = False,
-        key_added: Union[None, str] = None,
-        locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None
-    ) -> pd.DataFrame:
+    def gini_indices(self: Dandelion,
+                     groupby: str,
+                     metric: Union[None, str] = None,
+                     clone_key: Union[None, str] = None,
+                     resample: bool = False,
+                     n_resample: int = 50,
+                     downsample: Union[None, int] = None,
+                     reconstruct_network: bool = True,
+                     expanded_only: bool = False,
+                     contracted: bool = False,
+                     key_added: Union[None, str] = None,
+                     locus: Union[None, Literal['ig', 'tr-ab',
+                                                'tr-gd']] = None,
+                     **kwargs) -> pd.DataFrame:
         if self.__class__ == AnnData:
             raise TypeError('Only Dandelion class object accepted.')
         elif self.__class__ == Dandelion:
@@ -491,8 +513,6 @@ def diversity_gini(
                     g_c_v_res)
                 self.metadata['clone_network_cluster_size_gini'] = pd.Series(
                     g_c_c_res)
-        elif met == 'clone_size':
-            print("Computing gini indices for clone size using metadata.")
         elif met == 'clone_centrality':
             print(
                 "Computing gini indices for clone size using metadata and node closeness centrality using network."
@@ -527,7 +547,8 @@ def diversity_gini(
                                                      clone_key=clonekey,
                                                      downsample=minsize,
                                                      verbose=False,
-                                                     locus=locus)
+                                                     locus=locus,
+                                                     **kwargs)
                         if met == 'clone_network':
                             n_n, v_s, c_s = clone_networkstats(
                                 resampled,
@@ -567,9 +588,11 @@ def diversity_gini(
                         elif met == 'clone_degree':
                             clone_degree(resampled, verbose=False)
                         else:
-                            raise ValueError(
-                                'Unknown metric for calculating network stats. Please specify one of `clone_centrality` or `clone_degree`.'
-                            )
+                            raise ValueError((
+                                "Unknown metric for calculating network stats. Please specify "
+                                +
+                                "one of `clone_network`, `clone_centrality` or `clone_degree`."
+                            ))
                         # clone size gini
                         _dat = resampled.metadata.copy()
                         _tab = _dat[clonekey].value_counts()
@@ -581,22 +604,6 @@ def diversity_gini(
                         if met == 'clone_network':
                             sizelist.append(_dat[met +
                                                  '_cluster_size_gini'].mean())
-                        elif met == 'clone_size':
-                            clonesizecounts = np.array(_tab)
-                            clonesizecounts = clonesizecounts[
-                                clonesizecounts > 0]
-                            if len(clonesizecounts) > 1:
-                                # append a single zero for lorenz curve calculation
-                                clonesizecounts = np.append(clonesizecounts, 0)
-                            if len(clonesizecounts) > 0:
-                                g_c = gini_index(clonesizecounts,
-                                                 method='trapezoids')
-                                # probably not needed anymore but keep just in case
-                                if g_c < 0 or np.isnan(g_c):
-                                    g_c = 0
-                            else:
-                                g_c = 0
-                            sizelist.append(g_c)
                         else:
                             clonesizecounts = np.array(_tab)
                             clonesizecounts = clonesizecounts[
@@ -673,7 +680,8 @@ def diversity_gini(
                             generate_network(ddl_dat,
                                              clone_key=clonekey,
                                              verbose=False,
-                                             locus=locus)
+                                             locus=locus,
+                                             **kwargs)
                             n_n, v_s, c_s = clone_networkstats(
                                 ddl_dat,
                                 expanded_only=expanded_only,
@@ -781,7 +789,8 @@ def diversity_gini(
                        expanded_only=expanded_only,
                        contracted=use_contracted,
                        key_added=key_added,
-                       locus=locus)
+                       locus=locus,
+                       **kwargs)
 
     if diversity_key is None:
         diversitykey = 'diversity'
