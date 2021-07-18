@@ -66,8 +66,8 @@ def test_reassignalleles(create_testfolder, database_paths, filename, combine,
                             combined_folder=combine,
                             germline=database_paths['germline'],
                             filename_prefix=filename,
-                            novel=False,
-                            plot=False)
+                            novel=True,
+                            plot=True)
     assert len(list(
         (create_testfolder / 'dandelion/tmp').iterdir())) == expected
 
@@ -117,19 +117,63 @@ def test_quantify_mut(create_testfolder, processed_files, freq, colname):
     assert dat[colname].dtype == float
 
 
-@pytest.mark.parametrize(
-    "filename,simple,size",
-    [pytest.param('filtered', True, 8),
-     pytest.param('filtered', False, 7),
-     pytest.param('all', True, 8),
-     pytest.param('all', False, 7),
-     ])
+@pytest.mark.parametrize("filename,simple,size", [
+    pytest.param('filtered', True, 8),
+    pytest.param('filtered', False, 7),
+    pytest.param('all', True, 8),
+    pytest.param('all', False, 7),
+])
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata,
                        filename, simple, size):
     f = create_testfolder / str('dandelion/' + processed_files[filename])
     dat = pd.read_csv(f, sep='\t')
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata, simple = simple)
+    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata, simple=simple)
     assert dat.shape[0] == 9
     assert vdj.data.shape[0] == size
     assert vdj.metadata.shape[0] == 4
     assert adata.n_obs == 5
+
+
+@pytest.mark.parametrize("prefix,suffix,sep,remove", [
+    pytest.param('test', None, None, True),
+    pytest.param('test', None, None, False),
+    pytest.param(None, 'test', None, True),
+    pytest.param(None, 'test', None, False),
+    pytest.param(None, None, '-', True),
+    pytest.param(None, None, '-', False),
+    pytest.param('test', 'test', '-', True),
+    pytest.param('test', 'test', '-', False),
+])
+def test_formatfasta2(create_testfolder, prefix, suffix, sep,
+                      remove):
+    ddl.pp.format_fastas(str(create_testfolder),
+                         filename_prefix='filtered',
+                         prefix=prefix,
+                         suffix=suffix,
+                         sep=sep,
+                         remove_trailing_hyphen_number=remove)
+    f = create_testfolder / 'dandelion' / 'filtered_contig_annotations.csv'
+    df = pd.read_csv(f)
+    contig = list(df['contig_id'])[0]
+    if prefix is None:
+        if remove:
+            if suffix is not None:
+                if sep is None:
+                    assert contig.split('_contig')[0].endswith('_' + suffix)
+                else:
+                    assert contig.split('_contig')[0].endswith(sep + suffix)
+            else:
+                assert contig.split('_contig')[0].endswith('-1')
+        else:
+            if suffix is None:
+                assert contig.split('_contig')[0].endswith('-1')
+            else:
+                if sep is None:
+                    assert contig.split('_contig')[0].endswith('_' + suffix)
+                else:
+                    assert contig.split('_contig')[0].endswith(sep + suffix)
+    else:
+        if sep is None:
+            assert contig.startswith(prefix + '_')
+        else:
+            assert contig.startswith(prefix + sep)

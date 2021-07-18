@@ -310,3 +310,27 @@ def test_diversity2c(create_testfolder):
                                key='sequence',
                                update_obs_meta=False)
     assert isinstance(x, pd.DataFrame)
+
+
+def test_overlap1(create_testfolder):
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    ddl.tl.clone_overlap(adata, groupby='group3', colorby='group2')
+    assert 'clone_overlap' in adata.uns
+    assert isinstance(adata.uns['clone_overlap'], pd.DataFrame)
+    ddl.pl.clone_overlap(adata, groupby='group3', colorby='group2')
+
+
+def test_overlap2(create_testfolder):
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    ddl.pl.clone_overlap(adata, groupby='group3', colorby='group2')
+
+
+def test_extract_edge_weights(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    x = ddl.tl.extract_edge_weights(vdj)
+    assert x is None
+    x = ddl.tl.extract_edge_weights(vdj, expanded_only=True)
+    assert x is None
