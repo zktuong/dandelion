@@ -1,13 +1,14 @@
 .. include:: README.rst
 
-.. toctree::   
-   :maxdepth: 2
+.. toctree::
+   :hidden:   
+   :maxdepth: 1
 
    README.rst
 
 .. toctree::
    :hidden:
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Tutorial:
 
    notebooks/singularity_preprocessing.ipynb
@@ -16,7 +17,8 @@
    notebooks/7_dandelion_TCR_data_10x_data.ipynb
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: API:
-   
+   :hidden:
+
    api
