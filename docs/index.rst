@@ -1,5 +1,4 @@
-Welcome to dandelion's documentation!
-========================================
+.. include:: README.md
 
 .. toctree::   
    :maxdepth: 2
