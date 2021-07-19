@@ -2,7 +2,7 @@
 import pandas as pd
 import dandelion as ddl
 
-from fixtures import (airr_reannotated, create_testfolder)
+from fixtures import (airr_reannotated, create_testfolder, database_paths)
 
 
 def test_importrpy2():
@@ -26,11 +26,11 @@ def test_mutation(create_testfolder, airr_reannotated):
     assert not vdj.data.mu_freq.empty
 
 
-def test_create_germlines(create_testfolder):
+def test_create_germlines(create_testfolder, database_paths):
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep='\t')
     vdj = ddl.Dandelion(out)
-    ddl.pp.create_germlines(vdj)
+    ddl.pp.create_germlines(vdj, germline=database_paths['germline'])
     assert not vdj.data.germline_alignment_d_mask.empty
 
 
