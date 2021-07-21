@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-21 10:13:48
+# @Last Modified time: 2021-07-21 13:37:56
 
 import os
 import pandas as pd
@@ -668,6 +668,7 @@ def recipe_scanpy_qc(
     bool_dict = {True: 'True', False: 'False'}
 
     _adata.obs['is_doublet'] = [bool_dict[x] for x in _adata.obs['is_doublet']]
+    _adata.obs['filter_rna'] = [bool_dict[x] for x in _adata.obs['filter_rna']]
 
     # removing columns that probably don't need anymore
     if mito_cutoff is not None:
