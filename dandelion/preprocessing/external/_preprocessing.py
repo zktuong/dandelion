@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-16 22:10:43
+# @Last Modified time: 2021-07-21 10:11:52
 
 import os
 import pandas as pd
@@ -641,7 +641,7 @@ def recipe_scanpy_qc(self: AnnData, mito_startswith: str = 'MT', max_genes: int 
                         (pd.Series([n > max_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
                         ~(_adata.obs.gmm_pct_count_clusters_keep) | \
                         (_adata.obs.is_doublet)
-    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('category')
+    _adata.obs['is_doublet'] = _adata.obs['is_doublet'].astype('object')
 
     # removing columns that probably don't need anymore
     if mito_cutoff is not None:
