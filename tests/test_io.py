@@ -180,8 +180,8 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     assert adata.obs.shape[0] == 5
     assert adata.obs.shape[1] == 43
     os.remove(fasta_file)
-    # vdjx = ddl.from_scirpy(adata)
-    # assert vdjx.data.shape[0] == 9
+    vdjx = ddl.from_scirpy(adata)
+    assert vdjx.data.shape[0] == 9
 
 
 def test_tofro_scirpy_cr6(create_testfolder, annotation_10x_cr6, json_10x_cr6):
@@ -198,5 +198,5 @@ def test_tofro_scirpy_cr6(create_testfolder, annotation_10x_cr6, json_10x_cr6):
     adata = ddl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 10
     assert adata.obs.shape[1] == 43
-    # vdjx = ddl.from_scirpy(adata)
-    # assert vdjx.data.shape[0] == 26
+    vdjx = ddl.from_scirpy(adata)
+    assert vdjx.data.shape[0] == 26
