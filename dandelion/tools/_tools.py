@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:49
+# @Last Modified time: 2021-07-25 21:59:20
 
 import os
 import sys
@@ -668,7 +668,7 @@ def transfer(self: AnnData,
              neighbors_key: Optional[str] = None,
              rna_key: Optional[str] = None,
              vdj_key: Optional[str] = None,
-             overwrite: Optional[bool, Sequence, str] = None) -> AnnData:
+             overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 

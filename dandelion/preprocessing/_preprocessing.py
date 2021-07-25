@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:31
+# @Last Modified time: 2021-07-25 21:57:34
 
 import os
 import pandas as pd
@@ -238,7 +238,7 @@ def format_fastas(fastas: Sequence,
                   sep: Optional[str] = None,
                   remove_trailing_hyphen_number: bool = True,
                   outdir: Optional[str] = None,
-                  filename_prefix: Optional[Sequence, str] = None):
+                  filename_prefix: Optional[Union[Sequence, str]] = None):
     """
     Add prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -941,7 +941,7 @@ def assign_isotypes(fastas: Sequence,
                     allele: bool = False,
                     parallel: bool = True,
                     ncpu: Optional[int] = None,
-                    filename_prefix: Optional[Sequence, str] = None,
+                    filename_prefix: Optional[Union[Sequence, str]] = None,
                     verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn.
@@ -1012,11 +1012,11 @@ def assign_isotypes(fastas: Sequence,
 
 def reannotate_genes(data: Sequence,
                      igblast_db: Optional[str] = None,
-                     germline: Optional[str, PathLike] = None,
+                     germline: Optional[Union[str, PathLike]] = None,
                      org: Literal['human', 'ig'] = 'human',
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
-                     filename_prefix: Optional[Sequence, str] = None,
+                     filename_prefix: Optional[Union[Sequence, str]] = None,
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
@@ -1090,7 +1090,7 @@ def reannotate_genes(data: Sequence,
 def reassign_alleles(data: Sequence,
                      combined_folder: Union[str, PathLike],
                      v_germline: Optional[str] = None,
-                     germline: Optional[str, PathLike] = None,
+                     germline: Optional[Union[str, PathLike]] = None,
                      org: Literal['human', 'mouse'] = 'human',
                      v_field: Literal['v_call',
                                       'v_call_genotyped'] = 'v_call_genotyped',
@@ -1103,7 +1103,7 @@ def reassign_alleles(data: Sequence,
                      figsize: Tuple[Union[int, float], Union[int,
                                                              float]] = (4, 3),
                      sample_id_dictionary: Optional[Dict] = None,
-                     filename_prefix: Optional[Sequence, str] = None,
+                     filename_prefix: Optional[Union[Sequence, str]] = None,
                      verbose: bool = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles.
@@ -1531,7 +1531,7 @@ def reassign_alleles(data: Sequence,
 
 def create_germlines(
         self: Union[Dandelion, pd.DataFrame, str, PathLike],
-        germline: Optional[str, PathLike] = None,
+        germline: Optional[Union[str, PathLike]] = None,
         org: Literal['human', 'mouse'] = 'human',
         seq_field: Literal['sequence_alignment'] = 'sequence_alignment',
         v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call',

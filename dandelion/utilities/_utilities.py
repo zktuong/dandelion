@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:39
+# @Last Modified time: 2021-07-25 21:57:30
 
 import os
 from collections import defaultdict, Iterable
@@ -234,7 +234,7 @@ def check_fastapath(fasta, filename_prefix: Optional[str] = None):
 
 
 def change_file_location(data: Sequence,
-                         filename_prefix: Optional[Sequence, str] = None):
+                         filename_prefix: Optional[Union[Sequence, str]] = None):
     """
     Move file from tmp folder to dandelion folder.
 

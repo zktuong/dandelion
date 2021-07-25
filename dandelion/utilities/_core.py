@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:52
+# @Last Modified time: 2021-07-25 21:58:49
 
 import os
 from collections import defaultdict
@@ -129,7 +129,7 @@ class Dandelion:
         return copy.deepcopy(self)
 
     def update_germline(self,
-                        corrected: Optional[Dict, str] = None,
+                        corrected: Optional[Union[Dict, str]] = None,
                         germline: Optional[str] = None,
                         org: Literal['human', 'mouse'] = 'human'):
         """
@@ -1285,7 +1285,7 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
 
 
 def update_metadata(self: Dandelion,
-                    retrieve: Optional[Sequence, str] = None,
+                    retrieve: Optional[Union[Sequence, str]] = None,
                     locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                     clone_key: Optional[str] = None,
                     split: bool = True,

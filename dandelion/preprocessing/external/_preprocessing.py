@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:28
+# @Last Modified time: 2021-07-25 21:56:20
 
 import os
 import pandas as pd
@@ -76,8 +76,8 @@ def assigngenes_igblast(fasta: Union[str, PathLike],
 
 
 def makedb_igblast(fasta: Union[str, PathLike],
-                   igblast_output: Optional[str, PathLike] = None,
-                   germline: Optional[str, PathLike] = None,
+                   igblast_output: Optional[Union[str, PathLike]] = None,
+                   germline: Optional[Union[str, PathLike]] = None,
                    org: Literal['human', 'mouse'] = 'human',
                    extended: bool = True,
                    verbose: bool = False):
@@ -190,9 +190,9 @@ def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
 
 def creategermlines(db_file: Union[str, PathLike],
                     germtypes: Optional[str] = None,
-                    germline: Optional[str, PathLike] = None,
+                    germline: Optional[Union[str, PathLike]] = None,
                     org: Literal['human', 'mouse'] = 'human',
-                    genotype_fasta: Optional[str, PathLike] = None,
+                    genotype_fasta: Optional[Union[str, PathLike]] = None,
                     v_field: Optional[Literal['v_call',
                                               'v_call_genotyped']] = None,
                     cloned: bool = False,
@@ -420,8 +420,8 @@ def creategermlines(db_file: Union[str, PathLike],
 
 
 def tigger_genotype(data: Union[str, PathLike],
-                    v_germline: Optional[str, PathLike] = None,
-                    outdir: Optional[str, PathLike] = None,
+                    v_germline: Optional[Union[str, PathLike]] = None,
+                    outdir: Optional[Union[str, PathLike]] = None,
                     org: Literal['human', 'mouse'] = 'human',
                     fileformat: Literal['airr', 'changeo'] = 'airr',
                     novel_: Literal['YES', 'NO'] = 'YES',
