@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 16:39:26
+# @Last Modified time: 2021-07-25 16:37:42
 
 import os
 import json
@@ -17,7 +17,7 @@ import _pickle as cPickle
 from ..utilities._utilities import *
 from ..utilities._core import *
 from os import PathLike
-from typing import Union, Sequence
+from typing import Union, Sequence, Optional
 from collections import defaultdict, OrderedDict
 
 
@@ -392,7 +392,7 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
 
 
 def read_10x_vdj(path: Union[str, PathLike],
-                 filename_prefix: Union[None, str] = None,
+                 filename_prefix: Optional[str] = None,
                  return_dandelion: bool = True,
                  verbose: bool = False) -> Union[Dandelion, pd.DataFrame]:
     """
@@ -408,7 +408,7 @@ def read_10x_vdj(path: Union[str, PathLike],
     ----------
     path : str, PathLike
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     return_dandelion : bool
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.

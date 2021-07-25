@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-21 13:37:56
+# @Last Modified time: 2021-07-25 16:37:28
 
 import os
 import pandas as pd
@@ -19,11 +19,11 @@ import scanpy as sc
 import scipy.stats
 import re
 from os import PathLike
-from typing import Union, Sequence, Tuple
+from typing import Union, Sequence, Tuple, Optional
 
 
 def assigngenes_igblast(fasta: Union[str, PathLike],
-                        igblast_db: Union[None, str] = None,
+                        igblast_db: Optional[str] = None,
                         org: Literal['human', 'mouse'] = 'human',
                         loci: Literal['ig', 'tr'] = 'ig',
                         verbose: bool = False):
@@ -34,7 +34,7 @@ def assigngenes_igblast(fasta: Union[str, PathLike],
     ----------
     fasta : PathLike
         fasta file for reannotation.
-    igblast_db : PathLike, optional
+    igblast_db : PathLike, Optional
         path to igblast database.
     org : str
         organism for germline sequences.
@@ -76,8 +76,8 @@ def assigngenes_igblast(fasta: Union[str, PathLike],
 
 
 def makedb_igblast(fasta: Union[str, PathLike],
-                   igblast_output: Union[None, str, PathLike] = None,
-                   germline: Union[None, str, PathLike] = None,
+                   igblast_output: Optional[str, PathLike] = None,
+                   germline: Optional[str, PathLike] = None,
                    org: Literal['human', 'mouse'] = 'human',
                    extended: bool = True,
                    verbose: bool = False):
@@ -88,9 +88,9 @@ def makedb_igblast(fasta: Union[str, PathLike],
     ----------
     fasta : PathLike
         fasta file use for reannotation.
-    igblast_output : PathLike, optional
+    igblast_output : PathLike, Optional
         igblast output file.
-    germline : PathLike, optional
+    germline : PathLike, Optional
         path to germline database.
     org : str
         organism of germline sequences.
@@ -189,14 +189,14 @@ def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
 
 
 def creategermlines(db_file: Union[str, PathLike],
-                    germtypes: Union[None, str] = None,
-                    germline: Union[None, PathLike, str] = None,
+                    germtypes: Optional[str] = None,
+                    germline: Optional[str, PathLike] = None,
                     org: Literal['human', 'mouse'] = 'human',
-                    genotype_fasta: Union[None, PathLike, str] = None,
-                    v_field: Union[None, Literal['v_call',
-                                                 'v_call_genotyped']] = None,
+                    genotype_fasta: Optional[str, PathLike] = None,
+                    v_field: Optional[Literal['v_call',
+                                              'v_call_genotyped']] = None,
                     cloned: bool = False,
-                    mode: Union[None, Literal['heavy', 'light']] = None,
+                    mode: Optional[Literal['heavy', 'light']] = None,
                     verbose: bool = False):
     """
     Wrapper for CreateGermlines.py for reconstructing germline sequences,
@@ -205,19 +205,19 @@ def creategermlines(db_file: Union[str, PathLike],
     ----------
     db_file : PathLike
         path to AIRR table.
-    germtypes : str, optional
+    germtypes : str, Optional
         germline type for reconstuction.
-    germline : PathLike, optional
+    germline : PathLike, Optional
         location to germline fasta files.
     org : str
         organism for germline sequences.
-    genotype_fasta : PathLike, optional
+    genotype_fasta : PathLike, Optional
         location to corrected v germine fasta file.
-    v_field : str, optional
+    v_field : str, Optional
         name of column for v segment to perform reconstruction.
     cloned : bool
         whether or not to run with cloned option.
-    mode : str, optional
+    mode : str, Optional
         whether to run on heavy or light mode. If left as None, heavy and light will be run together.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
@@ -420,8 +420,8 @@ def creategermlines(db_file: Union[str, PathLike],
 
 
 def tigger_genotype(data: Union[str, PathLike],
-                    v_germline: Union[None, PathLike, str] = None,
-                    outdir: Union[None, PathLike, str] = None,
+                    v_germline: Optional[str, PathLike] = None,
+                    outdir: Optional[str, PathLike] = None,
                     org: Literal['human', 'mouse'] = 'human',
                     fileformat: Literal['airr', 'changeo'] = 'airr',
                     novel_: Literal['YES', 'NO'] = 'YES',
@@ -433,9 +433,9 @@ def tigger_genotype(data: Union[str, PathLike],
     ----------
     data : PathLike
         vdj tabulated data, in Change-O (TAB) or AIRR (TSV) format.
-    germline : PathLike, optional
+    germline : PathLike, Optional
         fasta file containing IMGT-gapped V segment reference germlines. Defaults to $GERMLINE.
-    outdir : PathLike,  optional
+    outdir : PathLike,  Optional
         output directory. Will be created if it does not exist. Defaults to the current working directory.
     org : str
         organism for germline sequences.
@@ -499,11 +499,11 @@ def recipe_scanpy_qc(
         mito_startswith: str = 'MT',
         max_genes: int = 2500,
         min_genes: int = 200,
-        mito_cutoff: Union[None, int] = 5,
+        mito_cutoff: Optional[int] = 5,
         pval_cutoff: float = 0.1,
-        min_counts: Union[None, int] = None,
-        max_counts: Union[None, int] = None,
-        blacklist: Union[None, Sequence] = None,
+        min_counts: Optional[int] = None,
+        max_counts: Optional[int] = None,
+        blacklist: Optional[Sequence] = None,
         vdj_pattern: str = '^TR[AB][VDJ]|^IG[HKL][VDJC]') -> AnnData:
     """
     Recipe for running a standard scanpy QC workflow.
@@ -522,11 +522,11 @@ def recipe_scanpy_qc(
         maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.
     pval_cutoff : float
         maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
-    min_counts : int, optional
+    min_counts : int, Optional
         minimum number of counts required for a cell to pass filtering. Default is None.
-    max_counts : int, optional
+    max_counts : int, Optional
         maximum number of counts required for a cell to pass filtering. Default is None.
-    blacklist : sequence, optional
+    blacklist : sequence, Optional
         if provided, will exclude these genes from highly variable genes list.
     vdj_pattern : str
         string pattern for search VDJ genes to exclude from highly variable genes.

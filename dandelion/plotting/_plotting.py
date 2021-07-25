@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 21:02:14
+# @Last Modified time: 2021-07-25 16:38:03
 
 import seaborn as sns
 import pandas as pd
@@ -21,13 +21,13 @@ from scanpy.plotting import palettes
 from time import sleep
 import matplotlib.pyplot as plt
 from itertools import combinations
-from typing import Union, Sequence, Tuple, Dict
+from typing import Union, Sequence, Tuple, Dict, Optional
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from tqdm import tqdm
 
 
-def clone_rarefaction(self: Union[AnnData, Dandelion], color: str, clone_key: Union[None, str] = None, palette: Union[None, Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), save: Union[None, str] = None) -> ggplot:
+def clone_rarefaction(self: Union[AnnData, Dandelion], color: str, clone_key: Optional[str] = None, palette: Optional[Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), save: Optional[str] = None) -> ggplot:
     """
     Plots rarefaction curve for cell numbers vs clone size.
 
@@ -37,13 +37,13 @@ def clone_rarefaction(self: Union[AnnData, Dandelion], color: str, clone_key: Un
         `AnnData` or `Dandelion` object.
     color : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata/obs.
-    palette : Sequence, optional
+    palette : Sequence, Optional
         Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
     figsize :  Tuple[Union[int,float], Union[int,float]]
         Size of plot.
-    save : str, optional
+    save : str, Optional
         Save path.
 
     Returns
@@ -199,7 +199,7 @@ def clone_network(adata: AnnData, basis: str = 'vdj', edges: bool = True, **kwar
     embedding(adata, basis=basis, edges=edges, **kwargs)
 
 
-def barplot(self: Union[AnnData, Dandelion], color: str, palette: str = 'Set1', figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), normalize: bool = True, sort_descending: bool = True, title: Union[None, str] = None, xtick_rotation: Union[None, Union[int, float]] = None, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None, **kwargs) -> Tuple[Figure, Axes]:
+def barplot(self: Union[AnnData, Dandelion], color: str, palette: str = 'Set1', figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), normalize: bool = True, sort_descending: bool = True, title: Optional[str] = None, xtick_rotation: Optional[Union[int, float]]] = None, min_clone_size: Optional[int] = None, clone_key: Optional[str] = None, **kwargs) -> Tuple[Figure, Axes]:
     """
     A barplot function to plot usage of V/J genes in the data.
 
@@ -217,13 +217,13 @@ def barplot(self: Union[AnnData, Dandelion], color: str, palette: str = 'Set1', 
         if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
     sort_descending : bool
         whether or not to sort the order of the plot. Default is True.
-    title : str, optional
+    title : str, Optional
         title of plot.
-    xtick_rotation : int, float, optional
+    xtick_rotation : int, float, Optional
         rotation of x tick labels.
-    min_clone_size : int, optional
+    min_clone_size : int, Optional
         minimum clone size to keep. Defaults to 1 if left as None.
-    clone_key : str, optional
+    clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
     **kwargs
         passed to `sns.barplot`.
@@ -279,7 +279,7 @@ def barplot(self: Union[AnnData, Dandelion], color: str, palette: str = 'Set1', 
     return fig, ax
 
 
-def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[None, str], figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), normalize: bool = False, title: Union[None, str] = None, sort_descending: bool = True, xtick_rotation: Union[None, Union[float, int]] = None, hide_legend: bool = True, legend_options: Tuple[str, Tuple[float, float], int] = None, labels: Union[None, Sequence] = None, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None, **kwargs) -> Tuple[Figure, Axes]:
+def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Optional[str], figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), normalize: bool = False, title: Optional[str] = None, sort_descending: bool = True, xtick_rotation: Optional[Union[int, float]]] = None, hide_legend: bool = True, legend_options: Tuple[str, Tuple[float, float], int] = None, labels: Optional[Sequence] = None, min_clone_size: Optional[int] = None, clone_key: Optional[str] = None, **kwargs) -> Tuple[Figure, Axes]:
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
 
@@ -297,19 +297,19 @@ def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[N
         if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
     sort_descending : bool
         whether or not to sort the order of the plot. Default is True.
-    title : str, optional
+    title : str, Optional
         title of plot.
-    xtick_rotation: Union[None, Union[float,int]] : int, float, optional
+    xtick_rotation: Optional[Union[int,float]] : int, float, Optional
         rotation of x tick labels.
     hide_legend : bool
         whether or not to hide the legend.
     legend_options : Tuple[str, Tuple[float, float], int]
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : Sequence, optional
+    labels : Sequence, Optional
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    min_clone_size : int, optional
+    min_clone_size : int, Optional
         minimum clone size to keep. Defaults to 1 if left as None.
-    clone_key : str, optional
+    clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
     **kwargs
         other kwargs passed to `matplotlib.plt`.
@@ -340,9 +340,9 @@ def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[N
     data_ = data[data[clone_].isin(keep)]
 
     dat_ = pd.DataFrame(data_.groupby(color)[groupby].value_counts(
-        normalize=normalize).unstack(fill_value=0).stack(), columns=['value'])
+        normalize = normalize).unstack(fill_value = 0).stack(), columns=['value'])
     dat_.reset_index(drop=False, inplace=True)
-    dat_order = pd.DataFrame(data[color].value_counts(normalize=normalize))
+    dat_order = pd.DataFrame(data[color].value_counts(normalize = normalize))
     dat_ = dat_.pivot(index=color, columns=groupby, values='value')
     if sort_descending is True:
         dat_ = dat_.reindex(dat_order.index)
@@ -351,7 +351,7 @@ def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[N
     elif sort_descending is None:
         dat_ = dat_.sort_index()
 
-    def _plot_bar_stacked(dfall: pd.DataFrame, labels: Union[None, Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), title: str = "multiple stacked bar plot", xtick_rotation: Union[None, Union[float, int]] = None, legend_options: Tuple[str, Tuple[float, float], int] = None, hide_legend: bool = True, H: Literal["/"] = "/", **kwargs) -> Tuple[Figure, Axes]:
+    def _plot_bar_stacked(dfall: pd.DataFrame, labels: Optional[Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4), title: str = "multiple stacked bar plot", xtick_rotation: Optional[Union[int, float]]] = None, legend_options: Tuple[str, Tuple[float, float], int] = None, hide_legend: bool = True, H: Literal["/"] = "/", **kwargs) -> Tuple[Figure, Axes]:
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
 
@@ -383,7 +383,7 @@ def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[N
                          **kwargs)  # make bar plots
         h, l = ax.get_legend_handles_labels()  # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col):  # len(h) = n_col * n_df
-            for j, pa in enumerate(h[i:i + n_col]):
+            for j, pa in enumerate(h[i: i + n_col]):
                 for rect in pa.patches:  # for each index
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1)
                                * i / float(n_col))
@@ -399,13 +399,13 @@ def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[N
         # Add invisible data to add another legend
         n = []
         for i in range(n_df):
-            n.append(ax.bar(0, 0, color="grey", hatch=H * i))
+            n.append(ax.bar(0, 0, color = "grey", hatch = H * i))
         if legend_options is None:
             Legend = ('center right', (1.15, 0.5), 1)
         else:
             Legend = legend_options
         if hide_legend is False:
-            l1 = ax.legend(h[:n_col], l[:n_col], loc=Legend[0],
+            l1 = ax.legend(h[: n_col], l[: n_col], loc=Legend[0],
                            bbox_to_anchor=Legend[1], ncol=Legend[2], frameon=False)
             if labels is not None:
                 l2 = plt.legend(
@@ -427,7 +427,7 @@ def stackedbarplot(self: Union[AnnData, Dandelion], color: str, groupby: Union[N
     return _plot_bar_stacked(dat_, labels=labels, figsize=figsize, title=title, xtick_rotation=xtick_rotation, legend_options=legend_options, hide_legend=hide_legend, **kwargs)
 
 
-def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus: str, clone_key: Union[None, str] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), width: Union[None, Union[int, float]] = None, title: Union[None, str] = None, xtick_rotation: Union[None, Union[float, int]] = None, hide_legend: bool = True, legend_options: Tuple[str, Tuple[float, float], int] = None, labels: Union[None, Sequence] = None, **kwargs) -> Tuple[Figure, Axes]:
+def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus: str, clone_key: Optional[str] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), width: Optional[Union[int, float]]] = None, title: Optional[str] = None, xtick_rotation: Optional[Union[int, float]]] = None, hide_legend: bool = True, legend_options: Tuple[str, Tuple[float, float], int] = None, labels: Optional[Sequence] = None, **kwargs) -> Tuple[Figure, Axes]:
     """
     A spectratype function to plot usage of CDR3 length in the data split by groups.
 
@@ -443,17 +443,17 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
         either IGH or IGL.
     figsize : Tuple[Union[int,float], Union[int,float]]
         figure size. Default is (6, 4).
-    width : float, int, optional
+    width : float, int, Optional
         width of bars.
-    title : str, optional
+    title : str, Optional
         title of plot.
-    xtick_rotation : int, float, optional
+    xtick_rotation : int, float, Optional
         rotation of x tick labels.
     hide_legend : bool
         whether or not to hide the legend.
     legend_options : Tuple[str, Tuple[float, float], int]
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : Sequence, optional
+    labels : Sequence, Optional
         Names of objects will be used for the legend if list of multiple dataframes supplied.
     **kwargs
         other kwargs passed to matplotlib.pyplot.plot
@@ -485,7 +485,7 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
     data = data[data['locus'].isin(locus)]
     data[groupby] = [str(l) for l in data[groupby]]
     dat_ = pd.DataFrame(data.groupby(color)[groupby].value_counts(
-        normalize=False).unstack(fill_value=0).stack(), columns=['value'])
+        normalize = False).unstack(fill_value = 0).stack(), columns=['value'])
     dat_.reset_index(drop=False, inplace=True)
     dat_[color] = pd.to_numeric(dat_[color], errors='coerce')
     dat_.sort_values(by=color)
@@ -493,7 +493,7 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
     new_index = range(0, int(dat_[color].max()) + 1)
     dat_2 = dat_2.reindex(new_index, fill_value=0)
 
-    def _plot_spectra_stacked(dfall: pd.DataFrame, labels: Union[None, Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), title: str = "multiple stacked bar plot", width: Union[None, Union[int, float]] = None, xtick_rotation: Union[None, Union[float, int]] = None, legend_options: Tuple[str, Tuple[float, float], int] = None, hide_legend: bool = True, H: Literal["/"] = "/", **kwargs) -> Tuple[Figure, Axes]:
+    def _plot_spectra_stacked(dfall: pd.DataFrame, labels: Optional[Sequence] = None, figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4), title: str = "multiple stacked bar plot", width: Optional[Union[int, float]]] = None, xtick_rotation: Optional[Union[int, float]]] = None, legend_options: Tuple[str, Tuple[float, float], int] = None, hide_legend: bool = True, H: Literal["/"] = "/", **kwargs) -> Tuple[Figure, Axes]:
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
@@ -515,7 +515,7 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
                          **kwargs)  # make bar plots
         h, l = ax.get_legend_handles_labels()  # get the handles we want to modify
         for i in range(0, n_df * n_col, n_col):  # len(h) = n_col * n_df
-            for j, pa in enumerate(h[i:i + n_col]):
+            for j, pa in enumerate(h[i: i + n_col]):
                 for rect in pa.patches:  # for each index
                     rect.set_x(rect.get_x() + 1 / float(n_df + 1)
                                * i / float(n_col))
@@ -531,13 +531,13 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
         # Add invisible data to add another legend
         n = []
         for i in range(n_df):
-            n.append(ax.bar(0, 0, color="gray", hatch=H * i))
+            n.append(ax.bar(0, 0, color = "gray", hatch = H * i))
         if legend_options is None:
             Legend = ('center right', (1.25, 0.5), 1)
         else:
             Legend = legend_options
         if hide_legend is False:
-            l1 = ax.legend(h[:n_col], l[:n_col], loc=Legend[0],
+            l1 = ax.legend(h[: n_col], l[: n_col], loc=Legend[0],
                            bbox_to_anchor=Legend[1], ncol=Legend[2], frameon=False)
             if labels is not None:
                 l2 = plt.legend(
@@ -553,7 +553,7 @@ def spectratype(self: Union[AnnData, Dandelion], color: str, groupby: str, locus
     return _plot_spectra_stacked(dat_2, labels=labels, figsize=figsize, title=title, width=width, xtick_rotation=xtick_rotation, legend_options=legend_options, hide_legend=hide_legend, **kwargs)
 
 
-def clone_overlap(self: Union[AnnData, Dandelion], groupby: str, colorby: str, min_clone_size: Union[None, int] = None, clone_key: Union[None, str] = None, color_mapping: Union[None, Sequence, Dict] = None, node_labels: bool = True, node_label_layout: Literal[None, 'rotation', 'numbers'] = 'rotation', group_label_position: Literal['beginning', 'middle', 'end'] = 'middle', group_label_offset: int = 8, figsize: Tuple[Union[int, float], Union[int, float]] = (8, 8), return_graph: bool = False, save: Union[None, str] = None, **kwargs):
+def clone_overlap(self: Union[AnnData, Dandelion], groupby: str, colorby: str, min_clone_size: Optional[int] = None, clone_key: Optional[str] = None, color_mapping: Optional[None, Sequence, Dict] = None, node_labels: bool = True, node_label_layout: Literal[None, 'rotation', 'numbers'] = 'rotation', group_label_position: Literal['beginning', 'middle', 'end'] = 'middle', group_label_offset: int = 8, figsize: Tuple[Union[int, float], Union[int, float]] = (8, 8), return_graph: bool = False, save: Optional[str] = None, **kwargs):
     """
     A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.
 
@@ -565,15 +565,15 @@ def clone_overlap(self: Union[AnnData, Dandelion], groupby: str, colorby: str, m
         column name in obs/metadata for collapsing to nodes in circos plot.
     colorby : str
         column name in obs/metadata for grouping and color of nodes in circos plot.
-    min_clone_size : int, optional
+    min_clone_size : int, Optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
-    clone_key : str, optional
+    clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
-    color_maopping : Dict, Sequence, optional
+    color_maopping : Dict, Sequence, Optional
         custom color mapping provided as a sequence (correpsonding to order of categories or alpha-numeric order if dtype is not category), or dictionary containing custom {category:color} mapping.
-    node_labels : bool, optional
+    node_labels : bool, Optional
         whether to use node objects as labels or not
-    node_label_layout : bool, optional
+    node_label_layout : bool, Optional
         which/whether (a) node layout is used. One of 'rotation', 'numbers' or None.
     group_label_position : str
         The position of the group label. One of 'beginning', 'middle' or 'end'.

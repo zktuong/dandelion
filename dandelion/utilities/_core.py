@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 19:48:17
+# @Last Modified time: 2021-07-25 16:37:52
 
 import os
 from collections import defaultdict
@@ -21,7 +21,7 @@ import _pickle as cPickle
 from scanpy import logging as logg
 from ..utilities._utilities import *
 from ..utilities._io import *
-from typing import Union, Sequence, Tuple, Dict
+from typing import Union, Sequence, Tuple, Dict, Optional
 
 BOOLEAN_COLUMNS = [
     'productive', 'rev_comp', 'vj_in_frame', 'stop_codon', 'complete_vdj'
@@ -129,8 +129,8 @@ class Dandelion:
         return copy.deepcopy(self)
 
     def update_germline(self,
-                        corrected: Union[None, Dict, str] = None,
-                        germline: Union[None, str] = None,
+                        corrected: Optional[Dict, str] = None,
+                        germline: Optional[str] = None,
                         org: Literal['human', 'mouse'] = 'human'):
         """
         Update germline reference with corrected sequences and store in `Dandelion` object.
@@ -139,9 +139,9 @@ class Dandelion:
         ----------
         self : Dandelion
             `Dandelion` object.
-        corrected : dict, str, optional
+        corrected : dict, str, Optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : str, optional
+        germline : str, Optional
             path to germline database folder. Defaults to `$GERMLINE` environmental variable.
         org : str
             organism of reference folder. Default is 'human'.
@@ -254,7 +254,7 @@ class Dandelion:
                                       'blosc:blosclz', 'blosc:lz4',
                                       'blosc:lz4hc', 'blosc:snappy',
                                       'blosc:zlib', 'blosc:zstd'] = None,
-                 compression_level: Union[None, int] = None,
+                 compression_level: Optional[int] = None,
                  **kwargs):
         """
         Writes a `Dandelion` class to .h5 format.
@@ -263,11 +263,11 @@ class Dandelion:
         ----------
         filename
             path to `.h5` file.
-        complib : str, optional
+        complib : str, Optional
             method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
-        compression : str, optional
+        compression : str, Optional
             same call as complib. Just a convenience option.
-        compression_opts : {0-9}, optional
+        compression_opts : {0-9}, Optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
             passed to `pd.DataFrame.to_hdf`.
@@ -1285,9 +1285,9 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
 
 
 def update_metadata(self: Dandelion,
-                    retrieve: Union[None, Sequence, str] = None,
-                    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
-                    clone_key: Union[None, str] = None,
+                    retrieve: Optional[Sequence, str] = None,
+                    locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                    clone_key: Optional[str] = None,
                     split: bool = True,
                     collapse: bool = True,
                     combine: bool = True,
@@ -1302,11 +1302,11 @@ def update_metadata(self: Dandelion,
     ----------
     self : Dandelion
         `Dandelion` object.
-    retrieve : str, sequence, optional
+    retrieve : str, sequence, Optional
         Column name in `.data` slot to retrieve and update the metadata.
-    locus : str, optional
+    locus : str, Optional
         Mode for creating metadata. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name of clone id. None defaults to 'clone_id'.
     split : bool
         Only applies if retrieve option is not None. Returns the retrieval splitted into two columns, e.g. one for heavy and one for light chains in BCR data, if True. Interacts with collapse, combine and split_locus options.

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 16:39:06
+# @Last Modified time: 2021-07-25 16:37:39
 
 import os
 from collections import defaultdict, Iterable
@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from subprocess import run
 import re
-from typing import Sequence, Tuple, Dict, Union
+from typing import Sequence, Tuple, Dict, Union, Optional
 try:
     from typing import Literal
 except ImportError:
@@ -173,9 +173,9 @@ def isBZIP(filename: str) -> bool:
 
 
 def check_filepath(s,
-                   filename_prefix: Union[None, str] = None,
-                   endswith: Union[None, str] = None,
-                   subdir: Union[None, str] = None):
+                   filename_prefix: Optional[str] = None,
+                   endswith: Optional[str] = None,
+                   subdir: Optional[str] = None):
     if filename_prefix is None:
         filename_pre = 'filtered'
     else:
@@ -212,7 +212,7 @@ def check_filepath(s,
     return (filePath)
 
 
-def check_fastapath(fasta, filename_prefix: Union[None, str] = None):
+def check_fastapath(fasta, filename_prefix: Optional[str] = None):
     if filename_prefix is None:
         filename_pre = 'filtered'
     else:
@@ -234,7 +234,7 @@ def check_fastapath(fasta, filename_prefix: Union[None, str] = None):
 
 
 def change_file_location(data: Sequence,
-                         filename_prefix: Union[None, Sequence, str] = None):
+                         filename_prefix: Optional[Sequence, str] = None):
     """
     Move file from tmp folder to dandelion folder.
 
@@ -245,7 +245,7 @@ def change_file_location(data: Sequence,
     data : Sequence
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
 
     Returns
