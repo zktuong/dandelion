@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 21:56:20
+# @Last Modified time: 2021-07-26 12:26:28
 
 import os
 import pandas as pd
@@ -553,28 +553,29 @@ def recipe_scanpy_qc(
                                percent_top=None,
                                log1p=False,
                                inplace=True)
-    # use a model-based method to determine the cut off for mitochondrial content
-    gmm = mixture.GaussianMixture(n_components=2,
-                                  max_iter=1000,
-                                  covariance_type='full')
-    X = _adata.obs[['pct_counts_mt', 'n_genes_by_counts']]
-    _adata.obs['gmm_pct_count_clusters'] = gmm.fit(X).predict(X)
-    # use a simple metric to workout which cluster is the one that contains lower mito content?
-    A1 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
-                0].obs['pct_counts_mt'].mean()
-    B1 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
-                1].obs['pct_counts_mt'].mean()
-    A2 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
-                0].obs['n_genes_by_counts'].mean()
-    B2 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
-                1].obs['n_genes_by_counts'].mean()
-    if ((A1 > B1) and (A2 < B2)):
-        keepdict = {0: False, 1: True}
-    else:
-        keepdict = {1: False, 0: True}
-    _adata.obs['gmm_pct_count_clusters_keep'] = [
-        keepdict[x] for x in _adata.obs['gmm_pct_count_clusters']
-    ]
+    if mito_cutoff is None:
+        # use a model-based method to determine the cut off for mitochondrial content
+        gmm = mixture.GaussianMixture(n_components=2,
+                                      max_iter=1000,
+                                      covariance_type='full')
+        X = _adata.obs[['pct_counts_mt', 'n_genes_by_counts']]
+        _adata.obs['gmm_pct_count_clusters'] = gmm.fit(X).predict(X)
+        # use a simple metric to workout which cluster is the one that contains lower mito content?
+        A1 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
+                    0].obs['pct_counts_mt'].mean()
+        B1 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
+                    1].obs['pct_counts_mt'].mean()
+        A2 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
+                    0].obs['n_genes_by_counts'].mean()
+        B2 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
+                    1].obs['n_genes_by_counts'].mean()
+        if ((A1 > B1) and (A2 < B2)):
+            keepdict = {0: False, 1: True}
+        else:
+            keepdict = {1: False, 0: True}
+        _adata.obs['gmm_pct_count_clusters_keep'] = [
+            keepdict[x] for x in _adata.obs['gmm_pct_count_clusters']
+        ]
     sc.pp.normalize_total(_adata, target_sum=1e4)
     sc.pp.log1p(_adata)
     sc.pp.highly_variable_genes(_adata,
