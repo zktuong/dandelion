@@ -2,9 +2,9 @@
 import pytest
 import dandelion as ddl
 import scanpy as sc
+import json
 
-from fixtures import (airr_reannotated, dummy_adata, create_testfolder,
-                      json_10x_cr6, dummy_adata_cr6)
+from fixtures import (airr_reannotated, dummy_adata, create_testfolder)
 
 
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
@@ -13,7 +13,8 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     assert vdj.data.shape[0] == 7
     assert vdj.metadata.shape[0] == 4
     assert adata.n_obs == 5
-    ddl.tl.find_clones(vdj)
+    vdj.data['clone_id'] = ['A', 'A', 'A', 'A', 'A', 'A', 'A']
+    vdj = ddl.Dandelion(vdj.data)
     ddl.tl.generate_network(vdj)
     ddl.tl.transfer(adata, vdj)
     assert 'clone_id' in adata.obs
@@ -24,10 +25,13 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     adata.write_h5ad(f2)
 
 
-# def test_plot_network(create_testfolder):
-#     f = create_testfolder / "test.h5ad"
-#     adata = sc.read_h5ad(f)
-#     ddl.pl.clone_network(adata, color=['isotype'], show = False, return_fig = False)
+def test_plot_network(create_testfolder):
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    ddl.pl.clone_network(adata,
+                         color=['isotype'],
+                         show=False,
+                         return_fig=False)
 
 
 @pytest.mark.parametrize("sort,norm", [
@@ -68,29 +72,3 @@ def test_plot_spectratype(create_testfolder):
                             groupby='c_call',
                             locus='IGH')
     assert ax is not None
-
-
-def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
-    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
-    with open(json_file, 'w') as outfile:
-        json.dump(json_10x_cr6, outfile)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
-    vdj, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 14
-    assert vdj.data.shape[1] == 50
-    assert vdj.metadata.shape[0] == 7
-    assert vdj.metadata.shape[1] == 25
-    ddl.tl.find_clones(vdj)
-    ddl.tl.generate_network(vdj, key='sequence')
-    ddl.tl.transfer(adata, vdj)
-    f2 = create_testfolder / "test.h5ad"
-    adata.write_h5ad(f2)
-
-
-def test_plot_network(create_testfolder):
-    f = create_testfolder / "test.h5ad"
-    adata = sc.read_h5ad(f)
-    ddl.pl.clone_network(adata,
-                         color=['isotype'],
-                         show=False,
-                         return_fig=False)
