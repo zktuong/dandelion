@@ -44,28 +44,28 @@ def main():
         for item in os.listdir('.'):
             if os.path.isdir(item):
                 samples.append(item)
+    filename_prefixes = [args.file_prefix for i in range(0, len(samples))]
 
     # STEP ONE - ddl.pp.format_fastas() 
     # do we have a prefix/suffix?
     if 'prefix' in meta.columns:
         # process with prefix
         vals = list(meta['prefix'].values)
-        ddl.pp.format_fastas(samples, prefix=vals, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = args.file_prefix)
+        ddl.pp.format_fastas(samples, prefix=vals, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = filename_prefixes)
     elif 'suffix' in meta.columns:
         # process with suffix
         vals = list(meta['suffix'].values)
-        ddl.pp.format_fastas(samples, suffix=vals, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = args.file_prefix)
-    else:
+        ddl.pp.format_fastas(samples, suffix=vals, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = filename_prefixes
         # neither. tag with the sample names as default, if more than one sample and the data is IG
         if len(samples) > 1 and args.chain == 'ig':
-            ddl.pp.format_fastas(samples, prefix=samples, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = args.file_prefix)
+            ddl.pp.format_fastas(samples, prefix=samples, sep=args.sep, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = filename_prefixes)
         else:
             # no need to tag as it's a single sample.
-            ddl.pp.format_fastas(samples, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = args.file_prefix)
+            ddl.pp.format_fastas(samples, remove_trailing_hyphen_number=args.keep_trailing_hyphen_number, filename_prefix = filename_prefixes)
 
     # STEP TWO - ddl.pp.reannotate_genes()
     # no tricks here
-    ddl.pp.reannotate_genes(samples, loci=args.chain, filename_prefix = args.file_prefix)
+    ddl.pp.reannotate_genes(samples, loci=args.chain, filename_prefix = filename_prefixes)
 
     # IG requires further preprocessing, TR is done now
     if args.chain == 'ig':
@@ -75,20 +75,20 @@ def main():
             # run the function for each individual separately
             for ind in np.unique(meta['individual']):
                 # yes, this screwy thing is needed so the function ingests it correctly, sorry
-                ddl.pp.reassign_alleles([str(i) for i in meta[meta['individual'] == ind].index.values], combined_folder=ind, save_plot=True, filename_prefix = args.file_prefix)
+                ddl.pp.reassign_alleles([str(i) for i in meta[meta['individual'] == ind].index.values], combined_folder=ind, save_plot=True, filename_prefix = filename_prefixes)
                 # remove if cleaning output - the important information is ported to sample folders already
                 if args.clean_output:
                     os.system('rm -r ' + ind)
         else:
             # run on the whole thing at once
-            ddl.pp.reassign_alleles(samples, combined_folder='tigger', save_plot=True, filename_prefix = args.file_prefix)
+            ddl.pp.reassign_alleles(samples, combined_folder='tigger', save_plot=True, filename_prefix = filename_prefixes)
             # remove if cleaning output - the important information is ported to sample folders already
             if args.clean_output:
                 os.system('rm -r tigger')
 
         # STEP FOUR - ddl.pp.assign_isotypes()
         # also no tricks here
-        ddl.pp.assign_isotypes(samples, save_plot=True, filename_prefix = args.file_prefix)
+        ddl.pp.assign_isotypes(samples, save_plot=True, filename_prefix = filename_prefixes)
 
     # at this stage it's safe to remove the per-sample dandelion/tmp folder if need be
     if args.clean_output:
