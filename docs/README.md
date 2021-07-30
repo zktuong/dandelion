@@ -19,7 +19,7 @@ Illustration of the `Dandelion` class slots
 
 ![](notebooks/img/dandelion_class.png)
 
-Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/master/docs/notebooks/):
+Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/latest/docs/notebooks/):
 
 The raw files for the examples can be downloaded from 10X's Single Cell Immune Profiling datasets [website](https://support.10xgenomics.com/single-cell-vdj/datasets).
 
@@ -37,7 +37,7 @@ This can be used for the preprocessing steps by navigating to the data folder an
 ```bash
 singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess
 ```
-Please refer to the [tutorial](https://sc-dandelion.readthedocs.io/en/master/notebooks/singularity_preprocessing.html) for more information.
+Please refer to the [tutorial](https://sc-dandelion.readthedocs.io/en/latest/notebooks/singularity_preprocessing.html) for more information.
 
 For more fine control, as well as for the exploration steps, please install via following the instructions below.
 
