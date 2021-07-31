@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 17:54:48
+# @Last Modified time: 2021-07-31 23:31:05
 
 import os
 import pandas as pd
@@ -1013,7 +1013,7 @@ def assign_isotypes(fastas: Sequence,
 def reannotate_genes(data: Sequence,
                      igblast_db: Optional[str] = None,
                      germline: Optional[Union[str, PathLike]] = None,
-                     org: Literal['human', 'ig'] = 'human',
+                     org: Literal['human', 'mouse'] = 'human',
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
