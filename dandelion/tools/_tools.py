@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 21:59:20
+# @Last Modified time: 2021-07-31 22:28:48
 
 import os
 import sys
@@ -90,7 +90,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         raise ValueError("key {} not found in input table.".format(key_))
 
     if locus is None:
-        locus_ = 'IGH'
+        locus_ = locus_dict[best_guess_locus(dat)]
     else:
         locus_ = locus_dict[locus]
 

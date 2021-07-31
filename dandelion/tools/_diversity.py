@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:44
+# @Last Modified time: 2021-07-31 22:16:53
 
 import pandas as pd
 import numpy as np
@@ -184,6 +184,13 @@ def clone_diversity(
     """
     if downsample is not None:
         resample = True
+
+    if locus is None:
+        if self.__class__ == Dandelion:
+            locus = best_guess_locus(self.data)
+        else:
+            locus = 'ig'
+
     if method == 'gini':
         if update_obs_meta:
             diversity_gini(self,
@@ -281,7 +288,7 @@ def clone_networkstats(self: Dandelion,
                 self.distance[x].toarray()
                 for x in self.distance if type(self.distance[x]) is csr_matrix
             ],
-                axis=0)
+                          axis=0)
             A = csr_matrix(dist)
             G = nx.Graph()
             G.add_weighted_edges_from(
@@ -437,8 +444,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                      expanded_only: bool = False,
                      contracted: bool = False,
                      key_added: Optional[str] = None,
-                     locus: Optional[Literal['ig', 'tr-ab',
-                                                   'tr-gd']] = None,
+                     locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                      **kwargs) -> pd.DataFrame:
         if self.__class__ == AnnData:
             raise TypeError('Only Dandelion class object accepted.')
@@ -812,15 +818,16 @@ def diversity_gini(self: Union[Dandelion, AnnData],
 
 
 def diversity_chao1(
-        self: Union[Dandelion, AnnData],
-        groupby: str,
-        clone_key: Optional[str] = None,
-        update_obs_meta: bool = False,
-        diversity_key: Optional[str] = None,
-        resample: bool = False,
-        n_resample: int = 50,
-        downsample: Optional[int] = None,
-        key_added: Optional[str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
+    self: Union[Dandelion, AnnData],
+    groupby: str,
+    clone_key: Optional[str] = None,
+    update_obs_meta: bool = False,
+    diversity_key: Optional[str] = None,
+    resample: bool = False,
+    n_resample: int = 50,
+    downsample: Optional[int] = None,
+    key_added: Optional[str] = None
+) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Chao1 estimates.
 
@@ -1007,16 +1014,17 @@ def diversity_chao1(
 
 
 def diversity_shannon(
-        self: Union[Dandelion, AnnData],
-        groupby: str,
-        clone_key: Optional[str] = None,
-        update_obs_meta: bool = False,
-        diversity_key: Optional[str] = None,
-        resample: bool = False,
-        n_resample: int = 50,
-        normalize: bool = True,
-        downsample: Optional[int] = None,
-        key_added: Optional[str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
+    self: Union[Dandelion, AnnData],
+    groupby: str,
+    clone_key: Optional[str] = None,
+    update_obs_meta: bool = False,
+    diversity_key: Optional[str] = None,
+    resample: bool = False,
+    n_resample: int = 50,
+    normalize: bool = True,
+    downsample: Optional[int] = None,
+    key_added: Optional[str] = None
+) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Shannon entropy.
 

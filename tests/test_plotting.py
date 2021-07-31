@@ -2,7 +2,6 @@
 import pytest
 import dandelion as ddl
 import scanpy as sc
-import json
 
 from fixtures import (airr_reannotated, dummy_adata, create_testfolder)
 

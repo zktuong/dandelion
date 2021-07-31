@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 16:37:47
+# @Last Modified time: 2021-07-31 22:11:33
 
 import pandas as pd
 import numpy as np
@@ -82,7 +82,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             'Data does not contain clone information. Please run find_clones.')
 
     if locus is None:
-        locus = 'ig'
+        locus = best_guess_locus(dat)
 
     dat = sanitize_data(dat, ignore=clonekey)
 

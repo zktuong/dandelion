@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 21:57:30
+# @Last Modified time: 2021-07-31 18:32:13
 
 import os
 from collections import defaultdict, Iterable
@@ -233,57 +233,6 @@ def check_fastapath(fasta, filename_prefix: Optional[str] = None):
     return (filePath)
 
 
-def change_file_location(data: Sequence,
-                         filename_prefix: Optional[Union[Sequence, str]] = None):
-    """
-    Move file from tmp folder to dandelion folder.
-
-    Only used for TCR data.
-
-    Parameters
-    ----------
-    data : Sequence
-        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
-        list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : str, Optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
-
-    Returns
-    -------
-    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
-    """
-    fileformat = 'blast'
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
-
-    informat_dict = {
-        'changeo': '_igblast_db-pass.tsv',
-        'blast': '_igblast_db-pass.tsv',
-        'airr': '_igblast_gap.tsv'
-    }
-
-    filePath = None
-
-    for i in range(0, len(data)):
-        filePath = check_filepath(data[i],
-                                  filename_prefix=filename_prefix[i],
-                                  endswith=informat_dict[fileformat],
-                                  subdir='tmp')
-        if filePath is None:
-            raise OSError(
-                'Path to .tsv file for {} is unknown. '.format(data[i]) +
-                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
-            )
-
-        cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
-
-        run(cmd)
-
-
 def cmp(a, b):
     """Python2.x cmp function."""
     return (a > b) - (a < b)
@@ -325,9 +274,16 @@ def cmp_to_key(mycmp):
 
 
 def not_same_call(a, b, pattern):
-    """Utility function to check if a == b in terms of patrern."""
+    """Utility function to check if a == b in terms of pattern."""
     return ((re.search(pattern, a) and not re.search(pattern, b))
             or (re.search(pattern, b) and not re.search(pattern, a)))
+
+
+def same_call(a, b, c, pattern):
+    """Utility function to check if a == b == c in terms of pattern."""
+    queries = [a, b, c]
+    queries = [q for q in queries if pd.notnull(q)]
+    return (all([re.search(pattern, x) for x in queries]))
 
 
 def present(x):
@@ -382,6 +338,7 @@ def sanitize_data(data, ignore='clone_id'):
                     data[d].replace(to_replace=[None, np.nan, pd.NA],
                                     value='',
                                     inplace=True)
+    data = check_travdv(data)
 
     # check if airr-standards is happy
     validate_airr(data)
@@ -400,11 +357,81 @@ def validate_airr(data):
                 if pd.isnull(v):
                     contig.update({k: np.nan})
         for required in [
-                'sequence', 'rev_comp', 'sequence_alignment', 'germline_alignment',
-                'v_cigar', 'd_cigar', 'j_cigar'
+                'sequence', 'rev_comp', 'sequence_alignment',
+                'germline_alignment', 'v_cigar', 'd_cigar', 'j_cigar'
         ]:
             if required not in contig:
                 contig.update({required: ''})
     # check if airr-standards is happy
     RearrangementSchema.validate_header(contig.keys())
     RearrangementSchema.validate_row(contig)
+
+
+def check_travdv(data):
+    data = load_data(data)
+    contig = [x for x in data['sequence_id']]
+    v = [x for x in data['v_call']]
+    d = [x for x in data['d_call']]
+    j = [x for x in data['j_call']]
+    c = [x for x in data['c_call']]
+    l = [x for x in data['locus']]
+    v_dict = dict(zip(contig, v))
+    d_dict = dict(zip(contig, d))
+    j_dict = dict(zip(contig, j))
+    c_dict = dict(zip(contig, c))
+    l_dict = dict(zip(contig, l))
+    for co in contig:
+        if re.search('TRAV.*/DV', v_dict[co]):
+            if same_call(j_dict[co], c_dict[co], d_dict[co], 'TRA'):
+                if not re.search('TRA', l_dict[co]):
+                    l_dict[co] = 'TRA'
+            elif same_call(j_dict[co], c_dict[co], d_dict[co], 'TRD'):
+                if not re.search('TRD', l_dict[co]):
+                    l_dict[co] = 'TRD'
+    data['locus'] = pd.Series(l_dict)
+    return (data)
+
+
+def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
+    """
+    Read in or copy dataframe object and set sequence_id as index without dropping.
+
+    Parameters
+    ----------
+    obj : DataFrame, str
+        file path to .tsv file or pandas DataFrame object.
+
+    Returns
+    -------
+    pandas DataFrame object.
+    """
+    if os.path.isfile(str(obj)):
+        try:
+            obj_ = pd.read_csv(obj, sep='\t')
+        except FileNotFoundError as e:
+            print(e)
+    elif isinstance(obj, pd.DataFrame):
+        obj_ = obj.copy()
+    else:
+        raise TypeError(
+            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
+        )
+
+    if 'sequence_id' in obj_.columns:
+        obj_.set_index('sequence_id', drop=False, inplace=True)
+    else:
+        raise KeyError("'sequence_id' not found in columns of input")
+
+    return (obj_)
+
+
+def best_guess_locus(data):
+    locus = [l for l in data['locus'] if pd.notnull(l)]
+    best_guess = None
+    if all(re.search('IG', l) for l in locus):
+        best_guess = 'ig'
+    elif all(re.search('TR[AB]', l) for l in locus):
+        best_guess = 'tr-ab'
+    elif all(re.search('TR[GD]', l) for l in locus):
+        best_guess = 'tr-gd'
+    return (best_guess)

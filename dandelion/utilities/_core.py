@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 21:58:49
+# @Last Modified time: 2021-07-31 22:10:43
 
 import os
 from collections import defaultdict
@@ -69,9 +69,17 @@ class Dandelion:
                     try:
                         update_metadata(self, **kwargs)
                     except:
-                        update_metadata(self, locus='tr-ab', **kwargs)
                         try:
-                            update_metadata(self, locus='tr-gd', **kwargs)
+                            bestguess = best_guess_locus(self.data)
+                            print(bestguess)
+                            if bestguess is not None:
+                                update_metadata(self,
+                                                locus=bestguess,
+                                                **kwargs)
+                            else:
+                                raise OSError(
+                                    'Unable to read data. Looks like this is a mixed data set. Unable to guess the locus format'
+                                )
                         except:
                             raise OSError(
                                 'Unable to read data. Are you sure this is an AIRR formatted data?'
@@ -391,12 +399,12 @@ def retrieve_metadata(
     split: bool = True,
     collapse: bool = True,
     combine: bool = False,
-    locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig',
+    locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
     split_locus: bool = False,
     verbose: bool = False,
     ignore: str = 'clone_id',
 ) -> pd.DataFrame:
-    data_tmp = sanitize_data(data.copy(), ignore = ignore)
+    data_tmp = sanitize_data(data.copy(), ignore=ignore)
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
@@ -411,6 +419,9 @@ def retrieve_metadata(
         data_tmp[query].fillna('unassigned', inplace=True)
 
     typesoflocus = len(list(set(data_tmp['locus'])))
+
+    if locus is None:
+        locus = best_guess_locus(data_tmp)
 
     if typesoflocus > 1:
         if split_locus:
@@ -510,7 +521,8 @@ def retrieve_result_dict(query: str,
                          data: pd.DataFrame,
                          meta_h: pd.DataFrame,
                          meta_l: pd.DataFrame,
-                         locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig',
+                         locus: Optional[Literal['ig', 'tr-ab',
+                                                 'tr-gd']] = None,
                          split: bool = True,
                          collapse: bool = True,
                          combine: bool = False,
@@ -520,6 +532,10 @@ def retrieve_result_dict(query: str,
     locus_dict2 = {'ig': ['IGK', 'IGL'], 'tr-ab': ['TRA'], 'tr-gd': ['TRG']}
     locus_dict3 = {'ig': 'H', 'tr-ab': 'B', 'tr-gd': 'D'}
     locus_dict4 = {'ig': 'L', 'tr-ab': 'A', 'tr-gd': 'G'}
+
+    if locus is None:
+        locus = best_guess_locus(data)
+
     if len(meta_l) == 2 and type(meta_l) is list:
         H = locus_dict1[locus]
     else:
@@ -836,13 +852,15 @@ def retrieve_result_dict(query: str,
 def retrieve_result_dict_singular(query: str,
                                   data: pd.DataFrame,
                                   meta_h: pd.DataFrame,
-                                  locus: Literal['ig', 'tr-ab',
-                                                 'tr-gd'] = 'ig',
+                                  locus: Optional[Literal['ig', 'tr-ab',
+                                                          'tr-gd']] = None,
                                   collapse: bool = True,
                                   combine: bool = False,
                                   verbose: bool = False) -> Dict:
 
     df_hl = defaultdict(dict)
+    if locus is None:
+        locus = best_guess_locus(data)
 
     locus_dict1 = {'ig': 'IGH', 'tr-ab': 'TRB', 'tr-gd': 'TRD'}
     locus_dict3 = {'ig': 'H', 'tr-ab': 'B', 'tr-gd': 'D'}
@@ -1328,7 +1346,7 @@ def update_metadata(self: Dandelion,
     """
 
     if locus is None:
-        locus_ = 'ig'
+        locus_ = best_guess_locus(self.data)
     else:
         locus_ = locus
 
