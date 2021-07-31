@@ -19,7 +19,9 @@ From: continuumio/miniconda3
     sudo apt update -y && sudo apt install -y curl libcurl4-openssl-dev rsync r-base r-base-core r-recommended r-base-dev
         
     R --slave -e 'install.packages("remotes", repos="https://cloud.r-project.org/")'
-    R --slave -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))'
+    sysreqs=$(R --slave -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))')
+    echo $sysreqs
+    sudo -s eval "$sysreqs"
 
     # Install required R packages
     R --slave -e 'install.packages("BiocManager", repos="https://cloud.r-project.org/")'
@@ -29,7 +31,7 @@ From: continuumio/miniconda3
     conda env update --name dandelion -f environment.yml
     echo ". /opt/conda/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
     echo "conda activate dandelion" >> $SINGULARITY_ENVIRONMENT
-    apt-get autoremove
+    sudo apt-get autoremove
 
 %environment
     export GERMLINE=/share/database/germlines/
