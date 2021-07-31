@@ -8,9 +8,16 @@ From: continuumio/miniconda3
     database /share/database
     environment.yml /environment.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
+    sources.list /etc/apt/sources.list
 
 %post
-    apt-get -y update && apt-get install -y curl r-base-core libcurl4-openssl-dev rsync
+    apt update -y --allow-insecure-repositories && apt install -y --allow-unauthenticated sudo software-properties-common gnupg 
+    sudo apt -y autoremove
+    # wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
+    sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
+    sudo apt update -y && sudo apt install -y r-base r-base-core r-recommended r-base-dev
+        
     R --slave -e 'install.packages("remotes", repos="https://cloud.r-project.org/")'
     R --slave -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))'
 
