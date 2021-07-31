@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-25 22:03:42
+# @Last Modified time: 2021-07-31 19:08:07
 
 import seaborn as sns
 import pandas as pd
@@ -454,6 +454,7 @@ def stackedbarplot(self: Union[AnnData, Dandelion],
                                 bbox_to_anchor=Legend[1],
                                 ncol=Legend[2],
                                 frameon=False)
+                ax.add_artist(l2)
             ax.add_artist(l1)
         if xtick_rotation is None:
             plt.xticks(rotation=90)
