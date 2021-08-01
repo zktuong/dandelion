@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 22:10:43
+# @Last Modified time: 2021-08-01 01:08:22
 
 import os
 from collections import defaultdict
@@ -71,7 +71,6 @@ class Dandelion:
                     except:
                         try:
                             bestguess = best_guess_locus(self.data)
-                            print(bestguess)
                             if bestguess is not None:
                                 update_metadata(self,
                                                 locus=bestguess,
@@ -1130,6 +1129,9 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
         'ighg2a': 'IgG',
         'ighg2b': 'IgG',
         'ighg2c': 'IgG',
+        'ighga': 'IgG',
+        'ighgb': 'IgG',
+        'ighgc': 'IgG',
         'ighm': 'IgM',
         'igkc': 'IgK',
         'iglc': 'IgL',
