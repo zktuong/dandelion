@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 11:54:32
+# @Last Modified time: 2021-08-01 12:28:39
 
 import os
 from collections import defaultdict, Iterable
@@ -427,6 +427,8 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
 
 def best_guess_locus(data):
     locus = [l for l in data['locus'] if pd.notnull(l)]
+    if 'Multi' in locus:
+        locus.remove('Multi')
     best_guess = None
     if all(re.search('IG', l) for l in locus):
         best_guess = 'ig'
