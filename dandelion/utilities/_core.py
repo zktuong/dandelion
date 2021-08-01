@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 01:08:22
+# @Last Modified time: 2021-08-01 01:44:45
 
 import os
 from collections import defaultdict
@@ -302,12 +302,11 @@ class Dandelion:
 
         # now to actually saving
         data = self.data.copy()
-        for col in data.columns:
-            weird = (data[[col]].applymap(type) !=
-                     data[[col]].iloc[0].apply(type)).any(axis=1)
-            if len(data[weird]) > 0:
-                data[col] = data[col].astype(float).where(
-                    pd.notnull(data[col]), np.nan)
+        data = sanitize_data(data)
+        for col in data:
+            if data[col].dtype == 'Int64' or data[col].dtype == 'Float64':
+                data[col] = data[col].astype(float)
+
         data.to_hdf(filename,
                     "data",
                     complib=comp,
