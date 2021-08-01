@@ -3,12 +3,13 @@ Bootstrap: docker
 From: continuumio/miniconda3
 
 %files
-    ncbi-blast-2.10.1+ /share/ncbi-blast-2.10.1+
-    ncbi-igblast-1.15.0 /share/ncbi-igblast-1.15.0
+    ncbi-blast-2.12.0+ /share/ncbi-blast-2.12.0+
+    ncbi-igblast-1.17.1 /share/ncbi-igblast-1.17.1
     database /share/database
     environment.yml /environment.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
     sources.list /etc/apt/sources.list
+    tests /share/tests
 
 %post
     apt update -y --allow-insecure-repositories && apt install -y --allow-unauthenticated sudo software-properties-common gnupg
@@ -36,16 +37,16 @@ From: continuumio/miniconda3
     echo "export GERMLINE=/share/database/germlines/" >> $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" >> $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" >> $SINGULARITY_ENVIRONMENT
-    echo "export PATH=/share/ncbi-igblast-1.15.0/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
-    echo "export PATH=/share/ncbi-blast-2.10.1+/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
+    echo "export PATH=/share/ncbi-igblast-1.17.1/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
+    echo "export PATH=/share/ncbi-blast-2.12.0+/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
     echo "export PATH=/share:$PATH" >> $SINGULARITY_ENVIRONMENT
 
 %environment
     export GERMLINE=/share/database/germlines/
     export IGDATA=/share/database/igblast/
     export BLASTDB=/share/database/blast/
-    export PATH=/share/ncbi-igblast-1.15.0/bin:$PATH
-    export PATH=/share/ncbi-blast-2.10.1+/bin:$PATH
+    export PATH=/share/ncbi-igblast-1.17.1/bin:$PATH
+    export PATH=/share/ncbi-blast-2.12.0+/bin:$PATH
     export PATH=/share:$PATH
 
 %runscript
@@ -53,6 +54,4 @@ From: continuumio/miniconda3
     eval ${@}
 
 %test
-    ls /share
-    which blastn
-    conda list
+    python -m pytest /share/tests/test_container.py

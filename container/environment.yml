@@ -13,6 +13,7 @@ dependencies:
 - python-igraph
 - leidenalg
 - pip
+- pytest
 - tbb
 - pip:
   - scanpy>=1.7.0
