@@ -151,7 +151,7 @@ jobs:
       run: |
         pip install git+https://www.github.com/zktuong/nxviz.git
         pip install scirpy scrublet "annoy<1.17.0"
-        pytest --cov=dandelion --cov-report=xml -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+        pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
     - name: Show coverage
       run: |
