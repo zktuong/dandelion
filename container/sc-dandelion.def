@@ -14,11 +14,9 @@ From: continuumio/miniconda3
 %post
     apt update -y --allow-insecure-repositories && apt install -y --allow-unauthenticated sudo software-properties-common gnupg
     sudo apt -y autoremove
-    # wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
     sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
     sudo apt update -y && sudo apt install -y curl libcurl4-openssl-dev rsync r-base r-base-core r-recommended r-base-dev
-
     R --slave -e 'install.packages("remotes", repos="https://cloud.r-project.org/")'
     sysreqs=$(R --slave -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))')
     echo $sysreqs
@@ -37,21 +35,19 @@ From: continuumio/miniconda3
     echo "export GERMLINE=/share/database/germlines/" >> $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" >> $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" >> $SINGULARITY_ENVIRONMENT
-    echo "export PATH=/share/ncbi-igblast-1.17.1/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
-    echo "export PATH=/share/ncbi-blast-2.12.0+/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
-    echo "export PATH=/share:$PATH" >> $SINGULARITY_ENVIRONMENT
-
+    echo "export PATH=/share/ncbi-blast-2.12.0+/bin:/share/ncbi-igblast-1.17.1/bin:$PATH" >> $SINGULARITY_ENVIRONMENT
+    echo "export NUMBA_CACHE_DIR=$PWD/.deletecache" >> $SINGULARITY_ENVIRONMENT
+    
 %environment
     export GERMLINE=/share/database/germlines/
     export IGDATA=/share/database/igblast/
     export BLASTDB=/share/database/blast/
-    export PATH=/share/ncbi-igblast-1.17.1/bin:$PATH
-    export PATH=/share/ncbi-blast-2.12.0+/bin:$PATH
-    export PATH=/share:$PATH
-
+    export PATH=/share/ncbi-blast-2.12.0+/bin:/share/ncbi-igblast-1.17.1/bin:$PATH
+    export NUMBA_CACHE_DIR=$PWD/.deletecache
+    
 %runscript
     alias dandelion-preprocess='dandelion_preprocess.py'
     eval ${@}
 
 %test
-    python -m pytest /share/tests/test_container.py
+    /opt/conda/envs/dandelion/bin/python -m pytest -p no:cacheprovider /share/tests/test_container.py
