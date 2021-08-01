@@ -1,4 +1,4 @@
->M14996+M14997+M14998|TRGC1*01|Homo_sapiens|F|EX1+EX2+EX3| |519 nt|1|+1| | | |519+0=519| | |
+>M14996+M14997+M14998|TRGC1*01|Homo_sapiens|F|EX1+EX2+EX3|M14996:41..370;M14997:25..72;M14998:174..313|519 nt|1|+1| | | |519+0=519| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcaattgct
 gaaacaaagctccagaaggctggaacatacctttgtcttcttgagaaatttttccctgat
 gttattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg
@@ -8,14 +8,14 @@ caagaaattatctttcctccaataaagacagatgtcatcacaatggatcccaaagacaat
 tgttcaaaagatgcaaatgatacactactgctgcagctcacaaacacctctgcatattac
 atgtacctcctcctgctcctcaagagtgtggtctattttgccatcatcacctgctgtctg
 cttagaagaacggctttctgctgcaatggagagaaatca
->M14999|TRGC1*02|Homo_sapiens|F|EX1| |301 nt|1|+1| | | |301+0=301| | |
+>M14999|TRGC1*02|Homo_sapiens|F|EX1|1..300|301 nt|1|+1| | | |301+0=301| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcgattgct
 gaaacaaaactccagaaggctggaacatacctttgtcttcttgagaaatttttcccagat
 attattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg
 aacaccatgaagactaacgacacatacatgaaatttagctggttaacggtgccagaagag
 tcactggacaaagaacacagatgtatcgtcagacatgagaataataaaaacggaattgat
 c
->M15002+M13231cDNA|TRGC2*01|Homo_sapiens|F|EX1+EX2T+EX2+EX3| |568 nt|1|+1| | | |568+0=568| | |
+>M15002+M13231cDNA|TRGC2*01|Homo_sapiens|F|EX1+EX2T+EX2+EX3|M15002:1..330;M13231:740..787+788..835+836..976|568 nt|1|+1| | | |568+0=568| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcaattgct
 gaaacaaaactccagaaggctggaacatacctttgtcttcttgagaaatttttcccagat
 attattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg
@@ -26,7 +26,7 @@ ttattcaaaagatgcaaatgatgtcatcacaatggatcccaaagacaattggtcaaaaga
 tgcaaatgatacactactgctgcagctcacaaacacctctgcatattacatgtacctcct
 cctgctcctcaagagtgtggtctattttgccatcatcacctgctgtctgcttggaagaac
 ggctttctgctgcaatggagagaaatca
->M15001+M15004+M15005+M15007|TRGC2*02|Homo_sapiens|F|EX1+EX2R+EX2+EX3| |567 nt|1|+1| | | |567+0=567| | |
+>M15001+M15004+M15005+M15007|TRGC2*02|Homo_sapiens|F|EX1+EX2R+EX2+EX3|M15001:1..330;M15004:6..53;M15005:6..53;M15007:2..141|567 nt|1|+1| | | |567+0=567| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcgattgct
 gaaacaaaactccagaaggctggaacatacctttgtcttcttgagaaatttttcccagat
 attattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg
@@ -37,7 +37,7 @@ tattcaaaggatgcaaatgatgtcatcacaatggatcccaaagacaattggtcaaaagat
 gcaaatgatacactactgctgcagctcacaaacacctctgcatattacatgtacctcctc
 ctgctcctcaagagtgtggtctattttgccatcatcacctgctgtctgcttggaagaacg
 gctttctgctgcaatggagagaaatca
->M17324cDNA|TRGC2*03|Homo_sapiens|F|EX1+EX2R+EX2+EX3| |567 nt|1|+1| | | |567+0=567| | |
+>M17324cDNA|TRGC2*03|Homo_sapiens|F|EX1+EX2R+EX2+EX3|1..329+330..377+378..425+426..566|567 nt|1|+1| | | |567+0=567| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcgattgct
 gaaacaaaactccagaaggctggaacatacctttgtcttcttgagaaatttttcccagat
 attattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg
@@ -48,7 +48,7 @@ tattcaaaggatgcaaatgatgtcatcacaatggatcccaaagacaattggtcaaaagat
 gcaattgatacactactgctgcagctcacaaacacctctgcatattacatgtacctcctc
 ctgctcctcaagagtggtgtctattttgccatcatcacctgctgtctgcttagaagaacg
 gctttctgctgcaatggagagaaatca
->AF159056|TRGC2*04|Homo_sapiens|F|EX1+EX2R+EX2+EX3| |567 nt|1|+1| | | |567+0=567| | |
+>AF159056|TRGC2*04|Homo_sapiens|F|EX1+EX2R+EX2+EX3|124343..124672+128685..128732+131440..131487+133741..133880|567 nt|1|+1| | | |567+0=567| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcaattgct
 gaaacaaaactccagaaggctggaacatacctttgtcttcttgagaaatttttcccagat
 attattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg
@@ -59,7 +59,7 @@ tattcaaaggatgcaaatgatgtcatcacaatggatcccaaagacaattggtcaaaagat
 gcaattgatacactactgctgcagctcacaaacacctctgcatattacatgtacctcctc
 ctgctcctcaagagtgtggtctattttgccatcatcacctgctgtctgcttggaagaacg
 gctttctgctgcaatggagagaaatca
->M17323cDNA+M25318|TRGC2*05|Homo_sapiens|F|EX1+EX2T+EX2R+EX2+EX3| |615 nt|1|+1| | | |615+0=615| | |
+>M17323cDNA+M25318|TRGC2*05|Homo_sapiens|F|EX1+EX2T+EX2R+EX2+EX3|M17323:1..330;M25318:7..53;M17323:378..425+426..473+474..614|615 nt|1|+1| | | |615+0=615| | |
 gataaacaacttgatgcagatgtttcccccaagcccactatttttcttccttcgattgct
 gaaacaaaactccagaaggctggaacatatctttgtcttcttgagaaatttttcccagat
 attattaagatacattggcaagaaaagaagagcaacacgattctgggatcccaggagggg

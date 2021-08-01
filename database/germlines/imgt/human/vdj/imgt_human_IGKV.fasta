@@ -397,6 +397,13 @@ tggtatcagcaaaaaccagggaaagcccctgagctcctgatctatgctgca.........
 ............tccactttgcaaagtggggtccca...tcaaggttcagtggcagtgga
 ......tctgggacagatttcactctcaccatcagctgcctgcagtctgaagattttgca
 acttattactgtcaacagtattatagtttccctcc
+>MK308861|IGKV1D-8*04|Homo_sapiens|(F)|V-REGION|1..287|287 nt|1| | | | |287+48=335| | |
+gtcatctggatgacccagtctccatccttactctctgcatctacaggagacagagtcatc
+atcagttgtcggatgagtcagggcatt..................agcagttatttagcc
+tggtatcagcaaaaaccagggaaagcccctgagctcctgatctatgctgca.........
+............tccactttgcaaagtggggtccca...tcaaggttcagtggcagtgga
+......tctgggacagatttcactctcaccatcagttgcctgcagtctgaagattttgca
+acttattactgtcaacagtattatagtttccctcc
 >X63400|IGKV2-18*01|Homo_sapiens|P|V-REGION|818..1119|302 nt|1| | || |302+33=335| | |
 gatattgtgatgacccagactccaccctccctgcccgtcaaccctggagagccggcctcc
 atctcttgcaggtctagtcagagcctcctgcatagt...aatggatatacctatttgcat

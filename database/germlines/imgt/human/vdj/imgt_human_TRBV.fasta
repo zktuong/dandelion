@@ -536,7 +536,7 @@ tggtataaacaggactctaagaaatttctgaagacaatgtttatctacagtaac......
 ......aaggagccaattttaaatgaaacagttcca...aatcgcttctcacctgactct
 cca...gacaaagttcatttaaatcttcacatcaattccctggagcttggtgactctgct
 gtgtatttctgtgccagcagccaag
->L36092|TRBV30*01|Homo_sapiens|F|V-REGION|666640..666923|284 nt|1| | | | |284+39=323| | |
+>L36092|TRBV30*01|Homo_sapiens|F|V-REGION|666640..666923|284 nt|1| | || |284+39=323| |rev-compl|
 tctcagactattcatcaatggccagcgaccctggtgcagcctgtgggcagcccgctctct
 ctggagtgcactgtggagggaacatca..................aaccccaacctatac
 tggtaccgacaggctgcaggcaggggcctccagctgctcttctactccgttggt......
