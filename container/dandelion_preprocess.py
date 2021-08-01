@@ -151,6 +151,15 @@ def main():
                                save_plot=True,
                                filename_prefix=filename_prefixes)
 
+        # STEP FIVE - ddl.pp.quantify_mutations()
+        # this adds the mu_count and mu_freq columns into the table
+        for s in samples:
+            ddl.pp.quantify_mutations(
+                s + '/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv')
+            ddl.pp.quantify_mutations(
+                s + '/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv',
+                frequency=True)
+
     # at this stage it's safe to remove the per-sample dandelion/tmp folder if need be
     if args.clean_output:
         for sample in samples:
