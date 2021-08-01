@@ -4716,21 +4716,6 @@ def annotation_10x_tr2():
 
 
 @pytest.fixture
-def mouse_ighg_primers():
-    primer_dict = {
-        'IGHG2': {
-            'IGHG2A':
-            'GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGATACAACTGGC',
-            'IGHG2B':
-            'GCCAAAACAACACCCCCATCAGTCTATCCACTGGCCCCTGGGTGTGGAGATACAACTGGT',
-            'IGHG2C':
-            'GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGGTACAACTGGC',
-        }
-    }
-    return (primer_dict)
-
-
-@pytest.fixture
 def airr_travdv():
     airr = pd.DataFrame([
         [
