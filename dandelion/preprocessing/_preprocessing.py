@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 00:58:13
+# @Last Modified time: 2021-08-01 08:52:14
 
 import os
 import pandas as pd
@@ -2077,7 +2077,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     contig_check = pd.DataFrame(index=adata_.obs_names)
     bc_ = {}
     for b in barcode:
-        bc_.update({b: True})
+        bc_.update({b: 'True'})
     contig_check['has_contig'] = pd.Series(bc_)
     contig_check.replace(np.nan, 'No_contig', inplace=True)
     adata_.obs['has_contig'] = pd.Series(contig_check['has_contig'])
