@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 18:32:13
+# @Last Modified time: 2021-08-01 11:54:32
 
 import os
 from collections import defaultdict, Iterable
@@ -435,3 +435,9 @@ def best_guess_locus(data):
     elif all(re.search('TR[GD]', l) for l in locus):
         best_guess = 'tr-gd'
     return (best_guess)
+
+
+def sanitize_dtype(data):
+    for col in data:
+        if data[col].dtype == 'Int64' or data[col].dtype == 'Float64':
+            data[col] = data[col].astype(float)

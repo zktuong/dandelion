@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 08:52:14
+# @Last Modified time: 2021-08-01 11:54:55
 
 import os
 import pandas as pd
@@ -2296,6 +2296,8 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
+    sanitize_dtype(dat)
+
     if sequence_column is None:
         seq_ = 'sequence_alignment'
     else:
@@ -2557,6 +2559,9 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
         warnings.filterwarnings("ignore")
+
+    sanitize_dtype(dat)
+
     sh = importr('shazam')
     pandas2ri.activate()
     if 'v_call_genotyped' in dat.columns:

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 01:44:45
+# @Last Modified time: 2021-08-01 11:55:06
 
 import os
 from collections import defaultdict
@@ -303,9 +303,7 @@ class Dandelion:
         # now to actually saving
         data = self.data.copy()
         data = sanitize_data(data)
-        for col in data:
-            if data[col].dtype == 'Int64' or data[col].dtype == 'Float64':
-                data[col] = data[col].astype(float)
+        sanitize_dtype(data)
 
         data.to_hdf(filename,
                     "data",
