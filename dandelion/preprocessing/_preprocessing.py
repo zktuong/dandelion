@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 21:11:45
+# @Last Modified time: 2021-08-01 21:59:29
 
 import os
 import pandas as pd
@@ -28,7 +28,7 @@ from changeo.IO import getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 import re
 import functools
-from .. import logging as logg
+from ..logging import logger as logg
 import numpy as np
 from Bio import Align
 from typing import Union, Sequence, Tuple, Optional
