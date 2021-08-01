@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 23:31:05
+# @Last Modified time: 2021-08-01 00:58:13
 
 import os
 import pandas as pd
@@ -2059,6 +2059,9 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             dat = dat_.copy()
     else:
         dat = dat_.copy()
+
+    if locus is None:
+        locus = best_guess_locus(dat)
 
     adata_ = adata.copy()
 
