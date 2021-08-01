@@ -50,4 +50,6 @@ From: continuumio/miniconda3
     eval ${@}
 
 %test
-    /opt/conda/envs/dandelion/bin/python -m pytest -p no:cacheprovider /share/tests/test_container.py
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate dandelion
+    python -m pytest -p no:cacheprovider /share/tests/test_container.py
