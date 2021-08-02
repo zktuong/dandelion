@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 22:22:37
+# @Last Modified time: 2021-07-31 19:08:07
 
 import seaborn as sns
 import pandas as pd
@@ -11,13 +11,13 @@ from ..utilities._utilities import *
 from ..utilities._core import *
 from ..utilities._io import *
 from ..tools._diversity import rarefun
-
+from scanpy.plotting._tools.scatterplots import embedding
 import matplotlib.pyplot as plt
 from anndata import AnnData
 import random
 from adjustText import adjust_text
 from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options, ggtitle, labs, scale_color_manual
-
+from scanpy.plotting import palettes
 from time import sleep
 import matplotlib.pyplot as plt
 from itertools import combinations
@@ -109,7 +109,6 @@ def clone_rarefaction(self: Union[AnnData, Dandelion],
 
     options.figure_size = figsize
     if palette is None:
-        from scanpy.plotting import palettes
         if self.__class__ == AnnData:
             try:
                 pal = self.uns[str(color) + '_colors']
@@ -197,8 +196,6 @@ def clone_network(adata: AnnData,
     **kwargs
         passed `sc.pl.embedding`.
     """
-    from scanpy.plotting._tools.scatterplots import embedding
-
     embedding(adata, basis=basis, edges=edges, **kwargs)
 
 
