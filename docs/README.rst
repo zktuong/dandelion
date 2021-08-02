@@ -37,7 +37,7 @@ Singularity container
 .. code:: bash
 
     singularity pull library://kt16/default/sc-dandelion:latest
-    singularity shell sc-dandelion_latest.sif
+    singularity shell --writable-tmpfs -B $PWD sc-dandelion_latest.sif
 
 | This will load up a conda-environment that has all the required
 dependencies installed.
@@ -122,14 +122,14 @@ should work. Otherwise, you might need to add it manually:
 Required database
 -----------------
 
-Last but not least, you will need to download the database folder in
-this repository and place them somewhere accessible. The igblast and
-germline database folders were originally downloaded with
-`immcantation's <https://immcantation.readthedocs.io/en/4.1.0/docker/intro.html>`__
-docker image (4.1.0). The blast database were downloaded from IMGT and
+Last but not least, you will need to download the `database folder <https://github.com/zktuong/dandelion/tree/master/container>`__ in
+the repository and place them somewhere accessible. The igblast and
+germline database folders were originally downloaded from
+`immcantation <https://immcantation.readthedocs.io/>`__
+docker image (4.2.0). The blast database were downloaded from IMGT and
 manually curated. I have uploaded a copy of the required databases in a
 separate `repository <https://github.com/zktuong/databases_for_vdj>`__
-(Last update: 28/11/2020). Once you've unpacked the folders, export the
+(Last update: 01/08/2021). Once you've unpacked the folders, export the
 the path to the database folders as environmental variables in your
 ``~/.bash_profile`` or ``~/.zshenv`` like below. This will allow
 dandelion to access them easily. In the future, the databases will have
