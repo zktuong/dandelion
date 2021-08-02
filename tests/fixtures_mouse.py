@@ -8,10 +8,10 @@ import scipy.sparse
 def database_paths_mouse():
     """Database paths for tests."""
     db = {
-        'igblast_db': "database/igblast/",
-        'germline': "database/germlines/imgt/mouse/vdj/",
-        'blastdb': "database/blast/mouse/",
-        'blastdb_fasta': "database/blast/mouse/mouse_BCR_C.fasta",
+        'igblast_db': "container/database/igblast/",
+        'germline': "container/database/germlines/imgt/mouse/vdj/",
+        'blastdb': "container/database/blast/mouse/",
+        'blastdb_fasta': "container/database/blast/mouse/mouse_BCR_C.fasta",
     }
     return (db)
 

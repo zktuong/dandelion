@@ -15,10 +15,10 @@ def create_testfolder(tmp_path_factory):
 def database_paths():
     """Database paths for tests."""
     db = {
-        'igblast_db': "database/igblast/",
-        'germline': "database/germlines/imgt/human/vdj/",
-        'blastdb': "database/blast/human/",
-        'blastdb_fasta': "database/blast/human/human_BCR_C.fasta",
+        'igblast_db': "container/database/igblast/",
+        'germline': "container/database/germlines/imgt/human/vdj/",
+        'blastdb': "container/database/blast/human/",
+        'blastdb_fasta': "container/database/blast/human/human_BCR_C.fasta",
     }
     return (db)
 
