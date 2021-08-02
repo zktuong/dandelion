@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 21:13:18
+# @Last Modified time: 2021-07-31 22:16:53
 
 import pandas as pd
 import numpy as np
@@ -16,7 +16,7 @@ from anndata import AnnData
 from skbio.diversity.alpha import chao1, gini_index, shannon
 from tqdm import tqdm
 from time import sleep
-from .. import logging as logg
+from scanpy import logging as logg
 from typing import Union, Dict, Optional
 import warnings
 

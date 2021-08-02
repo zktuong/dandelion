@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 21:13:25
+# @Last Modified time: 2021-07-31 22:11:33
 
 import pandas as pd
 import numpy as np
@@ -18,7 +18,7 @@ from scipy.spatial.distance import pdist, squareform
 from itertools import combinations
 from tqdm import tqdm
 from time import sleep
-from .. import logging as logg
+from scanpy import logging as logg
 from typing import Union, Sequence, Tuple, Optional
 
 
