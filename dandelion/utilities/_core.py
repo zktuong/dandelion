@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 11:55:06
+# @Last Modified time: 2021-08-02 14:12:04
 
 import os
 from collections import defaultdict
@@ -77,11 +77,11 @@ class Dandelion:
                                                 **kwargs)
                             else:
                                 raise OSError(
-                                    'Unable to read data. Looks like this is a mixed data set. Unable to guess the locus format'
+                                    'Unable to read data. Looks like this is a mixed data set. Unable to guess the locus format.'
                                 )
                         except:
                             raise OSError(
-                                'Unable to read data. Are you sure this is an AIRR formatted data?'
+                                'Unable to read data. The AIRR data should not be mixed with ig, tr-ab and tr-gd contigs.'
                             )
                 try:
                     self.n_obs = self.metadata.shape[0]
@@ -471,6 +471,17 @@ def retrieve_metadata(
     if typesoflocus > 1:
         if split_locus:
             for L in locus_dict2[locus]:
+                if isinstance(metadata_[L], pd.DataFrame):
+                    if len(metadata_[L].columns) > 1:
+                        metadata_[L].columns = [
+                            'sequence_id_' + L + '_' + str(x)
+                            for x in range(0, len(metadata_[L].columns))
+                        ]
+                    else:
+                        metadata_[L].columns = ['sequence_id_' + L + '_0']
+        else:
+            L = locus_dict4[locus]
+            if isinstance(metadata_[L], pd.DataFrame):
                 if len(metadata_[L].columns) > 1:
                     metadata_[L].columns = [
                         'sequence_id_' + L + '_' + str(x)
@@ -478,15 +489,6 @@ def retrieve_metadata(
                     ]
                 else:
                     metadata_[L].columns = ['sequence_id_' + L + '_0']
-        else:
-            L = locus_dict4[locus]
-            if len(metadata_[L].columns) > 1:
-                metadata_[L].columns = [
-                    'sequence_id_' + L + '_' + str(x)
-                    for x in range(0, len(metadata_[L].columns))
-                ]
-            else:
-                metadata_[L].columns = ['sequence_id_' + L + '_0']
 
     metadata_result = metadata_.copy()
     for l in metadata_:
@@ -496,16 +498,21 @@ def retrieve_metadata(
             ]
 
     if typesoflocus > 1:
-        if not split_locus:
-            results = retrieve_result_dict(query, data_tmp,
-                                           metadata_result[locus_dict3[locus]],
-                                           metadata_result[locus_dict4[locus]],
-                                           locus, split, collapse, combine)
+        if isinstance(metadata_[l], pd.DataFrame):
+            if not split_locus:
+                results = retrieve_result_dict(
+                    query, data_tmp, metadata_result[locus_dict3[locus]],
+                    metadata_result[locus_dict4[locus]], locus, split,
+                    collapse, combine)
+            else:
+                results = retrieve_result_dict(
+                    query, data_tmp, metadata_result[locus_dict1[locus]],
+                    [metadata_result[L] for L in locus_dict2[locus]], locus,
+                    split, collapse, combine)
         else:
-            results = retrieve_result_dict(
-                query, data_tmp, metadata_result[locus_dict1[locus]],
-                [metadata_result[L]
-                 for L in locus_dict2[locus]], locus, split, collapse, combine)
+            results = retrieve_result_dict_singular(
+                query, data_tmp, metadata_result[locus_dict3[locus]], locus,
+                collapse, combine)
     else:
         results = retrieve_result_dict_singular(
             query, data_tmp, metadata_result[locus_dict3[locus]], locus,
