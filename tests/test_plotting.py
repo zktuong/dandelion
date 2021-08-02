@@ -12,7 +12,8 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     assert vdj.data.shape[0] == 7
     assert vdj.metadata.shape[0] == 4
     assert adata.n_obs == 5
-    ddl.tl.find_clones(vdj)
+    vdj.data['clone_id'] = ['A', 'A', 'A', 'A', 'A', 'A', 'A']
+    vdj = ddl.Dandelion(vdj.data)
     ddl.tl.generate_network(vdj)
     ddl.tl.transfer(adata, vdj)
     assert 'clone_id' in adata.obs
@@ -26,7 +27,10 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
 def test_plot_network(create_testfolder):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
-    ddl.pl.clone_network(adata, color=['isotype'], show = False, return_fig = False)
+    ddl.pl.clone_network(adata,
+                         color=['isotype'],
+                         show=False,
+                         return_fig=False)
 
 
 @pytest.mark.parametrize("sort,norm", [

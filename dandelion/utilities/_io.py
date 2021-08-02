@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 16:39:26
+# @Last Modified time: 2021-07-31 18:17:57
 
 import os
 import json
@@ -17,7 +17,7 @@ import _pickle as cPickle
 from ..utilities._utilities import *
 from ..utilities._core import *
 from os import PathLike
-from typing import Union, Sequence
+from typing import Union, Sequence, Optional
 from collections import defaultdict, OrderedDict
 
 
@@ -48,39 +48,6 @@ def Write_output(out: str, file: str):
     fh.write(out)
     fh.close()
     return ()
-
-
-def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
-    """
-    Read in or copy dataframe object and set sequence_id as index without dropping.
-
-    Parameters
-    ----------
-    obj : DataFrame, str
-        file path to .tsv file or pandas DataFrame object.
-
-    Returns
-    -------
-    pandas DataFrame object.
-    """
-    if os.path.isfile(str(obj)):
-        try:
-            obj_ = pd.read_csv(obj, sep='\t')
-        except FileNotFoundError as e:
-            print(e)
-    elif isinstance(obj, pd.DataFrame):
-        obj_ = obj.copy()
-    else:
-        raise TypeError(
-            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
-        )
-
-    if 'sequence_id' in obj_.columns:
-        obj_.set_index('sequence_id', drop=False, inplace=True)
-    else:
-        raise KeyError("'sequence_id' not found in columns of input")
-
-    return (obj_)
 
 
 def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
@@ -392,7 +359,7 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
 
 
 def read_10x_vdj(path: Union[str, PathLike],
-                 filename_prefix: Union[None, str] = None,
+                 filename_prefix: Optional[str] = None,
                  return_dandelion: bool = True,
                  verbose: bool = False) -> Union[Dandelion, pd.DataFrame]:
     """
@@ -408,7 +375,7 @@ def read_10x_vdj(path: Union[str, PathLike],
     ----------
     path : str, PathLike
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     return_dandelion : bool
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
@@ -732,3 +699,55 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
         if out[key]['locus'] == 'None' or out[key]['locus'] == '':
             out[key]['locus'] = '|'
     return (out)
+
+
+def change_file_location(data: Sequence,
+                         filename_prefix: Optional[Union[Sequence,
+                                                         str]] = None):
+    """
+    Move file from tmp folder to dandelion folder.
+
+    Only used for TCR data.
+
+    Parameters
+    ----------
+    data : Sequence
+        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
+        list; this allows for the function to be run on single/multiple samples.
+    filename_prefix : str, Optional
+        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+
+    Returns
+    -------
+    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+    """
+    fileformat = 'blast'
+    if type(data) is not list:
+        data = [data]
+    if type(filename_prefix) is not list:
+        filename_prefix = [filename_prefix]
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+
+    informat_dict = {
+        'changeo': '_igblast_db-pass.tsv',
+        'blast': '_igblast_db-pass.tsv',
+        'airr': '_igblast_gap.tsv'
+    }
+
+    filePath = None
+
+    for i in range(0, len(data)):
+        filePath = check_filepath(data[i],
+                                  filename_prefix=filename_prefix[i],
+                                  endswith=informat_dict[fileformat],
+                                  subdir='tmp')
+        if filePath is None:
+            raise OSError(
+                'Path to .tsv file for {} is unknown. '.format(data[i]) +
+                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
+            )
+        tmp = check_travdv(filePath)
+        tmp.to_csv(filePath, sep='\t', index=False)
+        cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
+        run(cmd)

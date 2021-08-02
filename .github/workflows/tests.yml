@@ -103,7 +103,7 @@ jobs:
         restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
         
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.0.1
+      uses: conda-incubator/setup-miniconda@v2
       with:
         auto-activate-base: true
         auto-update-conda : true
@@ -114,6 +114,9 @@ jobs:
         environment-file: environment.yml
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     
+    - name: Install pip dependencies
+      run: pip install -r requirements.txt
+
     - name: Install Dandelion
       run: |
         python setup.py install    
@@ -147,8 +150,8 @@ jobs:
     - name: Test with pytest
       run: |
         pip install git+https://www.github.com/zktuong/nxviz.git
-        pip install scirpy
-        pytest --cov=dandelion --cov-report=xml -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+        pip install scirpy scrublet "annoy<1.17.0"
+        pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
     - name: Show coverage
       run: |

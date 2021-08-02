@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 19:47:48
+# @Last Modified time: 2021-07-31 22:11:33
 
 import pandas as pd
 import numpy as np
@@ -19,17 +19,17 @@ from itertools import combinations
 from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg
-from typing import Union, Sequence, Tuple
+from typing import Union, Sequence, Tuple, Optional
 
 
 def generate_network(self: Union[Dandelion, pd.DataFrame, str],
-                     key: Union[None, str] = None,
-                     clone_key: Union[None, str] = None,
+                     key: Optional[str] = None,
+                     clone_key: Optional[str] = None,
                      min_size: int = 2,
-                     downsample: Union[None, int] = None,
+                     downsample: Optional[int] = None,
                      verbose: bool = True,
-                     locus: Union[None, Literal['ig', 'tr-ab',
-                                                'tr-gd']] = None,
+                     locus: Optional[Literal['ig', 'tr-ab',
+                                                   'tr-gd']] = None,
                      **kwargs) -> Dandelion:
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
@@ -39,17 +39,17 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     ----------
     data : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    key : str, optional
+    key : str, Optional
         column name for distance calulations. None defaults to 'sequence_alignment_aa'.
-    clone_key: str, optional
+    clone_key: str, Optional
         column name to build network on.
     min_size : int
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    downsample : int, optional
+    downsample : int, Optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool
         whether or not to print the progress bars.
-    locus : str, optional
+    locus : str, Optional
         Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
@@ -82,7 +82,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             'Data does not contain clone information. Please run find_clones.')
 
     if locus is None:
-        locus = 'ig'
+        locus = best_guess_locus(dat)
 
     dat = sanitize_data(dat, ignore=clonekey)
 
@@ -421,7 +421,7 @@ def mst(mat: dict) -> Tree:
 
 
 def clone_degree(self: Dandelion,
-                 weight: Union[None, str] = None,
+                 weight: Optional[str] = None,
                  verbose: bool = True) -> Dandelion:
     """
     Calculates node degree in BCR network.
@@ -430,7 +430,7 @@ def clone_degree(self: Dandelion,
     ----------
     self : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    weight : str, optional
+    weight : str, Optional
         Atribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
     verbose : bool
         Whether or not to show logging information.
@@ -524,7 +524,7 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
 def generate_layout(vertices: Sequence,
                     edges: pd.DataFrame = None,
                     min_size: int = 2,
-                    weight: Union[None, str] = None,
+                    weight: Optional[str] = None,
                     verbose: bool = True,
                     **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     G = nx.Graph()
@@ -618,19 +618,19 @@ def _fruchterman_reingold_layout(
         Optimal distance between nodes.  If None the distance is set to
         1/sqrt(n) where n is the number of nodes.  Increase this value
         to move nodes farther apart.
-    pos : dict or None  optional (default=None)
+    pos : dict or None  Optional (default=None)
         Initial positions for nodes as a dictionary with node as keys
         and values as a coordinate list or tuple.  If None, then use
         random initial positions.
-    fixed : list or None  optional (default=None)
+    fixed : list or None  Optional (default=None)
         Nodes to keep fixed at initial position.
         ValueError raised if `fixed` specified and `pos` not.
-    iterations : int  optional (default=50)
+    iterations : int  Optional (default=50)
         Maximum number of iterations taken
-    threshold: float optional (default = 1e-4)
+    threshold: float Optional (default = 1e-4)
         Threshold for relative error in node position changes.
         The iteration stops if the error is below this threshold.
-    weight : string or None   optional (default='weight')
+    weight : string or None   Optional (default='weight')
         The edge attribute that holds the numerical value used for
         the edge weight.  If None, then all edge weights are 1.
     scale : number or None (default: 1)
@@ -641,7 +641,7 @@ def _fruchterman_reingold_layout(
         Not used unless `fixed is None`.
     dim : int
         Dimension of layout.
-    seed : int, RandomState instance or None  optional (default=None)
+    seed : int, RandomState instance or None  Optional (default=None)
         Set the random state for deterministic node layouts.
         If int, `seed` is the seed used by the random number generator,
         if numpy.random.RandomState instance, `seed` is the random

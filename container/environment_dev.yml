@@ -1,0 +1,22 @@
+name: sc-dandelion-container
+channels:
+- conda-forge
+- bioconda
+- anaconda
+- defaults
+dependencies:
+- python=3.9
+- seaborn
+- scikit-learn
+- statsmodels
+- numba
+- pytables
+- python-igraph
+- leidenalg
+- pip
+- pytest
+- tbb
+- pip:
+  - scanpy>=1.7.0
+  - git+https://www.github.com/zktuong/dandelion@devel
+  - rpy2>=3.4.4

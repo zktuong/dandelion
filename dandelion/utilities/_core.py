@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 19:48:17
+# @Last Modified time: 2021-08-02 14:12:04
 
 import os
 from collections import defaultdict
@@ -21,7 +21,7 @@ import _pickle as cPickle
 from scanpy import logging as logg
 from ..utilities._utilities import *
 from ..utilities._io import *
-from typing import Union, Sequence, Tuple, Dict
+from typing import Union, Sequence, Tuple, Dict, Optional
 
 BOOLEAN_COLUMNS = [
     'productive', 'rev_comp', 'vj_in_frame', 'stop_codon', 'complete_vdj'
@@ -69,12 +69,19 @@ class Dandelion:
                     try:
                         update_metadata(self, **kwargs)
                     except:
-                        update_metadata(self, locus='tr-ab', **kwargs)
                         try:
-                            update_metadata(self, locus='tr-gd', **kwargs)
+                            bestguess = best_guess_locus(self.data)
+                            if bestguess is not None:
+                                update_metadata(self,
+                                                locus=bestguess,
+                                                **kwargs)
+                            else:
+                                raise OSError(
+                                    'Unable to read data. Looks like this is a mixed data set. Unable to guess the locus format.'
+                                )
                         except:
                             raise OSError(
-                                'Unable to read data. Are you sure this is an AIRR formatted data?'
+                                'Unable to read data. The AIRR data should not be mixed with ig, tr-ab and tr-gd contigs.'
                             )
                 try:
                     self.n_obs = self.metadata.shape[0]
@@ -129,8 +136,8 @@ class Dandelion:
         return copy.deepcopy(self)
 
     def update_germline(self,
-                        corrected: Union[None, Dict, str] = None,
-                        germline: Union[None, str] = None,
+                        corrected: Optional[Union[Dict, str]] = None,
+                        germline: Optional[str] = None,
                         org: Literal['human', 'mouse'] = 'human'):
         """
         Update germline reference with corrected sequences and store in `Dandelion` object.
@@ -139,9 +146,9 @@ class Dandelion:
         ----------
         self : Dandelion
             `Dandelion` object.
-        corrected : dict, str, optional
+        corrected : dict, str, Optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : str, optional
+        germline : str, Optional
             path to germline database folder. Defaults to `$GERMLINE` environmental variable.
         org : str
             organism of reference folder. Default is 'human'.
@@ -254,7 +261,7 @@ class Dandelion:
                                       'blosc:blosclz', 'blosc:lz4',
                                       'blosc:lz4hc', 'blosc:snappy',
                                       'blosc:zlib', 'blosc:zstd'] = None,
-                 compression_level: Union[None, int] = None,
+                 compression_level: Optional[int] = None,
                  **kwargs):
         """
         Writes a `Dandelion` class to .h5 format.
@@ -263,11 +270,11 @@ class Dandelion:
         ----------
         filename
             path to `.h5` file.
-        complib : str, optional
+        complib : str, Optional
             method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
-        compression : str, optional
+        compression : str, Optional
             same call as complib. Just a convenience option.
-        compression_opts : {0-9}, optional
+        compression_opts : {0-9}, Optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
             passed to `pd.DataFrame.to_hdf`.
@@ -295,12 +302,9 @@ class Dandelion:
 
         # now to actually saving
         data = self.data.copy()
-        for col in data.columns:
-            weird = (data[[col]].applymap(type) !=
-                     data[[col]].iloc[0].apply(type)).any(axis=1)
-            if len(data[weird]) > 0:
-                data[col] = data[col].astype(float).where(
-                    pd.notnull(data[col]), np.nan)
+        data = sanitize_data(data)
+        sanitize_dtype(data)
+
         data.to_hdf(filename,
                     "data",
                     complib=comp,
@@ -391,12 +395,12 @@ def retrieve_metadata(
     split: bool = True,
     collapse: bool = True,
     combine: bool = False,
-    locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig',
+    locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
     split_locus: bool = False,
     verbose: bool = False,
     ignore: str = 'clone_id',
 ) -> pd.DataFrame:
-    data_tmp = sanitize_data(data.copy(), ignore = ignore)
+    data_tmp = sanitize_data(data.copy(), ignore=ignore)
     dat_dict = defaultdict(dict)
     dict_ = defaultdict(dict)
     metadata_ = defaultdict(dict)
@@ -411,6 +415,9 @@ def retrieve_metadata(
         data_tmp[query].fillna('unassigned', inplace=True)
 
     typesoflocus = len(list(set(data_tmp['locus'])))
+
+    if locus is None:
+        locus = best_guess_locus(data_tmp)
 
     if typesoflocus > 1:
         if split_locus:
@@ -464,6 +471,17 @@ def retrieve_metadata(
     if typesoflocus > 1:
         if split_locus:
             for L in locus_dict2[locus]:
+                if isinstance(metadata_[L], pd.DataFrame):
+                    if len(metadata_[L].columns) > 1:
+                        metadata_[L].columns = [
+                            'sequence_id_' + L + '_' + str(x)
+                            for x in range(0, len(metadata_[L].columns))
+                        ]
+                    else:
+                        metadata_[L].columns = ['sequence_id_' + L + '_0']
+        else:
+            L = locus_dict4[locus]
+            if isinstance(metadata_[L], pd.DataFrame):
                 if len(metadata_[L].columns) > 1:
                     metadata_[L].columns = [
                         'sequence_id_' + L + '_' + str(x)
@@ -471,15 +489,6 @@ def retrieve_metadata(
                     ]
                 else:
                     metadata_[L].columns = ['sequence_id_' + L + '_0']
-        else:
-            L = locus_dict4[locus]
-            if len(metadata_[L].columns) > 1:
-                metadata_[L].columns = [
-                    'sequence_id_' + L + '_' + str(x)
-                    for x in range(0, len(metadata_[L].columns))
-                ]
-            else:
-                metadata_[L].columns = ['sequence_id_' + L + '_0']
 
     metadata_result = metadata_.copy()
     for l in metadata_:
@@ -489,16 +498,21 @@ def retrieve_metadata(
             ]
 
     if typesoflocus > 1:
-        if not split_locus:
-            results = retrieve_result_dict(query, data_tmp,
-                                           metadata_result[locus_dict3[locus]],
-                                           metadata_result[locus_dict4[locus]],
-                                           locus, split, collapse, combine)
+        if isinstance(metadata_[l], pd.DataFrame):
+            if not split_locus:
+                results = retrieve_result_dict(
+                    query, data_tmp, metadata_result[locus_dict3[locus]],
+                    metadata_result[locus_dict4[locus]], locus, split,
+                    collapse, combine)
+            else:
+                results = retrieve_result_dict(
+                    query, data_tmp, metadata_result[locus_dict1[locus]],
+                    [metadata_result[L] for L in locus_dict2[locus]], locus,
+                    split, collapse, combine)
         else:
-            results = retrieve_result_dict(
-                query, data_tmp, metadata_result[locus_dict1[locus]],
-                [metadata_result[L]
-                 for L in locus_dict2[locus]], locus, split, collapse, combine)
+            results = retrieve_result_dict_singular(
+                query, data_tmp, metadata_result[locus_dict3[locus]], locus,
+                collapse, combine)
     else:
         results = retrieve_result_dict_singular(
             query, data_tmp, metadata_result[locus_dict3[locus]], locus,
@@ -510,7 +524,8 @@ def retrieve_result_dict(query: str,
                          data: pd.DataFrame,
                          meta_h: pd.DataFrame,
                          meta_l: pd.DataFrame,
-                         locus: Literal['ig', 'tr-ab', 'tr-gd'] = 'ig',
+                         locus: Optional[Literal['ig', 'tr-ab',
+                                                 'tr-gd']] = None,
                          split: bool = True,
                          collapse: bool = True,
                          combine: bool = False,
@@ -520,6 +535,10 @@ def retrieve_result_dict(query: str,
     locus_dict2 = {'ig': ['IGK', 'IGL'], 'tr-ab': ['TRA'], 'tr-gd': ['TRG']}
     locus_dict3 = {'ig': 'H', 'tr-ab': 'B', 'tr-gd': 'D'}
     locus_dict4 = {'ig': 'L', 'tr-ab': 'A', 'tr-gd': 'G'}
+
+    if locus is None:
+        locus = best_guess_locus(data)
+
     if len(meta_l) == 2 and type(meta_l) is list:
         H = locus_dict1[locus]
     else:
@@ -836,13 +855,15 @@ def retrieve_result_dict(query: str,
 def retrieve_result_dict_singular(query: str,
                                   data: pd.DataFrame,
                                   meta_h: pd.DataFrame,
-                                  locus: Literal['ig', 'tr-ab',
-                                                 'tr-gd'] = 'ig',
+                                  locus: Optional[Literal['ig', 'tr-ab',
+                                                          'tr-gd']] = None,
                                   collapse: bool = True,
                                   combine: bool = False,
                                   verbose: bool = False) -> Dict:
 
     df_hl = defaultdict(dict)
+    if locus is None:
+        locus = best_guess_locus(data)
 
     locus_dict1 = {'ig': 'IGH', 'tr-ab': 'TRB', 'tr-gd': 'TRD'}
     locus_dict3 = {'ig': 'H', 'tr-ab': 'B', 'tr-gd': 'D'}
@@ -1112,6 +1133,9 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
         'ighg2a': 'IgG',
         'ighg2b': 'IgG',
         'ighg2c': 'IgG',
+        'ighga': 'IgG',
+        'ighgb': 'IgG',
+        'ighgc': 'IgG',
         'ighm': 'IgM',
         'igkc': 'IgK',
         'iglc': 'IgL',
@@ -1285,9 +1309,9 @@ def initialize_metadata(self, cols: Sequence, locus_: str, clonekey: str,
 
 
 def update_metadata(self: Dandelion,
-                    retrieve: Union[None, Sequence, str] = None,
-                    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
-                    clone_key: Union[None, str] = None,
+                    retrieve: Optional[Union[Sequence, str]] = None,
+                    locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                    clone_key: Optional[str] = None,
                     split: bool = True,
                     collapse: bool = True,
                     combine: bool = True,
@@ -1302,11 +1326,11 @@ def update_metadata(self: Dandelion,
     ----------
     self : Dandelion
         `Dandelion` object.
-    retrieve : str, sequence, optional
+    retrieve : str, sequence, Optional
         Column name in `.data` slot to retrieve and update the metadata.
-    locus : str, optional
+    locus : str, Optional
         Mode for creating metadata. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name of clone id. None defaults to 'clone_id'.
     split : bool
         Only applies if retrieve option is not None. Returns the retrieval splitted into two columns, e.g. one for heavy and one for light chains in BCR data, if True. Interacts with collapse, combine and split_locus options.
@@ -1328,7 +1352,7 @@ def update_metadata(self: Dandelion,
     """
 
     if locus is None:
-        locus_ = 'ig'
+        locus_ = best_guess_locus(self.data)
     else:
         locus_ = locus
 

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 19:47:24
+# @Last Modified time: 2021-08-02 13:08:51
 
 import os
 import pandas as pd
@@ -31,7 +31,7 @@ import functools
 from scanpy import logging as logg
 import numpy as np
 from Bio import Align
-from typing import Union, Sequence, Tuple
+from typing import Union, Sequence, Tuple, Optional
 from os import PathLike
 
 TRUES = ['T', 'True', 'true', 'TRUE', True]
@@ -41,12 +41,12 @@ LIGHTSHORT = ['IGK', 'IGL', 'TRA', 'TRG']
 
 
 def format_fasta(fasta: Union[PathLike, str],
-                 prefix: Union[None, str] = None,
-                 suffix: Union[None, str] = None,
-                 sep: Union[None, str] = None,
+                 prefix: Optional[str] = None,
+                 suffix: Optional[str] = None,
+                 sep: Optional[str] = None,
                  remove_trailing_hyphen_number: bool = True,
-                 outdir: Union[None, str] = None,
-                 filename_prefix: Union[None, str] = None):
+                 outdir: Optional[str] = None,
+                 filename_prefix: Optional[str] = None):
     """
     Add prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -54,17 +54,17 @@ def format_fasta(fasta: Union[PathLike, str],
     ----------
     fasta : str
         path to fasta file.
-    prefix : str, optional
+    prefix : str, Optional
         prefix to append to the headers/contig ids.
-    suffix : str, optional
+    suffix : str, Optional
         suffix to append to the headers/contig ids.
-    sep : str, optional
+    sep : str, Optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
-    outdir : str, optional
+    outdir : str, Optional
         path to output location. None defaults to 'dandelion'.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
 
     Returns
@@ -233,12 +233,12 @@ def format_fasta(fasta: Union[PathLike, str],
 
 
 def format_fastas(fastas: Sequence,
-                  prefix: Union[None, Sequence] = None,
-                  suffix: Union[None, Sequence] = None,
-                  sep: Union[None, str] = None,
+                  prefix: Optional[Sequence] = None,
+                  suffix: Optional[Sequence] = None,
+                  sep: Optional[str] = None,
                   remove_trailing_hyphen_number: bool = True,
-                  outdir: Union[None, str] = None,
-                  filename_prefix: Union[None, Sequence, str] = None):
+                  outdir: Optional[str] = None,
+                  filename_prefix: Optional[Union[Sequence, str]] = None):
     """
     Add prefix to the headers/contig ids in cellranger fasta and annotation file.
 
@@ -246,17 +246,17 @@ def format_fastas(fastas: Sequence,
     ----------
     fastas : Sequence
         list of paths to fasta files.
-    prefix : list, optional
+    prefix : list, Optional
         list of prefixes to append to headers/contig ids in each fasta file.
-    suffix : str, optional
+    suffix : str, Optional
         list of suffixes to append to headers/contig ids in each fasta file.
-    sep : str, optional
+    sep : str, Optional
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
-    outdir : str, optional
+    outdir : str, Optional
         path to out put location. Default is None, which is 'dandelion'.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
 
     Returns
@@ -338,11 +338,11 @@ def assign_isotype(fasta: Union[str, PathLike],
                    save_plot: bool = False,
                    figsize: Tuple[Union[int, float], Union[int,
                                                            float]] = (4, 4),
-                   blastdb: Union[None, str] = None,
+                   blastdb: Optional[str] = None,
                    allele: bool = False,
                    parallel: bool = True,
-                   ncpu: Union[None, int] = None,
-                   filename_prefix: Union[None, str] = None,
+                   ncpu: Optional[int] = None,
+                   filename_prefix: Optional[str] = None,
                    verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn.
@@ -358,7 +358,7 @@ def assign_isotype(fasta: Union[str, PathLike],
     correct_c_call : bool
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
         Default is True.
-    correction_dict : Dict, optional
+    correction_dict : Dict, Optional
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting
         annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
@@ -367,7 +367,7 @@ def assign_isotype(fasta: Union[str, PathLike],
         whether or not to save plot.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
-    blastdb : str, optional
+    blastdb : str, Optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
@@ -375,7 +375,7 @@ def assign_isotype(fasta: Union[str, PathLike],
         whether or not to use parallelization. Default is True.
     ncpu : int
         number of cores to use if parallel is True. Default is all available minus 1.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
@@ -932,16 +932,16 @@ def assign_isotypes(fastas: Sequence,
                     fileformat: Literal['blast', 'changeo', 'airr'] = 'blast',
                     org: Literal['human', 'mouse'] = 'human',
                     correct_c_call: bool = True,
-                    correction_dict: Union[None, Dict] = None,
+                    correction_dict: Optional[Dict] = None,
                     plot: bool = True,
                     save_plot: bool = False,
                     figsize: Tuple[Union[int, float], Union[int,
                                                             float]] = (4, 4),
-                    blastdb: Union[None, str] = None,
+                    blastdb: Optional[str] = None,
                     allele: bool = False,
                     parallel: bool = True,
-                    ncpu: Union[None, int] = None,
-                    filename_prefix: Union[None, Sequence, str] = None,
+                    ncpu: Optional[int] = None,
+                    filename_prefix: Optional[Union[Sequence, str]] = None,
                     verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn.
@@ -957,7 +957,7 @@ def assign_isotypes(fastas: Sequence,
     correct_c_call : bool
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
         Default is True.
-    correction_dict : Dict, optional
+    correction_dict : Dict, Optional
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting
         annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool
@@ -966,7 +966,7 @@ def assign_isotypes(fastas: Sequence,
         whether or not to save plots.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
-    blastdb : str, optional
+    blastdb : str, Optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
@@ -974,7 +974,7 @@ def assign_isotypes(fastas: Sequence,
         whether or not to use parallelization. Default is True.
     ncpu : int
         number of cores to use if parallel is True. Default is all available - 1.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
         whether or not to print the blast command in terminal. Default is False.
@@ -1011,12 +1011,12 @@ def assign_isotypes(fastas: Sequence,
 
 
 def reannotate_genes(data: Sequence,
-                     igblast_db: Union[None, str] = None,
-                     germline: Union[None, str, PathLike] = None,
-                     org: Literal['human', 'ig'] = 'human',
+                     igblast_db: Optional[str] = None,
+                     germline: Optional[Union[str, PathLike]] = None,
+                     org: Literal['human', 'mouse'] = 'human',
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
-                     filename_prefix: Union[None, Sequence, str] = None,
+                     filename_prefix: Optional[Union[Sequence, str]] = None,
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
@@ -1026,9 +1026,9 @@ def reannotate_genes(data: Sequence,
     data : Sequence
         list of fasta file locations, or folder name containing fasta files. if provided as a single string,
         it will first be converted to a list; this allows for the function to be run on single/multiple samples.
-    igblast_db : str, PathLike, optional
+    igblast_db : str, PathLike, Optional
         path to igblast database folder. Defaults to `$IGDATA` environmental variable.
-    germline : str, PathLike, optional
+    germline : str, PathLike, Optional
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
     org : str
         organism of germline database. Default is 'human'.
@@ -1036,7 +1036,7 @@ def reannotate_genes(data: Sequence,
         mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for TCRs.
     extended : bool
         whether or not to transfer additional 10X annotions to output file. Default is True.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
@@ -1060,13 +1060,13 @@ def reannotate_genes(data: Sequence,
         if filePath is None:
             if filename_prefix[i] is not None:
                 raise OSError(
-                    'Path to fasta file for {} with filename prefix `{}_contig` is unknown. '
-                    .format(s, filename_prefix[i]) +
+                    'Path to fasta file with filename prefix `{}_contig` is unknown. '
+                    .format(filename_prefix[i]) +
                     'Please specify path to fasta file or folder containing fasta file.'
                 )
             else:
                 raise OSError(
-                    'Path to fasta file for {} is unknown. '.format(s) +
+                    'Path to fasta file is unknown. ' +
                     'Please specify path to fasta file or folder containing fasta file.'
                 )
 
@@ -1089,8 +1089,8 @@ def reannotate_genes(data: Sequence,
 
 def reassign_alleles(data: Sequence,
                      combined_folder: Union[str, PathLike],
-                     v_germline: Union[None, str] = None,
-                     germline: Union[None, str, PathLike] = None,
+                     v_germline: Optional[str] = None,
+                     germline: Optional[Union[str, PathLike]] = None,
                      org: Literal['human', 'mouse'] = 'human',
                      v_field: Literal['v_call',
                                       'v_call_genotyped'] = 'v_call_genotyped',
@@ -1102,8 +1102,8 @@ def reassign_alleles(data: Sequence,
                      save_plot: bool = False,
                      figsize: Tuple[Union[int, float], Union[int,
                                                              float]] = (4, 3),
-                     sample_id_dictionary: Union[None, Dict] = None,
-                     filename_prefix: Union[None, Sequence, str] = None,
+                     sample_id_dictionary: Optional[Dict] = None,
+                     filename_prefix: Optional[Union[Sequence, str]] = None,
                      verbose: bool = False):
     """
     Correct allele calls based on a personalized genotype using tigger-reassignAlleles.
@@ -1118,9 +1118,9 @@ def reassign_alleles(data: Sequence,
         list; this allows for the function to be run on single/multiple samples.
     combined_folder : str, PathLike
         name of folder for concatenated data file and genotyped files.
-    v_germline : str, optional
+    v_germline : str, Optional
         path to heavy chain v germline fasta. Defaults to IGHV fasta in `$GERMLINE` environmental variable.
-    germline : str, optional
+    germline : str, Optional
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
     org : str
         organism of germline database. Default is 'human'.
@@ -1139,9 +1139,9 @@ def reassign_alleles(data: Sequence,
         whether or not to save plot.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 3).
-    sample_id_dictionary : dict, optional
+    sample_id_dictionary : dict, Optional
         dictionary for creating a sample_id column in the concatenated file.
-    filename_prefix : str, optional
+    filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
         Whether or not to print the command used in the terminal. Default is False.
@@ -1531,7 +1531,7 @@ def reassign_alleles(data: Sequence,
 
 def create_germlines(
         self: Union[Dandelion, pd.DataFrame, str, PathLike],
-        germline: Union[None, str, PathLike] = None,
+        germline: Optional[Union[str, PathLike]] = None,
         org: Literal['human', 'mouse'] = 'human',
         seq_field: Literal['sequence_alignment'] = 'sequence_alignment',
         v_field: Literal['v_call', 'v_call_genotyped'] = 'v_call',
@@ -1550,7 +1550,7 @@ def create_germlines(
     self : Dandelion, pd.DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr
         file after clones have been determined.
-    germline : str, optional
+    germline : str, Optional
         path to germline database folder. Defaults to `$GERMLINE` environmental variable.
     org : str
         organism of germline database. Default is 'human'.
@@ -1988,8 +1988,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                    filter_missing: bool = True,
                    productive_only: bool = True,
                    simple: bool = False,
-                   locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
-                   save: Union[None, str] = None,
+                   locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                   save: Optional[str] = None,
                    **kwargs) -> Tuple[Dandelion, AnnData]:
     """
     Filter doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData`.
@@ -2037,7 +2037,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         simple filtering mode where only checks for potential gene assignment mismatches.
     locus : str
         Mode for filtering data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
-    save : str, optional
+    save : str, Optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     **kwargs
         additional kwargs passed to `Dandelion.Dandelion`.
@@ -2060,6 +2060,9 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     else:
         dat = dat_.copy()
 
+    if locus is None:
+        locus = best_guess_locus(dat)
+
     adata_ = adata.copy()
 
     if 'cell_id' not in dat.columns:
@@ -2074,7 +2077,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     contig_check = pd.DataFrame(index=adata_.obs_names)
     bc_ = {}
     for b in barcode:
-        bc_.update({b: True})
+        bc_.update({b: 'True'})
     contig_check['has_contig'] = pd.Series(bc_)
     contig_check.replace(np.nan, 'No_contig', inplace=True)
     adata_.obs['has_contig'] = pd.Series(contig_check['has_contig'])
@@ -2238,10 +2241,10 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
 def quantify_mutations(self: Union[Dandelion, str, PathLike],
                        split_locus: bool = False,
-                       sequence_column: Union[None, str] = None,
-                       germline_column: Union[None, str] = None,
-                       region_definition: Union[None, str] = None,
-                       mutation_definition: Union[None, str] = None,
+                       sequence_column: Optional[str] = None,
+                       germline_column: Optional[str] = None,
+                       region_definition: Optional[str] = None,
+                       mutation_definition: Optional[str] = None,
                        frequency: bool = False,
                        combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
     """
@@ -2255,13 +2258,13 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
         `Dandelion` object, file path to AIRR file.
     split_locus : bool
         whether to return the results for heavy chain and light chain separately. Default is False.
-    sequence_column: str, optional
+    sequence_column: str, Optional
         passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/observedMutations
-    germline_column: str, optional
+    germline_column: str, Optional
         passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/observedMutations
-    region_definition : str, optional
+    region_definition : str, Optional
         passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/IMGT_SCHEMES/
-    mutation_definition : str, optional
+    mutation_definition : str, Optional
         passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/MUTATION_SCHEMES/
     frequency
         whether to return the results a frequency or counts. Default is True (frequency).
@@ -2292,6 +2295,8 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
         raise ValueError("{} object/file not found.".format(self))
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
+
+    sanitize_dtype(dat)
 
     if sequence_column is None:
         seq_ = 'sequence_alignment'
@@ -2434,32 +2439,29 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
 
 def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                         mode: Literal["single-cell", "heavy"] = "single-cell",
-                        manual_threshold: Union[None, float] = None,
+                        manual_threshold: Optional[float] = None,
                         VJthenLen: bool = False,
                         onlyHeavy: bool = False,
-                        model: Union[None,
-                                     Literal["ham", "aa", "hh_s1f", "hh_s5f",
-                                             "mk_rs1nf", "hs1f_compat",
-                                             "m1n_compat"]] = None,
-                        normalize_method: Union[None, Literal['len']] = None,
-                        threshold_method: Union[None,
-                                                Literal['gmm',
-                                                        'density']] = None,
-                        edge: Union[None, float] = None,
-                        cross: Union[None, Sequence] = None,
-                        subsample: Union[None, int] = None,
-                        threshold_model: Union[None,
-                                               Literal["norm-norm",
-                                                       "norm-gamma",
-                                                       "gamma-norm",
-                                                       "gamma-gamma"]] = None,
-                        cutoff: Union[None, Literal["optimal", "intersect",
-                                                    "user"]] = None,
-                        sensitivity: Union[None, float] = None,
-                        specificity: Union[None, float] = None,
-                        ncpu: Union[None, int] = None,
+                        model: Optional[Literal["ham", "aa", "hh_s1f",
+                                                "hh_s5f", "mk_rs1nf",
+                                                "hs1f_compat",
+                                                "m1n_compat"]] = None,
+                        normalize_method: Optional[Literal['len']] = None,
+                        threshold_method: Optional[Literal['gmm',
+                                                           'density']] = None,
+                        edge: Optional[float] = None,
+                        cross: Optional[Sequence] = None,
+                        subsample: Optional[int] = None,
+                        threshold_model: Optional[
+                            Literal["norm-norm", "norm-gamma", "gamma-norm",
+                                    "gamma-gamma"]] = None,
+                        cutoff: Optional[Literal["optimal", "intersect",
+                                                 "user"]] = None,
+                        sensitivity: Optional[float] = None,
+                        specificity: Optional[float] = None,
+                        ncpu: Optional[int] = None,
                         plot: bool = True,
-                        plot_group: Union[None, str] = None,
+                        plot_group: Optional[str] = None,
                         figsize: Tuple[Union[int, float],
                                        Union[int, float]] = (4.5, 2.5),
                         **kwargs) -> Dandelion:
@@ -2487,7 +2489,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     mode : Literal, str
         accepts one of "heavy" or "single-cell".
         Refer to https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette.
-    manual_threshold : float, optional
+    manual_threshold : float, Optional
         value to manually plot in histogram.
     VJthenLen : bool
         logical value specifying whether to perform partitioning as a 2-stage process.
@@ -2499,37 +2501,37 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     onlyHeavy : bool
         use only the IGH (BCR) or TRB/TRD (TCR) sequences for grouping. Only applicable to single-cell mode.
         See groupGenes for further details.
-    model : str, optional
+    model : str, Optional
         underlying SHM model, which must be one of "ham","aa","hh_s1f","hh_s5f","mk_rs1nf","hs1f_compat","m1n_compat".
-    normalize_method : str, optional
+    normalize_method : str, Optional
         method of normalization. The default is "len", which divides the distance by the length of the sequence group.
         If "none" then no normalization if performed.
-    threshold_method : str, optional
+    threshold_method : str, Optional
         string defining the method to use for determining the optimal threshold. One of "gmm" or "density".
-    edge : float, optional
+    edge : float, Optional
         upper range as a fraction of the data density to rule initialization of Gaussian fit parameters.
         Default value is 0.9 (or 90). Applies only when threshold_method="density".
-    cross : Sequence, optional
+    cross : Sequence, Optional
         supplementary nearest neighbor distance vector output from distToNearest for initialization of the Gaussian fit
         parameters. Applies only when method="gmm".
-    subsample : int, optional
+    subsample : int, Optional
         maximum number of distances to subsample to before threshold detection.
-    threshold_model : str, optional
+    threshold_model : str, Optional
         allows the user to choose among four possible combinations of fitting curves: "norm-norm", "norm-gamma",
         "gamma-norm", and "gamma-gamma". Applies only when method="gmm".
-    cutoff : str, optional
+    cutoff : str, Optional
         method to use for threshold selection: the optimal threshold "optimal", the intersection point of the two fitted
         curves "intersect", or a value defined by user for one of the sensitivity or specificity "user". Applies only
         when method="gmm".
-    sensitivity : float, optional
+    sensitivity : float, Optional
         sensitivity required. Applies only when method="gmm" and cutoff="user".
-    specificity : float, optional
+    specificity : float, Optional
         specificity required. Applies only when method="gmm" and cutoff="user".
-    ncpu : int, optional
+    ncpu : int, Optional
         number of cpus for parallelization. Default is all available cpus.
     plot : bool
         whether or not to return plot.
-    plot_group : str, optional
+    plot_group : str, Optional
         determines the fill color and facets.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of plot. Default is (4.5, 2.5).
@@ -2557,6 +2559,9 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
         warnings.filterwarnings("ignore")
+
+    sanitize_dtype(dat)
+
     sh = importr('shazam')
     pandas2ri.activate()
     if 'v_call_genotyped' in dat.columns:
@@ -2615,7 +2620,9 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                         nproc=ncpu_,
                                         **kwargs)
         except:
-            print("Rerun this after filtering. For now, switching to heavy mode.")
+            print(
+                "Rerun this after filtering. For now, switching to heavy mode."
+            )
             dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
             try:
                 dat_h_r = pandas2ri.py2rpy(dat_h)
@@ -3107,7 +3114,7 @@ class FilterContigs:
             d = d_dict[h_p[0]]
             c = c_dict[h_p[0]]
             if present(v):
-                if not re.search('IGH|TR[BD]', v):
+                if not re.search('IGH|TR[BD]|TRAV.*/DV', v):
                     if filter_poorqualitycontig:
                         self.poor_qual.append(b)
                     self.drop_contig.append(l_p)
@@ -3144,10 +3151,11 @@ class FilterContigs:
                         self.drop_contig.append(l_p)
                         self.drop_contig.append(h_p)
                     elif not_same_call(v, j, 'TRD'):
-                        if filter_poorqualitycontig:
-                            self.poor_qual.append(b)
-                        self.drop_contig.append(l_p)
-                        self.drop_contig.append(h_p)
+                        if not re.search('TRAV.*/DV', v):
+                            if filter_poorqualitycontig:
+                                self.poor_qual.append(b)
+                            self.drop_contig.append(l_p)
+                            self.drop_contig.append(h_p)
 
                 if present(d):
                     if not_same_call(d, j, 'IGH'):
@@ -3178,7 +3186,7 @@ class FilterContigs:
                 j = j_dict[hx]
                 c = c_dict[hx]
                 if present(v):
-                    if not re.search('IGH|TR[BD]', v):
+                    if not re.search('IGH|TR[BD]|TRAV.*/DV', v):
                         if filter_poorqualitycontig:
                             self.poor_qual.append(b)
                         self.drop_contig.append(hx)
@@ -3208,9 +3216,10 @@ class FilterContigs:
                                 self.poor_qual.append(b)
                             self.drop_contig.append(hx)
                         elif not_same_call(v, j, 'TRD'):
-                            if filter_poorqualitycontig:
-                                self.poor_qual.append(b)
-                            self.drop_contig.append(hx)
+                            if not re.search('TRAV.*/DV', v):
+                                if filter_poorqualitycontig:
+                                    self.poor_qual.append(b)
+                                self.drop_contig.append(hx)
                     if present(d):
                         if not_same_call(d, j, 'IGH'):
                             if filter_poorqualitycontig:
@@ -3236,7 +3245,7 @@ class FilterContigs:
                 j = j_dict[hx]
                 c = c_dict[hx]
                 if present(v):
-                    if not re.search('IGH|TR[BD]', v):
+                    if not re.search('IGH|TR[BD]|TRAV.*/DV', v):
                         self.drop_contig.append(hx)
                 if present(d):
                     if not re.search('IGH|TR[BD]', d):
@@ -3255,7 +3264,8 @@ class FilterContigs:
                         elif not_same_call(v, j, 'TRB'):
                             self.drop_contig.append(hx)
                         elif not_same_call(v, j, 'TRD'):
-                            self.drop_contig.append(hx)
+                            if not re.search('TRAV.*/DV', v):
+                                self.drop_contig.append(hx)
                     if present(d):
                         if not_same_call(d, j, 'IGH'):
                             self.drop_contig.append(hx)
@@ -3436,7 +3446,7 @@ class FilterContigs:
                 j = j_dict[hx]
                 c = c_dict[hx]
                 if present(v):
-                    if not re.search('IGH|TR[BD]', v):
+                    if not re.search('IGH|TR[BD]|TRAV.*/DV', v):
                         self.drop_contig.append(hx)
                 if present(d):
                     if not re.search('IGH|TR[BD]', d):
@@ -3455,7 +3465,8 @@ class FilterContigs:
                         elif not_same_call(v, j, 'TRB'):
                             self.drop_contig.append(hx)
                         elif not_same_call(v, j, 'TRD'):
-                            self.drop_contig.append(hx)
+                            if not re.search('TRAV.*/DV', v):
+                                self.drop_contig.append(hx)
                     if present(d):
                         if not_same_call(d, j, 'IGH'):
                             self.drop_contig.append(hx)

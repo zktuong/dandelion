@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 19:47:37
+# @Last Modified time: 2021-07-31 22:28:48
 
 import os
 import sys
@@ -31,15 +31,15 @@ from subprocess import run
 import multiprocessing
 from changeo.Gene import getGene
 from anndata import AnnData
-from typing import Union, Sequence, Tuple
+from typing import Union, Sequence, Tuple, Optional
 
 
 def find_clones(self: Union[Dandelion, pd.DataFrame],
                 identity: float = 0.85,
-                key: Union[None, str] = None,
-                locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                key: Optional[str] = None,
+                locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                 by_alleles: bool = False,
-                key_added: Union[None, str] = None,
+                key_added: Optional[str] = None,
                 recalculate_length: bool = True,
                 productive_only: bool = True) -> Dandelion:
     """
@@ -51,13 +51,13 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
     identity : float
         Junction similarity parameter. Default 0.85
-    key : str, optional
+    key : str, Optional
         column name for performing clone clustering. None defaults to 'junction_aa'.
-    locus : str, optional
+    locus : str, Optional
         Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     by_alleles : bool
         Whether or not to collapse alleles to genes. None defaults to False.
-    key_added : str, optional
+    key_added : str, Optional
         If specified, this will be the column name for clones. None defaults to 'clone_id'
     recalculate_length : bool
         Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is wrong). Default is True
@@ -90,7 +90,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         raise ValueError("key {} not found in input table.".format(key_))
 
     if locus is None:
-        locus_ = 'IGH'
+        locus_ = locus_dict[best_guess_locus(dat)]
     else:
         locus_ = locus_dict[locus]
 
@@ -665,10 +665,10 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
 def transfer(self: AnnData,
              dandelion: Dandelion,
              expanded_only: bool = False,
-             neighbors_key: Union[None, str] = None,
-             rna_key: Union[None, str] = None,
-             vdj_key: Union[None, str] = None,
-             overwrite: Union[None, bool, Sequence, str] = None) -> AnnData:
+             neighbors_key: Optional[str] = None,
+             rna_key: Optional[str] = None,
+             vdj_key: Optional[str] = None,
+             overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -680,13 +680,13 @@ def transfer(self: AnnData,
         `Dandelion` object.
     expanded_only : bool
         Whether or not to transfer the embedding with all cells with BCR (False) or only for expanded clones (True).
-    neighbors_key : str, optional
+    neighbors_key : str, Optional
         key for 'neighbors' slot in `.uns`.
-    rna_key : str, optional
+    rna_key : str, Optional
         prefix for stashed RNA connectivities and distances.
-    vdj_key : str, optional
+    vdj_key : str, Optional
         prefix for stashed VDJ connectivities and distances.
-    overwrite : str, bool, list, optional
+    overwrite : str, bool, list, Optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).
 
     Returns
@@ -818,7 +818,7 @@ def transfer(self: AnnData,
 
 
 def define_clones(self: Union[Dandelion, pd.DataFrame, str],
-                  dist: Union[None, float] = None,
+                  dist: Optional[float] = None,
                   action: Literal['first', 'set'] = 'set',
                   model: Literal['ham', 'aa', 'hh_s1f', 'hh_s5f', 'mk_rs1nf',
                                  'mk_rs5nf', 'hs1f_compat',
@@ -826,10 +826,10 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                   norm: Literal['len', 'mut', 'none'] = 'len',
                   doublets: Literal['drop', 'count'] = 'drop',
                   fileformat: Literal['changeo', 'airr'] = 'airr',
-                  ncpu: Union[None, int] = None,
-                  dirs: Union[None, str] = None,
-                  outFilePrefix: Union[None, int] = None,
-                  key_added: Union[None, int] = None,
+                  ncpu: Optional[int] = None,
+                  dirs: Optional[str] = None,
+                  outFilePrefix: Optional[int] = None,
+                  key_added: Optional[int] = None,
                   verbose: bool = False) -> Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
@@ -840,7 +840,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
     ----------
     self : Dandelion, DataFrame, str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
-    dist : float, optional
+    dist : float, Optional
         The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class .threshold slot.
     action : str
         Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'. The “first” action will use only the first gene listed. The “set” action will use all gene assignments and construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence by a common assignment (similar to single-linkage).
@@ -852,11 +852,11 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         Option to control behaviour when dealing with heavy chain 'doublets'. Default is 'drop'. 'drop' will filter out the doublets while 'count' will retain only the highest umi count contig.
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    ncpu : int, optional
+    ncpu : int, Optional
         number of cpus for parallelization. Default is all available cpus.
-    dirs : str, optional
+    dirs : str, Optional
         If specified, out file will be in this location.
-    outFilePrefix : str, optional
+    outFilePrefix : str, Optional
         If specified, the out file name will have this prefix. None defaults to 'dandelion_define_clones'
     verbose : bool
         Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
@@ -1209,9 +1209,9 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
 
 
 def clone_size(self: Dandelion,
-               max_size: Union[None, int] = None,
-               clone_key: Union[None, str] = None,
-               key_added: Union[None, str] = None):
+               max_size: Optional[int] = None,
+               clone_key: Optional[str] = None,
+               key_added: Optional[str] = None):
     """
     Quantifies size of clones
 
@@ -1219,11 +1219,11 @@ def clone_size(self: Dandelion,
     ----------
     self : Dandelion
         `Dandelion` object
-    max_size : int, optional
+    max_size : int, Optional
         The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata.
-    key_added : str, optional
+    key_added : str, Optional
         column name where clone size is tabulated into.
 
     Returns
@@ -1355,8 +1355,8 @@ def clone_overlap(
         self: Union[Dandelion, AnnData],
         groupby: str,
         colorby: str,
-        min_clone_size: Union[None, int] = None,
-        clone_key: Union[None, str] = None) -> Union[AnnData, pd.DataFrame]:
+        min_clone_size: Optional[int] = None,
+        clone_key: Optional[str] = None) -> Union[AnnData, pd.DataFrame]:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
 
@@ -1368,9 +1368,9 @@ def clone_overlap(
         column name in obs/metadata for collapsing to nodes in circos plot.
     colorby : str
         column name in obs/metadata for grouping and color of nodes in circos plot.
-    min_clone_size : int, optional
+    min_clone_size : int, Optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
-    clone_key : str, optional
+    clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
 
     Returns

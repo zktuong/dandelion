@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-18 21:10:39
+# @Last Modified time: 2021-07-31 22:16:53
 
 import pandas as pd
 import numpy as np
@@ -17,17 +17,17 @@ from skbio.diversity.alpha import chao1, gini_index, shannon
 from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg
-from typing import Union, Sequence, Tuple, Dict
+from typing import Union, Dict, Optional
 import warnings
 
 
 def clone_rarefaction(
         self: Union[Dandelion, AnnData],
         groupby: str,
-        clone_key: Union[None, str] = None,
-        diversity_key: Union[None, str] = None) -> Union[AnnData, Dict]:
+        clone_key: Optional[str] = None,
+        diversity_key: Optional[str] = None) -> Union[AnnData, Dict]:
     """
-    Returns rarefaction predictions for cell numbers vs clone size.
+    Return rarefaction predictions for cell numbers vs clone size.
 
     Parameters
     ----------
@@ -35,9 +35,9 @@ def clone_rarefaction(
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata/obs.
-    diversity_key : str, optional
+    diversity_key : str, Optional
         key for 'diversity' results in AnnData's `.uns`.
 
     Returns
@@ -67,7 +67,6 @@ def clone_rarefaction(
     res_ = pd.DataFrame.from_dict(res, orient='index')
 
     # remove those with no counts
-    rowsum = res_.sum(axis=1)
     print(
         'removing due to zero counts:', ', '.join(
             [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]))
@@ -75,7 +74,7 @@ def clone_rarefaction(
 
     # set up for calculating rarefaction
     tot = res_.apply(sum, axis=1)
-    S = res_.apply(lambda x: x[x > 0].shape[0], axis=1)
+    # S = res_.apply(lambda x: x[x > 0].shape[0], axis=1)
     nr = res_.shape[0]
 
     # append the results to a dictionary
@@ -118,18 +117,18 @@ def clone_diversity(
     method: Literal['gini', 'chao1', 'shannon'] = 'gini',
     metric: Literal['clone_network', 'clone_degree',
                     'clone_centrality'] = None,
-    clone_key: Union[None, str] = None,
+    clone_key: Optional[str] = None,
     update_obs_meta: bool = True,
-    diversity_key: Union[None, str] = None,
+    diversity_key: Optional[str] = None,
     resample: bool = False,
-    downsample: Union[None, int] = None,
+    downsample: Optional[int] = None,
     n_resample: int = 50,
     normalize: bool = True,
     reconstruct_network: bool = True,
     expanded_only: bool = False,
     use_contracted: bool = False,
-    key_added: Union[None, str] = None,
-    locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
+    key_added: Optional[str] = None,
+    locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
     **kwargs,
 ) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
@@ -143,18 +142,18 @@ def clone_diversity(
         Column name to calculate the gini indices on, for e.g. sample, patient etc.
     method : str
         Method for diversity estimation. Either one of ['gini', 'chao1', 'shannon'].
-    metric : str, optional
+    metric : str, Optional
         Metric to use for calculating Gini indices of clones.
         Accepts one of ['clone_network', 'clone_degree', 'clone_centrality'].
         `None` defaults to 'clone_network'.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned.
         If False, function will try to populate the input object's metadata/obs slot.
-    diversity_key : str, optional
+    diversity_key : str, Optional
         key for 'diversity' results in `.uns`.
-    downsample : int, optional
+    downsample : int, Optional
         number of cells to downsample to. If None, defaults to size of smallest group.
     resample : bool
         Whether or not to randomly sample cells without replacement to
@@ -173,7 +172,7 @@ def clone_diversity(
         Whether or not to perform the gini calculation after contraction of clone network.
         Only applies to calculation of clone size gini index. Default is False.
         This is to try and preserve the single-cell properties of the network.
-    key_added : str, list, optional
+    key_added : str, list, Optional
         column names for output.
     locus : str
         Mode of data. Only used for method = 'gini', Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
@@ -185,6 +184,13 @@ def clone_diversity(
     """
     if downsample is not None:
         resample = True
+
+    if locus is None:
+        if self.__class__ == Dandelion:
+            locus = best_guess_locus(self.data)
+        else:
+            locus = 'ig'
+
     if method == 'gini':
         if update_obs_meta:
             diversity_gini(self,
@@ -282,7 +288,7 @@ def clone_networkstats(self: Dandelion,
                 self.distance[x].toarray()
                 for x in self.distance if type(self.distance[x]) is csr_matrix
             ],
-                axis=0)
+                          axis=0)
             A = csr_matrix(dist)
             G = nx.Graph()
             G.add_weighted_edges_from(
@@ -365,18 +371,18 @@ def clone_networkstats(self: Dandelion,
 
 def diversity_gini(self: Union[Dandelion, AnnData],
                    groupby: str,
-                   metric: Union[None, str] = None,
-                   clone_key: Union[None, str] = None,
+                   metric: Optional[str] = None,
+                   clone_key: Optional[str] = None,
                    update_obs_meta: bool = False,
-                   diversity_key: Union[None, str] = None,
+                   diversity_key: Optional[str] = None,
                    resample: bool = False,
                    n_resample: int = 50,
-                   downsample: Union[None, int] = None,
+                   downsample: Optional[int] = None,
                    reconstruct_network: bool = True,
                    expanded_only: bool = False,
                    use_contracted: bool = False,
-                   key_added: Union[None, str] = None,
-                   locus: Union[None, Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                   key_added: Optional[str] = None,
+                   locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                    **kwargs) -> Union[pd.DataFrame, Dandelion]:
     """
     Compute B cell clones Gini indices.
@@ -387,16 +393,16 @@ def diversity_gini(self: Union[Dandelion, AnnData],
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
-    metric : str, optional
+    metric : str, Optional
         Metric to use for calculating Gini indices of clones.
         Accepts one of ['clone_network', 'clone_degree', 'clone_centrality'].
         Defaults to 'clone_centrality'.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned.
         If False, function will try to populate the input object's metadata/obs slot.
-    diversity_key : str, optional
+    diversity_key : str, Optional
         Key for 'diversity' results in `.uns`.
     resample : bool
         Whether or not to randomly sample cells without replacement to
@@ -404,7 +410,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
         Default is False. Resampling will automatically trigger reconstruction of network.
     n_resample : int
         Number of times to perform resampling. Default is 50.
-    downsample : int, optional
+    downsample : int, Optional
         number of cells to downsample to. If None, defaults to size of smallest group.
     reconstruct_network : bool
         Whether or not to reconstruct the network for Gini Index based measures.
@@ -415,7 +421,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
         Whether or not to perform the gini calculation after contraction of clone network.
         Only applies to calculation of clone size gini index. Default is False.
         This is to try and preserve the single-cell properties of the network.
-    key_added : str, list, optional
+    key_added : str, list, Optional
         column names for output.
     locus : str
         Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
@@ -429,17 +435,16 @@ def diversity_gini(self: Union[Dandelion, AnnData],
 
     def gini_indices(self: Dandelion,
                      groupby: str,
-                     metric: Union[None, str] = None,
-                     clone_key: Union[None, str] = None,
+                     metric: Optional[str] = None,
+                     clone_key: Optional[str] = None,
                      resample: bool = False,
                      n_resample: int = 50,
-                     downsample: Union[None, int] = None,
+                     downsample: Optional[int] = None,
                      reconstruct_network: bool = True,
                      expanded_only: bool = False,
                      contracted: bool = False,
-                     key_added: Union[None, str] = None,
-                     locus: Union[None, Literal['ig', 'tr-ab',
-                                                'tr-gd']] = None,
+                     key_added: Optional[str] = None,
+                     locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                      **kwargs) -> pd.DataFrame:
         if self.__class__ == AnnData:
             raise TypeError('Only Dandelion class object accepted.')
@@ -815,14 +820,14 @@ def diversity_gini(self: Union[Dandelion, AnnData],
 def diversity_chao1(
     self: Union[Dandelion, AnnData],
     groupby: str,
-    clone_key: Union[None, str] = None,
+    clone_key: Optional[str] = None,
     update_obs_meta: bool = False,
-    diversity_key: Union[None, str] = None,
+    diversity_key: Optional[str] = None,
     resample: bool = False,
     n_resample: int = 50,
-    downsample: Union[None, int] = None,
-    key_added: Union[None,
-                     str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
+    downsample: Optional[int] = None,
+    key_added: Optional[str] = None
+) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Chao1 estimates.
 
@@ -832,19 +837,19 @@ def diversity_chao1(
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Chao1 estimates on, for e.g. sample, patient etc.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
-    diversity_key : str, optional
+    diversity_key : str, Optional
         key for 'diversity' results in `.uns`.
     resample : bool
         Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
-    downsample : int, optional
+    downsample : int, Optional
         number of cells to downsample to. If None, defaults to size of smallest group.
-    key_added : str, list, optional
+    key_added : str, list, Optional
         column names for output.
 
     Returns
@@ -855,11 +860,11 @@ def diversity_chao1(
 
     def chao1_estimates(self: Union[Dandelion, AnnData],
                         groupby: str,
-                        clone_key: Union[None, str] = None,
+                        clone_key: Optional[str] = None,
                         resample: bool = False,
                         n_resample: int = 50,
-                        downsample: Union[None, int] = None,
-                        key_added: Union[None, str] = None) -> pd.DataFrame:
+                        downsample: Optional[int] = None,
+                        key_added: Optional[str] = None) -> pd.DataFrame:
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -1011,15 +1016,15 @@ def diversity_chao1(
 def diversity_shannon(
     self: Union[Dandelion, AnnData],
     groupby: str,
-    clone_key: Union[None, str] = None,
+    clone_key: Optional[str] = None,
     update_obs_meta: bool = False,
-    diversity_key: Union[None, str] = None,
+    diversity_key: Optional[str] = None,
     resample: bool = False,
     n_resample: int = 50,
     normalize: bool = True,
-    downsample: Union[None, int] = None,
-    key_added: Union[None,
-                     str] = None) -> Union[pd.DataFrame, Dandelion, AnnData]:
+    downsample: Optional[int] = None,
+    key_added: Optional[str] = None
+) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Shannon entropy.
 
@@ -1029,11 +1034,11 @@ def diversity_shannon(
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Shannon entropy on, for e.g. sample, patient etc.
-    clone_key : str, optional
+    clone_key : str, Optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
-    diversity_key : str, optional
+    diversity_key : str, Optional
         key for 'diversity' results in `.uns`.
     resample : bool
         Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
@@ -1041,9 +1046,9 @@ def diversity_shannon(
         Number of times to perform resampling. Default is 50.
     normalize : bool
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
-    downsample : int, optional
+    downsample : int, Optional
         number of cells to downsample to. If None, defaults to size of smallest group.
-    key_added : str, list, optional
+    key_added : str, list, Optional
         column names for output.
 
     Returns
@@ -1054,12 +1059,12 @@ def diversity_shannon(
 
     def shannon_entropy(self: Union[Dandelion, AnnData],
                         groupby: str,
-                        clone_key: Union[None, str] = None,
+                        clone_key: Optional[str] = None,
                         resample: bool = False,
                         n_resample: int = 50,
                         normalize: bool = True,
-                        downsample: Union[None, int] = None,
-                        key_added: Union[None, str] = None) -> pd.DataFrame:
+                        downsample: Optional[int] = None,
+                        key_added: Optional[str] = None) -> pd.DataFrame:
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
