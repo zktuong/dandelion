@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 11:54:55
+# @Last Modified time: 2021-08-02 13:08:51
 
 import os
 import pandas as pd
@@ -1060,13 +1060,13 @@ def reannotate_genes(data: Sequence,
         if filePath is None:
             if filename_prefix[i] is not None:
                 raise OSError(
-                    'Path to fasta file for {} with filename prefix `{}_contig` is unknown. '
-                    .format(s, filename_prefix[i]) +
+                    'Path to fasta file with filename prefix `{}_contig` is unknown. '
+                    .format(filename_prefix[i]) +
                     'Please specify path to fasta file or folder containing fasta file.'
                 )
             else:
                 raise OSError(
-                    'Path to fasta file for {} is unknown. '.format(s) +
+                    'Path to fasta file is unknown. ' +
                     'Please specify path to fasta file or folder containing fasta file.'
                 )
 
