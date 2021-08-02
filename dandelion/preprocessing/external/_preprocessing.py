@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-01 20:29:57
+# @Last Modified time: 2021-07-26 12:26:28
 
 import os
 import pandas as pd
@@ -15,6 +15,7 @@ from collections import OrderedDict
 from sklearn import mixture
 from time import time
 from ...utilities._utilities import *
+import scanpy as sc
 import scipy.stats
 import re
 from os import PathLike
@@ -539,11 +540,7 @@ def recipe_scanpy_qc(
     try:
         import scrublet as scr
     except:
-        raise ImportError('Please install scrublet.')
-    try:
-        import scanpy as sc
-    except:
-        raise ImportError('Please install scanpy.')
+        raise ImportError('Please install scrublet with pip install scrublet.')
 
     scrub = scr.Scrublet(_adata.X)
     doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
