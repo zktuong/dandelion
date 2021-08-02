@@ -2,11 +2,21 @@
 import os
 import pandas as pd
 import dandelion as ddl
+from subprocess import run
+
+
+def test_callscript():
+    p = run(["python", "/share/dandelion_preprocess.py", "-h"],
+            capture_output=True,
+            encoding='utf8')
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout != ""
 
 
 def test_container():
     os.system(
-        "cd /tests; python dandelion_preprocess.py --meta test.csv;")
+        "cd /tests; python /share/dandelion_preprocess.py --meta test.csv;")
     dat = pd.read_csv(
         '/tests/sample_test_10x/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv',
         sep='\t')
