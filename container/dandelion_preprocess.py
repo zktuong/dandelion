@@ -1,4 +1,4 @@
-#!/opt/conda/envs/dandelion/bin/python
+#!/opt/conda/envs/sc-dandelion-container/bin/python
 
 import dandelion as ddl
 import argparse
