@@ -6,7 +6,7 @@ import dandelion as ddl
 
 def test_container():
     os.system(
-        "cd /share/tests/; python /share/dandelion_preprocess.py --meta test.csv;")
+        "cd /share/tests/; python dandelion_preprocess.py --meta test.csv;")
     dat = pd.read_csv(
         '/share/tests/sample_test_10x/dandelion/filtered_contig_igblast_db-pass_genotyped.tsv',
         sep='\t')
