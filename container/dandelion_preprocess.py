@@ -73,8 +73,8 @@ def main():
         samples = []
         for item in os.listdir('.'):
             if os.path.isdir(item):
-                if not item.startswith('.')  # exclude hidden folders like .ipynb_checkpoints
-                samples.append(item)
+                if not item.startswith('.'):  # exclude hidden folders like .ipynb_checkpoints
+                    samples.append(item)
     filename_prefixes = [args.file_prefix for i in range(0, len(samples))]
 
     # STEP ONE - ddl.pp.format_fastas()
