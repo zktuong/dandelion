@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-02 13:08:51
+# @Last Modified time: 2021-08-04 09:52:36
 
 import os
 import pandas as pd
@@ -336,6 +336,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                    correction_dict: Union[Dict, None] = None,
                    plot: bool = True,
                    save_plot: bool = False,
+                   show_plot: bool = True,
                    figsize: Tuple[Union[int, float], Union[int,
                                                            float]] = (4, 4),
                    blastdb: Optional[str] = None,
@@ -365,6 +366,8 @@ def assign_isotype(fasta: Union[str, PathLike],
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
         whether or not to save plot.
+    show_plot : bool
+        whether or not to show plot.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, Optional
@@ -923,9 +926,11 @@ def assign_isotype(fasta: Union[str, PathLike],
         if save_plot:
             _file3 = "{}/assign_isotype.pdf".format(os.path.dirname(filePath))
             save_as_pdf_pages([p], filename=_file3)
-            print(p)
+            if show_plot:
+                print(p)
         else:
-            print(p)
+            if show_plot:
+                print(p)
 
 
 def assign_isotypes(fastas: Sequence,
@@ -1100,6 +1105,7 @@ def reassign_alleles(data: Sequence,
                      cloned: bool = False,
                      plot: bool = True,
                      save_plot: bool = False,
+                     show_plot: bool = True,
                      figsize: Tuple[Union[int, float], Union[int,
                                                              float]] = (4, 3),
                      sample_id_dictionary: Optional[Dict] = None,
@@ -1137,6 +1143,8 @@ def reassign_alleles(data: Sequence,
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
         whether or not to save plot.
+    show_plot : bool
+        whether or not to show plot.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 3).
     sample_id_dictionary : dict, Optional
@@ -1504,9 +1512,11 @@ def reassign_alleles(data: Sequence,
                 if save_plot:
                     savefile = outDir + '/' + outDir + '_reassign_alleles.pdf'
                     save_as_pdf_pages([p], filename=savefile)
-                    print(p)
+                    if show_plot:
+                        print(p)
                 else:
-                    print(p)
+                    if show_plot:
+                        print(p)
             except:
                 print('Error in plotting encountered. Skipping.')
                 pass
@@ -1759,19 +1769,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -1941,8 +1951,8 @@ def create_germlines(
             out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
                 os.path.basename(file).split('.tsv')[0], germ_types),
-                sep='\t',
-                index=False)
+                            sep='\t',
+                            index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2190,8 +2200,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                sep='\t',
-                index=False)
+                        sep='\t',
+                        index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2675,13 +2685,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                method=threshold_method_,
-                model=threshold_model_,
-                cross=cross_,
-                subsample=subsample_,
-                cutoff=cutoff_,
-                sen=sen_,
-                spc=spc_)
+                                              method=threshold_method_,
+                                              model=threshold_model_,
+                                              cross=cross_,
+                                              subsample=subsample_,
+                                              cutoff=cutoff_,
+                                              sen=sen_,
+                                              spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2769,7 +2779,6 @@ class FilterContigs:
     Main class object to run filter_contigs.
 
     """
-
     def __init__(self, data):
         self.data = data
         self.poor_qual = []
