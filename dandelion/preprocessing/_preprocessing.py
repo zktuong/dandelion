@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-04 09:52:36
+# @Last Modified time: 2021-08-04 10:01:02
 
 import os
 import pandas as pd
@@ -1253,17 +1253,17 @@ def reassign_alleles(data: Sequence,
     if len(filepathlist_heavy) > 1:
         print('Concatenating objects')
         cmd1 = ' '.join(
-            ['cat'] + [f for f in filepathlist_heavy] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [f for f in filepathlist_heavy] + ['>'] +
             [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
         cmd2 = ' '.join(
-            ['cat'] + [f for f in filepathlist_light] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [f for f in filepathlist_light] + ['>'] +
             [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
     else:
         cmd1 = ' '.join(
-            ['cat'] + [filepathlist_heavy[0]] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [filepathlist_heavy[0]] + ['>'] +
             [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
         cmd2 = ' '.join(
-            ['cat'] + [filepathlist_light[0]] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [filepathlist_light[0]] + ['>'] +
             [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
 
     if verbose:
@@ -1769,19 +1769,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                                                        reference_dict,
-                                                        seq_field=seq_field_,
-                                                        v_field=v_field_,
-                                                        d_field=d_field_,
-                                                        j_field=j_field_)
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                                                        reference_dict,
-                                                        seq_field=seq_field_,
-                                                        v_field=v_field_,
-                                                        d_field=d_field_,
-                                                        j_field=j_field_)
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -1951,8 +1951,8 @@ def create_germlines(
             out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
                 os.path.basename(file).split('.tsv')[0], germ_types),
-                            sep='\t',
-                            index=False)
+                sep='\t',
+                index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2200,8 +2200,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                        sep='\t',
-                        index=False)
+                sep='\t',
+                index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2685,13 +2685,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                                              method=threshold_method_,
-                                              model=threshold_model_,
-                                              cross=cross_,
-                                              subsample=subsample_,
-                                              cutoff=cutoff_,
-                                              sen=sen_,
-                                              spc=spc_)
+                method=threshold_method_,
+                model=threshold_model_,
+                cross=cross_,
+                subsample=subsample_,
+                cutoff=cutoff_,
+                sen=sen_,
+                spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2779,6 +2779,7 @@ class FilterContigs:
     Main class object to run filter_contigs.
 
     """
+
     def __init__(self, data):
         self.data = data
         self.poor_qual = []
