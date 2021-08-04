@@ -134,6 +134,7 @@ def main():
                 ],
                     combined_folder=ind,
                     save_plot=True,
+                    show_plot=False,
                     filename_prefix=filename_prefixes)
                 # remove if cleaning output - the important information is ported to sample folders already
                 if args.clean_output:
