@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-04 10:01:02
+# @Last Modified time: 2021-08-04 10:44:53
 
 import os
 import pandas as pd
@@ -940,6 +940,7 @@ def assign_isotypes(fastas: Sequence,
                     correction_dict: Optional[Dict] = None,
                     plot: bool = True,
                     save_plot: bool = False,
+                    show_plot: bool = True,
                     figsize: Tuple[Union[int, float], Union[int,
                                                             float]] = (4, 4),
                     blastdb: Optional[str] = None,
@@ -969,6 +970,8 @@ def assign_isotypes(fastas: Sequence,
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
         whether or not to save plots.
+    show_plot : bool
+        whether or not to show plots.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, Optional
@@ -1006,6 +1009,7 @@ def assign_isotypes(fastas: Sequence,
                        correction_dict=correction_dict,
                        plot=plot,
                        save_plot=save_plot,
+                       show_plot=show_plot,
                        figsize=figsize,
                        blastdb=blastdb,
                        allele=allele,
