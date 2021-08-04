@@ -73,8 +73,9 @@ def main():
         samples = []
         for item in os.listdir('.'):
             if os.path.isdir(item):
-                if not item.startswith('.')  # exclude hidden folders like .ipynb_checkpoints
-                samples.append(item)
+                if not item.startswith(
+                        '.'):  # exclude hidden folders like .ipynb_checkpoints
+                    samples.append(item)
     filename_prefixes = [args.file_prefix for i in range(0, len(samples))]
 
     # STEP ONE - ddl.pp.format_fastas()
@@ -97,6 +98,7 @@ def main():
             sep=args.sep,
             remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
             filename_prefix=filename_prefixes)
+    else:
         # neither. tag with the sample names as default, if more than one sample and the data is IG
         if (len(samples) > 1) and (args.chain == 'ig'):
             ddl.pp.format_fastas(
@@ -132,6 +134,7 @@ def main():
                 ],
                     combined_folder=ind,
                     save_plot=True,
+                    show_plot=False,
                     filename_prefix=filename_prefixes)
                 # remove if cleaning output - the important information is ported to sample folders already
                 if args.clean_output:
@@ -141,6 +144,7 @@ def main():
             ddl.pp.reassign_alleles(samples,
                                     combined_folder='tigger',
                                     save_plot=True,
+                                    show_plot=False,
                                     filename_prefix=filename_prefixes)
             # remove if cleaning output - the important information is ported to sample folders already
             if args.clean_output:
@@ -150,6 +154,7 @@ def main():
         # also no tricks here
         ddl.pp.assign_isotypes(samples,
                                save_plot=True,
+                               show_plot=False,
                                filename_prefix=filename_prefixes)
         # STEP FIVE - ddl.pp.quantify_mutations()
         # this adds the mu_count and mu_freq columns into the table

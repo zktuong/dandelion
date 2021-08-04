@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-02 13:08:51
+# @Last Modified time: 2021-08-04 10:44:53
 
 import os
 import pandas as pd
@@ -336,6 +336,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                    correction_dict: Union[Dict, None] = None,
                    plot: bool = True,
                    save_plot: bool = False,
+                   show_plot: bool = True,
                    figsize: Tuple[Union[int, float], Union[int,
                                                            float]] = (4, 4),
                    blastdb: Optional[str] = None,
@@ -365,6 +366,8 @@ def assign_isotype(fasta: Union[str, PathLike],
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
         whether or not to save plot.
+    show_plot : bool
+        whether or not to show plot.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, Optional
@@ -923,9 +926,11 @@ def assign_isotype(fasta: Union[str, PathLike],
         if save_plot:
             _file3 = "{}/assign_isotype.pdf".format(os.path.dirname(filePath))
             save_as_pdf_pages([p], filename=_file3)
-            print(p)
+            if show_plot:
+                print(p)
         else:
-            print(p)
+            if show_plot:
+                print(p)
 
 
 def assign_isotypes(fastas: Sequence,
@@ -935,6 +940,7 @@ def assign_isotypes(fastas: Sequence,
                     correction_dict: Optional[Dict] = None,
                     plot: bool = True,
                     save_plot: bool = False,
+                    show_plot: bool = True,
                     figsize: Tuple[Union[int, float], Union[int,
                                                             float]] = (4, 4),
                     blastdb: Optional[str] = None,
@@ -964,6 +970,8 @@ def assign_isotypes(fastas: Sequence,
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
         whether or not to save plots.
+    show_plot : bool
+        whether or not to show plots.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 4).
     blastdb : str, Optional
@@ -1001,6 +1009,7 @@ def assign_isotypes(fastas: Sequence,
                        correction_dict=correction_dict,
                        plot=plot,
                        save_plot=save_plot,
+                       show_plot=show_plot,
                        figsize=figsize,
                        blastdb=blastdb,
                        allele=allele,
@@ -1100,6 +1109,7 @@ def reassign_alleles(data: Sequence,
                      cloned: bool = False,
                      plot: bool = True,
                      save_plot: bool = False,
+                     show_plot: bool = True,
                      figsize: Tuple[Union[int, float], Union[int,
                                                              float]] = (4, 3),
                      sample_id_dictionary: Optional[Dict] = None,
@@ -1137,6 +1147,8 @@ def reassign_alleles(data: Sequence,
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
         whether or not to save plot.
+    show_plot : bool
+        whether or not to show plot.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of figure. Default is (4, 3).
     sample_id_dictionary : dict, Optional
@@ -1245,17 +1257,17 @@ def reassign_alleles(data: Sequence,
     if len(filepathlist_heavy) > 1:
         print('Concatenating objects')
         cmd1 = ' '.join(
-            ['cat'] + [f for f in filepathlist_heavy] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [f for f in filepathlist_heavy] + ['>'] +
             [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
         cmd2 = ' '.join(
-            ['cat'] + [f for f in filepathlist_light] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [f for f in filepathlist_light] + ['>'] +
             [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
     else:
         cmd1 = ' '.join(
-            ['cat'] + [filepathlist_heavy[0]] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [filepathlist_heavy[0]] + ['>'] +
             [outDir + '/' + outDir + '_heavy' + informat_dict[fileformat]])
         cmd2 = ' '.join(
-            ['cat'] + [filepathlist_light[0]] + ['>'] +
+            ['awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'] + [filepathlist_light[0]] + ['>'] +
             [outDir + '/' + outDir + '_light' + informat_dict[fileformat]])
 
     if verbose:
@@ -1504,9 +1516,11 @@ def reassign_alleles(data: Sequence,
                 if save_plot:
                     savefile = outDir + '/' + outDir + '_reassign_alleles.pdf'
                     save_as_pdf_pages([p], filename=savefile)
-                    print(p)
+                    if show_plot:
+                        print(p)
                 else:
-                    print(p)
+                    if show_plot:
+                        print(p)
             except:
                 print('Error in plotting encountered. Skipping.')
                 pass
