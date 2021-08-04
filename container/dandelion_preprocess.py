@@ -143,6 +143,7 @@ def main():
             ddl.pp.reassign_alleles(samples,
                                     combined_folder='tigger',
                                     save_plot=True,
+                                    show_plot=False,
                                     filename_prefix=filename_prefixes)
             # remove if cleaning output - the important information is ported to sample folders already
             if args.clean_output:
@@ -152,6 +153,7 @@ def main():
         # also no tricks here
         ddl.pp.assign_isotypes(samples,
                                save_plot=True,
+                               show_plot=False,
                                filename_prefix=filename_prefixes)
         # STEP FIVE - ddl.pp.quantify_mutations()
         # this adds the mu_count and mu_freq columns into the table
