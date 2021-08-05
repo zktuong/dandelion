@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 22:16:53
+# @Last Modified time: 2021-08-06 00:04:38
 
 import pandas as pd
 import numpy as np
@@ -128,7 +128,6 @@ def clone_diversity(
     expanded_only: bool = False,
     use_contracted: bool = False,
     key_added: Optional[str] = None,
-    locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
     **kwargs,
 ) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
@@ -174,8 +173,6 @@ def clone_diversity(
         This is to try and preserve the single-cell properties of the network.
     key_added : str, list, Optional
         column names for output.
-    locus : str
-        Mode of data. Only used for method = 'gini', Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     **kwargs
         passed to dandelion.tl.generate_nework
     Returns
@@ -184,12 +181,6 @@ def clone_diversity(
     """
     if downsample is not None:
         resample = True
-
-    if locus is None:
-        if self.__class__ == Dandelion:
-            locus = best_guess_locus(self.data)
-        else:
-            locus = 'ig'
 
     if method == 'gini':
         if update_obs_meta:
@@ -206,7 +197,6 @@ def clone_diversity(
                            expanded_only=expanded_only,
                            use_contracted=use_contracted,
                            key_added=key_added,
-                           locus=locus,
                            **kwargs)
         else:
             return (diversity_gini(self,
@@ -222,7 +212,6 @@ def clone_diversity(
                                    expanded_only=expanded_only,
                                    use_contracted=use_contracted,
                                    key_added=key_added,
-                                   locus=locus,
                                    **kwargs))
     if method == 'chao1':
         if update_obs_meta:
@@ -382,7 +371,6 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                    expanded_only: bool = False,
                    use_contracted: bool = False,
                    key_added: Optional[str] = None,
-                   locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                    **kwargs) -> Union[pd.DataFrame, Dandelion]:
     """
     Compute B cell clones Gini indices.
@@ -423,8 +411,6 @@ def diversity_gini(self: Union[Dandelion, AnnData],
         This is to try and preserve the single-cell properties of the network.
     key_added : str, list, Optional
         column names for output.
-    locus : str
-        Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     **kwargs
         passed to dandelion.tl.generate_nework
     Returns
@@ -444,7 +430,6 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                      expanded_only: bool = False,
                      contracted: bool = False,
                      key_added: Optional[str] = None,
-                     locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                      **kwargs) -> pd.DataFrame:
         if self.__class__ == AnnData:
             raise TypeError('Only Dandelion class object accepted.')
@@ -541,7 +526,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
             # clone size distribution
             _dat = metadata[metadata[groupby] == g]
             _data = data[data['cell_id'].isin(list(_dat.index))]
-            ddl_dat = Dandelion(_data, metadata=_dat, locus=locus)
+            ddl_dat = Dandelion(_data, metadata=_dat)
             if resample:
                 sizelist = []
                 if self.__class__ == Dandelion:
@@ -552,7 +537,6 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                                                      clone_key=clonekey,
                                                      downsample=minsize,
                                                      verbose=False,
-                                                     locus=locus,
                                                      **kwargs)
                         if met == 'clone_network':
                             n_n, v_s, c_s = clone_networkstats(
@@ -685,7 +669,6 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                             generate_network(ddl_dat,
                                              clone_key=clonekey,
                                              verbose=False,
-                                             locus=locus,
                                              **kwargs)
                             n_n, v_s, c_s = clone_networkstats(
                                 ddl_dat,
@@ -794,7 +777,6 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                        expanded_only=expanded_only,
                        contracted=use_contracted,
                        key_added=key_added,
-                       locus=locus,
                        **kwargs)
 
     if diversity_key is None:
