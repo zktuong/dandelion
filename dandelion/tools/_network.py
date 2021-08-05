@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-05 23:47:44
+# @Last Modified time: 2021-08-06 00:24:57
 
 import pandas as pd
 import numpy as np
@@ -331,7 +331,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             deep=('Updated Dandelion object: \n'
                   '   \'data\', contig-indexed clone table\n'
                   '   \'metadata\', cell-indexed clone table\n'
-                  '   \'distance\', heavy and light chain distance matrices\n'
+                  '   \'distance\', distance matrices for VDJ- and VJ- chains\n'
                   '   \'edges\', network edges\n'
                   '   \'layout\', network layout\n'
                   '   \'graph\', network'))
