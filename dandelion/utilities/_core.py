@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 01:33:11
+# @Last Modified time: 2021-08-06 10:18:02
 
 import os
 from collections import defaultdict
@@ -477,10 +477,10 @@ class Query:
                 for i, c in _tmp.iterrows():
                     try:
                         _meta.append('|'.join(
-                            [h for h in list(c) if pd.notnull(h)]))
+                            set([h for h in list(c) if pd.notnull(h)])))
                     except:
                         _meta.append('|'.join(
-                            [str(h) for h in list(c) if pd.notnull(h)]))
+                            set([str(h) for h in list(c) if pd.notnull(h)])))
                 _meta = pd.DataFrame(_meta,
                                      columns=[self.query],
                                      index=_tmp.index)
@@ -1181,7 +1181,7 @@ class Query:
 
 
 def initialize_metadata(self, cols: Sequence, clonekey: str,
-                        collapse_alleles: bool, verbose: bool) -> Dandelion:
+                        collapse_alleles: bool) -> Dandelion:
     init_dict = {}
     for col in cols:
         init_dict.update(
@@ -1214,7 +1214,8 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         if k in ['duplicate_count', 'umi_count', 'mu_count', 'mu_freq']:
             v.update({'retrieve_mode': 'split'})
             meta_[k + '_split'] = querier.retrieve(**v)
-
+    print(init_dict)
+    print(meta_['sample_id'].head())
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
 
     if 'locus_VDJ' in tmp_metadata:
@@ -1608,8 +1609,6 @@ def update_metadata(self: Dandelion,
         Returns the V(D)J genes with allelic calls if False.
     reinitialize : bool
         Whether or not to reinitialize the current metadata. Useful when updating older versions of `dandelion` to newer version.
-    verbose : bool
-        Whether or not to print warning messages when constructing object.
     Returns
     -------
     `Dandelion` object with `.metadata` slot initialized.
@@ -1658,7 +1657,7 @@ def update_metadata(self: Dandelion,
 
     metadata_status = self.metadata
     if (metadata_status is None) or reinitialize:
-        initialize_metadata(self, cols, clonekey, collapse_alleles, verbose)
+        initialize_metadata(self, cols, clonekey, collapse_alleles)
 
     tmp_metadata = self.metadata.copy()
 
