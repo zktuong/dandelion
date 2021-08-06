@@ -2,11 +2,10 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:03:48
+# @Last Modified time: 2021-08-06 00:47:46
 
 import os
 import sys
-import scanpy as sc
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -578,8 +577,8 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         dat_.to_csv("{}/{}_clone.tsv".format(
             os.path.dirname(self),
             os.path.basename(self).split('.tsv')[0]),
-                    sep='\t',
-                    index=False)
+            sep='\t',
+            index=False)
 
     sleep(0.5)
     logg.info(' finished',
@@ -798,10 +797,11 @@ def transfer(
         logg.info(
             ' finished',
             time=start,
-            deep=('updated `.obs` with `.metadata`\n'
-                  'added to `.uns[\'' + neighbors_key + '\']` and `.obsp`\n'
-                  '   \'distances\', cluster-weighted adjacency matrix\n'
-                  '   \'connectivities\', cluster-weighted adjacency matrix'))
+            deep=(
+                'updated `.obs` with `.metadata`\n'
+                'added to `.uns[\'' + neighbors_key + '\']` and `.obsp`\n'
+                '   \'distances\', clonotype-weighted adjacency matrix\n'
+                '   \'connectivities\', clonotype-weighted adjacency matrix'))
     else:
         logg.info(' finished',
                   time=start,
@@ -1048,8 +1048,18 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                 ", ".join(expected_light_columns))
 
         # Fix types
-        heavy_df[junction_length] = heavy_df[junction_length].astype('int')
-        light_df[junction_length] = light_df[junction_length].astype('int')
+        try:
+            heavy_df[junction_length] = heavy_df[junction_length].astype('int')
+            light_df[junction_length] = light_df[junction_length].astype('int')
+        except:
+            heavy_df[junction_length] = heavy_df[junction_length].replace(
+                np.nan, pd.NA, inplace=True)
+            light_df[junction_length] = light_df[junction_length].replace(
+                np.nan, pd.NA, inplace=True)
+            heavy_df[junction_length] = heavy_df[junction_length].astype(
+                'Int64')
+            light_df[junction_length] = light_df[junction_length].astype(
+                'Int64')
 
         # filter multiple heavy chains
         if doublets == 'drop':
@@ -1150,30 +1160,30 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             threshold_ = None
 
         if ('clone_id' in self.data.columns) and (clone_key is not None):
-            self.__init__(data=dat,
-                          germline=germline_,
-                          distance=dist_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_,
-                          initialize=True,
-                          retrieve=clone_key,
-                          split=False,
-                          collapse=True,
-                          combine=True)
+            self.__init__(
+                data=dat,
+                germline=germline_,
+                distance=dist_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+                initialize=True,
+                retrieve=clone_key,
+                retrieve_mode='merge and unique only',
+            )
         elif ('clone_id' not in self.data.columns) and (clone_key is not None):
-            self.__init__(data=dat,
-                          germline=germline_,
-                          distance=dist_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_,
-                          initialize=True,
-                          clone_key=clone_key,
-                          retrieve=clone_key,
-                          split=False,
-                          collapse=True,
-                          combine=True)
+            self.__init__(
+                data=dat,
+                germline=germline_,
+                distance=dist_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+                initialize=True,
+                clone_key=clone_key,
+                retrieve=clone_key,
+                retrieve_mode='merge and unique only',
+            )
         else:
             self.__init__(data=dat,
                           germline=germline_,
@@ -1186,7 +1196,11 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         self.threshold = threshold_
     else:
         if ('clone_id' in dat.columns) and (clone_key is not None):
-            out = Dandelion(data=dat, retrieve=clonekey, split=False)
+            out = Dandelion(
+                data=dat,
+                retrieve=clone_key,
+                retrieve_mode='merge and unique only',
+            )
         elif ('clone_id' not in dat.columns) and (clone_key is not None):
             out = Dandelion(data=dat, clone_key=clone_key)
         else:
@@ -1260,9 +1274,9 @@ def clone_size(self: Dandelion,
                                         clonesize_dict[c_]
                                         for c_ in c.split('|')
                                     ])),
-                                       key=lambda x: int(x.split('>= ')[1])
-                                       if type(x) is str else int(x),
-                                       reverse=True)[0] if '|' in
+                                    key=lambda x: int(x.split('>= ')[1])
+                                    if type(x) is str else int(x),
+                                    reverse=True)[0] if '|' in
                                 c else clonesize_dict[c]
                                 for c in metadata_[str(clonekey)]
                             ]
@@ -1280,9 +1294,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
+                                key=lambda x: int(x.split('>= ')[1])
+                                if type(x) is str else int(x),
+                                reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
@@ -1301,9 +1315,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
+                                key=lambda x: int(x.split('>= ')[1])
+                                if type(x) is str else int(x),
+                                reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
@@ -1323,9 +1337,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
+                                key=lambda x: int(x.split('>= ')[1])
+                                if type(x) is str else int(x),
+                                reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]

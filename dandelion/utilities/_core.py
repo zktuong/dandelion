@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:03:59
+# @Last Modified time: 2021-08-06 01:33:11
 
 import os
 from collections import defaultdict
@@ -23,10 +23,6 @@ from ..utilities._utilities import *
 from ..utilities._io import *
 from typing import Union, Sequence, Tuple, Dict, Optional
 
-BOOLEAN_COLUMNS = [
-    'productive', 'rev_comp', 'vj_in_frame', 'stop_codon', 'complete_vdj'
-]
-
 
 class Dandelion:
     """
@@ -35,6 +31,7 @@ class Dandelion:
     Main class object storing input/ouput slots for all functions.
 
     """
+
     def __init__(self,
                  data=None,
                  metadata=None,
@@ -61,6 +58,7 @@ class Dandelion:
             self.data = load_data(self.data)
 
         if self.data is not None:
+            self.data = sanitize_data(self.data)
             self.n_contigs = self.data.shape[0]
             if metadata is None:
                 if initialize is True:
@@ -406,24 +404,26 @@ class Query:
             metadata_[d] = pd.DataFrame(seqs, index=cells)
             metadata_[d][pd.isnull(metadata_[d])] = None
 
-        if isinstance(metadata_['VDJ'], pd.DataFrame):
-            if len(metadata_['VDJ'].columns) > 1:
-                metadata_['VDJ'].columns = [
-                    'sequence_id_VDJ_' + str(x)
-                    for x in range(1,
-                                   len(metadata_['VDJ'].columns) + 1)
-                ]
-            else:
-                metadata_['VDJ'].columns = ['sequence_id_VDJ_1']
-        if isinstance(metadata_['VJ'], pd.DataFrame):
-            if len(metadata_['VJ'].columns) > 1:
-                metadata_['VJ'].columns = [
-                    'sequence_id_VJ_' + str(x)
-                    for x in range(1,
-                                   len(metadata_['VJ'].columns) + 1)
-                ]
-            else:
-                metadata_['VJ'].columns = ['sequence_id_VJ_1']
+        if 'VDJ' in metadata_:
+            if isinstance(metadata_['VDJ'], pd.DataFrame):
+                if len(metadata_['VDJ'].columns) > 1:
+                    metadata_['VDJ'].columns = [
+                        'sequence_id_VDJ_' + str(x)
+                        for x in range(1,
+                                       len(metadata_['VDJ'].columns) + 1)
+                    ]
+                else:
+                    metadata_['VDJ'].columns = ['sequence_id_VDJ_1']
+        if 'VJ' in metadata_:
+            if isinstance(metadata_['VJ'], pd.DataFrame):
+                if len(metadata_['VJ'].columns) > 1:
+                    metadata_['VJ'].columns = [
+                        'sequence_id_VJ_' + str(x)
+                        for x in range(1,
+                                       len(metadata_['VJ'].columns) + 1)
+                    ]
+                else:
+                    metadata_['VJ'].columns = ['sequence_id_VJ_1']
         return (metadata_)
 
     @property
@@ -443,26 +443,29 @@ class Query:
         self.retrieve_mode = retrieve_mode
         _meta, _tmp = {}, {}
         for x in ['VDJ', 'VJ']:
-            _tmp[x] = pd.DataFrame(self.query_dict[x],
-                                   index=self.tmpmeta[x].index)
+            if x in self.query_dict:
+                _tmp[x] = pd.DataFrame(self.query_dict[x],
+                                       index=self.tmpmeta[x].index)
 
         if 'unique only' in self.retrieve_mode:
             for x in ['VDJ', 'VJ']:
-                _meta[x] = []
-                for i in _tmp[x].index:
-                    try:
-                        _meta[x].append('|'.join([
-                            h for h in list(dict.fromkeys(_tmp[x].loc[i]))
-                            if pd.notnull(h)
-                        ]))
-                    except:
-                        _meta[x].append('|'.join([
-                            str(h) for h in list(dict.fromkeys(_tmp[x].loc[i]))
-                            if pd.notnull(h)
-                        ]))
-                _meta[x] = pd.DataFrame(_meta[x],
-                                        columns=[self.query + '_' + x],
-                                        index=_tmp[x].index)
+                if x in _tmp:
+                    _meta[x] = []
+                    for i in _tmp[x].index:
+                        try:
+                            _meta[x].append('|'.join([
+                                h for h in list(dict.fromkeys(_tmp[x].loc[i]))
+                                if pd.notnull(h)
+                            ]))
+                        except:
+                            _meta[x].append('|'.join([
+                                str(h)
+                                for h in list(dict.fromkeys(_tmp[x].loc[i]))
+                                if pd.notnull(h)
+                            ]))
+                    _meta[x] = pd.DataFrame(_meta[x],
+                                            columns=[self.query + '_' + x],
+                                            index=_tmp[x].index)
             if self.retrieve_mode == 'split and unique only':
                 _meta = pd.concat([_meta[x] for x in _meta], axis=1)
                 if self.querydtype == 'object':
@@ -486,15 +489,17 @@ class Query:
                 return (_meta)
         elif 'sum' in self.retrieve_mode:
             for x in ['VDJ', 'VJ']:
-                tlist = []
-                for i in _tmp[x].index:
-                    tlist.append(
-                        np.sum([
-                            h for h in list(_tmp[x].loc[i]) if pd.notnull(h)
-                        ]))
-                _meta[x] = pd.DataFrame(tlist,
-                                        columns=[self.query],
-                                        index=_tmp[x].index)
+                if x in _tmp:
+                    tlist = []
+                    for i in _tmp[x].index:
+                        tlist.append(
+                            np.sum([
+                                h for h in list(_tmp[x].loc[i])
+                                if pd.notnull(h)
+                            ]))
+                    _meta[x] = pd.DataFrame(tlist,
+                                            columns=[self.query],
+                                            index=_tmp[x].index)
             meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
             if self.retrieve_mode == 'split and sum':
                 return (meta_)
@@ -509,15 +514,17 @@ class Query:
                                      index=meta_.index))
         elif 'average' in self.retrieve_mode:
             for x in ['VDJ', 'VJ']:
-                tlist = []
-                for i in _tmp[x].index:
-                    tlist.append(
-                        np.mean([
-                            h for h in list(_tmp[x].loc[i]) if pd.notnull(h)
-                        ]))
-                _meta[x] = pd.DataFrame(tlist,
-                                        columns=[self.query],
-                                        index=_tmp[x].index)
+                if x in _tmp:
+                    tlist = []
+                    for i in _tmp[x].index:
+                        tlist.append(
+                            np.mean([
+                                h for h in list(_tmp[x].loc[i])
+                                if pd.notnull(h)
+                            ]))
+                    _meta[x] = pd.DataFrame(tlist,
+                                            columns=[self.query],
+                                            index=_tmp[x].index)
             meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
             if self.retrieve_mode == 'split and average':
                 return (meta_)
@@ -533,21 +540,22 @@ class Query:
         else:
             if self.retrieve_mode == 'merge':
                 for x in ['VDJ', 'VJ']:
-                    tlist = []
-                    for i in _tmp[x].index:
-                        try:
-                            tlist.append('|'.join([
-                                h for h in list(_tmp[x].loc[i])
-                                if pd.notnull(h)
-                            ]))
-                        except:
-                            tlist.append('|'.join([
-                                str(h) for h in list(_tmp[x].loc[i])
-                                if pd.notnull(h)
-                            ]))
-                    _meta[x] = pd.DataFrame(tlist,
-                                            columns=[self.query],
-                                            index=_tmp[x].index)
+                    if x in _tmp:
+                        tlist = []
+                        for i in _tmp[x].index:
+                            try:
+                                tlist.append('|'.join([
+                                    h for h in list(_tmp[x].loc[i])
+                                    if pd.notnull(h)
+                                ]))
+                            except:
+                                tlist.append('|'.join([
+                                    str(h) for h in list(_tmp[x].loc[i])
+                                    if pd.notnull(h)
+                                ]))
+                        _meta[x] = pd.DataFrame(tlist,
+                                                columns=[self.query],
+                                                index=_tmp[x].index)
                 meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
                 _meta = []
                 for i in meta_.index:
@@ -1265,41 +1273,82 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
             ]]
 
     for i in tmp_metadata.index:
-        if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_h]):
-            if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
-                tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
-                    i, 'locus' +
-                    suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' + suffix_l]
+        if 'locus' + suffix_h in tmp_metadata:
+            if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_h]):
+                if 'locus' + suffix_l in tmp_metadata:
+                    if not check_missing(tmp_metadata.loc[i,
+                                                          'locus' + suffix_l]):
+                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                            i, 'locus' +
+                            suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' +
+                                                                 suffix_l]
+                    else:
+                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                            i, 'locus' + suffix_h] + '_only'
+                else:
+                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                        i, 'locus' + suffix_h] + '_only'
             else:
-                tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
-                    i, 'locus' + suffix_h] + '_only'
-        elif not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
-            tmp_metadata.at[i, 'status'] = tmp_metadata.loc[i, 'locus' +
-                                                            suffix_l] + '_only'
+                if 'locus' + suffix_l in tmp_metadata:
+                    if not check_missing(tmp_metadata.loc[i,
+                                                          'locus' + suffix_l]):
+                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                            i, 'locus' + suffix_l] + '_only'
+                    else:
+                        tmp_metadata.at[i, 'status'] = 'unassigned'
+                else:
+                    tmp_metadata.at[i, 'status'] = 'unassigned'
         else:
-            tmp_metadata.at[i, 'status'] = 'unassigned'
+            if 'locus' + suffix_l in tmp_metadata:
+                if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
+                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                        i, 'locus' + suffix_l] + '_only'
+                else:
+                    tmp_metadata.at[i, 'status'] = 'unassigned'
+            else:
+                tmp_metadata.at[i, 'status'] = 'unassigned'
+
     tmp_metadata['status_summary'] = [
         'Multi' if '|' in i else i for i in tmp_metadata['status']
     ]
 
     for i in tmp_metadata.index:
-        if not check_missing(tmp_metadata.loc[i, 'productive' + suffix_h]):
-            if not check_missing(tmp_metadata.loc[i, 'productive' + suffix_l]):
-                tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
-                    i, 'productive' +
-                    suffix_h] + ' + ' + tmp_metadata.loc[i, 'productive' +
-                                                         suffix_l]
-            else:
-                tmp_metadata.at[i,
-                                'productive'] = tmp_metadata.loc[i,
+        if 'productive' + suffix_h in tmp_metadata:
+            if not check_missing(tmp_metadata.loc[i, 'productive' + suffix_h]):
+                if 'productive' + suffix_l in tmp_metadata:
+                    if not check_missing(
+                            tmp_metadata.loc[i, 'productive' + suffix_l]):
+                        tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                            i, 'productive' +
+                            suffix_h] + ' + ' + tmp_metadata.loc[i,
                                                                  'productive' +
-                                                                 suffix_h]
-        elif not check_missing(tmp_metadata.loc[i, 'productive' + suffix_l]):
-            tmp_metadata.at[i,
-                            'productive'] = tmp_metadata.loc[i, 'productive' +
-                                                             suffix_l]
+                                                                 suffix_l]
+                    else:
+                        tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                            i, 'productive' + suffix_h]
+                else:
+                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                        i, 'productive' + suffix_h]
+            else:
+                if 'productive' + suffix_l in tmp_metadata:
+                    if not check_missing(
+                            tmp_metadata.loc[i, 'productive' + suffix_l]):
+                        tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                            i, 'productive' + suffix_l]
+                    else:
+                        tmp_metadata.at[i, 'productive'] = 'unassigned'
+                else:
+                    tmp_metadata.at[i, 'productive'] = 'unassigned'
         else:
-            tmp_metadata.at[i, 'productive'] = 'unassigned'
+            if 'productive' + suffix_l in tmp_metadata:
+                if not check_missing(
+                        tmp_metadata.loc[i, 'productive' + suffix_l]):
+                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                        i, 'productive' + suffix_l]
+                else:
+                    tmp_metadata.at[i, 'productive'] = 'unassigned'
+            else:
+                tmp_metadata.at[i, 'productive'] = 'unassigned'
 
     tmp_metadata['productive_summary'] = [
         'Multi' if '|' in i else i for i in tmp_metadata['productive']
@@ -1352,26 +1401,28 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
     }
 
     isotype = []
-    for k in tmp_metadata['c_call' + suffix_h]:
-        if isinstance(k, str):
-            if ',' in k:
-                k = '|'.join(k.split(','))
-            if '|' in k:
-                isotype.append('|'.join([
-                    str(z) for z in [
-                        conversion_dict[y.lower()] for y in set(
-                            [re.sub('[0-9]', '', x) for x in k.split('|')])
-                    ]
-                ]))
+    if 'c_call' + suffix_h in tmp_metadata:
+        for k in tmp_metadata['c_call' + suffix_h]:
+            if isinstance(k, str):
+                if ',' in k:
+                    k = '|'.join(k.split(','))
+                if '|' in k:
+                    isotype.append('|'.join([
+                        str(z) for z in [
+                            conversion_dict[y.lower()] for y in set(
+                                [re.sub('[0-9]', '', x) for x in k.split('|')])
+                        ]
+                    ]))
+                else:
+                    isotype.append(conversion_dict[k.lower()])
             else:
-                isotype.append(conversion_dict[k.lower()])
-        else:
-            isotype.append('unassigned')
-    tmp_metadata['isotype'] = isotype
-    tmp_metadata['isotype_summary'] = [
-        i if i == 'IgM|IgD' or i == 'IgD|IgM' else 'Multi' if '|' in i else i
-        for i in tmp_metadata['isotype']
-    ]
+                isotype.append('unassigned')
+        tmp_metadata['isotype'] = isotype
+        tmp_metadata['isotype_summary'] = [
+            i
+            if i == 'IgM|IgD' or i == 'IgD|IgM' else 'Multi' if '|' in i else i
+            for i in tmp_metadata['isotype']
+        ]
 
     vdj_gene_calls = ['v_call', 'd_call', 'j_call']
     if collapse_alleles:
@@ -1394,75 +1445,98 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
     for i in tmp_metadata.index:
         try:
             if 'v_call_genotyped' in cols:
-                hv_ = tmp_metadata.at[i,
-                                      'v_call_genotyped' + suffix_h].split('|')
+                if 'v_call_genotyped' + suffix_h in tmp_metadata:
+                    hv_ = tmp_metadata.at[i, 'v_call_genotyped' +
+                                          suffix_h].split('|')
             else:
-                hv_ = tmp_metadata.at[i, 'v_call' + suffix_h].split('|')
+                if 'v_call' + suffix_h in tmp_metadata:
+                    hv_ = tmp_metadata.at[i, 'v_call' + suffix_h].split('|')
         except:
             if 'v_call_genotyped' in cols:
-                hv_ = tmp_metadata.at[i, 'v_call_genotyped' + suffix_h]
+                if 'v_call_genotyped' + suffix_h in tmp_metadata:
+                    hv_ = tmp_metadata.at[i, 'v_call_genotyped' + suffix_h]
             else:
-                hv_ = tmp_metadata.at[i, 'v_call' + suffix_h]
-        try:
-            hj_ = tmp_metadata.at[i, 'j_call' + suffix_h].split('|')
-        except:
-            hj_ = tmp_metadata.at[i, 'j_call' + suffix_h]
+                if 'v_call' + suffix_h in tmp_metadata:
+                    hv_ = tmp_metadata.at[i, 'v_call' + suffix_h]
+        if 'j_call' + suffix_h in tmp_metadata:
+            try:
+                hj_ = tmp_metadata.at[i, 'j_call' + suffix_h].split('|')
+            except:
+                hj_ = tmp_metadata.at[i, 'j_call' + suffix_h]
+
         try:
             if 'v_call_genotyped' in cols:
-                lv_ = tmp_metadata.at[i,
-                                      'v_call_genotyped' + suffix_l].split('|')
+                if 'v_call_genotyped' + suffix_l in tmp_metadata:
+                    lv_ = tmp_metadata.at[i, 'v_call_genotyped' +
+                                          suffix_l].split('|')
             else:
-                lv_ = tmp_metadata.at[i, 'v_call' + suffix_l].split('|')
+                if 'v_call' + suffix_l in tmp_metadata:
+                    lv_ = tmp_metadata.at[i, 'v_call' + suffix_l].split('|')
         except:
             if 'v_call_genotyped' in cols:
-                lv_ = tmp_metadata.at[i, 'v_call_genotyped' + suffix_l]
+                if 'v_call_genotyped' + suffix_l in tmp_metadata:
+                    lv_ = tmp_metadata.at[i, 'v_call_genotyped' + suffix_l]
             else:
-                lv_ = tmp_metadata.at[i, 'v_call' + suffix_l]
-        try:
-            lj_ = tmp_metadata.at[i, 'j_call' + suffix_l].split('|')
-        except:
-            lj_ = tmp_metadata.at[i, 'j_call' + suffix_l]
-        try:
-            hc_ = tmp_metadata.at[i, 'c_call' + suffix_h].split('|')
-        except:
-            hc_ = tmp_metadata.at[i, 'c_call' + suffix_h]
-        try:
-            lc_ = tmp_metadata.at[i, 'c_call' + suffix_l].split('|')
-        except:
-            lc_ = tmp_metadata.at[i, 'c_call' + suffix_l]
+                if 'v_call' + suffix_l in tmp_metadata:
+                    lv_ = tmp_metadata.at[i, 'v_call' + suffix_l]
+        if 'j_call' + suffix_l in tmp_metadata:
+            try:
+                lj_ = tmp_metadata.at[i, 'j_call' + suffix_l].split('|')
+            except:
+                lj_ = tmp_metadata.at[i, 'j_call' + suffix_l]
+        if 'c_call' + suffix_h in tmp_metadata:
+            try:
+                hc_ = tmp_metadata.at[i, 'c_call' + suffix_h].split('|')
+            except:
+                hc_ = tmp_metadata.at[i, 'c_call' + suffix_h]
+        if 'c_call' + suffix_l in tmp_metadata:
+            try:
+                lc_ = tmp_metadata.at[i, 'c_call' + suffix_l].split('|')
+            except:
+                lc_ = tmp_metadata.at[i, 'c_call' + suffix_l]
         multi_h = []
         multi_l = []
         multi_hc = []
         multi_lc = []
-        if len(hv_) > 1:
-            multi_h.append(['Multi' + suffix_h + '_v'])
-        if len(hj_) > 1:
-            multi_h.append(['Multi' + suffix_h + '_j'])
-        if len(lv_) > 1:
-            multi_l.append(['Multi' + suffix_l + '_v'])
-        if len(lj_) > 1:
-            multi_l.append(['Multi' + suffix_l + '_j'])
-        if len(hc_) > 1:
-            if (tmp_metadata.at[i, 'isotype_summary']
-                    == 'IgM|IgD') or (tmp_metadata.at[i, 'isotype_summary']
-                                      == 'IgD|IgM'):
-                multi_hc.append([tmp_metadata.at[i, 'isotype_summary']])
-            else:
-                multi_hc.append(['Multi' + suffix_h + '_c'])
-        if len(lc_) > 1:
-            multi_lc.append(['Multi' + suffix_l + '_c'])
+        if 'hv_' in locals():
+            if len(hv_) > 1:
+                multi_h.append(['Multi' + suffix_h + '_v'])
+        if 'hj_' in locals():
+            if len(hj_) > 1:
+                multi_h.append(['Multi' + suffix_h + '_j'])
+        if 'lv_' in locals():
+            if len(lv_) > 1:
+                multi_l.append(['Multi' + suffix_l + '_v'])
+        if 'lj_' in locals():
+            if len(lj_) > 1:
+                multi_l.append(['Multi' + suffix_l + '_j'])
+        if 'hc_' in locals():
+            if len(hc_) > 1:
+                if 'isotype_summary' in tmp_metadata:
+                    if (tmp_metadata.at[i, 'isotype_summary'] == 'IgM|IgD'
+                        ) or (tmp_metadata.at[i, 'isotype_summary']
+                              == 'IgD|IgM'):
+                        multi_hc.append(
+                            [tmp_metadata.at[i, 'isotype_summary']])
+                    else:
+                        multi_hc.append(['Multi' + suffix_h + '_c'])
+        if 'lc_' in locals():
+            if len(lc_) > 1:
+                multi_lc.append(['Multi' + suffix_l + '_c'])
         if len(multi_hc) < 1:
             multi_hc.append(['Single'])
         if len(multi_h) < 1:
             multi_h.append(['Single'])
-        if (len(lv_) == 1) & (len(lj_) == 1):
-            if ('' not in lv_) and ('' not in lj_):
-                if len(multi_l) < 1:
-                    multi_l.append(['Single'])
-        if len(lc_) == 1:
-            if ('' not in lc_):
-                if len(multi_lc) < 1:
-                    multi_lc.append(['Single'])
+        if 'lv_' in locals() and 'lj_' in locals():
+            if (len(lv_) == 1) & (len(lj_) == 1):
+                if ('' not in lv_) and ('' not in lj_):
+                    if len(multi_l) < 1:
+                        multi_l.append(['Single'])
+        if 'lc_' in locals():
+            if len(lc_) == 1:
+                if ('' not in lc_):
+                    if len(multi_lc) < 1:
+                        multi_lc.append(['Single'])
         multih = '|'.join(list(set(flatten(multi_h))))
         multil = '|'.join(list(set(flatten(multi_l))))
         multihc = '|'.join(list(set(flatten(multi_hc))))
@@ -1490,8 +1564,11 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         'Multi' if 'Multi' + suffix_h in i else 'Single'
         for i in pd.Series(multic)
     ]
-    if all(tmp_metadata['isotype'] == 'unassigned'):
-        tmp_metadata.drop(['isotype', 'isotype_summary'], axis=1, inplace=True)
+    if 'isotype' in tmp_metadata:
+        if all(tmp_metadata['isotype'] == 'unassigned'):
+            tmp_metadata.drop(['isotype', 'isotype_summary'],
+                              axis=1,
+                              inplace=True)
 
     self.metadata = tmp_metadata.copy()
 
