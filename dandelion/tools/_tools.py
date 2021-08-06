@@ -2,11 +2,10 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 22:28:48
+# @Last Modified time: 2021-08-06 00:47:46
 
 import os
 import sys
-import scanpy as sc
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -37,7 +36,7 @@ from typing import Union, Sequence, Tuple, Optional
 def find_clones(self: Union[Dandelion, pd.DataFrame],
                 identity: float = 0.85,
                 key: Optional[str] = None,
-                locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
+                locus: Optional[Literal['ig', 'tr']] = None,
                 by_alleles: bool = False,
                 key_added: Optional[str] = None,
                 recalculate_length: bool = True,
@@ -54,7 +53,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     key : str, Optional
         column name for performing clone clustering. None defaults to 'junction_aa'.
     locus : str, Optional
-        Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
+        Mode of data. Accepts one of 'ig', 'tr'. None defaults to 'ig'.
     by_alleles : bool
         Whether or not to collapse alleles to genes. None defaults to False.
     key_added : str, Optional
@@ -79,7 +78,8 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     else:
         dat = dat_.copy()
 
-    locus_dict = {'ig': 'IGH', 'tr-ab': 'TRB', 'tr-gd': 'TRG'}
+    locus_dict1 = {'ig': ['IGH'], 'tr': ['TRB', 'TRD']}
+    locus_dict2 = {'ig': ['IGK', 'IGL'], 'tr': ['TRA', 'TRG']}
 
     if key is None:
         key_ = 'junction_aa'  # default
@@ -90,22 +90,23 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         raise ValueError("key {} not found in input table.".format(key_))
 
     if locus is None:
-        locus_ = locus_dict[best_guess_locus(dat)]
-    else:
-        locus_ = locus_dict[locus]
+        locus = 'ig'
 
-    locus_log1_dict = {'IGH': 'IGH', 'TRB': 'TRB', 'TRD': 'TRD'}
-    locus_log2_dict = {'IGH': 'IGL/IGL', 'TRB': 'TRA', 'TRD': 'TRG'}
+    locus_1 = locus_dict1[locus]
+    locus_2 = locus_dict2[locus]
 
-    dat_light = dat[~(dat['locus'] == locus_)].copy()
-    dat_heavy = dat[dat['locus'] == locus_].copy()
+    locus_log1_dict = {'ig': 'IGH', 'tr': 'TRB/TRD'}
+    locus_log2_dict = {'ig': 'IGL/IGL', 'tr': 'TRA/TRG'}
+
+    dat_light = dat[dat['locus'].isin(locus_2)].copy()
+    dat_heavy = dat[dat['locus'].isin(locus_1)].copy()
 
     if dat_light.shape[0] > 0:
         dump = dat_light[~(
             dat_light['cell_id'].isin(dat_heavy['cell_id']))].copy()
         if dump.shape[0] > 0:
             dat = dat[~(dat['cell_id'].isin(dump['cell_id']))].copy()
-    dat_heavy = dat[dat['locus'] == locus_].copy()
+    dat_heavy = dat[dat['locus'].isin(locus_1)].copy()
     pd.set_option('mode.chained_assignment', None)
 
     if key_added is None:
@@ -142,7 +143,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
             seq_length = [l for l in dat_heavy[key_ + '_length']]
         except:
             raise ValueError("{} not found in {} input table.".format(
-                key_ + '_length', locus_log1_dict[locus_]))
+                key_ + '_length', locus_log1_dict[locus]))
     seq_length_dict = dict(zip(dat_heavy.index, seq_length))
 
     # Create a dictionary and group sequence ids with same V and J genes
@@ -334,7 +335,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     dat_heavy[clone_key] = pd.Series(clone_dict)
     dat[clone_key] = pd.Series(dat_heavy[clone_key])
 
-    dat_light_c = dat[~(dat['locus'] == locus_)].copy()
+    dat_light_c = dat[dat['locus'].isin(locus_2)].copy()
     if dat_light_c.shape[0] != 0:
         if not by_alleles:
             if 'v_call_genotyped' in dat_light_c.columns:
@@ -369,7 +370,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 ]
             except:
                 raise ValueError("{} not found in {} input table.".format(
-                    key_ + '_length', locus_log2_dict[locus_]))
+                    key_ + '_length', locus_log2_dict[locus]))
         seq_length_dict = dict(zip(dat_light_c.index, seq_length))
         # Create a dictionary and group sequence ids with same V and J genes
         V_Jlight = dict(zip(dat_light_c.index, zip(Vlight, Jlight)))
@@ -617,25 +618,20 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                           distance=dist_,
                           edges=edge_,
                           layout=layout_,
-                          graph=graph_,
-                          locus=locus)
-            update_metadata(self, reinitialize=True, locus=locus)
+                          graph=graph_)
+            update_metadata(self, reinitialize=True)
         elif ('clone_id' in self.data.columns) and (key_added is not None):
             self.__init__(data=dat_,
                           germline=germline_,
                           distance=dist_,
                           edges=edge_,
                           layout=layout_,
-                          graph=graph_,
-                          locus=locus)
+                          graph=graph_)
             update_metadata(self,
                             reinitialize=True,
                             clone_key='clone_id',
                             retrieve=clone_key,
-                            split=False,
-                            collapse=True,
-                            combine=True,
-                            locus=locus)
+                            retrieve_mode='merge and unique only')
         else:
             self.__init__(data=dat_,
                           germline=germline_,
@@ -643,32 +639,26 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                           edges=edge_,
                           layout=layout_,
                           graph=graph_,
-                          clone_key=clone_key,
-                          locus=locus)
-            update_metadata(self,
-                            reinitialize=True,
-                            clone_key=clone_key,
-                            locus=locus)
+                          clone_key=clone_key)
+            update_metadata(self, reinitialize=True, clone_key=clone_key)
         self.threshold = threshold_
 
     else:
         out = Dandelion(data=dat_,
                         clone_key=clone_key,
                         retrieve=clone_key,
-                        split=False,
-                        collapse=True,
-                        combine=True,
-                        locus = locus)
+                        retrieve_mode='merge and unique only')
         return (out)
 
 
-def transfer(self: AnnData,
-             dandelion: Dandelion,
-             expanded_only: bool = False,
-             neighbors_key: Optional[str] = None,
-             rna_key: Optional[str] = None,
-             vdj_key: Optional[str] = None,
-             overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
+def transfer(
+        self: AnnData,
+        dandelion: Dandelion,
+        expanded_only: bool = False,
+        neighbors_key: Optional[str] = None,
+        rna_key: Optional[str] = None,
+        vdj_key: Optional[str] = None,
+        overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -807,10 +797,11 @@ def transfer(self: AnnData,
         logg.info(
             ' finished',
             time=start,
-            deep=('updated `.obs` with `.metadata`\n'
-                  'added to `.uns[\'' + neighbors_key + '\']` and `.obsp`\n'
-                  '   \'distances\', cluster-weighted adjacency matrix\n'
-                  '   \'connectivities\', cluster-weighted adjacency matrix'))
+            deep=(
+                'updated `.obs` with `.metadata`\n'
+                'added to `.uns[\'' + neighbors_key + '\']` and `.obsp`\n'
+                '   \'distances\', clonotype-weighted adjacency matrix\n'
+                '   \'connectivities\', clonotype-weighted adjacency matrix'))
     else:
         logg.info(' finished',
                   time=start,
@@ -1057,8 +1048,18 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                 ", ".join(expected_light_columns))
 
         # Fix types
-        heavy_df[junction_length] = heavy_df[junction_length].astype('int')
-        light_df[junction_length] = light_df[junction_length].astype('int')
+        try:
+            heavy_df[junction_length] = heavy_df[junction_length].astype('int')
+            light_df[junction_length] = light_df[junction_length].astype('int')
+        except:
+            heavy_df[junction_length] = heavy_df[junction_length].replace(
+                np.nan, pd.NA, inplace=True)
+            light_df[junction_length] = light_df[junction_length].replace(
+                np.nan, pd.NA, inplace=True)
+            heavy_df[junction_length] = heavy_df[junction_length].astype(
+                'Int64')
+            light_df[junction_length] = light_df[junction_length].astype(
+                'Int64')
 
         # filter multiple heavy chains
         if doublets == 'drop':
@@ -1159,30 +1160,30 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             threshold_ = None
 
         if ('clone_id' in self.data.columns) and (clone_key is not None):
-            self.__init__(data=dat,
-                          germline=germline_,
-                          distance=dist_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_,
-                          initialize=True,
-                          retrieve=clone_key,
-                          split=False,
-                          collapse=True,
-                          combine=True)
+            self.__init__(
+                data=dat,
+                germline=germline_,
+                distance=dist_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+                initialize=True,
+                retrieve=clone_key,
+                retrieve_mode='merge and unique only',
+            )
         elif ('clone_id' not in self.data.columns) and (clone_key is not None):
-            self.__init__(data=dat,
-                          germline=germline_,
-                          distance=dist_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_,
-                          initialize=True,
-                          clone_key=clone_key,
-                          retrieve=clone_key,
-                          split=False,
-                          collapse=True,
-                          combine=True)
+            self.__init__(
+                data=dat,
+                germline=germline_,
+                distance=dist_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+                initialize=True,
+                clone_key=clone_key,
+                retrieve=clone_key,
+                retrieve_mode='merge and unique only',
+            )
         else:
             self.__init__(data=dat,
                           germline=germline_,
@@ -1195,7 +1196,11 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         self.threshold = threshold_
     else:
         if ('clone_id' in dat.columns) and (clone_key is not None):
-            out = Dandelion(data=dat, retrieve=clonekey, split=False)
+            out = Dandelion(
+                data=dat,
+                retrieve=clone_key,
+                retrieve_mode='merge and unique only',
+            )
         elif ('clone_id' not in dat.columns) and (clone_key is not None):
             out = Dandelion(data=dat, clone_key=clone_key)
         else:

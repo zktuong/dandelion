@@ -187,7 +187,7 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     assert vdj.data.shape[0] == 14
     assert vdj.data.shape[1] == 50
     assert vdj.metadata.shape[0] == 7
-    assert vdj.metadata.shape[1] == 25
+    assert vdj.metadata.shape[1] == 27
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key='sequence')
     ddl.tl.transfer(adata, vdj)
@@ -229,7 +229,7 @@ def test_diversity_rarefaction3(create_testfolder):
     vdj.data['contig_QC_pass'] = 'True'
     ddl.update_metadata(vdj,
                         retrieve=['sample_id', 'contig_QC_pass'],
-                        split=False)
+                        retrieve_mode=['merge and unique only', 'merge and unique only'])
     df = ddl.tl.clone_rarefaction(vdj, groupby='sample_id')
     assert isinstance(df, dict)
     p = ddl.pl.clone_rarefaction(vdj, color='sample_id')
@@ -245,7 +245,7 @@ def test_diversity_gini2(create_testfolder, metric):
     vdj.data['contig_QC_pass'] = 'True'
     ddl.update_metadata(vdj,
                         retrieve=['sample_id', 'contig_QC_pass'],
-                        split=False)
+                        retrieve_mode=['merge and unique only', 'merge and unique only'])
     ddl.tl.clone_diversity(vdj,
                            groupby='sample_id',
                            resample=True,
@@ -272,7 +272,7 @@ def test_diversity2a(create_testfolder):
     vdj.data['contig_QC_pass'] = 'True'
     ddl.update_metadata(vdj,
                         retrieve=['sample_id', 'contig_QC_pass'],
-                        split=False)
+                        retrieve_mode=['merge and unique only', 'merge and unique only'])
     ddl.tl.clone_diversity(vdj,
                            groupby='sample_id',
                            reconstruct_network=False,
@@ -288,7 +288,7 @@ def test_diversity2b(create_testfolder):
     vdj.data['contig_QC_pass'] = 'True'
     ddl.update_metadata(vdj,
                         retrieve=['sample_id', 'contig_QC_pass'],
-                        split=False)
+                        retrieve_mode=['merge and unique only', 'merge and unique only'])
     ddl.tl.clone_diversity(vdj,
                            groupby='sample_id',
                            use_contracted=True,
@@ -304,7 +304,7 @@ def test_diversity2c(create_testfolder):
     vdj.data['contig_QC_pass'] = 'True'
     ddl.update_metadata(vdj,
                         retrieve=['sample_id', 'contig_QC_pass'],
-                        split=False)
+                        retrieve_mode=['merge and unique only', 'merge and unique only'])
     x = ddl.tl.clone_diversity(vdj,
                                groupby='sample_id',
                                key='sequence',

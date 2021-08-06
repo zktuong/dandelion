@@ -93,7 +93,7 @@ def test_filtercontigs(create_testfolder, processed_files_tr, dummy_adata_tr,
                        filename, expected):
     f = create_testfolder / str('dandelion/' + processed_files_tr[filename])
     dat = pd.read_csv(f, sep='\t')
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_tr, locus='tr-gd')
+    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_tr)
     assert dat.shape[0] == expected
     assert vdj.data.shape[0] == expected
     assert vdj.metadata.shape[0] == expected

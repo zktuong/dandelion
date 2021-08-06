@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-04 10:44:53
+# @Last Modified time: 2021-08-05 23:28:58
 
 import os
 import pandas as pd
@@ -2002,7 +2002,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                    filter_missing: bool = True,
                    productive_only: bool = True,
                    simple: bool = False,
-                   locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
                    save: Optional[str] = None,
                    **kwargs) -> Tuple[Dandelion, AnnData]:
     """
@@ -2073,9 +2072,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             dat = dat_.copy()
     else:
         dat = dat_.copy()
-
-    if locus is None:
-        locus = best_guess_locus(dat)
 
     adata_ = adata.copy()
 
@@ -2235,7 +2231,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     adata_.obs['contig_QC_pass'] = pd.Series(contig_check['contig_QC_pass'])
 
     print('Initializing Dandelion object')
-    out_dat = Dandelion(data=_dat, locus=locus, **kwargs)
+    out_dat = Dandelion(data=_dat, **kwargs)
     if data.__class__ == Dandelion:
         out_dat.germline = data.germline
 

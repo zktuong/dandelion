@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 22:11:33
+# @Last Modified time: 2021-08-06 00:24:57
 
 import pandas as pd
 import numpy as np
@@ -28,8 +28,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                      min_size: int = 2,
                      downsample: Optional[int] = None,
                      verbose: bool = True,
-                     locus: Optional[Literal['ig', 'tr-ab',
-                                                   'tr-gd']] = None,
                      **kwargs) -> Dandelion:
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
@@ -49,8 +47,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool
         whether or not to print the progress bars.
-    locus : str, Optional
-        Mode of data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
 
@@ -81,9 +77,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         raise ValueError(
             'Data does not contain clone information. Please run find_clones.')
 
-    if locus is None:
-        locus = best_guess_locus(dat)
-
     dat = sanitize_data(dat, ignore=clonekey)
 
     # calculate distance
@@ -108,21 +101,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
     # So first, create a data frame to hold all possible (full) sequences split by
     # heavy (only 1 possible for now) and light (multiple possible)
-    try:
-        dat_seq = retrieve_metadata(dat_,
-                                    query=key_,
-                                    split=True,
-                                    collapse=False,
-                                    locus=locus,
-                                    ignore=clonekey)
-    except:
-        dat_seq = retrieve_metadata(dat_,
-                                    query=key_,
-                                    split=True,
-                                    collapse=False,
-                                    locus=locus,
-                                    ignore=clonekey,
-                                    **kwargs)
+    querier = Query(dat_)
+    dat_seq = querier.retrieve(query = key_, retrieve_mode = 'split')
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
 
     # calculate a distance matrix for all vs all and this can be referenced later on to
@@ -158,9 +138,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     if self.__class__ == Dandelion:
         out = self.copy()
         if downsample is not None:
-            out = Dandelion(dat_, locus=locus)
+            out = Dandelion(dat_)
     else:  # re-initiate a Dandelion class object
-        out = Dandelion(dat_, locus=locus)
+        out = Dandelion(dat_)
 
     tmp_totaldist = pd.DataFrame(total_dist,
                                  index=dat_seq.index,
@@ -351,7 +331,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             deep=('Updated Dandelion object: \n'
                   '   \'data\', contig-indexed clone table\n'
                   '   \'metadata\', cell-indexed clone table\n'
-                  '   \'distance\', heavy and light chain distance matrices\n'
+                  '   \'distance\', distance matrices for VDJ- and VJ- chains\n'
                   '   \'edges\', network edges\n'
                   '   \'layout\', network layout\n'
                   '   \'graph\', network'))
@@ -371,8 +351,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                             edges=edge_list_final,
                             layout=(lyt, lyt_),
                             graph=(g, g_),
-                            germline=germline_,
-                            locus=locus)
+                            germline=germline_)
             out.threshold = threshold_
             return (out)
         else:
@@ -383,7 +362,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                           layout=(lyt, lyt_),
                           graph=(g, g_),
                           germline=germline_,
-                          locus=locus,
                           initialize=False)
             self.threshold = threshold_
     else:
@@ -393,8 +371,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                         edges=edge_list_final,
                         layout=(lyt, lyt_),
                         graph=(g, g_),
-                        clone_key=clone_key,
-                        locus=locus)
+                        clone_key=clone_key)
         return (out)
 
 

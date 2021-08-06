@@ -2,7 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-05 12:02:47
+# @Last Modified time: 2021-08-06 00:04:28
+
 
 import os
 from collections import defaultdict, Iterable
@@ -296,6 +297,11 @@ def all_missing(x):
     return (all(pd.isnull(x)) or all(x == ''))
 
 
+def check_missing(x):
+    """Utility function to check if x is not null or blank."""
+    return (pd.isnull(x) or x == '')
+
+
 def check_mix_dtype(data):
     """Utility function to check if mixed dtypes."""
     return (any([
@@ -437,21 +443,21 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
     return (obj_)
 
 
-def best_guess_locus(data):
-    locus = [l for l in data['locus'] if pd.notnull(l)]
-    if 'Multi' in locus:
-        locus.remove('Multi')
-    best_guess = None
-    if all(re.search('IG', l) for l in locus):
-        best_guess = 'ig'
-    elif all(re.search('TR[AB]', l) for l in locus):
-        best_guess = 'tr-ab'
-    elif all(re.search('TR[GD]', l) for l in locus):
-        best_guess = 'tr-gd'
-    return (best_guess)
+# def best_guess_locus(data):
+#     locus = [l for l in data['locus'] if pd.notnull(l)]
+#     if 'Multi' in locus:
+#         locus.remove('Multi')
+#     best_guess = None
+#     if all(re.search('IG', l) for l in locus):
+#         best_guess = 'ig'
+#     elif all(re.search('TR[ABGD]', l) for l in locus):
+#         best_guess = 'tr'
+#     else:
+#         best_guess = 'mixed'
+#     return (best_guess)
 
 
 def sanitize_dtype(data):
     for col in data:
-        if data[col].dtype == np.int64 or data[col].dtype == np.float64:
-            data[col] = data[col].astype(float)
+        if data[col].dtype == np.int64:
+            data[col] = data[col].astype(np.float64)

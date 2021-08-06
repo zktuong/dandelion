@@ -19,3 +19,10 @@ dandelion/logging/version.py
 reassigned_all/
 reassigned_filtered/
 
+data/pbmc3k_raw.h5ad
+test_mouse/test_mouse_heavy_igblast_db-pass.tsv
+test_mouse/test_mouse_heavy_igblast_db-pass_germ-pass.tsv
+test_mouse/test_mouse_light_igblast_db-pass.tsv
+test_mouse/test_mouse_light_igblast_db-pass_germ-pass.tsv
+container/database/blast/human/human_BCR_C.fasta.nin
+container/database/blast/mouse/mouse_BCR_C.fasta.nin

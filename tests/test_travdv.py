@@ -14,7 +14,7 @@ def test_loadtravdv(airr_travdv):
     assert all([i == 'TRD' for i in temp['locus']])
 
 
-def test_loadtravdv(airr_travdv):
+def test_loadtravdv2(airr_travdv):
     vdj = ddl.Dandelion(airr_travdv)
     assert vdj.data.shape[0] == 6
     assert all([i == 'TRD' for i in vdj.data['locus']])
