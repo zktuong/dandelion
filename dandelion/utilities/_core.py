@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 10:18:02
+# @Last Modified time: 2021-08-06 10:41:48
 
 import os
 from collections import defaultdict
@@ -1214,8 +1214,6 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         if k in ['duplicate_count', 'umi_count', 'mu_count', 'mu_freq']:
             v.update({'retrieve_mode': 'split'})
             meta_[k + '_split'] = querier.retrieve(**v)
-    print(init_dict)
-    print(meta_['sample_id'].head())
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
 
     if 'locus_VDJ' in tmp_metadata:
