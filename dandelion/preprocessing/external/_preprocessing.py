@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-26 12:26:28
+# @Last Modified time: 2021-08-07 13:11:24
 
 import os
 import pandas as pd
@@ -496,6 +496,7 @@ def tigger_genotype(data: Union[str, PathLike],
 
 def recipe_scanpy_qc(
         self: AnnData,
+        layer: Optional[str] = None,
         mito_startswith: str = 'MT',
         max_genes: int = 2500,
         min_genes: int = 200,
@@ -512,6 +513,8 @@ def recipe_scanpy_qc(
     ----------
     adata : AnnData
         annotated data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
+    layer : str, Optional
+        name of layer to run scrublet on if supplied. Otherwise defaults to adata.X.
     mito_startswith : str
         string pattern used for searching mitochondrial genes.
     max_genes : int
@@ -542,7 +545,10 @@ def recipe_scanpy_qc(
     except:
         raise ImportError('Please install scrublet with pip install scrublet.')
 
-    scrub = scr.Scrublet(_adata.X)
+    if layer is None:
+        scrub = scr.Scrublet(_adata.X)
+    else:
+        scrub = scr.Scrublet(_adata.layers[layer])
     doublet_scores, predicted_doublets = scrub.scrub_doublets(verbose=False)
     _adata.obs['scrublet_score'] = doublet_scores
     # overcluster prep. run basic scanpy pipeline
