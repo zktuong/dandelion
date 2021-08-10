@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-05 23:28:58
+# @Last Modified time: 2021-08-10 21:11:53
 
 import os
 import pandas as pd
@@ -3430,7 +3430,7 @@ class FilterContigs:
                     self.drop_contig.append(l[:keep_index_l] +
                                             l[keep_index_l + 1:])
                     keep_lc_contig = l[keep_index_l]
-                    self.data.at[keep_hc_contig, 'duplicate_count'] = int(
+                    self.data.at[keep_lc_contig, 'duplicate_count'] = int(
                         np.sum(l_umi[:keep_index_l] +
                                l_umi[keep_index_l + 1:]))
                     self.umi_adjustment.update({
