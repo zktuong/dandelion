@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 10:41:48
+# @Last Modified time: 2021-08-10 14:34:25
 
 import os
 from collections import defaultdict
@@ -498,7 +498,7 @@ class Query:
                                 if pd.notnull(h)
                             ]))
                     _meta[x] = pd.DataFrame(tlist,
-                                            columns=[self.query],
+                                            columns=[self.query + '_' + x],
                                             index=_tmp[x].index)
             meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
             if self.retrieve_mode == 'split and sum':
@@ -523,7 +523,7 @@ class Query:
                                 if pd.notnull(h)
                             ]))
                     _meta[x] = pd.DataFrame(tlist,
-                                            columns=[self.query],
+                                            columns=[self.query + '_' + x],
                                             index=_tmp[x].index)
             meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
             if self.retrieve_mode == 'split and average':
