@@ -2,8 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:04:28
-
+# @Last Modified time: 2021-08-11 21:24:31
 
 import os
 from collections import defaultdict, Iterable
@@ -361,26 +360,25 @@ def validate_airr(data):
             int_columns.append(d)
         except:
             pass
+    bool_columns = [
+        'rev_comp', 'productive', 'vj_in_frame', 'stop_codon', 'complete_vdj'
+    ]
+    str_columns = list(data.dtypes[data.dtypes == 'object'].index)
+    columns = [
+        c for c in list(set(int_columns + str_columns + bool_columns))
+        if c in data
+    ]
+    if len(columns) > 0:
+        for c in columns:
+            data[c].fillna('', inplace=True)
     for _, row in data.iterrows():
-        contig = dict(row)
-        for k, v in contig.items():
-            if (data[k].dtype == np.int64) or (k in int_columns):
-                if pd.isnull(v):
-                    contig.update({k: str('')})
-            if data[k].dtype == np.float64:
-                if k in int_columns:
-                    if pd.isnull(v):
-                        contig.update({k: str('')})
-                else:
-                    if pd.isnull(v):
-                        contig.update({k: np.nan})
+        contig = Contig(row).contig
         for required in [
                 'sequence', 'rev_comp', 'sequence_alignment',
                 'germline_alignment', 'v_cigar', 'd_cigar', 'j_cigar'
         ]:
             if required not in contig:
                 contig.update({required: ''})
-    # check if airr-standards is happy
     RearrangementSchema.validate_header(contig.keys())
     RearrangementSchema.validate_row(contig)
 
@@ -461,3 +459,26 @@ def sanitize_dtype(data):
     for col in data:
         if data[col].dtype == np.int64:
             data[col] = data[col].astype(np.float64)
+
+
+class ContigDict(dict):
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+
+    def __hash__(self):
+        return hash(tuple(self))
+
+
+class Contig:
+    def __init__(self, contig, mapper=None):
+        if mapper is not None:
+            mapper.update({k: k for k in contig.keys() if k not in mapper})
+            self._contig = ContigDict(
+                {mapper[key]: vals
+                 for (key, vals) in contig.items()})
+        else:
+            self._contig = ContigDict(contig)
+
+    @property
+    def contig(self):
+        return self._contig

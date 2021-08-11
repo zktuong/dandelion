@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-11 18:57:04
+# @Last Modified time: 2021-08-11 20:57:04
 
 import os
 import json
@@ -694,29 +694,12 @@ def parse_json(data: list) -> defaultdict:
     return (out)
 
 
-class ContigDict(dict):
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-
-
-class CellrangerContig:
-    def __init__(self, contig, mapper):
-        mapper.update({k: k for k in contig.keys() if k not in mapper})
-        self._contig = ContigDict(
-            {mapper[key]: vals
-             for (key, vals) in contig.items()})
-
-    @property
-    def contig(self):
-        return self._contig
-
-
 def parse_annotation(data: pd.DataFrame) -> defaultdict:
     out = defaultdict(OrderedDict)
     swap_dict = dict(zip(CELLRANGER, AIRR))
     for _, row in data.iterrows():
-        contig = CellrangerContig(row, swap_dict).contig['sequence_id']
-        out[contig] = CellrangerContig(row, swap_dict).contig
+        contig = Contig(row, swap_dict).contig['sequence_id']
+        out[contig] = Contig(row, swap_dict).contig
         if out[contig]['locus'] == 'None' or out[contig]['locus'] == '':
             calls = []
             for call in ['v_call', 'd_call', 'j_call', 'c_call']:

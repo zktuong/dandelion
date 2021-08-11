@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-11 11:37:01
+# @Last Modified time: 2021-08-11 23:20:06
 
 import os
 from collections import defaultdict
@@ -574,6 +574,80 @@ class Query:
                 if self.querydtype == 'object':
                     _meta.fillna('', inplace=True)
                 return (_meta)
+
+
+class Query2:
+    def __init__(self, data):
+        self.data = data
+        self.Cell = Tree()
+        for contig, row in data.iterrows():
+            self.Cell[Contig(row).contig['cell_id']][Contig(
+                row).contig].value = 1
+
+    @property
+    def querydtype(self):
+        return (str(self.data[self.query].dtype))
+
+    def retrieve(self, query, retrieve_mode):
+        self.query = query
+        ret = {}
+        for cell in self.Cell:
+            cols, vdj, vj = {}, [], []
+            for contig in self.Cell[cell]:
+                if isinstance(contig, dict):
+                    if contig['locus'] in ['IGH', 'TRB', 'TRD']:
+                        vdj.append(contig[query])
+                    elif contig['locus'] in ['IGK', 'IGL', 'TRA', 'TRG']:
+                        vj.append(contig[query])
+            if retrieve_mode == 'split and unique only':
+                if len(vdj) > 0:
+                    cols.update({
+                        query + '_VDJ':
+                        '|'.join(
+                            str(x) for x in list(dict.fromkeys(vdj))
+                            if present(x))
+                    })
+                if len(vj) > 0:
+                    cols.update({
+                        query + '_VJ':
+                        '|'.join(
+                            str(x) for x in list(dict.fromkeys(vj))
+                            if present(x))
+                    })
+            elif retrieve_mode == 'merge and unique only':
+                cols.update({
+                    query:
+                    '|'.join(str(x) for x in set(vdj + vj) if present(x))
+                })
+            elif retrieve_mode == 'split and sum':
+                if len(vdj) > 0:
+                    cols.update({query + '_VDJ': np.sum(vdj)})
+                if len(vj) > 0:
+                    cols.update({query + '_VJ': np.sum(vj)})
+            elif retrieve_mode == 'split and average':
+                if len(vdj) > 0:
+                    cols.update({query + '_VDJ': np.mean(vdj)})
+                if len(vj) > 0:
+                    cols.update({query + '_VJ': np.mean(vj)})
+            elif retrieve_mode == 'merge':
+                cols.update(
+                    {query: '|'.join(x for x in set(vdj + vj) if present(x))})
+            elif retrieve_mode == 'split':
+                if len(vdj) > 0:
+                    for i in range(1, len(vdj) + 1):
+                        cols.update({query + '_VDJ_' + str(i): vdj[i - 1]})
+                if len(vj) > 0:
+                    for i in range(1, len(vj) + 1):
+                        cols.update({query + '_VJ_' + str(i): vj[i - 1]})
+            elif retrieve_mode == 'sum':
+                cols.update({query: np.sum(vdj + vj)})
+            elif retrieve_mode == 'average':
+                cols.update({query: np.mean(vdj + vj)})
+            ret.update({cell: cols})
+        out = pd.DataFrame.from_dict(ret, orient='index')
+        if self.querydtype == 'object':
+            out.fillna('', inplace=True)
+        return (out)
 
 
 # def retrieve_metadata(
@@ -1197,7 +1271,7 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 'retrieve_mode': 'merge and unique only',
             }
         })
-    querier = Query(self.data)
+    querier = Query2(self.data)
 
     meta_ = defaultdict(dict)
     for k, v in init_dict.copy().items():
@@ -1654,7 +1728,7 @@ def update_metadata(self: Dandelion,
     tmp_metadata = self.metadata.copy()
 
     if retrieve is not None:
-        querier = Query(self.data)
+        querier = Query2(self.data)
         ret_dict = {}
         if type(retrieve) is str:
             retrieve = [retrieve]
