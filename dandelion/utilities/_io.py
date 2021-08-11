@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-11 18:51:27
+# @Last Modified time: 2021-08-11 18:57:04
 
 import os
 import json
@@ -701,6 +701,7 @@ class ContigDict(dict):
 
 class CellrangerContig:
     def __init__(self, contig, mapper):
+        mapper.update({k: k for k in contig.keys() if k not in mapper})
         self._contig = ContigDict(
             {mapper[key]: vals
              for (key, vals) in contig.items()})
