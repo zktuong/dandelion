@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-10 14:34:25
+# @Last Modified time: 2021-08-11 11:37:01
 
 import os
 from collections import defaultdict
@@ -372,26 +372,17 @@ class Dandelion:
 class Query:
     def __init__(self, data):
         self.data = data
-
-    @property
-    def maindict(self):
-        maindict = {}
-        tmp1 = self.data[self.data['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
-        tmp2 = self.data[self.data['locus'].isin(['IGK', 'IGL', 'TRA',
-                                                  'TRG'])].copy()
-        if tmp1.shape[0] > 0:
-            maindict['VDJ'] = tmp1.copy()
-        if tmp2.shape[0] > 0:
-            maindict['VJ'] = tmp2.copy()
-        return (maindict)
-
-    @property
-    def querydtype(self):
-        return (str(self.data[self.query].dtype))
-
-    @property
-    def tmpmeta(self):
-        metadata_ = {}
+        self.maindict = {}
+        self.tmpmeta = {}
+        if self.data is not None:
+            tmp1 = self.data[self.data['locus'].isin(['IGH', 'TRB',
+                                                      'TRD'])].copy()
+            tmp2 = self.data[self.data['locus'].isin(
+                ['IGK', 'IGL', 'TRA', 'TRG'])].copy()
+            if tmp1.shape[0] > 0:
+                self.maindict['VDJ'] = tmp1.copy()
+            if tmp2.shape[0] > 0:
+                self.maindict['VJ'] = tmp2.copy()
         for d in self.maindict:
             tmp = Tree()
             for cell, seq in zip(self.maindict[d]['cell_id'],
@@ -401,30 +392,29 @@ class Query:
             for t in tmp:
                 cells.append(t)
                 seqs.append([s for s in tmp[t]])
-            metadata_[d] = pd.DataFrame(seqs, index=cells)
-            metadata_[d][pd.isnull(metadata_[d])] = None
+            self.tmpmeta[d] = pd.DataFrame(seqs, index=cells)
+            self.tmpmeta[d][pd.isnull(self.tmpmeta[d])] = None
 
-        if 'VDJ' in metadata_:
-            if isinstance(metadata_['VDJ'], pd.DataFrame):
-                if len(metadata_['VDJ'].columns) > 1:
-                    metadata_['VDJ'].columns = [
+        if 'VDJ' in self.tmpmeta:
+            if isinstance(self.tmpmeta['VDJ'], pd.DataFrame):
+                if len(self.tmpmeta['VDJ'].columns) > 1:
+                    self.tmpmeta['VDJ'].columns = [
                         'sequence_id_VDJ_' + str(x)
                         for x in range(1,
-                                       len(metadata_['VDJ'].columns) + 1)
+                                       len(self.tmpmeta['VDJ'].columns) + 1)
                     ]
                 else:
-                    metadata_['VDJ'].columns = ['sequence_id_VDJ_1']
-        if 'VJ' in metadata_:
-            if isinstance(metadata_['VJ'], pd.DataFrame):
-                if len(metadata_['VJ'].columns) > 1:
-                    metadata_['VJ'].columns = [
+                    self.tmpmeta['VDJ'].columns = ['sequence_id_VDJ_1']
+        if 'VJ' in self.tmpmeta:
+            if isinstance(self.tmpmeta['VJ'], pd.DataFrame):
+                if len(self.tmpmeta['VJ'].columns) > 1:
+                    self.tmpmeta['VJ'].columns = [
                         'sequence_id_VJ_' + str(x)
                         for x in range(1,
-                                       len(metadata_['VJ'].columns) + 1)
+                                       len(self.tmpmeta['VJ'].columns) + 1)
                     ]
                 else:
-                    metadata_['VJ'].columns = ['sequence_id_VJ_1']
-        return (metadata_)
+                    self.tmpmeta['VJ'].columns = ['sequence_id_VJ_1']
 
     @property
     def query_dict(self):
@@ -437,6 +427,10 @@ class Query:
                     for i in self.tmpmeta[l][x]
                 ]
         return (metadata_result)
+
+    @property
+    def querydtype(self):
+        return (str(self.data[self.query].dtype))
 
     def retrieve(self, query=None, retrieve_mode=None):
         self.query = query
