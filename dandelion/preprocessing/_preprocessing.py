@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 14:14:01
+# @Last Modified time: 2021-08-12 14:16:13
 
 import os
 import pandas as pd
@@ -2851,7 +2851,9 @@ class FilterContigs:
                                 data1 = pd.DataFrame(
                                     [data1.loc[keep_hc_contig]])
                                 h_p = list(data1['sequence_id'])
-                                h_umi_p = [int(x) for x in data1['duplicate_count']]
+                                h_umi_p = [
+                                    int(x) for x in data1['duplicate_count']
+                                ]
                                 h_ccall_p = list(data1['c_call'])
                     if len(h_p) > 1:
                         highest_umi_h = max(h_umi_p)
@@ -2974,7 +2976,9 @@ class FilterContigs:
                             # refresh
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
                             l_p = list(data3['sequence_id'])
-                            l_umi_p = [int(x) for x in data3['duplicate_count']]
+                            l_umi_p = [
+                                int(x) for x in data3['duplicate_count']
+                            ]
                     if len(l_p) > 1:
                         highest_umi_l = max(l_umi_p)
                         highest_umi_l_idx = [
@@ -3388,7 +3392,9 @@ class FilterContigsLite:
                                 data1 = pd.DataFrame(
                                     [data1.loc[keep_hc_contig]])
                                 h_p = list(data1['sequence_id'])
-                                h_umi_p = [int(x) for x in data1['duplicate_count']]
+                                h_umi_p = [
+                                    int(x) for x in data1['duplicate_count']
+                                ]
             if len(self.Cell[cell]['VDJ']['NP']) > 0:
                 data2 = pd.DataFrame([
                     x for x in self.Cell[cell]['VDJ']['NP']
@@ -3439,7 +3445,9 @@ class FilterContigsLite:
                             # refresh
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
                             l_p = list(data3['sequence_id'])
-                            l_umi_p = [int(x) for x in data3['duplicate_count']]
+                            l_umi_p = [
+                                int(x) for x in data3['duplicate_count']
+                            ]
             if len(self.Cell[cell]['VJ']['NP']) > 0:
                 data4 = pd.DataFrame([
                     x for x in self.Cell[cell]['VJ']['NP']
