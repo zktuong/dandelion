@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 13:41:36
+# @Last Modified time: 2021-08-12 14:14:01
 
 import os
 import pandas as pd
@@ -2822,7 +2822,7 @@ class FilterContigs:
                     if isinstance(x, dict)
                 ])
                 h_p = list(data1['sequence_id'])
-                h_umi_p = list(data1['duplicate_count'])
+                h_umi_p = [int(x) for x in data1['duplicate_count']]
                 h_ccall_p = list(data1['c_call'])
                 if len(h_p) > 1:
                     if 'sequence_alignment' in data1:
@@ -2851,7 +2851,7 @@ class FilterContigs:
                                 data1 = pd.DataFrame(
                                     [data1.loc[keep_hc_contig]])
                                 h_p = list(data1['sequence_id'])
-                                h_umi_p = list(data1['duplicate_count'])
+                                h_umi_p = [int(x) for x in data1['duplicate_count']]
                                 h_ccall_p = list(data1['c_call'])
                     if len(h_p) > 1:
                         highest_umi_h = max(h_umi_p)
@@ -2862,7 +2862,7 @@ class FilterContigs:
                         keep_index_h = highest_umi_idx[0]
                         keep_hc_contig = h_p[keep_index_h]
                         umi_test = [
-                            highest_umi_h / x < umi_foldchange_cutoff
+                            int(highest_umi_h) / x < umi_foldchange_cutoff
                             for x in h_umi_p[:keep_index_h] +
                             h_umi_p[keep_index_h:]
                         ]
@@ -2910,7 +2910,7 @@ class FilterContigs:
                     if isinstance(x, dict)
                 ])
                 h_np = list(data2['sequence_id'])
-                h_umi_np = list(data2['duplicate_count'])
+                h_umi_np = [int(x) for x in data2['duplicate_count']]
                 if len(h_np) > 1:
                     highest_umi_h = max(h_umi_np)
                     highest_umi_idx = [
@@ -2935,7 +2935,7 @@ class FilterContigs:
                         # refresh
                         data2 = pd.DataFrame([data2.loc[keep_hc_contig]])
                         h_np = list(data2['sequence_id'])
-                        h_umi_np = list(data2['duplicate_count'])
+                        h_umi_np = [int(x) for x in data2['duplicate_count']]
             if len(self.Cell[cell]['VJ']['P']) > 0:
                 data3 = pd.DataFrame([
                     x
@@ -2947,7 +2947,7 @@ class FilterContigs:
                     if isinstance(x, dict)
                 ])
                 l_p = list(data3['sequence_id'])
-                l_umi_p = list(data3['duplicate_count'])
+                l_umi_p = [int(x) for x in data3['duplicate_count']]
                 if len(l_p) > 1:
                     if 'sequence_alignment' in data3:
                         l_seq_p = list(data3['sequence_alignment'])
@@ -2974,7 +2974,7 @@ class FilterContigs:
                             # refresh
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
                             l_p = list(data3['sequence_id'])
-                            l_umi_p = list(data3['duplicate_count'])
+                            l_umi_p = [int(x) for x in data3['duplicate_count']]
                     if len(l_p) > 1:
                         highest_umi_l = max(l_umi_p)
                         highest_umi_l_idx = [
@@ -3026,7 +3026,7 @@ class FilterContigs:
                     if isinstance(x, dict)
                 ])
                 l_np = list(data4['sequence_id'])
-                l_umi_np = list(data4['duplicate_count'])
+                l_umi_np = [int(x) for x in data4['duplicate_count']]
                 if len(l_np) > 1:
                     highest_umi_l = max(l_umi_np)
                     highest_umi_l_idx = [
@@ -3359,7 +3359,7 @@ class FilterContigsLite:
                     if isinstance(x, dict)
                 ])
                 h_p = list(data1['sequence_id'])
-                h_umi_p = list(data1['duplicate_count'])
+                h_umi_p = [int(x) for x in data1['duplicate_count']]
                 h_ccall_p = list(data1['c_call'])
                 if len(h_p) > 1:
                     if 'sequence_alignment' in data1:
@@ -3388,7 +3388,7 @@ class FilterContigsLite:
                                 data1 = pd.DataFrame(
                                     [data1.loc[keep_hc_contig]])
                                 h_p = list(data1['sequence_id'])
-                                h_umi_p = list(data1['duplicate_count'])
+                                h_umi_p = [int(x) for x in data1['duplicate_count']]
             if len(self.Cell[cell]['VDJ']['NP']) > 0:
                 data2 = pd.DataFrame([
                     x for x in self.Cell[cell]['VDJ']['NP']
@@ -3400,7 +3400,7 @@ class FilterContigsLite:
                     if isinstance(x, dict)
                 ])
                 h_np = list(data2['sequence_id'])
-                h_umi_np = list(data2['duplicate_count'])
+                h_umi_np = [int(x) for x in data2['duplicate_count']]
             if len(self.Cell[cell]['VJ']['P']) > 0:
                 data3 = pd.DataFrame([
                     x
@@ -3412,7 +3412,7 @@ class FilterContigsLite:
                     if isinstance(x, dict)
                 ])
                 l_p = list(data3['sequence_id'])
-                l_umi_p = list(data3['duplicate_count'])
+                l_umi_p = [int(x) for x in data3['duplicate_count']]
                 if len(l_p) > 1:
                     if 'sequence_alignment' in data3:
                         l_seq_p = list(data3['sequence_alignment'])
@@ -3439,7 +3439,7 @@ class FilterContigsLite:
                             # refresh
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
                             l_p = list(data3['sequence_id'])
-                            l_umi_p = list(data3['duplicate_count'])
+                            l_umi_p = [int(x) for x in data3['duplicate_count']]
             if len(self.Cell[cell]['VJ']['NP']) > 0:
                 data4 = pd.DataFrame([
                     x for x in self.Cell[cell]['VJ']['NP']
@@ -3451,7 +3451,7 @@ class FilterContigsLite:
                     if isinstance(x, dict)
                 ])
                 l_np = list(data4['sequence_id'])
-                l_umi_np = list(data4['duplicate_count'])
+                l_umi_np = [int(x) for x in data4['duplicate_count']]
 
             if 'h_p' not in locals():
                 h_p = []
