@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 14:23:42
+# @Last Modified time: 2021-08-12 14:28:08
 
 import os
 import pandas as pd
@@ -2965,13 +2965,13 @@ class FilterContigs:
                             keep_lc_contig = l_p[keep_index_l]
                             self.data.at[keep_lc_contig,
                                          'duplicate_count'] = int(
-                                             np.sum(l_umi[:keep_index_l] +
-                                                    l_umi[keep_index_l:]))
+                                             np.sum(l_umi_p[:keep_index_l] +
+                                                    l_umi_p[keep_index_l:]))
                             self.umi_adjustment.update({
                                 keep_lc_contig:
                                 int(
-                                    np.sum(l_umi[:keep_index_l] +
-                                           l_umi[keep_index_l:]))
+                                    np.sum(l_umi_p[:keep_index_l] +
+                                           l_umi_p[keep_index_l:]))
                             })
                             # refresh
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
@@ -3434,13 +3434,13 @@ class FilterContigsLite:
                             keep_lc_contig = l_p[keep_index_l]
                             self.data.at[keep_lc_contig,
                                          'duplicate_count'] = int(
-                                             np.sum(l_umi[:keep_index_l] +
-                                                    l_umi[keep_index_l:]))
+                                             np.sum(l_umi_p[:keep_index_l] +
+                                                    l_umi_p[keep_index_l:]))
                             self.umi_adjustment.update({
                                 keep_lc_contig:
                                 int(
-                                    np.sum(l_umi[:keep_index_l] +
-                                           l_umi[keep_index_l:]))
+                                    np.sum(l_umi_p[:keep_index_l] +
+                                           l_umi_p[keep_index_l:]))
                             })
                             # refresh
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
