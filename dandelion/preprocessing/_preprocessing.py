@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 14:28:08
+# @Last Modified time: 2021-08-12 14:33:50
 
 import os
 import pandas as pd
@@ -2963,10 +2963,10 @@ class FilterContigs:
                             self.drop_contig.append(l_p[:keep_index_l] +
                                                     l_p[keep_index_l:])
                             keep_lc_contig = l_p[keep_index_l]
-                            self.data.at[keep_lc_contig,
-                                         'duplicate_count'] = int(
-                                             np.sum(l_umi_p[:keep_index_l] +
-                                                    l_umi_p[keep_index_l:]))
+                            data3.at[keep_lc_contig,
+                                     'duplicate_count'] = int(
+                                np.sum(l_umi_p[:keep_index_l] +
+                                       l_umi_p[keep_index_l:]))
                             self.umi_adjustment.update({
                                 keep_lc_contig:
                                 int(
@@ -3432,10 +3432,10 @@ class FilterContigsLite:
                             self.drop_contig.append(l_p[:keep_index_l] +
                                                     l_p[keep_index_l:])
                             keep_lc_contig = l_p[keep_index_l]
-                            self.data.at[keep_lc_contig,
-                                         'duplicate_count'] = int(
-                                             np.sum(l_umi_p[:keep_index_l] +
-                                                    l_umi_p[keep_index_l:]))
+                            data3.at[keep_lc_contig,
+                                     'duplicate_count'] = int(
+                                np.sum(l_umi_p[:keep_index_l] +
+                                       l_umi_p[keep_index_l:]))
                             self.umi_adjustment.update({
                                 keep_lc_contig:
                                 int(
@@ -3571,6 +3571,35 @@ class FilterContigsLite:
                                 self.drop_contig.append(lx)
                     else:
                         self.drop_contig.append(lx)
+
+            if len(l_np) > 0:
+                for lx in l_np:
+                    v = v_dict[lx]
+                    j = j_dict[lx]
+                    c = c_dict[lx]
+                    if present(v):
+                        if re.search('IGH|TR[BD]', v):
+                            self.drop_contig.append(lx)
+                    if present(j):
+                        if re.search('IGH|TR[BD]', j):
+                            self.drop_contig.append(lx)
+                    if present(c):
+                        if re.search('IGH|TR[BD]', c):
+                            self.drop_contig.append(lx)
+
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, 'IGK'):
+                                self.drop_contig.append(lx)
+                            elif not_same_call(v, j, 'IGL'):
+                                self.drop_contig.append(lx)
+                            elif not_same_call(v, j, 'TRA'):
+                                self.drop_contig.append(lx)
+                            elif not_same_call(v, j, 'TRG'):
+                                self.drop_contig.append(lx)
+                    else:
+                        self.drop_contig.append(lx)
+             self.drop_contig.append(lx)
 
             if len(l_np) > 0:
                 for lx in l_np:
