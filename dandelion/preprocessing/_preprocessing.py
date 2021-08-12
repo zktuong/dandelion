@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 14:33:50
+# @Last Modified time: 2021-08-12 14:38:10
 
 import os
 import pandas as pd
@@ -3571,35 +3571,6 @@ class FilterContigsLite:
                                 self.drop_contig.append(lx)
                     else:
                         self.drop_contig.append(lx)
-
-            if len(l_np) > 0:
-                for lx in l_np:
-                    v = v_dict[lx]
-                    j = j_dict[lx]
-                    c = c_dict[lx]
-                    if present(v):
-                        if re.search('IGH|TR[BD]', v):
-                            self.drop_contig.append(lx)
-                    if present(j):
-                        if re.search('IGH|TR[BD]', j):
-                            self.drop_contig.append(lx)
-                    if present(c):
-                        if re.search('IGH|TR[BD]', c):
-                            self.drop_contig.append(lx)
-
-                    if present(j):
-                        if present(v):
-                            if not_same_call(v, j, 'IGK'):
-                                self.drop_contig.append(lx)
-                            elif not_same_call(v, j, 'IGL'):
-                                self.drop_contig.append(lx)
-                            elif not_same_call(v, j, 'TRA'):
-                                self.drop_contig.append(lx)
-                            elif not_same_call(v, j, 'TRG'):
-                                self.drop_contig.append(lx)
-                    else:
-                        self.drop_contig.append(lx)
-             self.drop_contig.append(lx)
 
             if len(l_np) > 0:
                 for lx in l_np:
