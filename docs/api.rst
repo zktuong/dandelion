@@ -94,6 +94,7 @@ Dandelion
    update_germline
    write_h5
    write_pkl
+   write_airr
 
 Logging
 =========
