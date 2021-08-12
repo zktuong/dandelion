@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 15:00:11
+# @Last Modified time: 2021-08-12 17:10:50
 
 import os
 import pandas as pd
@@ -2135,7 +2135,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     hdoublet = {}
     ldoublet = {}
     if adata_provided:
-        for c in tqdm(adata_.obs_names, desc='Annotating in anndata obs slot '):
+        for c in tqdm(adata_.obs_names,
+                      desc='Annotating in anndata obs slot '):
             if c in poor_qual:
                 poorqual.update({c: 'True'})
             else:
@@ -2414,13 +2415,14 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             self.data[x] = [str(r) for r in res[x]]
+        self.data = sanitize_data(self.data)
         if split_locus is False:
             metadata_ = self.data[['cell_id'] + list(cols_to_return)]
         else:
             metadata_ = self.data[['locus', 'cell_id'] + list(cols_to_return)]
 
         for x in cols_to_return:
-            metadata_[x] = metadata_[x].astype(np.float32)
+            metadata_[x] = metadata_[x].astype(float)
 
         if split_locus is False:
             metadata_ = metadata_.groupby('cell_id').sum()
@@ -2455,7 +2457,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             dat[x] = [str(r) for r in res[x]]
-
+        dat = sanitize_data(dat)
         if self.__class__ == pd.DataFrame:
             logg.info(' finished', time=start, deep=('Returning DataFrame\n'))
             return (dat)
@@ -2980,8 +2982,7 @@ class FilterContigs:
                             self.drop_contig.append(l_p[:keep_index_l] +
                                                     l_p[keep_index_l:])
                             keep_lc_contig = l_p[keep_index_l]
-                            data3.at[keep_lc_contig,
-                                     'duplicate_count'] = int(
+                            data3.at[keep_lc_contig, 'duplicate_count'] = int(
                                 np.sum(l_umi_p[:keep_index_l] +
                                        l_umi_p[keep_index_l:]))
                             self.umi_adjustment.update({
@@ -3449,8 +3450,7 @@ class FilterContigsLite:
                             self.drop_contig.append(l_p[:keep_index_l] +
                                                     l_p[keep_index_l:])
                             keep_lc_contig = l_p[keep_index_l]
-                            data3.at[keep_lc_contig,
-                                     'duplicate_count'] = int(
+                            data3.at[keep_lc_contig, 'duplicate_count'] = int(
                                 np.sum(l_umi_p[:keep_index_l] +
                                        l_umi_p[keep_index_l:]))
                             self.umi_adjustment.update({
