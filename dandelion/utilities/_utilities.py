@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-11 21:24:31
+# @Last Modified time: 2021-08-12 18:01:57
 
 import os
 from collections import defaultdict, Iterable
@@ -323,13 +323,21 @@ def sanitize_data(data, ignore='clone_id'):
     data = data.astype('object')
     data = data.infer_objects()
     for d in data:
-        if data[d].dtype == "float64":
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]['type'] in ['string', 'boolean', 'integer']:
+                data[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
+                if RearrangementSchema.properties[d]['type'] == 'integer':
+                    data[d] = [int(x) if present(x) else '' for x in data[d]]
+            else:
+                data[d].replace([None, pd.NA, ''], np.nan, inplace=True)
+
+        elif data[d].dtype == "float64":
             try:
                 data[d].replace(np.nan, pd.NA, inplace=True)
                 data[d] = data[d].astype("int64")
             except:
                 pass
-        if data[d].dtype == 'object':
+        elif data[d].dtype == 'object':
             if d != ignore:
                 try:
                     data[d].replace([None, np.nan, ''], pd.NA, inplace=True)
@@ -353,6 +361,7 @@ def sanitize_data(data, ignore='clone_id'):
 
 def validate_airr(data):
     """Validate dtypes in airr table."""
+
     int_columns = []
     for d in data:
         try:
