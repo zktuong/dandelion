@@ -15,13 +15,21 @@ def test_write_airr(create_testfolder, airr_10x):
     assert len(list(create_testfolder.iterdir())) == 1
 
 
-def test_read10xairr(create_testfolder):
+def test_readwrite10xairr(create_testfolder):
     airr_file = str(create_testfolder) + "/test_airr_rearrangements.tsv"
+    airr_file2 = str(create_testfolder) + "/test_airr_rearrangements2.tsv"
     vdj = ddl.read_10x_airr(airr_file)
     assert vdj.data.shape[0] == 9
     assert vdj.data.shape[1] == 32
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 25
+    vdj.write_airr(airr_file2)
+    vdj2 = ddl.read_10x_airr(airr_file2)
+    assert vdj2.data.shape[0] == 9
+    assert vdj2.data.shape[1] == 32
+    assert vdj2.metadata.shape[0] == 5
+    assert vdj2.metadata.shape[1] == 25
+    os.remove(airr_file2)
 
 
 def test_read10xvdj_json(create_testfolder, json_10x_cr6):
