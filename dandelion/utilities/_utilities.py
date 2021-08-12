@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 20:25:52
+# @Last Modified time: 2021-08-12 21:01:28
 
 import os
 from collections import defaultdict, Iterable
@@ -353,9 +353,9 @@ def sanitize_data(data, ignore='clone_id'):
                     data[d].replace(to_replace=[None, np.nan, pd.NA],
                                     value='',
                                     inplace=True)
-        if d == 'mu_freq':
+        if re.search('mu_freq', d):
             data[d] = [float(x) if present(x) else np.nan for x in data[d]]
-        if d == 'mu_count':
+        if re.search('mu_count', d):
             data[d] = [int(x) if present(x) else '' for x in data[d]]
     data = check_travdv(data)
 
