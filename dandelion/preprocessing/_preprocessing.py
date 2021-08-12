@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 19:32:00
+# @Last Modified time: 2021-08-12 20:11:25
 
 import os
 import pandas as pd
@@ -2415,7 +2415,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             self.data[x] = [str(r) for r in res[x]]
-        # self.data = sanitize_data(self.data)
+        self.data = sanitize_data(self.data)
         if split_locus is False:
             metadata_ = self.data[['cell_id'] + list(cols_to_return)]
         else:

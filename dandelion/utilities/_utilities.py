@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 18:01:57
+# @Last Modified time: 2021-08-12 20:25:52
 
 import os
 from collections import defaultdict, Iterable
@@ -324,13 +324,14 @@ def sanitize_data(data, ignore='clone_id'):
     data = data.infer_objects()
     for d in data:
         if d in RearrangementSchema.properties:
-            if RearrangementSchema.properties[d]['type'] in ['string', 'boolean', 'integer']:
+            if RearrangementSchema.properties[d]['type'] in [
+                    'string', 'boolean', 'integer'
+            ]:
                 data[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
                 if RearrangementSchema.properties[d]['type'] == 'integer':
                     data[d] = [int(x) if present(x) else '' for x in data[d]]
             else:
                 data[d].replace([None, pd.NA, ''], np.nan, inplace=True)
-
         elif data[d].dtype == "float64":
             try:
                 data[d].replace(np.nan, pd.NA, inplace=True)
@@ -352,6 +353,10 @@ def sanitize_data(data, ignore='clone_id'):
                     data[d].replace(to_replace=[None, np.nan, pd.NA],
                                     value='',
                                     inplace=True)
+        if d == 'mu_freq':
+            data[d] = [float(x) if present(x) else np.nan for x in data[d]]
+        if d == 'mu_count':
+            data[d] = [int(x) if present(x) else '' for x in data[d]]
     data = check_travdv(data)
 
     # check if airr-standards is happy
@@ -448,20 +453,6 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
         raise KeyError("'sequence_id' not found in columns of input")
 
     return (obj_)
-
-
-# def best_guess_locus(data):
-#     locus = [l for l in data['locus'] if pd.notnull(l)]
-#     if 'Multi' in locus:
-#         locus.remove('Multi')
-#     best_guess = None
-#     if all(re.search('IG', l) for l in locus):
-#         best_guess = 'ig'
-#     elif all(re.search('TR[ABGD]', l) for l in locus):
-#         best_guess = 'tr'
-#     else:
-#         best_guess = 'mixed'
-#     return (best_guess)
 
 
 def sanitize_dtype(data):

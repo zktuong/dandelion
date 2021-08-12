@@ -117,6 +117,21 @@ def test_quantify_mut(create_testfolder, processed_files, freq, colname):
     assert dat[colname].dtype == float
 
 
+@pytest.mark.parametrize(
+    "freq,colname",
+    [pytest.param(True, 'mu_freq'),
+     pytest.param(False, 'mu_count')])
+def test_quantify_mut_2(create_testfolder, processed_files, freq, colname):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    ddl.pp.quantify_mutations(vdj, frequency=freq)
+    assert not vdj.data[colname].empty
+    if colname == 'mu_freq':
+        assert vdj.data[colname].dtype == float
+    else:
+        assert vdj.data[colname].dtype == int
+
+
 @pytest.mark.parametrize("filename,simple,size", [
     pytest.param('filtered', True, 8),
     pytest.param('filtered', False, 7),
