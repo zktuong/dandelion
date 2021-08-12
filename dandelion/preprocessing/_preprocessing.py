@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 12:46:38
+# @Last Modified time: 2021-08-12 13:41:36
 
 import os
 import pandas as pd
@@ -2835,8 +2835,8 @@ class FilterContigs:
                                     if j == highest_umi_h
                                 ]
                                 keep_index_h = highest_umi_h_idx[0]
-                                self.drop_contig.append(h[:keep_index_h] +
-                                                        h[keep_index_h + 1:])
+                                self.drop_contig.append(h_p[:keep_index_h] +
+                                                        h_p[keep_index_h:])
                                 keep_hc_contig = h_p[keep_index_h]
                                 data1[keep_hc_contig, 'duplicate_count'] = int(
                                     np.sum(h_umi_p[:keep_index_h] +
@@ -2958,9 +2958,9 @@ class FilterContigs:
                                 if j == highest_umi_l
                             ]
                             keep_index_l = highest_umi_l_idx[0]
-                            self.drop_contig.append(l[:keep_index_l] +
-                                                    l[keep_index_l:])
-                            keep_lc_contig = l[keep_index_l]
+                            self.drop_contig.append(l_p[:keep_index_l] +
+                                                    l_p[keep_index_l:])
+                            keep_lc_contig = l_p[keep_index_l]
                             self.data.at[keep_lc_contig,
                                          'duplicate_count'] = int(
                                              np.sum(l_umi[:keep_index_l] +
@@ -3372,8 +3372,8 @@ class FilterContigsLite:
                                     if j == highest_umi_h
                                 ]
                                 keep_index_h = highest_umi_h_idx[0]
-                                self.drop_contig.append(h[:keep_index_h] +
-                                                        h[keep_index_h + 1:])
+                                self.drop_contig.append(h_p[:keep_index_h] +
+                                                        h_p[keep_index_h + 1:])
                                 keep_hc_contig = h_p[keep_index_h]
                                 data1[keep_hc_contig, 'duplicate_count'] = int(
                                     np.sum(h_umi_p[:keep_index_h] +
