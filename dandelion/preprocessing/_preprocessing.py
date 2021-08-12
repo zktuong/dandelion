@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 14:46:36
+# @Last Modified time: 2021-08-12 15:00:11
 
 import os
 import pandas as pd
@@ -2032,8 +2032,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     ----------
     data : Dandeion, pd.DataDrame, str
         V(D)J airr/changeo data to filter. Can be pandas `DataFrame` object or file path as string.
-    adata : AnnData
-        AnnData object to filter.
+    adata : AnnData, Optional
+        AnnData object to filter. If not provided, will assume to keep all cells in the airr table.
     filter_contig : bool
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
     filter_rna : bool
