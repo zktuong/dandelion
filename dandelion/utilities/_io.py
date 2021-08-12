@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-11 20:57:04
+# @Last Modified time: 2021-08-12 09:29:23
 
 import os
 import json
@@ -409,32 +409,6 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
     return (out)
 
 
-# def read_10x_vdj(path: str, filtered: bool = True):
-#     """
-#     A wrapper from scirpy to read 10x's .csv and .json files directly to be formatted in dandelion.
-
-#     Parameters
-#     ----------
-#     path : str
-#         Path to `filterd_contig_annotations.csv`, `all_contig_annotations.csv` or `all_contig_annotations.json`.
-#     filtered : bool
-#         Only keep filtered contig annotations (i.e. `is_cell` and `high_confidence`).
-#         If using `filtered_contig_annotations.csv` already, this option is futile.
-#     Returns
-#     -------
-#     `Dandelion` object.
-
-#     """
-#     try:
-#         import scirpy as ir
-#     except:
-#         raise ImportError('Please install scirpy. pip install scirpy')
-
-#     adata = ir.io.read_10x_vdj(path, filtered=filtered)
-
-#     return(ir.io.to_dandelion(adata))
-
-
 def read_10x_vdj(path: Union[str, PathLike],
                  filename_prefix: Optional[str] = None,
                  return_dandelion: bool = True,
@@ -700,10 +674,10 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
     for _, row in data.iterrows():
         contig = Contig(row, swap_dict).contig['sequence_id']
         out[contig] = Contig(row, swap_dict).contig
-        if out[contig]['locus'] == 'None' or out[contig]['locus'] == '':
+        if out[contig]['locus'] in ['None', 'none', None, np.nan, '']:
             calls = []
             for call in ['v_call', 'd_call', 'j_call', 'c_call']:
-                if out[contig][call] != 'None' and out[contig][call] != '':
+                if out[contig][call] not in ['None', 'none', None, np.nan, '']:
                     calls.append(out[contig][call])
             out[contig]['locus'] = '|'.join(
                 list(set([str(c)[:3] for c in calls])))

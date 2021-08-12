@@ -43,7 +43,7 @@ def test_read10xvdj_cr6(create_testfolder, json_10x_cr6, annotation_10x_cr6, fas
     annotation_10x_cr6.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 26
-    assert vdj.data.shape[1] == 33
+    assert vdj.data.shape[1] == 31
     assert vdj.metadata.shape[0] == 10
     assert vdj.metadata.shape[1] == 29
     with open(json_file, 'w') as outfile:
@@ -63,7 +63,7 @@ def test_read10xvdj_cr6(create_testfolder, json_10x_cr6, annotation_10x_cr6, fas
         ddl.utl.Write_output(out, fasta_file)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 26
-    assert vdj.data.shape[1] == 34
+    assert vdj.data.shape[1] == 32
     assert vdj.metadata.shape[0] == 10
     assert vdj.metadata.shape[1] == 29
     assert not vdj.data.sequence.empty
@@ -76,7 +76,7 @@ def test_read10xvdj(create_testfolder, annotation_10x, fasta_10x):
     annotation_10x.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 20
+    assert vdj.data.shape[1] == 18
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 27
     fh = open(fasta_file, "w")
@@ -87,7 +87,7 @@ def test_read10xvdj(create_testfolder, annotation_10x, fasta_10x):
         ddl.utl.Write_output(out, fasta_file)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 21
+    assert vdj.data.shape[1] == 19
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 27
     assert not vdj.data.sequence.empty
@@ -101,7 +101,7 @@ def test_read10xvdj_cr6_folder(create_testfolder, json_10x_cr6, annotation_10x_c
     annotation_10x_cr6.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 26
-    assert vdj.data.shape[1] == 33
+    assert vdj.data.shape[1] == 31
     assert vdj.metadata.shape[0] == 10
     assert vdj.metadata.shape[1] == 29
     with open(json_file, 'w') as outfile:
@@ -121,7 +121,7 @@ def test_read10xvdj_cr6_folder(create_testfolder, json_10x_cr6, annotation_10x_c
         ddl.utl.Write_output(out, fasta_file)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 26
-    assert vdj.data.shape[1] == 34
+    assert vdj.data.shape[1] == 32
     assert vdj.metadata.shape[0] == 10
     assert vdj.metadata.shape[1] == 29
     assert not vdj.data.sequence.empty
@@ -134,7 +134,7 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
     annotation_10x.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 20
+    assert vdj.data.shape[1] == 18
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 27
     fh = open(fasta_file, "w")
@@ -145,7 +145,7 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
         ddl.utl.Write_output(out, fasta_file)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 21
+    assert vdj.data.shape[1] == 19
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 27
     assert not vdj.data.sequence.empty
@@ -158,7 +158,7 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     annotation_10x.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 20
+    assert vdj.data.shape[1] == 18
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 27
     adata = ddl.to_scirpy(vdj)
@@ -172,7 +172,7 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
         ddl.utl.Write_output(out, fasta_file)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
-    assert vdj.data.shape[1] == 21
+    assert vdj.data.shape[1] == 19
     assert vdj.metadata.shape[0] == 5
     assert vdj.metadata.shape[1] == 27
     assert not vdj.data.sequence.empty
@@ -192,7 +192,7 @@ def test_tofro_scirpy_cr6(create_testfolder, annotation_10x_cr6, json_10x_cr6):
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix = 'test_all')
     assert vdj.data.shape[0] == 26
-    assert vdj.data.shape[1] == 33
+    assert vdj.data.shape[1] == 31
     assert vdj.metadata.shape[0] == 10
     assert vdj.metadata.shape[1] == 29
     adata = ddl.to_scirpy(vdj)
