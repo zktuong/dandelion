@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 14:17:51
+# @Last Modified time: 2021-08-12 14:23:42
 
 import os
 import pandas as pd
@@ -2797,7 +2797,7 @@ class FilterContigs:
         d_dict = dict(zip(data['sequence_id'], data['d_call']))
         j_dict = dict(zip(data['sequence_id'], data['j_call']))
         c_dict = dict(zip(data['sequence_id'], data['c_call']))
-        for contig, row in data.iterrows():
+        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
             cell = Contig(row).contig['cell_id']
             if Contig(row).contig['locus'] in HEAVYLONG:
                 if Contig(row).contig['productive'] in TRUES:
@@ -2954,9 +2954,9 @@ class FilterContigs:
                     if 'sequence_alignment' in data3:
                         l_seq_p = list(data3['sequence_alignment'])
                         if len(list(set(l_seq_p))) == 1:
-                            highest_umi_l = max(l_umi)
+                            highest_umi_l = max(l_umi_p)
                             highest_umi_l_idx = [
-                                i for i, j in enumerate(l_umi)
+                                i for i, j in enumerate(l_umi_p)
                                 if j == highest_umi_l
                             ]
                             keep_index_l = highest_umi_l_idx[0]
@@ -3338,7 +3338,7 @@ class FilterContigsLite:
         d_dict = dict(zip(data['sequence_id'], data['d_call']))
         j_dict = dict(zip(data['sequence_id'], data['j_call']))
         c_dict = dict(zip(data['sequence_id'], data['c_call']))
-        for contig, row in data.iterrows():
+        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
             cell = Contig(row).contig['cell_id']
             if Contig(row).contig['locus'] in HEAVYLONG:
                 if Contig(row).contig['productive'] in TRUES:
@@ -3423,15 +3423,15 @@ class FilterContigsLite:
                     if 'sequence_alignment' in data3:
                         l_seq_p = list(data3['sequence_alignment'])
                         if len(list(set(l_seq_p))) == 1:
-                            highest_umi_l = max(l_umi)
+                            highest_umi_l = max(l_umi_p)
                             highest_umi_l_idx = [
-                                i for i, j in enumerate(l_umi)
+                                i for i, j in enumerate(l_umi_p)
                                 if j == highest_umi_l
                             ]
                             keep_index_l = highest_umi_l_idx[0]
-                            self.drop_contig.append(l[:keep_index_l] +
-                                                    l[keep_index_l:])
-                            keep_lc_contig = l[keep_index_l]
+                            self.drop_contig.append(l_p[:keep_index_l] +
+                                                    l_p[keep_index_l:])
+                            keep_lc_contig = l_p[keep_index_l]
                             self.data.at[keep_lc_contig,
                                          'duplicate_count'] = int(
                                              np.sum(l_umi[:keep_index_l] +
