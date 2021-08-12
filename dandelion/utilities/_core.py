@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 09:55:55
+# @Last Modified time: 2021-08-12 13:03:56
 
 import os
 from collections import defaultdict
@@ -230,6 +230,24 @@ class Dandelion:
             f = open(filename, 'wb')
             cPickle.dump(self, f, **kwargs)
             f.close()
+
+    def write_airr(self, filename: str = 'dandelion_airr.tsv', **kwargs):
+        """
+        Writes a `Dandelion` class to .pkl format.
+
+        Parameters
+        ----------
+        filename
+            path to `.pkl` file.
+        **kwargs
+            passed to `_pickle`.
+        """
+        from airr import create_rearrangement
+        writer = create_rearrangement(filename,
+                                      fields=[x for x in self.data],
+                                      **kwargs)
+        for _, row in self.data.iterrows():
+            writer.write(row)
 
     def write_h5(self,
                  filename: str = 'dandelion_data.h5',
