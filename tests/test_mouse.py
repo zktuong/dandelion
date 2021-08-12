@@ -76,7 +76,6 @@ def test_create_germlines(create_testfolder, processed_files,
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
     dat = pd.read_csv(f, sep='\t')
-    dat.to_csv('/Users/kt16/Downloads/dandelion_tutorial/test.tsv', sep = '\t')
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
     assert dat.shape[0] == 1287
     assert vdj.data.shape[0] == 787
