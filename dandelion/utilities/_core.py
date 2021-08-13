@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 13:08:37
+# @Last Modified time: 2021-08-13 13:30:02
 
 import os
 from collections import defaultdict
@@ -761,6 +761,9 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 hd_ = tmp_metadata.at[i, 'd_call' + suffix_h].split('|')
             except:
                 hd_ = tmp_metadata.at[i, 'd_call' + suffix_h]
+        if 'd_call' + suffix_l in tmp_metadata:
+            tmp_metadata.drop('d_call' + suffix_l, axis=1, inplace=True)
+
         if 'j_call' + suffix_h in tmp_metadata:
             try:
                 hj_ = tmp_metadata.at[i, 'j_call' + suffix_h].split('|')
