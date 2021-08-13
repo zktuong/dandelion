@@ -18,3 +18,12 @@ adjustText>=0.7
 distance>=0.1.3
 joblib>=0.14.1
 plotnine>=0.6.0
+nbsphinx
+sphinx-autodoc-typehints
+six
+readthedocs-sphinx-ext
+recommonmark
+mock
+pillow
+sphinx
+sphinx_rtd_theme
