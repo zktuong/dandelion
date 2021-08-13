@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 09:45:03
+# @Last Modified time: 2021-08-13 11:24:06
 
 import os
 from collections import defaultdict, Iterable
@@ -335,23 +335,11 @@ def sanitize_data(data, ignore='clone_id'):
                     ]
             else:
                 data[d].replace([None, pd.NA, ''], np.nan, inplace=True)
-        elif data[d].dtype == "float64":
-            try:
-                data[d].replace(np.nan, pd.NA, inplace=True)
-                data[d] = data[d].astype("int64")
-            except:
-                pass
-        elif data[d].dtype == 'object':
+        else:
             if d != ignore:
                 try:
                     data[d].replace([None, np.nan, ''], pd.NA, inplace=True)
                     data[d] = pd.to_numeric(data[d])
-                    try:
-                        data[d].replace(np.nan, pd.NA, inplace=True)
-                        data[d] = data[d].astype("int64")
-                    except:
-                        data[d].replace(pd.NA, np.nan, inplace=True)
-                        data[d] = data[d].astype("float64")
                 except:
                     data[d].replace(to_replace=[None, np.nan, pd.NA],
                                     value='',
