@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 10:44:14
+# @Last Modified time: 2021-08-13 13:08:37
 
 import os
 from collections import defaultdict
@@ -756,12 +756,16 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
             else:
                 if 'v_call' + suffix_h in tmp_metadata:
                     hv_ = tmp_metadata.at[i, 'v_call' + suffix_h]
+        if 'd_call' + suffix_h in tmp_metadata:
+            try:
+                hd_ = tmp_metadata.at[i, 'd_call' + suffix_h].split('|')
+            except:
+                hd_ = tmp_metadata.at[i, 'd_call' + suffix_h]
         if 'j_call' + suffix_h in tmp_metadata:
             try:
                 hj_ = tmp_metadata.at[i, 'j_call' + suffix_h].split('|')
             except:
                 hj_ = tmp_metadata.at[i, 'j_call' + suffix_h]
-
         try:
             if 'v_call_genotyped' in cols:
                 if 'v_call_genotyped' + suffix_l in tmp_metadata:
@@ -799,6 +803,9 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         if 'hv_' in locals():
             if len(hv_) > 1:
                 multi_h.append(['Multi' + suffix_h + '_v'])
+        if 'hd_' in locals():
+            if len(hd_) > 1:
+                multi_h.append(['Multi' + suffix_h + '_d'])
         if 'hj_' in locals():
             if len(hj_) > 1:
                 multi_h.append(['Multi' + suffix_h + '_j'])
@@ -917,8 +924,8 @@ def update_metadata(self: Dandelion,
         clonekey = clone_key
 
     cols = [
-        'sequence_id', 'cell_id', 'locus', 'productive', 'v_call', 'j_call',
-        'c_call', 'duplicate_count', 'junction_aa'
+        'sequence_id', 'cell_id', 'locus', 'productive', 'v_call', 'd_call',
+        'j_call', 'c_call', 'duplicate_count', 'junction_aa'
     ]
 
     if 'duplicate_count' not in self.data:
