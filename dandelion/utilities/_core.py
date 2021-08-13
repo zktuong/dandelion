@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 16:25:17
+# @Last Modified time: 2021-08-13 10:44:14
 
 import os
 from collections import defaultdict
@@ -432,18 +432,26 @@ class Query:
                 })
             elif retrieve_mode == 'split and sum':
                 if len(vdj) > 0:
-                    cols.update(
-                        {query + '_VDJ': np.sum([float(x) for x in vdj])})
+                    cols.update({
+                        query + '_VDJ':
+                        np.sum([float(x) for x in vdj if present(x)])
+                    })
                 if len(vj) > 0:
-                    cols.update(
-                        {query + '_VJ': np.sum([float(x) for x in vj])})
+                    cols.update({
+                        query + '_VJ':
+                        np.sum([float(x) for x in vj if present(x)])
+                    })
             elif retrieve_mode == 'split and average':
                 if len(vdj) > 0:
-                    cols.update(
-                        {query + '_VDJ': np.mean([float(x) for x in vdj])})
+                    cols.update({
+                        query + '_VDJ':
+                        np.mean([float(x) for x in vdj if present(x)])
+                    })
                 if len(vj) > 0:
-                    cols.update(
-                        {query + '_VJ': np.mean([float(x) for x in vj])})
+                    cols.update({
+                        query + '_VJ':
+                        np.mean([float(x) for x in vj if present(x)])
+                    })
             elif retrieve_mode == 'merge':
                 cols.update(
                     {query: '|'.join(x for x in set(vdj + vj) if present(x))})
@@ -455,9 +463,15 @@ class Query:
                     for i in range(1, len(vj) + 1):
                         cols.update({query + '_VJ_' + str(i): vj[i - 1]})
             elif retrieve_mode == 'sum':
-                cols.update({query: np.sum([float(x) for x in vdj + vj])})
+                cols.update({
+                    query:
+                    np.sum([float(x) for x in vdj + vj if present(x)])
+                })
             elif retrieve_mode == 'average':
-                cols.update({query: np.mean([float(x) for x in vdj + vj])})
+                cols.update({
+                    query:
+                    np.mean([float(x) for x in vdj + vj if present(x)])
+                })
             ret.update({cell: cols})
         out = pd.DataFrame.from_dict(ret, orient='index')
         if self.querydtype == 'object':
