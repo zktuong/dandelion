@@ -1,6 +1,7 @@
 pip
 setuptools_scm[toml]>=6.0
 pyyaml
+yamlordereddictloader
 airr
 numpy>=1.18.4
 pandas>=1.0.3
