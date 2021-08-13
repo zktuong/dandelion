@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 21:01:28
+# @Last Modified time: 2021-08-13 09:45:03
 
 import os
 from collections import defaultdict, Iterable
@@ -329,7 +329,10 @@ def sanitize_data(data, ignore='clone_id'):
             ]:
                 data[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
                 if RearrangementSchema.properties[d]['type'] == 'integer':
-                    data[d] = [int(x) if present(x) else '' for x in data[d]]
+                    data[d] = [
+                        int(x) if present(x) else ''
+                        for x in pd.to_numeric(data[d])
+                    ]
             else:
                 data[d].replace([None, pd.NA, ''], np.nan, inplace=True)
         elif data[d].dtype == "float64":
@@ -354,9 +357,14 @@ def sanitize_data(data, ignore='clone_id'):
                                     value='',
                                     inplace=True)
         if re.search('mu_freq', d):
-            data[d] = [float(x) if present(x) else np.nan for x in data[d]]
+            data[d] = [
+                float(x) if present(x) else np.nan
+                for x in pd.to_numeric(data[d])
+            ]
         if re.search('mu_count', d):
-            data[d] = [int(x) if present(x) else '' for x in data[d]]
+            data[d] = [
+                int(x) if present(x) else '' for x in pd.to_numeric(data[d])
+            ]
     data = check_travdv(data)
 
     # check if airr-standards is happy
@@ -366,7 +374,6 @@ def sanitize_data(data, ignore='clone_id'):
 
 def validate_airr(data):
     """Validate dtypes in airr table."""
-
     int_columns = []
     for d in data:
         try:
@@ -462,10 +469,14 @@ def sanitize_dtype(data):
 
 
 class ContigDict(dict):
+    """Class Object to extract the contigs as a dictionary."""
+
     def __setitem__(self, key, value):
+        """Standard __setitem__."""
         super().__setitem__(key, value)
 
     def __hash__(self):
+        """Make it hashable."""
         return hash(tuple(self))
 
 
