@@ -78,8 +78,8 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     dat = pd.read_csv(f, sep='\t')
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
     assert dat.shape[0] == 1287
-    assert vdj.data.shape[0] == 818
-    assert vdj.metadata.shape[0] == 407
+    assert vdj.data.shape[0] == 787
+    assert vdj.metadata.shape[0] == 395
     assert adata.n_obs == 547
     f1 = create_testfolder / "test.h5"
     f2 = create_testfolder / "test.h5ad"
@@ -94,6 +94,6 @@ def test_generate_network(create_testfolder):
     ddl.tl.generate_network(vdj)
     assert vdj.distance is not None
     assert vdj.edges is not None
-    assert vdj.n_obs == 407
+    assert vdj.n_obs == 395
     assert vdj.layout is not None
     assert vdj.graph is not None

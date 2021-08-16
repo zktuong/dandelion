@@ -40,7 +40,7 @@ def test_filtercontigs(create_testfolder, dummy_adata_cr6, json_10x_cr6):
                                         productive_only=True,
                                         filter_vj_chains=False)
     assert vdj.data.shape[0] == 26
-    assert vdj2.data.shape[0] == 16
+    assert vdj2.data.shape[0] == 17
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(vdj,
                                         dummy_adata_cr6,
@@ -64,3 +64,11 @@ def test_filtercontigs(create_testfolder, dummy_adata_cr6, json_10x_cr6):
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6, save = out_file)
     assert os.path.exists(out_file)
+
+
+def test_filtercontigs_no_adata(create_testfolder):
+    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
+    vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix='test_all')
+    vdj2 = ddl.pp.filter_contigs(vdj)
+    assert vdj.data.shape[0] == 26
+    assert vdj2.data.shape[0] == 14

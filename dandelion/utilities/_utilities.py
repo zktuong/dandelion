@@ -2,8 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:04:28
-
+# @Last Modified time: 2021-08-13 11:24:06
 
 import os
 from collections import defaultdict, Iterable
@@ -324,27 +323,36 @@ def sanitize_data(data, ignore='clone_id'):
     data = data.astype('object')
     data = data.infer_objects()
     for d in data:
-        if data[d].dtype == "float64":
-            try:
-                data[d].replace(np.nan, pd.NA, inplace=True)
-                data[d] = data[d].astype("int64")
-            except:
-                pass
-        if data[d].dtype == 'object':
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]['type'] in [
+                    'string', 'boolean', 'integer'
+            ]:
+                data[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
+                if RearrangementSchema.properties[d]['type'] == 'integer':
+                    data[d] = [
+                        int(x) if present(x) else ''
+                        for x in pd.to_numeric(data[d])
+                    ]
+            else:
+                data[d].replace([None, pd.NA, ''], np.nan, inplace=True)
+        else:
             if d != ignore:
                 try:
                     data[d].replace([None, np.nan, ''], pd.NA, inplace=True)
                     data[d] = pd.to_numeric(data[d])
-                    try:
-                        data[d].replace(np.nan, pd.NA, inplace=True)
-                        data[d] = data[d].astype("int64")
-                    except:
-                        data[d].replace(pd.NA, np.nan, inplace=True)
-                        data[d] = data[d].astype("float64")
                 except:
                     data[d].replace(to_replace=[None, np.nan, pd.NA],
                                     value='',
                                     inplace=True)
+        if re.search('mu_freq', d):
+            data[d] = [
+                float(x) if present(x) else np.nan
+                for x in pd.to_numeric(data[d])
+            ]
+        if re.search('mu_count', d):
+            data[d] = [
+                int(x) if present(x) else '' for x in pd.to_numeric(data[d])
+            ]
     data = check_travdv(data)
 
     # check if airr-standards is happy
@@ -361,26 +369,25 @@ def validate_airr(data):
             int_columns.append(d)
         except:
             pass
+    bool_columns = [
+        'rev_comp', 'productive', 'vj_in_frame', 'stop_codon', 'complete_vdj'
+    ]
+    str_columns = list(data.dtypes[data.dtypes == 'object'].index)
+    columns = [
+        c for c in list(set(int_columns + str_columns + bool_columns))
+        if c in data
+    ]
+    if len(columns) > 0:
+        for c in columns:
+            data[c].fillna('', inplace=True)
     for _, row in data.iterrows():
-        contig = dict(row)
-        for k, v in contig.items():
-            if (data[k].dtype == np.int64) or (k in int_columns):
-                if pd.isnull(v):
-                    contig.update({k: str('')})
-            if data[k].dtype == np.float64:
-                if k in int_columns:
-                    if pd.isnull(v):
-                        contig.update({k: str('')})
-                else:
-                    if pd.isnull(v):
-                        contig.update({k: np.nan})
+        contig = Contig(row).contig
         for required in [
                 'sequence', 'rev_comp', 'sequence_alignment',
                 'germline_alignment', 'v_cigar', 'd_cigar', 'j_cigar'
         ]:
             if required not in contig:
                 contig.update({required: ''})
-    # check if airr-standards is happy
     RearrangementSchema.validate_header(contig.keys())
     RearrangementSchema.validate_row(contig)
 
@@ -443,21 +450,34 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
     return (obj_)
 
 
-# def best_guess_locus(data):
-#     locus = [l for l in data['locus'] if pd.notnull(l)]
-#     if 'Multi' in locus:
-#         locus.remove('Multi')
-#     best_guess = None
-#     if all(re.search('IG', l) for l in locus):
-#         best_guess = 'ig'
-#     elif all(re.search('TR[ABGD]', l) for l in locus):
-#         best_guess = 'tr'
-#     else:
-#         best_guess = 'mixed'
-#     return (best_guess)
-
-
 def sanitize_dtype(data):
     for col in data:
         if data[col].dtype == np.int64:
             data[col] = data[col].astype(np.float64)
+
+
+class ContigDict(dict):
+    """Class Object to extract the contigs as a dictionary."""
+
+    def __setitem__(self, key, value):
+        """Standard __setitem__."""
+        super().__setitem__(key, value)
+
+    def __hash__(self):
+        """Make it hashable."""
+        return hash(tuple(self))
+
+
+class Contig:
+    def __init__(self, contig, mapper=None):
+        if mapper is not None:
+            mapper.update({k: k for k in contig.keys() if k not in mapper})
+            self._contig = ContigDict(
+                {mapper[key]: vals
+                 for (key, vals) in contig.items()})
+        else:
+            self._contig = ContigDict(contig)
+
+    @property
+    def contig(self):
+        return self._contig

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 18:17:57
+# @Last Modified time: 2021-08-12 09:29:23
 
 import os
 import json
@@ -19,6 +19,83 @@ from ..utilities._core import *
 from os import PathLike
 from typing import Union, Sequence, Optional
 from collections import defaultdict, OrderedDict
+
+AIRR = [
+    'cell_id',
+    'sequence_id',
+    'sequence',
+    'sequence_aa',
+    'productive',
+    'complete_vdj',
+    'vj_in_frame',
+    'locus',
+    'v_call',
+    'd_call',
+    'j_call',
+    'c_call',
+    'junction',
+    'junction_aa',
+    'consensus_count',
+    'duplicate_count',
+    'cdr3_start',
+    'cdr3_end',
+    'sequence_length_10x',
+    'high_confidence_10x',
+    'is_cell_10x',
+    'fwr1_aa',
+    'fwr1',
+    'cdr1_aa',
+    'cdr1',
+    'fwr2_aa',
+    'fwr2',
+    'cdr2_aa',
+    'cdr2',
+    'fwr3_aa',
+    'fwr3',
+    'fwr4_aa',
+    'fwr4',
+    'clone_id',
+    'raw_consensus_id_10x',
+    'exact_subclonotype_id_10x',
+]
+CELLRANGER = [
+    'barcode',
+    'contig_id',
+    'sequence',
+    'aa_sequence',
+    'productive',
+    'full_length',
+    'frame',
+    'chain',
+    'v_gene',
+    'd_gene',
+    'j_gene',
+    'c_gene',
+    'cdr3_nt',
+    'cdr3',
+    'reads',
+    'umis',
+    'cdr3_start',
+    'cdr3_stop',
+    'length',
+    'high_confidence',
+    'is_cell',
+    'fwr1',
+    'fwr1_nt',
+    'cdr1',
+    'cdr1_nt',
+    'fwr2',
+    'fwr2_nt',
+    'cdr2',
+    'cdr2_nt',
+    'fwr3',
+    'fwr3_nt',
+    'fwr4',
+    'fwr4_nt',
+    'raw_clonotype_id',
+    'raw_consensus_id',
+    'exact_subclonotype_id',
+]
 
 
 def fasta_iterator(fh: str):
@@ -332,32 +409,6 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
     return (out)
 
 
-# def read_10x_vdj(path: str, filtered: bool = True):
-#     """
-#     A wrapper from scirpy to read 10x's .csv and .json files directly to be formatted in dandelion.
-
-#     Parameters
-#     ----------
-#     path : str
-#         Path to `filterd_contig_annotations.csv`, `all_contig_annotations.csv` or `all_contig_annotations.json`.
-#     filtered : bool
-#         Only keep filtered contig annotations (i.e. `is_cell` and `high_confidence`).
-#         If using `filtered_contig_annotations.csv` already, this option is futile.
-#     Returns
-#     -------
-#     `Dandelion` object.
-
-#     """
-#     try:
-#         import scirpy as ir
-#     except:
-#         raise ImportError('Please install scirpy. pip install scirpy')
-
-#     adata = ir.io.read_10x_vdj(path, filtered=filtered)
-
-#     return(ir.io.to_dandelion(adata))
-
-
 def read_10x_vdj(path: Union[str, PathLike],
                  filename_prefix: Optional[str] = None,
                  return_dandelion: bool = True,
@@ -618,86 +669,20 @@ def parse_json(data: list) -> defaultdict:
 
 
 def parse_annotation(data: pd.DataFrame) -> defaultdict:
-    main_dict1 = {
-        "barcode": "cell_id",
-        "contig_id": "sequence_id",
-        "sequence": "sequence",
-        "aa_sequence": "sequence_aa",
-        "productive": 'productive',
-        "full_length": 'complete_vdj',
-        "frame": "vj_in_frame",
-        'chain': 'locus',
-        'v_gene': 'v_call',
-        'd_gene': 'd_call',
-        'j_gene': 'j_call',
-        'c_gene': 'c_call',
-        "cdr3_nt": "junction",
-        "cdr3": "junction_aa",
-    }
-
-    main_dict2 = {
-        "reads": "consensus_count",
-        "umis": "duplicate_count",
-        "cdr3_start": "cdr3_start",
-        "cdr3_stop": "cdr3_end",
-        "length": 'sequence_length_10x',
-    }
-
-    main_dict3 = {
-        "high_confidence": 'high_confidence_10x',
-        "is_cell": 'is_cell_10x',
-        'fwr1': 'fwr1_aa',
-        'fwr1_nt': 'fwr1',
-        'cdr1': 'cdr1_aa',
-        'cdr1_nt': 'cdr1',
-        'fwr2': 'fwr2_aa',
-        'fwr2_nt': 'fwr2',
-        'cdr2': 'cdr2_aa',
-        'cdr2_nt': 'cdr2',
-        'fwr3': 'fwr3_aa',
-        'fwr3_nt': 'fwr3',
-        'cdr3': 'cdr3_aa',
-        'cdr3_nt': 'cdr3',
-        'fwr4': 'fwr4_aa',
-        'fwr4_nt': 'fwr4',
-        "raw_clonotype_id": 'clone_id',
-        "raw_consensus_id": 'raw_consensus_id_10x',
-        "exact_subclonotype_id": 'exact_subclonotype_id_10x',
-    }
-
     out = defaultdict(OrderedDict)
+    swap_dict = dict(zip(CELLRANGER, AIRR))
     for _, row in data.iterrows():
-        if pd.notnull(row['contig_id']):
-            key = row['contig_id']
-        else:
-            continue
-        for c in main_dict1.keys():
-            if c in row.keys():
-                if pd.isnull(row[c]):
-                    out[key].update({main_dict1[c]: ''})
-                else:
-                    out[key].update({main_dict1[c]: row[c]})
-        for c in main_dict2.keys():
-            if c in row.keys():
-                if pd.isnull(row[c]):
-                    out[key].update({main_dict2[c]: np.nan})
-                else:
-                    out[key].update({main_dict2[c]: row[c]})
-        for c in main_dict3.keys():
-            if c in row.keys():
-                if pd.isnull(row[c]):
-                    out[key].update({main_dict3[c]: ''})
-                else:
-                    out[key].update({main_dict3[c]: row[c]})
-        if out[key]['locus'] == 'None' or out[key]['locus'] == '':
+        contig = Contig(row, swap_dict).contig['sequence_id']
+        out[contig] = Contig(row, swap_dict).contig
+        if out[contig]['locus'] in ['None', 'none', None, np.nan, '']:
             calls = []
             for call in ['v_call', 'd_call', 'j_call', 'c_call']:
-                if out[key][call] != 'None' and out[key][call] != '':
-                    calls.append(out[key][call])
-            out[key]['locus'] = '|'.join(list(set([str(c)[:3]
-                                                   for c in calls])))
-        if out[key]['locus'] == 'None' or out[key]['locus'] == '':
-            out[key]['locus'] = '|'
+                if out[contig][call] not in ['None', 'none', None, np.nan, '']:
+                    calls.append(out[contig][call])
+            out[contig]['locus'] = '|'.join(
+                list(set([str(c)[:3] for c in calls])))
+        if out[contig]['locus'] == 'None' or out[contig]['locus'] == '':
+            out[contig]['locus'] = '|'
     return (out)
 
 

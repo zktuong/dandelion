@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 10:41:48
+# @Last Modified time: 2021-08-13 13:30:02
 
 import os
 from collections import defaultdict
@@ -231,6 +231,24 @@ class Dandelion:
             cPickle.dump(self, f, **kwargs)
             f.close()
 
+    def write_airr(self, filename: str = 'dandelion_airr.tsv', **kwargs):
+        """
+        Writes a `Dandelion` class to .pkl format.
+
+        Parameters
+        ----------
+        filename
+            path to `.pkl` file.
+        **kwargs
+            passed to `_pickle`.
+        """
+        from airr import create_rearrangement
+        writer = create_rearrangement(filename,
+                                      fields=[x for x in self.data],
+                                      **kwargs)
+        for _, row in self.data.iterrows():
+            writer.write(row)
+
     def write_h5(self,
                  filename: str = 'dandelion_data.h5',
                  complib: Literal['zlib', 'lzo', 'bzip2', 'blosc',
@@ -372,812 +390,93 @@ class Dandelion:
 class Query:
     def __init__(self, data):
         self.data = data
-
-    @property
-    def maindict(self):
-        maindict = {}
-        tmp1 = self.data[self.data['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
-        tmp2 = self.data[self.data['locus'].isin(['IGK', 'IGL', 'TRA',
-                                                  'TRG'])].copy()
-        if tmp1.shape[0] > 0:
-            maindict['VDJ'] = tmp1.copy()
-        if tmp2.shape[0] > 0:
-            maindict['VJ'] = tmp2.copy()
-        return (maindict)
+        self.Cell = Tree()
+        for contig, row in data.iterrows():
+            self.Cell[Contig(row).contig['cell_id']][Contig(
+                row).contig].value = 1
 
     @property
     def querydtype(self):
         return (str(self.data[self.query].dtype))
 
-    @property
-    def tmpmeta(self):
-        metadata_ = {}
-        for d in self.maindict:
-            tmp = Tree()
-            for cell, seq in zip(self.maindict[d]['cell_id'],
-                                 self.maindict[d]['sequence_id']):
-                tmp[cell][seq].value = 1
-            cells, seqs = [], []
-            for t in tmp:
-                cells.append(t)
-                seqs.append([s for s in tmp[t]])
-            metadata_[d] = pd.DataFrame(seqs, index=cells)
-            metadata_[d][pd.isnull(metadata_[d])] = None
-
-        if 'VDJ' in metadata_:
-            if isinstance(metadata_['VDJ'], pd.DataFrame):
-                if len(metadata_['VDJ'].columns) > 1:
-                    metadata_['VDJ'].columns = [
-                        'sequence_id_VDJ_' + str(x)
-                        for x in range(1,
-                                       len(metadata_['VDJ'].columns) + 1)
-                    ]
-                else:
-                    metadata_['VDJ'].columns = ['sequence_id_VDJ_1']
-        if 'VJ' in metadata_:
-            if isinstance(metadata_['VJ'], pd.DataFrame):
-                if len(metadata_['VJ'].columns) > 1:
-                    metadata_['VJ'].columns = [
-                        'sequence_id_VJ_' + str(x)
-                        for x in range(1,
-                                       len(metadata_['VJ'].columns) + 1)
-                    ]
-                else:
-                    metadata_['VJ'].columns = ['sequence_id_VJ_1']
-        return (metadata_)
-
-    @property
-    def query_dict(self):
-        metadata_result = defaultdict(dict)
-        querydict = dict(zip(self.data['sequence_id'], self.data[self.query]))
-        for l in self.tmpmeta:
-            for x in self.tmpmeta[l]:
-                metadata_result[l][self.query + '_' + x] = [
-                    querydict[i] if pd.notnull(i) else np.nan
-                    for i in self.tmpmeta[l][x]
-                ]
-        return (metadata_result)
-
-    def retrieve(self, query=None, retrieve_mode=None):
+    def retrieve(self, query, retrieve_mode):
         self.query = query
-        self.retrieve_mode = retrieve_mode
-        _meta, _tmp = {}, {}
-        for x in ['VDJ', 'VJ']:
-            if x in self.query_dict:
-                _tmp[x] = pd.DataFrame(self.query_dict[x],
-                                       index=self.tmpmeta[x].index)
-
-        if 'unique only' in self.retrieve_mode:
-            for x in ['VDJ', 'VJ']:
-                if x in _tmp:
-                    _meta[x] = []
-                    for i in _tmp[x].index:
-                        try:
-                            _meta[x].append('|'.join([
-                                h for h in list(dict.fromkeys(_tmp[x].loc[i]))
-                                if pd.notnull(h)
-                            ]))
-                        except:
-                            _meta[x].append('|'.join([
-                                str(h)
-                                for h in list(dict.fromkeys(_tmp[x].loc[i]))
-                                if pd.notnull(h)
-                            ]))
-                    _meta[x] = pd.DataFrame(_meta[x],
-                                            columns=[self.query + '_' + x],
-                                            index=_tmp[x].index)
-            if self.retrieve_mode == 'split and unique only':
-                _meta = pd.concat([_meta[x] for x in _meta], axis=1)
-                if self.querydtype == 'object':
-                    _meta.fillna('', inplace=True)
-                return (_meta)
-            if self.retrieve_mode == 'merge and unique only':
-                _tmp = pd.concat([_meta[x] for x in _meta], axis=1)
-                _meta = []
-                for i, c in _tmp.iterrows():
-                    try:
-                        _meta.append('|'.join(
-                            set([h for h in list(c) if pd.notnull(h)])))
-                    except:
-                        _meta.append('|'.join(
-                            set([str(h) for h in list(c) if pd.notnull(h)])))
-                _meta = pd.DataFrame(_meta,
-                                     columns=[self.query],
-                                     index=_tmp.index)
-                if self.querydtype == 'object':
-                    _meta.fillna('', inplace=True)
-                return (_meta)
-        elif 'sum' in self.retrieve_mode:
-            for x in ['VDJ', 'VJ']:
-                if x in _tmp:
-                    tlist = []
-                    for i in _tmp[x].index:
-                        tlist.append(
-                            np.sum([
-                                h for h in list(_tmp[x].loc[i])
-                                if pd.notnull(h)
-                            ]))
-                    _meta[x] = pd.DataFrame(tlist,
-                                            columns=[self.query],
-                                            index=_tmp[x].index)
-            meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
-            if self.retrieve_mode == 'split and sum':
-                return (meta_)
-            if self.retrieve_mode == 'sum':
-                _meta = []
-                for i in meta_.index:
-                    _meta.append(
-                        np.sum(
-                            [h for h in list(meta_.loc[i]) if pd.notnull(h)]))
-                return (pd.DataFrame(_meta,
-                                     columns=[self.query],
-                                     index=meta_.index))
-        elif 'average' in self.retrieve_mode:
-            for x in ['VDJ', 'VJ']:
-                if x in _tmp:
-                    tlist = []
-                    for i in _tmp[x].index:
-                        tlist.append(
-                            np.mean([
-                                h for h in list(_tmp[x].loc[i])
-                                if pd.notnull(h)
-                            ]))
-                    _meta[x] = pd.DataFrame(tlist,
-                                            columns=[self.query],
-                                            index=_tmp[x].index)
-            meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
-            if self.retrieve_mode == 'split and average':
-                return (meta_)
-            if self.retrieve_mode == 'average':
-                _meta = []
-                for i in meta_.index:
-                    _meta.append(
-                        np.mean(
-                            [h for h in list(meta_.loc[i]) if pd.notnull(h)]))
-                return (pd.DataFrame(_meta,
-                                     columns=[self.query],
-                                     index=meta_.index))
-        else:
-            if self.retrieve_mode == 'merge':
-                for x in ['VDJ', 'VJ']:
-                    if x in _tmp:
-                        tlist = []
-                        for i in _tmp[x].index:
-                            try:
-                                tlist.append('|'.join([
-                                    h for h in list(_tmp[x].loc[i])
-                                    if pd.notnull(h)
-                                ]))
-                            except:
-                                tlist.append('|'.join([
-                                    str(h) for h in list(_tmp[x].loc[i])
-                                    if pd.notnull(h)
-                                ]))
-                        _meta[x] = pd.DataFrame(tlist,
-                                                columns=[self.query],
-                                                index=_tmp[x].index)
-                meta_ = pd.concat([_meta[x] for x in _meta], axis=1)
-                _meta = []
-                for i in meta_.index:
-                    try:
-                        _meta.append('|'.join(
-                            [h for h in list(meta_.loc[i]) if pd.notnull(h)]))
-                    except:
-                        _meta.append('|'.join([
-                            str(h) for h in list(meta_.loc[i]) if pd.notnull(h)
-                        ]))
-                _meta = pd.DataFrame(_meta,
-                                     columns=[self.query],
-                                     index=meta_.index)
-                if self.querydtype == 'object':
-                    _meta.fillna('', inplace=True)
-                return (_meta)
-            if self.retrieve_mode == 'split':
-                _meta = pd.concat([_tmp[x] for x in _tmp], axis=1)
-                _meta.columns = [
-                    re.sub('_sequence_id', '', i) for i in _meta.columns
-                ]
-                if self.querydtype == 'object':
-                    _meta.fillna('', inplace=True)
-                return (_meta)
-
-
-# def retrieve_metadata(
-#     data: pd.DataFrame,
-#     query: str,
-#     split: bool = True,
-#     collapse: bool = True,
-#     combine: bool = False,
-#     locus: Optional[Literal['ig', 'tr-ab', 'tr-gd']] = None,
-#     split_locus: bool = False,
-#     verbose: bool = False,
-#     ignore: str = 'clone_id',
-# ) -> pd.DataFrame:
-#     data_tmp = sanitize_data(data.copy(), ignore=ignore)
-#     dat_dict = defaultdict(dict)
-#     dict_ = defaultdict(dict)
-#     metadata_ = defaultdict(dict)
-
-#     locus_dict1 = {
-#         'ig': ['IGH'],
-#         'tr': ['TRB', 'TRD'],
-#         'mixed': ['IGH', 'TRB', 'TRD']
-#     }
-#     locus_dict2 = {
-#         'ig': ['IGK', 'IGL'],
-#         'tr': ['TRA', 'TRG'],
-#         'mixed': ['IGK', 'IGL', 'TRA', 'TRG']
-#     }
-#     locus_dict3 = {'ig': 'H', 'tr': 'BD', 'mixed': 'mixed'}
-#     locus_dict4 = {'ig': 'L', 'tr': 'AG', 'mixed': 'mixed'}
-#     query_dict = dict(zip(data_tmp['sequence_id'], data_tmp[query]))
-
-#     if type_check(data, query):
-#         data_tmp[query].fillna('unassigned', inplace=True)
-
-#     typesoflocus = len(list(set(data_tmp['locus'])))
-
-#     if locus is None:
-#         locus = best_guess_locus(data_tmp)
-
-#     if typesoflocus > 1:
-#         if split_locus:
-#             for loci in flatten(locus_dict1[locus] + locus_dict2[locus]):
-#                 tmp = data_tmp[data_tmp['locus'].isin([loci])].copy()
-#                 if tmp.shape[0] > 0:
-#                     dat_dict[loci] = tmp.copy()
-#         else:
-#             tmp3 = data_tmp[data_tmp['locus'].isin(locus_dict1[locus])].copy()
-#             tmp4 = data_tmp[data_tmp['locus'].isin(locus_dict2[locus])].copy()
-#             if tmp3.shape[0] > 0:
-#                 dat_dict[locus_dict3[locus]] = tmp3.copy()
-#             if tmp4.shape[0] > 0:
-#                 dat_dict[locus_dict4[locus]] = tmp4.copy()
-#     else:
-#         if verbose:
-#             warnings.warn(
-#                 UserWarning(
-#                     'Single locus type detected. Ignoring split = True and split_locus = True.'
-#                 ))
-#         dat_dict[locus_dict3[locus]] = data_tmp[data_tmp['locus'].isin(
-#             [locus_dict1[locus]])].copy()
-
-#     for d in dat_dict:
-#         tmp = Tree()
-#         for cell, seq in zip(dat_dict[d]['cell_id'],
-#                              dat_dict[d]['sequence_id']):
-#             tmp[cell][seq].value = 1
-#         cells = []
-#         seqs = []
-#         for t in tmp:
-#             cells.append(t)
-#             seqs.append([s for s in tmp[t]])
-#         metadata_[d] = pd.DataFrame(seqs, index=cells)
-#         metadata_[d][pd.isnull(metadata_[d])] = np.nan
-
-#     if split_locus:
-#         H = locus_dict1[locus]
-#     else:
-#         H = locus_dict3[locus]
-
-#     if len(metadata_[H].columns) > 1:
-#         metadata_[H].columns = [
-#             'sequence_id_' + H + '_' + str(x)
-#             for x in range(1,
-#                            len(metadata_[H].columns) + 1)
-#         ]
-#     else:
-#         metadata_[H].columns = ['sequence_id_' + H + '_1']
-
-#     if typesoflocus > 1:
-#         if split_locus:
-#             for L in locus_dict2[locus]:
-#                 if isinstance(metadata_[L], pd.DataFrame):
-#                     if len(metadata_[L].columns) > 1:
-#                         metadata_[L].columns = [
-#                             'sequence_id_' + L + '_' + str(x)
-#                             for x in range(1,
-#                                            len(metadata_[L].columns) + 1)
-#                         ]
-#                     else:
-#                         metadata_[L].columns = ['sequence_id_' + L + '_1']
-#         else:
-#             L = locus_dict4[locus]
-#             if isinstance(metadata_[L], pd.DataFrame):
-#                 if len(metadata_[L].columns) > 1:
-#                     metadata_[L].columns = [
-#                         'sequence_id_' + L + '_' + str(x)
-#                         for x in range(1,
-#                                        len(metadata_[L].columns) + 1)
-#                     ]
-#                 else:
-#                     metadata_[L].columns = ['sequence_id_' + L + '_1']
-
-#     metadata_result = metadata_.copy()
-#     for l in metadata_:
-#         for x in metadata_[l]:
-#             metadata_result[l][x] = [
-#                 query_dict[i] if i == i else np.nan for i in metadata_[l][x]
-#             ]
-
-#     if typesoflocus > 1:
-#         if isinstance(metadata_[l], pd.DataFrame):
-#             if not split_locus:
-#                 results = retrieve_result_dict(
-#                     query, data_tmp, metadata_result[locus_dict3[locus]],
-#                     metadata_result[locus_dict4[locus]], locus, split,
-#                     collapse, combine)
-#             else:
-#                 results = retrieve_result_dict(
-#                     query, data_tmp, metadata_result[locus_dict1[locus]],
-#                     [metadata_result[L] for L in locus_dict2[locus]], locus,
-#                     split, collapse, combine)
-#         else:
-#             results = retrieve_result_dict_singular(
-#                 query, data_tmp, metadata_result[locus_dict3[locus]], locus,
-#                 collapse, combine)
-#     else:
-#         results = retrieve_result_dict_singular(
-#             query, data_tmp, metadata_result[locus_dict3[locus]], locus,
-#             collapse, combine)
-#     return (results)
-
-# def retrieve_result_dict(query: str,
-#                          data: pd.DataFrame,
-#                          meta_h: pd.DataFrame,
-#                          meta_l: pd.DataFrame,
-#                          locus: Optional[Literal['ig', 'tr-ab',
-#                                                  'tr-gd']] = None,
-#                          split: bool = True,
-#                          collapse: bool = True,
-#                          combine: bool = False,
-#                          verbose: bool = False) -> Dict:
-#     df_hl = defaultdict(dict)
-#     locus_dict1 = {
-#         'ig': ['IGH'],
-#         'tr': ['TRB', 'TRD'],
-#         'mixed': ['IGH', 'TRB', 'TRD']
-#     }
-#     locus_dict2 = {
-#         'ig': ['IGK', 'IGL'],
-#         'tr': ['TRA', 'TRG'],
-#         'mixed': ['IGK', 'IGL', 'TRA', 'TRG']
-#     }
-#     locus_dict3 = {'ig': 'H', 'tr': 'BD', 'mixed': 'mixed'}
-#     locus_dict4 = {'ig': 'L', 'tr': 'AG', 'mixed': 'mixed'}
-
-#     if locus is None:
-#         locus = best_guess_locus(data)
-
-#     if len(meta_l) == 2 and type(meta_l) is list:
-#         H = locus_dict1[locus]
-#     else:
-#         H = locus_dict3[locus]
-#     if meta_h.shape[1] > 1:
-#         if collapse:
-#             newmeta_h = meta_h.copy()
-#             if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                 newh = []
-#                 for i in meta_h.index:
-#                     try:
-#                         newh.append('|'.join([
-#                             h for h in list(dict.fromkeys(newmeta_h.loc[i]))
-#                             if h == h
-#                         ]))
-#                     except:
-#                         newh.append('|'.join([
-#                             str(h)
-#                             for h in list(dict.fromkeys(newmeta_h.loc[i]))
-#                             if h == h
-#                         ]))
-#                 newmeta_h['sequence_id_' + H + '_1'] = newh
-#                 meta_h = pd.DataFrame(newmeta_h['sequence_id_' + H +
-#                                                 '_1'].copy())
-#             else:
-#                 collapse = False
-#                 if verbose:
-#                     warnings.warn(
-#                         UserWarning(
-#                             'Multiple VDJ contigs mapping to the same cell barcode and/or query dtype is {}. Ignoring collapse = True.'
-#                             .format(meta_h['sequence_id_' + H +
-#                                            '_1'].dtype.name)))
-#     if len(meta_l) == 2 and type(meta_l) is list:
-#         metadata_ = meta_h.join(meta_l[0]).join(meta_l[1])
-#     else:
-#         metadata_ = meta_h.join(meta_l)
-#     df_ = metadata_.copy()
-#     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#         if split:
-#             df_hl[H] = df_[list(meta_h.columns)].copy()
-#             if len(meta_l) == 2 and type(meta_l) is list:
-#                 for x in range(0, len(locus_dict2[locus])):
-#                     L = locus_dict2[locus][x]
-#                     df_hl[L] = df_[list(meta_l[x].columns)].copy()
-#             else:
-#                 L = locus_dict4[locus]
-#                 df_hl[L] = df_[list(meta_l.columns)].copy()
-#             df_res_hl = df_hl.copy()
-#             res_ = defaultdict(list)
-#             result_dict_hl = defaultdict(dict)
-#             if collapse:
-#                 for d in df_res_hl:
-#                     for i in df_hl[d].index:
-#                         if combine:
-#                             try:
-#                                 res_[d].append('|'.join([
-#                                     l for l in list(
-#                                         dict.fromkeys(df_hl[d].loc[i]))
-#                                     if l == l
-#                                 ]))
-#                             except:
-#                                 res_[d].append('|'.join([
-#                                     str(l) for l in list(
-#                                         dict.fromkeys(df_hl[d].loc[i]))
-#                                     if l == l
-#                                 ]))
-#                         else:
-#                             try:
-#                                 res_[d].append('|'.join([
-#                                     l for l in list(df_hl[d].loc[i]) if l == l
-#                                 ]))
-#                             except:
-#                                 res_[d].append('|'.join([
-#                                     str(l) for l in list(df_hl[d].loc[i])
-#                                     if l == l
-#                                 ]))
-#                     df_res_hl[d][query] = res_[d]
-#                     result_dict_hl[d] = dict(df_res_hl[d][query])
-#                     for k, v in result_dict_hl[d].items():
-#                         if type(v) is not list:
-#                             result_dict_hl[d][k] = [v]
-#                 if len(meta_l) == 2 and type(meta_l) is list and type(
-#                         meta_l) is list:
-#                     result_dict_ = {query + '_' + H: result_dict_hl[H]}
-#                     for x in range(0, len(locus_dict2[locus])):
-#                         L = locus_dict2[locus][x]
-#                         result_dict_.update(
-#                             {query + '_' + L: result_dict_hl[L]})
-#                 else:
-#                     result_dict_ = {
-#                         query + '_VDJ': result_dict_hl[H],
-#                         query + '_VJ': result_dict_hl[L]
-#                     }
-#             else:
-#                 for d in df_res_hl:
-#                     result_dict_hl[d] = df_res_hl[d]
-#         else:
-#             df_res = df_.copy()
-#             q_res = []
-#             if collapse:
-#                 for i in metadata_.index:
-#                     if combine:
-#                         q_res.append('|'.join([
-#                             qq for qq in list(dict.fromkeys(df_.loc[i]))
-#                             if qq == qq
-#                         ]))
-#                     else:
-#                         q_res.append('|'.join(
-#                             [qq for qq in list(df_.loc[i]) if qq == qq]))
-#             else:
-#                 for i in metadata_.index:
-#                     q_res.append([qq for qq in list(df_.loc[i]) if qq == qq])
-#             df_res[query] = q_res
-#             result_dict_ = dict(df_res[query])
-#     else:
-#         result_dict_ = {x: dict(df_[x]) for x in df_}
-#     rs_dict1 = {'ig': '[HL]', 'tr': '[ABGD]', 'mixed': '[HLABGD]'}
-#     rs_dict2 = {'ig': 'IG[HKL]', 'tr': 'TR[ABGD]', 'mixed': 'IG[HKL]|TR[ABGD]'}
-#     if len(meta_l) == 2 and type(meta_l) is list:
-#         rs = '_sequence_id_' + rs_dict2[locus]
-#     else:
-#         rs = '_sequence_id_' + rs_dict1[locus]
-#     final_result_ = defaultdict(dict)
-#     if split:
-#         if not collapse:
-#             if len(meta_l) == 2 and type(meta_l) is list:
-#                 names = [k for k in result_dict_hl.keys()]
-#                 final_result = result_dict_hl[names[0]].join(
-#                     result_dict_hl[names[1]]).join(result_dict_hl[names[2]])
-#                 final_result.columns = [
-#                     re.sub('_sequence_id', '', q) for q in
-#                     [query + '_' + str(l) for l in final_result.columns]
-#                 ]
-#             else:
-#                 try:
-#                     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                         final_result_h = pd.DataFrame(result_dict_hl[H])
-#                     else:
-#                         final_result_h = pd.DataFrame(result_dict_[H])
-#                 except:
-#                     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                         final_result_h = pd.DataFrame.from_dict(
-#                             result_dict_hl, orient='index').T
-#                         final_result_h = final_result_h[meta_h.columns].copy()
-#                     else:
-#                         final_result_h = pd.DataFrame.from_dict(
-#                             result_dict_, orient='index').T
-#                         final_result_h = final_result_h[meta_h.columns].copy()
-#                 final_result_h.columns = [
-#                     re.sub(rs, '', q) for q in
-#                     [query + '_VDJ_' + str(l) for l in final_result_h.columns]
-#                 ]
-#                 try:
-#                     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                         final_result_l = pd.DataFrame(
-#                             result_dict_hl[locus_dict4[locus]])
-#                     else:
-#                         final_result_l = pd.DataFrame(
-#                             result_dict_[locus_dict4[locus]])
-#                 except:
-#                     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                         final_result_l = pd.DataFrame.from_dict(
-#                             result_dict_hl, orient='index').T
-#                         final_result_l = final_result_l[meta_l.columns].copy()
-#                     else:
-#                         final_result_l = pd.DataFrame.from_dict(
-#                             result_dict_, orient='index').T
-#                         final_result_l = final_result_l[meta_l.columns].copy()
-#                 final_result_l.columns = [
-#                     re.sub(rs, '', q) for q in
-#                     [query + '_VJ_' + str(l) for l in final_result_l.columns]
-#                 ]
-#                 final_result = final_result_h.join(final_result_l)
-#         else:
-#             if len(meta_l) == 2 and type(meta_l) is list:
-#                 if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                     for d in result_dict_:
-#                         final_result_[d] = pd.DataFrame.from_dict(
-#                             result_dict_[d], orient='index')
-#                         final_result_[d].columns = [
-#                             re.sub(rs, '', q) for q in [
-#                                 d + '_' + str(l)
-#                                 for l in final_result_[d].columns
-#                             ]
-#                         ]
-#                         final_result_[d].columns = [
-#                             re.sub('_[0-9]', '', q)
-#                             for q in final_result_[d].columns
-#                         ]
-#                     names = [k for k in final_result_.keys()]
-#                     final_result = final_result_[names[0]].join(
-#                         final_result_[names[1]]).join(final_result_[names[2]])
-#                 else:
-#                     if verbose:
-#                         warnings.warn(
-#                             UserWarning(
-#                                 'Query dtype is {}. Ignoring collapse = True.'.
-#                                 format(meta_h['sequence_id_' + H +
-#                                               '_1'].dtype.name)))
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index').T
-#                     final_result.columns = [
-#                         query + re.sub('sequence_id', '', q)
-#                         for q in final_result.columns
-#                     ]
-#             else:
-#                 if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                     final_result_h = pd.DataFrame.from_dict(
-#                         result_dict_[query + '_VDJ'], orient='index')
-#                     final_result_h.columns = [query + '_VDJ']
-#                     final_result_l = pd.DataFrame.from_dict(
-#                         result_dict_[query + '_VJ'], orient='index')
-#                     final_result_l.columns = [query + '_VJ']
-#                     final_result = final_result_h.join(final_result_l)
-#                 else:
-#                     if verbose:
-#                         warnings.warn(
-#                             UserWarning(
-#                                 'Query dtype is {}. Ignoring collapse = True.'.
-#                                 format(meta_h['sequence_id_' + H +
-#                                               '_1'].dtype.name)))
-#                     final_result_h = pd.DataFrame.from_dict(result_dict_,
-#                                                             orient='index').T
-#                     final_result_h = final_result_h[meta_h.columns].copy()
-#                     final_result_h.columns = [
-#                         re.sub(rs, '', q) for q in [
-#                             query + '_VDJ_' + str(l)
-#                             for l in final_result_h.columns
-#                         ]
-#                     ]
-#                     final_result_l = pd.DataFrame.from_dict(result_dict_,
-#                                                             orient='index').T
-#                     final_result_l = final_result_l[meta_l.columns].copy()
-#                     final_result_l.columns = [
-#                         re.sub(rs, '', q) for q in [
-#                             query + '_VJ_' + str(l)
-#                             for l in final_result_l.columns
-#                         ]
-#                     ]
-#                     final_result = final_result_h.join(final_result_l)
-#     else:
-#         if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#             if not collapse:
-#                 if len(meta_l) == 2 and type(meta_l) is list:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index')
-#                     final_result.columns = [
-#                         re.sub(rs, '', q) for q in
-#                         [query + '_' + str(l) for l in final_result.columns]
-#                     ]
-#                 else:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index')
-#                     final_result.columns = [
-#                         re.sub(rs, '', q) for q in
-#                         [query + '_' + str(l) for l in final_result.columns]
-#                     ]
-#             else:
-#                 if len(meta_l) == 2 and type(meta_l) is list:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index')
-#                     final_result.columns = [query]
-#                 else:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index')
-#                     final_result.columns = [query]
-#         else:
-#             if not collapse:
-#                 if len(meta_l) == 2 and type(meta_l) is list:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index').T
-#                     final_result.columns = [
-#                         re.sub('_sequence_id', '', q) for q in
-#                         [query + '_' + str(l) for l in final_result.columns]
-#                     ]
-#                 else:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index').T
-#                     final_result.columns = [
-#                         re.sub(rs, '', q) for q in
-#                         [query + '_' + str(l) for l in final_result.columns]
-#                     ]
-#             else:
-#                 if verbose:
-#                     warnings.warn(
-#                         UserWarning(
-#                             'Query dtype is {}. Ignoring collapse = True and split = False.'
-#                             .format(meta_h['sequence_id_' + H +
-#                                            '_1'].dtype.name)))
-#                 if len(meta_l) == 2 and type(meta_l) is list:
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index').T
-#                     final_result.columns = [
-#                         re.sub('_sequence_id', '', q) for q in
-#                         [query + '_' + str(l) for l in final_result.columns]
-#                     ]
-#                 else:
-#                     typedict = {
-#                         locus_dict3[locus]: 'VDJ',
-#                         locus_dict4[locus]: 'VJ'
-#                     }
-#                     final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                           orient='index').T
-#                     final_result.columns = [
-#                         re.sub(rs, '', q) for q in [
-#                             query + '_' + typedict[l.split('_')[2]] + '_' + l
-#                             for l in final_result.columns
-#                         ]
-#                     ]
-
-#     return (final_result)
-
-# def retrieve_result_dict_singular(query: str,
-#                                   data: pd.DataFrame,
-#                                   meta_h: pd.DataFrame,
-#                                   locus: Optional[Literal['ig', 'tr-ab',
-#                                                           'tr-gd']] = None,
-#                                   collapse: bool = True,
-#                                   combine: bool = False,
-#                                   verbose: bool = False) -> Dict:
-
-#     df_hl = defaultdict(dict)
-#     if locus is None:
-#         locus = best_guess_locus(data)
-
-#     locus_dict3 = {'ig': 'H', 'tr': 'BD', 'mixed': 'mixed'}
-
-#     H = locus_dict3[locus]
-#     if meta_h.shape[1] > 1:
-#         if collapse:
-#             newmeta_h = meta_h.copy()
-#             if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#                 newh = []
-#                 for i in meta_h.index:
-#                     try:
-#                         newh.append('|'.join([
-#                             h for h in list(dict.fromkeys(newmeta_h.loc[i]))
-#                             if h == h
-#                         ]))
-#                     except:
-#                         newh.append('|'.join([
-#                             str(h)
-#                             for h in list(dict.fromkeys(newmeta_h.loc[i]))
-#                             if h == h
-#                         ]))
-#                 newmeta_h['sequence_id_' + H + '_1'] = newh
-#                 meta_h = pd.DataFrame(newmeta_h['sequence_id_' + H +
-#                                                 '_1'].copy())
-#             else:
-#                 collapse = False
-#                 if verbose:
-#                     warnings.warn(
-#                         UserWarning(
-#                             'Multiple VDJ contigs mapping to the same cell barcode and/or query dtype is {}. Ignoring collapse = True.'
-#                             .format(meta_h['sequence_id_' + H +
-#                                            '_1'].dtype.name)))
-
-#     metadata_ = meta_h.copy()
-
-#     df_ = metadata_.copy()
-#     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#         df_res = df_.copy()
-#         q_res = []
-#         if collapse:
-#             for i in metadata_.index:
-#                 if combine:
-#                     try:
-#                         q_res.append('|'.join([
-#                             qq for qq in list(dict.fromkeys(df_.loc[i]))
-#                             if qq == qq
-#                         ]))
-#                     except:
-#                         q_res.append('|'.join([
-#                             str(qq) for qq in list(dict.fromkeys(df_.loc[i]))
-#                             if qq == qq
-#                         ]))
-#                 else:
-#                     try:
-#                         q_res.append('|'.join(
-#                             [qq for qq in list(df_.loc[i]) if qq == qq]))
-#                     except:
-#                         q_res.append('|'.join(
-#                             [str(qq) for qq in list(df_.loc[i]) if qq == qq]))
-#         else:
-#             for i in metadata_.index:
-#                 q_res.append([qq for qq in list(df_.loc[i]) if qq == qq])
-#         df_res[query] = q_res
-#         result_dict_ = dict(df_res[query])
-#     else:
-#         result_dict_ = {x: dict(df_[x]) for x in df_}
-
-#     rs_dict1 = {'ig': '[H]', 'tr': '[BD]', 'mixed': '[HBD]'}
-#     rs = '_sequence_id_' + rs_dict1[locus]
-#     final_result_ = defaultdict(dict)
-
-#     if type_check(meta_h, 'sequence_id_' + H + '_1'):
-#         if not collapse:
-#             final_result = pd.DataFrame.from_dict(result_dict_, orient='index')
-#             final_result.columns = [
-#                 re.sub(rs, '', q)
-#                 for q in [query + '_' + str(l) for l in final_result.columns]
-#             ]
-#         else:
-#             final_result = pd.DataFrame.from_dict(result_dict_, orient='index')
-#             final_result.columns = [query]
-#     else:
-#         if not collapse:
-#             final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                   orient='index').T
-#             final_result.columns = [
-#                 re.sub(rs, '', q)
-#                 for q in [query + '_' + str(l) for l in final_result.columns]
-#             ]
-#         else:
-#             if verbose:
-#                 warnings.warn(
-#                     UserWarning(
-#                         'Query dtype is {}. Ignoring collapse = True and split = False.'
-#                         .format(meta_h['sequence_id_' + H + '_1'].dtype.name)))
-#             typedict = {locus_dict3[locus]: 'VDJ'}
-#             final_result = pd.DataFrame.from_dict(result_dict_,
-#                                                   orient='index').T
-#             final_result.columns = [
-#                 re.sub(rs, '', q) for q in [
-#                     query + '_' + typedict[l.split('_')[2]] + '_' + l
-#                     for l in final_result.columns
-#                 ]
-#             ]
-#     return (final_result)
+        ret = {}
+        for cell in self.Cell:
+            cols, vdj, vj = {}, [], []
+            for contig in self.Cell[cell]:
+                if isinstance(contig, dict):
+                    if contig['locus'] in ['IGH', 'TRB', 'TRD']:
+                        vdj.append(contig[query])
+                    elif contig['locus'] in ['IGK', 'IGL', 'TRA', 'TRG']:
+                        vj.append(contig[query])
+            if retrieve_mode == 'split and unique only':
+                if len(vdj) > 0:
+                    cols.update({
+                        query + '_VDJ':
+                        '|'.join(
+                            str(x) for x in list(dict.fromkeys(vdj))
+                            if present(x))
+                    })
+                if len(vj) > 0:
+                    cols.update({
+                        query + '_VJ':
+                        '|'.join(
+                            str(x) for x in list(dict.fromkeys(vj))
+                            if present(x))
+                    })
+            elif retrieve_mode == 'merge and unique only':
+                cols.update({
+                    query:
+                    '|'.join(str(x) for x in set(vdj + vj) if present(x))
+                })
+            elif retrieve_mode == 'split and sum':
+                if len(vdj) > 0:
+                    cols.update({
+                        query + '_VDJ':
+                        np.sum([float(x) for x in vdj if present(x)])
+                    })
+                if len(vj) > 0:
+                    cols.update({
+                        query + '_VJ':
+                        np.sum([float(x) for x in vj if present(x)])
+                    })
+            elif retrieve_mode == 'split and average':
+                if len(vdj) > 0:
+                    cols.update({
+                        query + '_VDJ':
+                        np.mean([float(x) for x in vdj if present(x)])
+                    })
+                if len(vj) > 0:
+                    cols.update({
+                        query + '_VJ':
+                        np.mean([float(x) for x in vj if present(x)])
+                    })
+            elif retrieve_mode == 'merge':
+                cols.update(
+                    {query: '|'.join(x for x in set(vdj + vj) if present(x))})
+            elif retrieve_mode == 'split':
+                if len(vdj) > 0:
+                    for i in range(1, len(vdj) + 1):
+                        cols.update({query + '_VDJ_' + str(i): vdj[i - 1]})
+                if len(vj) > 0:
+                    for i in range(1, len(vj) + 1):
+                        cols.update({query + '_VJ_' + str(i): vj[i - 1]})
+            elif retrieve_mode == 'sum':
+                cols.update({
+                    query:
+                    np.sum([float(x) for x in vdj + vj if present(x)])
+                })
+            elif retrieve_mode == 'average':
+                cols.update({
+                    query:
+                    np.mean([float(x) for x in vdj + vj if present(x)])
+                })
+            ret.update({cell: cols})
+        out = pd.DataFrame.from_dict(ret, orient='index')
+        if self.querydtype == 'object':
+            out.fillna('', inplace=True)
+        return (out)
 
 
 def initialize_metadata(self, cols: Sequence, clonekey: str,
@@ -1457,12 +756,19 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
             else:
                 if 'v_call' + suffix_h in tmp_metadata:
                     hv_ = tmp_metadata.at[i, 'v_call' + suffix_h]
+        if 'd_call' + suffix_h in tmp_metadata:
+            try:
+                hd_ = tmp_metadata.at[i, 'd_call' + suffix_h].split('|')
+            except:
+                hd_ = tmp_metadata.at[i, 'd_call' + suffix_h]
+        if 'd_call' + suffix_l in tmp_metadata:
+            tmp_metadata.drop('d_call' + suffix_l, axis=1, inplace=True)
+
         if 'j_call' + suffix_h in tmp_metadata:
             try:
                 hj_ = tmp_metadata.at[i, 'j_call' + suffix_h].split('|')
             except:
                 hj_ = tmp_metadata.at[i, 'j_call' + suffix_h]
-
         try:
             if 'v_call_genotyped' in cols:
                 if 'v_call_genotyped' + suffix_l in tmp_metadata:
@@ -1500,6 +806,9 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         if 'hv_' in locals():
             if len(hv_) > 1:
                 multi_h.append(['Multi' + suffix_h + '_v'])
+        if 'hd_' in locals():
+            if len(hd_) > 1:
+                multi_h.append(['Multi' + suffix_h + '_d'])
         if 'hj_' in locals():
             if len(hj_) > 1:
                 multi_h.append(['Multi' + suffix_h + '_j'])
@@ -1618,8 +927,8 @@ def update_metadata(self: Dandelion,
         clonekey = clone_key
 
     cols = [
-        'sequence_id', 'cell_id', 'locus', 'productive', 'v_call', 'j_call',
-        'c_call', 'duplicate_count', 'junction_aa'
+        'sequence_id', 'cell_id', 'locus', 'productive', 'v_call', 'd_call',
+        'j_call', 'c_call', 'duplicate_count', 'junction_aa'
     ]
 
     if 'duplicate_count' not in self.data:
