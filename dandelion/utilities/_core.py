@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 15:29:52
+# @Last Modified time: 2021-08-17 15:43:33
 
 import os
 from collections import defaultdict
@@ -1012,6 +1012,9 @@ def update_metadata(self: Dandelion,
                     'Cannot retrieve \'%s\' : Unknown column name.' % k)
         ret_metadata = pd.concat(retrieve_.values(), axis=1, join="inner")
         ret_metadata.dropna(axis = 1, how = 'all', inplace = True)
+        for col in ret_metadata:
+            if all_missing(ret_metadata[col]):
+                ret_metadata.drop(col, axis = 1, inplace = True)
 
         if collapse_alleles:
             for k in ret_dict.keys():
