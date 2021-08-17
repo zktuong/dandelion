@@ -5,6 +5,7 @@
    :maxdepth: 1
 
    README.rst
+   references.rst
 
 .. toctree::
    :hidden:
@@ -22,9 +23,3 @@
    :hidden:
 
    api
-
-.. toctree::
-   :maxdepth: 1
-   :caption: References:
-   :hidden:
-   references
