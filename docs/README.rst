@@ -244,6 +244,8 @@ Citation
 in `***Nature
 Medicine*** <https://www.nature.com/articles/s41591-021-01329-2>`__:
 
+[[Stephenson2021]](https://www.nature.com/articles/s41591-021-01329-2)
+
 *Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J
 Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon
 Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka,
