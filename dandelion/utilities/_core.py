@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 11:39:01
+# @Last Modified time: 2021-08-17 14:53:06
 
 import os
 from collections import defaultdict
@@ -435,22 +435,30 @@ class Query:
                         query + '_VDJ':
                         np.sum([float(x) for x in vdj if present(x)])
                     })
+                else:
+                    cols.update({query + 'VDJ': np.nan})
                 if len(vj) > 0:
                     cols.update({
                         query + '_VJ':
                         np.sum([float(x) for x in vj if present(x)])
                     })
+                else:
+                    cols.update({query + 'VJ': np.nan})
             elif retrieve_mode == 'split and average':
                 if len(vdj) > 0:
                     cols.update({
                         query + '_VDJ':
                         np.mean([float(x) for x in vdj if present(x)])
                     })
+                else:
+                    cols.update({query + 'VDJ': np.nan})
                 if len(vj) > 0:
                     cols.update({
                         query + '_VJ':
                         np.mean([float(x) for x in vj if present(x)])
                     })
+                else:
+                    cols.update({query + 'VJ': np.nan})
             elif retrieve_mode == 'merge':
                 cols.update(
                     {query: '|'.join(x for x in set(vdj + vj) if present(x))})
@@ -466,11 +474,15 @@ class Query:
                     query:
                     np.sum([float(x) for x in vdj + vj if present(x)])
                 })
+                if not present(cols[query]):
+                    cols.update({query: np.nan})
             elif retrieve_mode == 'average':
                 cols.update({
                     query:
                     np.mean([float(x) for x in vdj + vj if present(x)])
                 })
+                if not present(cols[query]):
+                    cols.update({query: np.nan})
             ret.update({cell: cols})
         out = pd.DataFrame.from_dict(ret, orient='index')
         if self.querydtype == 'object':
