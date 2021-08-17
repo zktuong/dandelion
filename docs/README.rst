@@ -207,7 +207,7 @@ Python packages
     presto>=0.6.0
     polyleven>=0.5
     networkx>=2.4
-    rpy2>=3.4 or # rpy2>=3.3.2,<3.3.5
+    rpy2>=3.4 # or rpy2>=3.3.2,<3.3.5
 
 R packages
 
@@ -240,9 +240,11 @@ post in the issue tracker and I will get back to you.
 Citation
 --------
 
-``dandelion`` is now included in the the following manuscript published
-in `***Nature
-Medicine*** <https://www.nature.com/articles/s41591-021-01329-2>`__:
+``dandelion`` is now included in the the following manuscript:
+
+.. [Stephenson2021] Stephenson *et al.* (2021),
+   *Single-cell multi-omics analysis of the immune response in COVID-19*,
+   `Nature Medicine <https://www.nature.com/articles/s41591-021-01329-2>`__.
 
 *Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J
 Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon
@@ -261,8 +263,8 @@ Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie
 Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z
 Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R
 Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.*
-***Single-cell multi-omics analysis of the immune response in
-COVID-19***. *Nature Medicine 2021.04.20; doi:
+**Single-cell multi-omics analysis of the immune response in
+COVID-19**. *Nature Medicine 2021.04.20; doi:
 https://dx.doi.org/10.1038/s41591-021-01329-2*
 
 Original preprint:
@@ -283,10 +285,56 @@ Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume
 Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie
 Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z
 Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R
-Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.* ***The
+Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.* **The
 cellular immune response to COVID-19 deciphered by single cell
-multi-omics across three UK centres***. *medRxiv 2021.01.13.21249725;
+multi-omics across three UK centres**. *medRxiv 2021.01.13.21249725;
 doi: https://doi.org/10.1101/2021.01.13.21249725*
+
+If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
+
+.. [changeo]
+*Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* **Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
+
+.. [tigger]
+*Gadala-Maria D, Yaari G, Uduman M, Kleinstein SH.* **Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles.** *Proceedings of the National Academy of Sciency of the United States of America, E862-70.*
+
+References
+----------
+
+.. [Bashford-Rogers13] Bashford-Rogers *et al.* (2013),
+   *Network properties derived from deep sequencing of human B-cell receptor repertoires delineate B-cell populations*,
+   `Genome Research <https://genome.cshlp.org/content/23/11/1874>`__.
+
+.. [Bashford-Rogers19] Bashford-Rogers *et al.* (2019),
+   *Analysis of the B cell receptor repertoire in six immune-mediated diseases*,
+   `Nature <https://www.nature.com/articles/s41586-019-1595-3>`__.
+
+.. [Gadala-Maria15] Gadala-Maria *et al.* (2015),
+   *Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles*,
+   `Proceedings of the National Academy of Sciency of the United States of America <https://www.pnas.org/content/112/8/E862>`__.
+
+.. [Gupta15] Gupta *et al.* (2015),
+   *Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data*,
+   `Bioinformatics <https://academic.oup.com/bioinformatics/article/31/20/3356/195677>`__.
+
+.. [Ma16] Ma *et al.* (2016)
+   *nxviz: Composable and rational network visualizations in matplotlib*,
+   `Github <https://github.com/ericmjl/nxviz>`__.
+
+.. [Stephenson2021] Stephenson *et al.* (2021),
+   *Single-cell multi-omics analysis of the immune response in COVID-19*,
+   `Nature Medicine <https://www.nature.com/articles/s41591-021-01329-2>`__.
+
+.. [Sturm2020] Sturm *et al.* (2020),
+   *Scirpy: a Scanpy extension for analyzing single-cell T-cell receptor-sequencing data*,
+   `Bioinformatics <https://academic.oup.com/bioinformatics/article/36/18/4817/5866543>`__.
+   `GitHub <https://github.com/icbi-lab/scirpy>`__.
+
+.. [Wolf18] Wolf *et al.* (2018),
+   *Scanpy: large-scale single-cell gene expression data analysis*,
+   `Genome Biology <https://doi.org/10.1186/s13059-017-1382-0>`__.
+   `GitHub <https://github.com/theislab/scanpy>`__.
+
 
 .. |Docs| image:: https://readthedocs.org/projects/sc-dandelion/badge/?version=latest
    :target: https://sc-dandelion.readthedocs.io/en/latest/?badge=latest

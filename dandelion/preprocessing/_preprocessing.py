@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 09:41:40
+# @Last Modified time: 2021-08-17 11:39:24
 
 import os
 import pandas as pd
@@ -2326,7 +2326,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
-    sanitize_dtype(dat)
+    dat = sanitize_data(dat)
 
     if sequence_column is None:
         seq_ = 'sequence_alignment'

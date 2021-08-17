@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 11:24:06
+# @Last Modified time: 2021-08-17 20:25:07
 
 import os
 from collections import defaultdict, Iterable
@@ -338,7 +338,6 @@ def sanitize_data(data, ignore='clone_id'):
         else:
             if d != ignore:
                 try:
-                    data[d].replace([None, np.nan, ''], pd.NA, inplace=True)
                     data[d] = pd.to_numeric(data[d])
                 except:
                     data[d].replace(to_replace=[None, np.nan, pd.NA],
@@ -360,27 +359,49 @@ def sanitize_data(data, ignore='clone_id'):
     return (data)
 
 
+def sanitize_data_for_saving(data):
+    """Quick sanitize dtypes for saving."""
+    tmp = data.copy()
+    for d in tmp:
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]['type'] in [
+                    'string', 'boolean'
+            ]:
+                tmp[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
+            if RearrangementSchema.properties[d]['type'] in [
+                    'integer', 'number'
+            ]:
+                tmp[d].replace([None, np.nan, pd.NA, ''], np.nan, inplace=True)
+        else:
+            try:
+                tmp[d] = pd.to_numeric(tmp[d])
+            except:
+                tmp[d].replace([None, pd.NA, np.nan], '', inplace=True)
+    return (tmp)
+
+
 def validate_airr(data):
     """Validate dtypes in airr table."""
+    tmp = data.copy()
     int_columns = []
-    for d in data:
+    for d in tmp:
         try:
-            data[d].replace(np.nan, pd.NA).astype("Int64")
+            tmp[d].replace(np.nan, pd.NA).astype("Int64")
             int_columns.append(d)
         except:
             pass
     bool_columns = [
         'rev_comp', 'productive', 'vj_in_frame', 'stop_codon', 'complete_vdj'
     ]
-    str_columns = list(data.dtypes[data.dtypes == 'object'].index)
+    str_columns = list(tmp.dtypes[tmp.dtypes == 'object'].index)
     columns = [
         c for c in list(set(int_columns + str_columns + bool_columns))
-        if c in data
+        if c in tmp
     ]
     if len(columns) > 0:
         for c in columns:
-            data[c].fillna('', inplace=True)
-    for _, row in data.iterrows():
+            tmp[c].fillna('', inplace=True)
+    for _, row in tmp.iterrows():
         contig = Contig(row).contig
         for required in [
                 'sequence', 'rev_comp', 'sequence_alignment',
@@ -448,12 +469,6 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
         raise KeyError("'sequence_id' not found in columns of input")
 
     return (obj_)
-
-
-def sanitize_dtype(data):
-    for col in data:
-        if data[col].dtype == np.int64:
-            data[col] = data[col].astype(np.float64)
 
 
 class ContigDict(dict):
