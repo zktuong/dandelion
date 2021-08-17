@@ -242,7 +242,7 @@ Citation
 
 ``dandelion`` is now included in the the following manuscript:
 
-.. [Stephenson2021] Stephenon *et al.* (2021),
+.. [Stephenson2021] Stephenson *et al.* (2021),
    *Single-cell multi-omics analysis of the immune response in COVID-19*,
    `Nature Medicine <https://www.nature.com/articles/s41591-021-01329-2>`__.
 
@@ -292,10 +292,10 @@ doi: https://doi.org/10.1101/2021.01.13.21249725*
 
 If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
 
-.. [Gupta15]
+.. [changeo]
 *Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* **Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
 
-.. [Gadala-Maria15]
+.. [tigger]
 *Gadala-Maria D, Yaari G, Uduman M, Kleinstein SH.* **Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles.** *Proceedings of the National Academy of Sciency of the United States of America, E862-70.*
 
 References
@@ -321,7 +321,7 @@ References
    *nxviz: Composable and rational network visualizations in matplotlib*,
    `Github <https://github.com/ericmjl/nxviz>`__.
 
-.. [Stephenson2021] Stephenon *et al.* (2021),
+.. [Stephenson2021] Stephenson *et al.* (2021),
    *Single-cell multi-omics analysis of the immune response in COVID-19*,
    `Nature Medicine <https://www.nature.com/articles/s41591-021-01329-2>`__.
 
