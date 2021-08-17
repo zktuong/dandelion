@@ -207,7 +207,7 @@ Python packages
     presto>=0.6.0
     polyleven>=0.5
     networkx>=2.4
-    rpy2>=3.4 or # rpy2>=3.3.2,<3.3.5
+    rpy2>=3.4 # or rpy2>=3.3.2,<3.3.5
 
 R packages
 
@@ -240,8 +240,7 @@ post in the issue tracker and I will get back to you.
 Citation
 --------
 
-``dandelion`` is now included in the the following manuscript published
-in Nature Medicine <https://www.nature.com/articles/s41591-021-01329-2>`__:
+``dandelion`` is now included in the the following manuscript:
 
 .. [Stephenson2021] Stephenon *et al.* (2021),
    *Single-cell multi-omics analysis of the immune response in COVID-19*,
@@ -264,8 +263,8 @@ Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie
 Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z
 Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R
 Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.*
-***Single-cell multi-omics analysis of the immune response in
-COVID-19***. *Nature Medicine 2021.04.20; doi:
+**Single-cell multi-omics analysis of the immune response in
+COVID-19**. *Nature Medicine 2021.04.20; doi:
 https://dx.doi.org/10.1038/s41591-021-01329-2*
 
 Original preprint:
@@ -286,18 +285,18 @@ Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume
 Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie
 Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z
 Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R
-Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.* ***The
+Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.* **The
 cellular immune response to COVID-19 deciphered by single cell
-multi-omics across three UK centres***. *medRxiv 2021.01.13.21249725;
+multi-omics across three UK centres**. *medRxiv 2021.01.13.21249725;
 doi: https://doi.org/10.1101/2021.01.13.21249725*
 
 If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
 
-.. [changeo and shazam]
-*Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* ***Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.*** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
+.. [Gupta15]
+*Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* **Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
 
-.. [TIgGER]
-*Gadala-Maria D, Yaari G, Uduman M, Kleinstein SH.* ***Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles.*** *Proceedings of the National Academy of Sciency of the United States of America, E862-70.*
+.. [Gadala-Maria15]
+*Gadala-Maria D, Yaari G, Uduman M, Kleinstein SH.* **Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles.** *Proceedings of the National Academy of Sciency of the United States of America, E862-70.*
 
 References
 ----------
