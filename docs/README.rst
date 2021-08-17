@@ -288,6 +288,9 @@ cellular immune response to COVID-19 deciphered by single cell
 multi-omics across three UK centres***. *medRxiv 2021.01.13.21249725;
 doi: https://doi.org/10.1101/2021.01.13.21249725*
 
+If you use the pre-processing tools/functions, please cite the relevant manuscripts from the [immcantation suite](https://immcantation.readthedocs.io/en/stable/about.html)
+*Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* ***Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.*** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
+
 .. |Docs| image:: https://readthedocs.org/projects/sc-dandelion/badge/?version=latest
    :target: https://sc-dandelion.readthedocs.io/en/latest/?badge=latest
 .. |PyPI| image:: https://img.shields.io/pypi/v/sc-dandelion?logo=PyPI
