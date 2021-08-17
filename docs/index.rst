@@ -5,7 +5,6 @@
    :maxdepth: 1
 
    README.rst
-   references.rst
 
 .. toctree::
    :hidden:

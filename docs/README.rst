@@ -291,9 +291,13 @@ cellular immune response to COVID-19 deciphered by single cell
 multi-omics across three UK centres***. *medRxiv 2021.01.13.21249725;
 doi: https://doi.org/10.1101/2021.01.13.21249725*
 
-If you use the pre-processing tools/functions, please cite the relevant manuscripts from the [immcantation suite](https://immcantation.readthedocs.io/en/stable/about.html)
+If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
 
+.. [changeo and shazam]
 *Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* ***Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.*** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
+
+.. [TIgGER]
+*Gadala-Maria D, Yaari G, Uduman M, Kleinstein SH.* ***Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles.*** *Proceedings of the National Academy of Sciency of the United States of America, E862-70.*
 
 References
 ----------
@@ -315,7 +319,7 @@ References
    `Bioinformatics <https://academic.oup.com/bioinformatics/article/31/20/3356/195677>`__.
 
 .. [Ma16] Ma *et al.* (2016)
-   *nxviz: Composable and rational network visualizations in matplotlib*
+   *nxviz: Composable and rational network visualizations in matplotlib*,
    `Github <https://github.com/ericmjl/nxviz>`__.
 
 .. [Stephenson2021] Stephenon *et al.* (2021),
