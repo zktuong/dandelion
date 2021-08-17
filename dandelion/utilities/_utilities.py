@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 19:24:22
+# @Last Modified time: 2021-08-17 20:25:07
 
 import os
 from collections import defaultdict, Iterable
@@ -340,7 +340,9 @@ def sanitize_data(data, ignore='clone_id'):
                 try:
                     data[d] = pd.to_numeric(data[d])
                 except:
-                    data[d].replace(to_replace=[None, np.nan, pd.NA], value='', inplace=True)
+                    data[d].replace(to_replace=[None, np.nan, pd.NA],
+                                    value='',
+                                    inplace=True)
         if re.search('mu_freq', d):
             data[d] = [
                 float(x) if present(x) else np.nan
@@ -355,6 +357,27 @@ def sanitize_data(data, ignore='clone_id'):
     # check if airr-standards is happy
     validate_airr(data)
     return (data)
+
+
+def sanitize_data_for_saving(data):
+    """Quick sanitize dtypes for saving."""
+    tmp = data.copy()
+    for d in tmp:
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]['type'] in [
+                    'string', 'boolean'
+            ]:
+                tmp[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
+            if RearrangementSchema.properties[d]['type'] in [
+                    'integer', 'number'
+            ]:
+                tmp[d].replace([None, np.nan, pd.NA, ''], np.nan, inplace=True)
+        else:
+            try:
+                tmp[d] = pd.to_numeric(tmp[d])
+            except:
+                tmp[d].replace([None, pd.NA, np.nan], '', inplace=True)
+    return (tmp)
 
 
 def validate_airr(data):
