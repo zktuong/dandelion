@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 11:24:06
+# @Last Modified time: 2021-08-17 11:39:12
 
 import os
 from collections import defaultdict, Iterable
@@ -448,12 +448,6 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
         raise KeyError("'sequence_id' not found in columns of input")
 
     return (obj_)
-
-
-def sanitize_dtype(data):
-    for col in data:
-        if data[col].dtype == np.int64:
-            data[col] = data[col].astype(np.float64)
 
 
 class ContigDict(dict):

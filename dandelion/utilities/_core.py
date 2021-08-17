@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-13 13:30:02
+# @Last Modified time: 2021-08-17 11:39:01
 
 import os
 from collections import defaultdict
@@ -301,7 +301,6 @@ class Dandelion:
         # now to actually saving
         data = self.data.copy()
         data = sanitize_data(data)
-        sanitize_dtype(data)
 
         data.to_hdf(filename,
                     "data",
