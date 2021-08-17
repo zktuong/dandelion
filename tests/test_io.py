@@ -35,8 +35,6 @@ def test_readwrite_h5(create_testfolder):
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
-    vdj.write_airr('/Users/kt16/Downloads/test.tsv')
-    vdj2.write_airr('/Users/kt16/Downloads/test2.tsv')
 
 
 def test_readwrite10xairr(create_testfolder):
