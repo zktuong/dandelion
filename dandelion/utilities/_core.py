@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 14:53:06
+# @Last Modified time: 2021-08-17 15:29:52
 
 import os
 from collections import defaultdict
@@ -451,14 +451,14 @@ class Query:
                         np.mean([float(x) for x in vdj if present(x)])
                     })
                 else:
-                    cols.update({query + 'VDJ': np.nan})
+                    cols.update({query + '_VDJ': np.nan})
                 if len(vj) > 0:
                     cols.update({
                         query + '_VJ':
                         np.mean([float(x) for x in vj if present(x)])
                     })
                 else:
-                    cols.update({query + 'VJ': np.nan})
+                    cols.update({query + '_VJ': np.nan})
             elif retrieve_mode == 'merge':
                 cols.update(
                     {query: '|'.join(x for x in set(vdj + vj) if present(x))})
@@ -485,8 +485,15 @@ class Query:
                     cols.update({query: np.nan})
             ret.update({cell: cols})
         out = pd.DataFrame.from_dict(ret, orient='index')
-        if self.querydtype == 'object':
-            out.fillna('', inplace=True)
+        if retrieve_mode not in ['split and sum', 'split and average', 'sum', 'average']:
+            if retrieve_mode == 'split':
+                for x in out:
+                    try:
+                        out[x] = pd.to_numeric(out[x])
+                    except:
+                        out[x].fillna('', inplace=True)
+            else:
+                out.fillna('', inplace=True)
         return (out)
 
 
@@ -986,6 +993,8 @@ def update_metadata(self: Dandelion,
             retrieve = [retrieve]
         if type(retrieve_mode) is str:
             retrieve_mode = [retrieve_mode]
+            if len(retrieve) > len(retrieve_mode):
+                retrieve_mode = [x for x in retrieve_mode for i in retrieve]
         for ret, mode in zip(retrieve, retrieve_mode):
             ret_dict.update({ret: {
                 'query': ret,
@@ -1002,6 +1011,7 @@ def update_metadata(self: Dandelion,
                 raise KeyError(
                     'Cannot retrieve \'%s\' : Unknown column name.' % k)
         ret_metadata = pd.concat(retrieve_.values(), axis=1, join="inner")
+        ret_metadata.dropna(axis = 1, how = 'all', inplace = True)
 
         if collapse_alleles:
             for k in ret_dict.keys():
