@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:47:46
+# @Last Modified time: 2021-08-20 20:11:50
 
 import os
 import sys
@@ -718,18 +718,11 @@ def transfer(
         print('Updating anndata slots')
         if neighbors_key is None:
             neighbors_key = "neighbors"
-        if neighbors_key not in self.uns:
-            raise ValueError(
-                "`edges=True` requires `pp.neighbors` to be run before.")
 
         rna_neighbors_key = 'rna_' + neighbors_key
         vdj_neighbors_key = 'vdj_' + neighbors_key
         if rna_neighbors_key not in self.uns:
             self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
-
-        if neighbors_key not in self.uns:
-            raise ValueError(
-                "`edges=True` requires `pp.neighbors` to be run before.")
 
         if rna_key is None:
             r_connectivities_key = 'rna_connectivities'
