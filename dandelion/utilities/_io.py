@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 09:29:23
+# @Last Modified time: 2021-08-20 16:47:32
 
 import os
 import json
@@ -733,6 +733,16 @@ def change_file_location(data: Sequence,
                 'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
             )
         tmp = check_travdv(filePath)
+        _airrfile = filePath.replace('_db-pass.tsv', '.tsv')
+        airr_output = load_data(_airrfile)
+        cols_to_merge = [
+            'junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa',
+            'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa',
+            'v_sequence_alignment_aa', 'd_sequence_alignment_aa',
+            'j_sequence_alignment_aa'
+        ]
+        for x in cols_to_merge:
+            tmp[x] = pd.Series(airr_output[x])
         tmp.to_csv(filePath, sep='\t', index=False)
         cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
         run(cmd)
