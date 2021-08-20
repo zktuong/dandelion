@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 20:22:34
+# @Last Modified time: 2021-08-20 20:25:56
 
 import os
 import sys
@@ -743,7 +743,7 @@ def transfer(
 
         # stash_rna_connectivities:
         if r_connectivities_key not in self.obsp:
-            if skip_stash not in locals():
+            if 'skip_stash' not in locals():
                 try:
                     self.obsp[r_connectivities_key] = self.obsp[
                         "connectivities"].copy()
