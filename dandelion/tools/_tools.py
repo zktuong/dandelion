@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 20:40:02
+# @Last Modified time: 2021-08-20 20:44:15
 
 import os
 import sys
@@ -336,7 +336,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     try:
         dat[clone_key] = pd.Series(dat_heavy[clone_key])
     except:
-        dat[clone_key] = np.nan
+        dat[clone_key] = ''
         dat[clone_key].update(dict(pd.Series(dat_heavy[clone_key])))
 
     dat_light_c = dat[dat['locus'].isin(locus_2)].copy()
