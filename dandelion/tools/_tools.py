@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 20:11:50
+# @Last Modified time: 2021-08-20 20:17:07
 
 import os
 import sys
@@ -718,6 +718,8 @@ def transfer(
         print('Updating anndata slots')
         if neighbors_key is None:
             neighbors_key = "neighbors"
+        if neighbors_key not in self.uns:
+            self.uns[neighbors_key] = {}
 
         rna_neighbors_key = 'rna_' + neighbors_key
         vdj_neighbors_key = 'vdj_' + neighbors_key
