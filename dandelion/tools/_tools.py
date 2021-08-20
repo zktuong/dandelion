@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 20:40:02
+# @Last Modified time: 2021-08-20 20:25:56
 
 import os
 import sys
@@ -333,11 +333,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                         second_key_dict[l]) + '_' + str(third_key_dict[key])
     # add it to the original dataframes
     dat_heavy[clone_key] = pd.Series(clone_dict)
-    try:
-        dat[clone_key] = pd.Series(dat_heavy[clone_key])
-    except:
-        dat[clone_key] = np.nan
-        dat[clone_key].update(dict(pd.Series(dat_heavy[clone_key])))
+    dat[clone_key] = pd.Series(dat_heavy[clone_key])
 
     dat_light_c = dat[dat['locus'].isin(locus_2)].copy()
     if dat_light_c.shape[0] != 0:
@@ -576,7 +572,6 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         dat[clone_key] = [fintree[x] for x in dat['cell_id']]
 
     dat_[clone_key] = pd.Series(dat[clone_key])
-
     dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(self)):
         dat_.to_csv("{}/{}_clone.tsv".format(
