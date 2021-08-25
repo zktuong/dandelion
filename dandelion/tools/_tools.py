@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:47:46
+# @Last Modified time: 2021-08-20 20:25:56
 
 import os
 import sys
@@ -719,17 +719,13 @@ def transfer(
         if neighbors_key is None:
             neighbors_key = "neighbors"
         if neighbors_key not in self.uns:
-            raise ValueError(
-                "`edges=True` requires `pp.neighbors` to be run before.")
+            skip_stash = True
+            self.uns[neighbors_key] = {}
 
         rna_neighbors_key = 'rna_' + neighbors_key
         vdj_neighbors_key = 'vdj_' + neighbors_key
         if rna_neighbors_key not in self.uns:
             self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
-
-        if neighbors_key not in self.uns:
-            raise ValueError(
-                "`edges=True` requires `pp.neighbors` to be run before.")
 
         if rna_key is None:
             r_connectivities_key = 'rna_connectivities'
@@ -747,15 +743,16 @@ def transfer(
 
         # stash_rna_connectivities:
         if r_connectivities_key not in self.obsp:
-            try:
-                self.obsp[r_connectivities_key] = self.obsp[
-                    "connectivities"].copy()
-                self.obsp[r_distances_key] = self.obsp["distances"].copy()
-            except:
-                self.obsp[r_connectivities_key] = self.uns[neighbors_key][
-                    "connectivities"]
-                self.obsp[r_distances_key] = self.uns[neighbors_key][
-                    "distances"]
+            if 'skip_stash' not in locals():
+                try:
+                    self.obsp[r_connectivities_key] = self.obsp[
+                        "connectivities"].copy()
+                    self.obsp[r_distances_key] = self.obsp["distances"].copy()
+                except:
+                    self.obsp[r_connectivities_key] = self.uns[neighbors_key][
+                        "connectivities"]
+                    self.obsp[r_distances_key] = self.uns[neighbors_key][
+                        "distances"]
 
         # always overwrite the bcr slots
         self.obsp['connectivities'] = df_connectivities_.copy()
