@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-07 13:11:24
+# @Last Modified time: 2021-09-09 16:22:21
 
 import os
 import pandas as pd
@@ -497,7 +497,7 @@ def tigger_genotype(data: Union[str, PathLike],
 def recipe_scanpy_qc(
         self: AnnData,
         layer: Optional[str] = None,
-        mito_startswith: str = 'MT',
+        mito_startswith: str = 'MT-',
         max_genes: int = 2500,
         min_genes: int = 200,
         mito_cutoff: Optional[int] = 5,
@@ -589,8 +589,9 @@ def recipe_scanpy_qc(
                                 max_mean=3,
                                 min_disp=0.5)
     for i in _adata.var.index:
-        if re.search(vdj_pattern, i):
-            _adata.var.at[i, 'highly_variable'] = False
+        if vdj_pattern is not None:
+            if re.search(vdj_pattern, i):
+                _adata.var.at[i, 'highly_variable'] = False
         if blacklist is not None:
             if i in blacklist:
                 _adata.var.at[i, 'highly_variable'] = False
