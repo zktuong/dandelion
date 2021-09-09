@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-09-09 16:22:21
+# @Last Modified time: 2021-09-09 16:25:25
 
 import os
 import pandas as pd
@@ -595,7 +595,7 @@ def recipe_scanpy_qc(
         if blacklist is not None:
             if i in blacklist:
                 _adata.var.at[i, 'highly_variable'] = False
-    _adata = _adata[:, _adata.var['highly_variable']]
+    _adata = _adata[:, _adata.var['highly_variable']].copy()
     sc.pp.scale(_adata, max_value=10)
     sc.tl.pca(_adata, svd_solver='arpack')
     sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
