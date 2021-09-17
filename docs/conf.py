@@ -20,6 +20,7 @@ with open("README.md", "r") as readme_file:
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
+import dandelion
 
 # -- Project information -----------------------------------------------------
 
