@@ -75,15 +75,15 @@ def main():
 
     logg.info(
         'command line parameters:\n',
-        deep=
-        (f'--------------------------------------------------------------\n'
-         f'    --meta = {args.meta}\n'
-         f'    --chain = {args.chain}\n'
-         f'    --file_prefix = {args.file_prefix}\n'
-         f'    --sep = {args.sep}\n'
-         f'    --keep_trailing_hyphen_number = {args.keep_trailing_hyphen_number}\n'
-         f'    --clean_output = {args.clean_output}\n'
-         f'--------------------------------------------------------------\n'),
+        deep=(f'\n'
+              f'--------------------------------------------------------------\n'
+              f'    --meta = {args.meta}\n'
+              f'    --chain = {args.chain}\n'
+              f'    --file_prefix = {args.file_prefix}\n'
+              f'    --sep = {args.sep}\n'
+              f'    --keep_trailing_hyphen_number = {args.keep_trailing_hyphen_number}\n'
+              f'    --clean_output = {args.clean_output}\n'
+              f'--------------------------------------------------------------\n'),
     )
 
     # set up a sample list
