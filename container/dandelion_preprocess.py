@@ -73,15 +73,17 @@ def main():
     start = logg.info('Beginning preprocessing\n')
 
     logg.info(
-        'command line parameters:',
-        time=start,
+        'command line parameters:\n',
         deep=(
-            f'meta {args.meta}\n'
-            f'chain {args.chain}\n'
-            f'file_prefix {args.file_prefix}\n'
-            f'sep {args.sep}\n'
-            f'keep_trailing_hyphen_number {args.keep_trailing_hyphen_number}\n'
-            f'clean_output {args.clean_output}\n'))
+            f'--------------------------------------------------------------\n'
+            f'    --meta : {args.meta}\n'
+            f'    --chain : {args.chain}\n'
+            f'    --file_prefix : {args.file_prefix}\n'
+            f'    --sep : {args.sep}\n'
+            f'    --keep_trailing_hyphen_number : {args.keep_trailing_hyphen_number}\n'
+            f'    --clean_output : {args.clean_output}\n'
+            f'--------------------------------------------------------------\n'
+        ))
     # set up a sample list
     # do we have metadata?
     if args.meta is not None:
@@ -199,7 +201,7 @@ def main():
     if args.clean_output:
         for sample in samples:
             os.system('rm -rf ' + sample + '/dandelion/tmp')
-    logg.info(' finished', time=start)
+    logg.info('Pre-processing finished.\n', time=start)
 
 
 if __name__ == "__main__":
