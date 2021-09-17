@@ -67,23 +67,22 @@ def parse_args():
 
 
 def main():
+    logg.info('Software versions:\n')
     ddl.logging.print_header()
     # sponge up command line arguments to begin with
     args = parse_args()
     start = logg.info('Beginning preprocessing\n')
 
-    logg.info(
-        'command line parameters:\n',
-        deep=(
-            f'--------------------------------------------------------------\n'
-            f'    --meta : {args.meta}\n'
-            f'    --chain : {args.chain}\n'
-            f'    --file_prefix : {args.file_prefix}\n'
-            f'    --sep : {args.sep}\n'
-            f'    --keep_trailing_hyphen_number : {args.keep_trailing_hyphen_number}\n'
-            f'    --clean_output : {args.clean_output}\n'
-            f'--------------------------------------------------------------\n'
-        ))
+    logg.info((
+        f'command line parameters:\n',
+        f'--------------------------------------------------------------\n'
+        f'    --meta = {args.meta}\n'
+        f'    --chain = {args.chain}\n'
+        f'    --file_prefix = {args.file_prefix}\n'
+        f'    --sep = {args.sep}\n'
+        f'    --keep_trailing_hyphen_number = {args.keep_trailing_hyphen_number}\n'
+        f'    --clean_output = {args.clean_output}\n'
+        f'--------------------------------------------------------------\n'))
     # set up a sample list
     # do we have metadata?
     if args.meta is not None:
