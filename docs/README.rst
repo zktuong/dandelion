@@ -233,6 +233,11 @@ I have had very useful discussions. I would also like to thank my wife
 who helped name the package, because she thought the plots looked like a
 dandelion =D.
 
+Support
+-------
+
+Support is provided on a voluntary basis, as time permits.
+
 If there are any ideas, comments, suggestions, thing you would like to
 know more etc., please feel free to email me at kt16@sanger.ac.uk or
 post in the issue tracker and I will get back to you.
