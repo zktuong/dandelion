@@ -10,7 +10,6 @@ def test_callscript():
             capture_output=True,
             encoding='utf8')
     assert p.returncode == 0
-    assert p.stderr == ""
     assert p.stdout != ""
 
 
