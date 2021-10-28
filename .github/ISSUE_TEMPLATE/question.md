@@ -1,6 +1,6 @@
 ---
 name: Question
-about: Ask a question about the package
+about: Ask a question about the package. IF IT IS NOT A BUG, PLEASE POST THIS IN THE [DISCUSSIONS](https://github.com/zktuong/dandelion/discussions).
 title: "[QUESTION]"
 labels: question
 assignees: ''
