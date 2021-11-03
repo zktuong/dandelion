@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-09-14 16:35:37
+# @Last Modified time: 2021-11-03 23:06:15
 
 import os
 import pandas as pd
@@ -2592,8 +2592,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
         dat = load_data(self)
         warnings.filterwarnings("ignore")
-
-    sanitize_dtype(dat)
 
     sh = importr('shazam')
     pandas2ri.activate()
