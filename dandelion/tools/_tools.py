@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 20:25:56
+# @Last Modified time: 2021-11-03 23:49:44
 
 import os
 import sys
@@ -660,7 +660,7 @@ def transfer(
         vdj_key: Optional[str] = None,
         overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
     """
-    Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
+    Transfer data in `Dandelion` slots to `AnnData` object, updating the obs, uns, obsm and obsp slots.
 
     Parameters
     ----------
