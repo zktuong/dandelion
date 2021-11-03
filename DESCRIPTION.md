@@ -1,10 +1,11 @@
 [![](https://readthedocs.org/projects/sc-dandelion/badge/?version=latest)](https://sc-dandelion.readthedocs.io/en/latest/?badge=latest)
 [![](https://img.shields.io/pypi/v/sc-dandelion?logo=PyPI)](https://pypi.org/project/sc-dandelion/)
-[![](https://byob.yarr.is/zktuong/dandelion/master-version)](https://github.com/zktuong/dandelion/tree/master)
-[![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)]((https://github.com/zktuong/dandelion/actions?query=workflow%3Atests))
-[![](https://byob.yarr.is/zktuong/dandelion/devel-version)](https://github.com/zktuong/dandelion/tree/devel)
+[<img src="https://byob.yarr.is/zktuong/dandelion/master-version">](https://github.com/zktuong/dandelion/tree/master)
+[![master](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master)](https://github.com/zktuong/dandelion/actions?query=workflow%3Atests)
+[<img src="https://byob.yarr.is/zktuong/dandelion/devel-version">](https://github.com/zktuong/dandelion/tree/devel)
 [![tests](https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel)](https://github.com/zktuong/dandelion/actions?query=workflow%3Atests)
 [![codecov](https://codecov.io/gh/zktuong/dandelion/branch/master/graph/badge.svg?token=661BMU1FBO)](https://codecov.io/gh/zktuong/dandelion)
+[![airr](https://img.shields.io/static/v1?label=AIRR-C%20sw-tools%20v1&message=compliant&color=008AFF&labelColor=000000&style=plastic)](https://docs.airr-community.org/en/stable/swtools/airr_swtools_standard.html)
 
 ![](docs/notebooks/img/dandelion_logo_illustration.png)
 
