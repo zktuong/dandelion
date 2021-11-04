@@ -1,7 +1,6 @@
 .. toctree::
    :maxdepth: 2
 
-   notebooks/1_dandelion_preprocessing-10x_data.ipynb
    notebooks/2_dandelion_filtering-10x_data.ipynb
    notebooks/1b_dandelion_noreannotation-10x_data.ipynb   
    notebooks/3_dandelion_findingclones-10x_data.ipynb
