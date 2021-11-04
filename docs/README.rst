@@ -1,4 +1,4 @@
-|Docs| |PyPI| |Master| |MasterTest| |Devel| |DevelTest| |CodeCov| |airr|
+|Docs| |PyPI| |Master| |MasterTest| |Devel| |DevelTest| |CodeCov| |airr| 
 
 |logo|
 
@@ -300,10 +300,8 @@ If you use the pre-processing tools/functions, please cite the relevant manuscri
 .. [changeo]
 *Gupta NT, Vander Heiden JA, Uduman M, Gadala-Maria D, Yaari G, Kleinstein SH.* **Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data.** *Bioinformatics 31, 3356-8 (2015). doi: https://doi.org/10.1093/bioinformatics/btv359*
 
-
 .. [tigger]
 *Gadala-Maria D, Yaari G, Uduman M, Kleinstein SH.* **Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles.** *Proceedings of the National Academy of Sciency of the United States of America, E862-70.*
-
 
 References
 ----------

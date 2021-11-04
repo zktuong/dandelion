@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-11-03 23:56:49
+# @Last Modified time: 2021-11-03 23:06:15
 
 import os
 import pandas as pd
@@ -70,7 +70,7 @@ def format_fasta(fasta: Union[PathLike, str],
 
     Returns
     -------
-
+    Formatted fasta file with new headers containing prefix
     """
     if filename_prefix is None:
         filename_pre = 'filtered'
@@ -264,7 +264,7 @@ def format_fastas(fastas: Sequence,
 
     Returns
     -------
-
+    Formatted fasta file with new headers containing prefix
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -388,7 +388,7 @@ def assign_isotype(fasta: Union[str, PathLike],
 
     Returns
     -------
-
+    V(D)J tsv files with constant genes annotated.
     """
     def _run_blastn(fasta, blastdb, fileformat, org, verbose):
 
@@ -992,7 +992,7 @@ def assign_isotypes(fastas: Sequence,
 
     Returns
     -------
-
+    V(D)J tsv files with constant genes annotated.
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -1055,7 +1055,7 @@ def reannotate_genes(data: Sequence,
 
     Returns
     -------
-
+    V(D)J data file in airr/changeo data format.
     """
     if type(data) is not list:
         data = [data]
@@ -1163,7 +1163,7 @@ def reassign_alleles(data: Sequence,
 
     Returns
     -------
-
+    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
     """
     fileformat = 'blast'
     if type(data) is not list:
@@ -1595,7 +1595,7 @@ def create_germlines(
 
     Returns
     -------
-
+    V(D)J data file with reconstructed germline sequences.
     """
     start = logg.info('Reconstructing germline sequences')
     env = os.environ.copy()
@@ -2068,8 +2068,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
     Returns
     -------
-    Dandelion : Filtered Dandelion object.
-    AnnData : Filtered AnnData object.
+    V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
     start = logg.info('Filtering BCRs')
     if data.__class__ == Dandelion:

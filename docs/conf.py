@@ -10,17 +10,17 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import dandelion
 import os
 import sys
 
-with open("README.rst", "r") as readme_file:
+with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
 
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
+import dandelion
 
 # -- Project information -----------------------------------------------------
 
