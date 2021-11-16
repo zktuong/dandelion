@@ -60,7 +60,7 @@ jobs:
           pip install git+https://www.github.com/zktuong/dandelion.git
           echo "##[set-output name=version;]$(python dandelion/logging/_badge.py)"
       - name: version badge
-        uses: RubbaBoy/BYOB@v1.2.0
+        uses: RubbaBoy/BYOB@v1.2.1
         with:
           NAME: master-version
           LABEL: 'master-version'

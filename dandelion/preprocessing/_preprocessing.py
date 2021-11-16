@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-09-17 08:57:29
+# @Last Modified time: 2021-11-03 23:06:15
 
 import os
 import pandas as pd
@@ -282,7 +282,7 @@ def format_fastas(fastas: Sequence,
             suffix = [suffix]
         suffix_dict = dict(zip(fastas, suffix))
 
-    for i in tqdm(range(0, len(fastas)), desc='Formating fasta(s) \n'):
+    for i in tqdm(range(0, len(fastas)), desc='Formating fasta(s) '):
         if prefix is None and suffix is None:
             format_fasta(
                 fastas[i],
@@ -614,7 +614,7 @@ def assign_isotype(fasta: Union[str, PathLike],
             )(delayed(_get_C_call)(fasta, c, fileformat, allele) for c in tqdm(
                 contigs,
                 desc='Retrieving contant region calls, parallelizing with ' +
-                str(num_cores) + ' cpus \n'))
+                str(num_cores) + ' cpus '))
             # transform list of dicts to dict
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
             for r in range(0, len(results)):
@@ -630,7 +630,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                 end.update(_end)
         else:
             seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
-            for c in tqdm(contigs, desc='Retrieving contant region calls \n'):
+            for c in tqdm(contigs, desc='Retrieving contant region calls '):
                 seq[c], germ[c], call[c], ident[c], support[c], score[
                     c], start[c], end[c] = _get_C_call(fasta, c, fileformat,
                                                        allele)[c]
@@ -1065,7 +1065,7 @@ def reannotate_genes(data: Sequence,
         filename_prefix = [None for d in data]
 
     filePath = None
-    for i in tqdm(range(0, len(data)), desc='Assigning genes \n'):
+    for i in tqdm(range(0, len(data)), desc='Assigning genes '):
         filePath = check_filepath(data[i],
                                   filename_prefix=filename_prefix[i],
                                   endswith='.fasta')
@@ -1220,7 +1220,7 @@ def reassign_alleles(data: Sequence,
     filePath = None
     sampleNames_dict = {}
     filePath_dict = {}
-    for i in tqdm(range(0, len(data)), desc='Processing data file(s) \n'):
+    for i in tqdm(range(0, len(data)), desc='Processing data file(s) '):
         filePath = check_filepath(data[i],
                                   filename_prefix=filename_prefix[i],
                                   endswith=informat_dict[fileformat],
@@ -1543,7 +1543,7 @@ def reassign_alleles(data: Sequence,
         print(
             'Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv`'
             'extension for convenience.')
-    for s in tqdm(data, desc='Writing out to individual folders \n'):
+    for s in tqdm(data, desc='Writing out to individual folders '):
         if sample_id_dictionary is not None:
             out_file = dat_[dat_['sample_id'] == sample_id_dictionary[s]]
         else:
@@ -1778,7 +1778,7 @@ def create_germlines(
         # Iterate over rows
         for key, records in tqdm(
                 receptor_iter,
-                desc="   Building {} germline sequences\n".format(germ_types)):
+                desc="   Building {} germline sequences".format(germ_types)):
             # Define iteration variables
             # Build germline for records
             if fileformat == 'airr':
@@ -1926,7 +1926,7 @@ def create_germlines(
         # Iterate over rows
         for key, records in tqdm(
                 receptor_iter,
-                desc="   Building {} germline sequences\n".format(germ_types)):
+                desc="   Building {} germline sequences".format(germ_types)):
             # Define iteration variables
             # Build germline for records
             # if not isinstance(self.data, pd.DataFrame):
@@ -2138,7 +2138,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     ldoublet = {}
     if adata_provided:
         for c in tqdm(adata_.obs_names,
-                      desc='Annotating in anndata obs slot \n'):
+                      desc='Annotating in anndata obs slot '):
             if c in poor_qual:
                 poorqual.update({c: 'True'})
             else:
@@ -2593,8 +2593,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         dat = load_data(self)
         warnings.filterwarnings("ignore")
 
-    sanitize_dtype(dat)
-
     sh = importr('shazam')
     pandas2ri.activate()
     if 'v_call_genotyped' in dat.columns:
@@ -2818,7 +2816,7 @@ class FilterContigs:
         d_dict = dict(zip(data['sequence_id'], data['d_call']))
         j_dict = dict(zip(data['sequence_id'], data['j_call']))
         c_dict = dict(zip(data['sequence_id'], data['c_call']))
-        for contig, row in tqdm(data.iterrows(), desc="Preparing data\n"):
+        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
             cell = Contig(row).contig['cell_id']
             if Contig(row).contig['locus'] in HEAVYLONG:
                 if Contig(row).contig['productive'] in TRUES:
@@ -2831,7 +2829,7 @@ class FilterContigs:
                 elif Contig(row).contig['productive'] in FALSES:
                     self.Cell[cell]['VJ']['NP'][Contig(row).contig].value = 1
         for cell in tqdm(self.Cell,
-                         desc='Scanning for poor quality/ambiguous contigs\n'):
+                         desc='Scanning for poor quality/ambiguous contigs'):
             if len(self.Cell[cell]['VDJ']['P']) > 0:
                 data1 = pd.DataFrame([
                     x for x in self.Cell[cell]['VDJ']['P']
@@ -3371,7 +3369,7 @@ class FilterContigsLite:
         d_dict = dict(zip(data['sequence_id'], data['d_call']))
         j_dict = dict(zip(data['sequence_id'], data['j_call']))
         c_dict = dict(zip(data['sequence_id'], data['c_call']))
-        for contig, row in tqdm(data.iterrows(), desc="Preparing data\n"):
+        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
             cell = Contig(row).contig['cell_id']
             if Contig(row).contig['locus'] in HEAVYLONG:
                 if Contig(row).contig['productive'] in TRUES:
@@ -3384,7 +3382,7 @@ class FilterContigsLite:
                 elif Contig(row).contig['productive'] in FALSES:
                     self.Cell[cell]['VJ']['NP'][Contig(row).contig].value = 1
         for cell in tqdm(self.Cell,
-                         desc='Scanning for poor quality/ambiguous contigs\n'):
+                         desc='Scanning for poor quality/ambiguous contigs'):
             if len(self.Cell[cell]['VDJ']['P']) > 0:
                 data1 = pd.DataFrame([
                     x for x in self.Cell[cell]['VDJ']['P']
