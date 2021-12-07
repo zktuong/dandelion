@@ -47,6 +47,10 @@ def parse_args():
             'file absent and more than one sample to process. ' +
             'Defaults to "_".'))
     parser.add_argument(
+        '--skip_format_header',
+        action='store_true',
+        help=('If passed, skips formatting of contig headers.'))
+    parser.add_argument(
         '--keep_trailing_hyphen_number',
         action='store_false',
         help=('If passed, do not strip out the trailing hyphen number, ' +
@@ -80,15 +84,17 @@ def main():
 
     logg.info(
         'command line parameters:\n',
-        deep=(f'\n'
-              f'--------------------------------------------------------------\n'
-              f'    --meta = {args.meta}\n'
-              f'    --chain = {args.chain}\n'
-              f'    --file_prefix = {args.file_prefix}\n'
-              f'    --sep = {args.sep}\n'
-              f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
-              f'    --clean_output = {args.clean_output}\n'
-              f'--------------------------------------------------------------\n'),
+        deep=
+        (f'\n'
+         f'--------------------------------------------------------------\n'
+         f'    --meta = {args.meta}\n'
+         f'    --chain = {args.chain}\n'
+         f'    --file_prefix = {args.file_prefix}\n'
+         f'    --sep = {args.sep}\n'
+         f'    --skip_format_header = {args.skip_format_header}'
+         f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
+         f'    --clean_output = {args.clean_output}\n'
+         f'--------------------------------------------------------------\n'),
     )
 
     # set up a sample list
@@ -112,40 +118,45 @@ def main():
 
     # STEP ONE - ddl.pp.format_fastas()
     # do we have a prefix/suffix?
-    if 'prefix' in meta.columns:
-        # process with prefix
-        vals = list(meta['prefix'].values)
-        ddl.pp.format_fastas(
-            samples,
-            prefix=vals,
-            sep=args.sep,
-            remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-            filename_prefix=filename_prefixes)
-    elif 'suffix' in meta.columns:
-        # process with suffix
-        vals = list(meta['suffix'].values)
-        ddl.pp.format_fastas(
-            samples,
-            suffix=vals,
-            sep=args.sep,
-            remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-            filename_prefix=filename_prefixes)
-    else:
-        # neither. tag with the sample names as default, if more than one
-        # sample and the data is IG
-        if (len(samples) > 1) and (args.chain == 'ig'):
+    if not args.skip_format_header:
+        if 'prefix' in meta.columns:
+            # process with prefix
+            vals = list(meta['prefix'].values)
             ddl.pp.format_fastas(
                 samples,
-                prefix=samples,
+                prefix=vals,
+                sep=args.sep,
+                remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
+                filename_prefix=filename_prefixes)
+        elif 'suffix' in meta.columns:
+            # process with suffix
+            vals = list(meta['suffix'].values)
+            ddl.pp.format_fastas(
+                samples,
+                suffix=vals,
                 sep=args.sep,
                 remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
                 filename_prefix=filename_prefixes)
         else:
-            # no need to tag as it's a single sample.
-            ddl.pp.format_fastas(
-                samples,
-                remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-                filename_prefix=filename_prefixes)
+            # neither. tag with the sample names as default, if more than one
+            # sample and the data is IG
+            if (len(samples) > 1) and (args.chain == 'ig'):
+                ddl.pp.format_fastas(samples,
+                                     prefix=samples,
+                                     sep=args.sep,
+                                     remove_trailing_hyphen_number=args.
+                                     keep_trailing_hyphen_number,
+                                     filename_prefix=filename_prefixes)
+            else:
+                # no need to tag as it's a single sample.
+                ddl.pp.format_fastas(samples,
+                                     remove_trailing_hyphen_number=args.
+                                     keep_trailing_hyphen_number,
+                                     filename_prefix=filename_prefixes)
+    else:
+        ddl.pp.format_fastas(samples,
+                             remove_trailing_hyphen_number=False,
+                             filename_prefix=filename_prefixes)
 
     # STEP TWO - ddl.pp.reannotate_genes()
     # no tricks here
