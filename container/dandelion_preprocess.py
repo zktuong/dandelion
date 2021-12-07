@@ -91,7 +91,7 @@ def main():
          f'    --chain = {args.chain}\n'
          f'    --file_prefix = {args.file_prefix}\n'
          f'    --sep = {args.sep}\n'
-         f'    --skip_format_header = {args.skip_format_header}'
+         f'    --skip_format_header = {args.skip_format_header}\n'
          f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
          f'    --clean_output = {args.clean_output}\n'
          f'--------------------------------------------------------------\n'),
