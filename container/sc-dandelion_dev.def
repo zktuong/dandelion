@@ -18,17 +18,16 @@ From: continuumio/miniconda3
     sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
     sudo apt update -y && sudo apt install -y curl libcurl4-openssl-dev rsync r-base r-base-core r-recommended r-base-dev vim
     R --slave -e 'install.packages("remotes", repos="https://cloud.r-project.org/")'
-    sysreqs=$(R --slave -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))')
-    echo $sysreqs
-    sudo -s eval "$sysreqs"
+    R --slave -e 'install.packages("BiocManager", repos="https://cloud.r-project.org/")'
+    # R dependencies
+    apt-get update -y && apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev
     sudo apt-get autoremove -y
 
     # Install required R packages
-    R --slave -e 'install.packages("BiocManager", repos="https://cloud.r-project.org/")'
     R --slave -e 'BiocManager::install(c("Biostrings", "GenomicAlignments", "IRanges"))'
     R --slave -e 'install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"), repos="https://cloud.r-project.org/")'
     . /opt/conda/etc/profile.d/conda.sh
-    conda env update --name sc-dandelion-container -f environment_dev.yml
+    conda env update --name sc-dandelion-container -f environment.yml
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
