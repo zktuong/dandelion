@@ -27,7 +27,7 @@ From: continuumio/miniconda3
     R --slave -e 'BiocManager::install(c("Biostrings", "GenomicAlignments", "IRanges"))'
     R --slave -e 'install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"), repos="https://cloud.r-project.org/")'
     . /opt/conda/etc/profile.d/conda.sh
-    conda env update --name sc-dandelion-container -f environment.yml
+    conda env update --name sc-dandelion-container -f environment_dev.yml
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
