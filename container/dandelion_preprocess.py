@@ -73,6 +73,11 @@ def main():
     args = parse_args()
     start = logg.info('\nBeginning preprocessing\n')
 
+    if args.keep_trailing_hyphen_number:
+        keep_trailing_hyphen_number_log = False
+    else:
+        keep_trailing_hyphen_number_log = True
+
     logg.info(
         'command line parameters:\n',
         deep=(f'\n'
@@ -81,7 +86,7 @@ def main():
               f'    --chain = {args.chain}\n'
               f'    --file_prefix = {args.file_prefix}\n'
               f'    --sep = {args.sep}\n'
-              f'    --keep_trailing_hyphen_number = {args.keep_trailing_hyphen_number}\n'
+              f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
               f'    --clean_output = {args.clean_output}\n'
               f'--------------------------------------------------------------\n'),
     )
