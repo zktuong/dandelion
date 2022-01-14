@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-14 14:48:57
+# @Last Modified time: 2022-01-14 16:53:23
 
 import os
 import pandas as pd
@@ -47,10 +47,10 @@ def assigngenes_igblast(fasta: Union[str, PathLike],
     if igblast_db is None:
         try:
             igdb = env['IGDATA']
-        except:
-            raise OSError(
-                'Environmental variable IGDATA must be set. Otherwise, please provide path to igblast database'
-            )
+        except KeyError:
+            raise KeyError(
+                ('Environmental variable IGDATA must be set. Otherwise,' +
+                 ' please provide path to igblast database'))
     else:
         env['IGDATA'] = igblast_db
         igdb = env['IGDATA']
@@ -103,11 +103,11 @@ def makedb_igblast(fasta: Union[str, PathLike],
     if germline is None:
         try:
             gml = env['GERMLINE']
-        except:
-            raise OSError((
-                'Environmental variable GERMLINE must be set. Otherwise, ' +
-                'please provide path to folder containing germline fasta files.'
-            ))
+        except KeyError:
+            raise KeyError(
+                ('Environmental variable GERMLINE must be set. Otherwise,' +
+                 ' please provide path to folder containing germline' +
+                 ' fasta files.'))
         gml = gml + 'imgt/' + org + '/vdj/'
     else:
         env['GERMLINE'] = germline
@@ -218,7 +218,8 @@ def creategermlines(db_file: Union[str, PathLike],
     cloned : bool
         whether or not to run with cloned option.
     mode : str, Optional
-        whether to run on heavy or light mode. If left as None, heavy and light will be run together.
+        whether to run on heavy or light mode. If left as None, heavy and
+        light will be run together.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
 
@@ -227,10 +228,10 @@ def creategermlines(db_file: Union[str, PathLike],
     if germline is None:
         try:
             gml = env['GERMLINE']
-        except:
-            raise OSError(('Environmental variable GERMLINE must be set.' +
-                           ' Otherwise, please provide path to folder' +
-                           ' containing germline fasta files.'))
+        except KeyError:
+            raise KeyError(('Environmental variable GERMLINE must be set.' +
+                            ' Otherwise, please provide path to folder' +
+                            ' containing germline fasta files.'))
         gml = gml + 'imgt/' + org + '/vdj/'
     else:
         env['GERMLINE'] = germline
@@ -243,9 +244,9 @@ def creategermlines(db_file: Union[str, PathLike],
 
     if cloned:
         if mode == 'heavy':
-            print(
-                '            Reconstructing heavy chain {} germline sequences with {} for each clone.'
-                .format(germ_type, v_field))
+            print((
+                '            Reconstructing heavy chain {}'.format(germ_type) +
+                ' germline sequences with {} for each clone.'.format(v_field)))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = [
@@ -273,9 +274,9 @@ def creategermlines(db_file: Union[str, PathLike],
                         '--cloned', '-r', genotype_fasta, gml, '--vf', v_field
                     ]
         elif mode == 'light':
-            print(
-                '            Reconstructing light chain {} germline sequences with {} for each clone.'
-                .format(germ_type, v_field))
+            print((
+                '            Reconstructing light chain {}'.format(germ_type) +
+                ' germline sequences with {} for each clone.'.format(v_field)))
             if germline is None:
                 cmd = [
                     'CreateGermlines.py', '-d', db_file, '-g', germ_type,
@@ -290,9 +291,9 @@ def creategermlines(db_file: Union[str, PathLike],
                     '--cloned', '-r', gml, '--vf', v_field
                 ]
         elif mode is None:
-            print(
-                '            Reconstructing {} germline sequences with {} for each clone.'
-                .format(germ_type, v_field))
+            print((
+                '            Reconstructing {}'.format(germ_type) +
+                ' germline sequences with {} for each clone.'.format(v_field)))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = [
@@ -329,9 +330,9 @@ def creategermlines(db_file: Union[str, PathLike],
                     ]
     else:
         if mode == 'heavy':
-            print(
-                '            Reconstructing heavy chain {} germline sequences with {}.'
-                .format(germ_type, v_field))
+            print((
+                '            Reconstructing heavy chain {}'.format(germ_type) +
+                ' germline sequences with {}.'.format(v_field)))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = [
@@ -359,9 +360,9 @@ def creategermlines(db_file: Union[str, PathLike],
                         '-r', genotype_fasta, gml, '--vf', v_field
                     ]
         elif mode == 'light':
-            print(
-                '            Reconstructing light chain {} germline sequences with {}.'
-                .format(germ_type, v_field))
+            print((
+                '            Reconstructing light chain {}'.format(germ_type) +
+                'germline sequences with {}.'.format(v_field)))
             if germline is None:
                 cmd = [
                     'CreateGermlines.py', '-d', db_file, '-g', germ_type, '-r',
@@ -376,9 +377,9 @@ def creategermlines(db_file: Union[str, PathLike],
                     gml, '--vf', v_field
                 ]
         elif mode is None:
-            print(
-                '            Reconstructing {} germline sequences with {} for each clone.'
-                .format(germ_type, v_field))
+            print((
+                '            Reconstructing {}'.format(germ_type) +
+                ' germline sequences with {} for each clone.'.format(v_field)))
             if genotype_fasta is None:
                 if germline is None:
                     cmd = [
@@ -497,8 +498,9 @@ def tigger_genotype(data: Union[str, PathLike],
         print('Running command: %s\n' % (' '.join(cmd)))
     run(cmd, env=env)  # logs are printed to terminal
     elapsed_time_secs = time() - start_time
-    msg = "tigger-genotype execution took: %s secs (Wall clock time)\n" % timedelta(
-        seconds=round(elapsed_time_secs))
+    msg = ("tigger-genotype execution took: %s" %
+           timedelta(seconds=round(elapsed_time_secs)) +
+           " secs (Wall clock time)\n")
     if verbose:
         print(msg)
 
@@ -561,7 +563,7 @@ def recipe_scanpy_qc(
     # run scrublet
     try:
         import scrublet as scr
-    except:
+    except ImportError:
         raise ImportError('Please install scrublet with pip install scrublet.')
 
     if layer is None:
@@ -579,13 +581,15 @@ def recipe_scanpy_qc(
                                log1p=False,
                                inplace=True)
     if mito_cutoff is None:
-        # use a model-based method to determine the cut off for mitochondrial content
+        # use a model-based method to determine the cut off
+        # for mitochondrial content
         gmm = mixture.GaussianMixture(n_components=2,
                                       max_iter=1000,
                                       covariance_type='full')
         X = _adata.obs[['pct_counts_mt', 'n_genes_by_counts']]
         _adata.obs['gmm_pct_count_clusters'] = gmm.fit(X).predict(X)
-        # use a simple metric to workout which cluster is the one that contains lower mito content?
+        # use a simple metric to workout which cluster
+        # is the one that contains lower mito content?
         A1 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
                     0].obs['pct_counts_mt'].mean()
         B1 = _adata[_adata.obs['gmm_pct_count_clusters'] ==
@@ -618,7 +622,8 @@ def recipe_scanpy_qc(
     sc.pp.scale(_adata, max_value=10)
     sc.tl.pca(_adata, svd_solver='arpack')
     sc.pp.neighbors(_adata, n_neighbors=10, n_pcs=50)
-    # overclustering proper - do basic clustering first, then cluster each cluster
+    # overclustering proper - do basic clustering first,
+    # then cluster each cluster
     sc.tl.leiden(_adata)
     for clus in list(np.unique(_adata.obs['leiden']))[0]:
         sc.tl.leiden(_adata,
@@ -629,12 +634,15 @@ def recipe_scanpy_qc(
         sc.tl.leiden(_adata,
                      restrict_to=('leiden_R', [clus]),
                      key_added='leiden_R')
-    # compute the cluster scores - the median of Scrublet scores per overclustered cluster
+    # compute the cluster scores - the median of Scrublet scores per
+    # overclustered cluster
     for clus in np.unique(_adata.obs['leiden_R']):
-        _adata.obs.loc[_adata.obs['leiden_R'] == clus, 'scrublet_cluster_score'] = \
-            np.median(
-                _adata.obs.loc[_adata.obs['leiden_R'] == clus, 'scrublet_score'])
-    # now compute doublet p-values. figure out the median and mad (from above-median values) for the distribution
+        _adata.obs.loc[_adata.obs['leiden_R'] == clus,
+                       'scrublet_cluster_score'] = np.median(
+                           _adata.obs.loc[_adata.obs['leiden_R'] == clus,
+                                          'scrublet_score'])
+    # now compute doublet p-values. figure out the median and mad
+    # (from above-median values) for the distribution
     med = np.median(_adata.obs['scrublet_cluster_score'])
     mask = _adata.obs['scrublet_cluster_score'] > med
     mad = np.median(_adata.obs['scrublet_cluster_score'][mask] - med)
@@ -723,8 +731,8 @@ def recipe_scanpy_qc(
                     )) | (pd.Series(
                         [n < min_counts for n in _adata.obs['total_counts']],
                         index=_adata.obs.index)
-                    ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
-                        _adata.obs.is_doublet)
+                          ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
+                              _adata.obs.is_doublet)
             else:
                 if max_counts is not None:
                     _adata.obs['filter_rna'] = (pd.Series(
@@ -734,8 +742,8 @@ def recipe_scanpy_qc(
                     )) | (pd.Series(
                         [n > max_counts for n in _adata.obs['total_counts']],
                         index=_adata.obs.index)
-                    ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
-                        _adata.obs.is_doublet)
+                          ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
+                              _adata.obs.is_doublet)
     bool_dict = {True: 'True', False: 'False'}
 
     _adata.obs['is_doublet'] = [bool_dict[x] for x in _adata.obs['is_doublet']]
@@ -747,11 +755,11 @@ def recipe_scanpy_qc(
             'leiden', 'leiden_R', 'scrublet_cluster_score',
             'scrublet_score_bh_pval'
         ],
-            axis=1)
+                                     axis=1)
     else:
         _adata.obs = _adata.obs.drop([
             'leiden', 'leiden_R', 'scrublet_cluster_score',
             'scrublet_score_bh_pval', 'gmm_pct_count_clusters'
         ],
-            axis=1)
+                                     axis=1)
     self.obs = _adata.obs.copy()
