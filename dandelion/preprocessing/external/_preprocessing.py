@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-09-09 16:25:25
+# @Last Modified time: 2022-01-14 14:48:57
 
 import os
 import pandas as pd
@@ -11,15 +11,14 @@ from subprocess import run
 from datetime import timedelta
 from anndata import AnnData
 from time import time
-from collections import OrderedDict
+
 from sklearn import mixture
-from time import time
 from ...utilities._utilities import *
 import scanpy as sc
 import scipy.stats
 import re
 from os import PathLike
-from typing import Union, Sequence, Tuple, Optional
+from typing import Union, Sequence, Optional
 
 
 def assigngenes_igblast(fasta: Union[str, PathLike],
@@ -82,7 +81,7 @@ def makedb_igblast(fasta: Union[str, PathLike],
                    extended: bool = True,
                    verbose: bool = False):
     """
-    Parses IgBLAST output to airr format.
+    Parse IgBLAST output to airr format.
 
     Parameters
     ----------
@@ -105,9 +104,10 @@ def makedb_igblast(fasta: Union[str, PathLike],
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError(
-                'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.'
-            )
+            raise OSError((
+                'Environmental variable GERMLINE must be set. Otherwise, ' +
+                'please provide path to folder containing germline fasta files.'
+            ))
         gml = gml + 'imgt/' + org + '/vdj/'
     else:
         env['GERMLINE'] = germline
@@ -142,7 +142,7 @@ def makedb_igblast(fasta: Union[str, PathLike],
 
 def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
     """
-    Parses AIRR table (heavy chain contigs only).
+    Parse AIRR table (heavy chain contigs only).
 
     Parameters
     ----------
@@ -166,7 +166,7 @@ def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
 
 def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
     """
-    Parses AIRR table (light chain contigs only).
+    Parse AIRR table (light chain contigs only).
 
     Parameters
     ----------
@@ -199,7 +199,7 @@ def creategermlines(db_file: Union[str, PathLike],
                     mode: Optional[Literal['heavy', 'light']] = None,
                     verbose: bool = False):
     """
-    Wrapper for CreateGermlines.py for reconstructing germline sequences,
+    Wrapper for CreateGermlines.py for reconstructing germline sequences.
 
     Parameters
     ----------
@@ -228,9 +228,9 @@ def creategermlines(db_file: Union[str, PathLike],
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError(
-                'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline fasta files.'
-            )
+            raise OSError(('Environmental variable GERMLINE must be set.' +
+                           ' Otherwise, please provide path to folder' +
+                           ' containing germline fasta files.'))
         gml = gml + 'imgt/' + org + '/vdj/'
     else:
         env['GERMLINE'] = germline
@@ -434,9 +434,11 @@ def tigger_genotype(data: Union[str, PathLike],
     data : PathLike
         vdj tabulated data, in Change-O (TAB) or AIRR (TSV) format.
     germline : PathLike, Optional
-        fasta file containing IMGT-gapped V segment reference germlines. Defaults to $GERMLINE.
+        fasta file containing IMGT-gapped V segment reference germlines.
+        Defaults to $GERMLINE.
     outdir : PathLike,  Optional
-        output directory. Will be created if it does not exist. Defaults to the current working directory.
+        output directory. Will be created if it does not exist.
+        Defaults to the current working directory.
     org : str
         organism for germline sequences.
     fileformat : str
@@ -454,21 +456,28 @@ def tigger_genotype(data: Union[str, PathLike],
             gml = env['GERMLINE']
         except:
             raise OSError(
-                'Environmental variable GERMLINE is not set. Please provide either the path to the folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.'
-            )
+                ('Environmental variable GERMLINE is not set. Please provide' +
+                 ' either the path to the folder containing the germline' +
+                 ' IGHV fasta file, or direct path to the germline IGHV' +
+                 ' fasta file.'))
         gml = gml + 'imgt/' + org + '/vdj/imgt_' + org + '_IGHV.fasta'
     else:
         if os.path.isdir(v_germline):
             gml = v_germline.rstrip('/') + 'imgt_' + org + '_IGHV.fasta'
             if not os.path.isfile(gml):
                 raise OSError(
-                    "Input for germline is incorrect. Please rename IGHV germline file to '{}'. Otherwise, please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file."
-                    .format(gml))
+                    ("Input for germline is incorrect. Please rename IGHV" +
+                     " germline file to '{}'.".format(gml) +
+                     " Otherwise, please provide path to folder containing" +
+                     " the germline IGHV fasta file, or direct path to the" +
+                     " germline IGHV fasta file."))
         else:
             if not v_germline.endswith('.fasta'):
                 raise OSError(
-                    'Input for germline is incorrect {}. Please provide path to folder containing the germline IGHV fasta file, or direct path to the germline IGHV fasta file.'
-                    .format(v_germline))
+                    ('Input for germline is incorrect {}.'.format(v_germline) +
+                     ' Please provide path to folder containing the germline' +
+                     ' IGHV fasta file, or direct path to the germline IGHV' +
+                     ' fasta file.'))
             if (os.path.isfile(v_germline)) & ('ighv' in v_germline.lower()):
                 gml = v_germline
 
@@ -512,31 +521,41 @@ def recipe_scanpy_qc(
     Parameters
     ----------
     adata : AnnData
-        annotated data matrix of shape n_obs × n_vars. Rows correspond to cells and columns to genes.
+        annotated data matrix of shape n_obs × n_vars. Rows correspond to cells
+        and columns to genes.
     layer : str, Optional
-        name of layer to run scrublet on if supplied. Otherwise defaults to adata.X.
+        name of layer to run scrublet on if supplied. Otherwise defaults to
+        adata.X.
     mito_startswith : str
         string pattern used for searching mitochondrial genes.
     max_genes : int
-        naximum number of genes expressed required for a cell to pass filtering. Default is 2500.
+        maximum number of genes expressed required for a cell to pass filtering
+        Default is 2500.
     min_genes : int
-        minimum number of genes expressed  required for a cell to pass filtering. Default is 200.
+        minimum number of genes expressed required for a cell to pass filtering
+        Default is 200.
     mito_cutoff : float
-        maximum percentage mitochondrial content allowed for a cell to pass filtering. Default is 5.
+        maximum percentage mitochondrial content allowed for a cell to pass
+        filtering. Default is 5.
     pval_cutoff : float
-        maximum Benjamini-Hochberg corrected p value from doublet detection protocol allowed for a cell to pass filtering. Default is 0.05.
+        maximum Benjamini-Hochberg corrected p value from doublet detection
+        protocol allowed for a cell to pass filtering. Default is 0.05.
     min_counts : int, Optional
-        minimum number of counts required for a cell to pass filtering. Default is None.
+        minimum number of counts required for a cell to pass filtering.
+        Default is None.
     max_counts : int, Optional
-        maximum number of counts required for a cell to pass filtering. Default is None.
+        maximum number of counts required for a cell to pass filtering.
+        Default is None.
     blacklist : sequence, Optional
         if provided, will exclude these genes from highly variable genes list.
     vdj_pattern : str
-        string pattern for search VDJ genes to exclude from highly variable genes.
+        string pattern for search VDJ genes to exclude from highly variable
+        genes.
 
     Returns
     -------
-    `AnnData` of shape n_obs × n_vars where obs now contain filtering information. Rows correspond to cells and columns to genes.
+    `AnnData` of shape n_obs × n_vars where obs now contain filtering
+    information. Rows correspond to cells and columns to genes.
     """
     _adata = self.copy()
     # run scrublet
@@ -629,50 +648,94 @@ def recipe_scanpy_qc(
         'is_doublet'] = _adata.obs['scrublet_score_bh_pval'] < pval_cutoff
     if mito_cutoff is not None:
         if min_counts is None and max_counts is None:
-            _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
-                (_adata.obs.is_doublet)
+            _adata.obs['filter_rna'] = (pd.Series(
+                [((n < min_genes) or (n > max_genes))
+                 for n in _adata.obs['n_genes_by_counts']],
+                index=_adata.obs.index)) | (_adata.obs['pct_counts_mt'] >=
+                                            mito_cutoff) | (
+                                                _adata.obs.is_doublet)
         else:
             if min_counts is not None:
                 if max_counts is not None:
-                    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                        (pd.Series([min_counts < n > max_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
-                        (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
-                        (_adata.obs.is_doublet)
+                    _adata.obs['filter_rna'] = (pd.Series(
+                        [((n < min_genes) or (n > max_genes))
+                         for n in _adata.obs['n_genes_by_counts']],
+                        index=_adata.obs.index)) | (pd.Series(
+                            [
+                                min_counts < n > max_counts
+                                for n in _adata.obs['total_counts']
+                            ],
+                            index=_adata.obs.index)) | (
+                                _adata.obs['pct_counts_mt'] >=
+                                mito_cutoff) | (_adata.obs.is_doublet)
                 else:
-                    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                        (pd.Series([n < min_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
-                        (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
-                        (_adata.obs.is_doublet)
+                    _adata.obs['filter_rna'] = (pd.Series(
+                        [((n < min_genes) or (n > max_genes))
+                         for n in _adata.obs['n_genes_by_counts']],
+                        index=_adata.obs.index)) | (pd.Series(
+                            [
+                                n < min_counts
+                                for n in _adata.obs['total_counts']
+                            ],
+                            index=_adata.obs.index)) | (
+                                _adata.obs['pct_counts_mt'] >=
+                                mito_cutoff) | (_adata.obs.is_doublet)
             else:
                 if max_counts is not None:
-                    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                        (pd.Series([n > max_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
-                        (_adata.obs['pct_counts_mt'] >= mito_cutoff) | \
-                        (_adata.obs.is_doublet)
+                    _adata.obs['filter_rna'] = (pd.Series(
+                        [((n < min_genes) or (n > max_genes))
+                         for n in _adata.obs['n_genes_by_counts']],
+                        index=_adata.obs.index)) | (pd.Series(
+                            [
+                                n > max_counts
+                                for n in _adata.obs['total_counts']
+                            ],
+                            index=_adata.obs.index)) | (
+                                _adata.obs['pct_counts_mt'] >=
+                                mito_cutoff) | (_adata.obs.is_doublet)
     else:
         if min_counts is None and max_counts is None:
-            _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                ~(_adata.obs.gmm_pct_count_clusters_keep) | \
-                (_adata.obs.is_doublet)
+            _adata.obs['filter_rna'] = (pd.Series(
+                [((n < min_genes) or (n > max_genes))
+                 for n in _adata.obs['n_genes_by_counts']],
+                index=_adata.obs.index)) | ~(
+                    _adata.obs.gmm_pct_count_clusters_keep) | (
+                        _adata.obs.is_doublet)
         else:
             if min_counts is not None:
                 if max_counts is not None:
-                    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                        (pd.Series([min_counts < n > max_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
-                        ~(_adata.obs.gmm_pct_count_clusters_keep) | \
-                        (_adata.obs.is_doublet)
+                    _adata.obs['filter_rna'] = (pd.Series(
+                        [((n < min_genes) or (n > max_genes))
+                         for n in _adata.obs['n_genes_by_counts']],
+                        index=_adata.obs.index)) | (pd.Series(
+                            [
+                                min_counts < n > max_counts
+                                for n in _adata.obs['total_counts']
+                            ],
+                            index=_adata.obs.index)) | ~(
+                                _adata.obs.gmm_pct_count_clusters_keep) | (
+                                    _adata.obs.is_doublet)
                 else:
-                    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                        (pd.Series([n < min_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
-                        ~(_adata.obs.gmm_pct_count_clusters_keep) | \
-                        (_adata.obs.is_doublet)
+                    _adata.obs['filter_rna'] = (pd.Series(
+                        [((n < min_genes) or (n > max_genes))
+                         for n in _adata.obs['n_genes_by_counts']],
+                        index=_adata.obs.index
+                    )) | (pd.Series(
+                        [n < min_counts for n in _adata.obs['total_counts']],
+                        index=_adata.obs.index)
+                    ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
+                        _adata.obs.is_doublet)
             else:
                 if max_counts is not None:
-                    _adata.obs['filter_rna'] = (pd.Series([min_genes < n > max_genes for n in _adata.obs['n_genes_by_counts']], index=_adata.obs.index)) | \
-                        (pd.Series([n > max_counts for n in _adata.obs['total_counts']], index=_adata.obs.index)) | \
-                        ~(_adata.obs.gmm_pct_count_clusters_keep) | \
-                        (_adata.obs.is_doublet)
+                    _adata.obs['filter_rna'] = (pd.Series(
+                        [((n < min_genes) or (n > max_genes))
+                         for n in _adata.obs['n_genes_by_counts']],
+                        index=_adata.obs.index
+                    )) | (pd.Series(
+                        [n > max_counts for n in _adata.obs['total_counts']],
+                        index=_adata.obs.index)
+                    ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
+                        _adata.obs.is_doublet)
     bool_dict = {True: 'True', False: 'False'}
 
     _adata.obs['is_doublet'] = [bool_dict[x] for x in _adata.obs['is_doublet']]
