@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 20:25:22
+# @Last Modified time: 2022-01-14 17:00:29
 
 import os
 from collections import defaultdict
@@ -50,6 +50,7 @@ class Dandelion:
         self.graph = graph
         self.threshold = None
         self.germline = {}
+        self.querier = None
 
         if germline is not None:
             self.germline.update(germline)
@@ -485,7 +486,9 @@ class Query:
                     cols.update({query: np.nan})
             ret.update({cell: cols})
         out = pd.DataFrame.from_dict(ret, orient='index')
-        if retrieve_mode not in ['split and sum', 'split and average', 'sum', 'average']:
+        if retrieve_mode not in [
+                'split and sum', 'split and average', 'sum', 'average'
+        ]:
             if retrieve_mode == 'split':
                 for x in out:
                     try:
@@ -520,7 +523,11 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 'retrieve_mode': 'merge and unique only',
             }
         })
-    querier = Query(self.data)
+    if self.querier is None:
+        querier = Query(self.data)
+        self.querier = querier
+    else:
+        querier = self.querier
 
     meta_ = defaultdict(dict)
     for k, v in init_dict.copy().items():
@@ -987,7 +994,11 @@ def update_metadata(self: Dandelion,
     tmp_metadata = self.metadata.copy()
 
     if retrieve is not None:
-        querier = Query(self.data)
+        if self.querier is None:
+            querier = Query(self.data)
+            self.querier = querier
+        else:
+            querier = self.querier
         ret_dict = {}
         if type(retrieve) is str:
             retrieve = [retrieve]
@@ -1011,10 +1022,10 @@ def update_metadata(self: Dandelion,
                 raise KeyError(
                     'Cannot retrieve \'%s\' : Unknown column name.' % k)
         ret_metadata = pd.concat(retrieve_.values(), axis=1, join="inner")
-        ret_metadata.dropna(axis = 1, how = 'all', inplace = True)
+        ret_metadata.dropna(axis=1, how='all', inplace=True)
         for col in ret_metadata:
             if all_missing(ret_metadata[col]):
-                ret_metadata.drop(col, axis = 1, inplace = True)
+                ret_metadata.drop(col, axis=1, inplace=True)
 
         if collapse_alleles:
             for k in ret_dict.keys():
