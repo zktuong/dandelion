@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 18:30:42
+# @Last Modified time: 2022-01-27 19:01:04
 
 import os
 from collections import defaultdict
@@ -971,6 +971,8 @@ def update_metadata(self: Dandelion,
                 raise ValueError(
                     "Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
                 )
+    if 'cell_id' not in self.data:  # shortcut for bulk data to pretend every unique sequence is a cell?
+        self.data['cell_id'] = self.data['sequence_id']
 
     if not all([c in self.data for c in cols]):
         raise ValueError(
