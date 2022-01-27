@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-14 17:00:29
+# @Last Modified time: 2022-01-27 18:30:42
 
 import os
 from collections import defaultdict
@@ -251,7 +251,8 @@ class Dandelion:
             writer.write(row)
 
     def write_h5(self,
-                 filename: str = 'dandelion_data.h5',
+                 filename: str = 'dandelion_data.h5ddl',
+                 keep_distance: bool = False,
                  complib: Literal['zlib', 'lzo', 'bzip2', 'blosc',
                                   'blosc:blosclz', 'blosc:lz4', 'blosc:lz4hc',
                                   'blosc:snappy', 'blosc:zlib',
@@ -348,17 +349,18 @@ class Dandelion:
         except:
             pass
 
-        try:
-            for d in self.distance:
-                # how to make this faster?
-                dat = pd.DataFrame(self.distance[d].toarray())
-                dat.to_hdf(filename,
-                           "distance/" + d,
-                           complib=comp,
-                           complevel=compression_level,
-                           **kwargs)
-        except:
-            pass
+        if keep_distance:
+            try:
+                for d in self.distance:
+                    # how to make this faster?
+                    dat = pd.DataFrame(self.distance[d].toarray())
+                    dat.to_hdf(filename,
+                               "distance/" + d,
+                               complib=comp,
+                               complevel=compression_level,
+                               **kwargs)
+            except:
+                pass
 
         with h5py.File(filename, "a") as hf:
             try:
@@ -385,6 +387,8 @@ class Dandelion:
             if self.threshold is not None:
                 tr = self.threshold
                 hf.create_dataset('threshold', data=tr)
+
+    write = write_h5ddl = write_h5  # shortcut
 
 
 class Query:
