@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 19:50:06
+# @Last Modified time: 2022-01-27 21:27:31
 
 import os
 from collections import defaultdict
@@ -118,7 +118,7 @@ class Dandelion:
 
     def update_plus(
         self,
-        options: Literal[
+        option: Literal[
             'all', 'sequence', 'mutations', 'cdr3 lengths',
             'mutations and cdr3 lengths'] = 'mutations and cdr3 lengths'):
         """
@@ -127,7 +127,7 @@ class Dandelion:
         ----------
         self : Dandelion
             `Dandelion` object.
-        options : Literal
+        option : Literal
             One of 'all', 'sequence', 'mutations', 'cdr3 lengths',
             'mutations and cdr3 lengths'
         Returns
@@ -189,7 +189,7 @@ class Dandelion:
         vdjlengths = [x for x in vdjlengths if x in self.data]
         seqinfo = [x for x in seqinfo if x in self.data]
 
-        if options == 'all':
+        if option == 'all':
             if len(mutations) > 0:
                 update_metadata(self,
                                 retrieve=mutations,
@@ -205,12 +205,12 @@ class Dandelion:
                 update_metadata(self,
                                 retrieve=seqinfo,
                                 retrieve_mode='split and unique only')
-        if options == 'sequence':
+        if option == 'sequence':
             if len(seqinfo) > 0:
                 update_metadata(self,
                                 retrieve=seqinfo,
                                 retrieve_mode='split and unique only')
-        if options == 'mutations':
+        if option == 'mutations':
             if len(mutations) > 0:
                 update_metadata(self,
                                 retrieve=mutations,
@@ -218,12 +218,12 @@ class Dandelion:
                 update_metadata(self,
                                 retrieve=mutations,
                                 retrieve_mode='average')
-        if options == 'cdr3 lengths':
+        if option == 'cdr3 lengths':
             if len(vdjlengths) > 0:
                 update_metadata(self,
                                 retrieve=vdjlengths,
                                 retrieve_mode='split and average')
-        if options == 'mutations and cdr3 lengths':
+        if option == 'mutations and cdr3 lengths':
             if len(mutations) > 0:
                 update_metadata(self,
                                 retrieve=mutations,
