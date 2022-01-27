@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 19:48:25
+# @Last Modified time: 2022-01-27 19:50:06
 
 import os
 from collections import defaultdict
@@ -166,10 +166,11 @@ class Dandelion:
             'fwr1_r', 'fwr1_s', 'fwr2_r', 'fwr2_s', 'fwr3_r', 'fwr3_s', 'v_r',
             'v_s'
         ]
-        mutations = []
+        mutations = [] + mutations_type
         for m in mutations_type:
             for d in mutationsdef:
                 mutations.append(m + '_' + d)
+
         vdjlengths = [
             'junction_length',
             'junction_aa_length',
