@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 19:34:18
+# @Last Modified time: 2022-01-27 19:48:25
 
 import os
 from collections import defaultdict
@@ -185,7 +185,7 @@ class Dandelion:
             'j_sequence_alignment_aa'
         ]
         mutations = [x for x in mutations if x in self.data]
-        vdjlenths = [x for x in vdjlenths if x in self.data]
+        vdjlengths = [x for x in vdjlengths if x in self.data]
         seqinfo = [x for x in seqinfo if x in self.data]
 
         if options == 'all':
