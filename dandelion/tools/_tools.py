@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 20:25:56
+# @Last Modified time: 2022-01-27 18:44:54
 
 import os
 import sys
@@ -40,14 +40,16 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 by_alleles: bool = False,
                 key_added: Optional[str] = None,
                 recalculate_length: bool = True,
-                productive_only: bool = True) -> Dandelion:
+                productive_only: bool = True,
+                full_pairing_label: bool = False) -> Dandelion:
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
     Parameters
     ----------
     self : Dandelion, DataFrame, str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file
+        after clones have been determined.
     identity : float
         Junction similarity parameter. Default 0.85
     key : str, Optional
@@ -59,9 +61,13 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     key_added : str, Optional
         If specified, this will be the column name for clones. None defaults to 'clone_id'
     recalculate_length : bool
-        Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is wrong). Default is True
+        Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is
+        wrong). Default is True
     productive_only : bool
         Whether or not to perform clone_clustering only on productive clones.
+    full_pairing_label: bool
+        Whether or not to return the clone_ids with the full  keys for VDJ and VJ groups.
+        Default (False) will only expand VDJ and collapse the VJ to a singular number.
 
     Returns
     -------
@@ -211,86 +217,16 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
             for st in source_target:
                 dist.update({st: d_mat[st]})
 
-            cm1, cm2, cm3 = [], [], []
-            # now to calculate which contigs to group
-            tr2 = min(dist.values())
-            if tr2 <= tr:
-                for d in dist:
-                    # if the distance is equal to the minimum distance, which is lesser than or equal to the threshold. I will add the sequence to cm1, meaning they passed and should be a clone.
-                    if dist[d] == tr2:
-                        cm1.append(d)
-                    else:
-                        # otherwise add into cm3, which later on will get split into individual clones, despite being part of the acceptable threshold for this group of sequences
-                        cm3.append(d)
+            if d_mat.shape[0] > 1:
+                seq_tmp_dict = clustering(dist, tr, seq_)
             else:
-                # if the value is greater than the the minimum threshold, I will add the entire group into cm3, so they shouldn't be grouped together as a clone
-                for d in dist:
-                    cm3.append(d)
-            # This is based on a simple scenario e.g. in 3x3 distance matrix where the acceptable distance threshold is 2.
-            # SeqA is 1 sequence different from SeqB
-            # SeqB is 2 sequences different from SeqC
-            # SeqC can only be 2 sequences different from SeqA otherwise it will violate the pair-wise distance matrix calculation
-            # Because the distance between SeqA and SeqB is below the threshold, and is essentially the smallest value, they will be grouped in cm1
-            # While SeqC is below the acceptable threshold, really it's more different than SeqA and SeqB. Therefore, they will be grouped separately.
-            # If there's more than 3 sequences in a particular distance matrix, it gets slightly complicated.
-            # so i repeat the calculation to only catch those with more than 3 sequences
-            if len(dist) > 3:
-                for d in dist:
-                    # This time, i will rely on the main threshold value; if the distance is lesser than the overall threshold, i will add it to cm2.
-                    if dist[d] < tr:
-                        cm2.append(d)
-                    else:
-                        cm3.append(d)
-                # any sequences that were already binned above in cm1, it will be removed from here.
-                cm2 = list(set(cm2) ^ set(cm1))
-                cm3 = list(set(cm3) ^ set(cm1))
-
-            # now to actually retrieve the seq/contigs properly through a series of appending and removing
-            j_list1 = []
-            if len(cm1) > 0:
-                for i in range(0, len(cm1)):
-                    a, b = cm1[i]
-                    j_list1.append(seq_[a])
-                    j_list1.append(seq_[b])
-                j_list1 = list(set(j_list1))
-
-            j_list2 = []
-            if len(cm3) > 0:
-                for i in range(0, len(cm2)):
-                    a, b = cm2[i]
-                    j_list2.append(seq_[a])
-                    j_list2.append(seq_[b])
-                j_list2 = list(set(j_list2))
-
-            j_list3 = []
-            if len(cm3) > 0:
-                for i in range(0, len(cm3)):
-                    a, b = cm3[i]
-                    j_list3.append(seq_[a])
-                    j_list3.append(seq_[b])
-                j_list3 = list(set(j_list3))
-
-            # this is to catch the overlapping seqs appearing in the lists because of the sequential appending
-            for jl3_1 in j_list1:
-                if jl3_1 in j_list3:
-                    j_list3.remove(jl3_1)
-            for jl2_1 in j_list1:
-                if jl2_1 in j_list2:
-                    j_list2.remove(jl2_1)
-            for jl3_2 in j_list2:
-                if jl3_2 in j_list3:
-                    j_list3.remove(jl3_2)
-
-            j_list3 = [i.split() for i in list(set(j_list3))]
-
-            if len(j_list1) > 0:
-                clones[g][l][str(0)] = j_list1
-            if len(j_list2) > 0:
-                clones[g][l][str(1)] = j_list2
-            if len(j_list3) > 0:
-                for c in range(0, len(j_list3)):
-                    # the +2 here is so that the numbers come up after 1. It doesn't matter because i will reformat the clone ID numbers later
-                    clones[g][l][str(c + 2)] = j_list3[c]
+                seq_tmp_dict = {seq_[0]: tuple([seq_[0]])}
+            # sort the list so that clones that are larger have a smaller number
+            clones_tmp = sorted(list(set(seq_tmp_dict.values())),
+                                key=len,
+                                reverse=True)
+            for x in range(0, len(clones_tmp)):
+                clones[g][l][x + 1] = clones_tmp[x]
 
     clone_dict = {}
     # now to retrieve the contig ids that are grouped together
@@ -403,23 +339,31 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 tdarray = np.array(seq_).reshape(-1, 1)
                 d_mat = squareform(
                     pdist(tdarray, lambda x, y: hamming(x[0], y[0])))
+                # then calculate what the acceptable threshold is for each length of sequence
                 tr = math.floor(int(l) * (1 - identity))
                 d_mat = np.tril(d_mat)
                 np.fill_diagonal(d_mat, 0)
+                # convert diagonal and upper triangle to zeroes
                 indices_temp = []
                 indices = []
                 indices_temp = [list(x) for x in np.tril_indices_from(d_mat)]
+                # get the coordinates/indices of seqs to match against the threshold later
                 indices = list(zip(indices_temp[0], indices_temp[1]))
+                # if there's more than 1 contig, remove the diagonal
                 if len(indices) > 1:
                     for pairs in indices:
                         if pairs[0] == pairs[1]:
                             indices.remove(pairs)
                 indices_j = []
+                # use the coordinates/indices to retrieve the seq sequences
                 for p in range(0, len(indices)):
                     a1, b1 = indices[p]
                     indices_j.append(seq_[a1])
                     indices_j.append(seq_[b1])
+                # retain only the unique sequences
                 indices_j_f = list(set(indices_j))
+                # convert the distance matrix to coordinate (source) and distance (target)
+                # and create it as a dictionary
                 source, target = d_mat.nonzero()
                 source_target = list(zip(source.tolist(), target.tolist()))
                 if len(source) == 0 & len(target) == 0:
@@ -427,79 +371,36 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 dist = {}
                 for st in source_target:
                     dist.update({st: d_mat[st]})
-                cm1 = []
-                cm2 = []
-                cm3 = []
-                tr2 = min(dist.values())
-                if tr2 <= tr:
-                    for d in dist:
-                        if dist[d] == tr2:
-                            cm1.append(d)
-                        else:
-                            cm3.append(d)
+
+                if d_mat.shape[0] > 1:
+                    seq_tmp_dict_l = clustering(dist, tr, seq_)
                 else:
-                    for d in dist:
-                        cm3.append(d)
-                if len(dist) > 3:
-                    for d in dist:
-                        if dist[d] < tr:
-                            cm2.append(d)
-                        else:
-                            cm3.append(d)
-                    cm2 = list(set(cm2) ^ set(cm1))
-                    cm3 = list(set(cm3) ^ set(cm1))
-                j_list1 = []
-                if len(cm1) > 0:
-                    for i in range(0, len(cm1)):
-                        a, b = cm1[i]
-                        j_list1.append(seq_[a])
-                        j_list1.append(seq_[b])
-                    j_list1 = list(set(j_list1))
-                j_list2 = []
-                if len(cm3) > 0:
-                    for i in range(0, len(cm2)):
-                        a, b = cm2[i]
-                        j_list2.append(seq_[a])
-                        j_list2.append(seq_[b])
-                    j_list2 = list(set(j_list2))
-                j_list3 = []
-                if len(cm3) > 0:
-                    for i in range(0, len(cm3)):
-                        a, b = cm3[i]
-                        j_list3.append(seq_[a])
-                        j_list3.append(seq_[b])
-                    j_list3 = list(set(j_list3))
-                for jl3_1 in j_list1:
-                    if jl3_1 in j_list3:
-                        j_list3.remove(jl3_1)
-                for jl2_1 in j_list1:
-                    if jl2_1 in j_list2:
-                        j_list2.remove(jl2_1)
-                for jl3_2 in j_list2:
-                    if jl3_2 in j_list3:
-                        j_list3.remove(jl3_2)
-                j_list3 = [i.split() for i in list(set(j_list3))]
-                if len(j_list1) > 0:
-                    clones_light[g][l][str(0)] = j_list1
-                if len(j_list2) > 0:
-                    clones_light[g][l][str(1)] = j_list2
-                if len(j_list3) > 0:
-                    for c in range(0, len(j_list3)):
-                        clones_light[g][l][str(c + 2)] = j_list3[c]
+                    seq_tmp_dict_l = {seq_[0]: tuple([seq_[0]])}
+                # sort the list so that clones that are larger have a smaller number
+                clones_tmp_l = sorted(list(set(seq_tmp_dict_l.values())),
+                                      key=len,
+                                      reverse=True)
+                for x in range(0, len(clones_tmp_l)):
+                    clones_light[g][l][x + 1] = clones_tmp_l[x]
+
         clone_dict_light = {}
+        # now to retrieve the contig ids that are grouped together
         cid_light = Tree()
         for g in clones_light:
             for l in clones_light[g]:
+                # retrieve the clone 'numbers'
                 for c in clones_light[g][l]:
                     grp_seq = clones_light[g][l][c]
                     for key, value in vj_len_lightgrp[g][l].items():
                         if value in grp_seq:
                             cid_light[g][l][c][key].value = 1
+        # rename clone ids - get dictionaries step by step
         first_key = []
         for k1 in cid_light.keys():
             first_key.append(k1)
         first_key = list(set(first_key))
         first_key_dict = dict(zip(first_key, range(1, len(first_key) + 1)))
+        # and now for the middle key
         for g in cid_light:
             second_key = []
             for k2 in cid_light[g].keys():
@@ -509,6 +410,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 zip(second_key, range(1,
                                       len(second_key) + 1)))
             for l in cid_light[g]:
+                # and now for the last key
                 third_key = []
                 for k3 in cid_light[g][l].keys():
                     third_key.append(k3)
@@ -521,22 +423,28 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                     for v in value:
                         if type(v) is int:
                             break
+                        # instead of converting to another tree, i will just make it a dictionary
                         clone_dict_light[v] = str(
                             first_key_dict[g]) + '_' + str(
                                 second_key_dict[l]) + '_' + str(
                                     third_key_dict[key])
         lclones = list(clone_dict_light.values())
-        # will just update the main dat directly
-        if len(list(set(lclones))) > 1:
-            lclones_dict = dict(
-                zip(sorted(list(set(lclones))),
-                    [str(x) for x in range(1,
-                                           len(list(set(lclones))) + 1)]))
-        else:
-            lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
         renamed_clone_dict_light = {}
-        for key, value in clone_dict_light.items():
-            renamed_clone_dict_light[key] = lclones_dict[value]
+        if full_pairing_label:
+            # will just update the main dat directly
+            if len(list(set(lclones))) > 1:
+                lclones_dict = dict(
+                    zip(sorted(list(set(lclones))), [
+                        str(x) for x in range(1,
+                                              len(list(set(lclones))) + 1)
+                    ]))
+            else:
+                lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
+            for key, value in clone_dict_light.items():
+                renamed_clone_dict_light[key] = lclones_dict[value]
+        else:
+            for key, value in clone_dict_light.items():
+                renamed_clone_dict_light[key] = value
 
         cellclonetree = Tree()
         seqcellclonetree = Tree()
@@ -677,7 +585,8 @@ def transfer(
     vdj_key : str, Optional
         prefix for stashed VDJ connectivities and distances.
     overwrite : str, bool, list, Optional
-        Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or list of column names will overwrite that specific column(s).
+        Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
+        list of column names will overwrite that specific column(s).
 
     Returns
     ----------
@@ -827,17 +736,30 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
     Parameters
     ----------
     self : Dandelion, DataFrame, str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones have been determined.
+        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after
+        clones have been determined.
     dist : float, Optional
-        The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class .threshold slot.
+        The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class
+        `.threshold` slot.
     action : str
-        Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'. The “first” action will use only the first gene listed. The “set” action will use all gene assignments and construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence by a common assignment (similar to single-linkage).
+        Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'.
+        The “first” action will use only the first gene listed. The “set” action will use all gene assignments and
+        construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence
+        by a common assignment (similar to single-linkage).
     model : str
-        Specifies which substitution model to use for calculating distance between sequences. Default is 'ham'. The “ham” model is nucleotide Hamming distance and “aa” is amino acid Hamming distance. The “hh_s1f” and “hh_s5f” models are human specific single nucleotide and 5-mer content models, respectively, from Yaari et al, 2013. The “mk_rs1nf” and “mk_rs5nf” models are mouse specific single nucleotide and 5-mer content models, respectively, from Cui et al, 2016. The “m1n_compat” and “hs1f_compat” models are deprecated models provided backwards compatibility with the “m1n” and “hs1f” models in Change-O v0.3.3 and SHazaM v0.1.4. Both 5-mer models should be considered experimental.
+        Specifies which substitution model to use for calculating distance between sequences. Default is 'ham'.
+        The “ham” model is nucleotide Hamming distance and “aa” is amino acid Hamming distance. The “hh_s1f” and
+        “hh_s5f” models are human specific single nucleotide and 5-mer content models, respectively, from Yaari et al,
+        2013. The “mk_rs1nf” and “mk_rs5nf” models are mouse specific single nucleotide and 5-mer content models,
+        respectively, from Cui et al, 2016. The “m1n_compat” and “hs1f_compat” models are deprecated models provided
+        backwards compatibility with the “m1n” and “hs1f” models in Change-O v0.3.3 and SHazaM v0.1.4. Both 5-mer
+        models should be considered experimental.
     norm : str
-        Specifies how to normalize distances. Default is 'len'. 'none' (do not normalize), 'len' (normalize by length), or 'mut' (normalize by number of mutations between sequences).
+        Specifies how to normalize distances. Default is 'len'. 'none' (do not normalize), 'len' (normalize by length),
+        or 'mut' (normalize by number of mutations between sequences).
     doublets : str
-        Option to control behaviour when dealing with heavy chain 'doublets'. Default is 'drop'. 'drop' will filter out the doublets while 'count' will retain only the highest umi count contig.
+        Option to control behaviour when dealing with heavy chain 'doublets'. Default is 'drop'. 'drop' will filter out
+        the doublets while 'count' will retain only the highest umi count contig.
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     ncpu : int, Optional
@@ -941,7 +863,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
 
     def clusterLinkage(cell_series, group_series):
         """
-        Returns a dictionary of {cell_id : cluster_id} that identifies clusters of cells by analyzing their shared
+        Return a dictionary of {cell_id : cluster_id} that identifies clusters of cells by analyzing their shared
         features (group_series) using single linkage.
 
         Arguments:
@@ -950,6 +872,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
 
         Returns:
         dict:  dictionary of {cell_id : cluster_id}.
+
         """
 
         # assign initial clusters
@@ -968,7 +891,8 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             for i, group in enumerate(initial_dict.keys()):
                 cluster_dict[i] = initial_dict[group]
                 for cluster in cluster_dict:
-                    # if initial_dict[group] and cluster_dict[cluster] share common cells, add initial_dict[group] to cluster
+                    # if initial_dict[group] and cluster_dict[cluster] share common cells, add initial_dict[group] to
+                    # cluster
                     if cluster != i and any(cell in initial_dict[group]
                                             for cell in cluster_dict[cluster]):
                         cluster_dict[cluster] = cluster_dict[cluster] + \
@@ -991,7 +915,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
 
     def _lightCluster(heavy_file, light_file, out_file, doublets, fileformat):
         """
-        Split heavy chain clones based on light chains
+        Split heavy chain clones based on light chains.
 
         Arguments:
         heavy_file (str): heavy chain input file.
@@ -1431,3 +1355,47 @@ def clone_overlap(
                         '   \'uns\', clone overlap table'))
     else:
         return (overlap)
+
+
+def clustering(distance_dict, threshold, sequences_dict):
+    """Clustering the sequences."""
+    out_dict = {}
+    # find out the unique indices in this subset
+    i_unique = list(set(flatten(distance_dict)))
+    # for every pair of i1,i2 is their dictance smaller than the thresholdeshold?
+    i_pair_d = {(i1, i2): distance_dict[(i1, i2)] <= threshold if
+                (i1, i2) in distance_dict else False
+                for i1, i2 in combinations(i_unique, 2)}
+    i_pair_d.update({(i2, i1): distance_dict[(i2, i1)] <= threshold if
+                     (i2, i1) in distance_dict else False
+                     for i1, i2 in combinations(i_unique, 2)})
+    # so which indices should not be part of a clone?
+    canbetogether = defaultdict(list)
+    for ii1, ii2 in combinations(i_unique, 2):
+        if i_pair_d[(ii1, ii2)] or i_pair_d[(ii2, ii1)]:
+            if (ii1, ii2) in distance_dict:
+                canbetogether[ii1].append((ii1, ii2))
+                canbetogether[ii2].append((ii1, ii2))
+            elif (ii2, ii1) in distance_dict:
+                canbetogether[ii2].append((ii2, ii1))
+                canbetogether[ii1].append((ii2, ii1))
+        else:
+            if (ii1, ii2) or (ii2, ii1) in distance_dict:
+                canbetogether[ii1].append(())
+                canbetogether[ii2].append(())
+    for x in canbetogether:
+        canbetogether[x] = list(
+            set([y for y in canbetogether[x] if len(y) > 0]))
+    # convert the indices to sequences
+    for x in canbetogether:
+        if len(canbetogether[x]) > 0:
+            out_dict[sequences_dict[x]] = tuple(
+                sorted(
+                    set(
+                        list([
+                            sequences_dict[y]
+                            for y in flatten(canbetogether[x])
+                        ]) + [sequences_dict[x]])))
+        else:
+            out_dict[sequences_dict[x]] = tuple([sequences_dict[x]])
+    return (out_dict)
