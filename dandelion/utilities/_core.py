@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 21:27:31
+# @Last Modified time: 2022-02-09 00:21:52
 
 import os
 from collections import defaultdict
@@ -725,38 +725,38 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 if 'locus' + suffix_l in tmp_metadata:
                     if not check_missing(tmp_metadata.loc[i,
                                                           'locus' + suffix_l]):
-                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                             i, 'locus' +
                             suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' +
                                                                  suffix_l]
                     else:
-                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                             i, 'locus' + suffix_h] + '_only'
                 else:
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                         i, 'locus' + suffix_h] + '_only'
             else:
                 if 'locus' + suffix_l in tmp_metadata:
                     if not check_missing(tmp_metadata.loc[i,
                                                           'locus' + suffix_l]):
-                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                             i, 'locus' + suffix_l] + '_only'
                     else:
-                        tmp_metadata.at[i, 'status'] = 'unassigned'
+                        tmp_metadata.at[i, 'locus_status'] = 'unassigned'
                 else:
-                    tmp_metadata.at[i, 'status'] = 'unassigned'
+                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
         else:
             if 'locus' + suffix_l in tmp_metadata:
                 if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                         i, 'locus' + suffix_l] + '_only'
                 else:
-                    tmp_metadata.at[i, 'status'] = 'unassigned'
+                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
             else:
-                tmp_metadata.at[i, 'status'] = 'unassigned'
+                tmp_metadata.at[i, 'locus_status'] = 'unassigned'
 
-    tmp_metadata['status_summary'] = [
-        'Multi' if '|' in i else i for i in tmp_metadata['status']
+    tmp_metadata['locus_status_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['locus_status']
     ]
 
     for i in tmp_metadata.index:

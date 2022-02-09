@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 18:44:54
+# @Last Modified time: 2022-02-09 00:04:07
 
 import os
 import sys
@@ -41,7 +41,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 key_added: Optional[str] = None,
                 recalculate_length: bool = True,
                 productive_only: bool = True,
-                full_pairing_label: bool = False) -> Dandelion:
+                collapse_label: bool = False) -> Dandelion:
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -65,9 +65,9 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         wrong). Default is True
     productive_only : bool
         Whether or not to perform clone_clustering only on productive clones.
-    full_pairing_label: bool
-        Whether or not to return the clone_ids with the full  keys for VDJ and VJ groups.
-        Default (False) will only expand VDJ and collapse the VJ to a singular number.
+    collapse_label: bool
+        Whether or not to return the clone_ids with the full keys for VDJ and VJ groups.
+        Default (False) will expand VDJ and VJ. If True, VJ will be collapsed to a singular number.
 
     Returns
     -------
@@ -430,7 +430,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                                     third_key_dict[key])
         lclones = list(clone_dict_light.values())
         renamed_clone_dict_light = {}
-        if full_pairing_label:
+        if collapse_label:
             # will just update the main dat directly
             if len(list(set(lclones))) > 1:
                 lclones_dict = dict(
