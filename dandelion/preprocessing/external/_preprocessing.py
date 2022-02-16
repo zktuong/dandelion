@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-14 16:53:23
+# @Last Modified time: 2022-02-16 14:57:04
 
 import os
 import pandas as pd
@@ -125,19 +125,30 @@ def makedb_igblast(fasta: Union[str, PathLike],
         os.path.basename(fasta).replace('.fasta', '_annotations.csv'))
 
     if extended:
-        cmd = [
+        cmd1 = [
             'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
             '--10x', cellranger_annotation, '--extended'
         ]
+        cmd2 = [
+            'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
+            '--10x', cellranger_annotation, '--extended', '--failed'
+        ]
     else:
-        cmd = [
+        cmd1 = [
             'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
             '--10x', cellranger_annotation
         ]
+        cmd2 = [
+            'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
+            '--10x', cellranger_annotation, '--failed'
+        ]
 
     if verbose:
-        print('Running command: %s\n' % (' '.join(cmd)))
-    run(cmd, env=env)  # logs are printed to terminal
+        print('Running command: %s\n' % (' '.join(cmd1)))
+    run(cmd1, env=env)  # logs are printed to terminal
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd2)))
+    run(cmd2, env=env)  # logs are printed to terminal
 
 
 def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
@@ -731,8 +742,8 @@ def recipe_scanpy_qc(
                     )) | (pd.Series(
                         [n < min_counts for n in _adata.obs['total_counts']],
                         index=_adata.obs.index)
-                          ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
-                              _adata.obs.is_doublet)
+                    ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
+                        _adata.obs.is_doublet)
             else:
                 if max_counts is not None:
                     _adata.obs['filter_rna'] = (pd.Series(
@@ -742,8 +753,8 @@ def recipe_scanpy_qc(
                     )) | (pd.Series(
                         [n > max_counts for n in _adata.obs['total_counts']],
                         index=_adata.obs.index)
-                          ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
-                              _adata.obs.is_doublet)
+                    ) | ~(_adata.obs.gmm_pct_count_clusters_keep) | (
+                        _adata.obs.is_doublet)
     bool_dict = {True: 'True', False: 'False'}
 
     _adata.obs['is_doublet'] = [bool_dict[x] for x in _adata.obs['is_doublet']]
@@ -755,11 +766,11 @@ def recipe_scanpy_qc(
             'leiden', 'leiden_R', 'scrublet_cluster_score',
             'scrublet_score_bh_pval'
         ],
-                                     axis=1)
+            axis=1)
     else:
         _adata.obs = _adata.obs.drop([
             'leiden', 'leiden_R', 'scrublet_cluster_score',
             'scrublet_score_bh_pval', 'gmm_pct_count_clusters'
         ],
-                                     axis=1)
+            axis=1)
     self.obs = _adata.obs.copy()
