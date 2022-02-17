@@ -86,12 +86,11 @@ jobs:
         env:
           recipe: ${{ matrix.changed_file }}
         run: |
-         echo $GITHUB_WORKSPACE
          ls container
          if [ -f "${{ matrix.changed_file }}" ]; then
             cd container
-            wget https://github.com/zktuong/github-ci/tree/master/ncbi-blast-2.12.0%2B
-            wget https://github.com/zktuong/github-ci/tree/master/ncbi-igblast-1.17.1
+            wget -r -nH --cut-dirs=4 -np https://github.com/zktuong/github-ci/tree/master/ncbi-blast-2.12.0%2B
+            wget -r -nH --cut-dirs=4 -np https://github.com/zktuong/github-ci/tree/master/ncbi-igblast-1.17.1
             sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_dev.def
             tag=$(echo "${recipe/Singularity\./}")
             if [ "$tag" == "Singularity" ]; then
