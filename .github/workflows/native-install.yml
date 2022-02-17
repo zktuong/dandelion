@@ -87,9 +87,12 @@ jobs:
         run: |
          cd container
          ls 
+         cd ..
          if [ -f "${{ matrix.changed_file }}" ]; then
+            cd container
             wget https://github.com/zktuong/github-ci/tree/master/ncbi-blast-2.12.0%2B
             wget https://github.com/zktuong/github-ci/tree/master/ncbi-igblast-1.17.1
+            cd ..
             sudo -E singularity build --notest sc-dandelion.sif ${{ matrix.changed_file }}
             tag=$(echo "${recipe/Singularity\./}")
             if [ "$tag" == "Singularity" ]; then
