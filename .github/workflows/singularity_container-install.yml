@@ -93,8 +93,10 @@ jobs:
          ls container
          if [ -f "${{ matrix.changed_file }}" ]; then
             cd container
-            wget -r -nH --cut-dirs=4 -np https://github.com/zktuong/github-ci/tree/master/ncbi-blast-2.12.0%2B
-            wget -r -nH --cut-dirs=4 -np https://github.com/zktuong/github-ci/tree/master/ncbi-igblast-1.17.1
+            wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
+            wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-x64-linux.tar.gz
+            tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
+            tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
             echo '${{ steps.extract_location.outputs.location }}' >> environment_test.yml
             sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
             tag=$(echo "${recipe/Singularity\./}")
