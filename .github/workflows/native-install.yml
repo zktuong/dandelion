@@ -93,24 +93,14 @@ jobs:
             wget https://github.com/zktuong/github-ci/tree/master/ncbi-blast-2.12.0%2B
             wget https://github.com/zktuong/github-ci/tree/master/ncbi-igblast-1.17.1
             cd ..
-            if: github.ref != 'refs/heads/devel'
-              sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_dev.def
-              tag=$(echo "${recipe/Singularity\./}")
-              if [ "$tag" == "Singularity" ]; then
-                  tag=latest
-              fi
-              # Build the container and name by tag
-              echo "Tag is $tag."
-              echo "tag=$tag" >> $GITHUB_ENV
-            else
-              sudo -E singularity build --notest sc-dandelion.sif sc-dandelion.def
-              tag=$(echo "${recipe/Singularity\./}")
-              if [ "$tag" == "Singularity" ]; then
-                  tag=latest
-              fi
-              # Build the container and name by tag
-              echo "Tag is $tag."
-              echo "tag=$tag" >> $GITHUB_ENV
+            sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_dev.def
+            tag=$(echo "${recipe/Singularity\./}")
+            if [ "$tag" == "Singularity" ]; then
+                tag=latest
+            fi
+            # Build the container and name by tag
+            echo "Tag is $tag."
+            echo "tag=$tag" >> $GITHUB_ENV
          else
            echo "${{ matrix.changed_file }} is not found."
            echo "Present working directory: $PWD"
