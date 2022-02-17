@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-11-03 23:06:15
+# @Last Modified time: 2022-02-17 12:06:08
 
 import os
 import pandas as pd
@@ -46,6 +46,7 @@ def format_fasta(fasta: Union[PathLike, str],
                  suffix: Optional[str] = None,
                  sep: Optional[str] = None,
                  remove_trailing_hyphen_number: bool = True,
+                 high_confidence_filtering: bool = False,
                  outdir: Optional[str] = None,
                  filename_prefix: Optional[str] = None):
     """
@@ -63,6 +64,8 @@ def format_fasta(fasta: Union[PathLike, str],
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
+    high_confidence_filtering : bool
+        whether ot not to filter to only `high confidence` contigs.
     outdir : str, Optional
         path to output location. None defaults to 'dandelion'.
     filename_prefix : str, Optional
@@ -149,15 +152,6 @@ def format_fasta(fasta: Union[PathLike, str],
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    out_fasta = out_dir + os.path.basename(filePath)
-
-    fh1 = open(out_fasta, 'w')
-    fh1.close()
-    out = ''
-    for l in seqs:
-        out = '>' + l + '\n' + seqs[l] + '\n'
-        Write_output(out, out_fasta)
-
     # format the barcode and contig_id in the corresponding annotation file too
     anno = basedir + '/' + \
         os.path.basename(filePath).replace('.fasta', '_annotations.csv')
@@ -231,7 +225,22 @@ def format_fasta(fasta: Union[PathLike, str],
 
     out_anno = out_dir + \
         os.path.basename(filePath).replace('.fasta', '_annotations.csv')
+    out_fasta = out_dir + os.path.basename(filePath)
+    fh1 = open(out_fasta, 'w')
+    fh1.close()
+    out = ''
 
+    if high_confidence_filtering:
+        hiconf_contigs = [
+            x for x, y in zip(data['contig_id'], data['high_confidence']) if y
+        ]
+        seqs = {hiconf: seqs[hiconf] for hiconf in hiconf_contigs}
+
+        data = data[data['contig_id'].isin(hiconf_contigs)]
+
+    for l in seqs:
+        out = '>' + l + '\n' + seqs[l] + '\n'
+        Write_output(out, out_fasta)
     data.to_csv(out_anno, index=False)
 
 
@@ -240,6 +249,7 @@ def format_fastas(fastas: Sequence,
                   suffix: Optional[Sequence] = None,
                   sep: Optional[str] = None,
                   remove_trailing_hyphen_number: bool = True,
+                  high_confidence_filtering: bool = False,
                   outdir: Optional[str] = None,
                   filename_prefix: Optional[Union[Sequence, str]] = None):
     """
@@ -257,6 +267,8 @@ def format_fastas(fastas: Sequence,
         separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool
         whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
+    high_confidence_filtering : bool
+        whether ot not to filter to only `high confidence` contigs.
     outdir : str, Optional
         path to out put location. Default is None, which is 'dandelion'.
     filename_prefix : str, Optional
@@ -290,6 +302,7 @@ def format_fastas(fastas: Sequence,
                 suffix=None,
                 sep=None,
                 remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                high_confidence_filtering=high_confidence_filtering,
                 outdir=outdir,
                 filename_prefix=filename_prefix[i])
         elif prefix is not None:
@@ -300,6 +313,7 @@ def format_fastas(fastas: Sequence,
                     suffix=suffix_dict[fastas[i]],
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
             else:
@@ -309,6 +323,7 @@ def format_fastas(fastas: Sequence,
                     suffix=None,
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
         else:
@@ -319,6 +334,7 @@ def format_fastas(fastas: Sequence,
                     suffix=suffix_dict[fastas[i]],
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
             else:
@@ -328,6 +344,7 @@ def format_fastas(fastas: Sequence,
                     suffix=None,
                     sep=None,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
 
@@ -1784,19 +1801,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -1966,8 +1983,8 @@ def create_germlines(
             out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
                 os.path.basename(file).split('.tsv')[0], germ_types),
-                sep='\t',
-                index=False)
+                            sep='\t',
+                            index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2221,8 +2238,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                sep='\t',
-                index=False)
+                        sep='\t',
+                        index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2706,13 +2723,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                method=threshold_method_,
-                model=threshold_model_,
-                cross=cross_,
-                subsample=subsample_,
-                cutoff=cutoff_,
-                sen=sen_,
-                spc=spc_)
+                                              method=threshold_method_,
+                                              model=threshold_model_,
+                                              cross=cross_,
+                                              subsample=subsample_,
+                                              cutoff=cutoff_,
+                                              sen=sen_,
+                                              spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2800,7 +2817,6 @@ class FilterContigs:
     Main class object to run filter_contigs.
 
     """
-
     def __init__(self, data, keep_highest_umi, umi_foldchange_cutoff,
                  filter_poorqualitycontig):
         self.Cell = Tree()
@@ -2835,11 +2851,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VDJ']['P']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -2928,11 +2944,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VDJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -2970,11 +2986,11 @@ class FilterContigs:
                     x
                     for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -3053,11 +3069,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
@@ -3354,7 +3370,6 @@ class FilterContigsLite:
     Main class object to run filter_contigs, lite mode.
 
     """
-
     def __init__(self, data):
         self.Cell = Tree()
         self.poor_qual = []
@@ -3388,11 +3403,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VDJ']['P']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -3434,11 +3449,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VDJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -3448,11 +3463,11 @@ class FilterContigsLite:
                     x
                     for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -3491,11 +3506,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
