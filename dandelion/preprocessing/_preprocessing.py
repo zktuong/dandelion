@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-17 12:06:08
+# @Last Modified time: 2022-02-17 22:58:26
 
 import os
 import pandas as pd
@@ -1046,6 +1046,9 @@ def reannotate_genes(data: Sequence,
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
+                     flavour: Literal['dandelion',
+                                      'immcantation'] = 'dandelion',
+                     evalue: float = 1e-4,
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
@@ -1067,6 +1070,11 @@ def reannotate_genes(data: Sequence,
         whether or not to transfer additional 10X annotions to output file. Default is True.
     filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+    flavour : str
+        Either 'dandelion' or 'immcantation'. Determines how igblastn should be run.
+        Running in 'dandelion' flavour will use the evalue in the call.
+    evalue : float
+        e-value cut off for running igblastn.
     verbose :
         whether or not to print the igblast command used in the terminal. Default is False.
 
@@ -1102,11 +1110,20 @@ def reannotate_genes(data: Sequence,
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        assigngenes_igblast(filePath,
-                            igblast_db=igblast_db,
-                            org=org,
-                            loci=loci,
-                            verbose=verbose)
+        if flavour == 'immcantation':
+            assigngenes_igblast(filePath,
+                                igblast_db=igblast_db,
+                                org=org,
+                                loci=loci,
+                                verbose=verbose)
+        elif flavour == 'dandelion':
+            run_igblastn(filePath,
+                         igblast_db=igblast_db,
+                         org=org,
+                         loci=loci,
+                         evalue=evalue,
+                         verbose=verbose)
+
         makedb_igblast(filePath,
                        org=org,
                        germline=germline,
@@ -1801,19 +1818,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                                                        reference_dict,
-                                                        seq_field=seq_field_,
-                                                        v_field=v_field_,
-                                                        d_field=d_field_,
-                                                        j_field=j_field_)
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                                                        reference_dict,
-                                                        seq_field=seq_field_,
-                                                        v_field=v_field_,
-                                                        d_field=d_field_,
-                                                        j_field=j_field_)
+                    reference_dict,
+                    seq_field=seq_field_,
+                    v_field=v_field_,
+                    d_field=d_field_,
+                    j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -1983,8 +2000,8 @@ def create_germlines(
             out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
                 os.path.basename(file).split('.tsv')[0], germ_types),
-                            sep='\t',
-                            index=False)
+                sep='\t',
+                index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2238,8 +2255,8 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                        sep='\t',
-                        index=False)
+                sep='\t',
+                index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
@@ -2723,13 +2740,13 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                                              method=threshold_method_,
-                                              model=threshold_model_,
-                                              cross=cross_,
-                                              subsample=subsample_,
-                                              cutoff=cutoff_,
-                                              sen=sen_,
-                                              spc=spc_)
+                method=threshold_method_,
+                model=threshold_model_,
+                cross=cross_,
+                subsample=subsample_,
+                cutoff=cutoff_,
+                sen=sen_,
+                spc=spc_)
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2817,6 +2834,7 @@ class FilterContigs:
     Main class object to run filter_contigs.
 
     """
+
     def __init__(self, data, keep_highest_umi, umi_foldchange_cutoff,
                  filter_poorqualitycontig):
         self.Cell = Tree()
@@ -2851,11 +2869,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VDJ']['P']
                     if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VDJ']['P']
+                    if isinstance(x, dict)
+                ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -2944,11 +2962,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VDJ']['NP']
                     if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VDJ']['NP']
+                    if isinstance(x, dict)
+                ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -2986,11 +3004,11 @@ class FilterContigs:
                     x
                     for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VJ']['P']
+                    if isinstance(x, dict)
+                ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -3069,11 +3087,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VJ']['NP']
                     if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VJ']['NP']
+                    if isinstance(x, dict)
+                ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
@@ -3370,6 +3388,7 @@ class FilterContigsLite:
     Main class object to run filter_contigs, lite mode.
 
     """
+
     def __init__(self, data):
         self.Cell = Tree()
         self.poor_qual = []
@@ -3403,11 +3422,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VDJ']['P']
                     if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VDJ']['P']
+                    if isinstance(x, dict)
+                ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -3449,11 +3468,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VDJ']['NP']
                     if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VDJ']['NP']
+                    if isinstance(x, dict)
+                ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -3463,11 +3482,11 @@ class FilterContigsLite:
                     x
                     for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VJ']['P']
+                    if isinstance(x, dict)
+                ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -3506,11 +3525,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VJ']['NP']
                     if isinstance(x, dict)
                 ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                    index=[
+                    x['sequence_id']
+                    for x in self.Cell[cell]['VJ']['NP']
+                    if isinstance(x, dict)
+                ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
@@ -3654,3 +3673,68 @@ class FilterContigsLite:
                                 self.drop_contig.append(lx)
                     else:
                         self.drop_contig.append(lx)
+
+
+def run_igblastn(fasta: Union[str, PathLike],
+                 igblast_db: Optional[str] = None,
+                 org: Literal['human', 'mouse'] = 'human',
+                 loci: Literal['ig', 'tr'] = 'ig',
+                 evalue: float = 1e-4,
+                 verbose: bool = False):
+    """
+    Reannotate with IgBLASTn.
+
+    Parameters
+    ----------
+    fasta : PathLike
+        fasta file for reannotation.
+    igblast_db : PathLike, Optional
+        path to igblast database.
+    org : str
+        organism for germline sequences.
+    loci : str
+        `ig` or `tr` mode for running igblastn.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
+
+    """
+    env = os.environ.copy()
+    if igblast_db is None:
+        try:
+            igdb = env['IGDATA']
+        except KeyError:
+            raise KeyError(
+                ('Environmental variable IGDATA must be set. Otherwise,' +
+                 ' please provide path to igblast database'))
+    else:
+        env['IGDATA'] = igblast_db
+        igdb = env['IGDATA']
+
+    outfolder = os.path.abspath(os.path.dirname(fasta)) + '/tmp'
+    informat_dict = {'blast': '_igblast.fmt7', 'airr': '_igblast.tsv'}
+    if not os.path.exists(outfolder):
+        os.makedirs(outfolder)
+
+    loci_type = {'ig': 'Ig', 'tr': 'TCR'}
+    outformat = {'blast': '7 std qseq sseq btop', 'airr': '19'}
+
+    for fileformat in ['blast', 'airr']:
+        outfile = os.path.basename(fasta).split(
+            '.fasta')[0] + informat_dict[fileformat]
+        cmd = [
+            'igblastn', '-germline_db_V',
+            igdb + '/database/imgt_' + org + '_' + loci + '_v',
+            '-germline_db_D',
+            igdb + '/database/imgt_' + org + '_' + loci + '_d',
+            '-germline_db_J',
+            igdb + '/database/imgt_' + org + '_' + loci + '_j',
+            '-auxiliary_data', igdb + 'optional_file/' + org + '_gl.aux',
+            '-domain_system', 'imgt', '-ig_seqtype', loci_type[loci],
+            '-organism', org, '-outfmt', outformat[fileformat], '-query',
+            fasta, '-out', "{}/{}".format(outfolder, outfile), '-evalue',
+            str(evalue)
+        ]
+
+        if verbose:
+            print('Running command: %s\n' % (' '.join(cmd)))
+        run(cmd, env=env)  # logs are printed to terminal
