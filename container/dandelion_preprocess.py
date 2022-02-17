@@ -51,6 +51,11 @@ def parse_args():
         action='store_true',
         help=('If passed, skips formatting of contig headers.'))
     parser.add_argument(
+        '--filter_to_high_confidence',
+        action='store_true',
+        help=('If passed, limits the contig space to ones that are set to ' +
+            '"True" in the high_confidence column of the contig annotation.'))
+    parser.add_argument(
         '--keep_trailing_hyphen_number',
         action='store_false',
         help=('If passed, do not strip out the trailing hyphen number, ' +
@@ -92,6 +97,7 @@ def main():
          f'    --file_prefix = {args.file_prefix}\n'
          f'    --sep = {args.sep}\n'
          f'    --skip_format_header = {args.skip_format_header}\n'
+         f'    --filter_to_high_confidence = {args.filter_to_high_confidence}\n'
          f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
          f'    --clean_output = {args.clean_output}\n'
          f'--------------------------------------------------------------\n'),
@@ -126,6 +132,7 @@ def main():
                 samples,
                 prefix=vals,
                 sep=args.sep,
+                high_confidence_filtering=args.filter_to_high_confidence,
                 remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
                 filename_prefix=filename_prefixes)
         elif 'suffix' in meta.columns:
@@ -135,6 +142,7 @@ def main():
                 samples,
                 suffix=vals,
                 sep=args.sep,
+                high_confidence_filtering=args.filter_to_high_confidence,
                 remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
                 filename_prefix=filename_prefixes)
         else:
@@ -144,17 +152,22 @@ def main():
                 ddl.pp.format_fastas(samples,
                                      prefix=samples,
                                      sep=args.sep,
+                                     high_confidence_filtering=args.
+                                     filter_to_high_confidence,
                                      remove_trailing_hyphen_number=args.
                                      keep_trailing_hyphen_number,
                                      filename_prefix=filename_prefixes)
             else:
                 # no need to tag as it's a single sample.
                 ddl.pp.format_fastas(samples,
+                                     high_confidence_filtering=args.
+                                     filter_to_high_confidence,
                                      remove_trailing_hyphen_number=args.
                                      keep_trailing_hyphen_number,
                                      filename_prefix=filename_prefixes)
     else:
         ddl.pp.format_fastas(samples,
+                             high_confidence_filtering=args.filter_to_high_confidence,
                              remove_trailing_hyphen_number=False,
                              filename_prefix=filename_prefixes)
 
