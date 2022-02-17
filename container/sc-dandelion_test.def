@@ -6,7 +6,7 @@ From: continuumio/miniconda3
     ncbi-blast-2.12.0+ /share/ncbi-blast-2.12.0+
     ncbi-igblast-1.17.1 /share/ncbi-igblast-1.17.1
     database /share/database
-    environment_dev.yml /environment_dev.yml
+    environment_test.yml /environment_test.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
     tests /tests
 
@@ -32,7 +32,7 @@ From: continuumio/miniconda3
     R --slave -e 'BiocManager::install(c("Biostrings", "GenomicAlignments", "IRanges"))'
     R --slave -e 'install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"), repos="https://cloud.r-project.org/")'
     . /opt/conda/etc/profile.d/conda.sh
-    conda env update --name sc-dandelion-container -f environment_dev.yml
+    conda env update --name sc-dandelion-container -f environment_test.yml
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT

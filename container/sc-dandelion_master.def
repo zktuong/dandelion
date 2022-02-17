@@ -6,7 +6,7 @@ From: continuumio/miniconda3
     ncbi-blast-2.12.0+ /share/ncbi-blast-2.12.0+
     ncbi-igblast-1.17.1 /share/ncbi-igblast-1.17.1
     database /share/database
-    environment_dev.yml /environment_dev.yml
+    environment_master.yml /environment_master.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
     tests /tests
 
