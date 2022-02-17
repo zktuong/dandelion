@@ -32,7 +32,7 @@ jobs:
       matrix:
         changed_file: ${{ fromJson(needs.changes.outputs.changed_file) }}
 
-    name: Check ${{ matrix.changed_file }}
+    name: Check changed files
     steps:
       - name: Continue if file name contains the word 'container'
         run: |
