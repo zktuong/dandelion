@@ -118,4 +118,4 @@ jobs:
         run: |
           cd container
           sudo singularity test --writable-tmpfs sc-dandelion.sif
-          singularity run -B $PWD sc-dandelion.sif dandelion-prepreprocess --help
+          singularity run -B $PWD sc-dandelion.sif dandelion-preprocess --help
