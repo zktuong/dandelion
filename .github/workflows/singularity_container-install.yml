@@ -1,16 +1,15 @@
 name: Test Singularity Build
 on: 
   push:
-
-    # Edit the branches here if you want to change deploy behavior
     branches:
       - master
       - devel
-      - singularity_CI
+      - "*"
 
   # Do the builds on all pull requests (to test them)
-  pull_request: []
-
+  pull_request: 
+    branches:
+      - "*"
 jobs:
   changes:
     name: "Changed files"
@@ -81,6 +80,11 @@ jobs:
         if: ${{ env.keepgoing == 'true' }}
         uses: actions/checkout@v2
 
+      - name: Extract repository location
+        shell: bash
+        run: echo "##[set-output name=location;]$(echo "  - git+https://www.github.com/${GITHUB_REPOSITORY}@${GITHUB_REF#refs/heads/}")"
+        id: extract_location
+
       - name: Build Container
         if: ${{ env.keepgoing == 'true' }}
         env:
@@ -91,7 +95,8 @@ jobs:
             cd container
             wget -r -nH --cut-dirs=4 -np https://github.com/zktuong/github-ci/tree/master/ncbi-blast-2.12.0%2B
             wget -r -nH --cut-dirs=4 -np https://github.com/zktuong/github-ci/tree/master/ncbi-igblast-1.17.1
-            sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_dev.def
+            echo '${{ steps.extract_location.outputs.location }}' >> environment_test.yml
+            sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
             tag=$(echo "${recipe/Singularity\./}")
             if [ "$tag" == "Singularity" ]; then
                 tag=latest
