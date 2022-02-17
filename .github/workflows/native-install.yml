@@ -39,7 +39,7 @@ jobs:
         run: |
           # Continue if we have a changed Singularity recipe
           echo ${{ matrix.changed_file }}
-          if [[ "${{ matrix.changed_file }}" = *container* ]]; then
+          if [[ "${{ matrix.changed_file }}" = *container* ]] or [[ "${{ matrix.changed_file }}" = native-install.yml ]]; then
             echo "keepgoing=true" >> $GITHUB_ENV
           fi          
       - name: Set up Go 1.13
@@ -109,4 +109,6 @@ jobs:
         env:
           recipe: ${{ matrix.changed_file }}
         run: |
-          sudo -E singularity test --writable-tmpfs container/sc-dandelion.sif;
+          cd container
+          sudo singularity test --writable-tmpfs sc-dandelion.sif
+          singularity run -B $PWD sc-dandelion.sif dandelion-prepreprocess --help
