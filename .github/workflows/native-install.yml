@@ -110,4 +110,4 @@ jobs:
         env:
           recipe: ${{ matrix.changed_file }}
         run: |
-          sudo -E singularity test --writable-tmpfs sc-dandelion.sif;
+          sudo -E singularity test --writable-tmpfs container/sc-dandelion.sif;
