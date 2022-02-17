@@ -1,4 +1,4 @@
-name: Singularity Build (native)
+name: Test Singularity Build
 on: 
   push:
 
@@ -13,7 +13,7 @@ on:
 
 jobs:
   changes:
-    name: "Changed Singularity Recipes"
+    name: "Changed files"
     runs-on: ubuntu-latest
     outputs:
       changed_file: ${{ steps.files.outputs.added_modified }}
@@ -35,7 +35,7 @@ jobs:
 
     name: Check ${{ matrix.changed_file }}
     steps:
-      - name: Continue if Singularity Recipe
+      - name: Continue if file name contains the word 'container'
         run: |
           # Continue if we have a changed Singularity recipe
           echo ${{ matrix.changed_file }}
@@ -86,6 +86,7 @@ jobs:
         env:
           recipe: ${{ matrix.changed_file }}
         run: |
+         echo $GITHUB_WORKSPACE
          ls container
          if [ -f "${{ matrix.changed_file }}" ]; then
             cd container
