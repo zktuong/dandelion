@@ -47,15 +47,15 @@ def test_reannotategenes(create_testfolder, database_paths):
                             igblast_db=database_paths['igblast_db'],
                             germline=database_paths['germline'],
                             loci='tr')
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
-    assert len(list((create_testfolder / 'dandelion').iterdir())) == 5
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 5
+    assert len(list((create_testfolder / 'dandelion').iterdir())) == 4
 
 
 def test_loadtravdv_reannotated(create_testfolder):
     vdj = ddl.Dandelion(
         str(create_testfolder) +
         '/dandelion/filtered_contig_igblast_db-pass.tsv')
-    assert vdj.data.shape[0] == 6
+    assert vdj.data.shape[0] == 1
     assert all([i == 'TRD' for i in vdj.data['locus']])
 
 
@@ -63,7 +63,7 @@ def test_travdv_filter(create_testfolder, dummy_adata_travdv):
     vdj = ddl.Dandelion(
         str(create_testfolder) +
         '/dandelion/filtered_contig_igblast_db-pass.tsv')
-    assert vdj.data.shape[0] == 6
+    assert vdj.data.shape[0] == 1
     assert all([i == 'TRD' for i in vdj.data['locus']])
     vdj2, adata = ddl.pp.filter_contigs(vdj, dummy_adata_travdv)
-    assert vdj2.data.shape[0] == 6
+    assert vdj2.data.shape[0] == 1
