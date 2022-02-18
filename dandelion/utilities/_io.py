@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-16 15:39:02
+# @Last Modified time: 2022-02-18 01:10:08
 
 import os
 import json
@@ -763,7 +763,7 @@ def change_file_location(data: Sequence,
                     'Path to .tsv file for {} is unknown. '.format(data[i]) +
                     'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
                 )
-            tmp2 = check_travdv(filePath2)
+            tmp2 = load_data(filePath2)
             _airrfile = filePath2.replace('_db-fail.tsv', '.tsv')
             airr_output = load_data(_airrfile)
             cols_to_merge = [
