@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-16 14:57:04
+# @Last Modified time: 2022-02-18 08:56:58
 
 import os
 import pandas as pd
@@ -79,6 +79,7 @@ def makedb_igblast(fasta: Union[str, PathLike],
                    germline: Optional[Union[str, PathLike]] = None,
                    org: Literal['human', 'mouse'] = 'human',
                    extended: bool = True,
+                   partial: bool = False,
                    verbose: bool = False):
     """
     Parse IgBLAST output to airr format.
@@ -95,6 +96,9 @@ def makedb_igblast(fasta: Union[str, PathLike],
         organism of germline sequences.
     extended : bool
         whether or not to parse extended 10x annotations. Default is True.
+    partial : bool
+        If specified, include incomplete V(D)J alignments in the pass file
+        instead of the fail file.
     verbose : bool
         whether or not to print the command used in terminal. Default is False.
 
@@ -125,30 +129,31 @@ def makedb_igblast(fasta: Union[str, PathLike],
         os.path.basename(fasta).replace('.fasta', '_annotations.csv'))
 
     if extended:
-        cmd1 = [
-            'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
-            '--10x', cellranger_annotation, '--extended'
-        ]
-        cmd2 = [
-            'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
-            '--10x', cellranger_annotation, '--extended', '--failed'
-        ]
+        if partial:
+            cmd = [
+                'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
+                '--10x', cellranger_annotation, '--extended', '--partial'
+            ]
+        else:
+            cmd = [
+                'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
+                '--10x', cellranger_annotation, '--extended'
+            ]
     else:
-        cmd1 = [
-            'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
-            '--10x', cellranger_annotation
-        ]
-        cmd2 = [
-            'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
-            '--10x', cellranger_annotation, '--failed'
-        ]
+        if partial:
+            cmd = [
+                'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
+                '--10x', cellranger_annotation, '--partial'
+            ]
+        else:
+            cmd = [
+                'MakeDb.py', 'igblast', '-i', igbo, '-s', fasta, '-r', gml,
+                '--10x', cellranger_annotation
+            ]
 
     if verbose:
-        print('Running command: %s\n' % (' '.join(cmd1)))
-    run(cmd1, env=env)  # logs are printed to terminal
-    if verbose:
-        print('Running command: %s\n' % (' '.join(cmd2)))
-    run(cmd2, env=env)  # logs are printed to terminal
+        print('Running command: %s\n' % (' '.join(cmd)))
+    run(cmd, env=env)  # logs are printed to terminal
 
 
 def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
