@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-18 01:10:08
+# @Last Modified time: 2022-02-18 08:58:01
 
 import os
 import json
@@ -720,12 +720,6 @@ def change_file_location(data: Sequence,
         'airr': '_igblast_gap.tsv'
     }
 
-    informat_dict2 = {
-        'changeo': '_igblast_db-fail.tsv',
-        'blast': '_igblast_db-fail.tsv',
-        'airr': '_igblast_gap.tsv'
-    }
-
     filePath = None
 
     for i in range(0, len(data)):
@@ -752,30 +746,3 @@ def change_file_location(data: Sequence,
         tmp.to_csv(filePath, sep='\t', index=False)
         cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
         run(cmd)
-
-        try:
-            filePath2 = check_filepath(data[i],
-                                       filename_prefix=filename_prefix[i],
-                                       endswith=informat_dict2[fileformat],
-                                       subdir='tmp')
-            if filePath2 is None:
-                raise OSError(
-                    'Path to .tsv file for {} is unknown. '.format(data[i]) +
-                    'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
-                )
-            tmp2 = load_data(filePath2)
-            _airrfile = filePath2.replace('_db-fail.tsv', '.tsv')
-            airr_output = load_data(_airrfile)
-            cols_to_merge = [
-                'junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa',
-                'fwr4_aa', 'cdr1_aa', 'cdr2_aa', 'cdr3_aa',
-                'sequence_alignment_aa', 'v_sequence_alignment_aa',
-                'd_sequence_alignment_aa', 'j_sequence_alignment_aa'
-            ]
-            for x in cols_to_merge:
-                tmp2[x] = pd.Series(airr_output[x])
-            tmp2.to_csv(filePath2, sep='\t', index=False)
-            cmd2 = ['rsync', '-azvh', filePath2, filePath2.rsplit('/', 2)[0]]
-            run(cmd2)
-        except:
-            pass
