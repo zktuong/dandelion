@@ -1,5 +1,5 @@
 name: Test Singularity Build
-on: 
+on:
   push:
     branches:
       - master
@@ -7,7 +7,7 @@ on:
       - "*"
 
   # Do the builds on all pull requests (to test them)
-  pull_request: 
+  pull_request:
     branches:
       - "*"
 jobs:
@@ -21,8 +21,8 @@ jobs:
         uses: jitterbit/get-changed-files@b17fbb00bdc0c0f63fcf166580804b4d2cdc2a42
         with:
           format: 'json'
-  
-  build-test-containers:
+
+  fileschanged:
     needs:
       - changes
     runs-on: ubuntu-latest
@@ -40,7 +40,16 @@ jobs:
           echo ${{ matrix.changed_file }}
           if [[ "${{ matrix.changed_file }}" = *container* ]]; then
             echo "keepgoing=true" >> $GITHUB_ENV
-          fi          
+          fi
+
+  build-test-containers:
+    needs:
+      - fileschanged
+    runs-on: ubuntu-latest
+    strategy:
+      # Keep going on other deployments if anything bloops
+      fail-fast: True
+    steps:
       - name: Set up Go 1.13
         if: ${{ env.keepgoing == 'true' }}
         uses: actions/setup-go@v1
@@ -64,7 +73,7 @@ jobs:
         env:
           SINGULARITY_VERSION: 3.8.1
           GOPATH: /tmp/go
-      
+
         run: |
           mkdir -p $GOPATH
           sudo mkdir -p /usr/local/var/singularity/mnt && \
@@ -75,7 +84,7 @@ jobs:
           cd singularity-ce-${SINGULARITY_VERSION} && \
           ./mconfig -p /usr/local && \
           make -C builddir && \
-          sudo make -C builddir install          
+          sudo make -C builddir install
       - name: Check out code for the container build
         if: ${{ env.keepgoing == 'true' }}
         uses: actions/checkout@v2
