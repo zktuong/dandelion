@@ -47,6 +47,12 @@ def parse_args():
             'file absent and more than one sample to process. ' +
             'Defaults to "_".'))
     parser.add_argument(
+        '--flavour',
+        type=str,
+        default="strict",
+        help=('The "flavour" for running igblastn reannotation. Accepts either ' +
+              '"strict" or "original". strict will enforce evalue and penalty cutoffs.'))
+    parser.add_argument(
         '--skip_format_header',
         action='store_true',
         help=('If passed, skips formatting of contig headers.'))
@@ -54,7 +60,7 @@ def parse_args():
         '--filter_to_high_confidence',
         action='store_true',
         help=('If passed, limits the contig space to ones that are set to ' +
-            '"True" in the high_confidence column of the contig annotation.'))
+              '"True" in the high_confidence column of the contig annotation.'))
     parser.add_argument(
         '--keep_trailing_hyphen_number',
         action='store_false',
@@ -89,18 +95,18 @@ def main():
 
     logg.info(
         'command line parameters:\n',
-        deep=
-        (f'\n'
-         f'--------------------------------------------------------------\n'
-         f'    --meta = {args.meta}\n'
-         f'    --chain = {args.chain}\n'
-         f'    --file_prefix = {args.file_prefix}\n'
-         f'    --sep = {args.sep}\n'
-         f'    --skip_format_header = {args.skip_format_header}\n'
-         f'    --filter_to_high_confidence = {args.filter_to_high_confidence}\n'
-         f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
-         f'    --clean_output = {args.clean_output}\n'
-         f'--------------------------------------------------------------\n'),
+        deep=(f'\n'
+              f'--------------------------------------------------------------\n'
+              f'    --meta = {args.meta}\n'
+              f'    --chain = {args.chain}\n'
+              f'    --file_prefix = {args.file_prefix}\n'
+              f'    --sep = {args.sep}\n'
+              f'    --flavour = {args.flavour}\n'
+              f'    --skip_format_header = {args.skip_format_header}\n'
+              f'    --filter_to_high_confidence = {args.filter_to_high_confidence}\n'
+              f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
+              f'    --clean_output = {args.clean_output}\n'
+              f'--------------------------------------------------------------\n'),
     )
 
     # set up a sample list
@@ -175,7 +181,9 @@ def main():
     # no tricks here
     ddl.pp.reannotate_genes(samples,
                             loci=args.chain,
-                            filename_prefix=filename_prefixes)
+                            filename_prefix=filename_prefixes,
+                            flavour=args.flavour
+                            )
 
     # IG requires further preprocessing, TR is done now
     if args.chain == 'ig':
