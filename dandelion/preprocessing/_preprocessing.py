@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-18 00:53:57
+# @Last Modified time: 2022-02-18 09:18:00
 
 import os
 import pandas as pd
@@ -1056,8 +1056,8 @@ def reannotate_genes(data: Sequence,
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
-                     flavour: Literal['dandelion',
-                                      'immcantation'] = 'dandelion',
+                     flavour: Literal['strict',
+                                      'original'] = 'strict',
                      evalue: float = 1e-4,
                      min_d_match: int = 9,
                      override_j: bool = True,
@@ -1106,7 +1106,8 @@ def reannotate_genes(data: Sequence,
         verlapping matches at V-D or D-J junctions.
     override_j: bool
         if flavour == 'dandelion', j calls will be blasted as well and if this
-        option is specified, it will override the j_call value.
+        option is specified, it will override the j_call value. Only toggled for
+        TCR data.
     verbose :
         whether or not to print the igblast command used in the terminal.
         Default is False.
@@ -1143,13 +1144,13 @@ def reannotate_genes(data: Sequence,
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        if flavour == 'immcantation':
+        if flavour == 'original':
             assigngenes_igblast(filePath,
                                 igblast_db=igblast_db,
                                 org=org,
                                 loci=loci,
                                 verbose=verbose)
-        elif flavour == 'dandelion':
+        elif flavour == 'strict':
             run_igblastn(filePath,
                          igblast_db=igblast_db,
                          org=org,
@@ -1157,20 +1158,27 @@ def reannotate_genes(data: Sequence,
                          evalue=evalue,
                          min_d_match=min_d_match,
                          verbose=verbose)
-        makedb_igblast(filePath,
-                       org=org,
-                       germline=germline,
-                       extended=extended,
-                       verbose=verbose)
-        if flavour == 'dandelion':
-            assign_J(filePath,
-                     org=org,
-                     loci=loci,
-                     igblastdb=igblast_db,
-                     filename_prefix=filename_prefix,
-                     override=override_j,
-                     verbose=verbose)
+        if loci == 'tr':
+            makedb_igblast(filePath,
+                           org=org,
+                           germline=germline,
+                           extended=extended,
+                           partial=True,
+                           verbose=verbose)
+        else:
+            makedb_igblast(filePath,
+                           org=org,
+                           germline=germline,
+                           extended=extended,
+                           verbose=verbose)
     if loci == 'tr':
+        assign_J(filePath,
+                 org=org,
+                 loci=loci,
+                 igblastdb=igblast_db,
+                 filename_prefix=filename_prefix,
+                 override=override_j,
+                 verbose=verbose)
         change_file_location(data, filename_prefix)
 
 
@@ -3857,6 +3865,8 @@ def assign_J(fasta: Union[str, PathLike],
         else:
             env['IGDATA'] = igblastdb
             bdb = igblastdb
+            if not bdb.endswith('_' + loci + '_j'):
+                bdb = bdb + 'database/imgt_' + org + '_' + loci + '_j'
 
         cmd = [
             'blastn', '-db', bdb, '-evalue', '0.001', '-max_target_seqs', '1',
@@ -4101,9 +4111,6 @@ def assign_J(fasta: Union[str, PathLike],
     passfile = "{}/tmp/{}.tsv".format(
         os.path.dirname(filePath),
         os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-pass')
-    failfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-fail')
 
     if override:
         suffix = ''
@@ -4119,13 +4126,3 @@ def assign_J(fasta: Union[str, PathLike],
     dat = _transfer_J(dat, j_ident, 'j_identity' + suffix)
     dat = _transfer_J(dat, j_supp, 'j_support' + suffix)
     dat.to_csv(passfile, sep='\t', index=False)
-
-    dat = _transfer_J(failfile, j_call, 'j_call' + suffix)
-    dat = _transfer_J(dat, j_seq, 'j_sequence_alignment' + suffix)
-    dat = _transfer_J(dat, j_germ, 'j_germline_alignment' + suffix)
-    dat = _transfer_J(dat, j_st, 'j_sequence_start' + suffix)
-    dat = _transfer_J(dat, j_en, 'j_sequence_end' + suffix)
-    dat = _transfer_J(dat, j_scr, 'j_score' + suffix)
-    dat = _transfer_J(dat, j_ident, 'j_identity' + suffix)
-    dat = _transfer_J(dat, j_supp, 'j_support' + suffix)
-    dat.to_csv(failfile, sep='\t', index=False)
