@@ -55,8 +55,8 @@ def test_formatfasta(create_testfolder, filename, expected):
 
 @pytest.mark.parametrize(
     "filename,expected",
-    [pytest.param('filtered', [3, 6]),
-     pytest.param('all', [6, 7])])
+    [pytest.param('filtered', [5, 6]),
+     pytest.param('all', [10, 7])])
 def test_reannotategenes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.reannotate_genes(str(create_testfolder),
@@ -81,7 +81,6 @@ def test_checkreannotation(create_testfolder, processed_files_tr, filename):
     f2 = f2.replace({'None': None, '': None, 'False': False, 'True': True})
     assert all(pd.isnull(f1.d_gene))
     assert not f2.d_call.empty
-    assert all(pd.notnull(f2.d_call))
     assert not all(f1.productive)
     assert all(f2.productive)
 
