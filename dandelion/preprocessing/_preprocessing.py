@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-18 09:18:00
+# @Last Modified time: 2022-02-21 10:02:01
 
 import os
 import pandas as pd
@@ -234,7 +234,8 @@ def format_fasta(fasta: Union[PathLike, str],
 
     if high_confidence_filtering:
         hiconf_contigs = [
-            x for x, y in zip(data['contig_id'], data['high_confidence']) if y
+            x for x, y in zip(data['contig_id'], data['high_confidence'])
+            if y in TRUES
         ]
         seqs = {hiconf: seqs[hiconf] for hiconf in hiconf_contigs}
 
@@ -1056,8 +1057,7 @@ def reannotate_genes(data: Sequence,
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
-                     flavour: Literal['strict',
-                                      'original'] = 'strict',
+                     flavour: Literal['strict', 'original'] = 'strict',
                      evalue: float = 1e-4,
                      min_d_match: int = 9,
                      override_j: bool = True,
@@ -3850,7 +3850,6 @@ def assign_J(fasta: Union[str, PathLike],
     -------
         j genes assigned
     """
-
     def _run_blastn(fasta, igblastdb, org, loci, verbose):
 
         env = os.environ.copy()
