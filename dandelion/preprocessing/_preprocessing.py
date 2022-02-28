@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-21 10:02:01
+# @Last Modified time: 2022-02-28 14:38:24
 
 import os
 import pandas as pd
@@ -1060,7 +1060,7 @@ def reannotate_genes(data: Sequence,
                      flavour: Literal['strict', 'original'] = 'strict',
                      evalue: float = 1e-4,
                      min_d_match: int = 9,
-                     override_j: bool = True,
+                     overwrite_j: bool = True,
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr format.
@@ -1104,10 +1104,9 @@ def reannotate_genes(data: Sequence,
         consecutive nucleotide matches between the query sequence and the D
         genes based on your own criteria. Note that the matches do not include
         verlapping matches at V-D or D-J junctions.
-    override_j: bool
-        if flavour == 'dandelion', j calls will be blasted as well and if this
-        option is specified, it will override the j_call value. Only toggled for
-        TCR data.
+    overwrite_j: bool
+        if flavour == 'strict', j calls will be blasted as well and if this
+        option is specified, it will overwrite the j_call value.
     verbose :
         whether or not to print the igblast command used in the terminal.
         Default is False.
@@ -1172,13 +1171,24 @@ def reannotate_genes(data: Sequence,
                            extended=extended,
                            verbose=verbose)
     if loci == 'tr':
-        assign_J(filePath,
-                 org=org,
-                 loci=loci,
-                 igblastdb=igblast_db,
-                 filename_prefix=filename_prefix,
-                 override=override_j,
-                 verbose=verbose)
+        assign_DJ(filePath,
+                  org=org,
+                  loci=loci,
+                  igblastdb=igblast_db,
+                  call='j',
+                  filename_prefix=filename_prefix,
+                  overwrite=overwrite_j,
+                  evalue=evalue,
+                  verbose=verbose)
+        assign_DJ(filePath,
+                  org=org,
+                  loci=loci,
+                  igblastdb=igblast_db,
+                  call='d',
+                  filename_prefix=filename_prefix,
+                  overwrite=False,
+                  evalue=evalue,
+                  verbose=verbose)
         change_file_location(data, filename_prefix)
 
 
@@ -3820,13 +3830,15 @@ def run_igblastn(fasta: Union[str, PathLike],
         run(cmd, env=env)  # logs are printed to terminal
 
 
-def assign_J(fasta: Union[str, PathLike],
-             org: Literal['human', 'mouse'] = 'human',
-             loci: Literal['ig', 'tr'] = 'tr',
-             igblastdb: Optional[str] = None,
-             filename_prefix: Optional[str] = None,
-             override: bool = True,
-             verbose: bool = False):
+def assign_DJ(fasta: Union[str, PathLike],
+              org: Literal['human', 'mouse'] = 'human',
+              loci: Literal['ig', 'tr'] = 'tr',
+              call: Literal['d', 'j'] = 'j',
+              igblastdb: Optional[str] = None,
+              evalue: float = 0.001,
+              filename_prefix: Optional[str] = None,
+              overwrite: bool = True,
+              verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn.
 
@@ -3838,19 +3850,25 @@ def assign_J(fasta: Union[str, PathLike],
         organism of reference folder. Default is 'human'.
     loci : str
         locus. 'ig' or 'tr',
+    call : str
+        Either 'd' of 'j' gene.
     igblastdb : str, Optional
         path to igblast database. Defaults to `$IGDATA` environmental variable.
+    evalue : float
+        minimum evalue cut off.
     filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
+    overwrite : bool
+        If True, original calls will be overwritten.
     verbose : bool
         whether or not to print the blast command in terminal.
         Default is False.
 
     Returns
     -------
-        j genes assigned
+        D/J genes assigned.
     """
-    def _run_blastn(fasta, igblastdb, org, loci, verbose):
+    def _run_blastn(fasta, igblastdb, org, loci, call, evalue, verbose):
 
         env = os.environ.copy()
         if igblastdb is None:
@@ -3858,32 +3876,32 @@ def assign_J(fasta: Union[str, PathLike],
                 bdb = env['IGDATA']
             except:
                 raise OSError(
-                    'Environmental variable IGDATA must be set. Otherwise, please provide path to igblast database.'
-                )
-            bdb = bdb + 'database/imgt_' + org + '_' + loci + '_j'
+                    ('Environmental variable IGDATA must be set. ' +
+                     'Otherwise, please provide path to igblast database.'))
+            bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
         else:
             env['IGDATA'] = igblastdb
             bdb = igblastdb
-            if not bdb.endswith('_' + loci + '_j'):
-                bdb = bdb + 'database/imgt_' + org + '_' + loci + '_j'
+            if not bdb.endswith('_' + loci + '_' + call):
+                bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
 
         cmd = [
-            'blastn', '-db', bdb, '-evalue', '0.001', '-max_target_seqs', '1',
+            'blastn', '-db', bdb, '-evalue', str(evalue), '-max_target_seqs', '1',
             '-outfmt', '5', '-query', fasta
         ]
 
         blast_out = "{}/tmp/{}.xml".format(
             os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + '_j_blast')
+            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
 
         if verbose:
             print('Running command: %s\n' % (' '.join(cmd)))
         with open(blast_out, 'w') as out:
             run(cmd, stdout=out, env=env)
 
-    def _parse_BLAST(fasta):
+    def _parse_BLAST(fasta, call):
         """Parse BLAST output from output files and writes formatted output to BLAST output summary files."""
-        def split_blast_file(filename):
+        def split_blast_file(filename, call):
             """
             Split blast file.
 
@@ -3916,10 +3934,10 @@ def assign_J(fasta: Union[str, PathLike],
 
         input_file = "{}/tmp/{}.xml".format(
             os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + '_j_blast')
+            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
         output_file = "{}/tmp/{}summary.txt".format(
             os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + '_j_blast')
+            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
 
         with open(output_file, 'w') as outfile:
             outfile.write(
@@ -3927,7 +3945,7 @@ def assign_J(fasta: Union[str, PathLike],
                     fasta))
             # Split result file into chunks corresponding to results for each query sequence.
             if os.path.isfile(input_file):
-                blast_result_chunks = split_blast_file(input_file)
+                blast_result_chunks = split_blast_file(input_file, call)
                 for chunk in blast_result_chunks:
                     message = False
                     for line_x in chunk:
@@ -3939,7 +3957,7 @@ def assign_J(fasta: Union[str, PathLike],
                             evalue = extract_blast_info(line_x)
                             evalue = format(float(evalue), '.0e')
                         elif line_x.startswith("<Hit_accession>"):
-                            J_segment = extract_blast_info(line_x)
+                            DJ_segment = extract_blast_info(line_x)
                         elif line_x.startswith("<Hsp_bit-score>"):
                             bit_score = extract_blast_info(line_x)
                         elif line_x.startswith("<Hsp_query-from>"):
@@ -3965,8 +3983,12 @@ def assign_J(fasta: Union[str, PathLike],
                         elif line_x.startswith(
                                 "<Iteration_message>No hits found"):
                             message = True
-                            out_string = "##{blast_query_name}##\nNo J segment found\n\n".format(
-                                blast_query_name=blast_query_name)
+                            if call == 'd':
+                                out_string = "##{blast_query_name}##\nNo D segment found\n\n".format(
+                                    blast_query_name=blast_query_name)
+                            elif call == 'j':
+                                out_string = "##{blast_query_name}##\nNo J segment found\n\n".format(
+                                    blast_query_name=blast_query_name)
                             outfile.write(out_string)
                         # Create output string when reaching end of BLAST
                         # iteration result (marked by </Iteration>) and write
@@ -3984,19 +4006,23 @@ def assign_J(fasta: Union[str, PathLike],
                                 q_start = int(query_length) - y + 1
                                 q_end = int(query_length) - x + 1
                                 s_start, s_end = s_end, s_start
-                            intro_string = "##{}##\nJ segment:\t{}\n\n".format(
-                                blast_query_name, J_segment)
+                            if call == 'd':
+                                intro_string = "##{}##\nD segment:\t{}\n\n".format(
+                                    blast_query_name, DJ_segment)
+                            elif call == 'j':
+                                intro_string = "##{}##\nJ segment:\t{}\n\n".format(
+                                    blast_query_name, DJ_segment)
                             header_string = (
                                 "Segment\tquery_id\tsubject_id\t% identity\talignment length\t"
                                 "mismatches\tgap opens\tgaps\tq start\tq end\ts start\ts end\t"
                                 "evalue\tbit score\n")
                             tmp_out = (
-                                "C\t{blast_query_name}\t{J_segment}\t{identity_pro}\t{align_length}\t"
+                                "C\t{blast_query_name}\t{DJ_segment}\t{identity_pro}\t{align_length}\t"
                                 "{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t"
                                 "{evalue}\t{bit_score}\t{q_seq}\t{h_seq}\n\n")
                             out_string = tmp_out.format(
                                 blast_query_name=blast_query_name,
-                                J_segment=J_segment,
+                                DJ_segment=DJ_segment,
                                 identity_pro=identity_pro,
                                 align_length=align_length,
                                 evalue=evalue,
@@ -4012,43 +4038,43 @@ def assign_J(fasta: Union[str, PathLike],
                             string_to_write = intro_string + header_string + out_string
                             outfile.write(string_to_write)
 
-    def _get_J(fasta):
-        def _get_J_call(fasta, contig_name):
+    def _get_gene(fasta, call):
+        def _get_call(fasta, contig_name, call):
             blast_summary_file = "{}/tmp/{}_blastsummary.txt".format(
                 os.path.dirname(fasta),
-                os.path.basename(fasta).split('.fasta')[0] + '_j')
+                os.path.basename(fasta).split('.fasta')[0] + '_' + call)
 
-            J_seq, J_germ, J_gene, J_ident = None, None, None, None
-            J_eval, J_bitscore, J_qstart, J_qend = None, None, None, None
+            _seq, _germ, _gene, _ident = None, None, None, None
+            _eval, _bitscore, _qstart, _qend = None, None, None, None
             with open(blast_summary_file, 'r') as input:
                 for line in input:
                     if line.startswith("C\t{contig_name}".format(
                             contig_name=contig_name)) or line.startswith(
                                 "C\treversed|{contig_name}".format(
                                     contig_name=contig_name)):
-                        J_gene = line.split("\t")[2]
-                        J_ident = line.split("\t")[3]
-                        J_seq = line.split("\t")[14]
-                        J_germ = line.split("\t")[15]
-                        J_eval = line.split("\t")[12]
-                        J_bitscore = line.split("\t")[13]
-                        J_qstart = line.split("\t")[8]
-                        J_qend = line.split("\t")[9]
+                        _gene = line.split("\t")[2]
+                        _ident = line.split("\t")[3]
+                        _seq = line.split("\t")[14]
+                        _germ = line.split("\t")[15]
+                        _eval = line.split("\t")[12]
+                        _bitscore = line.split("\t")[13]
+                        _qstart = line.split("\t")[8]
+                        _qend = line.split("\t")[9]
 
-            J_call, J_identity, J_sequence, J_germline, J_support, J_score, J_start, J_end, = {
+            _call, _identity, _sequence, _germline, _supp, _score, _start, _end, = {
             }, {}, {}, {}, {}, {}, {}, {}
 
-            J_call[contig_name] = J_gene
-            J_identity[contig_name] = J_ident
-            J_sequence[contig_name] = J_seq
-            J_germline[contig_name] = J_germ
-            J_support[contig_name] = J_eval
-            J_score[contig_name] = J_bitscore
-            J_start[contig_name] = J_qstart
-            J_end[contig_name] = J_qend
+            _call[contig_name] = _gene
+            _identity[contig_name] = _ident
+            _sequence[contig_name] = _seq
+            _germline[contig_name] = _germ
+            _supp[contig_name] = _eval
+            _score[contig_name] = _bitscore
+            _start[contig_name] = _qstart
+            _end[contig_name] = _qend
 
-            return (J_sequence, J_germline, J_call, J_identity, J_support,
-                    J_score, J_start, J_end)
+            return (_sequence, _germline, _call, _identity, _supp, _score,
+                    _start, _end)
 
         fh = open(fasta, 'r')
         contigs = []
@@ -4060,33 +4086,37 @@ def assign_J(fasta: Union[str, PathLike],
         if num_cores < 1:
             num_cores = 1
         results = ()
-        results = Parallel(n_jobs=num_cores)(delayed(_get_J_call)(fasta, c)
+        results = Parallel(n_jobs=num_cores)(delayed(_get_call)(fasta, c, call)
                                              for c in contigs)
         # transform list of dicts to dict
-        seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
+        seq, germ, call, ident = {}, {}, {}, {}
+        support, score, start, end = {}, {}, {}, {}
         for r in range(0, len(results)):
-            _seq, _germ, _call, _ident, _support, _score, _start, _end = results[
+            _seq, _germ, _call, _ident, _supp, _score, _start, _end = results[
                 r]
             seq.update(_seq)
             germ.update(_germ)
             call.update(_call)
             ident.update(_ident)
-            support.update(_support)
+            support.update(_supp)
             score.update(_score)
             start.update(_start)
             end.update(_end)
         return (seq, germ, call, ident, support, score, start, end)
 
-    def _transfer_J(data, j_dict, colname):
+    def _transfer_call2(data, blastn_result, col, overwrite):
         _data = load_data(data)
-        if colname not in _data.columns:
-            _data = _data.merge(pd.DataFrame.from_dict(j_dict,
-                                                       orient='index',
-                                                       columns=[colname]),
-                                left_index=True,
-                                right_index=True)
+        if col not in _data:
+            _data[col] = ''
+        if overwrite:
+            _data[col] = pd.Series(blastn_result)
         else:
-            _data[colname] = pd.Series(j_dict)
+            for i in _data.index:
+                if present(blastn_result[i]):
+                    _data.at[i, col] = blastn_result[i]
+                else:
+                    pass
+
         return (_data)
 
     # main function from here
@@ -4094,34 +4124,33 @@ def assign_J(fasta: Union[str, PathLike],
                               filename_prefix=filename_prefix,
                               endswith='.fasta')
     if filePath is None:
-        raise OSError(
-            'Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.'
-        )
+        raise OSError(('Path to fasta file is unknown. Please specify ' +
+                       'path to fasta file or folder containing fasta file.'))
 
     # running blast using blast
-    _run_blastn(filePath, igblastdb, org, loci, verbose)
+    _run_blastn(filePath, igblastdb, org, loci, call, evalue, verbose)
     # parsing output into a summary.txt file
-    _parse_BLAST(filePath)
+    _parse_BLAST(filePath, call)
     # Add the c_calls to the data file
-    j_seq, j_germ, j_call, j_ident, j_supp, j_scr, j_st, j_en = {}, {}, {}, {}, {}, {}, {}, {}
-    j_seq, j_germ, j_call, j_ident, j_supp, j_scr, j_st, j_en = _get_J(
-        filePath)
+    _seq, _germ, _call, _ident, _supp, _scr, _st, _en = {}, {}, {}, {}, {}, {}, {}, {}
+    _seq, _germ, _call, _ident, _supp, _scr, _st, _en = _get_gene(
+        filePath, call)
 
     passfile = "{}/tmp/{}.tsv".format(
         os.path.dirname(filePath),
         os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-pass')
 
-    if override:
+    if overwrite:
         suffix = ''
     else:
         suffix = '_blast'
 
-    dat = _transfer_J(passfile, j_call, 'j_call' + suffix)
-    dat = _transfer_J(dat, j_seq, 'j_sequence_alignment' + suffix)
-    dat = _transfer_J(dat, j_germ, 'j_germline_alignment' + suffix)
-    dat = _transfer_J(dat, j_st, 'j_sequence_start' + suffix)
-    dat = _transfer_J(dat, j_en, 'j_sequence_end' + suffix)
-    dat = _transfer_J(dat, j_scr, 'j_score' + suffix)
-    dat = _transfer_J(dat, j_ident, 'j_identity' + suffix)
-    dat = _transfer_J(dat, j_supp, 'j_support' + suffix)
+    dat = _transfer_call2(passfile, _call, call + '_call' + suffix, overwrite)
+    dat = _transfer_call2(dat, _seq, call + '_sequence_alignment' + suffix, overwrite)
+    dat = _transfer_call2(dat, _germ, call + '_germline_alignment' + suffix, overwrite)
+    dat = _transfer_call2(dat, _st, call + '_sequence_start' + suffix, overwrite)
+    dat = _transfer_call2(dat, _en, call + '_sequence_end' + suffix, overwrite)
+    dat = _transfer_call2(dat, _scr, call + '_score' + suffix, overwrite)
+    dat = _transfer_call2(dat, _ident, call + '_identity' + suffix, overwrite)
+    dat = _transfer_call2(dat, _supp, call + '_support' + suffix, overwrite)
     dat.to_csv(passfile, sep='\t', index=False)

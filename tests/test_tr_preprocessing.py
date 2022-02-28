@@ -55,8 +55,8 @@ def test_formatfasta(create_testfolder, filename, expected):
 
 @pytest.mark.parametrize(
     "filename,expected",
-    [pytest.param('filtered', [5, 6]),
-     pytest.param('all', [10, 7])])
+    [pytest.param('filtered', [7, 6]),
+     pytest.param('all', [14, 7])])
 def test_reannotategenes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.reannotate_genes(str(create_testfolder),
