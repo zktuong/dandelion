@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-01 10:56:23
+# @Last Modified time: 2022-03-01 13:27:48
 
 import os
 import json
@@ -717,6 +717,11 @@ def change_file_location(data: Sequence,
     informat_dict = {
         'changeo': '_igblast_db-pass.tsv',
         'blast': '_igblast_db-pass.tsv',
+        'airr': '_igblast_gap.tsv'
+    }
+    informat_dict2 = {
+        'changeo': '_igblast_db-fail.tsv',
+        'blast': '_igblast_db-fail.tsv',
         'airr': '_igblast_gap.tsv'
     }
 
