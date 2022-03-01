@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-28 14:38:24
+# @Last Modified time: 2022-03-01 12:02:29
 
 import os
 import pandas as pd
@@ -1157,19 +1157,11 @@ def reannotate_genes(data: Sequence,
                          evalue=evalue,
                          min_d_match=min_d_match,
                          verbose=verbose)
-        if loci == 'tr':
-            makedb_igblast(filePath,
-                           org=org,
-                           germline=germline,
-                           extended=extended,
-                           partial=True,
-                           verbose=verbose)
-        else:
-            makedb_igblast(filePath,
-                           org=org,
-                           germline=germline,
-                           extended=extended,
-                           verbose=verbose)
+        makedb_igblast(filePath,
+                       org=org,
+                       germline=germline,
+                       extended=extended,
+                       verbose=verbose)
     if loci == 'tr':
         assign_DJ(filePath,
                   org=org,
@@ -3835,7 +3827,7 @@ def assign_DJ(fasta: Union[str, PathLike],
               loci: Literal['ig', 'tr'] = 'tr',
               call: Literal['d', 'j'] = 'j',
               igblastdb: Optional[str] = None,
-              evalue: float = 0.001,
+              evalue: float = 1e-4,
               filename_prefix: Optional[str] = None,
               overwrite: bool = True,
               verbose: bool = False):
@@ -3886,8 +3878,9 @@ def assign_DJ(fasta: Union[str, PathLike],
                 bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
 
         cmd = [
-            'blastn', '-db', bdb, '-evalue', str(evalue), '-max_target_seqs', '1',
-            '-outfmt', '5', '-query', fasta
+            'blastn', '-db', bdb, '-evalue',
+            str(evalue), '-max_target_seqs', '1', '-outfmt', '5', '-query',
+            fasta
         ]
 
         blast_out = "{}/tmp/{}.xml".format(
@@ -4139,18 +4132,46 @@ def assign_DJ(fasta: Union[str, PathLike],
     passfile = "{}/tmp/{}.tsv".format(
         os.path.dirname(filePath),
         os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-pass')
+    failfile = "{}/tmp/{}.tsv".format(
+        os.path.dirname(filePath),
+        os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-fail')
 
     if overwrite:
         suffix = ''
     else:
         suffix = '_blast'
+    if os.path.isfile(passfile):
+        dat = _transfer_call2(passfile, _call, call + '_call' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _seq, call + '_sequence_alignment' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _germ,
+                              call + '_germline_alignment' + suffix, overwrite)
+        dat = _transfer_call2(dat, _st, call + '_sequence_start' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _en, call + '_sequence_end' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _scr, call + '_score' + suffix, overwrite)
+        dat = _transfer_call2(dat, _ident, call + '_identity' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _supp, call + '_support' + suffix,
+                              overwrite)
+        dat.to_csv(passfile, sep='\t', index=False)
 
-    dat = _transfer_call2(passfile, _call, call + '_call' + suffix, overwrite)
-    dat = _transfer_call2(dat, _seq, call + '_sequence_alignment' + suffix, overwrite)
-    dat = _transfer_call2(dat, _germ, call + '_germline_alignment' + suffix, overwrite)
-    dat = _transfer_call2(dat, _st, call + '_sequence_start' + suffix, overwrite)
-    dat = _transfer_call2(dat, _en, call + '_sequence_end' + suffix, overwrite)
-    dat = _transfer_call2(dat, _scr, call + '_score' + suffix, overwrite)
-    dat = _transfer_call2(dat, _ident, call + '_identity' + suffix, overwrite)
-    dat = _transfer_call2(dat, _supp, call + '_support' + suffix, overwrite)
-    dat.to_csv(passfile, sep='\t', index=False)
+    if os.path.isfile(failfile):
+        dat = _transfer_call2(failfile, _call, call + '_call' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _seq, call + '_sequence_alignment' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _germ,
+                              call + '_germline_alignment' + suffix, overwrite)
+        dat = _transfer_call2(dat, _st, call + '_sequence_start' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _en, call + '_sequence_end' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _scr, call + '_score' + suffix, overwrite)
+        dat = _transfer_call2(dat, _ident, call + '_identity' + suffix,
+                              overwrite)
+        dat = _transfer_call2(dat, _supp, call + '_support' + suffix,
+                              overwrite)
+        dat.to_csv(failfile, sep='\t', index=False)
