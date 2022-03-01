@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-01 12:02:29
+# @Last Modified time: 2022-03-01 13:08:47
 
 import os
 import pandas as pd
@@ -597,7 +597,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                         C_gene = line.split("\t")[2]
                         C_ident = line.split("\t")[3]
                         C_seq = line.split("\t")[14]
-                        C_germ = line.split("\t")[15]
+                        C_germ = line.split("\t")[15].rstrip()
                         C_eval = line.split("\t")[12]
                         C_bitscore = line.split("\t")[13]
                         C_qstart = line.split("\t")[8]
@@ -4048,7 +4048,7 @@ def assign_DJ(fasta: Union[str, PathLike],
                         _gene = line.split("\t")[2]
                         _ident = line.split("\t")[3]
                         _seq = line.split("\t")[14]
-                        _germ = line.split("\t")[15]
+                        _germ = line.split("\t")[15].rstrip()
                         _eval = line.split("\t")[12]
                         _bitscore = line.split("\t")[13]
                         _qstart = line.split("\t")[8]
