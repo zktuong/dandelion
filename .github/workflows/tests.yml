@@ -70,7 +70,6 @@ jobs:
         sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))')
         echo $sysreqs
         sudo -s eval "$sysreqs"
-        sudo apt-get install -y libncbi-vdb2
     - name: Install macOS system dependencies
       if: matrix.config.os == 'macos-latest'
       run: |
@@ -80,7 +79,7 @@ jobs:
       uses: actions/cache@v1
       env:
         # Increase this value to reset cache if etc/example-environment.yml has not changed
-        CACHE_NUMBER: 0
+        CACHE_NUMBER: 1
       with:
         path: ~/conda_pkgs_dir
         key:
