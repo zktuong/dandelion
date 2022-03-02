@@ -101,7 +101,9 @@ jobs:
         restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
     
     - name: Install dependencies
+      # scikit-bio requires numpy to be installed first
       run: |
+        pip install numpy
         pip install -r requirements_ci.txt
         python setup.py install
               
