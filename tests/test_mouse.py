@@ -46,7 +46,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
                             org='mouse',
                             novel=True,
                             plot=False)
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 7
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 10
 
 
 def test_updateblastdb(database_paths_mouse):
