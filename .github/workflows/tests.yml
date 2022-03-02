@@ -79,7 +79,7 @@ jobs:
       uses: actions/cache@v1
       env:
         # Increase this value to reset cache if etc/example-environment.yml has not changed
-        CACHE_NUMBER: 1
+        CACHE_NUMBER: 0
       with:
         path: ~/conda_pkgs_dir
         key:
@@ -179,6 +179,7 @@ jobs:
 
     - name: Test with pytest
       run: |
+        pip install pytest-cov
         pip install git+https://www.github.com/zktuong/nxviz.git
         pip install scirpy scrublet "annoy<1.17.0"
         pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
