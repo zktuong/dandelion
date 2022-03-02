@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-01 13:08:47
+# @Last Modified time: 2022-03-02 14:08:11
 
 import os
 import pandas as pd
@@ -1060,7 +1060,7 @@ def reannotate_genes(data: Sequence,
                      flavour: Literal['strict', 'original'] = 'strict',
                      evalue: float = 1e-4,
                      min_d_match: int = 9,
-                     overwrite_j: bool = True,
+                     overwrite_j: bool = False,
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr format.
@@ -3829,7 +3829,7 @@ def assign_DJ(fasta: Union[str, PathLike],
               igblastdb: Optional[str] = None,
               evalue: float = 1e-4,
               filename_prefix: Optional[str] = None,
-              overwrite: bool = True,
+              overwrite: bool = False,
               verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn.
