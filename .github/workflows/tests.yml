@@ -41,11 +41,11 @@ jobs:
     - uses: actions/setup-node@v2
     
     - uses: actions/cache@v1
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.CACHE_NUMBER }}-${{ hashFiles('requirements_ci.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ env.CACHE_NUMBER }}-${{ hashFiles('requirements_ci.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Set up Python
       uses: actions/setup-python@v2
