@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 12:24:43
+# @Last Modified time: 2022-03-02 13:05:16
 
 import os
 import pandas as pd
@@ -3829,7 +3829,7 @@ def assign_DJ(fasta: Union[str, PathLike],
               igblastdb: Optional[str] = None,
               evalue: float = 1e-4,
               filename_prefix: Optional[str] = None,
-              overwrite: bool = True,
+              overwrite: bool = False,
               verbose: bool = False):
     """
     Annotate contigs with constant region call using blastn.
