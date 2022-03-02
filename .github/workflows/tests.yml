@@ -114,9 +114,6 @@ jobs:
         environment-file: environment.yml
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     
-    - name: Install pip dependencies
-      run: pip install -r requirements.txt
-
     - name: Install Dandelion
       run: |
         python setup.py install    
@@ -179,9 +176,6 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pip install pytest-cov
-        pip install git+https://www.github.com/zktuong/nxviz.git
-        pip install scirpy scrublet "annoy<1.17.0"
         pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
     - name: Show coverage
