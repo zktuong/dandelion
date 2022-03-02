@@ -22,3 +22,8 @@ dependencies:
   - sphinx-autodoc-typehints
   - rpy2>=3.4.0
   - pytest-cov
+  - -r requirements.txt
+  - git+https://www.github.com/zktuong/nxviz.git
+  - scirpy
+  - scrublet
+  - annoy=1.16.3
