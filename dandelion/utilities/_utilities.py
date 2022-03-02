@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 20:25:07
+# @Last Modified time: 2022-03-02 22:22:31
 
 import os
 from collections import defaultdict, Iterable
@@ -465,6 +465,7 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
 
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop=False, inplace=True)
+        obj_['cell_id'] = [c.split('_contig')[0] for c in obj_['sequence_id']]
     else:
         raise KeyError("'sequence_id' not found in columns of input")
 
