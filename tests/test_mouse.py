@@ -36,7 +36,7 @@ def test_reannotategenes(create_testfolder, database_paths_mouse):
                             igblast_db=database_paths_mouse['igblast_db'],
                             germline=database_paths_mouse['germline'],
                             org='mouse')
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 6
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
 
 
 def test_reassignalleles(create_testfolder, database_paths_mouse):
@@ -46,7 +46,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
                             org='mouse',
                             novel=True,
                             plot=False)
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 9
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 7
 
 
 def test_updateblastdb(database_paths_mouse):
@@ -77,14 +77,14 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
     dat = pd.read_csv(f, sep='\t')
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
-    assert dat.shape[0] == 1285
-    assert vdj.data.shape[0] == 781
-    assert vdj.metadata.shape[0] == 392
-    assert adata.n_obs == 547
     f1 = create_testfolder / "test.h5"
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5(f1)
     adata.write_h5ad(f2)
+    assert dat.shape[0] == 1285
+    assert vdj.data.shape[0] == 782
+    assert vdj.metadata.shape[0] == 392
+    assert adata.n_obs == 547
 
 
 def test_generate_network(create_testfolder):
