@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 14:08:11
+# @Last Modified time: 2022-03-02 18:56:07
 
 import os
 import pandas as pd
@@ -1061,6 +1061,7 @@ def reannotate_genes(data: Sequence,
                      evalue: float = 1e-4,
                      min_d_match: int = 9,
                      overwrite_j: bool = False,
+                     maxhits: int = 10,
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr format.
@@ -1107,6 +1108,8 @@ def reannotate_genes(data: Sequence,
     overwrite_j: bool
         if flavour == 'strict', j calls will be blasted as well and if this
         option is specified, it will overwrite the j_call value.
+    maxhits: int
+        maximum number of hits to return for additional D/J call alignment.
     verbose :
         whether or not to print the igblast command used in the terminal.
         Default is False.
@@ -1162,25 +1165,45 @@ def reannotate_genes(data: Sequence,
                        germline=germline,
                        extended=extended,
                        verbose=verbose)
+
+        if flavour == 'strict':
+            assign_DJ(filePath,
+                      org=org,
+                      loci=loci,
+                      igblastdb=igblast_db,
+                      call='j',
+                      filename_prefix=filename_prefix,
+                      overwrite=overwrite_j,
+                      evalue=evalue,
+                      verbose=verbose)
+            blast_DJ_all(filePath,
+                         org=org,
+                         loci=loci,
+                         igblastdb=igblast_db,
+                         call='j',
+                         filename_prefix=filename_prefix,
+                         evalue=evalue,
+                         maxhits=maxhits,
+                         verbose=verbose)
+            assign_DJ(filePath,
+                      org=org,
+                      loci=loci,
+                      igblastdb=igblast_db,
+                      call='d',
+                      filename_prefix=filename_prefix,
+                      overwrite=False,
+                      evalue=evalue,
+                      verbose=verbose)
+            blast_DJ_all(filePath,
+                         org=org,
+                         loci=loci,
+                         igblastdb=igblast_db,
+                         call='d',
+                         filename_prefix=filename_prefix,
+                         evalue=evalue,
+                         maxhits=maxhits,
+                         verbose=verbose)
     if loci == 'tr':
-        assign_DJ(filePath,
-                  org=org,
-                  loci=loci,
-                  igblastdb=igblast_db,
-                  call='j',
-                  filename_prefix=filename_prefix,
-                  overwrite=overwrite_j,
-                  evalue=evalue,
-                  verbose=verbose)
-        assign_DJ(filePath,
-                  org=org,
-                  loci=loci,
-                  igblastdb=igblast_db,
-                  call='d',
-                  filename_prefix=filename_prefix,
-                  overwrite=False,
-                  evalue=evalue,
-                  verbose=verbose)
         change_file_location(data, filename_prefix)
 
 
@@ -3822,6 +3845,81 @@ def run_igblastn(fasta: Union[str, PathLike],
         run(cmd, env=env)  # logs are printed to terminal
 
 
+def blast_DJ_all(fasta: Union[str, PathLike],
+                 org: Literal['human', 'mouse'] = 'human',
+                 loci: Literal['ig', 'tr'] = 'tr',
+                 call: Literal['d', 'j'] = 'j',
+                 igblastdb: Optional[str] = None,
+                 evalue: float = 1e-4,
+                 maxhits: int = 10,
+                 filename_prefix: Optional[str] = None,
+                 verbose: bool = False):
+    """
+    Annotate contigs with constant region call using blastn.
+
+    Parameters
+    ----------
+    fasta : str, PathLike
+        path to fasta file.
+    org : str
+        organism of reference folder. Default is 'human'.
+    loci : str
+        locus. 'ig' or 'tr',
+    call : str
+        Either 'd' of 'j' gene.
+    igblastdb : str, Optional
+        path to igblast database. Defaults to `$IGDATA` environmental variable.
+    evalue : float
+        minimum evalue cut off.
+    maxhits: int
+        maximum number of hits to return.
+    filename_prefix : str, Optional
+        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+    verbose : bool
+        whether or not to print the blast command in terminal.
+        Default is False.
+
+    Returns
+    -------
+        blastn output.
+    """
+    env = os.environ.copy()
+    if igblastdb is None:
+        try:
+            bdb = env['IGDATA']
+        except:
+            raise OSError(
+                ('Environmental variable IGDATA must be set. ' +
+                 'Otherwise, please provide path to igblast database.'))
+        bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
+    else:
+        env['IGDATA'] = igblastdb
+        bdb = igblastdb
+        if not bdb.endswith('_' + loci + '_' + call):
+            bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
+    cmd = [
+        'blastn', '-db', bdb, '-evalue',
+        str(evalue), '-max_target_seqs',
+        str(maxhits), '-outfmt', '6', '-query', fasta
+    ]
+    blast_out = "{}/tmp/{}.tsv".format(
+        os.path.dirname(fasta),
+        os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    with open(blast_out, 'w') as out:
+        run(cmd, stdout=out, env=env)
+
+    dat = pd.read_csv(blast_out, sep='\t', header=None)
+    dat.columns = [
+        'sequence_id', call + '_call', 'percentage_identity',
+        'alignment_length', 'number_of_mismatches', 'number_of_gap_openings',
+        'query_start', 'query_end', 'reference_start', 'reference_end',
+        'evalue', 'bitscore'
+    ]
+    dat.to_csv(blast_out, sep='\t', index=False)
+
+
 def assign_DJ(fasta: Union[str, PathLike],
               org: Literal['human', 'mouse'] = 'human',
               loci: Literal['ig', 'tr'] = 'tr',
@@ -3885,7 +3983,7 @@ def assign_DJ(fasta: Union[str, PathLike],
 
         blast_out = "{}/tmp/{}.xml".format(
             os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
+            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_tmp')
 
         if verbose:
             print('Running command: %s\n' % (' '.join(cmd)))
@@ -3927,10 +4025,10 @@ def assign_DJ(fasta: Union[str, PathLike],
 
         input_file = "{}/tmp/{}.xml".format(
             os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
+            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_tmp')
         output_file = "{}/tmp/{}summary.txt".format(
             os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
+            os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_tmp')
 
         with open(output_file, 'w') as outfile:
             outfile.write(
@@ -4033,7 +4131,7 @@ def assign_DJ(fasta: Union[str, PathLike],
 
     def _get_gene(fasta, call):
         def _get_call(fasta, contig_name, call):
-            blast_summary_file = "{}/tmp/{}_blastsummary.txt".format(
+            blast_summary_file = "{}/tmp/{}_tmpsummary.txt".format(
                 os.path.dirname(fasta),
                 os.path.basename(fasta).split('.fasta')[0] + '_' + call)
 
