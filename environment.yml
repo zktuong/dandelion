@@ -15,8 +15,6 @@ dependencies:
 - numba
 - pytables
 - pytest
-- blast
-- igblast
 - pip
 - tbb
 - pip:
