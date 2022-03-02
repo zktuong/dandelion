@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 23:01:34
+# @Last Modified time: 2022-03-02 23:42:47
 
 import os
 import pandas as pd
@@ -793,7 +793,7 @@ def reannotate_genes(data: Sequence,
                      flavour: Literal['strict', 'original'] = 'strict',
                      evalue: float = 1e-4,
                      min_d_match: int = 9,
-                     overwrite_j: bool = False,
+                     reassign_dj: bool = False,
                      max_target_seqs: int = 10,
                      verbose: bool = False):
     """
@@ -837,11 +837,12 @@ def reannotate_genes(data: Sequence,
         D gene detection. You can set the minimal number of required
         consecutive nucleotide matches between the query sequence and the D
         genes based on your own criteria. Note that the matches do not include
-        verlapping matches at V-D or D-J junctions.
-    overwrite_j: bool
-        if flavour == 'strict', j calls will be blasted as well and if this
-        option is specified, it will overwrite the j_call value.
+        overlapping matches at V-D or D-J junctions.
+    reassign_dj : bool
+        whether or not to perform a targetted blastn reassignment for D and J genes.
+        Default is False.
     max_target_seqs: int
+        Only used if reassign_dj is True.
         Combined funtionality with max_hsps. Number of aligned sequences to keep and
         Maximum number of HSPs (alignments) to keep for any single query-subject pair.
         The HSPs shown will be the best as judged by expect value. This number should
@@ -902,8 +903,12 @@ def reannotate_genes(data: Sequence,
                        germline=germline,
                        extended=extended,
                        verbose=verbose)
+        # block this for now, until I figure out if it's
+        # worth it
+        if loci == 'ig':
+            reassign_dj = False
 
-        if flavour == 'strict':
+        if reassign_dj:
             assign_DJ(fasta=filePath,
                       org=org,
                       loci=loci,
