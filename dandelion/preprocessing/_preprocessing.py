@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 10:11:46
+# @Last Modified time: 2022-03-03 11:57:57
 
 import os
 import pandas as pd
@@ -3819,7 +3819,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                 if i in blast_result['sequence_id']:
                     score1 = db_pass.loc[i, call + '_score']
                     score2 = blast_result.loc[i, call + '_score']
-                    if score1 > score2:
+                    if score1 >= score2:
                         for col in [
                                 call + '_call', call + '_identity',
                                 call + '_support', call + '_score',
@@ -3830,6 +3830,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                         ]:
                             if col in db_pass:
                                 out[col][i] = db_pass.loc[i, col]
+                        out[call + '_source'][i] = 'igblastn'
                     elif score2 > score1:
                         for col in [
                                 call + '_call', call + '_identity',
@@ -3841,6 +3842,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                         ]:
                             if col in blast_result:
                                 out[col][i] = blast_result.loc[i, col]
+                        out[call + '_source'][i] = 'blastn'
                 else:
                     for col in [
                             call + '_call', call + '_sequence_alignment',
@@ -3853,12 +3855,13 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_sequence_end'
                     ]:
                         out[col][i] = np.nan
+                    out[call + '_source'][i] = ''
         if db_fail is not None:
             for i in db_fail['sequence_id']:
                 if i in blast_result['sequence_id']:
                     score1 = db_fail.loc[i, call + '_score']
                     score2 = blast_result.loc[i, call + '_score']
-                    if score1 > score2:
+                    if score1 >= score2:
                         for col in [
                                 call + '_call', call + '_identity',
                                 call + '_support', call + '_score',
@@ -3869,6 +3872,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                         ]:
                             if col in db_fail:
                                 out[col][i] = db_fail.loc[i, col]
+                        out[call + '_source'][i] = 'igblastn'
                     elif score2 > score1:
                         for col in [
                                 call + '_call', call + '_identity',
@@ -3880,12 +3884,13 @@ def transfer_assignment(passfile: Union[PathLike, str],
                         ]:
                             if col in blast_result:
                                 out[col][i] = blast_result.loc[i, col]
+                        out[call + '_source'][i] = 'blastn'
         if db_pass is not None:
             for col in [
                     call + '_call', call + '_identity', call + '_support',
                     call + '_score', call + '_sequence_alignment',
                     call + '_germline_alignment', call + '_sequence_start',
-                    call + '_sequence_end'
+                    call + '_sequence_end', call + '_source'
             ]:
                 if col in db_pass:
                     db_pass[col].update(out[col])
@@ -3897,7 +3902,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                     call + '_call', call + '_identity', call + '_support',
                     call + '_score', call + '_sequence_alignment',
                     call + '_germline_alignment', call + '_sequence_start',
-                    call + '_sequence_end'
+                    call + '_sequence_end', call + '_source'
             ]:
                 if col in db_fail:
                     db_fail[col].update(out[col])
