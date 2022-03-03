@@ -76,12 +76,11 @@ jobs:
     - name: Test if blast works
       run: |
         blastn -h
-      shell: bash -l {0}
 
     - name: Test if igblast works
       run: |
         igblastn -h
-      shell: bash -l {0}
+
     - name: Cache conda
       uses: actions/cache@v1
       env:
