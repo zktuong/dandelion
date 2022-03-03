@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 12:22:58
+# @Last Modified time: 2022-03-03 12:40:28
 
 import os
 import pandas as pd
@@ -3844,21 +3844,22 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                 out[col][i] = blast_result.loc[i, col]
                         out[call + '_source'][i] = 'blastn'
                 else:
-                    for col in [
-                            call + '_call', call + '_sequence_alignment',
-                            call + '_germline_alignment'
-                    ]:
-                        out[col][i] = ''
-                    for col in [
-                            call + '_identity', call + '_support',
-                            call + '_score', call + '_sequence_start',
-                            call + '_sequence_end'
-                    ]:
-                        out[col][i] = np.nan
-                    if present(db_pass.loc[i, call + '_call']):
-                        out[call + '_source'][i] = 'igblastn'
-                    else:
+                    if not present(db_pass.loc[i, call + '_call']):
+                        for col in [
+                                call + '_call', call + '_sequence_alignment',
+                                call + '_germline_alignment'
+                        ]:
+                            out[col][i] = ''
+                        for col in [
+                                call + '_identity', call + '_support',
+                                call + '_score', call + '_sequence_start',
+                                call + '_sequence_end'
+                        ]:
+                            out[col][i] = np.nan
                         out[call + '_source'][i] = ''
+                    else:
+                        out[call + '_source'][i] = 'igblastn'
+
         if db_fail is not None:
             for i in db_fail['sequence_id']:
                 if i in blast_result['sequence_id']:
@@ -3889,21 +3890,22 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                 out[col][i] = blast_result.loc[i, col]
                         out[call + '_source'][i] = 'blastn'
                 else:
-                    for col in [
-                            call + '_call', call + '_sequence_alignment',
-                            call + '_germline_alignment'
-                    ]:
-                        out[col][i] = ''
-                    for col in [
-                            call + '_identity', call + '_support',
-                            call + '_score', call + '_sequence_start',
-                            call + '_sequence_end'
-                    ]:
-                        out[col][i] = np.nan
-                    if present(db_fail.loc[i, call + '_call']):
-                        out[call + '_source'][i] = 'igblastn'
-                    else:
-                        out[call + '_source'][i] = ''
+                    if not present(db_fail.loc[i, call + '_call']):
+                        for col in [
+                                call + '_call', call + '_sequence_alignment',
+                                call + '_germline_alignment'
+                        ]:
+                            out[col][i] = ''
+                        for col in [
+                                call + '_identity', call + '_support',
+                                call + '_score', call + '_sequence_start',
+                                call + '_sequence_end'
+                        ]:
+                            out[col][i] = np.nan
+                        if present(db_fail.loc[i, call + '_call']):
+                            out[call + '_source'][i] = 'igblastn'
+                        else:
+                            out[call + '_source'][i] = ''
         if db_pass is not None:
             for col in [
                     call + '_call', call + '_identity', call + '_support',
@@ -3915,6 +3917,9 @@ def transfer_assignment(passfile: Union[PathLike, str],
                     db_pass[col].update(out[col])
                 else:
                     db_pass[col] = pd.Series(out[col])
+            for i in db_pass['sequence_id']:
+                if not present(db_pass.loc[i, call + '_call']):
+                    db_pass.at[i, call + '_source'] = ''
             db_pass.to_csv(passfile, sep='\t', index=False)
         if db_fail is not None:
             for col in [
@@ -3927,4 +3932,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                     db_fail[col].update(out[col])
                 else:
                     db_fail[col] = pd.Series(out[col])
+            for i in db_fail['sequence_id']:
+                if not present(db_fail.loc[i, call + '_call']):
+                    db_fail.at[i, call + '_source'] = ''
             db_fail.to_csv(failfile, sep='\t', index=False)
