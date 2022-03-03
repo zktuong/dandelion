@@ -50,8 +50,10 @@ def parse_args():
         '--flavour',
         type=str,
         default="strict",
-        help=('The "flavour" for running igblastn reannotation. Accepts either ' +
-              '"strict" or "original". strict will enforce evalue and penalty cutoffs.'))
+        help=
+        ('The "flavour" for running igblastn reannotation. Accepts either ' +
+         '"strict" or "original". strict will enforce evalue and penalty cutoffs.'
+         ))
     parser.add_argument(
         '--skip_format_header',
         action='store_true',
@@ -59,8 +61,16 @@ def parse_args():
     parser.add_argument(
         '--filter_to_high_confidence',
         action='store_true',
-        help=('If passed, limits the contig space to ones that are set to ' +
-              '"True" in the high_confidence column of the contig annotation.'))
+        help=(
+            'If passed, limits the contig space to ones that are set to ' +
+            '"True" in the high_confidence column of the contig annotation.'))
+    parser.add_argument(
+        '--reassign_dj',
+        action='store_true',
+        help=(
+            'If passed, reassign d/j calls with blastn. ' +
+            'Only affects if loci is ig - will always reassign if loci is tr.'
+        ))
     parser.add_argument(
         '--keep_trailing_hyphen_number',
         action='store_false',
@@ -95,18 +105,20 @@ def main():
 
     logg.info(
         'command line parameters:\n',
-        deep=(f'\n'
-              f'--------------------------------------------------------------\n'
-              f'    --meta = {args.meta}\n'
-              f'    --chain = {args.chain}\n'
-              f'    --file_prefix = {args.file_prefix}\n'
-              f'    --sep = {args.sep}\n'
-              f'    --flavour = {args.flavour}\n'
-              f'    --skip_format_header = {args.skip_format_header}\n'
-              f'    --filter_to_high_confidence = {args.filter_to_high_confidence}\n'
-              f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
-              f'    --clean_output = {args.clean_output}\n'
-              f'--------------------------------------------------------------\n'),
+        deep=
+        (f'\n'
+         f'--------------------------------------------------------------\n'
+         f'    --meta = {args.meta}\n'
+         f'    --chain = {args.chain}\n'
+         f'    --file_prefix = {args.file_prefix}\n'
+         f'    --sep = {args.sep}\n'
+         f'    --flavour = {args.flavour}\n'
+         f'    --skip_format_header = {args.skip_format_header}\n'
+         f'    --filter_to_high_confidence = {args.filter_to_high_confidence}\n'
+         f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
+         f'    --reassign_dj = {args.reassign_dj}\n'
+         f'    --clean_output = {args.clean_output}\n'
+         f'--------------------------------------------------------------\n'),
     )
 
     # set up a sample list
@@ -155,35 +167,45 @@ def main():
             # neither. tag with the sample names as default, if more than one
             # sample and the data is IG
             if (len(samples) > 1) and (args.chain == 'ig'):
-                ddl.pp.format_fastas(samples,
-                                     prefix=samples,
-                                     sep=args.sep,
-                                     high_confidence_filtering=args.
-                                     filter_to_high_confidence,
-                                     remove_trailing_hyphen_number=args.
-                                     keep_trailing_hyphen_number,
-                                     filename_prefix=filename_prefixes)
+                ddl.pp.format_fastas(
+                    samples,
+                    prefix=samples,
+                    sep=args.sep,
+                    high_confidence_filtering=args.filter_to_high_confidence,
+                    remove_trailing_hyphen_number=args.
+                    keep_trailing_hyphen_number,
+                    filename_prefix=filename_prefixes)
             else:
                 # no need to tag as it's a single sample.
-                ddl.pp.format_fastas(samples,
-                                     high_confidence_filtering=args.
-                                     filter_to_high_confidence,
-                                     remove_trailing_hyphen_number=args.
-                                     keep_trailing_hyphen_number,
-                                     filename_prefix=filename_prefixes)
+                ddl.pp.format_fastas(
+                    samples,
+                    high_confidence_filtering=args.filter_to_high_confidence,
+                    remove_trailing_hyphen_number=args.
+                    keep_trailing_hyphen_number,
+                    filename_prefix=filename_prefixes)
     else:
-        ddl.pp.format_fastas(samples,
-                             high_confidence_filtering=args.filter_to_high_confidence,
-                             remove_trailing_hyphen_number=False,
-                             filename_prefix=filename_prefixes)
+        ddl.pp.format_fastas(
+            samples,
+            high_confidence_filtering=args.filter_to_high_confidence,
+            remove_trailing_hyphen_number=False,
+            filename_prefix=filename_prefixes)
 
     # STEP TWO - ddl.pp.reannotate_genes()
     # no tricks here
-    ddl.pp.reannotate_genes(samples,
-                            loci=args.chain,
-                            filename_prefix=filename_prefixes,
-                            flavour=args.flavour
-                            )
+    if args.chain == 'ig':
+        ddl.pp.reannotate_genes(samples,
+                                loci=args.chain,
+                                filename_prefix=filename_prefixes,
+                                flavour=args.flavour,
+                                reassign_dj=args.reassign_dj)
+    elif args.chain == 'tr':
+        ddl.pp.reannotate_genes(
+            samples,
+            loci=args.chain,
+            filename_prefix=filename_prefixes,
+            flavour=args.flavour,
+            reassign_dj=True,
+        )
 
     # IG requires further preprocessing, TR is done now
     if args.chain == 'ig':
