@@ -62,25 +62,6 @@ jobs:
         echo 'export PATH=/home/runner/work/dandelion/dandelion/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
         source ~/.bash_profile
 
-    - name: Setup macOS blast and igblast
-      if: matrix.config.os != 'ubuntu-latest'
-      run: |
-        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-macosx.tar.gz
-        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        tar -xzvf ncbi-igblast-1.17.1-x64-macosx.tar.gz
-        tar -xzvf ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        echo 'export PATH=/home/runner/work/dandelion/dandelion/ncbi-igblast-1.17.1/bin:$PATH' >> ~/.bash_profile
-        echo 'export PATH=/home/runner/work/dandelion/dandelion/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
-        source ~/.bash_profile
-
-    - name: Test if blast works
-      run: |
-        blastn -h
-
-    - name: Test if igblast works
-      run: |
-        igblastn -h
-
     - name: Cache conda
       uses: actions/cache@v1
       env:
@@ -104,6 +85,19 @@ jobs:
         environment-file: environment.yml
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     
+    - name: Setup macOS blast and igblast
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        conda install -c bioconda igblastn==1.17.1 blast==2.12.0
+
+    - name: Test if blast works
+      run: |
+        blastn -h
+
+    - name: Test if igblast works
+      run: |
+        igblastn -h
+
     - name: Display Python version
       run: |
         python --version
