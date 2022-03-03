@@ -58,8 +58,8 @@ jobs:
         wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-linux.tar.gz
         tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
         tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
-        export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PATH
-        export PATH=$PWD/ncbi-blast-2.12.0+/bin:$PATH
+        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PATH' >> ~/.bashrc
+        echo 'export PATH=$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bashrc
 
     - name: Setup macOS blast and igblast
       if: matrix.config.os != 'ubuntu-latest'
@@ -68,9 +68,9 @@ jobs:
         wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-macosx.tar.gz
         tar -xzvf ncbi-igblast-1.17.1-x64-macosx.tar.gz
         tar -xzvf ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PATH
-        export PATH=$PWD/ncbi-blast-2.12.0+/bin:$PATH
-        
+        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PATH' >> ~/.bash_profile
+        echo 'export PATH=$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
+
     - name: Test if blast works
       run: |
         blastn -h
