@@ -137,7 +137,7 @@ jobs:
         
     - name: Install Dandelion
       run: |
-        python setup.py install    
+        python -m pip install .
               
     - name: Install ubuntu R dependencies
       if: matrix.config.os == 'ubuntu-latest'
