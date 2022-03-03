@@ -1,3 +1,4 @@
+@@ -1,171 +1,172 @@
 name: tests
 
 on:
@@ -10,7 +11,7 @@ on:
       - "devel"
 
 env:
-  cache-version: 'cache-v2'
+  cache-version: 'cache-v1'
 
 jobs:
   tests:    
@@ -19,7 +20,7 @@ jobs:
       run:
         shell: bash -l {0}
     strategy:
-      max-parallel: 6
+      max-parallel: 5
       matrix:
         config:
           - { python-version: 3.7, os: ubuntu-latest }
@@ -39,24 +40,35 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
+
+    - name: Cache conda
+      uses: actions/cache@v1
+      env:
+        # Increase this value to reset cache if etc/example-environment.yml has not changed
+        CACHE_NUMBER: 0
+      with:
+        path: ~/conda_pkgs_dir
+        key:
+          ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+          hashFiles('environment.yml') }}
+
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-activate-base: true
+        auto-update-conda : true
+        activate-environment: dandelion
+        channels: conda-forge, bioconda, anaconda, defaults
+        channel-priority: true
+        python-version: ${{ matrix.config.python-version }}
+        environment-file: environment.yml
+        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
     
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ env.CACHE_NUMBER }}-${{ hashFiles('requirements_ci.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Set up Python
-      uses: actions/setup-python@v3.0.0
-      with:
-        python-version: ${{ matrix.python-version }}
-
     - name: Display Python version
       run: |
         python --version
         which python
-
+        
     - id: R
       name: Check R version
       run: |
@@ -81,7 +93,10 @@ jobs:
       if: matrix.config.os == 'ubuntu-latest'
       run: |
         sudo apt-get install libcurl4-openssl-dev
-        sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev
+        sysreqs=$(Rscript -e 'cat("apt-get update -y && apt-get install -y", paste(gsub("apt-get install -y ", "", remotes::system_requirements("ubuntu", "20.04", package = c("shazam","alakazam","tigger","airr","optparse","Biostrings","GenomicAlignments","IRanges","BiocManager","RCurl","XML"))), collapse = " "))')
+        echo $sysreqs
+        sudo -s eval "$sysreqs"
+        sudo apt-get install -y libncbi-vdb2
     - name: Install macOS system dependencies
       if: matrix.config.os == 'macos-latest'
       run: |
@@ -102,13 +117,10 @@ jobs:
         path: ${{ env.R_LIBS_USER }}
         key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
         restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
-    
-    - name: Install dependencies
-      # scikit-bio requires numpy to be installed first
+        
+    - name: Install Dandelion
       run: |
-        pip install numpy
-        pip install -r requirements_ci.txt
-        python setup.py install
+        python setup.py install    
               
     - name: Install ubuntu R dependencies
       if: matrix.config.os == 'ubuntu-latest'
@@ -135,39 +147,11 @@ jobs:
       run: |
         Rscript tests/r_dependencies.R
       shell: bash -l {0}
-    
-    - name: setup blast and igblast ubuntu
-      if: matrix.config.os == 'ubuntu-latest'
-      run: |
-        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
-        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-linux.tar.gz
-        tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
-        tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
-        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
-        source ~/.bash_profile
-
-    - name: setup blast and igblast macOS
-      if: matrix.config.os != 'ubuntu-latest'
-      run: |
-        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-macosx.tar.gz
-        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        tar -xzvf ncbi-igblast-1.17.1-x64-macosx.tar.gz
-        tar -xzvf ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
-        source ~/.bash_profile
-
-    - name: Test if blast works
-      run: |
-        blastn -h
-      shell: bash -l {0}
-
-    - name: Test if igblast works
-      run: |
-        igblastn -h
-      shell: bash -l {0}
 
     - name: Test with pytest
       run: |
+        pip install git+https://www.github.com/zktuong/nxviz.git
+        pip install scirpy scrublet "annoy<1.17.0"
         pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
     - name: Show coverage
