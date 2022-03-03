@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 12:21:25
+# @Last Modified time: 2022-03-03 12:22:58
 
 import os
 import pandas as pd
@@ -3855,7 +3855,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_sequence_end'
                     ]:
                         out[col][i] = np.nan
-                    if present(db_pass.loc[i, call + '_score']):
+                    if present(db_pass.loc[i, call + '_call']):
                         out[call + '_source'][i] = 'igblastn'
                     else:
                         out[call + '_source'][i] = ''
@@ -3900,7 +3900,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_sequence_end'
                     ]:
                         out[col][i] = np.nan
-                    if present(db_fail.loc[i, call + '_score']):
+                    if present(db_fail.loc[i, call + '_call']):
                         out[call + '_source'][i] = 'igblastn'
                     else:
                         out[call + '_source'][i] = ''
