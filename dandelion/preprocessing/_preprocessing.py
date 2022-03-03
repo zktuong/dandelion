@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 23:42:47
+# @Last Modified time: 2022-03-03 00:00:55
 
 import os
 import pandas as pd
@@ -905,44 +905,42 @@ def reannotate_genes(data: Sequence,
                        verbose=verbose)
         # block this for now, until I figure out if it's
         # worth it
-        if loci == 'ig':
-            reassign_dj = False
-
-        if reassign_dj:
-            assign_DJ(fasta=filePath,
-                      org=org,
-                      loci=loci,
-                      call='j',
-                      database=igblast_db,
-                      evalue=evalue,
-                      filename_prefix=filename_prefix,
-                      verbose=verbose)
-            assign_DJ(filePath,
-                      org=org,
-                      loci=loci,
-                      call='d',
-                      database=igblast_db,
-                      evalue=evalue,
-                      filename_prefix=filename_prefix,
-                      verbose=verbose)
-            assign_DJ(fasta=filePath,
-                      org=org,
-                      loci=loci,
-                      call='j',
-                      database=igblast_db,
-                      evalue=evalue,
-                      filename_prefix=filename_prefix,
-                      max_target_seqs=max_target_seqs,
-                      verbose=verbose)
-            assign_DJ(filePath,
-                      org=org,
-                      loci=loci,
-                      call='d',
-                      database=igblast_db,
-                      evalue=evalue,
-                      filename_prefix=filename_prefix,
-                      max_target_seqs=max_target_seqs,
-                      verbose=verbose)
+        if flavour == 'strict':
+            if reassign_dj:
+                assign_DJ(fasta=filePath,
+                          org=org,
+                          loci=loci,
+                          call='j',
+                          database=igblast_db,
+                          evalue=evalue,
+                          filename_prefix=filename_prefix,
+                          verbose=verbose)
+                assign_DJ(filePath,
+                          org=org,
+                          loci=loci,
+                          call='d',
+                          database=igblast_db,
+                          evalue=evalue,
+                          filename_prefix=filename_prefix,
+                          verbose=verbose)
+                assign_DJ(fasta=filePath,
+                          org=org,
+                          loci=loci,
+                          call='j',
+                          database=igblast_db,
+                          evalue=evalue,
+                          filename_prefix=filename_prefix,
+                          max_target_seqs=max_target_seqs,
+                          verbose=verbose)
+                assign_DJ(filePath,
+                          org=org,
+                          loci=loci,
+                          call='d',
+                          database=igblast_db,
+                          evalue=evalue,
+                          filename_prefix=filename_prefix,
+                          max_target_seqs=max_target_seqs,
+                          verbose=verbose)
 
     if loci == 'tr':
         change_file_location(data, filename_prefix)
