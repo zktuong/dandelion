@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 02:56:29
+# @Last Modified time: 2022-03-03 10:11:46
 
 import os
 import pandas as pd
@@ -652,7 +652,8 @@ def assign_isotype(fasta: Union[str, PathLike],
         res = pd.concat([res_10x_sum, res_blast_sum])
 
     res = res.reset_index(drop=True)
-
+    res['c_call'] = res['c_call'].fillna(value='None')
+    res['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in res['c_call']]
     res['c_call'] = res['c_call'].astype('category')
     res['c_call'] = res['c_call'].cat.reorder_categories(
         sorted(list(set(res['c_call'])), reverse=True))
@@ -672,6 +673,7 @@ def assign_isotype(fasta: Union[str, PathLike],
         dat[x] = pd.Series(airr_output[x])
 
     # remove allellic calls
+    dat['c_call'] = dat['c_call'].fillna(value='')
     dat['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in dat['c_call']]
     dat.to_csv(_file2, sep='\t', index=False)
 
