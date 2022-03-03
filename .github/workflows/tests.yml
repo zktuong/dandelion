@@ -39,6 +39,37 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
+    
+    - name: Install ubuntu system dependencies
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get install libcurl4-openssl-dev
+        sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev libhdf5-serial-dev
+
+    - name: Install macOS system dependencies
+      if: matrix.config.os == 'macos-latest'
+      run: |
+        brew install cairo pkg-config autoconf automake libtool
+
+    - name: Setup ubuntu blast and igblast
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
+        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-linux.tar.gz
+        tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
+        tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
+        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
+        source ~/.bash_profile
+
+    - name: Setup macOS blast and igblast
+      if: matrix.config.os != 'ubuntu-latest'
+      run: |
+        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-macosx.tar.gz
+        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-macosx.tar.gz
+        tar -xzvf ncbi-igblast-1.17.1-x64-macosx.tar.gz
+        tar -xzvf ncbi-blast-2.12.0+-x64-macosx.tar.gz
+        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
+        source ~/.bash_profile
 
     - name: Cache conda
       uses: actions/cache@v1
@@ -87,17 +118,6 @@ jobs:
       run: |
         install.packages('remotes')
       shell: Rscript {0}
-
-    - name: Install ubuntu system dependencies
-      if: matrix.config.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get install libcurl4-openssl-dev
-        sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev libhdf5-serial-dev
-
-    - name: Install macOS system dependencies
-      if: matrix.config.os == 'macos-latest'
-      run: |
-        brew install cairo pkg-config autoconf automake libtool
     
     - name: Cache ubuntu R packages
       if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os == 'ubuntu-latest'"
@@ -145,26 +165,6 @@ jobs:
         Rscript tests/r_dependencies.R
       shell: bash -l {0}
 
-    - name: Setup ubuntu blast and igblast
-      if: matrix.config.os == 'ubuntu-latest'
-      run: |
-        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
-        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-linux.tar.gz
-        tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
-        tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
-        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
-        source ~/.bash_profile
-
-    - name: Setup macOS blast and igblast
-      if: matrix.config.os != 'ubuntu-latest'
-      run: |
-        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-macosx.tar.gz
-        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        tar -xzvf ncbi-igblast-1.17.1-x64-macosx.tar.gz
-        tar -xzvf ncbi-blast-2.12.0+-x64-macosx.tar.gz
-        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
-        source ~/.bash_profile
-
     - name: Test if blast works
       run: |
         blastn -h
@@ -177,7 +177,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+        python -m pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
     - name: Show coverage
       run: |
