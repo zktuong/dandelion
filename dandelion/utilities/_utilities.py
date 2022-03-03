@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 22:22:31
+# @Last Modified time: 2022-03-03 17:58:43
 
 import os
 from collections import defaultdict, Iterable
@@ -497,3 +497,22 @@ class Contig:
     @property
     def contig(self):
         return self._contig
+
+
+def mask_d(data, filename_prefix, evalue_threshold):
+    for i in range(0, len(data)):
+        filePath = check_filepath(data[i],
+                                  filename_prefix=filename_prefix[i],
+                                  endswith='_igblast_db-pass.tsv')
+        if filePath is None:
+            raise FileNotFoundError(
+                'Path to .tsv file for {} is unknown. '.format(data[i]) +
+                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
+            )
+
+        dat = load_data(filePath)
+        dat['d_call'] = [
+            '' if s > evalue_threshold else c
+            for c, s in zip(dat['d_call'], dat['d_support'])
+        ]
+        dat.to_csv(filePath, sep='\t', index=False)

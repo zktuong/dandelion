@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 18:11:40
+# @Last Modified time: 2022-03-03 17:46:12
 
 import os
 import json
@@ -733,7 +733,7 @@ def change_file_location(data: Sequence,
                                   endswith=informat_dict[fileformat],
                                   subdir='tmp')
         if filePath is None:
-            raise OSError(
+            raise FileNotFoundError(
                 'Path to .tsv file for {} is unknown. '.format(data[i]) +
                 'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
             )
