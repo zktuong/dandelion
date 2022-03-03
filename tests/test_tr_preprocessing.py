@@ -55,14 +55,15 @@ def test_formatfasta(create_testfolder, filename, expected):
 
 @pytest.mark.parametrize(
     "filename,expected",
-    [pytest.param('filtered', [7, 6]),
-     pytest.param('all', [14, 7])])
+    [pytest.param('filtered', [5, 6]),
+     pytest.param('all', [10, 7])])
 def test_reannotategenes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.reannotate_genes(str(create_testfolder),
                             igblast_db=database_paths['igblast_db'],
                             germline=database_paths['germline'],
                             loci='tr',
+                            reassign_dj = True,
                             filename_prefix=filename)
     assert len(list(
         (create_testfolder / 'dandelion/tmp').iterdir())) == expected[0]
