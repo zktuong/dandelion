@@ -145,10 +145,38 @@ jobs:
         Rscript tests/r_dependencies.R
       shell: bash -l {0}
 
+    - name: Setup ubuntu blast and igblast
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
+        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-linux.tar.gz
+        tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
+        tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
+        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
+        source ~/.bash_profile
+
+    - name: Setup macOS blast and igblast
+      if: matrix.config.os != 'ubuntu-latest'
+      run: |
+        wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-macosx.tar.gz
+        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-macosx.tar.gz
+        tar -xzvf ncbi-igblast-1.17.1-x64-macosx.tar.gz
+        tar -xzvf ncbi-blast-2.12.0+-x64-macosx.tar.gz
+        echo 'export PATH=$PWD/ncbi-igblast-1.17.1/bin:$PWD/ncbi-blast-2.12.0+/bin:$PATH' >> ~/.bash_profile
+        source ~/.bash_profile
+
+    - name: Test if blast works
+      run: |
+        blastn -h
+      shell: bash -l {0}
+
+    - name: Test if igblast works
+      run: |
+        igblastn -h
+      shell: bash -l {0}
+
     - name: Test with pytest
       run: |
-        pip install git+https://www.github.com/zktuong/nxviz.git
-        pip install scirpy scrublet "annoy<1.17.0"
         pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
     - name: Show coverage
