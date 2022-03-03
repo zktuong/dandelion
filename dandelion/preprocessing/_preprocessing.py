@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 12:40:28
+# @Last Modified time: 2022-03-03 12:45:02
 
 import os
 import pandas as pd
@@ -3902,10 +3902,9 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                 call + '_sequence_end'
                         ]:
                             out[col][i] = np.nan
-                        if present(db_fail.loc[i, call + '_call']):
-                            out[call + '_source'][i] = 'igblastn'
-                        else:
-                            out[call + '_source'][i] = ''
+                        out[call + '_source'][i] = ''
+                    else:
+                        out[call + '_source'][i] = 'igblastn'
         if db_pass is not None:
             for col in [
                     call + '_call', call + '_identity', call + '_support',
