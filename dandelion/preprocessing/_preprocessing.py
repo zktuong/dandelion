@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 11:57:57
+# @Last Modified time: 2022-03-03 12:21:25
 
 import os
 import pandas as pd
@@ -3855,7 +3855,10 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_sequence_end'
                     ]:
                         out[col][i] = np.nan
-                    out[call + '_source'][i] = ''
+                    if present(db_pass.loc[i, call + '_score']):
+                        out[call + '_source'][i] = 'igblastn'
+                    else:
+                        out[call + '_source'][i] = ''
         if db_fail is not None:
             for i in db_fail['sequence_id']:
                 if i in blast_result['sequence_id']:
@@ -3885,6 +3888,22 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             if col in blast_result:
                                 out[col][i] = blast_result.loc[i, col]
                         out[call + '_source'][i] = 'blastn'
+                else:
+                    for col in [
+                            call + '_call', call + '_sequence_alignment',
+                            call + '_germline_alignment'
+                    ]:
+                        out[col][i] = ''
+                    for col in [
+                            call + '_identity', call + '_support',
+                            call + '_score', call + '_sequence_start',
+                            call + '_sequence_end'
+                    ]:
+                        out[col][i] = np.nan
+                    if present(db_fail.loc[i, call + '_score']):
+                        out[call + '_source'][i] = 'igblastn'
+                    else:
+                        out[call + '_source'][i] = ''
         if db_pass is not None:
             for col in [
                     call + '_call', call + '_identity', call + '_support',
