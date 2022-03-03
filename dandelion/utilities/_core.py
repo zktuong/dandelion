@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-02 23:07:32
+# @Last Modified time: 2022-03-03 01:52:53
 
 import os
 from collections import defaultdict
@@ -861,7 +861,7 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                         ]
                     ]))
                 else:
-                    isotype.append(conversion_dict[k.lower().split('*')[0]])
+                    isotype.append(conversion_dict[k.lower()])
             else:
                 isotype.append('unassigned')
         tmp_metadata['isotype'] = isotype
