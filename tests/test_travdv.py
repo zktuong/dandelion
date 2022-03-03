@@ -47,8 +47,8 @@ def test_reannotategenes(create_testfolder, database_paths):
                             igblast_db=database_paths['igblast_db'],
                             germline=database_paths['germline'],
                             loci='tr')
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 8
-    assert len(list((create_testfolder / 'dandelion').iterdir())) == 5
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
+    assert len(list((create_testfolder / 'dandelion').iterdir())) == 4
 
 
 def test_loadtravdv_reannotated(create_testfolder):
