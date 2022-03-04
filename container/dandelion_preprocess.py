@@ -251,10 +251,10 @@ def main():
         for s in samples:
             ddl.pp.quantify_mutations(s + '/dandelion/' +
                                       str(args.file_prefix) +
-                                      '_contig_igblast_db-pass_genotyped.tsv')
+                                      '_contig_dandelion.tsv')
             ddl.pp.quantify_mutations(s + '/dandelion/' +
                                       str(args.file_prefix) +
-                                      '_contig_igblast_db-pass_genotyped.tsv',
+                                      '_contig_dandelion.tsv',
                                       frequency=True)
 
     # at this stage it's safe to remove the per-sample dandelion/tmp folder if
