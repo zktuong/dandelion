@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 01:52:53
+# @Last Modified time: 2022-03-04 17:50:29
 
 import os
 from collections import defaultdict
@@ -730,8 +730,13 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                             suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' +
                                                                  suffix_l]
                     else:
-                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
-                            i, 'locus' + suffix_h] + '_only'
+                        if '|' in tmp_metadata.at[i, 'locus' + suffix_h]:
+                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
+                        else:
+                            tmp_metadata.at[i,
+                                            'locus_status'] = tmp_metadata.loc[
+                                                i,
+                                                'locus' + suffix_h] + '_only'
                 else:
                     tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                         i, 'locus' + suffix_h] + '_only'
@@ -739,8 +744,13 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 if 'locus' + suffix_l in tmp_metadata:
                     if not check_missing(tmp_metadata.loc[i,
                                                           'locus' + suffix_l]):
-                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
-                            i, 'locus' + suffix_l] + '_only'
+                        if '|' in tmp_metadata.at[i, 'locus' + suffix_l]:
+                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
+                        else:
+                            tmp_metadata.at[i,
+                                            'locus_status'] = tmp_metadata.loc[
+                                                i,
+                                                'locus' + suffix_l] + '_only'
                     else:
                         tmp_metadata.at[i, 'locus_status'] = 'unassigned'
                 else:
@@ -757,6 +767,18 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
 
     tmp_metadata['locus_status_summary'] = [
         'Multi' if '|' in i else i for i in tmp_metadata['locus_status']
+    ]
+    acceptable = [
+        'TRB + TRA', 'TRD + TRG', 'IGH + IGK', 'IGH + IGL', 'IGH_only',
+        'TRB_only', 'TRD_only', 'TRA_only', 'TRG_only', 'IGK_only', 'IGL_only',
+        'Multi', 'unassigned'
+    ]
+    # tmp_metadata['locus_status'] = [
+    #     'Multi' if i not in acceptable else i
+    #     for i in tmp_metadata['locus_status']
+    # ]
+    tmp_metadata['locus_status_summary'] = [
+        'Multi' if i == 'Multi' else i for i in tmp_metadata['locus_status']
     ]
 
     for i in tmp_metadata.index:

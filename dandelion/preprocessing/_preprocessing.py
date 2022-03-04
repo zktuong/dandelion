@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 16:37:14
+# @Last Modified time: 2022-03-04 17:36:00
 
 import os
 import pandas as pd
@@ -3856,6 +3856,20 @@ def transfer_assignment(passfile: Union[PathLike, str],
         db_pass = None
     if os.path.isfile(failfile):
         db_fail = load_data(failfile)
+        # should be pretty safe to fill this in
+        db_fail['vj_in_frame'].fillna(value='F', inplace=True)
+        db_fail['productive'].fillna(value='F', inplace=True)
+        db_fail['c_call'].fillna(value='', inplace=True)
+        db_fail['v_call'].fillna(value='', inplace=True)
+        db_fail['d_call'].fillna(value='', inplace=True)
+        db_fail['j_call'].fillna(value='', inplace=True)
+        db_fail['locus'].fillna(value='', inplace=True)
+        for i, r in db_fail.iterrows():
+            if not present(r.locus):
+                calls = list(set([r.v_call[:3], r.d_call[:3], r.j_call[:3], r.c_call[:3]]))
+                locus = ''.join([c for c in calls if present(c)])
+                if len(locus) == 3:
+                    db_fail.at[i, 'locus'] = locus
     else:
         db_fail = None
     if blast_result.shape[0] < 1:
