@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 10:05:21
+# @Last Modified time: 2022-03-04 16:37:14
 
 import os
 import pandas as pd
@@ -588,11 +588,13 @@ def assign_isotype(fasta: Union[str, PathLike],
         org=org,
         loci='ig',
         call='c',
-        max_target_seqs=1,
+        max_hsps=1,
         evalue=evalue,
         outfmt=('6 qseqid sseqid pident length mismatch gapopen ' +
                 'qstart qend sstart send evalue bitscore qseq sseq'),
+        dust='no',
         verbose=verbose)
+    blast_out.drop_duplicates(subset='sequence_id', keep='first', inplace=True)
 
     _file = "{}/tmp/{}_genotyped.tsv".format(
         os.path.dirname(filePath),
@@ -701,6 +703,9 @@ def assign_isotype(fasta: Union[str, PathLike],
         else:
             if show_plot:
                 print(p)
+    # move and rename
+    move_to_tmp(fasta, filename_prefix)
+    rename_dandelion(fasta, filename_prefix)
 
 
 def assign_isotypes(fastas: Sequence,
@@ -797,12 +802,14 @@ def reannotate_genes(data: Sequence,
                      extended: bool = True,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
                      flavour: Literal['strict', 'original'] = 'strict',
+                     min_j_match: int = 7,
                      min_d_match: int = 9,
                      v_evalue: float = 1e-4,
                      d_evalue: float = 1e-3,
                      j_evalue: float = 1e-4,
                      reassign_dj: bool = False,
-                     max_target_seqs: int = 10,
+                     overwrite: bool = True,
+                     dust: Optional[Union[Literal['yes', 'no'], str]] = 'no',
                      verbose: bool = False):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr format.
@@ -858,16 +865,21 @@ def reannotate_genes(data: Sequence,
         consecutive nucleotide matches between the query sequence and the D
         genes based on your own criteria. Note that the matches do not include
         overlapping matches at V-D or D-J junctions.
+    min_j_match : int
+        Minimum D gene nucleotide matches. This controls the threshold for
+        D gene detection. You can set the minimal number of required
+        consecutive nucleotide matches between the query sequence and the D
+        genes based on your own criteria. Note that the matches do not include
+        overlapping matches at V-D or D-J junctions.
     reassign_dj : bool
         whether or not to perform a targetted blastn reassignment for D and J genes.
         Default is False.
-    max_target_seqs: int
-        Only used if reassign_dj is True.
-        Combined funtionality with max_hsps. Number of aligned sequences to keep and
-        Maximum number of HSPs (alignments) to keep for any single query-subject pair.
-        The HSPs shown will be the best as judged by expect value. This number should
-        be an integer that is one or greater. Setting it to one will show only the best
-        HSP for every query-subject pair. Only affects the output file in the tmp folder.
+    dust: str
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    overwrite: bool
+        whether or not to overwrite the assignment if flavour = 'strict'.
     verbose :
         whether or not to print the igblast command used in the terminal.
         Default is False.
@@ -934,6 +946,9 @@ def reannotate_genes(data: Sequence,
                           database=igblast_db,
                           evalue=j_evalue,
                           filename_prefix=filename_prefix,
+                          dust=dust,
+                          word_size=min_j_match,
+                          overwrite=overwrite,
                           verbose=verbose)
                 assign_DJ(filePath,
                           org=org,
@@ -942,30 +957,19 @@ def reannotate_genes(data: Sequence,
                           database=igblast_db,
                           evalue=d_evalue,
                           filename_prefix=filename_prefix,
-                          verbose=verbose)
-                assign_DJ(fasta=filePath,
-                          org=org,
-                          loci=loci,
-                          call='j',
-                          database=igblast_db,
-                          evalue=j_evalue,
-                          filename_prefix=filename_prefix,
-                          max_target_seqs=max_target_seqs,
-                          verbose=verbose)
-                assign_DJ(filePath,
-                          org=org,
-                          loci=loci,
-                          call='d',
-                          database=igblast_db,
-                          evalue=d_evalue,
-                          filename_prefix=filename_prefix,
-                          max_target_seqs=max_target_seqs,
+                          dust=dust,
+                          word_size=min_d_match,
+                          overwrite=overwrite,
                           verbose=verbose)
 
     if loci == 'tr':
         change_file_location(data, filename_prefix)
         if flavour == 'strict':
-            mask_d(data, filename_prefix, d_evalue)
+            mask_dj(data, filename_prefix, d_evalue, j_evalue)
+        move_to_tmp(data, filename_prefix)
+        rename_dandelion(data,
+                         filename_prefix,
+                         endswith='_igblast_db-pass.tsv')
 
 
 def reassign_alleles(data: Sequence,
@@ -3617,7 +3621,9 @@ def assign_DJ(
         call: Literal['d', 'j'] = 'j',
         database: Optional[str] = None,
         evalue: float = 1e-4,
-        max_target_seqs: int = 1,
+        max_hsps: int = 10,
+        dust: Optional[Union[Literal['yes', 'no'], str]] = None,
+        word_size: Optional[int] = None,
         outfmt: str = ('6 qseqid sseqid pident length mismatch gapopen ' +
                        'qstart qend sstart send evalue bitscore qseq sseq'),
         filename_prefix: Optional[str] = None,
@@ -3646,12 +3652,18 @@ def assign_DJ(
         and report only high similarity matches. Choose higher EXPECT value
         (for example 1 or more) if you expect a low identity between your query
         sequence and the targets.
-    max_target_seqs: int
-        Combined funtionality with max_hsps. Number of aligned sequences to keep and
+    max_hsps: int
         Maximum number of HSPs (alignments) to keep for any single query-subject pair.
         The HSPs shown will be the best as judged by expect value. This number should
         be an integer that is one or greater. Setting it to one will show only the best
         HSP for every query-subject pair. Only affects the output file in the tmp folder.
+    dust: str
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    word_size : int
+        Word size for wordfinder algorithm (length of best perfect match).
+        Must be >=4. None defaults to 4.
     filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     overwrite: bool
@@ -3679,9 +3691,11 @@ def assign_DJ(
                            org=org,
                            loci=loci,
                            call=call,
-                           max_target_seqs=max_target_seqs,
+                           max_hsps=max_hsps,
                            evalue=evalue,
                            outfmt=outfmt,
+                           dust=dust,
+                           word_size=word_size,
                            verbose=verbose)
 
     # read the original object
@@ -3692,12 +3706,13 @@ def assign_DJ(
         os.path.dirname(filePath),
         os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-fail')
 
-    if max_target_seqs == 1:
-        transfer_assignment(passfile=passfile,
-                            failfile=failfile,
-                            blast_result=blast_out,
-                            eval_threshold=evalue,
-                            call=call)
+    transfer_assignment(passfile=passfile,
+                        failfile=failfile,
+                        blast_result=blast_out.drop_duplicates(
+                            subset='sequence_id', keep='first'),
+                        eval_threshold=evalue,
+                        call=call,
+                        overwrite=overwrite)
 
 
 def run_blastn(
@@ -3706,10 +3721,12 @@ def run_blastn(
         org: Literal['human', 'mouse'] = 'human',
         loci: Literal['ig', 'tr'] = 'ig',
         call: Literal['v', 'd', 'j', 'c'] = 'c',
-        max_target_seqs: int = 1,
+        max_hsps: int = 10,
         evalue: float = 1e-4,
         outfmt: str = ('6 qseqid sseqid pident length mismatch gapopen ' +
                        'qstart qend sstart send evalue bitscore qseq sseq'),
+        dust: Optional[Union[Literal['yes', 'no'], str]] = None,
+        word_size: Optional[int] = None,
         verbose: bool = False):
     """
     Annotate contigs using blastn.
@@ -3728,8 +3745,7 @@ def run_blastn(
         locus. 'ig' or 'tr',
     call : str
         Either 'v', 'd', 'j' or 'c' gene.
-    max_target_seqs: int
-        Combined funtionality with max_hsps. Number of aligned sequences to keep and
+    max_hsps: int
         Maximum number of HSPs (alignments) to keep for any single query-subject pair.
         The HSPs shown will be the best as judged by expect value. This number should
         be an integer that is one or greater. Setting it to one will show only the best
@@ -3742,6 +3758,13 @@ def run_blastn(
         sequence and the targets.
     outfmt : str
         blastn output format.
+    dust: str
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    word_size : int
+        Word size for wordfinder algorithm (length of best perfect match).
+        Must be >=4. None defaults to 4.
     verbose : bool
         whether or not to print the blast command in terminal.
         Default is False.
@@ -3780,10 +3803,14 @@ def run_blastn(
 
     cmd = [
         'blastn', '-db', bdb, '-evalue',
-        str(evalue), '-max_target_seqs',
-        str(max_target_seqs), '-max_hsps',
-        str(max_target_seqs), '-outfmt', outfmt, '-query', fasta
+        str(evalue), '-max_hsps',
+        str(max_hsps), '-outfmt', outfmt, '-query', fasta
     ]
+
+    if dust is not None:
+        cmd = cmd + ['-dust', str(dust)]
+    if word_size is not None:
+        cmd = cmd + ['-word_size', str(word_size)]
 
     blast_out = "{}/tmp/{}.tsv".format(
         os.path.dirname(fasta),
@@ -3797,16 +3824,16 @@ def run_blastn(
         dat = pd.read_csv(blast_out, sep='\t', header=None)
         dat.columns = [
             'sequence_id', call + '_call', call + '_identity',
-            'alignment_length', 'number_of_mismatches',
-            'number_of_gap_openings', call + '_sequence_start',
+            call + 'alignment_length', call + 'number_of_mismatches',
+            call + 'number_of_gap_openings', call + '_sequence_start',
             call + '_sequence_end', call + '_germline_start',
             call + '_germline_end', call + '_support', call + '_score',
             call + '_sequence_alignment', call + '_germline_alignment'
         ]
     except pd.errors.EmptyDataError:
         dat = pd.DataFrame(columns=[
-            'sequence_id', call + '_call', call +
-            '_identity', 'alignment_length', 'number_of_mismatches',
+            'sequence_id', call + '_call', call + '_identity', call +
+            '_alignment_length', call + 'number_of_mismatches', call +
             'number_of_gap_openings', call + '_sequence_start', call +
             '_sequence_end', call + '_germline_start', call +
             '_germline_end', call + '_support', call + '_score', call +
@@ -3821,7 +3848,8 @@ def transfer_assignment(passfile: Union[PathLike, str],
                         failfile: Union[PathLike, str],
                         blast_result: pd.DataFrame,
                         eval_threshold: float,
-                        call: Literal['v', 'd', 'j', 'c'] = 'c'):
+                        call: Literal['v', 'd', 'j', 'c'] = 'c',
+                        overwrite: bool = False):
     if os.path.isfile(passfile):
         db_pass = load_data(passfile)
     else:
@@ -3833,354 +3861,178 @@ def transfer_assignment(passfile: Union[PathLike, str],
     if blast_result.shape[0] < 1:
         blast_result = None
 
-    out = defaultdict(dict)
     if blast_result is not None:
+        blast_result_evalues = dict(blast_result[call + '_support'])
+        blast_result_call = dict(blast_result[call + '_support'])
         blast_result_evalues = dict(blast_result[call + '_support'])
         if db_pass is not None:
             db_pass_evalues = dict(db_pass[call + '_support'])
-            for i in db_pass['sequence_id']:
-                if i in blast_result['sequence_id']:
-                    eval1 = db_pass.loc[i, call + '_support']
-                    eval2 = blast_result.loc[i, call + '_support']
-                    if db_pass.loc[i, call +
-                                   '_call'] != blast_result.loc[i, call +
-                                                                '_call']:
-                        if re.sub('[*][0-9][0-9]', '',
-                                  blast_result.loc[i, call + '_call']
-                                  ) != db_pass.loc[i, call + '_call_10x']:
-                            if eval1 <= eval2:
-                                for col in [
-                                        call + '_call',
-                                        call + '_identity',
-                                        call + '_support',
-                                        call + '_score',
-                                        call + '_sequence_alignment',
-                                        call + '_germline_alignment',
-                                        call + '_sequence_start',
-                                        call + '_sequence_end',
-                                        call + '_germline_start',
-                                        call + '_germline_end',
-                                ]:
-                                    if col in db_pass:
-                                        out[col][i] = db_pass.loc[i, col]
-                                out[call + '_source'][i] = 'igblastn'
-                            elif eval2 < eval1:
-                                for col in [
-                                        call + '_call',
-                                        call + '_identity',
-                                        call + '_support',
-                                        call + '_score',
-                                        call + '_sequence_alignment',
-                                        call + '_germline_alignment',
-                                        call + '_sequence_start',
-                                        call + '_sequence_end',
-                                        call + '_germline_start',
-                                        call + '_germline_end',
-                                ]:
-                                    if col in blast_result:
-                                        out[col][i] = blast_result.loc[i, col]
-                                out[call + '_source'][i] = 'blastn'
+            db_pass_scores = dict(db_pass[call + '_score'])
+            db_pass[call + '_call'].fillna(value='', inplace=True)
+            db_pass_call = dict(db_pass[call + '_call'])
+            db_pass[call + '_support_igblastn'] = pd.Series(db_pass_evalues)
+            db_pass[call + '_score_igblastn'] = pd.Series(db_pass_scores)
+            db_pass[call + '_call_igblastn'] = pd.Series(db_pass_call)
+            db_pass[call + '_call_igblastn'].fillna(value='', inplace=True)
+            for col in blast_result:
+                if col != 'sequence_id':
+                    db_pass[col + '_blastn'] = pd.Series(blast_result[col])
+                    if col in [
+                            call + '_call', call + '_sequence_alignment',
+                            call + '_germline_alignment'
+                    ]:
+                        db_pass[col + '_blastn'].fillna(value='', inplace=True)
+            if overwrite:
+                for i in db_pass['sequence_id']:
+                    vend = db_pass.loc[i, 'v_sequence_end']
+                    if not present(vend):
+                        vend = 0
+                    jstart = db_pass.loc[i, 'j_sequence_start']
+                    if not present(jstart):
+                        jstart = 1000
+                    callstart = db_pass.loc[i, call + '_sequence_start_blastn']
+                    callend = db_pass.loc[i, call + '_sequence_end_blastn']
+                    if (callstart >= vend) and (callend <= jstart):
+                        eval1 = db_pass.loc[i, call + '_support_igblastn']
+                        eval2 = db_pass.loc[i, call + '_support_blastn']
+                        if db_pass.loc[i,
+                                       call + '_call_igblastn'] != db_pass.loc[
+                                           i, call + '_call_blastn']:
+                            if call + '_call_10x' in db_pass:
+                                if re.sub(
+                                        '[*][0-9][0-9]', '',
+                                        db_pass.loc[i, call + '_call_blastn']
+                                ) != db_pass.loc[i, call + '_call_10x']:
+                                    if present(eval1):
+                                        if eval1 > eval2:
+                                            db_pass.at[i, call +
+                                                       '_call'] = db_pass.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_pass.at[i, call +
+                                                       '_source'] = 'blastn'
+                                    else:
+                                        if present(eval2):
+                                            db_pass.at[i, call +
+                                                       '_call'] = db_pass.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_pass.at[i, call +
+                                                       '_source'] = 'blastn'
+                                else:
+                                    db_pass.at[i, call + '_source'] = '10x'
+                                    db_pass.at[i, call + '_call'] = db_pass.at[
+                                        i, call + '_call_blastn']
+                                    if present(db_pass.loc[i, 'junction_10x']):
+                                        if present(db_pass.loc[i, 'junction']):
+                                            if db_pass.loc[
+                                                    i,
+                                                    'junction'] != db_pass.loc[
+                                                        i, 'junction_10x']:
+                                                db_pass.at[
+                                                    i,
+                                                    'junction'] = db_pass.at[
+                                                        i, 'junction_10x']
+                                                db_pass.at[
+                                                    i,
+                                                    'junction_aa'] = db_pass.at[
+                                                        i, 'junction_10x_aa']
                         else:
-                            for col in [
-                                    call + '_call',
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                if col in blast_result:
-                                    out[col][i] = blast_result.loc[i, col]
-                            out[call + '_source'][i] = 'blastn'
-                            if present(db_pass.loc[i, 'junction_10x']):
-                                if present(db_pass.loc[i, 'junction']):
-                                    out[call + 'junction'][i] = db_pass.loc[
-                                        i, 'junction']
-                                    out[call + 'junction_aa'][i] = db_pass.loc[
-                                        i, 'junction_aa']
-                                else:
-                                    out[call + 'junction'][i] = db_pass.loc[
-                                        i, 'junction_10x']
-                                    out[call + 'junction_aa'][i] = db_pass.loc[
-                                        i, 'junction_10x_aa']
+                            if present(eval1):
+                                if eval1 > eval2:
+                                    db_pass.at[i, call + '_call'] = db_pass.at[
+                                        i, call + '_call_blastn']
+                                    db_pass.at[i, call + '_source'] = 'blastn'
                             else:
-                                if present(db_pass.loc[i, 'junction']):
-                                    out[call + 'junction'][i] = db_pass.loc[
-                                        i, 'junction']
-                                    out[call + 'junction_aa'][i] = db_pass.loc[
-                                        i, 'junction_aa']
-                                else:
-                                    out[call + 'junction'][i] = db_pass.loc[
-                                        i, 'junction_10x']
-                                    out[call + 'junction_aa'][i] = db_pass.loc[
-                                        i, 'junction_10x_aa']
+                                if present(eval2):
+                                    db_pass.at[i, call + '_call'] = db_pass.at[
+                                        i, call + '_call_blastn']
+                                    db_pass.at[i, call + '_source'] = 'blastn'
 
-                    else:
-                        if eval1 <= eval2:
-                            for col in [
-                                    call + '_call',
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                if col in db_pass:
-                                    out[col][i] = db_pass.loc[i, col]
-                            out[call + '_source'][i] = 'igblastn'
-                        elif eval2 < eval1:
-                            for col in [
-                                    call + '_call',
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                if col in blast_result:
-                                    out[col][i] = blast_result.loc[i, col]
-                            out[call + '_source'][i] = 'blastn'
-                            if re.sub('[*][0-9][0-9]', '',
-                                      blast_result.loc[i, call + '_call']
-                                      ) == db_pass.loc[i, call + '_call_10x']:
-                                out[call + 'junction'][i] = db_pass.loc[
-                                    i, 'junction_10x']
-                                out[call + 'junction_aa'][i] = db_pass.loc[
-                                    i, 'junction_10x_aa']
-                            else:
-                                # potentially can run changeo.Alignment.inferJunction
-                                # to infer the junction. But is it worth it at this
-                                # point?
-                                out[call + 'junction'][i] = ''
-                                out[call + 'junction_aa'][i] = ''
-                else:
-                    if present(db_pass.loc[i, call + '_call']):
-                        evalue = db_pass.loc[i, call + '_support']
-                        if evalue < eval_threshold:
-                            out[call + '_source'][i] = 'igblastn'
-                        else:
-                            for col in [
-                                    call + '_call',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment'
-                            ]:
-                                out[col][i] = ''
-                            for col in [
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                out[col][i] = np.nan
-                            out[call + '_source'][i] = ''
+            db_pass.to_csv(passfile, sep='\t', index=False)
 
         if db_fail is not None:
             db_fail_evalues = dict(db_fail[call + '_support'])
-            for i in db_fail['sequence_id']:
-                if i in blast_result['sequence_id']:
-                    eval1 = db_fail.loc[i, call + '_score']
-                    eval2 = blast_result.loc[i, call + '_score']
-                    if db_fail.loc[i, call +
-                                   '_call'] != blast_result.loc[i, call +
-                                                                '_call']:
-                        if re.sub('[*][0-9][0-9]', '',
-                                  blast_result.loc[i, call + '_call']
-                                  ) != db_fail.loc[i, call + '_call_10x']:
-                            if eval1 <= eval2:
-                                for col in [
-                                        call + '_call',
-                                        call + '_identity',
-                                        call + '_support',
-                                        call + '_score',
-                                        call + '_sequence_alignment',
-                                        call + '_germline_alignment',
-                                        call + '_sequence_start',
-                                        call + '_sequence_end',
-                                        call + '_germline_start',
-                                        call + '_germline_end',
-                                ]:
-                                    if col in db_fail:
-                                        out[col][i] = db_pass.loc[i, col]
-                                out[call + '_source'][i] = 'igblastn'
-                            elif eval2 < eval1:
-                                for col in [
-                                        call + '_call',
-                                        call + '_identity',
-                                        call + '_support',
-                                        call + '_score',
-                                        call + '_sequence_alignment',
-                                        call + '_germline_alignment',
-                                        call + '_sequence_start',
-                                        call + '_sequence_end',
-                                        call + '_germline_start',
-                                        call + '_germline_end',
-                                ]:
-                                    if col in blast_result:
-                                        out[col][i] = blast_result.loc[i, col]
-                                out[call + '_source'][i] = 'blastn'
-                        else:
-                            for col in [
-                                    call + '_call',
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                if col in blast_result:
-                                    out[col][i] = blast_result.loc[i, col]
-                            out[call + '_source'][i] = 'blastn'
-                            if present(db_fail.loc[i, 'junction_10x']):
-                                if present(db_fail.loc[i, 'junction']):
-                                    out[call + 'junction'][i] = db_fail.loc[
-                                        i, 'junction']
-                                    out[call + 'junction_aa'][i] = db_fail.loc[
-                                        i, 'junction_aa']
+            db_fail_scores = dict(db_fail[call + '_score'])
+            db_fail[call + '_call'].fillna(value='', inplace=True)
+            db_fail_call = dict(db_fail[call + '_call'])
+            db_fail[call + '_support_igblastn'] = pd.Series(db_fail_evalues)
+            db_fail[call + '_score_igblastn'] = pd.Series(db_fail_scores)
+            db_fail[call + '_call_igblastn'] = pd.Series(db_fail_call)
+            db_fail[call + '_call_igblastn'].fillna(value='', inplace=True)
+            for col in blast_result:
+                if col != 'sequence_id':
+                    db_fail[col + '_blastn'] = pd.Series(blast_result[col])
+                    if col in [
+                            call + '_call', call + '_sequence_alignment',
+                            call + '_germline_alignment'
+                    ]:
+                        db_fail[col + '_blastn'].fillna(value='', inplace=True)
+            if overwrite:
+                for i in db_fail['sequence_id']:
+                    vend = db_fail.loc[i, 'v_sequence_end']
+                    if not present(vend):
+                        vend = 0
+                    jstart = db_fail.loc[i, 'j_sequence_start']
+                    if not present(jstart):
+                        jstart = 1000
+                    callstart = db_fail.loc[i, call + '_sequence_start_blastn']
+                    callend = db_fail.loc[i, call + '_sequence_end_blastn']
+                    if (callstart >= vend) and (callend <= jstart):
+                        eval1 = db_fail.loc[i, call + '_support_igblastn']
+                        eval2 = db_fail.loc[i, call + '_support_blastn']
+                        if db_fail.loc[i,
+                                       call + '_call_igblastn'] != db_fail.loc[
+                                           i, call + '_call_blastn']:
+                            if call + '_call_10x' in db_fail:
+                                if re.sub(
+                                        '[*][0-9][0-9]', '',
+                                        db_fail.loc[i, call + '_call_blastn']
+                                ) != db_fail.loc[i, call + '_call_10x']:
+                                    if present(eval1):
+                                        if eval1 > eval2:
+                                            db_fail.at[i, call +
+                                                       '_call'] = db_fail.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_fail.at[i, call +
+                                                       '_source'] = 'blastn'
+                                    else:
+                                        if present(eval2):
+                                            db_fail.at[i, call +
+                                                       '_call'] = db_fail.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_fail.at[i, call +
+                                                       '_source'] = 'blastn'
                                 else:
-                                    out[call + 'junction'][i] = db_fail.loc[
-                                        i, 'junction_10x']
-                                    out[call + 'junction_aa'][i] = db_fail.loc[
-                                        i, 'junction_10x_aa']
-                            else:
-                                if present(db_fail.loc[i, 'junction']):
-                                    out[call + 'junction'][i] = db_fail.loc[
-                                        i, 'junction']
-                                    out[call + 'junction_aa'][i] = db_fail.loc[
-                                        i, 'junction_aa']
-                                else:
-                                    out[call + 'junction'][i] = db_fail.loc[
-                                        i, 'junction_10x']
-                                    out[call + 'junction_aa'][i] = db_fail.loc[
-                                        i, 'junction_10x_aa']
-                    else:
-                        if eval1 <= eval2:
-                            for col in [
-                                    call + '_call',
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                if col in db_fail:
-                                    out[col][i] = db_fail.loc[i, col]
-                            out[call + '_source'][i] = 'igblastn'
-                        elif eval2 < eval1:
-                            for col in [
-                                    call + '_call',
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                if col in blast_result:
-                                    out[col][i] = blast_result.loc[i, col]
-                            out[call + '_source'][i] = 'blastn'
-                            if re.sub('[*][0-9][0-9]', '',
-                                      blast_result.loc[i, call + '_call']
-                                      ) == db_fail.loc[i, call + '_call_10x']:
-                                out[call + 'junction'][i] = db_fail.loc[
-                                    i, 'junction_10x']
-                                out[call + 'junction_aa'][i] = db_fail.loc[
-                                    i, 'junction_10x_aa']
-                            else:
-                                out[call + 'junction'][i] = ''
-                                out[call + 'junction_aa'][i] = ''
-                else:
-                    if present(db_fail.loc[i, call + '_call']):
-                        evalue = db_fail.loc[i, call + '_support']
-                        if evalue < eval_threshold:
-                            out[call + '_source'][i] = 'igblastn'
+                                    db_fail.at[i, call + '_source'] = '10x'
+                                    db_fail.at[i, call + '_call'] = db_fail.at[
+                                        i, call + '_call_blastn']
+                                    if present(db_fail.loc[i, 'junction_10x']):
+                                        if present(db_fail.loc[i, 'junction']):
+                                            if db_fail.loc[
+                                                    i,
+                                                    'junction'] != db_fail.loc[
+                                                        i, 'junction_10x']:
+                                                db_fail.at[
+                                                    i,
+                                                    'junction'] = db_fail.at[
+                                                        i, 'junction_10x']
+                                                db_fail.at[
+                                                    i,
+                                                    'junction_aa'] = db_fail.at[
+                                                        i, 'junction_10x_aa']
                         else:
-                            for col in [
-                                    call + '_call',
-                                    call + '_sequence_alignment',
-                                    call + '_germline_alignment'
-                            ]:
-                                out[col][i] = ''
-                            for col in [
-                                    call + '_identity',
-                                    call + '_support',
-                                    call + '_score',
-                                    call + '_sequence_start',
-                                    call + '_sequence_end',
-                                    call + '_germline_start',
-                                    call + '_germline_end',
-                            ]:
-                                out[col][i] = np.nan
-                            out[call + '_source'][i] = ''
+                            if present(eval1):
+                                if eval1 > eval2:
+                                    db_fail.at[i, call + '_call'] = db_fail.at[
+                                        i, call + '_call_blastn']
+                                    db_fail.at[i, call + '_source'] = 'blastn'
+                            else:
+                                if present(eval2):
+                                    db_fail.at[i, call + '_call'] = db_fail.at[
+                                        i, call + '_call_blastn']
+                                    db_fail.at[i, call + '_source'] = 'blastn'
 
-        if db_pass is not None:
-            for col in [
-                    call + '_call', call + '_identity', call + '_support',
-                    call + '_score', call + '_sequence_alignment',
-                    call + '_germline_alignment', call + '_sequence_start',
-                    call + '_sequence_end', call + '_germline_start',
-                    call + '_germline_end', call + '_source', 'junction',
-                    'junction_aa'
-            ]:
-                if col in db_pass:
-                    db_pass[col].update(out[col])
-                else:
-                    db_pass[col] = pd.Series(out[col])
-            for i in db_pass['sequence_id']:
-                if not present(db_pass.loc[i, call + '_call']):
-                    db_pass.at[i, call + '_source'] = ''
-            if 'db_pass_evalues' in locals():
-                db_pass[call +
-                        '_support_igblastn'] = pd.Series(db_pass_evalues)
-            if 'blast_result_evalues' in locals():
-                db_pass[call +
-                        '_support_blastn'] = pd.Series(blast_result_evalues)
-            db_pass.to_csv(passfile, sep='\t', index=False)
-        if db_fail is not None:
-            for col in [
-                    call + '_call', call + '_identity', call + '_support',
-                    call + '_score', call + '_sequence_alignment',
-                    call + '_germline_alignment', call + '_sequence_start',
-                    call + '_sequence_end', call + '_germline_start',
-                    call + '_germline_end', call + '_source', 'junction',
-                    'junction_aa'
-            ]:
-                if col in db_fail:
-                    db_fail[col].update(out[col])
-                else:
-                    db_fail[col] = pd.Series(out[col])
-            for i in db_fail['sequence_id']:
-                if not present(db_fail.loc[i, call + '_call']):
-                    db_fail.at[i, call + '_source'] = ''
-            if 'db_fail_evalues' in locals():
-                db_fail[call +
-                        '_support_igblastn'] = pd.Series(db_fail_evalues)
-            if 'blast_result_evalues' in locals():
-                db_fail[call +
-                        '_support_blastn'] = pd.Series(blast_result_evalues)
             db_fail.to_csv(failfile, sep='\t', index=False)

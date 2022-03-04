@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 17:58:43
+# @Last Modified time: 2022-03-04 16:59:08
 
 import os
 from collections import defaultdict, Iterable
@@ -499,7 +499,7 @@ class Contig:
         return self._contig
 
 
-def mask_d(data, filename_prefix, evalue_threshold):
+def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
     for i in range(0, len(data)):
         filePath = check_filepath(data[i],
                                   filename_prefix=filename_prefix[i],
@@ -511,8 +511,14 @@ def mask_d(data, filename_prefix, evalue_threshold):
             )
 
         dat = load_data(filePath)
-        dat['d_call'] = [
-            '' if s > evalue_threshold else c
-            for c, s in zip(dat['d_call'], dat['d_support'])
-        ]
-        dat.to_csv(filePath, sep='\t', index=False)
+        if 'd_support_blastn' in dat:
+            dat['d_call'] = [
+                '' if s > d_evalue_threshold else c
+                for c, s in zip(dat['d_call'], dat['d_support_blastn'])
+            ]
+        if 'j_support_blastn' in dat:
+            dat['j_call'] = [
+                '' if s > j_evalue_threshold else c
+                for c, s in zip(dat['j_call'], dat['j_support_blastn'])
+            ]
+            dat.to_csv(filePath, sep='\t', index=False)

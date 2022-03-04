@@ -78,8 +78,8 @@ def test_updateblastdb(database_paths):
 
 
 @pytest.mark.parametrize("filename, expected",
-                         [pytest.param('filtered', 6),
-                          pytest.param('all', 7)])
+                         [pytest.param('filtered', 4),
+                          pytest.param('all', 3)])
 def test_assignsisotypes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.assign_isotypes(str(create_testfolder),

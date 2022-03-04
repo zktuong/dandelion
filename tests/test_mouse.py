@@ -60,7 +60,7 @@ def test_assignsisotypes(create_testfolder, database_paths_mouse,
                            blastdb=database_paths_mouse['blastdb_fasta'],
                            correction_dict=balbc_ighg_primers,
                            plot=False)
-    assert len(list((create_testfolder / 'dandelion').iterdir())) == 4
+    assert len(list((create_testfolder / 'dandelion').iterdir())) == 2
 
 
 def test_create_germlines(create_testfolder, processed_files,
@@ -97,3 +97,14 @@ def test_generate_network(create_testfolder):
     assert vdj.n_obs == 392
     assert vdj.layout is not None
     assert vdj.graph is not None
+
+
+def test_filtercontigs_drop_contigs(create_testfolder, processed_files, dummy_adata_mouse):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    dat = pd.read_csv(f, sep='\t')
+    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse,
+                                       filter_poorqualitycontig = True)
+    assert dat.shape[0] == 1285
+    assert vdj.data.shape[0] == 781
+    assert vdj.metadata.shape[0] == 391
+    assert adata.n_obs == 547

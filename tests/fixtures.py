@@ -29,11 +29,11 @@ def processed_files():
     """Database paths for tests."""
     fl = {
         'filtered':
-        "filtered_contig_igblast_db-pass_genotyped.tsv",
+        "filtered_contig_dandelion.tsv",
         'all':
-        "all_contig_igblast_db-pass_genotyped.tsv",
+        "all_contig_dandelion.tsv",
         'germline-dmask':
-        "filtered_contig_igblast_db-pass_genotyped_germline_dmask.tsv",
+        "filtered_contig_dandelion_germline_dmask.tsv",
     }
     return (fl)
 
@@ -42,8 +42,8 @@ def processed_files():
 def processed_files_tr():
     """Database paths for tests."""
     fl = {
-        'filtered': "filtered_contig_igblast_db-pass.tsv",
-        'all': "all_contig_igblast_db-pass.tsv",
+        'filtered': "filtered_contig_dandelion.tsv",
+        'all': "all_contig_dandelion.tsv",
     }
     return (fl)
 
