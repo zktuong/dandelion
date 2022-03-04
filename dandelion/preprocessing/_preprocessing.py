@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-03 17:49:35
+# @Last Modified time: 2022-03-04 10:05:21
 
 import os
 import pandas as pd
@@ -964,7 +964,8 @@ def reannotate_genes(data: Sequence,
 
     if loci == 'tr':
         change_file_location(data, filename_prefix)
-        mask_d(data, filename_prefix, d_evalue)
+        if flavour == 'strict':
+            mask_d(data, filename_prefix, d_evalue)
 
 
 def reassign_alleles(data: Sequence,
