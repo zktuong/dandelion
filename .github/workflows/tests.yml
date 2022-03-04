@@ -80,8 +80,11 @@ jobs:
         which python
 
     - name: Setup blast and igblast
+      # just in case this happens again in the future
+      # conda install -c bioconda igblast blast ncbi-vdb=2.11.0
+      # https://github.com/bioconda/bioconda-recipes/issues/33479
       run: |
-        conda install -c bioconda igblast blast ncbi-vdb=2.11.0
+        conda install -c bioconda igblast blast
 
     - name: Test if blast works
       run: |
