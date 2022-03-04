@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 17:36:00
+# @Last Modified time: 2022-03-04 18:31:49
 
 import os
 import pandas as pd
@@ -3793,7 +3793,7 @@ def run_blastn(
             try:
                 bdb = env['BLASTDB']
             except KeyError:
-                raise keyError(
+                raise KeyError(
                     ('Environmental variable BLASTDB must be set. ' +
                      'Otherwise, please provide path to blast database'))
             bdb = bdb + org + '/' + org + '_BCR_C.fasta'
