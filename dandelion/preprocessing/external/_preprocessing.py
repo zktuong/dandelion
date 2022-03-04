@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-16 14:57:04
+# @Last Modified time: 2022-03-04 18:25:36
 
 import os
 import pandas as pd
@@ -467,7 +467,7 @@ def tigger_genotype(data: Union[str, PathLike],
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError(
+            raise KeyError(
                 ('Environmental variable GERMLINE is not set. Please provide' +
                  ' either the path to the folder containing the germline' +
                  ' IGHV fasta file, or direct path to the germline IGHV' +
@@ -477,7 +477,7 @@ def tigger_genotype(data: Union[str, PathLike],
         if os.path.isdir(v_germline):
             gml = v_germline.rstrip('/') + 'imgt_' + org + '_IGHV.fasta'
             if not os.path.isfile(gml):
-                raise OSError(
+                raise KeyError(
                     ("Input for germline is incorrect. Please rename IGHV" +
                      " germline file to '{}'.".format(gml) +
                      " Otherwise, please provide path to folder containing" +
@@ -485,7 +485,7 @@ def tigger_genotype(data: Union[str, PathLike],
                      " germline IGHV fasta file."))
         else:
             if not v_germline.endswith('.fasta'):
-                raise OSError(
+                raise KeyError(
                     ('Input for germline is incorrect {}.'.format(v_germline) +
                      ' Please provide path to folder containing the germline' +
                      ' IGHV fasta file, or direct path to the germline IGHV' +
