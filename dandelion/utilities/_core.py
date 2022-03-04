@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 17:50:29
+# @Last Modified time: 2022-03-04 19:14:24
 
 import os
 from collections import defaultdict
@@ -264,9 +264,11 @@ class Dandelion:
             try:
                 gml = env['GERMLINE']
             except:
-                raise OSError(
-                    'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.'
-                )
+                raise KeyError((
+                    'Environmental variable GERMLINE must be set. Otherwise, '
+                    +
+                    'please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.'
+                ))
             gml = gml + 'imgt/' + org + '/vdj/'
         else:
             if os.path.isdir(germline):
@@ -274,29 +276,39 @@ class Dandelion:
             elif type(germline) is not list:
                 germline_ = [germline]
                 if len(germline_) < 3:
-                    raise OSError(
-                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                    )
+                    raise TypeError((
+                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, '
+                        +
+                        'IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ '
+                        + 'fasta files (with .fasta extension) as a list.'))
                 else:
                     gml = []
                     for x in germline_:
                         if not x.endswith('.fasta'):
-                            raise OSError(
-                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                            )
+                            raise TypeError((
+                                'Input for germline is incorrect. Please provide path to folder containing germline '
+                                +
+                                'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, '
+                                +
+                                'and IGHJ fasta files (with .fasta extension) as a list.'
+                            ))
                         gml.append(x)
             elif type(germline) is list:
                 if len(germline) < 3:
-                    raise OSError(
-                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                    )
+                    raise TypeError((
+                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, '
+                        +
+                        'and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta '
+                        + 'files (with .fasta extension) as a list.'))
                 else:
                     gml = []
                     for x in germline:
                         if not x.endswith('.fasta'):
-                            raise OSError(
-                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                            )
+                            raise TypeError((
+                                'Input for germline is incorrect. Please provide path to folder containing germline '
+                                +
+                                'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta '
+                                + 'files (with .fasta extension) as a list.'))
                         gml.append(x)
 
         if type(gml) is not list:
@@ -312,9 +324,9 @@ class Dandelion:
             if 'personalized_ref_dict' in locals():
                 germline_ref.update(personalized_ref_dict)
             else:
-                raise OSError(
-                    'Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences.'
-                )
+                raise TypeError((
+                    'Input for corrected germline fasta is incorrect. Please provide path to file containing '
+                    + 'corrected germline fasta sequences.'))
 
         self.germline.update(germline_ref)
         logg.info(' finished',
@@ -391,7 +403,8 @@ class Dandelion:
         filename
             path to `.h5` file.
         complib : str, Optional
-            method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
+            method for compression for data frames. see
+            https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
         compression : str, Optional
             same call as complib. Just a convenience option.
         compression_opts : {0-9}, Optional
