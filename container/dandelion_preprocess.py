@@ -103,6 +103,9 @@ def main():
     else:
         keep_trailing_hyphen_number_log = True
 
+    if args.chain == 'tr':
+        args.reassign_dj = True
+
     logg.info(
         'command line parameters:\n',
         deep=
