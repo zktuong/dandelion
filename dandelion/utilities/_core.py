@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 19:14:24
+# @Last Modified time: 2022-03-05 00:03:48
 
 import os
 from collections import defaultdict
@@ -1207,36 +1207,3 @@ def update_metadata(self: Dandelion,
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
         self.metadata = tmp_metadata.copy()
-
-
-def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
-    """
-    Reads in or copy dataframe object and set sequence_id as index without dropping.
-
-    Parameters
-    ----------
-    obj : DataFrame, str
-        file path to .tsv file or pandas DataFrame object.
-
-    Returns
-    -------
-    pandas DataFrame object.
-    """
-    if os.path.isfile(str(obj)):
-        try:
-            obj_ = pd.read_csv(obj, sep='\t')
-        except FileNotFoundError as e:
-            print(e)
-    elif isinstance(obj, pd.DataFrame):
-        obj_ = obj.copy()
-    else:
-        raise TypeError(
-            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
-        )
-
-    if 'sequence_id' in obj_.columns:
-        obj_.set_index('sequence_id', drop=False, inplace=True)
-    else:
-        raise KeyError("'sequence_id' not found in columns of input")
-
-    return (obj_)
