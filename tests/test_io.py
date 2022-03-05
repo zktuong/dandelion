@@ -3,6 +3,7 @@ import os
 import json
 import pytest
 import dandelion as ddl
+import pandas as pd
 
 from fixtures import (create_testfolder, airr_reannotated, airr_10x, fasta_10x,
                       annotation_10x, fasta_10x_cr6, annotation_10x_cr6,
@@ -13,6 +14,21 @@ def test_write_airr(create_testfolder, airr_10x):
     out_file = str(create_testfolder) + "/test_airr_rearrangements.tsv"
     airr_10x.to_csv(out_file, sep='\t', index=False)
     assert len(list(create_testfolder.iterdir())) == 1
+
+
+def test_loaddata(create_testfolder):
+    file1 = str(create_testfolder) + "/test_airr_rearrangements.tsv"
+    file2 = str(create_testfolder) + "/test_airr_rearrangements2.tsv"
+    dat = ddl.utl.load_data(file1)
+    assert isinstance(dat, pd.DataFrame)
+    with pytest.raises(FileNotFoundError):
+        dat2 = ddl.utl.load_data(file2)
+    with pytest.raises(FileNotFoundError):
+        dat2 = ddl.utl.load_data('something.tsv')
+    dat2 = pd.read_csv(file1, sep = '\t')
+    dat2.drop('sequence_id', inplace = True, axis = 1)
+    with pytest.raises(KeyError):
+        dat2 = ddl.utl.load_data(dat2)
 
 
 def test_write_annotated(create_testfolder, airr_reannotated):
@@ -35,6 +51,44 @@ def test_readwrite_h5(create_testfolder):
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
+    vdj.write_h5(out_file2, complib = 'blosc:lz4')
+    vdj2 = ddl.read_h5(out_file2)
+    assert not vdj2.data.np1_length.empty
+    assert not vdj2.data.np2_length.empty
+    assert not vdj2.data.junction_length.empty
+    vdj.write_h5(out_file2, compression = 'blosc:lz4')
+    vdj2 = ddl.read_h5(out_file2)
+    assert not vdj2.data.np1_length.empty
+    assert not vdj2.data.np2_length.empty
+    assert not vdj2.data.junction_length.empty
+    with pytest.raises(ValueError):
+        vdj.write_h5(out_file2, complib = 'blosc:lz4', compression = 'blosc:lz4')
+
+
+def test_readwrite_pkl(create_testfolder):
+    out_file1 = str(create_testfolder) + "/test_airr_reannotated.tsv"
+    out_file2 = str(create_testfolder) + "/test_airr_reannotated.pkl"
+    out_file3 = str(create_testfolder) + "/test_airr_reannotated.pkl.gz"
+    out_file4 = str(create_testfolder) + "/test_airr_reannotated.pkl.pbz2"
+    vdj = ddl.Dandelion(out_file1)
+    assert not vdj.data.np1_length.empty
+    assert not vdj.data.np2_length.empty
+    assert not vdj.data.junction_length.empty
+    vdj.write_pkl(out_file2)
+    vdj3 = ddl.read_pkl(out_file2)
+    assert not vdj3.data.np1_length.empty
+    assert not vdj3.data.np2_length.empty
+    assert not vdj3.data.junction_length.empty
+    vdj.write_pkl(out_file3)
+    vdj4 = ddl.read_pkl(out_file3)
+    assert not vdj4.data.np1_length.empty
+    assert not vdj4.data.np2_length.empty
+    assert not vdj4.data.junction_length.empty
+    vdj.write_pkl(out_file4)
+    vdj5 = ddl.read_pkl(out_file4)
+    assert not vdj5.data.np1_length.empty
+    assert not vdj5.data.np2_length.empty
+    assert not vdj5.data.junction_length.empty
 
 
 def test_readwrite10xairr(create_testfolder):

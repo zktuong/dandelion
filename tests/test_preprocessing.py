@@ -145,6 +145,20 @@ def test_create_germlines(create_testfolder, processed_files, database_paths):
     assert not dat['germline_alignment_d_mask'].empty
 
 
+def test_update_germlines_fail(create_testfolder, processed_files):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    with pytest.raises(KeyError):
+        vdj.update_germlines()
+
+
+def test_update_germlines(create_testfolder, processed_files, database_paths):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    vdj.update_germlines(database_paths['germline'])
+    assert len(vdj.germline) > 0
+
+
 @pytest.mark.parametrize(
     "freq,colname",
     [pytest.param(True, 'mu_freq'),
@@ -243,3 +257,31 @@ def test_formatfasta2(create_testfolder, prefix, suffix, sep, remove):
             assert contig.startswith(prefix + '_')
         else:
             assert contig.startswith(prefix + sep)
+
+
+def test_update_germlines_fail(create_testfolder, processed_files):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    with pytest.raises(KeyError):
+        vdj.update_germline()
+
+
+def test_update_germlines(create_testfolder, processed_files, database_paths,
+                          fasta_10x):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    vdj.update_germline(germline=database_paths['germline'])
+    assert len(vdj.germline) > 0
+    out_file = str(create_testfolder) + "/test_airr_reannotated.h5"
+    vdj.write_h5(out_file)
+    tmp = ddl.read_h5(out_file)
+    assert len(tmp.germline) > 0
+    vdj.update_germline(germline=database_paths['germline'],
+                        corrected=str(create_testfolder) +
+                        "/filtered_contig.fasta")
+    assert len(vdj.germline) > 0
+    vdj.update_germline(germline=database_paths['germline'],
+                        corrected=fasta_10x)
+    assert len(vdj.germline) > 0
+    with pytest.raises(TypeError):
+        vdj.update_germline(germline=database_paths['germline'], corrected=[])
