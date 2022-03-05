@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 16:59:08
+# @Last Modified time: 2022-03-04 23:58:39
 
 import os
 from collections import defaultdict, Iterable
@@ -459,7 +459,7 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
     elif isinstance(obj, pd.DataFrame):
         obj_ = obj.copy()
     else:
-        raise TypeError(
+        raise FileNotFoundError(
             "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
         )
 
