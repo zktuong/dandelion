@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 18:31:49
+# @Last Modified time: 2022-03-05 20:48:43
 
 import os
 import pandas as pd
@@ -3824,8 +3824,8 @@ def run_blastn(
         dat = pd.read_csv(blast_out, sep='\t', header=None)
         dat.columns = [
             'sequence_id', call + '_call', call + '_identity',
-            call + 'alignment_length', call + 'number_of_mismatches',
-            call + 'number_of_gap_openings', call + '_sequence_start',
+            call + '_alignment_length', call + '_number_of_mismatches',
+            call + '_number_of_gap_openings', call + '_sequence_start',
             call + '_sequence_end', call + '_germline_start',
             call + '_germline_end', call + '_support', call + '_score',
             call + '_sequence_alignment', call + '_germline_alignment'
@@ -3833,8 +3833,8 @@ def run_blastn(
     except pd.errors.EmptyDataError:
         dat = pd.DataFrame(columns=[
             'sequence_id', call + '_call', call + '_identity', call +
-            '_alignment_length', call + 'number_of_mismatches', call +
-            'number_of_gap_openings', call + '_sequence_start', call +
+            '_alignment_length', call + '_number_of_mismatches', call +
+            '_number_of_gap_openings', call + '_sequence_start', call +
             '_sequence_end', call + '_germline_start', call +
             '_germline_end', call + '_support', call + '_score', call +
             '_sequence_alignment', call + '_germline_alignment'
