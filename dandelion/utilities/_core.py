@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-05 00:03:48
+# @Last Modified time: 2022-03-07 09:42:40
 
 import os
 from collections import defaultdict
@@ -786,10 +786,10 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         'TRB_only', 'TRD_only', 'TRA_only', 'TRG_only', 'IGK_only', 'IGL_only',
         'Multi', 'unassigned'
     ]
-    # tmp_metadata['locus_status'] = [
-    #     'Multi' if i not in acceptable else i
-    #     for i in tmp_metadata['locus_status']
-    # ]
+    tmp_metadata['locus_status'] = [
+        'Multi' if i not in acceptable else i
+        for i in tmp_metadata['locus_status']
+    ]
     tmp_metadata['locus_status_summary'] = [
         'Multi' if i == 'Multi' else i for i in tmp_metadata['locus_status']
     ]
