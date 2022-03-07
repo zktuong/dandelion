@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-01-27 21:27:31
+# @Last Modified time: 2022-03-07 09:42:40
 
 import os
 from collections import defaultdict
@@ -264,9 +264,11 @@ class Dandelion:
             try:
                 gml = env['GERMLINE']
             except:
-                raise OSError(
-                    'Environmental variable GERMLINE must be set. Otherwise, please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.'
-                )
+                raise KeyError((
+                    'Environmental variable GERMLINE must be set. Otherwise, '
+                    +
+                    'please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files.'
+                ))
             gml = gml + 'imgt/' + org + '/vdj/'
         else:
             if os.path.isdir(germline):
@@ -274,29 +276,39 @@ class Dandelion:
             elif type(germline) is not list:
                 germline_ = [germline]
                 if len(germline_) < 3:
-                    raise OSError(
-                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                    )
+                    raise TypeError((
+                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, '
+                        +
+                        'IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ '
+                        + 'fasta files (with .fasta extension) as a list.'))
                 else:
                     gml = []
                     for x in germline_:
                         if not x.endswith('.fasta'):
-                            raise OSError(
-                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                            )
+                            raise TypeError((
+                                'Input for germline is incorrect. Please provide path to folder containing germline '
+                                +
+                                'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, '
+                                +
+                                'and IGHJ fasta files (with .fasta extension) as a list.'
+                            ))
                         gml.append(x)
             elif type(germline) is list:
                 if len(germline) < 3:
-                    raise OSError(
-                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                    )
+                    raise TypeError((
+                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, '
+                        +
+                        'and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta '
+                        + 'files (with .fasta extension) as a list.'))
                 else:
                     gml = []
                     for x in germline:
                         if not x.endswith('.fasta'):
-                            raise OSError(
-                                'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta files (with .fasta extension) as a list.'
-                            )
+                            raise TypeError((
+                                'Input for germline is incorrect. Please provide path to folder containing germline '
+                                +
+                                'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta '
+                                + 'files (with .fasta extension) as a list.'))
                         gml.append(x)
 
         if type(gml) is not list:
@@ -312,9 +324,9 @@ class Dandelion:
             if 'personalized_ref_dict' in locals():
                 germline_ref.update(personalized_ref_dict)
             else:
-                raise OSError(
-                    'Input for corrected germline fasta is incorrect. Please provide path to file containing corrected germline fasta sequences.'
-                )
+                raise TypeError((
+                    'Input for corrected germline fasta is incorrect. Please provide path to file containing '
+                    + 'corrected germline fasta sequences.'))
 
         self.germline.update(germline_ref)
         logg.info(' finished',
@@ -391,7 +403,8 @@ class Dandelion:
         filename
             path to `.h5` file.
         complib : str, Optional
-            method for compression for data frames. see (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html) for more options.
+            method for compression for data frames. see
+            https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
         compression : str, Optional
             same call as complib. Just a convenience option.
         compression_opts : {0-9}, Optional
@@ -725,38 +738,60 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 if 'locus' + suffix_l in tmp_metadata:
                     if not check_missing(tmp_metadata.loc[i,
                                                           'locus' + suffix_l]):
-                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                             i, 'locus' +
                             suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' +
                                                                  suffix_l]
                     else:
-                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
-                            i, 'locus' + suffix_h] + '_only'
+                        if '|' in tmp_metadata.at[i, 'locus' + suffix_h]:
+                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
+                        else:
+                            tmp_metadata.at[i,
+                                            'locus_status'] = tmp_metadata.loc[
+                                                i,
+                                                'locus' + suffix_h] + '_only'
                 else:
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                         i, 'locus' + suffix_h] + '_only'
             else:
                 if 'locus' + suffix_l in tmp_metadata:
                     if not check_missing(tmp_metadata.loc[i,
                                                           'locus' + suffix_l]):
-                        tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
-                            i, 'locus' + suffix_l] + '_only'
+                        if '|' in tmp_metadata.at[i, 'locus' + suffix_l]:
+                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
+                        else:
+                            tmp_metadata.at[i,
+                                            'locus_status'] = tmp_metadata.loc[
+                                                i,
+                                                'locus' + suffix_l] + '_only'
                     else:
-                        tmp_metadata.at[i, 'status'] = 'unassigned'
+                        tmp_metadata.at[i, 'locus_status'] = 'unassigned'
                 else:
-                    tmp_metadata.at[i, 'status'] = 'unassigned'
+                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
         else:
             if 'locus' + suffix_l in tmp_metadata:
                 if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
-                    tmp_metadata.at[i, 'status'] = tmp_metadata.loc[
+                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
                         i, 'locus' + suffix_l] + '_only'
                 else:
-                    tmp_metadata.at[i, 'status'] = 'unassigned'
+                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
             else:
-                tmp_metadata.at[i, 'status'] = 'unassigned'
+                tmp_metadata.at[i, 'locus_status'] = 'unassigned'
 
-    tmp_metadata['status_summary'] = [
-        'Multi' if '|' in i else i for i in tmp_metadata['status']
+    tmp_metadata['locus_status_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['locus_status']
+    ]
+    acceptable = [
+        'TRB + TRA', 'TRD + TRG', 'IGH + IGK', 'IGH + IGL', 'IGH_only',
+        'TRB_only', 'TRD_only', 'TRA_only', 'TRG_only', 'IGK_only', 'IGL_only',
+        'Multi', 'unassigned'
+    ]
+    tmp_metadata['locus_status'] = [
+        'Multi' if i not in acceptable else i
+        for i in tmp_metadata['locus_status']
+    ]
+    tmp_metadata['locus_status_summary'] = [
+        'Multi' if i == 'Multi' else i for i in tmp_metadata['locus_status']
     ]
 
     for i in tmp_metadata.index:
@@ -1172,36 +1207,3 @@ def update_metadata(self: Dandelion,
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
         self.metadata = tmp_metadata.copy()
-
-
-def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
-    """
-    Reads in or copy dataframe object and set sequence_id as index without dropping.
-
-    Parameters
-    ----------
-    obj : DataFrame, str
-        file path to .tsv file or pandas DataFrame object.
-
-    Returns
-    -------
-    pandas DataFrame object.
-    """
-    if os.path.isfile(str(obj)):
-        try:
-            obj_ = pd.read_csv(obj, sep='\t')
-        except FileNotFoundError as e:
-            print(e)
-    elif isinstance(obj, pd.DataFrame):
-        obj_ = obj.copy()
-    else:
-        raise TypeError(
-            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
-        )
-
-    if 'sequence_id' in obj_.columns:
-        obj_.set_index('sequence_id', drop=False, inplace=True)
-    else:
-        raise KeyError("'sequence_id' not found in columns of input")
-
-    return (obj_)

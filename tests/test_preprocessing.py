@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 import pytest
+import os
 import pandas as pd
 import dandelion as ddl
 from pathlib import Path
 
 from fixtures import (fasta_10x, annotation_10x, create_testfolder,
                       database_paths, dummy_adata, processed_files)
+
+try:
+    os.environ.pop('IGDATA')
+    os.environ.pop('GERMLINE')
+    os.environ.pop('BLASTDB')
+except:
+    pass
 
 
 @pytest.mark.parametrize("filename,expected",
@@ -43,6 +51,20 @@ def test_formatfasta(create_testfolder, filename, expected):
     assert len(list((create_testfolder / 'dandelion').iterdir())) == expected
 
 
+def test_reannotate_fails(create_testfolder, database_paths):
+    with pytest.raises(KeyError):
+        ddl.pp.reannotate_genes(str(create_testfolder),
+                                filename_prefix='filtered')
+    with pytest.raises(KeyError):
+        ddl.pp.reannotate_genes(str(create_testfolder),
+                                igblast_db=database_paths['igblast_db'],
+                                filename_prefix='filtered')
+    with pytest.raises(KeyError):
+        ddl.pp.reannotate_genes(str(create_testfolder),
+                                germline=database_paths['germline'],
+                                filename_prefix='filtered')
+
+
 @pytest.mark.parametrize("filename,expected",
                          [pytest.param('filtered', 3),
                           pytest.param('all', 6)])
@@ -56,6 +78,16 @@ def test_reannotategenes(create_testfolder, database_paths, filename,
         (create_testfolder / 'dandelion/tmp').iterdir())) == expected
 
 
+def test_reassign_alleles_fails(create_testfolder, database_paths):
+    with pytest.raises(TypeError):
+        ddl.pp.reassign_alleles(str(create_testfolder),
+                                filename_prefix='filtered')
+    with pytest.raises(KeyError):
+        ddl.pp.reassign_alleles(str(create_testfolder),
+                                combined_folder='reassigned_filtered',
+                                filename_prefix='filtered')
+
+
 @pytest.mark.parametrize("filename,combine,expected", [
     pytest.param('filtered', 'reassigned_filtered', 9),
     pytest.param('all', 'reassigned_all', 12)
@@ -67,7 +99,8 @@ def test_reassignalleles(create_testfolder, database_paths, filename, combine,
                             germline=database_paths['germline'],
                             filename_prefix=filename,
                             novel=True,
-                            plot=True)
+                            save_plot=True,
+                            show_plot=False)
     assert len(list(
         (create_testfolder / 'dandelion/tmp').iterdir())) == expected
 
@@ -78,14 +111,15 @@ def test_updateblastdb(database_paths):
 
 
 @pytest.mark.parametrize("filename, expected",
-                         [pytest.param('filtered', 6),
-                          pytest.param('all', 7)])
+                         [pytest.param('filtered', 5),
+                          pytest.param('all', 4)])
 def test_assignsisotypes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.assign_isotypes(str(create_testfolder),
                            blastdb=database_paths['blastdb_fasta'],
                            filename_prefix=filename,
-                           plot=False)
+                           save_plot=True,
+                           show_plot=False)
     assert len(list((create_testfolder / 'dandelion').iterdir())) == expected
 
 
@@ -96,6 +130,12 @@ def test_checkccall(create_testfolder, processed_files, filename):
     assert not dat['c_call'].empty
 
 
+def test_create_germlines_fails(create_testfolder, processed_files):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    with pytest.raises(KeyError):
+        ddl.pp.create_germlines(f)
+
+
 def test_create_germlines(create_testfolder, processed_files, database_paths):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
     ddl.pp.create_germlines(f, germline=database_paths['germline'])
@@ -103,6 +143,20 @@ def test_create_germlines(create_testfolder, processed_files, database_paths):
                                  processed_files['germline-dmask'])
     dat = pd.read_csv(f2, sep='\t')
     assert not dat['germline_alignment_d_mask'].empty
+
+
+def test_update_germlines_fail(create_testfolder, processed_files):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    with pytest.raises(KeyError):
+        vdj.update_germlines()
+
+
+def test_update_germlines(create_testfolder, processed_files, database_paths):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    vdj.update_germlines(database_paths['germline'])
+    assert len(vdj.germline) > 0
 
 
 @pytest.mark.parametrize(
@@ -149,6 +203,18 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata,
     assert adata.n_obs == 5
 
 
+def test_assign_isotypes_fails(create_testfolder, database_paths):
+    with pytest.raises(FileNotFoundError):
+        ddl.pp.assign_isotypes(str(create_testfolder),
+                               filename_prefix='filtered',
+                               plot=False)
+    ddl.pp.format_fastas(str(create_testfolder), filename_prefix='filtered')
+    with pytest.raises(KeyError):
+        ddl.pp.assign_isotypes(str(create_testfolder),
+                               filename_prefix='filtered',
+                               plot=False)
+
+
 @pytest.mark.parametrize("prefix,suffix,sep,remove", [
     pytest.param('test', None, None, True),
     pytest.param('test', None, None, False),
@@ -159,8 +225,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata,
     pytest.param('test', 'test', '-', True),
     pytest.param('test', 'test', '-', False),
 ])
-def test_formatfasta2(create_testfolder, prefix, suffix, sep,
-                      remove):
+def test_formatfasta2(create_testfolder, prefix, suffix, sep, remove):
     ddl.pp.format_fastas(str(create_testfolder),
                          filename_prefix='filtered',
                          prefix=prefix,
@@ -192,3 +257,31 @@ def test_formatfasta2(create_testfolder, prefix, suffix, sep,
             assert contig.startswith(prefix + '_')
         else:
             assert contig.startswith(prefix + sep)
+
+
+def test_update_germlines_fail(create_testfolder, processed_files):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    with pytest.raises(KeyError):
+        vdj.update_germline()
+
+
+def test_update_germlines(create_testfolder, processed_files, database_paths,
+                          fasta_10x):
+    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
+    vdj = ddl.Dandelion(f)
+    vdj.update_germline(germline=database_paths['germline'])
+    assert len(vdj.germline) > 0
+    out_file = str(create_testfolder) + "/test_airr_reannotated.h5"
+    vdj.write_h5(out_file)
+    tmp = ddl.read_h5(out_file)
+    assert len(tmp.germline) > 0
+    vdj.update_germline(germline=database_paths['germline'],
+                        corrected=str(create_testfolder) +
+                        "/filtered_contig.fasta")
+    assert len(vdj.germline) > 0
+    vdj.update_germline(germline=database_paths['germline'],
+                        corrected=fasta_10x)
+    assert len(vdj.germline) > 0
+    with pytest.raises(TypeError):
+        vdj.update_germline(germline=database_paths['germline'], corrected=[])

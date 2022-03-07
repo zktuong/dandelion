@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-20 16:47:32
+# @Last Modified time: 2022-03-04 16:31:11
 
 import os
 import json
@@ -719,6 +719,11 @@ def change_file_location(data: Sequence,
         'blast': '_igblast_db-pass.tsv',
         'airr': '_igblast_gap.tsv'
     }
+    # informat_dict2 = {
+    #     'changeo': '_igblast_db-fail.tsv',
+    #     'blast': '_igblast_db-fail.tsv',
+    #     'airr': '_igblast_gap.tsv'
+    # }
 
     filePath = None
 
@@ -728,7 +733,7 @@ def change_file_location(data: Sequence,
                                   endswith=informat_dict[fileformat],
                                   subdir='tmp')
         if filePath is None:
-            raise OSError(
+            raise FileNotFoundError(
                 'Path to .tsv file for {} is unknown. '.format(data[i]) +
                 'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
             )
@@ -745,4 +750,47 @@ def change_file_location(data: Sequence,
             tmp[x] = pd.Series(airr_output[x])
         tmp.to_csv(filePath, sep='\t', index=False)
         cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
+        run(cmd)
+
+
+def move_to_tmp(data: Sequence,
+                filename_prefix: Optional[Union[Sequence, str]] = None):
+    if type(data) is not list:
+        data = [data]
+    if type(filename_prefix) is not list:
+        filename_prefix = [filename_prefix]
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+
+    for i in range(0, len(data)):
+        filePath1 = check_filepath(data[i],
+                                   filename_prefix=filename_prefix[i],
+                                   endswith='_annotations.csv')
+        filePath2 = check_filepath(data[i],
+                                   filename_prefix=filename_prefix[i],
+                                   endswith='.fasta')
+        cmd1 = ['mv', '-f', filePath1, filePath1.rsplit('/', 1)[0] + '/tmp']
+        cmd2 = ['mv', '-f', filePath2, filePath2.rsplit('/', 1)[0] + '/tmp']
+        run(cmd1)
+        run(cmd2)
+
+
+def rename_dandelion(data: Sequence,
+                     filename_prefix: Optional[Union[Sequence, str]] = None,
+                     endswith='_igblast_db-pass_genotyped.tsv'):
+    if type(data) is not list:
+        data = [data]
+    if type(filename_prefix) is not list:
+        filename_prefix = [filename_prefix]
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+
+    for i in range(0, len(data)):
+        filePath = check_filepath(data[i],
+                                  filename_prefix=filename_prefix[i],
+                                  endswith=endswith)  # must be whatever's after contig
+        cmd = [
+            'mv', '-f', filePath,
+            filePath.rsplit(endswith)[0] + '_dandelion.tsv'
+        ]
         run(cmd)

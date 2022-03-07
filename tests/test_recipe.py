@@ -19,10 +19,18 @@ def test_recipe():
                 f.write(r.raw.read())
         os.system('tar -xzvf filtered_gene_bc_matrices.tar.gz')
         adata = sc.read_10x_mtx('filtered_gene_bc_matrices/hg19')
-    ddl.pp.external.recipe_scanpy_qc(adata)
-    assert not adata.obs['filter_rna'].empty
-    # ddl.pp.external.recipe_scanpy_qc(adata, mito_cutoff = None) # weird segmentation fault in the tests
-    # assert not adata.obs['gmm_pct_count_clusters_keep'].empty
+    _adata = adata.copy()
+    ddl.pp.external.recipe_scanpy_qc(_adata)
+    assert not _adata.obs['filter_rna'].empty
+    _adata = adata.copy()
+    ddl.pp.external.recipe_scanpy_qc(_adata, mito_cutoff = None)  # weird segmentation fault in the tests
+    assert not _adata.obs['gmm_pct_count_clusters_keep'].empty
+    _adata = adata.copy()
+    ddl.pp.external.recipe_scanpy_qc(_adata, min_counts= 100, max_counts = 20000)
+    _adata = adata.copy()
+    ddl.pp.external.recipe_scanpy_qc(_adata, min_counts= 100)
+    _adata = adata.copy()
+    ddl.pp.external.recipe_scanpy_qc(_adata, max_counts = 20000)
 
 
 def test_update_plus(airr_reannotated):

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-17 20:25:07
+# @Last Modified time: 2022-03-04 23:58:39
 
 import os
 from collections import defaultdict, Iterable
@@ -459,12 +459,13 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
     elif isinstance(obj, pd.DataFrame):
         obj_ = obj.copy()
     else:
-        raise TypeError(
+        raise FileNotFoundError(
             "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
         )
 
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop=False, inplace=True)
+        obj_['cell_id'] = [c.split('_contig')[0] for c in obj_['sequence_id']]
     else:
         raise KeyError("'sequence_id' not found in columns of input")
 
@@ -496,3 +497,28 @@ class Contig:
     @property
     def contig(self):
         return self._contig
+
+
+def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
+    for i in range(0, len(data)):
+        filePath = check_filepath(data[i],
+                                  filename_prefix=filename_prefix[i],
+                                  endswith='_igblast_db-pass.tsv')
+        if filePath is None:
+            raise FileNotFoundError(
+                'Path to .tsv file for {} is unknown. '.format(data[i]) +
+                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
+            )
+
+        dat = load_data(filePath)
+        if 'd_support_blastn' in dat:
+            dat['d_call'] = [
+                '' if s > d_evalue_threshold else c
+                for c, s in zip(dat['d_call'], dat['d_support_blastn'])
+            ]
+        if 'j_support_blastn' in dat:
+            dat['j_call'] = [
+                '' if s > j_evalue_threshold else c
+                for c, s in zip(dat['j_call'], dat['j_support_blastn'])
+            ]
+            dat.to_csv(filePath, sep='\t', index=False)

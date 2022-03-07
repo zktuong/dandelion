@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-11-03 23:06:15
+# @Last Modified time: 2022-03-05 20:48:43
 
 import os
 import pandas as pd
@@ -46,10 +46,11 @@ def format_fasta(fasta: Union[PathLike, str],
                  suffix: Optional[str] = None,
                  sep: Optional[str] = None,
                  remove_trailing_hyphen_number: bool = True,
+                 high_confidence_filtering: bool = False,
                  outdir: Optional[str] = None,
                  filename_prefix: Optional[str] = None):
     """
-    Add prefix to the headers/contig ids in cellranger fasta and annotation file.
+    Add prefix to the headers/contig ids in input fasta and annotation file.
 
     Parameters
     ----------
@@ -60,9 +61,13 @@ def format_fasta(fasta: Union[PathLike, str],
     suffix : str, Optional
         suffix to append to the headers/contig ids.
     sep : str, Optional
-        separator after prefix or before suffix to append to the headers/contig ids.
+        separator after prefix or before suffix to append to the headers/contig
+        ids.
     remove_trailing_hyphen_number : bool
-        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        ell/contig barcodes.
+    high_confidence_filtering : bool
+        whether ot not to filter to only `high confidence` contigs.
     outdir : str, Optional
         path to output location. None defaults to 'dandelion'.
     filename_prefix : str, Optional
@@ -81,10 +86,10 @@ def format_fasta(fasta: Union[PathLike, str],
     filePath = check_fastapath(fasta, filename_prefix=filename_pre)
 
     if filePath is None:
-        raise OSError(
-            'Path to fasta file is unknown. ' +
-            'Please specify path to fasta file or folder containing fasta file. '
-            + 'Starting folder should only contain 1 fasta file.')
+        raise FileNotFoundError(
+            'Path to fasta file is unknown. Please ' +
+            'specify path to fasta file or folder containing fasta file. ' +
+            'Starting folder should only contain 1 fasta file.')
 
     fh = open(filePath, 'r')
     seqs = {}
@@ -148,15 +153,6 @@ def format_fasta(fasta: Union[PathLike, str],
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-
-    out_fasta = out_dir + os.path.basename(filePath)
-
-    fh1 = open(out_fasta, 'w')
-    fh1.close()
-    out = ''
-    for l in seqs:
-        out = '>' + l + '\n' + seqs[l] + '\n'
-        Write_output(out, out_fasta)
 
     # format the barcode and contig_id in the corresponding annotation file too
     anno = basedir + '/' + \
@@ -231,7 +227,23 @@ def format_fasta(fasta: Union[PathLike, str],
 
     out_anno = out_dir + \
         os.path.basename(filePath).replace('.fasta', '_annotations.csv')
+    out_fasta = out_dir + os.path.basename(filePath)
+    fh1 = open(out_fasta, 'w')
+    fh1.close()
+    out = ''
 
+    if high_confidence_filtering:
+        hiconf_contigs = [
+            x for x, y in zip(data['contig_id'], data['high_confidence'])
+            if y in TRUES
+        ]
+        seqs = {hiconf: seqs[hiconf] for hiconf in hiconf_contigs}
+
+        data = data[data['contig_id'].isin(hiconf_contigs)]
+
+    for l in seqs:
+        out = '>' + l + '\n' + seqs[l] + '\n'
+        Write_output(out, out_fasta)
     data.to_csv(out_anno, index=False)
 
 
@@ -240,10 +252,11 @@ def format_fastas(fastas: Sequence,
                   suffix: Optional[Sequence] = None,
                   sep: Optional[str] = None,
                   remove_trailing_hyphen_number: bool = True,
+                  high_confidence_filtering: bool = False,
                   outdir: Optional[str] = None,
                   filename_prefix: Optional[Union[Sequence, str]] = None):
     """
-    Add prefix to the headers/contig ids in cellranger fasta and annotation file.
+    Add prefix to the headers/contig ids in input fasta and annotation file.
 
     Parameters
     ----------
@@ -254,13 +267,18 @@ def format_fastas(fastas: Sequence,
     suffix : str, Optional
         list of suffixes to append to headers/contig ids in each fasta file.
     sep : str, Optional
-        separator after prefix or before suffix to append to the headers/contig ids.
+        separator after prefix or before suffix to append to the headers/contig
+        ids.
     remove_trailing_hyphen_number : bool
-        whether or not to remove the trailing hyphen number e.g. '-1' from the cell/contig barcodes.
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+    high_confidence_filtering : bool
+        whether ot not to filter to only `high confidence` contigs.
     outdir : str, Optional
         path to out put location. Default is None, which is 'dandelion'.
     filename_prefix : str, Optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. None defaults to
+        'filtered'.
 
     Returns
     -------
@@ -290,6 +308,7 @@ def format_fastas(fastas: Sequence,
                 suffix=None,
                 sep=None,
                 remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                high_confidence_filtering=high_confidence_filtering,
                 outdir=outdir,
                 filename_prefix=filename_prefix[i])
         elif prefix is not None:
@@ -300,6 +319,7 @@ def format_fastas(fastas: Sequence,
                     suffix=suffix_dict[fastas[i]],
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
             else:
@@ -309,6 +329,7 @@ def format_fastas(fastas: Sequence,
                     suffix=None,
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
         else:
@@ -319,6 +340,7 @@ def format_fastas(fastas: Sequence,
                     suffix=suffix_dict[fastas[i]],
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
             else:
@@ -328,6 +350,7 @@ def format_fastas(fastas: Sequence,
                     suffix=None,
                     sep=None,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    high_confidence_filtering=high_confidence_filtering,
                     outdir=outdir,
                     filename_prefix=filename_prefix[i])
 
@@ -335,6 +358,7 @@ def format_fastas(fastas: Sequence,
 def assign_isotype(fasta: Union[str, PathLike],
                    fileformat: Literal['blast', 'changeo', 'airr'] = 'blast',
                    org: Literal['human', 'mouse'] = 'human',
+                   evalue: float = 1e-4,
                    correct_c_call: bool = True,
                    correction_dict: Union[Dict, None] = None,
                    plot: bool = True,
@@ -356,15 +380,23 @@ def assign_isotype(fasta: Union[str, PathLike],
     fasta : str, PathLike
         path to fasta file.
     fileformat : str
-        format of V(D)J file/objects. Default is 'blast'. Also accepts 'changeo' (same behaviour as 'blast') and 'airr'.
+        format of V(D)J file/objects. Default is 'blast'. Also accepts
+        'changeo' (same behaviour as 'blast') and 'airr'.
     org : str
         organism of reference folder. Default is 'human'.
+    evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
     correct_c_call : bool
-        whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
-        Default is True.
+        whether or not to adjust the c_calls after blast based on provided
+        primers specified in `primer_dict` option. Default is True.
     correction_dict : Dict, Optional
-        a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting
-        annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
+        a nested dictionary contain isotype/c_genes as keys and primer
+        sequences as records to use for correcting annotated c_calls. Defaults
+        to a curated dictionary for human sequences if left as none.
     plot : bool
         whether or not to plot reassignment summary metrics. Default is True.
     save_plot : bool
@@ -380,281 +412,18 @@ def assign_isotype(fasta: Union[str, PathLike],
     parallel : bool
         whether or not to use parallelization. Default is True.
     ncpu : int
-        number of cores to use if parallel is True. Default is all available minus 1.
+        number of cores to use if parallel is True. Default is all
+        available minus 1.
     filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
-        whether or not to print the blast command in terminal. Default is False.
+        whether or not to print the blast command in terminal.
+        Default is False.
 
     Returns
     -------
     V(D)J tsv files with constant genes annotated.
     """
-    def _run_blastn(fasta, blastdb, fileformat, org, verbose):
-
-        env = os.environ.copy()
-        if blastdb is None:
-            try:
-                bdb = env['BLASTDB']
-            except:
-                raise OSError(
-                    'Environmental variable BLASTDB must be set. Otherwise, please provide path to blast database'
-                )
-            bdb = bdb + org + '/' + org + '_BCR_C.fasta'
-        else:
-            env['BLASTDB'] = blastdb
-            bdb = blastdb
-
-        cmd = [
-            'blastn', '-db', bdb, '-evalue', '0.001', '-max_target_seqs', '1',
-            '-outfmt', '5', '-query', fasta
-        ]
-
-        blast_out = "{}/tmp/{}.xml".format(
-            os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + fileformat)
-
-        if verbose:
-            print('Running command: %s\n' % (' '.join(cmd)))
-        with open(blast_out, 'w') as out:
-            run(cmd, stdout=out, env=env)
-
-    def _parse_BLAST(fasta, fileformat):
-        """Parse BLAST output from output files and writes formatted output to BLAST output summary files."""
-        def split_blast_file(filename):
-            """
-            Split blast file.
-
-            Code adapted from:
-            http://stackoverflow.com/questions/19575702/pythonhow-to-split-file-into-chunks-by-the-occurrence-of-the-header-word.
-
-            """
-            token = '<Iteration>'
-            chunks = []
-            current_chunk = []
-
-            with open(filename) as fh:
-                for line in fh:
-                    line = line.rstrip()
-
-                    if line.startswith(token) and current_chunk:
-                        chunks.append(current_chunk[:])
-                        current_chunk = []
-                    if not line.startswith("Total queries"):
-                        current_chunk.append(line)
-
-                chunks.append(current_chunk)
-            return (chunks)
-
-        def extract_blast_info(line):
-            line = line.split()[0]
-            info = line.split(">")[1]
-            info = info.split("<")[0]
-            return (info)
-
-        input_file = "{}/tmp/{}.xml".format(
-            os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + fileformat)
-        output_file = "{}/tmp/{}.blastsummary.txt".format(
-            os.path.dirname(fasta),
-            os.path.basename(fasta).split('.fasta')[0] + fileformat)
-
-        with open(output_file, 'w') as outfile:
-            outfile.write(
-                "------------------\n##{}##\n------------------\n\n#BCR#\n\n".
-                format(fasta))
-            # Split result file into chunks corresponding to results for each query sequence.
-            if os.path.isfile(input_file):
-                blast_result_chunks = split_blast_file(input_file)
-                for chunk in blast_result_chunks:
-                    message = False
-                    for line_x in chunk:
-                        line_x = line_x.strip()
-                        if line_x.startswith("<Iteration_query-def>"):
-                            line = line_x.split(">")[1]
-                            blast_query_name = line.split("<")[0]
-                        elif line_x.startswith("<Hsp_evalue>"):
-                            evalue = extract_blast_info(line_x)
-                            evalue = format(float(evalue), '.0e')
-                        elif line_x.startswith("<Hit_accession>"):
-                            C_segment = extract_blast_info(line_x)
-                            if "C-REGION" or "CH1" in C_segment:
-                                C_segment = C_segment.split("_")[0]
-                        elif line_x.startswith("<Hsp_bit-score>"):
-                            bit_score = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_query-from>"):
-                            q_start = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_query-to>"):
-                            q_end = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_hit-from>"):
-                            s_start = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_hit-to>"):
-                            s_end = extract_blast_info(line_x)
-                        elif line_x.startswith("<Iteration_query-len>"):
-                            query_length = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_align-len>"):
-                            align_length = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_gaps>"):
-                            gaps = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_identity>"):
-                            identity = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_qseq>"):
-                            c_qseq = extract_blast_info(line_x)
-                        elif line_x.startswith("<Hsp_hseq>"):
-                            c_hseq = extract_blast_info(line_x)
-                        elif line_x.startswith(
-                                "<Iteration_message>No hits found"):
-                            message = True
-                            out_string = "##{blast_query_name}##\nNo C segment found\n\n".format(
-                                blast_query_name=blast_query_name)
-                            outfile.write(out_string)
-                        # Create output string when reaching end of BLAST
-                        # iteration result (marked by </Iteration>) and write
-                        # to BLAST summary file
-                        elif line_x.startswith(
-                                "</Iteration>") and message is not True:
-                            identity_pro = float(identity) / int(
-                                align_length) * 100
-                            identity_pro = format(identity_pro, '.2f')
-                            mismatches = int(align_length) - int(identity)
-                            # Account for reversed sequences
-                            if int(s_start) > int(s_end):
-                                blast_query_name = "reversed|" + blast_query_name
-                                x, y = int(q_start), int(q_end)
-                                q_start = int(query_length) - y + 1
-                                q_end = int(query_length) - x + 1
-                                s_start, s_end = s_end, s_start
-                            intro_string = "##{}##\nC segment:\t{}\n\n".format(
-                                blast_query_name, C_segment)
-                            header_string = (
-                                "Segment\tquery_id\tsubject_id\t% identity\talignment length\t"
-                                "mismatches\tgap opens\tgaps\tq start\tq end\ts start\ts end\t"
-                                "evalue\tbit score\n")
-                            tmp_out = (
-                                "C\t{blast_query_name}\t{C_segment}\t{identity_pro}\t{align_length}\t"
-                                "{mismatches}\tNA\t{gaps}\t{q_start}\t{q_end}\t{s_start}\t{s_end}\t"
-                                "{evalue}\t{bit_score}\t{q_seq}\t{h_seq}\n\n")
-                            out_string = tmp_out.format(
-                                blast_query_name=blast_query_name,
-                                C_segment=C_segment,
-                                identity_pro=identity_pro,
-                                align_length=align_length,
-                                evalue=evalue,
-                                mismatches=mismatches,
-                                gaps=gaps,
-                                q_start=q_start,
-                                q_end=q_end,
-                                s_start=s_start,
-                                s_end=s_end,
-                                bit_score=bit_score,
-                                q_seq=c_qseq,
-                                h_seq=c_hseq)
-                            string_to_write = intro_string + header_string + out_string
-                            outfile.write(string_to_write)
-
-    def _get_C(fasta, fileformat, allele=False, parallel=True, ncpu=None):
-        def _get_C_call(fasta, contig_name, fileformat, allele=False):
-            blast_summary_file = "{}/tmp/{}.blastsummary.txt".format(
-                os.path.dirname(fasta),
-                os.path.basename(fasta).split('.fasta')[0] + fileformat)
-
-            C_seq, C_germ, C_gene, C_ident = None, None, None, None
-            C_eval, C_bitscore, C_qstart, C_qend = None, None, None, None
-            with open(blast_summary_file, 'r') as input:
-                for line in input:
-                    if line.startswith("C\t{contig_name}".format(
-                            contig_name=contig_name)) or line.startswith(
-                                "C\treversed|{contig_name}".format(
-                                    contig_name=contig_name)):
-                        C_gene = line.split("\t")[2]
-                        C_ident = line.split("\t")[3]
-                        C_seq = line.split("\t")[14]
-                        C_germ = line.split("\t")[15]
-                        C_eval = line.split("\t")[12]
-                        C_bitscore = line.split("\t")[13]
-                        C_qstart = line.split("\t")[8]
-                        C_qend = line.split("\t")[9]
-
-                        if "_CH1" or "_C-REGION" in C_gene:
-                            C_gene = C_gene.split("_")[0]
-            if not allele:
-                try:
-                    C_gene = C_gene.split('*')[0]
-                except:
-                    pass
-
-            C_call, C_identity, C_sequence, C_germline, C_support, C_score, C_start, C_end, = {
-            }, {}, {}, {}, {}, {}, {}, {}
-            C_call[contig_name] = C_gene
-            C_identity[contig_name] = C_ident
-            C_sequence[contig_name] = C_seq
-            C_germline[contig_name] = C_germ
-            C_support[contig_name] = C_eval
-            C_score[contig_name] = C_bitscore
-            C_start[contig_name] = C_qstart
-            C_end[contig_name] = C_qend
-
-            return (C_sequence, C_germline, C_call, C_identity, C_support,
-                    C_score, C_start, C_end)
-
-        fh = open(fasta, 'r')
-        contigs = []
-        for header, sequence in fasta_iterator(fh):
-            contigs.append(header)
-        fh.close()
-
-        if parallel:
-            if ncpu is None:
-                num_cores = multiprocessing.cpu_count() - 1
-            else:
-                num_cores = int(ncpu)
-            results = ()
-            results = Parallel(
-                n_jobs=num_cores
-            )(delayed(_get_C_call)(fasta, c, fileformat, allele) for c in tqdm(
-                contigs,
-                desc='Retrieving contant region calls, parallelizing with ' +
-                str(num_cores) + ' cpus '))
-            # transform list of dicts to dict
-            seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
-            for r in range(0, len(results)):
-                _seq, _germ, _call, _ident, _support, _score, _start, _end = results[
-                    r]
-                seq.update(_seq)
-                germ.update(_germ)
-                call.update(_call)
-                ident.update(_ident)
-                support.update(_support)
-                score.update(_score)
-                start.update(_start)
-                end.update(_end)
-        else:
-            seq, germ, call, ident, support, score, start, end = {}, {}, {}, {}, {}, {}, {}, {}
-            for c in tqdm(contigs, desc='Retrieving contant region calls '):
-                seq[c], germ[c], call[c], ident[c], support[c], score[
-                    c], start[c], end[c] = _get_C_call(fasta, c, fileformat,
-                                                       allele)[c]
-        return (seq, germ, call, ident, support, score, start, end)
-
-    def _transfer_c(data, c_dict, colname):
-        _data = load_data(data)
-        if colname not in _data.columns:
-            _data = _data.merge(pd.DataFrame.from_dict(c_dict,
-                                                       orient='index',
-                                                       columns=[colname]),
-                                left_index=True,
-                                right_index=True)
-        else:
-            _data[colname] = pd.Series(c_dict)
-        return (_data)
-
-    def _add_cell(data):
-        _data = load_data(data)
-        _data['cell_id'] = [
-            c.split('_contig')[0] for c in _data['sequence_id']
-        ]
-        return (_data)
-
     aligner = Align.PairwiseAligner()
 
     def two_gene_correction(self, i, dictionary):
@@ -809,25 +578,23 @@ def assign_isotype(fasta: Union[str, PathLike],
                               filename_prefix=filename_prefix,
                               endswith='.fasta')
     if filePath is None:
-        raise OSError(
-            'Path to fasta file is unknown. Please specify path to fasta file or folder containing fasta file.'
-        )
+        raise FileNotFoundError(
+            ('Path to fasta file is unknown. Please specify path to ' +
+             'fasta file or folder containing fasta file.'))
 
-    if verbose:
-        print('Processing {} \n'.format(filePath))
-
-    # running blast using blast
-    if verbose:
-        print('Running blastn \n')
-    _run_blastn(filePath, blastdb, format_dict[fileformat], org, verbose)
-    # parsing output into a summary.txt file
-    if verbose:
-        print('Parsing blast output \n')
-    _parse_BLAST(filePath, format_dict[fileformat])
-    # Add the c_calls to the data file
-    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = {}, {}, {}, {}, {}, {}, {}, {}
-    c_seq, c_germ, c_call, c_ident, c_supp, c_scr, c_st, c_en = _get_C(
-        filePath, format_dict[fileformat], allele, parallel, ncpu)
+    blast_out = run_blastn(
+        fasta=filePath,
+        database=blastdb,
+        org=org,
+        loci='ig',
+        call='c',
+        max_hsps=1,
+        evalue=evalue,
+        outfmt=('6 qseqid sseqid pident length mismatch gapopen ' +
+                'qstart qend sstart send evalue bitscore qseq sseq'),
+        dust='no',
+        verbose=verbose)
+    blast_out.drop_duplicates(subset='sequence_id', keep='first', inplace=True)
 
     _file = "{}/tmp/{}_genotyped.tsv".format(
         os.path.dirname(filePath),
@@ -848,14 +615,12 @@ def assign_isotype(fasta: Union[str, PathLike],
     res_10x['c_call'] = res_10x['c_call'].fillna(value='None')
     if verbose:
         print('Preparing new calls \n')
-    dat = _transfer_c(_file, c_call, 'c_call')
-    dat = _transfer_c(dat, c_seq, 'c_sequence_alignment')
-    dat = _transfer_c(dat, c_germ, 'c_germline_alignment')
-    dat = _transfer_c(dat, c_st, 'c_sequence_start')
-    dat = _transfer_c(dat, c_en, 'c_sequence_end')
-    dat = _transfer_c(dat, c_scr, 'c_score')
-    dat = _transfer_c(dat, c_ident, 'c_identity')
-    dat = _transfer_c(dat, c_supp, 'c_support')
+    dat = load_data(_file)
+    for col in [
+            'c_call', 'c_sequence_alignment', 'c_germline_alignment',
+            'c_sequence_start', 'c_sequence_end', 'c_score', 'c_identity'
+    ]:
+        dat[col] = pd.Series(blast_out[col])
     res_blast = pd.DataFrame(dat['c_call'])
     res_blast = res_blast.fillna(value='None')
 
@@ -889,14 +654,14 @@ def assign_isotype(fasta: Union[str, PathLike],
         res = pd.concat([res_10x_sum, res_blast_sum])
 
     res = res.reset_index(drop=True)
+    res['c_call'] = res['c_call'].fillna(value='None')
+    res['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in res['c_call']]
     res['c_call'] = res['c_call'].astype('category')
     res['c_call'] = res['c_call'].cat.reorder_categories(
         sorted(list(set(res['c_call'])), reverse=True))
 
     if verbose:
         print('Finishing up \n')
-    if 'cell_id' not in dat.columns:
-        dat = _add_cell(dat)
     dat['c_call_10x'] = pd.Series(dat_10x['c_call'])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
@@ -908,6 +673,10 @@ def assign_isotype(fasta: Union[str, PathLike],
     ]
     for x in cols_to_merge:
         dat[x] = pd.Series(airr_output[x])
+
+    # remove allellic calls
+    dat['c_call'] = dat['c_call'].fillna(value='')
+    dat['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in dat['c_call']]
     dat.to_csv(_file2, sep='\t', index=False)
 
     if plot:
@@ -934,6 +703,9 @@ def assign_isotype(fasta: Union[str, PathLike],
         else:
             if show_plot:
                 print(p)
+    # move and rename
+    move_to_tmp(fasta, filename_prefix)
+    rename_dandelion(fasta, filename_prefix)
 
 
 def assign_isotypes(fastas: Sequence,
@@ -1029,29 +801,88 @@ def reannotate_genes(data: Sequence,
                      loci: Literal['ig', 'tr'] = 'ig',
                      extended: bool = True,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
+                     flavour: Literal['strict', 'original'] = 'strict',
+                     min_j_match: int = 7,
+                     min_d_match: int = 9,
+                     v_evalue: float = 1e-4,
+                     d_evalue: float = 1e-3,
+                     j_evalue: float = 1e-4,
+                     reassign_dj: bool = False,
+                     overwrite: bool = True,
+                     dust: Optional[Union[Literal['yes', 'no'], str]] = 'no',
                      verbose: bool = False):
     """
-    Reannotate cellranger fasta files with igblastn and parses to airr/changeo data format.
+    Reannotate cellranger fasta files with igblastn and parses to airr format.
 
     Parameters
     ----------
     data : Sequence
-        list of fasta file locations, or folder name containing fasta files. if provided as a single string,
-        it will first be converted to a list; this allows for the function to be run on single/multiple samples.
+        list of fasta file locations, or folder name containing fasta files.
+        if provided as a single string, it will first be converted to a list;
+        this allows for the function to be run on single/multiple samples.
     igblast_db : str, PathLike, Optional
-        path to igblast database folder. Defaults to `$IGDATA` environmental variable.
+        path to igblast database folder. Defaults to `$IGDATA` environmental
+        variable.
     germline : str, PathLike, Optional
-        path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+        path to germline database folder. Defaults to `$GERMLINE` environmental
+        variable.
     org : str
         organism of germline database. Default is 'human'.
     loci : str
-        mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for TCRs.
+        mode for igblastn. Default is 'ig' for BCRs. Also accepts 'tr' for
+        TCRs.
     extended : bool
-        whether or not to transfer additional 10X annotions to output file. Default is True.
+        whether or not to transfer additional 10X annotions to output file.
+        Default is True.
     filename_prefix : str, Optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. None defaults
+        to 'filtered'.
+    flavour : str
+        Either 'dandelion' or 'immcantation'. Determines how igblastnshould
+        be run. Running in 'dandelion' flavour will add the additional the
+        evalue and min_d_match options to the run.
+    v_evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets. for v gene.
+    d_evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets. for d gene.
+    j_evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets. for j gene.
+    min_d_match : int
+        Minimum D gene nucleotide matches. This controls the threshold for
+        D gene detection. You can set the minimal number of required
+        consecutive nucleotide matches between the query sequence and the D
+        genes based on your own criteria. Note that the matches do not include
+        overlapping matches at V-D or D-J junctions.
+    min_j_match : int
+        Minimum D gene nucleotide matches. This controls the threshold for
+        D gene detection. You can set the minimal number of required
+        consecutive nucleotide matches between the query sequence and the D
+        genes based on your own criteria. Note that the matches do not include
+        overlapping matches at V-D or D-J junctions.
+    reassign_dj : bool
+        whether or not to perform a targetted blastn reassignment for D and J genes.
+        Default is False.
+    dust: str
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    overwrite: bool
+        whether or not to overwrite the assignment if flavour = 'strict'.
     verbose :
-        whether or not to print the igblast command used in the terminal. Default is False.
+        whether or not to print the igblast command used in the terminal.
+        Default is False.
 
     Returns
     -------
@@ -1071,13 +902,13 @@ def reannotate_genes(data: Sequence,
                                   endswith='.fasta')
         if filePath is None:
             if filename_prefix[i] is not None:
-                raise OSError(
+                raise FileNotFoundError(
                     'Path to fasta file with filename prefix `{}_contig` is unknown. '
                     .format(filename_prefix[i]) +
                     'Please specify path to fasta file or folder containing fasta file.'
                 )
             else:
-                raise OSError(
+                raise FileNotFoundError(
                     'Path to fasta file is unknown. ' +
                     'Please specify path to fasta file or folder containing fasta file.'
                 )
@@ -1085,18 +916,60 @@ def reannotate_genes(data: Sequence,
         if verbose:
             print('Processing {} \n'.format(filePath))
 
-        assigngenes_igblast(filePath,
-                            igblast_db=igblast_db,
-                            org=org,
-                            loci=loci,
-                            verbose=verbose)
+        if flavour == 'original':
+            assigngenes_igblast(filePath,
+                                igblast_db=igblast_db,
+                                org=org,
+                                loci=loci,
+                                verbose=verbose)
+        elif flavour == 'strict':
+            run_igblastn(filePath,
+                         igblast_db=igblast_db,
+                         org=org,
+                         loci=loci,
+                         evalue=v_evalue,
+                         min_d_match=min_d_match,
+                         verbose=verbose)
         makedb_igblast(filePath,
                        org=org,
                        germline=germline,
                        extended=extended,
                        verbose=verbose)
+        # block this for now, until I figure out if it's
+        # worth it
+        if flavour == 'strict':
+            if reassign_dj:
+                assign_DJ(fasta=filePath,
+                          org=org,
+                          loci=loci,
+                          call='j',
+                          database=igblast_db,
+                          evalue=j_evalue,
+                          filename_prefix=filename_prefix,
+                          dust=dust,
+                          word_size=min_j_match,
+                          overwrite=overwrite,
+                          verbose=verbose)
+                assign_DJ(filePath,
+                          org=org,
+                          loci=loci,
+                          call='d',
+                          database=igblast_db,
+                          evalue=d_evalue,
+                          filename_prefix=filename_prefix,
+                          dust=dust,
+                          word_size=min_d_match,
+                          overwrite=overwrite,
+                          verbose=verbose)
+
     if loci == 'tr':
         change_file_location(data, filename_prefix)
+        if flavour == 'strict':
+            mask_dj(data, filename_prefix, d_evalue, j_evalue)
+        move_to_tmp(data, filename_prefix)
+        rename_dandelion(data,
+                         filename_prefix,
+                         endswith='_igblast_db-pass.tsv')
 
 
 def reassign_alleles(data: Sequence,
@@ -1119,31 +992,36 @@ def reassign_alleles(data: Sequence,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
                      verbose: bool = False):
     """
-    Correct allele calls based on a personalized genotype using tigger-reassignAlleles.
+    Correct allele calls based on a personalized genotype using tigger.
 
-    It uses a subject-specific genotype to correct correct preliminary allele assignments of a set of
-    sequences derived from a single subject.
+    It uses a subject-specific genotype to correct correct preliminary allele
+    assignments of a set ofsequences derived from a single subject.
 
     Parameters
     ----------
     data : Sequence
-        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
-        list; this allows for the function to be run on single/multiple samples.
+        list of data folders containing the .tsv files. if provided as a single
+        string, it will first be converted to a list; this allows for the
+        function to be run on single/multiple samples.
     combined_folder : str, PathLike
         name of folder for concatenated data file and genotyped files.
     v_germline : str, Optional
-        path to heavy chain v germline fasta. Defaults to IGHV fasta in `$GERMLINE` environmental variable.
+        path to heavy chain v germline fasta. Defaults to IGHV fasta in
+        `$GERMLINE` environmental variable.
     germline : str, Optional
-        path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+        path to germline database folder. Defaults to `$GERMLINE` environmental
+        variable.
     org : str
         organism of germline database. Default is 'human'.
     v_field : str
-        name of column containing the germline V segment call. Default is 'v_call_genotyped' (airr) for after tigger.
+        name of column containing the germline V segment call. Default is
+        v_call_genotyped' (airr) for after tigger.
     germ_types : str
-        Specify type of germline for reconstruction. Accepts one of : 'full', 'dmask', 'vonly', 'region'.
-        Default is 'dmask'.
+        Specify type of germline for reconstruction. Accepts one of : 'full',
+        'dmask', 'vonly', 'region'. Default is 'dmask'.
     novel : bool
-        whether or not to run novel allele discovery during tigger-genotyping. Default is True (yes).
+        whether or not to run novel allele discovery during tigger-genotyping.
+        Default is True (yes).
     cloned : bool
         whether or not to run CreateGermlines.py with `--cloned`.
     plot : bool
@@ -1157,13 +1035,16 @@ def reassign_alleles(data: Sequence,
     sample_id_dictionary : dict, Optional
         dictionary for creating a sample_id column in the concatenated file.
     filename_prefix : str, Optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. None defaults to
+        'filtered'.
     verbose : bool
-        Whether or not to print the command used in the terminal. Default is False.
+        Whether or not to print the command used in the terminal. Default is
+        False.
 
     Returns
     -------
-    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+    Individual V(D)J data files with v_call_genotyped column containing
+    reassigned heavy chain v calls
     """
     fileformat = 'blast'
     if type(data) is not list:
@@ -1226,10 +1107,10 @@ def reassign_alleles(data: Sequence,
                                   endswith=informat_dict[fileformat],
                                   subdir='tmp')
         if filePath is None:
-            raise OSError(
+            raise FileNotFoundError(
                 'Path to .tsv file for {} is unknown. '.format(data[i]) +
-                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
-            )
+                'Please specify path to reannotated .tsv file or folder ' +
+                'containing reannotated .tsv file.')
 
         filePath_heavy = filePath.replace(informat_dict[fileformat],
                                           heavy_dict[fileformat])
@@ -1603,7 +1484,7 @@ def create_germlines(
         try:
             gml = env['GERMLINE']
         except:
-            raise OSError(
+            raise KeyError(
                 'Environmental variable GERMLINE must be set. ' +
                 'Otherwise, please provide path to folder containing germline fasta files.'
             )
@@ -2228,7 +2109,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
                 if save.endswith('.tsv'):
                     _dat.to_csv(str(save), sep='\t', index=False)
                 else:
-                    raise OSError(
+                    raise FileNotFoundError(
                         'Please provide a file name that ends with .tsv')
     else:
         _dat = dat.copy()
@@ -3639,3 +3520,533 @@ class FilterContigsLite:
                                 self.drop_contig.append(lx)
                     else:
                         self.drop_contig.append(lx)
+
+
+def run_igblastn(fasta: Union[str, PathLike],
+                 igblast_db: Optional[str] = None,
+                 org: Literal['human', 'mouse'] = 'human',
+                 loci: Literal['ig', 'tr'] = 'ig',
+                 evalue: float = 1e-4,
+                 min_d_match: int = 9,
+                 verbose: bool = False):
+    """
+    Reannotate with IgBLASTn.
+
+    Parameters
+    ----------
+    fasta : PathLike
+        fasta file for reannotation.
+    igblast_db : PathLike, Optional
+        path to igblast database.
+    org : str
+        organism for germline sequences.
+    loci : str
+        `ig` or `tr` mode for running igblastn.
+    evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
+    min_d_match : int
+        minimum D nucleotide match.
+    verbose : bool
+        whether or not to print the command used in terminal. Default is False.
+
+    """
+    env = os.environ.copy()
+    if igblast_db is None:
+        try:
+            igdb = env['IGDATA']
+        except KeyError:
+            raise KeyError(
+                ('Environmental variable IGDATA must be set. Otherwise,' +
+                 ' please provide path to igblast database'))
+    else:
+        env['IGDATA'] = igblast_db
+        igdb = env['IGDATA']
+
+    outfolder = os.path.abspath(os.path.dirname(fasta)) + '/tmp'
+    informat_dict = {'blast': '_igblast.fmt7', 'airr': '_igblast.tsv'}
+    if not os.path.exists(outfolder):
+        os.makedirs(outfolder)
+
+    loci_type = {'ig': 'Ig', 'tr': 'TCR'}
+    outformat = {'blast': '7 std qseq sseq btop', 'airr': '19'}
+
+    for fileformat in ['blast', 'airr']:
+        outfile = os.path.basename(fasta).split(
+            '.fasta')[0] + informat_dict[fileformat]
+        if loci == 'tr':
+            cmd = [
+                'igblastn', '-germline_db_V',
+                igdb + '/database/imgt_' + org + '_' + loci + '_v',
+                '-germline_db_D',
+                igdb + '/database/imgt_' + org + '_' + loci + '_d',
+                '-germline_db_J',
+                igdb + '/database/imgt_' + org + '_' + loci + '_j',
+                '-auxiliary_data', igdb + 'optional_file/' + org + '_gl.aux',
+                '-domain_system', 'imgt', '-ig_seqtype', loci_type[loci],
+                '-organism', org, '-outfmt', outformat[fileformat], '-query',
+                fasta, '-out', "{}/{}".format(outfolder, outfile), '-evalue',
+                str(evalue), '-min_D_match',
+                str(min_d_match), '-D_penalty',
+                str(-4)
+            ]
+        else:
+            cmd = [
+                'igblastn', '-germline_db_V',
+                igdb + '/database/imgt_' + org + '_' + loci + '_v',
+                '-germline_db_D',
+                igdb + '/database/imgt_' + org + '_' + loci + '_d',
+                '-germline_db_J',
+                igdb + '/database/imgt_' + org + '_' + loci + '_j',
+                '-auxiliary_data', igdb + 'optional_file/' + org + '_gl.aux',
+                '-domain_system', 'imgt', '-ig_seqtype', loci_type[loci],
+                '-organism', org, '-outfmt', outformat[fileformat], '-query',
+                fasta, '-out', "{}/{}".format(outfolder, outfile), '-evalue',
+                str(evalue), '-min_D_match',
+                str(min_d_match)
+            ]
+
+        if verbose:
+            print('Running command: %s\n' % (' '.join(cmd)))
+        run(cmd, env=env)  # logs are printed to terminal
+
+
+def assign_DJ(
+        fasta: Union[str, PathLike],
+        org: Literal['human', 'mouse'] = 'human',
+        loci: Literal['ig', 'tr'] = 'tr',
+        call: Literal['d', 'j'] = 'j',
+        database: Optional[str] = None,
+        evalue: float = 1e-4,
+        max_hsps: int = 10,
+        dust: Optional[Union[Literal['yes', 'no'], str]] = None,
+        word_size: Optional[int] = None,
+        outfmt: str = ('6 qseqid sseqid pident length mismatch gapopen ' +
+                       'qstart qend sstart send evalue bitscore qseq sseq'),
+        filename_prefix: Optional[str] = None,
+        overwrite: bool = False,
+        verbose: bool = False):
+    """
+    Annotate contigs with constant region call using blastn.
+
+    Parameters
+    ----------
+    fasta : str, PathLike
+        path to fasta file.
+    org : str
+        organism of reference folder. Default is 'human'.
+    loci : str
+        locus. 'ig' or 'tr',
+    call : str
+        Either 'd' of 'j' gene.
+    database : str, PathLike, Optional
+        path to database.
+        Defaults to `$IGDATA` environmental variable if v/d/j_call.
+        Defaults to `$BLASTDB` environmental variable if c_call.
+    evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
+    max_hsps: int
+        Maximum number of HSPs (alignments) to keep for any single query-subject pair.
+        The HSPs shown will be the best as judged by expect value. This number should
+        be an integer that is one or greater. Setting it to one will show only the best
+        HSP for every query-subject pair. Only affects the output file in the tmp folder.
+    dust: str
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    word_size : int
+        Word size for wordfinder algorithm (length of best perfect match).
+        Must be >=4. None defaults to 4.
+    filename_prefix : str, Optional
+        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+    overwrite: bool
+        whether or not to overwrite the assignments.
+    verbose : bool
+        whether or not to print the blast command in terminal.
+        Default is False.
+
+    Returns
+    -------
+        D/J genes assigned.
+    """
+    # main function from here
+    filePath = check_filepath(fasta,
+                              filename_prefix=filename_prefix,
+                              endswith='.fasta')
+    if filePath is None:
+        raise FileNotFoundError(
+            ('Path to fasta file is unknown. Please specify ' +
+             'path to fasta file or folder containing fasta file.'))
+
+    # run blast
+    blast_out = run_blastn(fasta=filePath,
+                           database=database,
+                           org=org,
+                           loci=loci,
+                           call=call,
+                           max_hsps=max_hsps,
+                           evalue=evalue,
+                           outfmt=outfmt,
+                           dust=dust,
+                           word_size=word_size,
+                           verbose=verbose)
+
+    # read the original object
+    passfile = "{}/tmp/{}.tsv".format(
+        os.path.dirname(filePath),
+        os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-pass')
+    failfile = "{}/tmp/{}.tsv".format(
+        os.path.dirname(filePath),
+        os.path.basename(filePath).split('.fasta')[0] + '_igblast_db-fail')
+
+    transfer_assignment(passfile=passfile,
+                        failfile=failfile,
+                        blast_result=blast_out.drop_duplicates(
+                            subset='sequence_id', keep='first'),
+                        eval_threshold=evalue,
+                        call=call,
+                        overwrite=overwrite)
+
+
+def run_blastn(
+        fasta: Union[PathLike, str],
+        database: Optional[Union[PathLike, str]],
+        org: Literal['human', 'mouse'] = 'human',
+        loci: Literal['ig', 'tr'] = 'ig',
+        call: Literal['v', 'd', 'j', 'c'] = 'c',
+        max_hsps: int = 10,
+        evalue: float = 1e-4,
+        outfmt: str = ('6 qseqid sseqid pident length mismatch gapopen ' +
+                       'qstart qend sstart send evalue bitscore qseq sseq'),
+        dust: Optional[Union[Literal['yes', 'no'], str]] = None,
+        word_size: Optional[int] = None,
+        verbose: bool = False):
+    """
+    Annotate contigs using blastn.
+
+    Parameters
+    ----------
+    fasta : str, PathLike
+        path to fasta file.
+    database : str, PathLike, Optional
+        path to database.
+        Defaults to `$IGDATA` environmental variable if v/d/j_call.
+        Defaults to `$BLASTDB` environmental variable if c_call.
+    org : str
+        organism of reference folder. Default is 'human'.
+    loci : str
+        locus. 'ig' or 'tr',
+    call : str
+        Either 'v', 'd', 'j' or 'c' gene.
+    max_hsps: int
+        Maximum number of HSPs (alignments) to keep for any single query-subject pair.
+        The HSPs shown will be the best as judged by expect value. This number should
+        be an integer that is one or greater. Setting it to one will show only the best
+        HSP for every query-subject pair. Only affects the output file in the tmp folder.
+    evalue : float
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
+    outfmt : str
+        blastn output format.
+    dust: str
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    word_size : int
+        Word size for wordfinder algorithm (length of best perfect match).
+        Must be >=4. None defaults to 4.
+    verbose : bool
+        whether or not to print the blast command in terminal.
+        Default is False.
+
+    Returns
+    -------
+        blastn assignment.
+    """
+    env = os.environ.copy()
+    if call != 'c':
+        if database is None:
+            try:
+                bdb = env['IGDATA']
+            except KeyError:
+                raise KeyError(
+                    ('Environmental variable IGDATA must be set. ' +
+                     'Otherwise, please provide path to igblast database.'))
+            bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
+        else:
+            env['IGDATA'] = database
+            bdb = database
+            if not bdb.endswith('_' + loci + '_' + call):
+                bdb = bdb + 'database/imgt_' + org + '_' + loci + '_' + call
+    else:
+        if database is None:
+            try:
+                bdb = env['BLASTDB']
+            except KeyError:
+                raise KeyError(
+                    ('Environmental variable BLASTDB must be set. ' +
+                     'Otherwise, please provide path to blast database'))
+            bdb = bdb + org + '/' + org + '_BCR_C.fasta'
+        else:
+            env['BLASTDB'] = database
+            bdb = database
+
+    cmd = [
+        'blastn', '-db', bdb, '-evalue',
+        str(evalue), '-max_hsps',
+        str(max_hsps), '-outfmt', outfmt, '-query', fasta
+    ]
+
+    if dust is not None:
+        cmd = cmd + ['-dust', str(dust)]
+    if word_size is not None:
+        cmd = cmd + ['-word_size', str(word_size)]
+
+    blast_out = "{}/tmp/{}.tsv".format(
+        os.path.dirname(fasta),
+        os.path.basename(fasta).split('.fasta')[0] + '_' + call + '_blast')
+
+    if verbose:
+        print('Running command: %s\n' % (' '.join(cmd)))
+    with open(blast_out, 'w') as out:
+        run(cmd, stdout=out, env=env)
+    try:
+        dat = pd.read_csv(blast_out, sep='\t', header=None)
+        dat.columns = [
+            'sequence_id', call + '_call', call + '_identity',
+            call + '_alignment_length', call + '_number_of_mismatches',
+            call + '_number_of_gap_openings', call + '_sequence_start',
+            call + '_sequence_end', call + '_germline_start',
+            call + '_germline_end', call + '_support', call + '_score',
+            call + '_sequence_alignment', call + '_germline_alignment'
+        ]
+    except pd.errors.EmptyDataError:
+        dat = pd.DataFrame(columns=[
+            'sequence_id', call + '_call', call + '_identity', call +
+            '_alignment_length', call + '_number_of_mismatches', call +
+            '_number_of_gap_openings', call + '_sequence_start', call +
+            '_sequence_end', call + '_germline_start', call +
+            '_germline_end', call + '_support', call + '_score', call +
+            '_sequence_alignment', call + '_germline_alignment'
+        ])
+    dat.to_csv(blast_out, sep='\t', index=False)
+    dat = load_data(dat)
+    return (dat)
+
+
+def transfer_assignment(passfile: Union[PathLike, str],
+                        failfile: Union[PathLike, str],
+                        blast_result: pd.DataFrame,
+                        eval_threshold: float,
+                        call: Literal['v', 'd', 'j', 'c'] = 'c',
+                        overwrite: bool = False):
+    if os.path.isfile(passfile):
+        db_pass = load_data(passfile)
+    else:
+        db_pass = None
+    if os.path.isfile(failfile):
+        db_fail = load_data(failfile)
+        # should be pretty safe to fill this in
+        db_fail['vj_in_frame'].fillna(value='F', inplace=True)
+        db_fail['productive'].fillna(value='F', inplace=True)
+        db_fail['c_call'].fillna(value='', inplace=True)
+        db_fail['v_call'].fillna(value='', inplace=True)
+        db_fail['d_call'].fillna(value='', inplace=True)
+        db_fail['j_call'].fillna(value='', inplace=True)
+        db_fail['locus'].fillna(value='', inplace=True)
+        for i, r in db_fail.iterrows():
+            if not present(r.locus):
+                calls = list(set([r.v_call[:3], r.d_call[:3], r.j_call[:3], r.c_call[:3]]))
+                locus = ''.join([c for c in calls if present(c)])
+                if len(locus) == 3:
+                    db_fail.at[i, 'locus'] = locus
+    else:
+        db_fail = None
+    if blast_result.shape[0] < 1:
+        blast_result = None
+
+    if blast_result is not None:
+        blast_result_evalues = dict(blast_result[call + '_support'])
+        blast_result_call = dict(blast_result[call + '_support'])
+        blast_result_evalues = dict(blast_result[call + '_support'])
+        if db_pass is not None:
+            db_pass_evalues = dict(db_pass[call + '_support'])
+            db_pass_scores = dict(db_pass[call + '_score'])
+            db_pass[call + '_call'].fillna(value='', inplace=True)
+            db_pass_call = dict(db_pass[call + '_call'])
+            db_pass[call + '_support_igblastn'] = pd.Series(db_pass_evalues)
+            db_pass[call + '_score_igblastn'] = pd.Series(db_pass_scores)
+            db_pass[call + '_call_igblastn'] = pd.Series(db_pass_call)
+            db_pass[call + '_call_igblastn'].fillna(value='', inplace=True)
+            for col in blast_result:
+                if col != 'sequence_id':
+                    db_pass[col + '_blastn'] = pd.Series(blast_result[col])
+                    if col in [
+                            call + '_call', call + '_sequence_alignment',
+                            call + '_germline_alignment'
+                    ]:
+                        db_pass[col + '_blastn'].fillna(value='', inplace=True)
+            if overwrite:
+                for i in db_pass['sequence_id']:
+                    vend = db_pass.loc[i, 'v_sequence_end']
+                    if not present(vend):
+                        vend = 0
+                    jstart = db_pass.loc[i, 'j_sequence_start']
+                    if not present(jstart):
+                        jstart = 1000
+                    callstart = db_pass.loc[i, call + '_sequence_start_blastn']
+                    callend = db_pass.loc[i, call + '_sequence_end_blastn']
+                    if (callstart >= vend) and (callend <= jstart):
+                        eval1 = db_pass.loc[i, call + '_support_igblastn']
+                        eval2 = db_pass.loc[i, call + '_support_blastn']
+                        if db_pass.loc[i,
+                                       call + '_call_igblastn'] != db_pass.loc[
+                                           i, call + '_call_blastn']:
+                            if call + '_call_10x' in db_pass:
+                                if re.sub(
+                                        '[*][0-9][0-9]', '',
+                                        db_pass.loc[i, call + '_call_blastn']
+                                ) != db_pass.loc[i, call + '_call_10x']:
+                                    if present(eval1):
+                                        if eval1 > eval2:
+                                            db_pass.at[i, call +
+                                                       '_call'] = db_pass.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_pass.at[i, call +
+                                                       '_source'] = 'blastn'
+                                    else:
+                                        if present(eval2):
+                                            db_pass.at[i, call +
+                                                       '_call'] = db_pass.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_pass.at[i, call +
+                                                       '_source'] = 'blastn'
+                                else:
+                                    db_pass.at[i, call + '_source'] = '10x'
+                                    db_pass.at[i, call + '_call'] = db_pass.at[
+                                        i, call + '_call_blastn']
+                                    if present(db_pass.loc[i, 'junction_10x']):
+                                        if present(db_pass.loc[i, 'junction']):
+                                            if db_pass.loc[
+                                                    i,
+                                                    'junction'] != db_pass.loc[
+                                                        i, 'junction_10x']:
+                                                db_pass.at[
+                                                    i,
+                                                    'junction'] = db_pass.at[
+                                                        i, 'junction_10x']
+                                                db_pass.at[
+                                                    i,
+                                                    'junction_aa'] = db_pass.at[
+                                                        i, 'junction_10x_aa']
+                        else:
+                            if present(eval1):
+                                if eval1 > eval2:
+                                    db_pass.at[i, call + '_call'] = db_pass.at[
+                                        i, call + '_call_blastn']
+                                    db_pass.at[i, call + '_source'] = 'blastn'
+                            else:
+                                if present(eval2):
+                                    db_pass.at[i, call + '_call'] = db_pass.at[
+                                        i, call + '_call_blastn']
+                                    db_pass.at[i, call + '_source'] = 'blastn'
+
+            db_pass.to_csv(passfile, sep='\t', index=False)
+
+        if db_fail is not None:
+            db_fail_evalues = dict(db_fail[call + '_support'])
+            db_fail_scores = dict(db_fail[call + '_score'])
+            db_fail[call + '_call'].fillna(value='', inplace=True)
+            db_fail_call = dict(db_fail[call + '_call'])
+            db_fail[call + '_support_igblastn'] = pd.Series(db_fail_evalues)
+            db_fail[call + '_score_igblastn'] = pd.Series(db_fail_scores)
+            db_fail[call + '_call_igblastn'] = pd.Series(db_fail_call)
+            db_fail[call + '_call_igblastn'].fillna(value='', inplace=True)
+            for col in blast_result:
+                if col != 'sequence_id':
+                    db_fail[col + '_blastn'] = pd.Series(blast_result[col])
+                    if col in [
+                            call + '_call', call + '_sequence_alignment',
+                            call + '_germline_alignment'
+                    ]:
+                        db_fail[col + '_blastn'].fillna(value='', inplace=True)
+            if overwrite:
+                for i in db_fail['sequence_id']:
+                    vend = db_fail.loc[i, 'v_sequence_end']
+                    if not present(vend):
+                        vend = 0
+                    jstart = db_fail.loc[i, 'j_sequence_start']
+                    if not present(jstart):
+                        jstart = 1000
+                    callstart = db_fail.loc[i, call + '_sequence_start_blastn']
+                    callend = db_fail.loc[i, call + '_sequence_end_blastn']
+                    if (callstart >= vend) and (callend <= jstart):
+                        eval1 = db_fail.loc[i, call + '_support_igblastn']
+                        eval2 = db_fail.loc[i, call + '_support_blastn']
+                        if db_fail.loc[i,
+                                       call + '_call_igblastn'] != db_fail.loc[
+                                           i, call + '_call_blastn']:
+                            if call + '_call_10x' in db_fail:
+                                if re.sub(
+                                        '[*][0-9][0-9]', '',
+                                        db_fail.loc[i, call + '_call_blastn']
+                                ) != db_fail.loc[i, call + '_call_10x']:
+                                    if present(eval1):
+                                        if eval1 > eval2:
+                                            db_fail.at[i, call +
+                                                       '_call'] = db_fail.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_fail.at[i, call +
+                                                       '_source'] = 'blastn'
+                                    else:
+                                        if present(eval2):
+                                            db_fail.at[i, call +
+                                                       '_call'] = db_fail.at[
+                                                           i, call +
+                                                           '_call_blastn']
+                                            db_fail.at[i, call +
+                                                       '_source'] = 'blastn'
+                                else:
+                                    db_fail.at[i, call + '_source'] = '10x'
+                                    db_fail.at[i, call + '_call'] = db_fail.at[
+                                        i, call + '_call_blastn']
+                                    if present(db_fail.loc[i, 'junction_10x']):
+                                        if present(db_fail.loc[i, 'junction']):
+                                            if db_fail.loc[
+                                                    i,
+                                                    'junction'] != db_fail.loc[
+                                                        i, 'junction_10x']:
+                                                db_fail.at[
+                                                    i,
+                                                    'junction'] = db_fail.at[
+                                                        i, 'junction_10x']
+                                                db_fail.at[
+                                                    i,
+                                                    'junction_aa'] = db_fail.at[
+                                                        i, 'junction_10x_aa']
+                        else:
+                            if present(eval1):
+                                if eval1 > eval2:
+                                    db_fail.at[i, call + '_call'] = db_fail.at[
+                                        i, call + '_call_blastn']
+                                    db_fail.at[i, call + '_source'] = 'blastn'
+                            else:
+                                if present(eval2):
+                                    db_fail.at[i, call + '_call'] = db_fail.at[
+                                        i, call + '_call_blastn']
+                                    db_fail.at[i, call + '_source'] = 'blastn'
+
+            db_fail.to_csv(failfile, sep='\t', index=False)
