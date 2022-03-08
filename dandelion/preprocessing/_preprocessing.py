@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-05 20:48:43
+# @Last Modified time: 2022-03-08 10:26:56
 
 import os
 import pandas as pd
@@ -705,6 +705,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
+    # make_all(fasta, filename_prefix)
     rename_dandelion(fasta, filename_prefix)
 
 
@@ -967,6 +968,7 @@ def reannotate_genes(data: Sequence,
         if flavour == 'strict':
             mask_dj(data, filename_prefix, d_evalue, j_evalue)
         move_to_tmp(data, filename_prefix)
+        make_all(data, filename_prefix)
         rename_dandelion(data,
                          filename_prefix,
                          endswith='_igblast_db-pass.tsv')
