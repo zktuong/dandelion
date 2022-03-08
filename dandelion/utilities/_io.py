@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 16:31:11
+# @Last Modified time: 2022-03-08 10:31:49
 
 import os
 import json
@@ -775,6 +775,38 @@ def move_to_tmp(data: Sequence,
         run(cmd2)
 
 
+def make_all(data: Sequence,
+             filename_prefix: Optional[Union[Sequence, str]] = None):
+    if type(data) is not list:
+        data = [data]
+    if type(filename_prefix) is not list:
+        filename_prefix = [filename_prefix]
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+
+    for i in range(0, len(data)):
+        filePath1 = check_filepath(data[i],
+                                   filename_prefix=filename_prefix[i],
+                                   endswith='_igblast_db-pass.tsv',
+                                   subdir='tmp')
+        filePath2 = check_filepath(data[i],
+                                   filename_prefix=filename_prefix[i],
+                                   endswith='_igblast_db-fail.tsv',
+                                   subdir='tmp')
+        if filePath1 is not None:
+            df1 = pd.read_csv(filePath1, sep='\t')
+            if filePath2 is not None:
+                df2 = pd.read_csv(filePath2, sep='\t')
+                df = df1.append(df2)
+                df.to_csv(filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv',
+                          sep='\t',
+                          index=False)
+            else:
+                df1.to_csv(filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv',
+                           sep='\t',
+                           index=False)
+
+
 def rename_dandelion(data: Sequence,
                      filename_prefix: Optional[Union[Sequence, str]] = None,
                      endswith='_igblast_db-pass_genotyped.tsv'):
@@ -786,9 +818,9 @@ def rename_dandelion(data: Sequence,
         filename_prefix = [None for d in data]
 
     for i in range(0, len(data)):
-        filePath = check_filepath(data[i],
-                                  filename_prefix=filename_prefix[i],
-                                  endswith=endswith)  # must be whatever's after contig
+        filePath = check_filepath(
+            data[i], filename_prefix=filename_prefix[i],
+            endswith=endswith)  # must be whatever's after contig
         cmd = [
             'mv', '-f', filePath,
             filePath.rsplit(endswith)[0] + '_dandelion.tsv'
