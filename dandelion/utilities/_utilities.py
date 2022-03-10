@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 23:58:39
+# @Last Modified time: 2022-03-10 23:23:48
 
 import os
 from collections import defaultdict, Iterable
@@ -460,8 +460,8 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
         obj_ = obj.copy()
     else:
         raise FileNotFoundError(
-            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
-        )
+            "Either input is not of <class 'pandas.core.frame.DataFrame'> or {} does not exist."
+            .format(str(obj)))
 
     if 'sequence_id' in obj_.columns:
         obj_.set_index('sequence_id', drop=False, inplace=True)
