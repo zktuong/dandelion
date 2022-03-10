@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-10 17:46:36
+# @Last Modified time: 2022-03-10 19:54:04
 
 import os
 import pandas as pd
@@ -34,6 +34,7 @@ from Bio import Align
 from typing import Union, Sequence, Tuple, Optional
 from os import PathLike
 import anndata as ad
+import airr
 
 TRUES = ['T', 'True', 'true', 'TRUE', True]
 FALSES = ['F', 'False', 'false', 'FALSE', False]
@@ -4217,10 +4218,10 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                                    '_germline_end_blastn']
                                     db_fail.at[i, call + '_source'] = 'blastn'
 
-                vend = db_faill['v_sequence_end']
-                dstart = db_faill['d_sequence_start']
-                dend = db_faill['d_sequence_end']
-                jstart = db_faill['j_sequence_start']
+                vend = db_fail['v_sequence_end']
+                dstart = db_fail['d_sequence_start']
+                dend = db_fail['d_sequence_end']
+                jstart = db_fail['j_sequence_start']
 
                 np1 = [
                     (v - d) - 1 if pd.notnull(v) and pd.notnull(d) else np.nan
@@ -4230,8 +4231,8 @@ def transfer_assignment(passfile: Union[PathLike, str],
                     (d - j) - 1 if pd.notnull(d) and pd.notnull(j) else np.nan
                     for d, j in zip(dend, jstart)
                 ]
-                db_faill['np1_length'] = np1
-                db_faill['np2_length'] = np2
+                db_fail['np1_length'] = np1
+                db_fail['np2_length'] = np2
 
             writer = airr.create_rearrangement(failfile,
                                                fields=db_fail.columns)
