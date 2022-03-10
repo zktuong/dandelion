@@ -2,15 +2,17 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-04 23:58:39
+# @Last Modified time: 2022-03-10 21:32:44
 
 import os
-from collections import defaultdict, Iterable
-from airr import RearrangementSchema
+import re
 import pandas as pd
 import numpy as np
+
+from collections import defaultdict, Iterable
+from airr import RearrangementSchema, create_rearrangement
 from subprocess import run
-import re
+
 from typing import Sequence, Tuple, Dict, Union, Optional
 try:
     from typing import Literal
@@ -521,4 +523,6 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
                 '' if s > j_evalue_threshold else c
                 for c, s in zip(dat['j_call'], dat['j_support_blastn'])
             ]
-            dat.to_csv(filePath, sep='\t', index=False)
+        writer = create_rearrangement(filePath, fields=dat.columns)
+        for _, row in dat.iterrows():
+            writer.write(row)
