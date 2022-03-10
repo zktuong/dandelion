@@ -2,21 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-10 20:46:53
+# @Last Modified time: 2022-02-09 00:04:07
 
 import os
 import sys
-import re
-import math
-import copy
-import functools
-import warnings
-import multiprocessing
-
 import pandas as pd
 import numpy as np
-import networkx as nx
-
 from tqdm import tqdm
 from ..utilities._utilities import *
 from ..utilities._core import *
@@ -27,10 +18,16 @@ from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
 from scipy.sparse import csr_matrix
 from distance import hamming
+import re
+import math
+import networkx as nx
 from time import sleep
-from airr import create_rearrangement
+import copy
+import functools
 from scanpy import logging as logg
+import warnings
 from subprocess import run
+import multiprocessing
 from changeo.Gene import getGene
 from anndata import AnnData
 from typing import Union, Sequence, Tuple, Optional
@@ -485,12 +482,11 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     dat_[clone_key] = pd.Series(dat[clone_key])
     dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(self)):
-        writer = create_rearrangement("{}/{}_clone.tsv".format(
+        dat_.to_csv("{}/{}_clone.tsv".format(
             os.path.dirname(self),
             os.path.basename(self).split('.tsv')[0]),
-                                           fields=dat_.columns)
-        for _, row in dat_.iterrows():
-            writer.write(row)
+            sep='\t',
+            index=False)
 
     sleep(0.5)
     logg.info(' finished',
@@ -835,12 +831,8 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         l_file = "{}/{}_light.tsv".format(tmpFolder, out_FilePrefix)
         outfile = "{}/{}_clone.tsv".format(outFolder, out_FilePrefix)
 
-    writer = create_rearrangement(h_file1, fields=dat_h.columns)
-    for _, row in dat_h.iterrows():
-        writer.write(row)
-    writer = create_rearrangement(l_file, fields=dat_l.columns)
-    for _, row in dat_l.iterrows():
-        writer.write(row)
+    dat_h.to_csv(h_file1, sep='\t', index=False)
+    dat_l.to_csv(l_file, sep='\t', index=False)
 
     if 'v_call_genotyped' in dat.columns:
         v_field = 'v_call_genotyped'
@@ -1027,9 +1019,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             heavy_df.apply(lambda row: str(cluster_dict[row[cell_id]]), axis=1)
 
         # write heavy chains
-        writer = create_rearrangement(out_file, fields=heavy_df.columns)
-        for _, row in heavy_df.iterrows():
-            writer.write(row)
+        heavy_df.to_csv(out_file, sep='\t', index=False)
         return (heavy_df, light_df)
 
     if verbose:
@@ -1205,9 +1195,9 @@ def clone_size(self: Dandelion,
                                         clonesize_dict[c_]
                                         for c_ in c.split('|')
                                     ])),
-                                       key=lambda x: int(x.split('>= ')[1])
-                                       if type(x) is str else int(x),
-                                       reverse=True)[0] if '|' in
+                                    key=lambda x: int(x.split('>= ')[1])
+                                    if type(x) is str else int(x),
+                                    reverse=True)[0] if '|' in
                                 c else clonesize_dict[c]
                                 for c in metadata_[str(clonekey)]
                             ]
@@ -1225,9 +1215,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
+                                key=lambda x: int(x.split('>= ')[1])
+                                if type(x) is str else int(x),
+                                reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
@@ -1246,9 +1236,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
+                                key=lambda x: int(x.split('>= ')[1])
+                                if type(x) is str else int(x),
+                                reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
@@ -1268,9 +1258,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
+                                key=lambda x: int(x.split('>= ')[1])
+                                if type(x) is str else int(x),
+                                reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-10 21:33:05
+# @Last Modified time: 2022-03-10 19:54:04
 
 import os
 import pandas as pd
@@ -34,7 +34,7 @@ from Bio import Align
 from typing import Union, Sequence, Tuple, Optional
 from os import PathLike
 import anndata as ad
-from airr import create_rearrangement
+import airr
 
 TRUES = ['T', 'True', 'true', 'TRUE', True]
 FALSES = ['F', 'False', 'false', 'FALSE', False]
@@ -678,10 +678,7 @@ def assign_isotype(fasta: Union[str, PathLike],
     # remove allellic calls
     dat['c_call'] = dat['c_call'].fillna(value='')
     dat['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in dat['c_call']]
-
-    writer = create_rearrangement(_file2, fields=dat.columns)
-    for _, row in dat.iterrows():
-        writer.write(row)
+    dat.to_csv(_file2, sep='\t', index=False)
 
     if plot:
         options.figure_size = figsize
@@ -1436,12 +1433,9 @@ def reassign_alleles(data: Sequence,
         else:
             out_file = dat_[dat_['sample_id'] == s]
         outfilepath = filePath_dict[s]
-
-        writer = create_rearrangement(outfilepath.replace(
-            '.tsv', '_genotyped.tsv'),
-            fields=out_file.columns)
-        for _, row in out_file.iterrows():
-            writer.write(row)
+        out_file.to_csv(outfilepath.replace('.tsv', '_genotyped.tsv'),
+                        index=False,
+                        sep='\t')
 
 
 def create_germlines(
@@ -1853,9 +1847,11 @@ def create_germlines(
             out.data[x] = pd.Series(germline_df[x])
 
         if os.path.isfile(str(file)):
-            out.write_airr("{}/{}_germline_{}.tsv".format(
+            out.data.to_csv("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
-                os.path.basename(file).split('.tsv')[0], germ_types))
+                os.path.basename(file).split('.tsv')[0], germ_types),
+                sep='\t',
+                index=False)
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2106,19 +2102,15 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             )
 
         if os.path.isfile(str(data)):
-            writer = create_rearrangement("{}/{}_filtered.tsv".format(
+            _dat.to_csv("{}/{}_filtered.tsv".format(
                 os.path.dirname(data),
                 os.path.basename(data).split('.tsv')[0]),
-                fields=_dat.columns)
-            for _, row in _dat.iterrows():
-                writer.write(row)
+                sep='\t',
+                index=False)
         else:
             if save is not None:
                 if save.endswith('.tsv'):
-                    writer = create_rearrangement(str(save),
-                                                  fields=_dat.columns)
-                    for _, row in _dat.iterrows():
-                        writer.write(row)
+                    _dat.to_csv(str(save), sep='\t', index=False)
                 else:
                     raise FileNotFoundError(
                         'Please provide a file name that ends with .tsv')
@@ -2359,9 +2351,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
             logg.info(' finished',
                       time=start,
                       deep=('saving DataFrame at {}\n'.format(str(self))))
-            writer = create_rearrangement(self, fields=dat.columns)
-            for _, row in dat.iterrows():
-                writer.write(row)
+            dat.to_csv(self, sep='\t', index=False)
 
 
 def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
@@ -3852,9 +3842,7 @@ def run_blastn(
             '_germline_end', call + '_support', call + '_score', call +
             '_sequence_alignment', call + '_germline_alignment'
         ])
-    writer = create_rearrangement(blast_out, fields=dat.columns)
-    for _, row in dat.iterrows():
-        writer.write(row)
+    dat.to_csv(blast_out, sep='\t', index=False)
     dat = load_data(dat)
     return (dat)
 
@@ -4069,8 +4057,8 @@ def transfer_assignment(passfile: Union[PathLike, str],
                 db_pass['np1_length'] = np1
                 db_pass['np2_length'] = np2
 
-            writer = create_rearrangement(passfile,
-                                          fields=db_pass.columns)
+            writer = airr.create_rearrangement(passfile,
+                                               fields=db_pass.columns)
             for _, row in db_pass.iterrows():
                 writer.write(row)
 
@@ -4246,7 +4234,7 @@ def transfer_assignment(passfile: Union[PathLike, str],
                 db_fail['np1_length'] = np1
                 db_fail['np2_length'] = np2
 
-            writer = create_rearrangement(failfile,
-                                          fields=db_fail.columns)
+            writer = airr.create_rearrangement(failfile,
+                                               fields=db_fail.columns)
             for _, row in db_fail.iterrows():
                 writer.write(row)
