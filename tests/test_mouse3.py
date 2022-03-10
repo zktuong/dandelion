@@ -40,6 +40,9 @@ def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
                             reassign_dj = True,
                             org='mouse')
     assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 6
+    f = create_testfolder / str('dandelion/tmp/filtered_contig_igblast_db-pass.tsv')
+    dat = pd.read_csv(f, sep='\t')
+    assert dat.shape[0] == 1287
 
 
 def test_reassignalleles(create_testfolder, database_paths_mouse):
@@ -50,6 +53,9 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
                             novel=True,
                             plot=False)
     assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 9
+    f = create_testfolder / str('dandelion/tmp/filtered_contig_igblast_db-pass_genotyped.tsv')
+    dat = pd.read_csv(f, sep='\t')
+    assert dat.shape[0] == 1285
 
 
 def test_updateblastdb(database_paths_mouse):
