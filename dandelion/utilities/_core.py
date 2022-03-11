@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-07 09:42:40
+# @Last Modified time: 2022-03-11 17:44:21
 
 import os
 from collections import defaultdict
@@ -375,12 +375,8 @@ class Dandelion:
         **kwargs
             passed to `_pickle`.
         """
-        from airr import create_rearrangement
-        writer = create_rearrangement(filename,
-                                      fields=[x for x in self.data],
-                                      **kwargs)
-        for _, row in self.data.iterrows():
-            writer.write(row)
+        data = sanitize_data(self.data)
+        data.to_csv(filename, sep='\t', index=False, **kwargs)
 
     def write_h5(self,
                  filename: str = 'dandelion_data.h5ddl',
