@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 10:09:32
+# @Last Modified time: 2022-03-11 11:26:24
 
 import os
 import pandas as pd
@@ -809,7 +809,7 @@ def reannotate_genes(data: Sequence,
                      v_evalue: float = 1e-4,
                      d_evalue: float = 1e-3,
                      j_evalue: float = 1e-4,
-                     reassign_dj: bool = False,
+                     reassign_dj: bool = True,
                      overwrite: bool = True,
                      dust: Optional[Union[Literal['yes', 'no'], str]] = 'no',
                      verbose: bool = False):
