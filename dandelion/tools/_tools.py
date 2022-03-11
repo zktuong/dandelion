@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
-# @Last Modified by:   kt16
-# @Last Modified time: 2022-03-11 17:42:10
+# @Last Modified by:   Kelvin
+# @Last Modified time: 2022-03-11 18:11:55
 
 import os
 import sys
@@ -832,7 +832,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         outfile = "{}/{}_clone.tsv".format(outFolder, out_FilePrefix)
 
     write_airr(dat_h, h_file1)
-    write_airr(dat_l, l_file1)
+    write_airr(dat_l, l_file)
 
     if 'v_call_genotyped' in dat.columns:
         v_field = 'v_call_genotyped'
