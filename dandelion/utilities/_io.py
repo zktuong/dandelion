@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 20:33:38
+# @Last Modified time: 2022-03-11 22:19:55
 
 import os
 import json
@@ -778,7 +778,8 @@ def move_to_tmp(data: Sequence,
 
 
 def make_all(data: Sequence,
-             filename_prefix: Optional[Union[Sequence, str]] = None):
+             filename_prefix: Optional[Union[Sequence, str]] = None,
+             loci: Literal['ig', 'tr'] = 'tr'):
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -787,10 +788,17 @@ def make_all(data: Sequence,
         filename_prefix = [None for d in data]
 
     for i in range(0, len(data)):
-        filePath1 = check_filepath(data[i],
-                                   filename_prefix=filename_prefix[i],
-                                   endswith='_igblast_db-pass.tsv',
-                                   subdir='tmp')
+        if loci == 'tr':
+            filePath1 = check_filepath(data[i],
+                                       filename_prefix=filename_prefix[i],
+                                       endswith='_igblast_db-pass.tsv',
+                                       subdir='tmp')
+        else:
+            filePath1 = check_filepath(
+                data[i],
+                filename_prefix=filename_prefix[i],
+                endswith='_igblast_db-pass_genotyped.tsv',
+                subdir='tmp')
         filePath2 = check_filepath(data[i],
                                    filename_prefix=filename_prefix[i],
                                    endswith='_igblast_db-fail.tsv',
@@ -800,9 +808,25 @@ def make_all(data: Sequence,
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep='\t')
                 df = df1.append(df2)
-                write_airr(df, filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
+                if loci == 'tr':
+                    write_airr(
+                        df,
+                        filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
+                else:
+                    write_airr(
+                        df,
+                        filePath1.rsplit('db-pass_genotyped.tsv')[0] +
+                        'db-all.tsv')
             else:
-                write_airr(df1, filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
+                if loci == 'tr':
+                    write_airr(
+                        df1,
+                        filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
+                else:
+                    write_airr(
+                        df1,
+                        filePath1.rsplit('db-pass_genotyped.tsv')[0] +
+                        'db-all.tsv')
 
 
 def rename_dandelion(data: Sequence,
