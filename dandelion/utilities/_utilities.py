@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-10 21:32:44
+# @Last Modified time: 2022-03-11 17:44:35
 
 import os
 import re
@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 from collections import defaultdict, Iterable
-from airr import RearrangementSchema, create_rearrangement
+from airr import RearrangementSchema
 from subprocess import run
 
 from typing import Sequence, Tuple, Dict, Union, Optional
@@ -329,22 +329,27 @@ def sanitize_data(data, ignore='clone_id'):
             if RearrangementSchema.properties[d]['type'] in [
                     'string', 'boolean', 'integer'
             ]:
-                data[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
+                data[d].replace([None, np.nan, pd.NA, 'nan', ''],
+                                '',
+                                inplace=True)
                 if RearrangementSchema.properties[d]['type'] == 'integer':
                     data[d] = [
                         int(x) if present(x) else ''
                         for x in pd.to_numeric(data[d])
                     ]
             else:
-                data[d].replace([None, pd.NA, ''], np.nan, inplace=True)
+                data[d].replace([None, pd.NA, np.nan, 'nan', ''],
+                                np.nan,
+                                inplace=True)
         else:
             if d != ignore:
                 try:
                     data[d] = pd.to_numeric(data[d])
                 except:
-                    data[d].replace(to_replace=[None, np.nan, pd.NA],
-                                    value='',
-                                    inplace=True)
+                    data[d].replace(
+                        to_replace=[None, np.nan, pd.NA, 'nan', ''],
+                        value='',
+                        inplace=True)
         if re.search('mu_freq', d):
             data[d] = [
                 float(x) if present(x) else np.nan
@@ -369,16 +374,22 @@ def sanitize_data_for_saving(data):
             if RearrangementSchema.properties[d]['type'] in [
                     'string', 'boolean'
             ]:
-                tmp[d].replace([None, np.nan, pd.NA, ''], '', inplace=True)
+                tmp[d].replace([None, np.nan, pd.NA, 'nan', ''],
+                               '',
+                               inplace=True)
             if RearrangementSchema.properties[d]['type'] in [
                     'integer', 'number'
             ]:
-                tmp[d].replace([None, np.nan, pd.NA, ''], np.nan, inplace=True)
+                tmp[d].replace([None, np.nan, pd.NA, 'nan', ''],
+                               np.nan,
+                               inplace=True)
         else:
             try:
                 tmp[d] = pd.to_numeric(tmp[d])
             except:
-                tmp[d].replace([None, pd.NA, np.nan], '', inplace=True)
+                tmp[d].replace([None, pd.NA, np.nan, 'nan', ''],
+                               '',
+                               inplace=True)
     return (tmp)
 
 
@@ -523,6 +534,5 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
                 '' if s > j_evalue_threshold else c
                 for c, s in zip(dat['j_call'], dat['j_support_blastn'])
             ]
-        writer = create_rearrangement(filePath, fields=dat.columns)
-        for _, row in dat.iterrows():
-            writer.write(row)
+
+        write_airr(dat, filePath)
