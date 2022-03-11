@@ -66,7 +66,7 @@ def parse_args():
             '"True" in the high_confidence column of the contig annotation.'))
     parser.add_argument(
         '--skip_reassign_dj',
-        action='store_false',
+        action='store_true',
         help=(
             'If passed, skips reassign d/j calls with blastn when flavour = strict.'
         ))
@@ -101,6 +101,11 @@ def main():
         keep_trailing_hyphen_number_log = False
     else:
         keep_trailing_hyphen_number_log = True
+
+    if args.skip_reassign_dj:
+        reassign_dj = True
+    else:
+        reassign_dj = False
 
     logg.info(
         'command line parameters:\n',
@@ -195,7 +200,7 @@ def main():
                             loci=args.chain,
                             filename_prefix=filename_prefixes,
                             flavour=args.flavour,
-                            reassign_dj=args.skip_reassign_dj)
+                            reassign_dj=reassign_dj)
 
     # IG requires further preprocessing, TR is done now
     if args.chain == 'ig':
