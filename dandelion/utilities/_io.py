@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 17:44:51
+# @Last Modified time: 2022-03-11 20:33:38
 
 import os
 import json
@@ -824,8 +824,3 @@ def rename_dandelion(data: Sequence,
             filePath.rsplit(endswith)[0] + '_dandelion.tsv'
         ]
         run(cmd)
-
-
-def write_airr(data, save):
-    data = sanitize_data(data)
-    data.to_csv(save, sep='\t', index=False)
