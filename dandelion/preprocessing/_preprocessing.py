@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 19:12:29
+# @Last Modified time: 2022-03-11 21:27:48
 
 import os
 import pandas as pd
@@ -367,8 +367,6 @@ def assign_isotype(fasta: Union[str, PathLike],
                                                            float]] = (4, 4),
                    blastdb: Optional[str] = None,
                    allele: bool = False,
-                   parallel: bool = True,
-                   ncpu: Optional[int] = None,
                    filename_prefix: Optional[str] = None,
                    verbose: bool = False):
     """
@@ -408,11 +406,6 @@ def assign_isotype(fasta: Union[str, PathLike],
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
-    parallel : bool
-        whether or not to use parallelization. Default is True.
-    ncpu : int
-        number of cores to use if parallel is True. Default is all
-        available minus 1.
     filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
@@ -728,8 +721,6 @@ def assign_isotypes(fastas: Sequence,
                                                             float]] = (4, 4),
                     blastdb: Optional[str] = None,
                     allele: bool = False,
-                    parallel: bool = True,
-                    ncpu: Optional[int] = None,
                     filename_prefix: Optional[Union[Sequence, str]] = None,
                     verbose: bool = False):
     """
@@ -761,10 +752,6 @@ def assign_isotypes(fastas: Sequence,
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
-    parallel : bool
-        whether or not to use parallelization. Default is True.
-    ncpu : int
-        number of cores to use if parallel is True. Default is all available - 1.
     filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
@@ -796,8 +783,6 @@ def assign_isotypes(fastas: Sequence,
                        figsize=figsize,
                        blastdb=blastdb,
                        allele=allele,
-                       parallel=parallel,
-                       ncpu=ncpu,
                        filename_prefix=filename_prefix[i],
                        verbose=verbose)
 
@@ -2164,6 +2149,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                        region_definition: Optional[str] = None,
                        mutation_definition: Optional[str] = None,
                        frequency: bool = False,
+                       ncpu: int = 1,
                        combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
     """
     Run basic mutation load analysis.
@@ -2186,6 +2172,8 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
         passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/MUTATION_SCHEMES/
     frequency
         whether to return the results a frequency or counts. Default is True (frequency).
+     ncpu : int
+        number of cores to use. Default is 1.
     combine
         whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
 
@@ -2251,6 +2239,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                        regionDefinition=reg_d,
                                        mutationDefinition=mut_d,
                                        frequency=frequency,
+                                       nproc = ncpu,
                                        combine=combine)
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
@@ -2278,6 +2267,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          regionDefinition=reg_d,
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
+                                         nproc = ncpu,
                                          combine=combine)
         results_l = sh.observedMutations(dat_l_r,
                                          sequenceColumn=seq_,
@@ -2285,6 +2275,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          regionDefinition=reg_d,
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
+                                         nproc = ncpu,
                                          combine=combine)
         pd_df = pd.concat([results_h, results_l])
 
