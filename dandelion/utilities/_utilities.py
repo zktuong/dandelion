@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 17:44:35
+# @Last Modified time: 2022-03-11 20:32:54
 
 import os
 import re
@@ -359,10 +359,44 @@ def sanitize_data(data, ignore='clone_id'):
             data[d] = [
                 int(x) if present(x) else '' for x in pd.to_numeric(data[d])
             ]
-    data = check_travdv(data)
+    try:
+        data = check_travdv(data)
+    except:
+        pass
 
     # check if airr-standards is happy
     validate_airr(data)
+    return (data)
+
+
+def sanitize_blastn(data):
+    """Quick sanitize dtypes."""
+    data = data.astype('object')
+    data = data.infer_objects()
+    for d in data:
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]['type'] in [
+                    'string', 'boolean', 'integer'
+            ]:
+                data[d].replace([None, np.nan, pd.NA, 'nan', ''],
+                                '',
+                                inplace=True)
+                if RearrangementSchema.properties[d]['type'] == 'integer':
+                    data[d] = [
+                        int(x) if present(x) else ''
+                        for x in pd.to_numeric(data[d])
+                    ]
+            else:
+                data[d].replace([None, pd.NA, np.nan, 'nan', ''],
+                                np.nan,
+                                inplace=True)
+        else:
+            try:
+                data[d] = pd.to_numeric(data[d])
+            except:
+                data[d].replace(to_replace=[None, np.nan, pd.NA, 'nan', ''],
+                                value='',
+                                inplace=True)
     return (data)
 
 
@@ -536,3 +570,13 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
             ]
 
         write_airr(dat, filePath)
+
+
+def write_airr(data, save):
+    data = sanitize_data(data)
+    data.to_csv(save, sep='\t', index=False)
+
+
+def write_blastn(data, save):
+    data = sanitize_blastn(data)
+    data.to_csv(save, sep='\t', index=False)
