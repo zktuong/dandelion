@@ -66,8 +66,8 @@ def test_reannotate_fails(create_testfolder, database_paths):
 
 
 @pytest.mark.parametrize("filename,expected",
-                         [pytest.param('filtered', 3),
-                          pytest.param('all', 6)])
+                         [pytest.param('filtered', 5),
+                          pytest.param('all', 10)])
 def test_reannotategenes(create_testfolder, database_paths, filename,
                          expected):
     ddl.pp.reannotate_genes(str(create_testfolder),
@@ -89,8 +89,8 @@ def test_reassign_alleles_fails(create_testfolder, database_paths):
 
 
 @pytest.mark.parametrize("filename,combine,expected", [
-    pytest.param('filtered', 'reassigned_filtered', 9),
-    pytest.param('all', 'reassigned_all', 12)
+    pytest.param('filtered', 'reassigned_filtered', 13),
+    pytest.param('all', 'reassigned_all', 16)
 ])
 def test_reassignalleles(create_testfolder, database_paths, filename, combine,
                          expected):
@@ -160,15 +160,15 @@ def test_update_germlines(create_testfolder, processed_files, database_paths):
 
 
 @pytest.mark.parametrize(
-    "freq,colname",
-    [pytest.param(True, 'mu_freq'),
-     pytest.param(False, 'mu_count')])
-def test_quantify_mut(create_testfolder, processed_files, freq, colname):
+    "freq,colname,dtype",
+    [pytest.param(True, 'mu_freq', float),
+     pytest.param(False, 'mu_count', int)])
+def test_quantify_mut(create_testfolder, processed_files, freq, colname, dtype):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
     ddl.pp.quantify_mutations(f, frequency=freq)
     dat = pd.read_csv(f, sep='\t')
     assert not dat[colname].empty
-    assert dat[colname].dtype == float
+    assert dat[colname].dtype == dtype
 
 
 @pytest.mark.parametrize(
