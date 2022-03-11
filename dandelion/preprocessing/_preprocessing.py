@@ -2,13 +2,12 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-10 21:33:05
+# @Last Modified time: 2022-03-11 17:45:29
 
 import os
 import pandas as pd
 from subprocess import run
 from tqdm import tqdm
-import multiprocessing
 from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
@@ -34,7 +33,6 @@ from Bio import Align
 from typing import Union, Sequence, Tuple, Optional
 from os import PathLike
 import anndata as ad
-from airr import create_rearrangement
 
 TRUES = ['T', 'True', 'true', 'TRUE', True]
 FALSES = ['F', 'False', 'false', 'FALSE', False]
@@ -679,10 +677,7 @@ def assign_isotype(fasta: Union[str, PathLike],
     dat['c_call'] = dat['c_call'].fillna(value='')
     dat['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in dat['c_call']]
 
-    writer = create_rearrangement(_file2, fields=dat.columns)
-    for _, row in dat.iterrows():
-        writer.write(row)
-
+    write_airr(dat, _file2)
     if plot:
         options.figure_size = figsize
         if correct_c_call:
@@ -812,7 +807,7 @@ def reannotate_genes(data: Sequence,
                      v_evalue: float = 1e-4,
                      d_evalue: float = 1e-3,
                      j_evalue: float = 1e-4,
-                     reassign_dj: bool = False,
+                     reassign_dj: bool = True,
                      overwrite: bool = True,
                      dust: Optional[Union[Literal['yes', 'no'], str]] = 'no',
                      verbose: bool = False):
@@ -1436,12 +1431,7 @@ def reassign_alleles(data: Sequence,
         else:
             out_file = dat_[dat_['sample_id'] == s]
         outfilepath = filePath_dict[s]
-
-        writer = create_rearrangement(outfilepath.replace(
-            '.tsv', '_genotyped.tsv'),
-            fields=out_file.columns)
-        for _, row in out_file.iterrows():
-            writer.write(row)
+        write_airr(out_file, outfilepath.replace('.tsv', '_genotyped.tsv'))
 
 
 def create_germlines(
@@ -2106,22 +2096,18 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             )
 
         if os.path.isfile(str(data)):
-            writer = create_rearrangement("{}/{}_filtered.tsv".format(
-                os.path.dirname(data),
-                os.path.basename(data).split('.tsv')[0]),
-                fields=_dat.columns)
-            for _, row in _dat.iterrows():
-                writer.write(row)
+            write_airr(
+                _dat, "{}/{}_filtered.tsv".format(
+                    os.path.dirname(data),
+                    os.path.basename(data).split('.tsv')[0]))
         else:
             if save is not None:
                 if save.endswith('.tsv'):
-                    writer = create_rearrangement(str(save),
-                                                  fields=_dat.columns)
-                    for _, row in _dat.iterrows():
-                        writer.write(row)
+                    write_airr(_dat, str(save))
                 else:
                     raise FileNotFoundError(
-                        'Please provide a file name that ends with .tsv')
+                        '{} not suitable. Please provide a file name that ends with .tsv'
+                        .format(str(save)))
     else:
         _dat = dat.copy()
 
@@ -2359,9 +2345,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
             logg.info(' finished',
                       time=start,
                       deep=('saving DataFrame at {}\n'.format(str(self))))
-            writer = create_rearrangement(self, fields=dat.columns)
-            for _, row in dat.iterrows():
-                writer.write(row)
+            write_airr(dat, self)
 
 
 def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
@@ -2386,7 +2370,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                                  "user"]] = None,
                         sensitivity: Optional[float] = None,
                         specificity: Optional[float] = None,
-                        ncpu: Optional[int] = None,
                         plot: bool = True,
                         plot_group: Optional[str] = None,
                         figsize: Tuple[Union[int, float],
@@ -2454,8 +2437,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         sensitivity required. Applies only when method="gmm" and cutoff="user".
     specificity : float, Optional
         specificity required. Applies only when method="gmm" and cutoff="user".
-    ncpu : int, Optional
-        number of cpus for parallelization. Default is all available cpus.
     plot : bool
         whether or not to return plot.
     plot_group : str, Optional
@@ -2509,10 +2490,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         subsample_ = NULL
     else:
         subsample_ = subsample
-    if ncpu is None:
-        ncpu_ = multiprocessing.cpu_count() - 1
-    else:
-        ncpu_ = ncpu
+
     if mode == 'heavy':
         dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
         try:
@@ -2525,7 +2503,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                     vCallColumn=v_call,
                                     model=model_,
                                     normalize=norm_,
-                                    nproc=ncpu_,
                                     **kwargs)
     elif mode == 'single-cell':
         try:
@@ -3852,9 +3829,7 @@ def run_blastn(
             '_germline_end', call + '_support', call + '_score', call +
             '_sequence_alignment', call + '_germline_alignment'
         ])
-    writer = create_rearrangement(blast_out, fields=dat.columns)
-    for _, row in dat.iterrows():
-        writer.write(row)
+    write_airr(dat, blast_out)
     dat = load_data(dat)
     return (dat)
 
@@ -3914,17 +3889,22 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_germline_alignment'
                     ]:
                         db_pass[col + '_blastn'].fillna(value='', inplace=True)
+            db_pass[call + '_source'] = ''
             if overwrite:
                 for i in db_pass['sequence_id']:
                     vend = db_pass.loc[i, 'v_sequence_end']
                     if not present(vend):
-                        vend = 0
+                        vend_ = 0
+                    else:
+                        vend_ = vend
                     jstart = db_pass.loc[i, 'j_sequence_start']
                     if not present(jstart):
-                        jstart = 1000
+                        jstart_ = 1000
+                    else:
+                        jstart_ = jstart
                     callstart = db_pass.loc[i, call + '_sequence_start_blastn']
                     callend = db_pass.loc[i, call + '_sequence_end_blastn']
-                    if (callstart >= vend) and (callend <= jstart):
+                    if (callstart >= vend_) and (callend <= jstart_):
                         eval1 = db_pass.loc[i, call + '_support_igblastn']
                         eval2 = db_pass.loc[i, call + '_support_blastn']
                         if db_pass.loc[i,
@@ -4059,20 +4039,33 @@ def transfer_assignment(passfile: Union[PathLike, str],
                 jstart = db_pass['j_sequence_start']
 
                 np1 = [
-                    (v - d) - 1 if pd.notnull(v) and pd.notnull(d) else np.nan
-                    for v, d in zip(vend, dstart)
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(d - v) -
+                              1 if pd.notnull(v) and pd.notnull(d) else np.nan
+                              for v, d in zip(vend, dstart)]
                 ]
                 np2 = [
-                    (d - j) - 1 if pd.notnull(d) and pd.notnull(j) else np.nan
-                    for d, j in zip(dend, jstart)
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(j - d) -
+                              1 if pd.notnull(j) and pd.notnull(d) else np.nan
+                              for d, j in zip(dend, jstart)]
                 ]
+
                 db_pass['np1_length'] = np1
                 db_pass['np2_length'] = np2
 
-            writer = create_rearrangement(passfile,
-                                          fields=db_pass.columns)
-            for _, row in db_pass.iterrows():
-                writer.write(row)
+                for i in db_pass['sequence_id']:
+                    if not present(db_pass.loc[i, 'np1_length']):
+                        vend = db_pass.loc[i, 'v_sequence_end']
+                        if present(vend):
+                            jstart = db_pass.loc[i, 'j_sequence_start']
+                            if present(jstart):
+                                np1l = (jstart - vend) - 1
+                                if np1l >= 0:
+                                    db_pass.loc[i, 'np1_length'] = np1l
+            # fill in blanks
+            db_pass = sanitize_data(db_pass)
+            db_pass.to_csv(passfile, sep='\t', index=False)
 
         if db_fail is not None:
             db_fail_evalues = dict(db_fail[call + '_support'])
@@ -4091,17 +4084,22 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_germline_alignment'
                     ]:
                         db_fail[col + '_blastn'].fillna(value='', inplace=True)
+            db_fail[call + '_source'] = ''
             if overwrite:
                 for i in db_fail['sequence_id']:
                     vend = db_fail.loc[i, 'v_sequence_end']
                     if not present(vend):
-                        vend = 0
+                        vend_ = 0
+                    else:
+                        vend_ = vend
                     jstart = db_fail.loc[i, 'j_sequence_start']
                     if not present(jstart):
-                        jstart = 1000
+                        jstart_ = 1000
+                    else:
+                        jstart_ = jstart
                     callstart = db_fail.loc[i, call + '_sequence_start_blastn']
                     callend = db_fail.loc[i, call + '_sequence_end_blastn']
-                    if (callstart >= vend) and (callend <= jstart):
+                    if (callstart >= vend_) and (callend <= jstart_):
                         eval1 = db_fail.loc[i, call + '_support_igblastn']
                         eval2 = db_fail.loc[i, call + '_support_blastn']
                         if db_fail.loc[i,
@@ -4236,17 +4234,31 @@ def transfer_assignment(passfile: Union[PathLike, str],
                 jstart = db_fail['j_sequence_start']
 
                 np1 = [
-                    (v - d) - 1 if pd.notnull(v) and pd.notnull(d) else np.nan
-                    for v, d in zip(vend, dstart)
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(d - v) -
+                              1 if pd.notnull(v) and pd.notnull(d) else np.nan
+                              for v, d in zip(vend, dstart)]
                 ]
                 np2 = [
-                    (d - j) - 1 if pd.notnull(d) and pd.notnull(j) else np.nan
-                    for d, j in zip(dend, jstart)
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(j - d) -
+                              1 if pd.notnull(j) and pd.notnull(d) else np.nan
+                              for d, j in zip(dend, jstart)]
                 ]
                 db_fail['np1_length'] = np1
                 db_fail['np2_length'] = np2
 
-            writer = create_rearrangement(failfile,
-                                          fields=db_fail.columns)
-            for _, row in db_fail.iterrows():
-                writer.write(row)
+                # rescue the d blanks
+                for i in db_fail['sequence_id']:
+                    if not present(db_fail.loc[i, 'np1_length']):
+                        vend = db_fail.loc[i, 'v_sequence_end']
+                        if present(vend):
+                            jstart = db_fail.loc[i, 'j_sequence_start']
+                            if present(jstart):
+                                np1l = (jstart - vend) - 1
+                                if np1l >= 0:
+                                    db_fail.loc[i, 'np1_length'] = np1l
+
+            # fill in blanks
+            db_fail = sanitize_data(db_fail)
+            db_fail.to_csv(failfile, sep='\t', index=False)
