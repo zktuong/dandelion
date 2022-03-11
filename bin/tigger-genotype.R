@@ -150,7 +150,7 @@ if (opt$VFIELD != v_call_genotyped) {
 }
 
 # Write genotyped data
-writeChangeoDb(db, file.path(opt$OUTDIR, paste0(opt$NAME, "_genotyped.",ext)))
+readr::write_tsv(db, file.path(opt$OUTDIR, paste0(opt$NAME, "_genotyped.",ext)), na = '')
 
 # Plot genotype
 plot_file <- file.path(opt$OUTDIR, paste0(opt$NAME, "_genotype.pdf"))
