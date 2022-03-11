@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 17:45:29
+# @Last Modified time: 2022-03-11 19:12:29
 
 import os
 import pandas as pd
@@ -609,7 +609,15 @@ def assign_isotype(fasta: Union[str, PathLike],
 
     if verbose:
         print('Loading 10X annotations \n')
-    dat_10x = load_data(_file)
+    try:
+        dat_10x = load_data(_file)
+    except FileNotFoundError:
+        # maybe a short cut to skip reassign_alleles?
+        _file = "{}/tmp/{}.tsv".format(
+            os.path.dirname(filePath),
+            os.path.basename(filePath).split('.fasta')[0] +
+            format_dict[fileformat])
+        dat_10x = load_data(_file)
     res_10x = pd.DataFrame(dat_10x['c_call'])
     res_10x['c_call'] = res_10x['c_call'].fillna(value='None')
     if verbose:
@@ -3829,7 +3837,7 @@ def run_blastn(
             '_germline_end', call + '_support', call + '_score', call +
             '_sequence_alignment', call + '_germline_alignment'
         ])
-    write_airr(dat, blast_out)
+    write_blastn(dat, blast_out)
     dat = load_data(dat)
     return (dat)
 
@@ -3869,16 +3877,18 @@ def transfer_assignment(passfile: Union[PathLike, str],
         blast_result = None
 
     if blast_result is not None:
-        blast_result_evalues = dict(blast_result[call + '_support'])
-        blast_result_call = dict(blast_result[call + '_support'])
-        blast_result_evalues = dict(blast_result[call + '_support'])
         if db_pass is not None:
-            db_pass_evalues = dict(db_pass[call + '_support'])
-            db_pass_scores = dict(db_pass[call + '_score'])
+            if call + '_support' in db_pass:
+                db_pass_evalues = dict(db_pass[call + '_support'])
+            if call + '_score' in db_pass:
+                db_pass_scores = dict(db_pass[call + '_score'])
             db_pass[call + '_call'].fillna(value='', inplace=True)
             db_pass_call = dict(db_pass[call + '_call'])
-            db_pass[call + '_support_igblastn'] = pd.Series(db_pass_evalues)
-            db_pass[call + '_score_igblastn'] = pd.Series(db_pass_scores)
+            if call + '_support' in db_pass:
+                db_pass[call +
+                        '_support_igblastn'] = pd.Series(db_pass_evalues)
+            if call + '_score' in db_pass:
+                db_pass[call + '_score_igblastn'] = pd.Series(db_pass_scores)
             db_pass[call + '_call_igblastn'] = pd.Series(db_pass_call)
             db_pass[call + '_call_igblastn'].fillna(value='', inplace=True)
             for col in blast_result:
@@ -3905,7 +3915,10 @@ def transfer_assignment(passfile: Union[PathLike, str],
                     callstart = db_pass.loc[i, call + '_sequence_start_blastn']
                     callend = db_pass.loc[i, call + '_sequence_end_blastn']
                     if (callstart >= vend_) and (callend <= jstart_):
-                        eval1 = db_pass.loc[i, call + '_support_igblastn']
+                        if call + '_support_igblastn' in db_pass:
+                            eval1 = db_pass.loc[i, call + '_support_igblastn']
+                        else:
+                            eval1 = 1
                         eval2 = db_pass.loc[i, call + '_support_blastn']
                         if db_pass.loc[i,
                                        call + '_call_igblastn'] != db_pass.loc[
@@ -4068,12 +4081,17 @@ def transfer_assignment(passfile: Union[PathLike, str],
             db_pass.to_csv(passfile, sep='\t', index=False)
 
         if db_fail is not None:
-            db_fail_evalues = dict(db_fail[call + '_support'])
-            db_fail_scores = dict(db_fail[call + '_score'])
+            if call + '_support' in db_fail:
+                db_fail_evalues = dict(db_fail[call + '_support'])
+            if call + '_score' in db_fail:
+                db_fail_scores = dict(db_fail[call + '_score'])
             db_fail[call + '_call'].fillna(value='', inplace=True)
             db_fail_call = dict(db_fail[call + '_call'])
-            db_fail[call + '_support_igblastn'] = pd.Series(db_fail_evalues)
-            db_fail[call + '_score_igblastn'] = pd.Series(db_fail_scores)
+            if call + '_support' in db_fail:
+                db_fail[call +
+                        '_support_igblastn'] = pd.Series(db_fail_evalues)
+            if call + '_score' in db_fail:
+                db_fail[call + '_score_igblastn'] = pd.Series(db_fail_scores)
             db_fail[call + '_call_igblastn'] = pd.Series(db_fail_call)
             db_fail[call + '_call_igblastn'].fillna(value='', inplace=True)
             for col in blast_result:
@@ -4100,7 +4118,10 @@ def transfer_assignment(passfile: Union[PathLike, str],
                     callstart = db_fail.loc[i, call + '_sequence_start_blastn']
                     callend = db_fail.loc[i, call + '_sequence_end_blastn']
                     if (callstart >= vend_) and (callend <= jstart_):
-                        eval1 = db_fail.loc[i, call + '_support_igblastn']
+                        if call + '_support_igblastn' in db_fail:
+                            eval1 = db_fail.loc[i, call + '_support_igblastn']
+                        else:
+                            eval1 = 1
                         eval2 = db_fail.loc[i, call + '_support_blastn']
                         if db_fail.loc[i,
                                        call + '_call_igblastn'] != db_fail.loc[
