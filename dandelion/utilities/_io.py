@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-10 21:31:35
+# @Last Modified time: 2022-03-11 17:44:51
 
 import os
 import json
@@ -19,7 +19,6 @@ from ..utilities._core import *
 from os import PathLike
 from typing import Union, Sequence, Optional
 from collections import defaultdict, OrderedDict
-from airr import create_rearrangement, dump_rearrangement
 
 AIRR = [
     'cell_id',
@@ -750,11 +749,7 @@ def change_file_location(data: Sequence,
         for x in cols_to_merge:
             tmp[x] = pd.Series(airr_output[x])
 
-        # this part doesn't seem to want to work?
-        # writer = create_rearrangement(filePath, fields=tmp.columns)
-        # for _, row in tmp.iterrows():
-            # writer.write(row)
-        dump_rearrangement(tmp, filePath)
+        write_airr(tmp, filePath)
 
         cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
         run(cmd)
@@ -805,17 +800,9 @@ def make_all(data: Sequence,
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep='\t')
                 df = df1.append(df2)
-                writer = create_rearrangement(
-                    filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv',
-                    fields=df.columns)
-                for _, row in df.iterrows():
-                    writer.write(row)
+                write_airr(df, filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
             else:
-                writer = create_rearrangement(
-                    filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv',
-                    fields=df1.columns)
-                for _, row in df1.iterrows():
-                    writer.write(row)
+                write_airr(df1, filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
 
 
 def rename_dandelion(data: Sequence,
@@ -837,3 +824,8 @@ def rename_dandelion(data: Sequence,
             filePath.rsplit(endswith)[0] + '_dandelion.tsv'
         ]
         run(cmd)
+
+
+def write_airr(data, save):
+    data = sanitize_data(data)
+    data.to_csv(save, sep='\t', index=False)
