@@ -35,7 +35,9 @@ def test_reannotategenes(create_testfolder, database_paths_mouse):
     ddl.pp.reannotate_genes(str(create_testfolder),
                             igblast_db=database_paths_mouse['igblast_db'],
                             germline=database_paths_mouse['germline'],
-                            org='mouse')
+                            org='mouse',
+                            reassign_dj = False,
+                            )
     assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
 
 
