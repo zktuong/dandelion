@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 21:27:48
+# @Last Modified time: 2022-03-11 21:32:14
 
 import os
 import pandas as pd
@@ -2195,10 +2195,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
     base = importr('base')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(self):
-        dat = load_data(self)
     else:
-        raise ValueError("{} object/file not found.".format(self))
+        dat = load_data(self)
+
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
