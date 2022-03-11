@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 21:32:14
+# @Last Modified time: 2022-03-11 22:35:39
 
 import os
 import pandas as pd
@@ -705,7 +705,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
-    # make_all(fasta, filename_prefix)
+    make_all(fasta, filename_prefix)
     rename_dandelion(fasta, filename_prefix)
 
 
