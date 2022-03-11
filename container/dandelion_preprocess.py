@@ -65,11 +65,10 @@ def parse_args():
             'If passed, limits the contig space to ones that are set to ' +
             '"True" in the high_confidence column of the contig annotation.'))
     parser.add_argument(
-        '--reassign_dj',
-        action='store_true',
+        '--skip_reassign_dj',
+        action='store_false',
         help=(
-            'If passed, reassign d/j calls with blastn. ' +
-            'Only affects if loci is ig - will always reassign if loci is tr.'
+            'If passed, skips reassigning d/j calls with blastn when flavour=strict.'
         ))
     parser.add_argument(
         '--keep_trailing_hyphen_number',
@@ -103,8 +102,10 @@ def main():
     else:
         keep_trailing_hyphen_number_log = True
 
-    if args.chain == 'tr':
-        args.reassign_dj = True
+    if args.skip_reassign_dj:
+        skip_reassign_dj_log = False
+    else:
+        skip_reassign_dj_log = True
 
     logg.info(
         'command line parameters:\n',
@@ -119,7 +120,7 @@ def main():
          f'    --skip_format_header = {args.skip_format_header}\n'
          f'    --filter_to_high_confidence = {args.filter_to_high_confidence}\n'
          f'    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n'
-         f'    --reassign_dj = {args.reassign_dj}\n'
+         f'    --skip_reassign_dj = {skip_reassign_dj_log}\n'
          f'    --clean_output = {args.clean_output}\n'
          f'--------------------------------------------------------------\n'),
     )
@@ -195,20 +196,11 @@ def main():
 
     # STEP TWO - ddl.pp.reannotate_genes()
     # no tricks here
-    if args.chain == 'ig':
-        ddl.pp.reannotate_genes(samples,
-                                loci=args.chain,
-                                filename_prefix=filename_prefixes,
-                                flavour=args.flavour,
-                                reassign_dj=args.reassign_dj)
-    elif args.chain == 'tr':
-        ddl.pp.reannotate_genes(
-            samples,
-            loci=args.chain,
-            filename_prefix=filename_prefixes,
-            flavour=args.flavour,
-            reassign_dj=True,
-        )
+    ddl.pp.reannotate_genes(samples,
+                            loci=args.chain,
+                            filename_prefix=filename_prefixes,
+                            flavour=args.flavour,
+                            reassign_dj=args.skip_reassign_dj)
 
     # IG requires further preprocessing, TR is done now
     if args.chain == 'ig':
