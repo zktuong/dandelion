@@ -31,16 +31,6 @@ def test_formatfasta(create_testfolder):
     assert len(list((create_testfolder / 'dandelion').iterdir())) == 2
 
 
-def test_reannotategenes_other(create_testfolder, database_paths_mouse):
-    ddl.pp.format_fastas(str(create_testfolder))
-    ddl.pp.reannotate_genes(str(create_testfolder),
-                            igblast_db=database_paths_mouse['igblast_db'],
-                            germline=database_paths_mouse['germline'],
-                            extended = False,
-                            org='mouse')
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
-
-
 def test_reannotategenes_original(create_testfolder, database_paths_mouse):
     ddl.pp.format_fastas(str(create_testfolder))
     ddl.pp.reannotate_genes(str(create_testfolder),
@@ -49,3 +39,13 @@ def test_reannotategenes_original(create_testfolder, database_paths_mouse):
                             flavour = 'original',
                             org='mouse')
     assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
+
+
+def test_reannotategenes_other(create_testfolder, database_paths_mouse):
+    ddl.pp.format_fastas(str(create_testfolder))
+    ddl.pp.reannotate_genes(str(create_testfolder),
+                            igblast_db=database_paths_mouse['igblast_db'],
+                            germline=database_paths_mouse['germline'],
+                            extended = False,
+                            org='mouse')
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 6

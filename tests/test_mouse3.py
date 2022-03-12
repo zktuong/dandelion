@@ -31,14 +31,15 @@ def test_formatfasta(create_testfolder):
     assert len(list((create_testfolder / 'dandelion').iterdir())) == 2
 
 
-def test_reannotategenes(create_testfolder, database_paths_mouse):
+def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
+    ddl.pp.format_fastas(str(create_testfolder))
     ddl.pp.reannotate_genes(str(create_testfolder),
                             igblast_db=database_paths_mouse['igblast_db'],
                             germline=database_paths_mouse['germline'],
-                            org='mouse',
-                            reassign_dj = False,
-                            )
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 4
+                            flavour = 'strict',
+                            reassign_dj = True,
+                            org='mouse')
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 6
 
 
 def test_reassignalleles(create_testfolder, database_paths_mouse):
@@ -48,7 +49,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
                             org='mouse',
                             novel=True,
                             plot=False)
-    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 7
+    assert len(list((create_testfolder / 'dandelion/tmp').iterdir())) == 9
 
 
 def test_updateblastdb(database_paths_mouse):
@@ -65,16 +66,6 @@ def test_assignsisotypes(create_testfolder, database_paths_mouse,
     assert len(list((create_testfolder / 'dandelion').iterdir())) == 2
 
 
-def test_create_germlines(create_testfolder, processed_files,
-                          database_paths_mouse):
-    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
-    ddl.pp.create_germlines(f, germline=database_paths_mouse['germline'])
-    f2 = create_testfolder / str('dandelion/' +
-                                 processed_files['germline-dmask'])
-    dat = pd.read_csv(f2, sep='\t')
-    assert not dat['germline_alignment_d_mask'].empty
-
-
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
     dat = pd.read_csv(f, sep='\t')
@@ -83,30 +74,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5(f1)
     adata.write_h5ad(f2)
-    assert dat.shape[0] == 1285
-    assert vdj.data.shape[0] == 782
-    assert vdj.metadata.shape[0] == 392
-    assert adata.n_obs == 547
-
-
-def test_generate_network(create_testfolder):
-    f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
-    ddl.tl.find_clones(vdj)
-    ddl.tl.generate_network(vdj)
-    assert vdj.distance is not None
-    assert vdj.edges is not None
-    assert vdj.n_obs == 392
-    assert vdj.layout is not None
-    assert vdj.graph is not None
-
-
-def test_filtercontigs_drop_contigs(create_testfolder, processed_files, dummy_adata_mouse):
-    f = create_testfolder / str('dandelion/' + processed_files['filtered'])
-    dat = pd.read_csv(f, sep='\t')
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse,
-                                       filter_poorqualitycontig = True)
-    assert dat.shape[0] == 1285
-    assert vdj.data.shape[0] == 781
-    assert vdj.metadata.shape[0] == 391
+    assert dat.shape[0] == 1278
+    assert vdj.data.shape[0] == 776
+    assert vdj.metadata.shape[0] == 389
     assert adata.n_obs == 547

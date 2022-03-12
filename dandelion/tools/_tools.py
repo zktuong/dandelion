@@ -2,12 +2,20 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-02-09 00:04:07
+# @Last Modified time: 2022-03-11 18:11:55
 
 import os
 import sys
+import re
+import math
+import copy
+import functools
+import warnings
+
 import pandas as pd
 import numpy as np
+import networkx as nx
+
 from tqdm import tqdm
 from ..utilities._utilities import *
 from ..utilities._core import *
@@ -18,16 +26,9 @@ from itertools import groupby
 from scipy.spatial.distance import pdist, squareform
 from scipy.sparse import csr_matrix
 from distance import hamming
-import re
-import math
-import networkx as nx
 from time import sleep
-import copy
-import functools
 from scanpy import logging as logg
-import warnings
 from subprocess import run
-import multiprocessing
 from changeo.Gene import getGene
 from anndata import AnnData
 from typing import Union, Sequence, Tuple, Optional
@@ -482,11 +483,10 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     dat_[clone_key] = pd.Series(dat[clone_key])
     dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(self)):
-        dat_.to_csv("{}/{}_clone.tsv".format(
-            os.path.dirname(self),
-            os.path.basename(self).split('.tsv')[0]),
-            sep='\t',
-            index=False)
+        write_airr(
+            dat_,
+            "{}/{}_clone.tsv".format(os.path.dirname(self),
+                                     os.path.basename(self).split('.tsv')[0]))
 
     sleep(0.5)
     logg.info(' finished',
@@ -763,7 +763,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
     fileformat : str
         format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     ncpu : int, Optional
-        number of cpus for parallelization. Default is all available cpus.
+        number of cpus for parallelization. Default is 1, no parallelization.
     dirs : str, Optional
         If specified, out file will be in this location.
     outFilePrefix : str, Optional
@@ -777,7 +777,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
     """
     start = logg.info('Finding clones')
     if ncpu is None:
-        nproc = multiprocessing.cpu_count()
+        nproc = 1
     else:
         nproc = ncpu
 
@@ -831,8 +831,8 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         l_file = "{}/{}_light.tsv".format(tmpFolder, out_FilePrefix)
         outfile = "{}/{}_clone.tsv".format(outFolder, out_FilePrefix)
 
-    dat_h.to_csv(h_file1, sep='\t', index=False)
-    dat_l.to_csv(l_file, sep='\t', index=False)
+    write_airr(dat_h, h_file1)
+    write_airr(dat_l, l_file)
 
     if 'v_call_genotyped' in dat.columns:
         v_field = 'v_call_genotyped'
@@ -1019,7 +1019,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             heavy_df.apply(lambda row: str(cluster_dict[row[cell_id]]), axis=1)
 
         # write heavy chains
-        heavy_df.to_csv(out_file, sep='\t', index=False)
+        write_airr(heavy_df, out_file)
         return (heavy_df, light_df)
 
     if verbose:

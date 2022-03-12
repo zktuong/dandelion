@@ -2,13 +2,12 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-08 10:26:56
+# @Last Modified time: 2022-03-12 11:24:29
 
 import os
 import pandas as pd
 from subprocess import run
 from tqdm import tqdm
-import multiprocessing
 from joblib import Parallel, delayed
 from collections import OrderedDict
 from time import sleep
@@ -368,8 +367,6 @@ def assign_isotype(fasta: Union[str, PathLike],
                                                            float]] = (4, 4),
                    blastdb: Optional[str] = None,
                    allele: bool = False,
-                   parallel: bool = True,
-                   ncpu: Optional[int] = None,
                    filename_prefix: Optional[str] = None,
                    verbose: bool = False):
     """
@@ -409,11 +406,6 @@ def assign_isotype(fasta: Union[str, PathLike],
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
-    parallel : bool
-        whether or not to use parallelization. Default is True.
-    ncpu : int
-        number of cores to use if parallel is True. Default is all
-        available minus 1.
     filename_prefix : str, Optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
@@ -610,7 +602,15 @@ def assign_isotype(fasta: Union[str, PathLike],
 
     if verbose:
         print('Loading 10X annotations \n')
-    dat_10x = load_data(_file)
+    try:
+        dat_10x = load_data(_file)
+    except FileNotFoundError:
+        # maybe a short cut to skip reassign_alleles?
+        _file = "{}/tmp/{}.tsv".format(
+            os.path.dirname(filePath),
+            os.path.basename(filePath).split('.fasta')[0] +
+            format_dict[fileformat])
+        dat_10x = load_data(_file)
     res_10x = pd.DataFrame(dat_10x['c_call'])
     res_10x['c_call'] = res_10x['c_call'].fillna(value='None')
     if verbose:
@@ -677,8 +677,8 @@ def assign_isotype(fasta: Union[str, PathLike],
     # remove allellic calls
     dat['c_call'] = dat['c_call'].fillna(value='')
     dat['c_call'] = [re.sub('[*][0-9][0-9]', '', c) for c in dat['c_call']]
-    dat.to_csv(_file2, sep='\t', index=False)
 
+    write_airr(dat, _file2)
     if plot:
         options.figure_size = figsize
         if correct_c_call:
@@ -705,7 +705,7 @@ def assign_isotype(fasta: Union[str, PathLike],
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
-    # make_all(fasta, filename_prefix)
+    make_all(fasta, filename_prefix)
     rename_dandelion(fasta, filename_prefix)
 
 
@@ -721,8 +721,6 @@ def assign_isotypes(fastas: Sequence,
                                                             float]] = (4, 4),
                     blastdb: Optional[str] = None,
                     allele: bool = False,
-                    parallel: bool = True,
-                    ncpu: Optional[int] = None,
                     filename_prefix: Optional[Union[Sequence, str]] = None,
                     verbose: bool = False):
     """
@@ -754,10 +752,6 @@ def assign_isotypes(fastas: Sequence,
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     allele : bool
         whether or not to return allele calls. Default is False.
-    parallel : bool
-        whether or not to use parallelization. Default is True.
-    ncpu : int
-        number of cores to use if parallel is True. Default is all available - 1.
     filename_prefix : str, Optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
     verbose : bool
@@ -789,8 +783,6 @@ def assign_isotypes(fastas: Sequence,
                        figsize=figsize,
                        blastdb=blastdb,
                        allele=allele,
-                       parallel=parallel,
-                       ncpu=ncpu,
                        filename_prefix=filename_prefix[i],
                        verbose=verbose)
 
@@ -808,7 +800,7 @@ def reannotate_genes(data: Sequence,
                      v_evalue: float = 1e-4,
                      d_evalue: float = 1e-3,
                      j_evalue: float = 1e-4,
-                     reassign_dj: bool = False,
+                     reassign_dj: bool = True,
                      overwrite: bool = True,
                      dust: Optional[Union[Literal['yes', 'no'], str]] = 'no',
                      verbose: bool = False):
@@ -1432,9 +1424,7 @@ def reassign_alleles(data: Sequence,
         else:
             out_file = dat_[dat_['sample_id'] == s]
         outfilepath = filePath_dict[s]
-        out_file.to_csv(outfilepath.replace('.tsv', '_genotyped.tsv'),
-                        index=False,
-                        sep='\t')
+        write_airr(out_file, outfilepath.replace('.tsv', '_genotyped.tsv'))
 
 
 def create_germlines(
@@ -1846,11 +1836,9 @@ def create_germlines(
             out.data[x] = pd.Series(germline_df[x])
 
         if os.path.isfile(str(file)):
-            out.data.to_csv("{}/{}_germline_{}.tsv".format(
+            out.write_airr("{}/{}_germline_{}.tsv".format(
                 os.path.dirname(file),
-                os.path.basename(file).split('.tsv')[0], germ_types),
-                sep='\t',
-                index=False)
+                os.path.basename(file).split('.tsv')[0], germ_types))
         return (out)
 
     if (type(germline) is dict) or (type(germline) is list):
@@ -2101,18 +2089,18 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
             )
 
         if os.path.isfile(str(data)):
-            _dat.to_csv("{}/{}_filtered.tsv".format(
-                os.path.dirname(data),
-                os.path.basename(data).split('.tsv')[0]),
-                sep='\t',
-                index=False)
+            write_airr(
+                _dat, "{}/{}_filtered.tsv".format(
+                    os.path.dirname(data),
+                    os.path.basename(data).split('.tsv')[0]))
         else:
             if save is not None:
                 if save.endswith('.tsv'):
-                    _dat.to_csv(str(save), sep='\t', index=False)
+                    write_airr(_dat, str(save))
                 else:
                     raise FileNotFoundError(
-                        'Please provide a file name that ends with .tsv')
+                        '{} not suitable. Please provide a file name that ends with .tsv'
+                        .format(str(save)))
     else:
         _dat = dat.copy()
 
@@ -2161,7 +2149,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                        region_definition: Optional[str] = None,
                        mutation_definition: Optional[str] = None,
                        frequency: bool = False,
-                       combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
+                       combine: bool = True,
+                       **kwargs
+                       ) -> Union[pd.DataFrame, Dandelion]:
     """
     Run basic mutation load analysis.
 
@@ -2185,6 +2175,8 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
         whether to return the results a frequency or counts. Default is True (frequency).
     combine
         whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
+    **kwargs
+        passed to shazam::observedMutations.
 
     Returns
     -------
@@ -2204,10 +2196,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
     base = importr('base')
     if self.__class__ == Dandelion:
         dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(self):
-        dat = load_data(self)
     else:
-        raise ValueError("{} object/file not found.".format(self))
+        dat = load_data(self)
+
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
@@ -2248,7 +2239,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                        regionDefinition=reg_d,
                                        mutationDefinition=mut_d,
                                        frequency=frequency,
-                                       combine=combine)
+                                       combine=combine,
+                                       **kwargs
+                                       )
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
     else:
@@ -2275,14 +2268,18 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          regionDefinition=reg_d,
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
-                                         combine=combine)
+                                         combine=combine,
+                                         **kwargs
+                                         )
         results_l = sh.observedMutations(dat_l_r,
                                          sequenceColumn=seq_,
                                          germlineColumn=germline_,
                                          regionDefinition=reg_d,
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
-                                         combine=combine)
+                                         combine=combine,
+                                         **kwargs
+                                         )
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace=True, drop=False)
@@ -2350,7 +2347,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
             logg.info(' finished',
                       time=start,
                       deep=('saving DataFrame at {}\n'.format(str(self))))
-            dat.to_csv(self, sep='\t', index=False)
+            write_airr(dat, self)
 
 
 def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
@@ -2375,7 +2372,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                                  "user"]] = None,
                         sensitivity: Optional[float] = None,
                         specificity: Optional[float] = None,
-                        ncpu: Optional[int] = None,
                         plot: bool = True,
                         plot_group: Optional[str] = None,
                         figsize: Tuple[Union[int, float],
@@ -2443,8 +2439,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         sensitivity required. Applies only when method="gmm" and cutoff="user".
     specificity : float, Optional
         specificity required. Applies only when method="gmm" and cutoff="user".
-    ncpu : int, Optional
-        number of cpus for parallelization. Default is all available cpus.
     plot : bool
         whether or not to return plot.
     plot_group : str, Optional
@@ -2498,10 +2492,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         subsample_ = NULL
     else:
         subsample_ = subsample
-    if ncpu is None:
-        ncpu_ = multiprocessing.cpu_count() - 1
-    else:
-        ncpu_ = ncpu
+
     if mode == 'heavy':
         dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
         try:
@@ -2514,7 +2505,6 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                     vCallColumn=v_call,
                                     model=model_,
                                     normalize=norm_,
-                                    nproc=ncpu_,
                                     **kwargs)
     elif mode == 'single-cell':
         try:
@@ -3841,7 +3831,7 @@ def run_blastn(
             '_germline_end', call + '_support', call + '_score', call +
             '_sequence_alignment', call + '_germline_alignment'
         ])
-    dat.to_csv(blast_out, sep='\t', index=False)
+    write_blastn(dat, blast_out)
     dat = load_data(dat)
     return (dat)
 
@@ -3868,7 +3858,10 @@ def transfer_assignment(passfile: Union[PathLike, str],
         db_fail['locus'].fillna(value='', inplace=True)
         for i, r in db_fail.iterrows():
             if not present(r.locus):
-                calls = list(set([r.v_call[:3], r.d_call[:3], r.j_call[:3], r.c_call[:3]]))
+                calls = list(
+                    set([
+                        r.v_call[:3], r.d_call[:3], r.j_call[:3], r.c_call[:3]
+                    ]))
                 locus = ''.join([c for c in calls if present(c)])
                 if len(locus) == 3:
                     db_fail.at[i, 'locus'] = locus
@@ -3878,16 +3871,18 @@ def transfer_assignment(passfile: Union[PathLike, str],
         blast_result = None
 
     if blast_result is not None:
-        blast_result_evalues = dict(blast_result[call + '_support'])
-        blast_result_call = dict(blast_result[call + '_support'])
-        blast_result_evalues = dict(blast_result[call + '_support'])
         if db_pass is not None:
-            db_pass_evalues = dict(db_pass[call + '_support'])
-            db_pass_scores = dict(db_pass[call + '_score'])
+            if call + '_support' in db_pass:
+                db_pass_evalues = dict(db_pass[call + '_support'])
+            if call + '_score' in db_pass:
+                db_pass_scores = dict(db_pass[call + '_score'])
             db_pass[call + '_call'].fillna(value='', inplace=True)
             db_pass_call = dict(db_pass[call + '_call'])
-            db_pass[call + '_support_igblastn'] = pd.Series(db_pass_evalues)
-            db_pass[call + '_score_igblastn'] = pd.Series(db_pass_scores)
+            if call + '_support' in db_pass:
+                db_pass[call +
+                        '_support_igblastn'] = pd.Series(db_pass_evalues)
+            if call + '_score' in db_pass:
+                db_pass[call + '_score_igblastn'] = pd.Series(db_pass_scores)
             db_pass[call + '_call_igblastn'] = pd.Series(db_pass_call)
             db_pass[call + '_call_igblastn'].fillna(value='', inplace=True)
             for col in blast_result:
@@ -3898,18 +3893,26 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_germline_alignment'
                     ]:
                         db_pass[col + '_blastn'].fillna(value='', inplace=True)
+            db_pass[call + '_source'] = ''
             if overwrite:
                 for i in db_pass['sequence_id']:
                     vend = db_pass.loc[i, 'v_sequence_end']
                     if not present(vend):
-                        vend = 0
+                        vend_ = 0
+                    else:
+                        vend_ = vend
                     jstart = db_pass.loc[i, 'j_sequence_start']
                     if not present(jstart):
-                        jstart = 1000
+                        jstart_ = 1000
+                    else:
+                        jstart_ = jstart
                     callstart = db_pass.loc[i, call + '_sequence_start_blastn']
                     callend = db_pass.loc[i, call + '_sequence_end_blastn']
-                    if (callstart >= vend) and (callend <= jstart):
-                        eval1 = db_pass.loc[i, call + '_support_igblastn']
+                    if (callstart >= vend_) and (callend <= jstart_):
+                        if call + '_support_igblastn' in db_pass:
+                            eval1 = db_pass.loc[i, call + '_support_igblastn']
+                        else:
+                            eval1 = 1
                         eval2 = db_pass.loc[i, call + '_support_blastn']
                         if db_pass.loc[i,
                                        call + '_call_igblastn'] != db_pass.loc[
@@ -3925,6 +3928,26 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                                        '_call'] = db_pass.at[
                                                            i, call +
                                                            '_call_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_sequence_start'] = db_pass.at[
+                                                    i, call +
+                                                    '_sequence_start_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_sequence_end'] = db_pass.at[
+                                                    i, call +
+                                                    '_sequence_end_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_germline_start'] = db_pass.at[
+                                                    i, call +
+                                                    '_germline_start_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_germline_end'] = db_pass.at[
+                                                    i, call +
+                                                    '_germline_end_blastn']
                                             db_pass.at[i, call +
                                                        '_source'] = 'blastn'
                                     else:
@@ -3933,6 +3956,26 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                                        '_call'] = db_pass.at[
                                                            i, call +
                                                            '_call_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_sequence_start'] = db_pass.at[
+                                                    i, call +
+                                                    '_sequence_start_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_sequence_end'] = db_pass.at[
+                                                    i, call +
+                                                    '_sequence_end_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_germline_start'] = db_pass.at[
+                                                    i, call +
+                                                    '_germline_start_blastn']
+                                            db_pass.at[
+                                                i, call +
+                                                '_germline_end'] = db_pass.at[
+                                                    i, call +
+                                                    '_germline_end_blastn']
                                             db_pass.at[i, call +
                                                        '_source'] = 'blastn'
                                 else:
@@ -3958,22 +4001,91 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                 if eval1 > eval2:
                                     db_pass.at[i, call + '_call'] = db_pass.at[
                                         i, call + '_call_blastn']
+                                    db_pass.at[i, call +
+                                               '_sequence_start'] = db_pass.at[
+                                                   i, call +
+                                                   '_sequence_start_blastn']
+                                    db_pass.at[i, call +
+                                               '_sequence_end'] = db_pass.at[
+                                                   i, call +
+                                                   '_sequence_end_blastn']
+                                    db_pass.at[i, call +
+                                               '_germline_start'] = db_pass.at[
+                                                   i, call +
+                                                   '_germline_start_blastn']
+                                    db_pass.at[i, call +
+                                               '_germline_end'] = db_pass.at[
+                                                   i, call +
+                                                   '_germline_end_blastn']
                                     db_pass.at[i, call + '_source'] = 'blastn'
                             else:
                                 if present(eval2):
                                     db_pass.at[i, call + '_call'] = db_pass.at[
                                         i, call + '_call_blastn']
+                                    db_pass.at[i, call +
+                                               '_sequence_start'] = db_pass.at[
+                                                   i, call +
+                                                   '_sequence_start_blastn']
+                                    db_pass.at[i, call +
+                                               '_sequence_end'] = db_pass.at[
+                                                   i, call +
+                                                   '_sequence_end_blastn']
+                                    db_pass.at[i, call +
+                                               '_germline_start'] = db_pass.at[
+                                                   i, call +
+                                                   '_germline_start_blastn']
+                                    db_pass.at[i, call +
+                                               '_germline_end'] = db_pass.at[
+                                                   i, call +
+                                                   '_germline_end_blastn']
                                     db_pass.at[i, call + '_source'] = 'blastn'
 
+                vend = db_pass['v_sequence_end']
+                dstart = db_pass['d_sequence_start']
+                dend = db_pass['d_sequence_end']
+                jstart = db_pass['j_sequence_start']
+
+                np1 = [
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(d - v) -
+                              1 if pd.notnull(v) and pd.notnull(d) else np.nan
+                              for v, d in zip(vend, dstart)]
+                ]
+                np2 = [
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(j - d) -
+                              1 if pd.notnull(j) and pd.notnull(d) else np.nan
+                              for d, j in zip(dend, jstart)]
+                ]
+
+                db_pass['np1_length'] = np1
+                db_pass['np2_length'] = np2
+
+                for i in db_pass['sequence_id']:
+                    if not present(db_pass.loc[i, 'np1_length']):
+                        vend = db_pass.loc[i, 'v_sequence_end']
+                        if present(vend):
+                            jstart = db_pass.loc[i, 'j_sequence_start']
+                            if present(jstart):
+                                np1l = (jstart - vend) - 1
+                                if np1l >= 0:
+                                    db_pass.loc[i, 'np1_length'] = np1l
+            # fill in blanks
+            db_pass = sanitize_data(db_pass)
             db_pass.to_csv(passfile, sep='\t', index=False)
 
         if db_fail is not None:
-            db_fail_evalues = dict(db_fail[call + '_support'])
-            db_fail_scores = dict(db_fail[call + '_score'])
+            if call + '_support' in db_fail:
+                db_fail_evalues = dict(db_fail[call + '_support'])
+            if call + '_score' in db_fail:
+                db_fail_scores = dict(db_fail[call + '_score'])
             db_fail[call + '_call'].fillna(value='', inplace=True)
             db_fail_call = dict(db_fail[call + '_call'])
-            db_fail[call + '_support_igblastn'] = pd.Series(db_fail_evalues)
-            db_fail[call + '_score_igblastn'] = pd.Series(db_fail_scores)
+            if call + '_support' in db_fail:
+                db_fail[call +
+                        '_support_igblastn'] = pd.Series(db_fail_evalues)
+            if call + '_score' in db_fail:
+                db_fail[call + '_score_igblastn'] = pd.Series(db_fail_scores)
             db_fail[call + '_call_igblastn'] = pd.Series(db_fail_call)
             db_fail[call + '_call_igblastn'].fillna(value='', inplace=True)
             for col in blast_result:
@@ -3984,18 +4096,26 @@ def transfer_assignment(passfile: Union[PathLike, str],
                             call + '_germline_alignment'
                     ]:
                         db_fail[col + '_blastn'].fillna(value='', inplace=True)
+            db_fail[call + '_source'] = ''
             if overwrite:
                 for i in db_fail['sequence_id']:
                     vend = db_fail.loc[i, 'v_sequence_end']
                     if not present(vend):
-                        vend = 0
+                        vend_ = 0
+                    else:
+                        vend_ = vend
                     jstart = db_fail.loc[i, 'j_sequence_start']
                     if not present(jstart):
-                        jstart = 1000
+                        jstart_ = 1000
+                    else:
+                        jstart_ = jstart
                     callstart = db_fail.loc[i, call + '_sequence_start_blastn']
                     callend = db_fail.loc[i, call + '_sequence_end_blastn']
-                    if (callstart >= vend) and (callend <= jstart):
-                        eval1 = db_fail.loc[i, call + '_support_igblastn']
+                    if (callstart >= vend_) and (callend <= jstart_):
+                        if call + '_support_igblastn' in db_fail:
+                            eval1 = db_fail.loc[i, call + '_support_igblastn']
+                        else:
+                            eval1 = 1
                         eval2 = db_fail.loc[i, call + '_support_blastn']
                         if db_fail.loc[i,
                                        call + '_call_igblastn'] != db_fail.loc[
@@ -4011,6 +4131,26 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                                        '_call'] = db_fail.at[
                                                            i, call +
                                                            '_call_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_sequence_start'] = db_fail.at[
+                                                    i, call +
+                                                    '_sequence_start_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_sequence_end'] = db_fail.at[
+                                                    i, call +
+                                                    '_sequence_end_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_germline_start'] = db_fail.at[
+                                                    i, call +
+                                                    '_germline_start_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_germline_end'] = db_fail.at[
+                                                    i, call +
+                                                    '_germline_end_blastn']
                                             db_fail.at[i, call +
                                                        '_source'] = 'blastn'
                                     else:
@@ -4019,6 +4159,26 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                                        '_call'] = db_fail.at[
                                                            i, call +
                                                            '_call_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_sequence_start'] = db_fail.at[
+                                                    i, call +
+                                                    '_sequence_start_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_sequence_end'] = db_fail.at[
+                                                    i, call +
+                                                    '_sequence_end_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_germline_start'] = db_fail.at[
+                                                    i, call +
+                                                    '_germline_start_blastn']
+                                            db_fail.at[
+                                                i, call +
+                                                '_germline_end'] = db_fail.at[
+                                                    i, call +
+                                                    '_germline_end_blastn']
                                             db_fail.at[i, call +
                                                        '_source'] = 'blastn'
                                 else:
@@ -4044,11 +4204,76 @@ def transfer_assignment(passfile: Union[PathLike, str],
                                 if eval1 > eval2:
                                     db_fail.at[i, call + '_call'] = db_fail.at[
                                         i, call + '_call_blastn']
+                                    db_fail.at[i, call +
+                                               '_sequence_start'] = db_fail.at[
+                                                   i, call +
+                                                   '_sequence_start_blastn']
+                                    db_fail.at[i, call +
+                                               '_sequence_end'] = db_fail.at[
+                                                   i, call +
+                                                   '_sequence_end_blastn']
+                                    db_fail.at[i, call +
+                                               '_germline_start'] = db_fail.at[
+                                                   i, call +
+                                                   '_germline_start_blastn']
+                                    db_fail.at[i, call +
+                                               '_germline_end'] = db_fail.at[
+                                                   i, call +
+                                                   '_germline_end_blastn']
                                     db_fail.at[i, call + '_source'] = 'blastn'
                             else:
                                 if present(eval2):
                                     db_fail.at[i, call + '_call'] = db_fail.at[
                                         i, call + '_call_blastn']
+                                    db_fail.at[i, call +
+                                               '_sequence_start'] = db_fail.at[
+                                                   i, call +
+                                                   '_sequence_start_blastn']
+                                    db_fail.at[i, call +
+                                               '_sequence_end'] = db_fail.at[
+                                                   i, call +
+                                                   '_sequence_end_blastn']
+                                    db_fail.at[i, call +
+                                               '_germline_start'] = db_fail.at[
+                                                   i, call +
+                                                   '_germline_start_blastn']
+                                    db_fail.at[i, call +
+                                               '_germline_end'] = db_fail.at[
+                                                   i, call +
+                                                   '_germline_end_blastn']
                                     db_fail.at[i, call + '_source'] = 'blastn'
 
+                vend = db_fail['v_sequence_end']
+                dstart = db_fail['d_sequence_start']
+                dend = db_fail['d_sequence_end']
+                jstart = db_fail['j_sequence_start']
+
+                np1 = [
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(d - v) -
+                              1 if pd.notnull(v) and pd.notnull(d) else np.nan
+                              for v, d in zip(vend, dstart)]
+                ]
+                np2 = [
+                    str(int(n)) if n >= 0 else ''
+                    for n in [(j - d) -
+                              1 if pd.notnull(j) and pd.notnull(d) else np.nan
+                              for d, j in zip(dend, jstart)]
+                ]
+                db_fail['np1_length'] = np1
+                db_fail['np2_length'] = np2
+
+                # rescue the d blanks
+                for i in db_fail['sequence_id']:
+                    if not present(db_fail.loc[i, 'np1_length']):
+                        vend = db_fail.loc[i, 'v_sequence_end']
+                        if present(vend):
+                            jstart = db_fail.loc[i, 'j_sequence_start']
+                            if present(jstart):
+                                np1l = (jstart - vend) - 1
+                                if np1l >= 0:
+                                    db_fail.loc[i, 'np1_length'] = np1l
+
+            # fill in blanks
+            db_fail = sanitize_data(db_fail)
             db_fail.to_csv(failfile, sep='\t', index=False)

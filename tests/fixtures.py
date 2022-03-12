@@ -16,7 +16,6 @@ def database_paths():
     """Database paths for tests."""
     db = {
         'igblast_db': "container/database/igblast/",
-        'igblast_db': "container/database/igblast/",
         'germline': "container/database/germlines/imgt/human/vdj/",
         'blastdb': "container/database/blast/human/",
         'blastdb_fasta': "container/database/blast/human/human_BCR_C.fasta",
