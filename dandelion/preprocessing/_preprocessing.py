@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 22:35:39
+# @Last Modified time: 2022-03-12 11:24:29
 
 import os
 import pandas as pd
@@ -2149,8 +2149,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                        region_definition: Optional[str] = None,
                        mutation_definition: Optional[str] = None,
                        frequency: bool = False,
-                       ncpu: int = 1,
-                       combine: bool = True) -> Union[pd.DataFrame, Dandelion]:
+                       combine: bool = True,
+                       **kwargs
+                       ) -> Union[pd.DataFrame, Dandelion]:
     """
     Run basic mutation load analysis.
 
@@ -2172,10 +2173,10 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
         passed to shazam's `observedMutations`. https://shazam.readthedocs.io/en/stable/topics/MUTATION_SCHEMES/
     frequency
         whether to return the results a frequency or counts. Default is True (frequency).
-     ncpu : int
-        number of cores to use. Default is 1.
     combine
         whether to return the results for replacement and silent mutations separately (False). Default is True (sum).
+    **kwargs
+        passed to shazam::observedMutations.
 
     Returns
     -------
@@ -2238,8 +2239,9 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                        regionDefinition=reg_d,
                                        mutationDefinition=mut_d,
                                        frequency=frequency,
-                                       nproc = ncpu,
-                                       combine=combine)
+                                       combine=combine,
+                                       **kwargs
+                                       )
         # pd_df = pandas2ri.rpy2py_dataframe(results)
         pd_df = results.copy()
     else:
@@ -2266,16 +2268,18 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          regionDefinition=reg_d,
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
-                                         nproc = ncpu,
-                                         combine=combine)
+                                         combine=combine,
+                                         **kwargs
+                                         )
         results_l = sh.observedMutations(dat_l_r,
                                          sequenceColumn=seq_,
                                          germlineColumn=germline_,
                                          regionDefinition=reg_d,
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
-                                         nproc = ncpu,
-                                         combine=combine)
+                                         combine=combine,
+                                         **kwargs
+                                         )
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace=True, drop=False)
