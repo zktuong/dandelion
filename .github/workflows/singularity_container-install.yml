@@ -11,7 +11,7 @@ on:
     branches:
       - "*"
 jobs:
-    name: Check changed files
+  container:
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
