@@ -33,7 +33,6 @@ jobs:
         env:
           SINGULARITY_VERSION: 3.8.1
           GOPATH: /tmp/go
-      
         run: |
           mkdir -p $GOPATH
           sudo mkdir -p /usr/local/var/singularity/mnt && \
@@ -55,14 +54,14 @@ jobs:
 
       - name: Build Container
         run: |
-         ls container
-         cd container
-         wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
-         wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-x64-linux.tar.gz
-         tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
-         tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
-         echo '${{ steps.extract_location.outputs.location }}' >> environment_test.yml
-         sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
+          ls container
+          cd container
+          wget https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/ncbi-igblast-1.17.1-x64-linux.tar.gz
+          wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-x64-linux.tar.gz
+          tar -xzvf ncbi-igblast-1.17.1-x64-linux.tar.gz
+          tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
+          echo '${{ steps.extract_location.outputs.location }}' >> environment_test.yml
+          sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
       - name: Test Container
         run: |
           cd container
