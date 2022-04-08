@@ -2,11 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-<<<<<<< Updated upstream
-# @Last Modified time: 2022-03-12 11:24:29
-=======
-# @Last Modified time: 2022-04-08 11:39:33
->>>>>>> Stashed changes
+# @Last Modified time: 2022-04-08 11:40:40
 
 import os
 import pandas as pd
