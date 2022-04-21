@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pandas as pd
 import dandelion as ddl
+import sys
 import pytest
 
 from fixtures import (airr_reannotated, create_testfolder, database_paths)
