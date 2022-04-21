@@ -2083,7 +2083,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
 
         if _dat.shape[0] == 0:
             raise IndexError(
-                'No BCRs passed filtering. Are you sure that the cell barcodes are matching?'
+                'No contigs passed filtering. Are you sure that the cell barcodes are matching?'
             )
 
         if os.path.isfile(str(data)):
