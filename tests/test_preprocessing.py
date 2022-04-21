@@ -8,13 +8,12 @@ from pathlib import Path
 from fixtures import (fasta_10x, annotation_10x, create_testfolder,
                       database_paths, dummy_adata, processed_files)
 
-try:
-    os.environ.pop('IGDATA')
-    os.environ.pop('GERMLINE')
-    os.environ.pop('BLASTDB')
-except:
-    pass
-
+if 'IGDATA' in os.environ:
+    del os.environ["IGDATA"]
+if 'GERMLINE' in os.environ:
+    del os.environ["GERMLINE"]
+if 'GERMLINE' in os.environ:
+    del os.environ["GERMLINE"]
 
 @pytest.mark.parametrize("filename,expected",
                          [pytest.param('filtered', 1),
