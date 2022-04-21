@@ -15,6 +15,7 @@ def test_importrpy2():
     assert sh.__module__ == 'rpy2.robjects.packages'
 
 
+@pytest.mark.skipif(sys.platform == 'darwin')
 def test_mutation(create_testfolder, airr_reannotated):
     f = create_testfolder / "test.tsv"
     airr_reannotated.to_csv(f, sep='\t', index=False)
@@ -34,6 +35,7 @@ def test_create_germlines(create_testfolder, database_paths):
     assert not vdj.data.germline_alignment_d_mask.empty
 
 
+@pytest.mark.skipif(sys.platform == 'darwin')
 def test_manual_threshold_and_define_clones(create_testfolder):
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep='\t')
