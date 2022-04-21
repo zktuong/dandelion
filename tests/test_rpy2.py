@@ -7,6 +7,7 @@ import pytest
 from fixtures import (airr_reannotated, create_testfolder, database_paths)
 
 
+@pytest.mark.skipif(sys.platform == 'darwin', reason="macos CI stalls.")
 def test_importrpy2():
 
     from rpy2.robjects.packages import importr
