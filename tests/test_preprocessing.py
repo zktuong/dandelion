@@ -165,7 +165,7 @@ def test_update_germlines(create_testfolder, processed_files, database_paths):
     pytest.param(True, 'mu_freq', float),
     pytest.param(False, 'mu_count', int)
 ])
-@pytest.mark.skipif(sys.platform == 'darwin')
+@pytest.mark.skipif(sys.platform == 'darwin', reason="macos CI stalls.")
 def test_quantify_mut(create_testfolder, processed_files, freq, colname,
                       dtype):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
@@ -179,7 +179,7 @@ def test_quantify_mut(create_testfolder, processed_files, freq, colname,
     "freq,colname",
     [pytest.param(True, 'mu_freq'),
      pytest.param(False, 'mu_count')])
-@pytest.mark.skipif(sys.platform == 'darwin')
+@pytest.mark.skipif(sys.platform == 'darwin', reason="macos CI stalls.")
 def test_quantify_mut_2(create_testfolder, processed_files, freq, colname):
     f = create_testfolder / str('dandelion/' + processed_files['filtered'])
     vdj = ddl.Dandelion(f)
