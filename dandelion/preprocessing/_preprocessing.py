@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-04-06 12:10:48
+# @Last Modified time: 2022-04-08 11:40:40
 
 import os
 import pandas as pd
@@ -1930,8 +1930,6 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         whether or not to retain only productive contigs.
     simple : bool
         simple filtering mode where only checks for potential gene assignment mismatches.
-    locus : str
-        Mode for filtering data. Accepts one of 'ig', 'tr-ab' or 'tr-gd'. None defaults to 'ig'.
     save : str, Optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     **kwargs
