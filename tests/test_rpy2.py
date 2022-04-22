@@ -30,6 +30,7 @@ def test_mutation(create_testfolder, airr_reannotated):
     assert not vdj.data.mu_freq.empty
 
 
+@pytest.mark.skipif(sys.platform == 'darwin', reason="macos CI stalls.")
 def test_create_germlines(create_testfolder, database_paths):
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep='\t')
