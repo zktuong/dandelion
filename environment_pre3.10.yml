@@ -5,6 +5,7 @@ channels:
 - anaconda
 - defaults
 dependencies:
+- numpy
 - pandas
 - pandoc
 - pyyaml
