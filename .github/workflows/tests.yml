@@ -143,6 +143,7 @@ jobs:
         install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
         BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
+        BiocManager::install(c('GenomeInfoDb', 'Rsamtools'))
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
@@ -154,7 +155,7 @@ jobs:
         install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
         BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
-        BiocManager::install(c('GenomeInfoDb', 'Rhtslib', 'Rsamtools'))
+        BiocManager::install(c('GenomeInfoDb', 'Rsamtools'))
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages('matrixStats')
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
