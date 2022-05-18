@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:04:38
+# @Last Modified time: 2022-05-18 06:07:42
 
 import pandas as pd
 import numpy as np
@@ -418,6 +418,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
     `pandas` dataframe or `Dandelion` object with updated `.metadata` slot.
     """
     start = logg.info('Calculating Gini indices')
+    from skbio.diversity.alpha import gini_index
 
     def gini_indices(self: Dandelion,
                      groupby: str,
@@ -839,6 +840,7 @@ def diversity_chao1(
     `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Chao1 estimates')
+    from skbio.diversity.alpha import chao1
 
     def chao1_estimates(self: Union[Dandelion, AnnData],
                         groupby: str,
@@ -1038,6 +1040,7 @@ def diversity_shannon(
     `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
     """
     start = logg.info('Calculating Shannon entropy')
+    from skbio.diversity.alpha import shannon
 
     def shannon_entropy(self: Union[Dandelion, AnnData],
                         groupby: str,
