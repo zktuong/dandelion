@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 06:07:42
+# @Last Modified time: 2022-05-18 06:37:42
 
 import pandas as pd
 import numpy as np
@@ -13,7 +13,7 @@ from ..utilities._io import *
 from ..tools._network import clone_centrality, clone_degree, generate_network
 from scipy.special import gammaln
 from anndata import AnnData
-from skbio.diversity.alpha import chao1, gini_index, shannon
+# from skbio.diversity.alpha import chao1, gini_index, shannon
 from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg
