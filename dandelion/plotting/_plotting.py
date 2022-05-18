@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 13:10:30
+# @Last Modified time: 2022-05-18 14:09:49
 
 import seaborn as sns
 import pandas as pd
@@ -881,8 +881,13 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         df = df.sort_values(colorby).drop_duplicates(
             subset=groupby, keep="first").reset_index(drop=True)
 
-    from importlib.metadata import version
-    if version('nxviz') < '0.7.3':
+    try:
+        from importlib.metadata import version
+        NXVIZVERSION = version("nxviz")
+    except:
+        from pkg_resources import get_distribution
+        NXVIZVERSION = get_distribution("nxviz").version
+    if NXVIZVERSION < '0.7.3':
         c = nxv.CircosPlot(G,
                            node_color=colorby,
                            node_grouping=colorby,
