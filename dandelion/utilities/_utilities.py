@@ -2,14 +2,20 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 20:32:54
+# @Last Modified time: 2022-05-18 02:37:52
 
 import os
 import re
 import pandas as pd
 import numpy as np
 
-from collections import defaultdict, Iterable
+from collections import defaultdict
+## for compatibility with python>=3.10
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
+
 from airr import RearrangementSchema
 from subprocess import run
 
