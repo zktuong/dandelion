@@ -22,14 +22,14 @@ jobs:
       max-parallel: 6
       matrix:
         config:
-          - { python-version: 3.7, os: ubuntu-latest }
-          - { python-version: 3.8, os: ubuntu-latest }
-          - { python-version: 3.9, os: ubuntu-latest }
-          - { python-version: "3.10", os: ubuntu-latest }
-          - { python-version: 3.7, os: macos-latest }
-          - { python-version: 3.8, os: macos-latest }
-          - { python-version: 3.9, os: macos-latest } # segmentation fault due to missing py3.9 macOSX wheel https://github.com/rpy2/rpy2/issues/846
-          - { python-version: "3.10", os: macos-latest }
+          - { python-version: 3.7, os: ubuntu-latest, yml-file: environment_pre3.10.yml}
+          - { python-version: 3.8, os: ubuntu-latest, yml-file: environment_pre3.10.yml}
+          - { python-version: 3.9, os: ubuntu-latest, yml-file: environment_pre3.10.yml}
+          - { python-version: "3.10", os: ubuntu-latest, yml-file: environment.yml}
+          - { python-version: 3.7, os: macos-latest, yml-file: environment_pre3.10.yml}
+          - { python-version: 3.8, os: macos-latest, yml-file: environment_pre3.10.yml}
+          - { python-version: 3.9, os: macos-latest, yml-file: environment_pre3.10.yml}
+          - { python-version: "3.10", os: macos-latest, yml-file: environment.yml}
           # disabled until it's fixed.
     runs-on: ${{ matrix.config.os }}
     env:
@@ -74,7 +74,7 @@ jobs:
         channels: conda-forge, bioconda, anaconda, defaults
         channel-priority: true
         python-version: ${{ matrix.config.python-version }}
-        environment-file: environment.yml
+        environment-file: ${{ matrix.config.yml-file }}
         use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
    
     - name: Display Python version
