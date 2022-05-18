@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-07-31 19:08:07
+# @Last Modified time: 2022-05-18 13:10:30
 
 import seaborn as sns
 import pandas as pd
@@ -365,7 +365,7 @@ def stackedbarplot(self: Union[AnnData, Dandelion],
 
     dat_ = pd.DataFrame(data_.groupby(color)[groupby].value_counts(
         normalize=normalize).unstack(fill_value=0).stack(),
-        columns=['value'])
+                        columns=['value'])
     dat_.reset_index(drop=False, inplace=True)
     dat_order = pd.DataFrame(data[color].value_counts(normalize=normalize))
     dat_ = dat_.pivot(index=color, columns=groupby, values='value')
@@ -551,7 +551,7 @@ def spectratype(self: Union[AnnData, Dandelion],
     data[groupby] = [str(l) for l in data[groupby]]
     dat_ = pd.DataFrame(data.groupby(color)[groupby].value_counts(
         normalize=False).unstack(fill_value=0).stack(),
-        columns=['value'])
+                        columns=['value'])
     dat_.reset_index(drop=False, inplace=True)
     dat_[color] = pd.to_numeric(dat_[color], errors='coerce')
     dat_.sort_values(by=color)
@@ -654,6 +654,7 @@ def clone_overlap(self: Union[AnnData, Dandelion],
                   groupby: str,
                   colorby: str,
                   min_clone_size: Optional[int] = None,
+                  weighted_overlap: bool = False,
                   clone_key: Optional[str] = None,
                   color_mapping: Optional[Union[Sequence, Dict]] = None,
                   node_labels: bool = True,
@@ -666,9 +667,13 @@ def clone_overlap(self: Union[AnnData, Dandelion],
                                                           float]] = (8, 8),
                   return_graph: bool = False,
                   save: Optional[str] = None,
+                  show_plot: bool = True,
                   **kwargs):
     """
     A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.
+
+    Written with nxviz < 0.7.3. Will need to revisit for newer nxviz versions, or change how it's called?
+    TODO: workout how to modify edge thickness with both old and new versions.
 
     Parameters
     ----------
@@ -680,10 +685,15 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         column name in obs/metadata for grouping and color of nodes in circos plot.
     min_clone_size : int, Optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
+    weighted_overlapt : bool
+        if True, instead of collapsing to overlap to binary, edge thickness will reflect the number of
+        cells found in the overlap. In the future, there will be the option to use something like a jaccard
+        index instead.
     clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
     color_maopping : Dict, Sequence, Optional
-        custom color mapping provided as a sequence (correpsonding to order of categories or alpha-numeric order if dtype is not category), or dictionary containing custom {category:color} mapping.
+        custom color mapping provided as a sequence (correpsonding to order of categories or
+        alpha-numeric order ifdtype is not category), or dictionary containing custom {category:color} mapping.
     node_labels : bool, Optional
         whether to use node objects as labels or not
     node_label_layout : bool, Optional
@@ -696,6 +706,10 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         figure size. Default is (8, 8).
     return_graph : bool
         whether or not to return the graph for fine tuning. Default is False.
+    save : str
+        file path for saving plot
+    show_plot : bool
+        whether or not to show the plot.
     **kwargs
         passed to `matplotlib.pyplot.savefig`.
 
@@ -740,15 +754,16 @@ def clone_overlap(self: Union[AnnData, Dandelion],
             dictg_ = dict(data[groupby])
             datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
-            overlap = pd.crosstab(data[clone_], data[groupby])
+            overlap = pd.crosstab(datc_[clone_], datc_[groupby])
 
             if min_size == 0:
                 raise ValueError('min_size must be greater than 0.')
-            elif min_size > 2:
-                overlap[overlap < min_size] = 0
-                overlap[overlap >= min_size] = 1
-            elif min_size == 2:
-                overlap[overlap >= min_size] = 1
+            if not weighted_overlap:
+                if min_size > 2:
+                    overlap[overlap < min_size] = 0
+                    overlap[overlap >= min_size] = 1
+                elif min_size == 2:
+                    overlap[overlap >= min_size] = 1
 
             overlap.index.name = None
             overlap.columns.name = None
@@ -767,30 +782,58 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         dictg_ = dict(data[groupby])
         datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
-        overlap = pd.crosstab(data[clone_], data[groupby])
-
+        overlap = pd.crosstab(datc_[clone_], datc_[groupby])
         if min_size == 0:
             raise ValueError('min_size must be greater than 0.')
-        elif min_size > 2:
-            overlap[overlap < min_size] = 0
-            overlap[overlap >= min_size] = 1
-        elif min_size == 2:
-            overlap[overlap >= min_size] = 1
+        if not weighted_overlap:
+            if min_size > 2:
+                overlap[overlap < min_size] = 0
+                overlap[overlap >= min_size] = 1
+            elif min_size == 2:
+                overlap[overlap >= min_size] = 1
 
         overlap.index.name = None
         overlap.columns.name = None
 
     edges = {}
-    for x in overlap.index:
-        if overlap.loc[x].sum() > 1:
-            edges[x] = [
-                y + ({
-                    str(clone_): x
-                }, ) for y in list(
-                    combinations(
-                        [i for i in overlap.loc[x][overlap.loc[x] == 1].index],
-                        2))
-            ]
+    if not weighted_overlap:
+        for x in overlap.index:
+            if overlap.loc[x].sum() > 1:
+                edges[x] = [
+                    y + ({
+                        str(clone_): x
+                    }, ) for y in list(
+                        combinations([
+                            i for i in overlap.loc[x][overlap.loc[x] > 0].index
+                        ], 2))
+                ]
+    else:
+        tmp_overlap = overlap.astype(bool).sum(axis=1)
+        combis = {
+            x: list(
+                combinations(
+                    [i for i in overlap.loc[x][overlap.loc[x] > 0].index], 2))
+            for x in tmp_overlap.index if tmp_overlap.loc[x] > 1
+        }
+
+        tmp_edge_weight_dict = defaultdict(list)
+        for k_clone, val_pair in combis.items():
+            for pair in val_pair:
+                tmp_edge_weight_dict[pair].append(
+                    overlap.loc[k_clone, list(pair)].sum())
+        for combix in tmp_edge_weight_dict:
+            tmp_edge_weight_dict[combix] = sum(tmp_edge_weight_dict[combix])
+        for x in overlap.index:
+            if overlap.loc[x].sum() > 1:
+                edges[x] = [
+                    y + ({
+                        str(clone_): x,
+                        'weight': tmp_edge_weight_dict[y],
+                    }, ) for y in list(
+                        combinations([
+                            i for i in overlap.loc[x][overlap.loc[x] > 0].index
+                        ], 2))
+                ]
 
     # create graph
     G = nx.Graph()
@@ -802,6 +845,12 @@ def clone_overlap(self: Union[AnnData, Dandelion],
     # unpack the edgelist and add to the graph
     for edge in edges:
         G.add_edges_from(edges[edge])
+
+    if not weighted_overlap:
+        weighted_attr = None
+    else:
+        weighted_attr = 'weight'
+
     groupby_dict = dict(zip(data[groupby], data[colorby]))
     if color_mapping is None:
         if self.__class__ == AnnData:
@@ -832,21 +881,42 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         df = df.sort_values(colorby).drop_duplicates(
             subset=groupby, keep="first").reset_index(drop=True)
 
-    c = nxv.CircosPlot(G,
-                       node_color=colorby,
-                       node_grouping=colorby,
-                       node_labels=node_labels,
-                       node_label_layout=node_label_layout,
-                       group_label_position=group_label_position,
-                       group_label_offset=group_label_offset,
-                       figsize=figsize)
-    c.nodes = list(df[groupby])
-    if 'colorby_dict' in locals():
-        c.node_colors = [colorby_dict[groupby_dict[c]] for c in c.nodes]
-    c.compute_group_label_positions()
-    c.compute_group_colors()
-    c.draw()
-    if save is not None:
-        plt.savefig(save, bbox_inches='tight', **kwargs)
-    if return_graph:
-        return (c)
+    from importlib.metadata import version
+    if version('nxviz') < '0.7.3':
+        c = nxv.CircosPlot(G,
+                           node_color=colorby,
+                           node_grouping=colorby,
+                           node_labels=node_labels,
+                           node_label_layout=node_label_layout,
+                           group_label_position=group_label_position,
+                           group_label_offset=group_label_offset,
+                           edge_width=weighted_attr,
+                           figsize=figsize)
+        c.nodes = list(df[groupby])
+        if 'colorby_dict' in locals():
+            c.node_colors = [colorby_dict[groupby_dict[c]] for c in c.nodes]
+        c.compute_group_label_positions()
+        c.compute_group_colors()
+        if show_plot:
+            c.draw()
+        if save is not None:
+            plt.savefig(save, bbox_inches='tight', **kwargs)
+        if return_graph:
+            return (c)
+    else:
+        # some limited support for future nxviz plotting api
+        from nxviz import annotate
+        c = nxv.circos(
+            G,
+            group_by=colorby,
+            node_color_by=colorby,
+            edge_lw_by=weighted_attr,
+        )  # group_by
+        annotate.circos_group(G, group_by=colorby)
+        annotate.node_colormapping(G, color_by=colorby)
+        if show_plot:
+            plt.show()
+        if save is not None:
+            plt.savefig(save, bbox_inches='tight', **kwargs)
+        if return_graph:
+            return (c.fig, c.ax)
