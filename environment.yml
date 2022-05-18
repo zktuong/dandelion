@@ -5,7 +5,6 @@ channels:
 - anaconda
 - defaults
 dependencies:
-- numpy
 - pandas
 - pandoc
 - pyyaml
@@ -24,6 +23,7 @@ dependencies:
   - rpy2==3.4.2
   - pytest-cov
   - -r requirements.txt
-  - git+https://www.github.com/zktuong/nxviz.git
+  - git+https://www.github.com/zktuong/nxviz.git; python_version < '3.10'
+  - nxviz==0.7.4; python_version >= '3.10'
   - scirpy
   - scrublet
