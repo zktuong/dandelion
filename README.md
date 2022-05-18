@@ -136,7 +136,6 @@ python>=3.7,<=3.8 (conda-forge)
 numpy>=1.18.4 (conda-forge)
 pandas>=1.0.3 (conda-forge)
 distance>=0.1.3 (conda-forge)
-joblib>=0.14.1 (conda-forge)
 jupyter (conda-forge) # if running via a notebook
 scikit-learn>=0.23.0 (conda-forge)
 numba>=0.48.0 (conda-forge)
@@ -153,7 +152,6 @@ igblast>=1.15.0 (bioconda)
 anndata>=0.7.1
 scanpy>=1.4.6
 scrublet>=0.2.1
-scikit-bio>=0.5.6 
 changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
