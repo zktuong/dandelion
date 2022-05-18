@@ -2,11 +2,11 @@
 # @Author: Kelvin
 # @Date:   2021-02-06 13:18:58
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-02-20 09:07:55
+# @Last Modified time: 2022-05-18 16:18:14
 from typing import Union, Sequence, Tuple
 
 modules = ['dandelion', 'pandas', 'numpy', 'matplotlib',
-           'networkx', 'scipy', 'skbio', 'distance', 'polyleven']
+           'networkx', 'scipy', 'distance', 'polyleven']
 
 
 # borrowed from scanpy's logging module

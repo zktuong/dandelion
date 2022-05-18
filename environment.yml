@@ -5,7 +5,7 @@ channels:
 - anaconda
 - defaults
 dependencies:
-- numpy>=1.22.3
+- numpy
 - pandas
 - pandoc
 - pyyaml
@@ -24,6 +24,6 @@ dependencies:
   - rpy2==3.4.2
   - pytest-cov
   - -r requirements.txt
-  - nxviz>=0.7.3
+  - nxviz>=0.6.2
   - scirpy
   - scrublet
