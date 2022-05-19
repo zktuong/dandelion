@@ -11,11 +11,13 @@
    :maxdepth: 1
    :caption: Tutorial:
 
+.. toctree::
    :caption: Singularity:
    :maxdepth: 1
    notebooks/singularity_preprocessing.ipynb
    notebooks/gamma_delta.ipynb
-   
+
+.. toctree::   
    :caption: Advanced:
    :maxdepth: 1
    tutorial_short.rst
