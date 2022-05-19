@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 17:37:10
+# @Last Modified time: 2022-05-19 08:24:22
 
 import os
 import pandas as pd
@@ -2373,6 +2373,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                         plot_group: Optional[str] = None,
                         figsize: Tuple[Union[int, float],
                                        Union[int, float]] = (4.5, 2.5),
+                        ncpu: int = 1,
                         **kwargs) -> Dandelion:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam`.
@@ -2442,6 +2443,8 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
         determines the fill color and facets.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of plot. Default is (4.5, 2.5).
+    ncpu : float
+        number of cpus to run `distToNearest`. defaults to 1.
     **kwargs
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
 
@@ -2518,7 +2521,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                         onlyHeavy=onlyHeavy,
                                         normalize=norm_,
                                         model=model_,
-                                        nproc=ncpu_,
+                                        nproc=ncpu,
                                         **kwargs)
         except:
             print(
@@ -2535,7 +2538,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                         vCallColumn=v_call,
                                         model=model_,
                                         normalize=norm_,
-                                        nproc=ncpu_,
+                                        nproc=ncpu,
                                         **kwargs)
     # Find threshold using density method
     dist = np.array(dist_ham['dist_nearest'])
