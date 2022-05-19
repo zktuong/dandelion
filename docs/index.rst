@@ -11,8 +11,13 @@
    :maxdepth: 1
    :caption: Tutorial:
 
+   :caption: Singularity:
+   :maxdepth: 1
    notebooks/singularity_preprocessing.ipynb
    notebooks/gamma_delta.ipynb
+   
+   :caption: Advanced:
+   :maxdepth: 1
    tutorial_short.rst
    notebooks/7_dandelion_TCR_data_10x_data.ipynb
 
