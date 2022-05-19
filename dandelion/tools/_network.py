@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-12 09:55:11
+# @Last Modified time: 2022-05-18 06:55:37
 
 import pandas as pd
 import numpy as np
@@ -11,7 +11,10 @@ from polyleven import levenshtein
 from ..utilities._utilities import *
 from ..utilities._core import *
 from ..utilities._io import *
-from networkx.utils import random_state
+try:
+    from networkx.utils import np_random_state as random_state
+except:
+    from networkx.utils import random_state
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import pdist, squareform

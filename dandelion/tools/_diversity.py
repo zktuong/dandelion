@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2021-08-06 00:04:38
+# @Last Modified time: 2022-05-18 16:15:56
 
 import pandas as pd
 import numpy as np
@@ -11,9 +11,11 @@ from ..utilities._utilities import *
 from ..utilities._core import *
 from ..utilities._io import *
 from ..tools._network import clone_centrality, clone_degree, generate_network
+from ._chao1 import chao1
+from ._gini import gini_index
+from ._shannon import shannon
 from scipy.special import gammaln
 from anndata import AnnData
-from skbio.diversity.alpha import chao1, gini_index, shannon
 from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg

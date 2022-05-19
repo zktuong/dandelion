@@ -22,12 +22,14 @@ jobs:
       max-parallel: 6
       matrix:
         config:
-          - { python-version: 3.7, os: ubuntu-latest }
-          - { python-version: 3.8, os: ubuntu-latest }
-          - { python-version: 3.9, os: ubuntu-latest }
-          - { python-version: 3.7, os: macos-latest }
-          - { python-version: 3.8, os: macos-latest }
-          - { python-version: 3.9, os: macos-latest } # segmentation fault due to missing py3.9 macOSX wheel https://github.com/rpy2/rpy2/issues/846
+          - { python-version: 3.7, os: ubuntu-latest}
+          - { python-version: 3.8, os: ubuntu-latest}
+          - { python-version: 3.9, os: ubuntu-latest}
+          - { python-version: "3.10", os: ubuntu-latest}
+          - { python-version: 3.7, os: macos-latest}
+          - { python-version: 3.8, os: macos-latest}
+          - { python-version: 3.9, os: macos-latest}
+          - { python-version: "3.10", os: macos-latest}
           # disabled until it's fixed.
     runs-on: ${{ matrix.config.os }}
     env:
@@ -45,7 +47,7 @@ jobs:
       if: matrix.config.os == 'ubuntu-latest'
       run: |
         sudo apt-get install libcurl4-openssl-dev
-        sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev libhdf5-serial-dev
+        sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev libhdf5-serial-dev libcurl4-gnutls-dev
 
     - name: Install macOS system dependencies
       if: matrix.config.os == 'macos-latest'
@@ -64,7 +66,7 @@ jobs:
           hashFiles('environment.yml') }}
 
     - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v2.1.1
       with:
         auto-activate-base: true
         auto-update-conda : true
@@ -141,6 +143,7 @@ jobs:
         install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
         BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
+        BiocManager::install(c('GenomeInfoDb', 'Rsamtools'))
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
       shell: Rscript {0}
@@ -152,6 +155,7 @@ jobs:
         install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
         BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
+        BiocManager::install(c('GenomeInfoDb', 'Rsamtools'))
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages('matrixStats')
         install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))

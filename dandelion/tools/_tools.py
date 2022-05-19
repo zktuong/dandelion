@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 18:11:55
+# @Last Modified time: 2022-05-18 09:37:54
 
 import os
 import sys
@@ -1282,6 +1282,7 @@ def clone_overlap(
         groupby: str,
         colorby: str,
         min_clone_size: Optional[int] = None,
+        weighted_overlap: bool = False,
         clone_key: Optional[str] = None) -> Union[AnnData, pd.DataFrame]:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
@@ -1296,6 +1297,9 @@ def clone_overlap(
         column name in obs/metadata for grouping and color of nodes in circos plot.
     min_clone_size : int, Optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
+    weighted_overlap : bool
+        if True, instead of collapsing to overlap to binary, overlap will be returned as the number of cells.
+        In the future, there will be the option to use something like a jaccard index.
     clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
 
@@ -1338,11 +1342,12 @@ def clone_overlap(
 
     if min_size == 0:
         raise ValueError('min_size must be greater than 0.')
-    elif min_size > 2:
-        overlap[overlap < min_size] = 0
-        overlap[overlap >= min_size] = 1
-    elif min_size == 2:
-        overlap[overlap >= min_size] = 1
+    if not weighted_overlap:
+        if min_size > 2:
+            overlap[overlap < min_size] = 0
+            overlap[overlap >= min_size] = 1
+        elif min_size == 2:
+            overlap[overlap >= min_size] = 1
 
     overlap.index.name = None
     overlap.columns.name = None

@@ -2,14 +2,20 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 20:32:54
+# @Last Modified time: 2022-05-18 16:15:18
 
 import os
 import re
 import pandas as pd
 import numpy as np
 
-from collections import defaultdict, Iterable
+from collections import defaultdict
+## for compatibility with python>=3.10
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
+
 from airr import RearrangementSchema
 from subprocess import run
 
@@ -23,7 +29,6 @@ except ImportError:
 
         class LiteralMeta(type):
             """LiteralMeta class."""
-
             def __getitem__(self, values):
                 """Return Literal."""
                 if not isinstance(values, tuple):
@@ -36,7 +41,6 @@ except ImportError:
 
 class Tree(defaultdict):
     """Create a recursive defaultdict."""
-
     def __init__(self, value=None):
         super(Tree, self).__init__(Tree)
         self.value = value
@@ -521,7 +525,6 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
 
 class ContigDict(dict):
     """Class Object to extract the contigs as a dictionary."""
-
     def __setitem__(self, key, value):
         """Standard __setitem__."""
         super().__setitem__(key, value)
@@ -580,3 +583,19 @@ def write_airr(data, save):
 def write_blastn(data, save):
     data = sanitize_blastn(data)
     data.to_csv(save, sep='\t', index=False)
+
+
+## from skbio==0.5.6
+def _validate_counts_vector(counts, suppress_cast=False):
+    """Validate and convert input to an acceptable counts vector type.
+    Note: may not always return a copy of `counts`!
+    """
+    counts = np.asarray(counts)
+    if not np.all(np.isreal(counts)):
+        raise ValueError("Counts vector must contain real-valued entries.")
+    if counts.ndim != 1:
+        raise ValueError("Only 1-D vectors are supported.")
+    elif (counts < 0).any():
+        raise ValueError("Counts vector cannot contain negative values.")
+
+    return counts

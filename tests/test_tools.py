@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import pytest
 import json
 import pandas as pd
@@ -10,6 +11,7 @@ from fixtures import (airr_reannotated, dummy_adata, create_testfolder,
                       json_10x_cr6, dummy_adata_cr6)
 
 
+@pytest.mark.slow
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
     assert airr_reannotated.shape[0] == 9
@@ -23,6 +25,7 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     assert vdj2.metadata is not None
 
 
+@pytest.mark.slow
 def test_find_clones(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -33,6 +36,7 @@ def test_find_clones(create_testfolder):
     vdj.write_h5(f)
 
 
+@pytest.mark.slow
 def test_clone_size(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -42,6 +46,7 @@ def test_clone_size(create_testfolder):
     assert not vdj.metadata.clone_id_size.empty
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "resample,expected",
     [pytest.param(None, 4), pytest.param(3, 3)])
@@ -64,6 +69,7 @@ def test_generate_network(create_testfolder, resample, expected):
     assert vdj.edges is not None
 
 
+@pytest.mark.slow
 def test_find_clones_key(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -77,6 +83,7 @@ def test_find_clones_key(create_testfolder):
     assert vdj.graph is not None
 
 
+@pytest.mark.slow
 def test_transfer(create_testfolder, dummy_adata):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -90,6 +97,7 @@ def test_transfer(create_testfolder, dummy_adata):
     dummy_adata.write_h5ad(f2)
 
 
+@pytest.mark.slow
 def test_diversity_gini(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -107,6 +115,7 @@ def test_diversity_gini(create_testfolder):
     assert isinstance(tmp, pd.DataFrame)
 
 
+@pytest.mark.slow
 def test_diversity_gini(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -117,6 +126,7 @@ def test_diversity_gini(create_testfolder):
     assert isinstance(tmp, pd.DataFrame)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("resample", [True, False])
 def test_diversity_chao(create_testfolder, resample):
     f = create_testfolder / "test.h5"
@@ -140,6 +150,7 @@ def test_diversity_chao(create_testfolder, resample):
     assert isinstance(tmp, pd.DataFrame)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("method,diversitykey", [
     pytest.param('chao1', None),
     pytest.param('chao1', 'test_diversity_key'),
@@ -159,6 +170,7 @@ def test_diversity_anndata(create_testfolder, method, diversitykey):
         assert 'test_diversity_key' in adata.uns
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("resample,normalize", [
     pytest.param(True, True),
     pytest.param(False, True),
@@ -192,6 +204,7 @@ def test_diversity_shannon(create_testfolder, resample, normalize):
     assert isinstance(tmp, pd.DataFrame)
 
 
+@pytest.mark.slow
 def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
     with open(json_file, 'w') as outfile:
@@ -211,6 +224,7 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     adata.write_h5ad(f2)
 
 
+@pytest.mark.slow
 def test_diversity_rarefaction(create_testfolder):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
@@ -224,6 +238,7 @@ def test_diversity_rarefaction(create_testfolder):
     assert p is not None
 
 
+@pytest.mark.slow
 def test_diversity_rarefaction2(create_testfolder):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
@@ -236,6 +251,7 @@ def test_diversity_rarefaction2(create_testfolder):
     assert p is not None
 
 
+@pytest.mark.slow
 def test_diversity_rarefaction3(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -251,6 +267,7 @@ def test_diversity_rarefaction3(create_testfolder):
     assert p is not None
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "metric", ['clone_network', None, 'clone_degree', 'clone_centrality'])
 def test_diversity_gini2(create_testfolder, metric):
@@ -281,6 +298,7 @@ def test_diversity_gini2(create_testfolder, metric):
         assert not vdj.metadata.clone_centrality_gini.empty
 
 
+@pytest.mark.slow
 def test_diversity2a(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -298,6 +316,7 @@ def test_diversity2a(create_testfolder):
     assert not vdj.metadata.clone_network_vertex_size_gini.empty
 
 
+@pytest.mark.slow
 def test_diversity2b(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -315,6 +334,7 @@ def test_diversity2b(create_testfolder):
     assert not vdj.metadata.clone_network_vertex_size_gini.empty
 
 
+@pytest.mark.slow
 def test_diversity2c(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -331,21 +351,7 @@ def test_diversity2c(create_testfolder):
     assert isinstance(x, pd.DataFrame)
 
 
-def test_overlap1(create_testfolder):
-    f = create_testfolder / "test.h5ad"
-    adata = sc.read_h5ad(f)
-    ddl.tl.clone_overlap(adata, groupby='group3', colorby='group2')
-    assert 'clone_overlap' in adata.uns
-    assert isinstance(adata.uns['clone_overlap'], pd.DataFrame)
-    ddl.pl.clone_overlap(adata, groupby='group3', colorby='group2')
-
-
-def test_overlap2(create_testfolder):
-    f = create_testfolder / "test.h5ad"
-    adata = sc.read_h5ad(f)
-    ddl.pl.clone_overlap(adata, groupby='group3', colorby='group2')
-
-
+@pytest.mark.slow
 def test_extract_edge_weights(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
@@ -355,6 +361,7 @@ def test_extract_edge_weights(create_testfolder):
     assert x is None
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("method", [
     pytest.param('chao1'),
     pytest.param('shannon'),

@@ -24,6 +24,6 @@ dependencies:
   - rpy2==3.4.2
   - pytest-cov
   - -r requirements.txt
-  - git+https://www.github.com/zktuong/nxviz.git
+  - nxviz>=0.6.2
   - scirpy
   - scrublet
