@@ -6,7 +6,7 @@ Hi there! I have put together a python package for analyzing single cell
 BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the
 pre-processing, leveraging some tools from immcantation suite, and
 integrates with scanpy/anndata for single-cell BCR analysis. It also
-includes a couple of functions for visualization. Try it out on Google Colab above!
+includes a couple of functions for visualization. Try it out on |Colab| !
 
 Overview
 --------
@@ -25,6 +25,14 @@ notebooks
 The raw files for the examples can be downloaded from 10X's Single Cell
 Immune Profiling datasets
 `website <https://support.10xgenomics.com/single-cell-vdj/datasets>`__.
+
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="https://www.youtube.com/embed/pxz31b1iIFY" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+
 
 Installation
 ------------
