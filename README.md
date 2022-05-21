@@ -73,7 +73,7 @@ conda install -c bioconda igblast blast # if this doesn't work, download them ma
 # optional: installing rpy2 (if not doing pre-processing)
 # This is optional because it's only used for interaction with some of the R packages from the immcantation suite. Skip if prefer keeping it simple and run the different tools separately
 # if you just want to stick with the base R
-pip install "rpy2==3.4.2" # or if you don't mind having conda manage R: conda install -c conda-forge "rpy2==3.4.2"
+pip install "rpy2>=3.4.2" # or if you don't mind having conda manage R: conda install -c conda-forge "rpy2>=3.4.2"
 # newer versions of rpy2 may cause issues.
 # make sure not to use the same R package folder or you will end up with major issues later.
 
@@ -133,7 +133,7 @@ This is already available in the singularity container under `/share/`.
 Python packages
 ```python
 # conda
-python>=3.7,<=3.8 (conda-forge)
+python>=3.7 (conda-forge)
 numpy>=1.18.4 (conda-forge)
 pandas>=1.0.3 (conda-forge)
 distance>=0.1.3 (conda-forge)
@@ -157,7 +157,10 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-rpy2>=3.4 or # rpy2>=3.3.2,<3.3.5
+rpy2>=3.4.2
+
+# optional
+nxviz>=0.6.4
 ```
 
 R packages
