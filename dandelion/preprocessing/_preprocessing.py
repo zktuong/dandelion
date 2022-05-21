@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-19 08:24:22
+# @Last Modified time: 2022-05-21 08:11:37
 
 import os
 import pandas as pd
@@ -1656,19 +1656,19 @@ def create_germlines(
             if fileformat == 'airr':
                 germ_log, glines, genes = buildGermline(_parseAIRR(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             elif fileformat == 'changeo':
                 germ_log, glines, genes = buildGermline(_parseChangeO(
                     dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_)
+                                                        reference_dict,
+                                                        seq_field=seq_field_,
+                                                        v_field=v_field_,
+                                                        d_field=d_field_,
+                                                        j_field=j_field_)
             else:
                 raise AttributeError('%s is not acceptable file format.' %
                                      fileformat)
@@ -2147,8 +2147,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                        mutation_definition: Optional[str] = None,
                        frequency: bool = False,
                        combine: bool = True,
-                       **kwargs
-                       ) -> Union[pd.DataFrame, Dandelion]:
+                       **kwargs) -> Union[pd.DataFrame, Dandelion]:
     """
     Run basic mutation load analysis.
 
@@ -2181,6 +2180,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
     """
     start = logg.info('Quantifying mutations')
     try:
+        import rpy2
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri
@@ -2237,10 +2237,15 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                        mutationDefinition=mut_d,
                                        frequency=frequency,
                                        combine=combine,
-                                       **kwargs
-                                       )
-        # pd_df = pandas2ri.rpy2py_dataframe(results)
-        pd_df = results.copy()
+                                       **kwargs)
+        if rpy2.__version__ >= '3.4.5':
+            from rpy2.robjects.conversion import localconverter
+            with localconverter(rpy2.robjects.default_converter +
+                                pandas2ri.converter):
+                pd_df = rpy2.robjects.conversion.rpy2py(results)
+        else:
+            # pd_df = pandas2ri.rpy2py_dataframe(results)
+            pd_df = results.copy()
     else:
         dat_h = dat[dat['locus'] == 'IGH']
         dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
@@ -2266,8 +2271,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
                                          combine=combine,
-                                         **kwargs
-                                         )
+                                         **kwargs)
         results_l = sh.observedMutations(dat_l_r,
                                          sequenceColumn=seq_,
                                          germlineColumn=germline_,
@@ -2275,8 +2279,12 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          mutationDefinition=mut_d,
                                          frequency=frequency,
                                          combine=combine,
-                                         **kwargs
-                                         )
+                                         **kwargs)
+        if rpy2.__version__ >= '3.4.5':
+            with localconverter(rpy2.robjects.default_converter +
+                                pandas2ri.converter):
+                results_h = rpy2.robjects.conversion.rpy2py(results_h)
+                results_l = rpy2.robjects.conversion.rpy2py(results_l)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index('sequence_id', inplace=True, drop=False)
@@ -2456,6 +2464,7 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
     """
     start = logg.info('Calculating threshold')
     try:
+        import rpy2
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
         from rpy2.robjects import pandas2ri, FloatVector
@@ -2540,6 +2549,11 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                         normalize=norm_,
                                         nproc=ncpu,
                                         **kwargs)
+    if rpy2.__version__ >= '3.4.5':
+        from rpy2.robjects.conversion import localconverter
+        with localconverter(rpy2.robjects.default_converter +
+                            pandas2ri.converter):
+            dist_ham = rpy2.robjects.conversion.rpy2py(dist_ham)
     # Find threshold using density method
     dist = np.array(dist_ham['dist_nearest'])
     if threshold_method_ == 'density':
@@ -2579,13 +2593,20 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                 spc_ = specificity
             dist_threshold = sh.findThreshold(FloatVector(
                 dist[~np.isnan(dist)]),
-                method=threshold_method_,
-                model=threshold_model_,
-                cross=cross_,
-                subsample=subsample_,
-                cutoff=cutoff_,
-                sen=sen_,
-                spc=spc_)
+                                              method=threshold_method_,
+                                              model=threshold_model_,
+                                              cross=cross_,
+                                              subsample=subsample_,
+                                              cutoff=cutoff_,
+                                              sen=sen_,
+                                              spc=spc_)
+            if rpy2.__version__ >= '3.4.5':
+                from rpy2.robjects.conversion import localconverter
+                with localconverter(rpy2.robjects.default_converter +
+                                    pandas2ri.converter):
+                    dist_threshold = rpy2.robjects.conversion.rpy2py(
+                        dist_threshold)
+
             threshold = np.array(dist_threshold.slots['threshold'])[0]
     else:
         if threshold_model is None:
@@ -2616,6 +2637,12 @@ def calculate_threshold(self: Union[Dandelion, pd.DataFrame, str],
                                           cutoff=cutoff_,
                                           sen=sen_,
                                           spc=spc_)
+        if rpy2.__version__ >= '3.4.5':
+            from rpy2.robjects.conversion import localconverter
+            with localconverter(rpy2.robjects.default_converter +
+                                pandas2ri.converter):
+                dist_threshold = rpy2.robjects.conversion.rpy2py(
+                    dist_threshold)
         threshold = np.array(dist_threshold.slots['threshold'])[0]
     if np.isnan(threshold):
         raise ValueError(
@@ -2673,7 +2700,6 @@ class FilterContigs:
     Main class object to run filter_contigs.
 
     """
-
     def __init__(self, data, keep_highest_umi, umi_foldchange_cutoff,
                  filter_poorqualitycontig):
         self.Cell = Tree()
@@ -2708,11 +2734,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VDJ']['P']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -2801,11 +2827,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VDJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -2843,11 +2869,11 @@ class FilterContigs:
                     x
                     for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -2926,11 +2952,11 @@ class FilterContigs:
                     x for x in self.Cell[cell]['VJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
@@ -3227,7 +3253,6 @@ class FilterContigsLite:
     Main class object to run filter_contigs, lite mode.
 
     """
-
     def __init__(self, data):
         self.Cell = Tree()
         self.poor_qual = []
@@ -3261,11 +3286,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VDJ']['P']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -3307,11 +3332,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VDJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VDJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VDJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -3321,11 +3346,11 @@ class FilterContigsLite:
                     x
                     for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['P']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['P']
+                                         if isinstance(x, dict)
+                                     ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -3364,11 +3389,11 @@ class FilterContigsLite:
                     x for x in self.Cell[cell]['VJ']['NP']
                     if isinstance(x, dict)
                 ],
-                    index=[
-                    x['sequence_id']
-                    for x in self.Cell[cell]['VJ']['NP']
-                    if isinstance(x, dict)
-                ])
+                                     index=[
+                                         x['sequence_id']
+                                         for x in self.Cell[cell]['VJ']['NP']
+                                         if isinstance(x, dict)
+                                     ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])

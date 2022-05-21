@@ -129,7 +129,7 @@ This is already available in the singularity container under `/share/`.
 Python packages
 ```python
 # conda
-python>=3.7,<=3.8 (conda-forge)
+python>=3.7 (conda-forge)
 numpy>=1.18.4 (conda-forge)
 pandas>=1.0.3 (conda-forge)
 distance>=0.1.3 (conda-forge)
@@ -153,7 +153,10 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-rpy2>=3.4 or # rpy2>=3.3.2,<3.3.5
+rpy2>=3.4.2
+
+# optional
+nxviz>=0.6.4
 ```
 
 R packages

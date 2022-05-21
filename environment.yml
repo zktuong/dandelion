@@ -21,7 +21,7 @@ dependencies:
   - nbsphinx
   - sphinx-autodoc-typehints
   - annoy==1.16.3
-  - rpy2==3.4.2
+  - rpy2>=3.4.2
   - pytest-cov
   - -r requirements.txt
   - nxviz>=0.6.2
