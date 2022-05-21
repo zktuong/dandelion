@@ -73,7 +73,8 @@ conda install -c bioconda igblast blast # if this doesn't work, download them ma
 # optional: installing rpy2 (if not doing pre-processing)
 # This is optional because it's only used for interaction with some of the R packages from the immcantation suite. Skip if prefer keeping it simple and run the different tools separately
 # if you just want to stick with the base R
-pip install "rpy2>=3.4" # or if you don't mind having conda manage R: conda install -c conda-forge "rpy2>=3.4"
+pip install "rpy2==3.4.2" # or if you don't mind having conda manage R: conda install -c conda-forge "rpy2==3.4.2"
+# newer versions of rpy2 may cause issues.
 # make sure not to use the same R package folder or you will end up with major issues later.
 
 # Use pip to install the following with --no-cache-dir --upgrade if necessary
