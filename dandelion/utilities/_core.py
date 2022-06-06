@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 17:44:21
+# @Last Modified time: 2022-06-06 10:19:52
 
 import os
 from collections import defaultdict
@@ -522,7 +522,7 @@ class Dandelion:
 
 class Query:
     def __init__(self, data):
-        self.data = data
+        self.data = data.copy()
         self.Cell = Tree()
         for contig, row in data.iterrows():
             self.Cell[Contig(row).contig['cell_id']][Contig(
@@ -1151,14 +1151,19 @@ def update_metadata(self: Dandelion,
     tmp_metadata = self.metadata.copy()
 
     if retrieve is not None:
+        ret_dict = {}
+        if type(retrieve) is str:
+            retrieve = [retrieve]
         if self.querier is None:
             querier = Query(self.data)
             self.querier = querier
         else:
-            querier = self.querier
-        ret_dict = {}
-        if type(retrieve) is str:
-            retrieve = [retrieve]
+            if any([r not in self.querier.data for r in retrieve]):
+                querier = Query(self.data)
+                self.querier = querier
+            else:
+                querier = self.querier
+
         if type(retrieve_mode) is str:
             retrieve_mode = [retrieve_mode]
             if len(retrieve) > len(retrieve_mode):
