@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 16:38:44
+# @Last Modified time: 2022-06-07 18:24:42
 
 import os
 from collections import defaultdict
@@ -22,6 +22,7 @@ from scanpy import logging as logg
 from ..utilities._utilities import *
 from ..utilities._io import *
 from typing import Union, Sequence, Tuple, Dict, Optional
+from tqdm import tqdm
 
 
 class Dandelion:
@@ -375,12 +376,9 @@ class Dandelion:
         data = sanitize_data(self.data)
         data.to_csv(filename, sep='\t', index=False, **kwargs)
 
-    @deprecated(
-        deprecated_in="0.2.2",
-        removed_in="0.2.3",
-        details=
-        "write_h5ddl will be the recommended way to save."
-    )
+    @deprecated(deprecated_in="0.2.2",
+                removed_in="0.2.3",
+                details="write_h5ddl will be the recommended way to save.")
     def write_h5(self,
                  filename: str = 'dandelion_data.h5ddl',
                  complib: Literal['zlib', 'lzo', 'bzip2', 'blosc',
@@ -510,10 +508,16 @@ class Dandelion:
 
 
 class Query:
-    def __init__(self, data):
+    def __init__(self, data, verbose=False):
         self.data = data.copy()
         self.Cell = Tree()
-        for contig, row in data.iterrows():
+        if verbose:
+            disable = False
+        else:
+            disable = True
+        for contig, row in tqdm(data.iterrows(),
+                                desc="Setting up data",
+                                disable=disable):
             self.Cell[Contig(row).contig['cell_id']][Contig(
                 row).contig].value = 1
 

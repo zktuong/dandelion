@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 18:02:56
+# @Last Modified time: 2022-06-07 18:22:48
 
 import pandas as pd
 import numpy as np
@@ -106,9 +106,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     else:
         dat_ = dat.copy()
 
-    # So first, create a data frame to hold all possible (full) sequences split by
-    # heavy (only 1 possible for now) and light (multiple possible)
-    querier = Query(dat_)
+    querier = Query(dat_, verbose = True)
     dat_seq = querier.retrieve(query=key_, retrieve_mode='split')
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
     dat_clone = querier.retrieve(query=clonekey,
@@ -180,6 +178,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         dmat[x] = dmat[x].droplevel(level=0)
         dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
         dmat[x].fillna(0, inplace=True)
+        dmat[x] = dmat[x].values
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
@@ -287,9 +286,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
 
     # create a dataframe to recall the actual distance quickly
-    print('unstacking distances')
     tmp_totaldiststack = pd.DataFrame(tmp_totaldist.unstack())
-    print('Converting to edge list')
     tmp_totaldiststack.index.names = [None, None]
     tmp_totaldiststack = tmp_totaldiststack.reset_index(drop=False)
     tmp_totaldiststack.columns = ['source', 'target', 'weight']
