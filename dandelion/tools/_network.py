@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 17:48:05
+# @Last Modified time: 2022-06-07 18:02:15
 
 import pandas as pd
 import numpy as np
@@ -289,7 +289,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
 
     # create a dataframe to recall the actual distance quickly
+    print('unstacking distances')
     tmp_totaldiststack = pd.DataFrame(tmp_totaldist.unstack())
+    print('Converting to edge list')
     tmp_totaldiststack.index.names = [None, None]
     tmp_totaldiststack = tmp_totaldiststack.reset_index(drop=False)
     tmp_totaldiststack.columns = ['source', 'target', 'weight']
