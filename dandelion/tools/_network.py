@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 18:22:48
+# @Last Modified time: 2022-06-07 18:26:33
 
 import pandas as pd
 import numpy as np
@@ -106,7 +106,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     else:
         dat_ = dat.copy()
 
-    querier = Query(dat_, verbose = True)
+    querier = Query(dat_, verbose = verbose)
     dat_seq = querier.retrieve(query=key_, retrieve_mode='split')
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
     dat_clone = querier.retrieve(query=clonekey,
