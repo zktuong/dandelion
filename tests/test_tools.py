@@ -57,7 +57,6 @@ def test_generate_network(create_testfolder, resample, expected):
         vdj = ddl.tl.generate_network(vdj, downsample=resample)
     else:
         ddl.tl.generate_network(vdj)
-    assert vdj.distance is not None
     assert vdj.edges is None
     assert vdj.n_obs == expected
     assert vdj.layout is not None
@@ -77,7 +76,6 @@ def test_find_clones_key(create_testfolder):
     assert not vdj.metadata.test_clone.empty
     assert vdj.data.test_clone.dtype == 'object'
     ddl.tl.generate_network(vdj, clone_key='test_clone')
-    assert vdj.distance is not None
     assert vdj.edges is None
     assert vdj.layout is not None
     assert vdj.graph is not None

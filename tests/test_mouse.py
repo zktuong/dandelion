@@ -94,7 +94,6 @@ def test_generate_network(create_testfolder):
     vdj = ddl.read_h5(f)
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj)
-    assert vdj.distance is not None
     assert vdj.edges is not None
     assert vdj.n_obs == 392
     assert vdj.layout is not None
