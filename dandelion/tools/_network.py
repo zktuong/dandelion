@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 18:02:15
+# @Last Modified time: 2022-06-07 18:02:56
 
 import pandas as pd
 import numpy as np
@@ -275,9 +275,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             tmp_.fillna(0, inplace=True)
             tmp_clone_tree3[x] = tmp_
 
-    for x in tqdm(tmp_clone_tree3_overlap,
-                  desc='Construct overlap matrix ',
-                  disable=disable):  # repeat for the overlap clones
+    for x in tmp_clone_tree3_overlap:  # repeat for the overlap clones
         tmp_ = pd.DataFrame(index=tmp_clone_tree3_overlap[x],
                             columns=tmp_clone_tree3_overlap[x])
         tmp_ = pd.DataFrame(np.tril(tmp_) + 1,
