@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-06 10:19:52
+# @Last Modified time: 2022-06-07 16:38:44
 
 import os
 from collections import defaultdict
@@ -31,12 +31,10 @@ class Dandelion:
     Main class object storing input/ouput slots for all functions.
 
     """
-
     def __init__(self,
                  data=None,
                  metadata=None,
                  germline=None,
-                 distance=None,
                  edges=None,
                  layout=None,
                  graph=None,
@@ -44,7 +42,6 @@ class Dandelion:
                  **kwargs):
         self.data = data
         self.metadata = metadata
-        self.distance = distance
         self.edges = edges
         self.layout = layout
         self.graph = graph
@@ -78,7 +75,7 @@ class Dandelion:
     def _gen_repr(self, n_obs, n_contigs) -> str:
         # inspire by AnnData's function
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
-        for attr in ["data", "metadata", "distance", "edges"]:
+        for attr in ["data", "metadata", "edges"]:
             try:
                 keys = getattr(self, attr).keys()
             except:
@@ -378,9 +375,14 @@ class Dandelion:
         data = sanitize_data(self.data)
         data.to_csv(filename, sep='\t', index=False, **kwargs)
 
+    @deprecated(
+        deprecated_in="0.2.2",
+        removed_in="0.2.3",
+        details=
+        "write_h5ddl will be the recommended way to save."
+    )
     def write_h5(self,
                  filename: str = 'dandelion_data.h5ddl',
-                 keep_distance: bool = False,
                  complib: Literal['zlib', 'lzo', 'bzip2', 'blosc',
                                   'blosc:blosclz', 'blosc:lz4', 'blosc:lz4hc',
                                   'blosc:snappy', 'blosc:zlib',
@@ -477,19 +479,6 @@ class Dandelion:
                 graph_counter += 1
         except:
             pass
-
-        if keep_distance:
-            try:
-                for d in self.distance:
-                    # how to make this faster?
-                    dat = pd.DataFrame(self.distance[d].toarray())
-                    dat.to_hdf(filename,
-                               "distance/" + d,
-                               complib=comp,
-                               complevel=compression_level,
-                               **kwargs)
-            except:
-                pass
 
         with h5py.File(filename, "a") as hf:
             try:

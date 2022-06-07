@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-03-11 22:19:55
+# @Last Modified time: 2022-06-07 16:38:37
 
 import os
 import json
@@ -152,6 +152,9 @@ def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
     return (data)
 
 
+@deprecated(deprecated_in="0.2.2",
+            removed_in="0.2.3",
+            details="read_h5ddl will be the recommended way to read.")
 def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     """
     Read in and returns a `Dandelion` class from .h5 format.
@@ -222,14 +225,6 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         except:
             pass
 
-        distance = Tree()
-        try:
-            for d in hf['distance'].keys():
-                d_ = pd.read_hdf(filename, 'distance/' + d)
-                distance[d] = scipy.sparse.csr_matrix(d_.values)
-        except:
-            pass
-
         try:
             threshold = np.float(np.array(hf['threshold']))
         except:
@@ -243,8 +238,6 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         constructor['germline'] = germline
     if 'edges' in locals():
         constructor['edges'] = edges
-    if 'distance' in locals():
-        constructor['distance'] = distance
     if 'layout' in locals():
         constructor['layout'] = layout
     if 'graph' in locals():

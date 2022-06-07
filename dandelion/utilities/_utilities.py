@@ -2,12 +2,13 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 16:15:18
+# @Last Modified time: 2022-06-07 16:57:07
 
 import os
 import re
 import pandas as pd
 import numpy as np
+import warnings
 
 from collections import defaultdict
 ## for compatibility with python>=3.10
@@ -599,3 +600,21 @@ def _validate_counts_vector(counts, suppress_cast=False):
         raise ValueError("Counts vector cannot contain negative values.")
 
     return counts
+
+
+def deprecated(details, deprecated_in, removed_in):
+    """Decorator to mark a function as deprecated"""
+
+    def deprecated_decorator(func):
+        def deprecated_func(*args, **kwargs):
+            warnings.warn(
+                "{} is a deprecated in {} and will be removed in {}."
+                " {}".format(func.__name__, deprecated_in, removed_in, details),
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+            return func(*args, **kwargs)
+
+        return deprecated_func
+
+    return deprecated_decorator
