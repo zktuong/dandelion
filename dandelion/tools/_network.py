@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 17:33:14
+# @Last Modified time: 2022-06-07 17:48:05
 
 import pandas as pd
 import numpy as np
@@ -275,7 +275,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             tmp_.fillna(0, inplace=True)
             tmp_clone_tree3[x] = tmp_
 
-    for x in tmp_clone_tree3_overlap:  # repeat for the overlap clones
+    for x in tqdm(tmp_clone_tree3_overlap,
+                  desc='Construct overlap matrix ',
+                  disable=disable):  # repeat for the overlap clones
         tmp_ = pd.DataFrame(index=tmp_clone_tree3_overlap[x],
                             columns=tmp_clone_tree3_overlap[x])
         tmp_ = pd.DataFrame(np.tril(tmp_) + 1,
@@ -359,13 +361,14 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         logg.info(
             ' finished',
             time=start,
-            deep=(
-                'Updated Dandelion object: \n'
-                '   \'data\', contig-indexed clone table\n'
-                '   \'metadata\', cell-indexed clone table\n'
-                '   \'edges\', graph edges\n'
-                '   \'layout\', graph layout\n'
-                '   \'graph\', network constructed from distance matrices of VDJ- and VJ- chains'))
+            deep=
+            ('Updated Dandelion object: \n'
+             '   \'data\', contig-indexed clone table\n'
+             '   \'metadata\', cell-indexed clone table\n'
+             '   \'edges\', graph edges\n'
+             '   \'layout\', graph layout\n'
+             '   \'graph\', network constructed from distance matrices of VDJ- and VJ- chains'
+             ))
     if self.__class__ == Dandelion:
         if self.germline is not None:
             germline_ = self.germline
