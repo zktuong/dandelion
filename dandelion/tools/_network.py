@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 15:37:50
+# @Last Modified time: 2022-06-07 17:33:14
 
 import pandas as pd
 import numpy as np
@@ -254,7 +254,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
     tmp_clone_tree3 = Tree()
     tmp_clone_tree3_overlap = Tree()
-    for x in tmp_clone_tree2:
+    for x in tqdm(tmp_clone_tree2, desc='Computing overlap ', disable=disable):
         # this is to catch all possible cells that may potentially match up with this clone that's joined together
         if x in list(flatten(overlap)):
             for ol in overlap:
