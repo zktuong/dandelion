@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 09:37:54
+# @Last Modified time: 2022-06-07 15:37:53
 
 import os
 import sys
@@ -499,10 +499,6 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
             germline_ = self.germline
         else:
             germline_ = None
-        if self.distance is not None:
-            dist_ = self.distance
-        else:
-            dist_ = None
         if self.edges is not None:
             edge_ = self.edges
         else:
@@ -523,7 +519,6 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
             # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
             self.__init__(data=dat_,
                           germline=germline_,
-                          distance=dist_,
                           edges=edge_,
                           layout=layout_,
                           graph=graph_)
@@ -531,7 +526,6 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         elif ('clone_id' in self.data.columns) and (key_added is not None):
             self.__init__(data=dat_,
                           germline=germline_,
-                          distance=dist_,
                           edges=edge_,
                           layout=layout_,
                           graph=graph_)
@@ -543,7 +537,6 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         else:
             self.__init__(data=dat_,
                           germline=germline_,
-                          distance=dist_,
                           edges=edge_,
                           layout=layout_,
                           graph=graph_,
@@ -598,31 +591,29 @@ def transfer(
             G = dandelion.graph[1]
         else:
             G = dandelion.graph[0]
+        print('converting matrices')
         distances = nx.to_pandas_adjacency(G,
                                            dtype=np.float32,
                                            weight='weight',
                                            nonedge=np.nan)
+        df_distances = distances.reindex(index=self.obs_names,
+                                         columns=self.obs_names)
         connectivities = nx.to_pandas_adjacency(G,
                                                 dtype=np.float32,
                                                 weight='weight',
                                                 nonedge=np.nan)
-        connectivities[~connectivities.isnull()] = 1
+        # convert to connectivity
+        distances[~distances.isnull()] = 1 - distances[~distances.isnull()]
+        df_connectivities = distances.reindex(index=self.obs_names,
+                                              columns=self.obs_names)
 
-        A = np.zeros(shape=(len(self.obs_names), len(self.obs_names)))
-        B = A.copy()
-        df_connectivities = pd.DataFrame(A,
-                                         index=self.obs_names,
-                                         columns=self.obs_names)
-        df_distances = pd.DataFrame(B,
-                                    index=self.obs_names,
-                                    columns=self.obs_names)
-        print('converting matrices')
-        df_connectivities.update(connectivities)
-        df_distances.update(distances)
+        df_connectivities = df_connectivities.values
+        df_connectivities[np.isnan(df_connectivities)] = 0
+        df_distances = df_distances.values
+        df_distances[np.isnan(df_distances)] = 0
 
-        df_connectivities_ = csr_matrix(df_connectivities.values,
-                                        dtype=np.float32)
-        df_distances_ = csr_matrix(df_distances.values, dtype=np.float32)
+        df_connectivities_ = csr_matrix(df_connectivities, dtype=np.float32)
+        df_distances = csr_matrix(df_distances, dtype=np.float32)
 
         print('Updating anndata slots')
         if neighbors_key is None:
@@ -665,7 +656,7 @@ def transfer(
 
         # always overwrite the bcr slots
         self.obsp['connectivities'] = df_connectivities_.copy()
-        self.obsp['distances'] = df_distances_.copy()
+        self.obsp['distances'] = df_distances.copy()
         self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
 
@@ -1059,10 +1050,6 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             germline_ = self.germline
         else:
             germline_ = None
-        if self.distance is not None:
-            dist_ = self.distance
-        else:
-            dist_ = None
         if self.edges is not None:
             edge_ = self.edges
         else:
@@ -1084,7 +1071,6 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             self.__init__(
                 data=dat,
                 germline=germline_,
-                distance=dist_,
                 edges=edge_,
                 layout=layout_,
                 graph=graph_,
@@ -1096,7 +1082,6 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             self.__init__(
                 data=dat,
                 germline=germline_,
-                distance=dist_,
                 edges=edge_,
                 layout=layout_,
                 graph=graph_,
@@ -1108,7 +1093,6 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         else:
             self.__init__(data=dat,
                           germline=germline_,
-                          distance=dist_,
                           edges=edge_,
                           layout=layout_,
                           graph=graph_,
@@ -1195,9 +1179,9 @@ def clone_size(self: Dandelion,
                                         clonesize_dict[c_]
                                         for c_ in c.split('|')
                                     ])),
-                                    key=lambda x: int(x.split('>= ')[1])
-                                    if type(x) is str else int(x),
-                                    reverse=True)[0] if '|' in
+                                       key=lambda x: int(x.split('>= ')[1])
+                                       if type(x) is str else int(x),
+                                       reverse=True)[0] if '|' in
                                 c else clonesize_dict[c]
                                 for c in metadata_[str(clonekey)]
                             ]
@@ -1215,9 +1199,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                key=lambda x: int(x.split('>= ')[1])
-                                if type(x) is str else int(x),
-                                reverse=True)[0] if '|' in
+                                   key=lambda x: int(x.split('>= ')[1])
+                                   if type(x) is str else int(x),
+                                   reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
@@ -1236,9 +1220,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                key=lambda x: int(x.split('>= ')[1])
-                                if type(x) is str else int(x),
-                                reverse=True)[0] if '|' in
+                                   key=lambda x: int(x.split('>= ')[1])
+                                   if type(x) is str else int(x),
+                                   reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
@@ -1258,9 +1242,9 @@ def clone_size(self: Dandelion,
                                 set([
                                     clonesize_dict[c_] for c_ in c.split('|')
                                 ])),
-                                key=lambda x: int(x.split('>= ')[1])
-                                if type(x) is str else int(x),
-                                reverse=True)[0] if '|' in
+                                   key=lambda x: int(x.split('>= ')[1])
+                                   if type(x) is str else int(x),
+                                   reverse=True)[0] if '|' in
                             c else clonesize_dict[c]
                             for c in metadata_[str(clonekey)]
                         ]
