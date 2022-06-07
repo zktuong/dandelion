@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 18:37:38
+# @Last Modified time: 2022-06-07 19:07:28
 
 import pandas as pd
 import numpy as np
@@ -177,12 +177,14 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         dmat[x] = pd.concat(dmat[x])
         dmat[x] = dmat[x].droplevel(level=0)
         dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
-        dmat[x].fillna(0, inplace=True)
         dmat[x] = dmat[x].values
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
     total_dist = np.sum(dist_mat_list, axis=0)
+    np.fill_diagonal(total_dist, np.nan)
+    
+    # free up memory
     del dmat
     del dist_mat_list
 
@@ -285,14 +287,15 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         tmp_.fillna(0, inplace=True)
         tmp_clone_tree3[x] = tmp_
 
+    # free up memory
     del tmp_clone_tree2
     # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully link them up if they were identical but clipped off during the mst step
 
     # create a dataframe to recall the actual distance quickly
-    tmp_totaldiststack = pd.DataFrame(tmp_totaldist.unstack())
-    del tmp_totaldist  # free up memory
-    tmp_totaldiststack.index.names = [None, None]
-    tmp_totaldiststack = tmp_totaldiststack.reset_index(drop=False)
+    tmp_totaldiststack = tmp_totaldist.stack().reset_index()
+
+    # free up memory
+    del tmp_totaldist
     tmp_totaldiststack.columns = ['source', 'target', 'weight']
     tmp_totaldiststack.index = [
         str(s) + '|' + str(t) for s, t in zip(tmp_totaldiststack['source'],
@@ -342,6 +345,10 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     except:
         edge_list_final = None
 
+    # free up memory
+    del tmp_totaldiststack
+    del tmp_edge_list
+
     # and finally the vertex list which is super easy
     vertice_list = list(out.metadata.index)
     sleep(0.5)
@@ -352,11 +359,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                                        weight=None,
                                        verbose=verbose,
                                        **kwargs)
-
-    # convert distance matrices to sparse
-    for x in dmat:
-        if type(dmat[x]) is np.ndarray:
-            dmat[x] = csr_matrix(dmat[x])
 
     if verbose:
         logg.info(
