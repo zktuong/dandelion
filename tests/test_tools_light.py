@@ -7,7 +7,7 @@ from fixtures import (airr_reannotated, dummy_adata, create_testfolder)
 
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
-    assert airr_reannotated.shape[0] == 9
+    assert airr_reannotated.shape[0] == 8
     assert vdj.data.shape[0] == 7
     assert vdj.metadata.shape[0] == 4
     assert adata.n_obs == 5
