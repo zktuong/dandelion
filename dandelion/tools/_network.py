@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-06 09:37:41
+# @Last Modified time: 2022-06-07 15:37:50
 
 import pandas as pd
 import numpy as np
@@ -55,7 +55,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
     Returns
     -------
-    `Dandelion` object with `.distance`, `.edges`, `.layout`, `.graph` initialized.
+    `Dandelion` object with `.edges`, `.layout`, `.graph` initialized.
     """
     if verbose:
         start = logg.info('Generating network')
@@ -111,22 +111,75 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     querier = Query(dat_)
     dat_seq = querier.retrieve(query=key_, retrieve_mode='split')
     dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
+    dat_clone = querier.retrieve(query=clonekey,
+                                 retrieve_mode='merge and unique only')
 
     # calculate a distance matrix for all vs all and this can be referenced later on to
     # extract the distance between the right pairs
+    # dmat = Tree()
+    # sleep(0.5)
+    # for x in tqdm(dat_seq.columns,
+    #               desc='Calculating distances... ',
+    #               disable=disable):
+    #     tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
+    #     # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)
+    #     # if (x[0] == x[0]) and (y[0] == y[0]) else 0])
+    #     d_mat = squareform(
+    #         pdist(
+    #             tdarray, lambda x, y: levenshtein(x[0], y[0])
+    #             if (x[0] == x[0]) and (y[0] == y[0]) else 0))
+    #     dmat[x] = d_mat
+
+    clone_counts = dat_clone[clonekey].value_counts()
+    clone_counts = clone_counts[(clone_counts > 1) | list(
+        re.search('[|]', c) for c in clone_counts.index)]
+    clone_tree_dict = Tree()
+    for c in clone_counts.index:
+        if re.search('[|]', c):
+            sub = c.split('|')
+            for cc in sub:
+                for ccc in sub:
+                    clone_tree_dict[cc][ccc].value = 1
+                clone_tree_dict[cc][c].value = 1
+                clone_tree_dict[c][cc].value = 1
+        clone_tree_dict[c][c].value = 1
+    clone_tree_dict = {
+        k: '|'.join(sorted(r))
+        for k, r in clone_tree_dict.items()
+    }
+    dat_clone['tmpcloneid'] = [
+        clone_tree_dict[x] if x in clone_tree_dict else None
+        for x in dat_clone[clonekey]
+    ]
+    clones = list(set(dat_clone.tmpcloneid))
+    membership = Tree()
+    for x in clones:
+        for i, j in dat_clone.tmpcloneid.iteritems():
+            if j is not None:
+                if j == x:
+                    membership[x][i].value = 1
+    membership = {i: list(j) for i, j in dict(membership).items()}
+    df = pd.DataFrame(columns=dat_seq.index, index=dat_seq.index)
     dmat = Tree()
-    sleep(0.5)
-    for x in tqdm(dat_seq.columns,
+    for t in tqdm(membership,
                   desc='Calculating distances... ',
                   disable=disable):
-        tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
-        # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)
-        # if (x[0] == x[0]) and (y[0] == y[0]) else 0])
-        d_mat = squareform(
-            pdist(
-                tdarray, lambda x, y: levenshtein(x[0], y[0])
-                if (x[0] == x[0]) and (y[0] == y[0]) else 0))
-        dmat[x] = d_mat
+        tmp = dat_seq.loc[membership[t]]
+        if tmp.shape[0] > 1:
+            for x in tmp.columns:
+                tdarray = np.array(np.array(tmp[x])).reshape(-1, 1)
+                d_mat_tmp = squareform(
+                    pdist(
+                        tdarray, lambda x, y: levenshtein(x[0], y[0])
+                        if (x[0] == x[0]) and (y[0] == y[0]) else 0))
+                dmat[x][t] = pd.DataFrame(d_mat_tmp,
+                                          index=tmp.index,
+                                          columns=tmp.index)
+    for x in dmat:
+        dmat[x] = pd.concat(dmat[x])
+        dmat[x] = dmat[x].droplevel(level=0)
+        dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
+        dmat[x].fillna(0, inplace=True)
 
     dist_mat_list = [dmat[x] for x in dmat if type(dmat[x]) is np.ndarray]
 
@@ -310,10 +363,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                 'Updated Dandelion object: \n'
                 '   \'data\', contig-indexed clone table\n'
                 '   \'metadata\', cell-indexed clone table\n'
-                '   \'distance\', distance matrices for VDJ- and VJ- chains\n'
-                '   \'edges\', network edges\n'
-                '   \'layout\', network layout\n'
-                '   \'graph\', network'))
+                '   \'edges\', graph edges\n'
+                '   \'layout\', graph layout\n'
+                '   \'graph\', network constructed from distance matrices of VDJ- and VJ- chains'))
     if self.__class__ == Dandelion:
         if self.germline is not None:
             germline_ = self.germline
@@ -326,7 +378,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         if downsample is not None:
             # out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
             out = Dandelion(data=dat_,
-                            distance=dmat,
                             edges=edge_list_final,
                             layout=(lyt, lyt_),
                             graph=(g, g_),
@@ -336,7 +387,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         else:
             self.__init__(data=self.data,
                           metadata=self.metadata,
-                          distance=dmat,
                           edges=edge_list_final,
                           layout=(lyt, lyt_),
                           graph=(g, g_),
@@ -346,7 +396,6 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     else:
         # out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
         out = Dandelion(data=dat_,
-                        distance=dmat,
                         edges=edge_list_final,
                         layout=(lyt, lyt_),
                         graph=(g, g_),
@@ -398,24 +447,11 @@ def clone_degree(self: Dandelion,
     if verbose:
         start = logg.info('Calculating node degree')
     if self.__class__ == Dandelion:
-        try:
-            G = self.graph[0]
-        except:
-            dist = np.sum([
-                self.distance[x].toarray()
-                for x in self.distance if type(self.distance[x]) is csr_matrix
-            ],
-                          axis=0)
-            A = csr_matrix(dist)
-            G = nx.Graph()
-            G.add_weighted_edges_from(
-                zip(list(self.metadata.index), list(self.metadata.index),
-                    A.data))
-
-        if len(G) == 0:
+        if self.graph is None:
             raise AttributeError(
                 'Graph not found. Plase run tl.generate_network.')
         else:
+            G = self.graph[0]
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
             self.metadata['clone_degree'] = pd.Series(cd[1])
@@ -445,24 +481,11 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
     if verbose:
         start = logg.info('Calculating node closeness centrality')
     if self.__class__ == Dandelion:
-        try:
-            G = self.graph[0]
-        except:
-            dist = np.sum([
-                self.distance[x].toarray()
-                for x in self.distance if type(self.distance[x]) is csr_matrix
-            ],
-                          axis=0)
-            A = csr_matrix(dist)
-            G = nx.Graph()
-            G.add_weighted_edges_from(
-                zip(list(self.metadata.index), list(self.metadata.index),
-                    A.data))
-
-        if len(G) == 0:
+        if self.graph is None:
             raise AttributeError(
                 'Graph not found. Plase run tl.generate_network.')
         else:
+            G = self.graph[0]
             cc = nx.closeness_centrality(G)
             cc = pd.DataFrame.from_dict(cc,
                                         orient='index',
