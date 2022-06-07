@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-06 09:35:48
+# @Last Modified time: 2022-06-07 15:35:18
 
 import pandas as pd
 import numpy as np
@@ -272,27 +272,14 @@ def clone_networkstats(self: Dandelion,
         disable = True
 
     if self.__class__ == Dandelion:
-        try:
+        if self.graph is None:
+            raise AttributeError(
+                'Graph not found. Plase run tl.generate_network.')
+        else:
             if expanded_only:
                 G = self.graph[1]
             else:
                 G = self.graph[0]
-        except:
-            dist = np.sum([
-                self.distance[x].toarray()
-                for x in self.distance if type(self.distance[x]) is csr_matrix
-            ],
-                          axis=0)
-            A = csr_matrix(dist)
-            G = nx.Graph()
-            G.add_weighted_edges_from(
-                zip(list(self.metadata.index), list(self.metadata.index),
-                    A.data))
-
-        if len(G) == 0:
-            raise AttributeError(
-                'Graph not found. Plase run tl.generate_network.')
-        else:
             remove_edges = defaultdict(list)
             vertexsizes = defaultdict(list)
             clustersizes = defaultdict(list)
