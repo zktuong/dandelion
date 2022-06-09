@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 16:38:37
+# @Last Modified time: 2022-06-09 09:10:56
 
 import os
 import json
@@ -800,7 +800,7 @@ def make_all(data: Sequence,
             df1 = pd.read_csv(filePath1, sep='\t')
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep='\t')
-                df = df1.append(df2)
+                df = pd.concat([df1, df2])
                 if loci == 'tr':
                     write_airr(
                         df,
