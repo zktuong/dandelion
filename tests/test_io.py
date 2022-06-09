@@ -291,3 +291,21 @@ def test_tofro_scirpy_cr6(create_testfolder, annotation_10x_cr6, json_10x_cr6):
     assert adata.obs.shape[1] == 43
     vdjx = ddl.from_scirpy(adata)
     assert vdjx.data.shape[0] == 26
+
+
+def test_tofro_scirpy_cr6_transfer(create_testfolder, annotation_10x_cr6, json_10x_cr6):
+    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
+    annot_file = str(create_testfolder) + "/test_all_contig_annotations.csv"
+    annotation_10x_cr6.to_csv(annot_file, index=False)
+    with open(json_file, 'w') as outfile:
+        json.dump(json_10x_cr6, outfile)
+    vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix='test_all')
+    assert vdj.data.shape[0] == 26
+    assert vdj.data.shape[1] == 31
+    assert vdj.metadata.shape[0] == 10
+    assert vdj.metadata.shape[1] == 30
+    adata = ddl.to_scirpy(vdj, transfer = True)
+    assert adata.obs.shape[0] == 10
+    assert adata.obs.shape[1] == 43
+    vdjx = ddl.from_scirpy(adata)
+    assert vdjx.data.shape[0] == 26

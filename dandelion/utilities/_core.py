@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 18:24:42
+# @Last Modified time: 2022-06-09 09:46:10
 
 import os
 from collections import defaultdict
@@ -789,27 +789,29 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 if 'productive' + suffix_l in tmp_metadata:
                     if not check_missing(
                             tmp_metadata.loc[i, 'productive' + suffix_l]):
-                        tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
-                            i, 'productive' +
-                            suffix_h] + ' + ' + tmp_metadata.loc[i,
-                                                                 'productive' +
-                                                                 suffix_l]
+                        tmp_metadata.at[
+                            i, 'productive_status'] = tmp_metadata.loc[
+                                i, 'productive' +
+                                suffix_h] + ' + ' + tmp_metadata.loc[
+                                    i, 'productive' + suffix_l]
                     else:
-                        tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
-                            i, 'productive' + suffix_h]
+                        tmp_metadata.at[
+                            i, 'productive_status'] = tmp_metadata.loc[
+                                i, 'productive' + suffix_h]
                 else:
-                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                    tmp_metadata.at[i, 'productive_status'] = tmp_metadata.loc[
                         i, 'productive' + suffix_h]
             else:
                 if 'productive' + suffix_l in tmp_metadata:
                     if not check_missing(
                             tmp_metadata.loc[i, 'productive' + suffix_l]):
-                        tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
-                            i, 'productive' + suffix_l]
+                        tmp_metadata.at[
+                            i, 'productive_status'] = tmp_metadata.loc[
+                                i, 'productive' + suffix_l]
                     else:
-                        tmp_metadata.at[i, 'productive'] = 'unassigned'
+                        tmp_metadata.at[i, 'productive_status'] = 'unassigned'
                 else:
-                    tmp_metadata.at[i, 'productive'] = 'unassigned'
+                    tmp_metadata.at[i, 'productive_status'] = 'unassigned'
         else:
             if 'productive' + suffix_l in tmp_metadata:
                 if not check_missing(
@@ -817,12 +819,12 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                     tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
                         i, 'productive' + suffix_l]
                 else:
-                    tmp_metadata.at[i, 'productive'] = 'unassigned'
+                    tmp_metadata.at[i, 'productive_status'] = 'unassigned'
             else:
-                tmp_metadata.at[i, 'productive'] = 'unassigned'
+                tmp_metadata.at[i, 'productive_status'] = 'unassigned'
 
     tmp_metadata['productive_summary'] = [
-        'Multi' if '|' in i else i for i in tmp_metadata['productive']
+        'Multi' if '|' in i else i for i in tmp_metadata['productive_status']
     ]
 
     conversion_dict = {
