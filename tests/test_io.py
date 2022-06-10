@@ -306,6 +306,6 @@ def test_tofro_scirpy_cr6_transfer(create_testfolder, annotation_10x_cr6, json_1
     assert vdj.metadata.shape[1] == 30
     adata = ddl.to_scirpy(vdj, transfer = True)
     assert adata.obs.shape[0] == 10
-    assert adata.obs.shape[1] == 43
+    assert adata.obs.shape[1] == 73
     vdjx = ddl.from_scirpy(adata)
     assert vdjx.data.shape[0] == 26
