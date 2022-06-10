@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 15:37:53
+# @Last Modified time: 2022-06-10 17:40:41
 
 import os
 import sys
@@ -559,6 +559,8 @@ def transfer(
         neighbors_key: Optional[str] = None,
         rna_key: Optional[str] = None,
         vdj_key: Optional[str] = None,
+        clone_key: Optional[str] = None,
+        collapse_nodes: bool = False,
         overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
@@ -577,6 +579,10 @@ def transfer(
         prefix for stashed RNA connectivities and distances.
     vdj_key : str, Optional
         prefix for stashed VDJ connectivities and distances.
+    clone_key : str, Optional
+        column name of clone/clonotype ids. Only used for integration with scirpy.
+    collapse_nodes : bool
+        Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for integration with scirpy.
     overwrite : str, bool, list, Optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
         list of column names will overwrite that specific column(s).
@@ -586,6 +592,25 @@ def transfer(
     `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
     """
     start = logg.info('Transferring network')
+    # always overwrite with whatever columns are in dandelion's metadata:
+    for x in dandelion.metadata.columns:
+        if x not in self.obs.columns:
+            self.obs[x] = pd.Series(dandelion.metadata[x])
+        elif overwrite is True:
+            self.obs[x] = pd.Series(dandelion.metadata[x])
+        if type_check(dandelion.metadata, x):
+            self.obs[x].replace(np.nan, 'No_contig', inplace=True)
+        if self.obs[x].dtype == 'bool':
+            self.obs[x] = [str(x) for x in self.obs[x]]
+
+    if overwrite is not None and overwrite is not True:
+        if not type(overwrite) is list:
+            overwrite = [overwrite]
+        for ow in overwrite:
+            self.obs[ow] = pd.Series(dandelion.metadata[ow])
+            if type_check(dandelion.metadata, ow):
+                self.obs[ow].replace(np.nan, 'No_contig', inplace=True)
+
     if dandelion.graph is not None:
         if expanded_only:
             G = dandelion.graph[1]
@@ -603,7 +628,8 @@ def transfer(
                                                 weight='weight',
                                                 nonedge=np.nan)
         # convert to connectivity
-        distances[~distances.isnull()] = 1 - distances[~distances.isnull()]
+        distances[~distances.isnull()] = 1 / np.exp(
+            distances[~distances.isnull()])
         df_connectivities = distances.reindex(index=self.obs_names,
                                               columns=self.obs_names)
 
@@ -660,43 +686,65 @@ def transfer(
         self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
 
-    # always overwrite with whatever columns are in dandelion's metadata:
-    for x in dandelion.metadata.columns:
-        if x not in self.obs.columns:
-            self.obs[x] = pd.Series(dandelion.metadata[x])
-        elif overwrite is True:
-            self.obs[x] = pd.Series(dandelion.metadata[x])
-        if type_check(dandelion.metadata, x):
-            self.obs[x].replace(np.nan, 'No_contig', inplace=True)
-        if self.obs[x].dtype == 'bool':
-            self.obs[x] = [str(x) for x in self.obs[x]]
+        # create the dictionary that will enable the use of scirpy's plotting.
+        if clone_key is None:
+            clonekey = 'clone_id'
+        else:
+            clonekey = clone_key
 
-    if overwrite is not None and overwrite is not True:
-        if not type(overwrite) is list:
-            overwrite = [overwrite]
-        for ow in overwrite:
-            self.obs[ow] = pd.Series(dandelion.metadata[ow])
-            if type_check(dandelion.metadata, ow):
-                self.obs[ow].replace(np.nan, 'No_contig', inplace=True)
+        if not collapse_nodes:
+            df_connectivities_[df_connectivities_.nonzero()] = 1
+            cell_indices = {
+                str(i): np.array([k])
+                for i, k in zip(range(0, len(self.obs_names)), self.obs_names)
+            }
+        else:
+            cell_indices = Tree()
+            for x, y in self.obs[clonekey].iteritems():
+                if y not in ['', 'unassigned', np.nan, 'NaN', 'NA', 'nan', 'None', None, 'none']:
+                    cell_indices[y][x].value = 1
+            cell_indices = {
+                str(x): np.array(list(r))
+                for x, r in zip(range(0, len(cell_indices)),
+                                cell_indices.values())
+            }
+            df_connectivities_ = np.zeros(
+                [len(cell_indices), len(cell_indices)])
+            np.fill_diagonal(df_connectivities_, 1)
+            df_connectivities_ = csr_matrix(df_connectivities_)
+
+        self.uns[clonekey] = {
+            # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
+            # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
+            "distances": df_connectivities_,
+            # '0' refers to the row/col index in the `distances` matrix (numeric index, but needs to be str because of h5py)
+            # np.array(["cell1", "cell2"]) points to the rows in `adata.obs`
+            "cell_indices": cell_indices,
+        }
 
     tmp = self.obs.copy()
-    if dandelion.layout is not None:
-        if expanded_only:
-            coord = pd.DataFrame.from_dict(dandelion.layout[1], orient='index')
-        else:
-            coord = pd.DataFrame.from_dict(dandelion.layout[0], orient='index')
-        for x in coord.columns:
-            tmp[x] = coord[x]
-        # tmp[[1]] = tmp[[1]]*-1
-        X_vdj = np.array(tmp[[0, 1]], dtype=np.float32)
-        self.obsm['X_vdj'] = X_vdj
+    if dandelion.graph is not None:
+        if dandelion.layout is not None:
+            if expanded_only:
+                coord = pd.DataFrame.from_dict(dandelion.layout[1],
+                                               orient='index')
+            else:
+                coord = pd.DataFrame.from_dict(dandelion.layout[0],
+                                               orient='index')
+            for x in coord.columns:
+                tmp[x] = coord[x]
+
+            X_vdj = np.array(tmp[[0, 1]], dtype=np.float32)
+            self.obsm['X_vdj'] = X_vdj
 
         logg.info(
             ' finished',
             time=start,
             deep=(
                 'updated `.obs` with `.metadata`\n'
-                'added to `.uns[\'' + neighbors_key + '\']` and `.obsp`\n'
+                'added to `.uns[\'' + neighbors_key + '\']` and `.uns[\'' +
+                clonekey + '\']`\n'
+                'and `.obsp`\n'
                 '   \'distances\', clonotype-weighted adjacency matrix\n'
                 '   \'connectivities\', clonotype-weighted adjacency matrix'))
     else:
