@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 22:32:00
+# @Last Modified time: 2022-06-10 17:25:09
 
 import pandas as pd
 import numpy as np
@@ -31,6 +31,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                      min_size: int = 2,
                      downsample: Optional[int] = None,
                      verbose: bool = True,
+                     generate_layout: bool = True,
                      **kwargs) -> Dandelion:
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
@@ -48,6 +49,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
     downsample : int, Optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
+    generate_layout : bool
+        whether or not to generate the Fruchterman-Reingold layout. May be time consuming if too many cells.
     verbose : bool
         whether or not to print the progress bars.
     **kwargs
@@ -128,7 +131,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     #             if (x[0] == x[0]) and (y[0] == y[0]) else 0))
     #     dmat[x] = d_mat
 
-    clone_counts = dat_clone[clonekey].value_counts()
+    clone_counts = dat_clone[clonekey].mask(lambda x: x.eq('')).value_counts()
     clone_counts = clone_counts[(clone_counts > 1) | list(
         re.search('[|]', c) for c in clone_counts.index)]
     clone_tree_dict = Tree()
@@ -362,12 +365,13 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
     sleep(0.5)
     # and now to actually generate the network
-    g, g_, lyt, lyt_ = generate_layout(vertice_list,
-                                       edge_list_final,
-                                       min_size=min_size,
-                                       weight=None,
-                                       verbose=verbose,
-                                       **kwargs)
+    g, g_, lyt, lyt_ = _generate_layout(vertice_list,
+                                        edge_list_final,
+                                        min_size=min_size,
+                                        weight=None,
+                                        verbose=verbose,
+                                        generate_layout=generate_layout,
+                                        **kwargs)
 
     if verbose:
         logg.info(
@@ -391,30 +395,50 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         else:
             threshold_ = None
         if downsample is not None:
-            # out = Dandelion(data = dat_downsample, metadata = downsample_meta, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), germline = germline_)
+            if (lyt and lyt_) is not None:
+                out = Dandelion(data=dat_,
+                                edges=edge_list_final,
+                                layout=(lyt, lyt_),
+                                graph=(g, g_),
+                                germline=germline_)
+            else:
+                out = Dandelion(data=dat_,
+                                edges=edge_list_final,
+                                graph=(g, g_),
+                                germline=germline_)
+            out.threshold = threshold_
+            return (out)
+        else:
+            if (lyt and lyt_) is not None:
+                self.__init__(data=self.data,
+                              metadata=self.metadata,
+                              edges=edge_list_final,
+                              layout=(lyt, lyt_),
+                              graph=(g, g_),
+                              germline=germline_,
+                              initialize=False)
+            else:
+                self.__init__(data=self.data,
+                              metadata=self.metadata,
+                              edges=edge_list_final,
+                              layout=None,
+                              graph=(g, g_),
+                              germline=germline_,
+                              initialize=False)
+            self.threshold = threshold_
+    else:
+        if (lyt and lyt_) is not None:
             out = Dandelion(data=dat_,
                             edges=edge_list_final,
                             layout=(lyt, lyt_),
                             graph=(g, g_),
-                            germline=germline_)
-            out.threshold = threshold_
-            return (out)
+                            clone_key=clone_key)
         else:
-            self.__init__(data=self.data,
-                          metadata=self.metadata,
-                          edges=edge_list_final,
-                          layout=(lyt, lyt_),
-                          graph=(g, g_),
-                          germline=germline_,
-                          initialize=False)
-            self.threshold = threshold_
-    else:
-        # out = Dandelion(data = dat, distance = dmat, edges = edge_list_final, layout = (lyt, lyt_), graph = (g, g_), clone_key = clone_key)
-        out = Dandelion(data=dat_,
-                        edges=edge_list_final,
-                        layout=(lyt, lyt_),
-                        graph=(g, g_),
-                        clone_key=clone_key)
+            out = Dandelion(data=dat_,
+                            edges=edge_list_final,
+                            layout=None,
+                            graph=(g, g_),
+                            clone_key=clone_key)
         return (out)
 
 
@@ -515,12 +539,13 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
         raise TypeError('Input object must be of {}'.format(Dandelion))
 
 
-def generate_layout(vertices: Sequence,
-                    edges: pd.DataFrame = None,
-                    min_size: int = 2,
-                    weight: Optional[str] = None,
-                    verbose: bool = True,
-                    **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
+def _generate_layout(vertices: Sequence,
+                     edges: pd.DataFrame = None,
+                     min_size: int = 2,
+                     weight: Optional[str] = None,
+                     verbose: bool = True,
+                     generate_layout: bool = True,
+                     **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
@@ -544,11 +569,14 @@ def generate_layout(vertices: Sequence,
             pass
     # if edges is not None:
     # edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
-    if verbose:
-        print('generating network layout')
-    pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
-    pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
-    return (G, G_, pos, pos_)
+    if generate_layout:
+        if verbose:
+            print('generating network layout')
+        pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
+        pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
+        return (G, G_, pos, pos_)
+    else:
+        return (G, G_, None, None)
 
 
 # when dealing with a lot of unconnected vertices, the pieces fly out to infinity and the original fr layout can't be used
