@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-21 08:11:37
+# @Last Modified time: 2022-06-10 15:40:24
 
 import os
 import pandas as pd
@@ -1471,19 +1471,44 @@ def create_germlines(
     """
     start = logg.info('Reconstructing germline sequences')
     env = os.environ.copy()
-    if germline is None:
-        try:
-            gml = env['GERMLINE']
-        except:
-            raise KeyError(
-                'Environmental variable GERMLINE must be set. ' +
-                'Otherwise, please provide path to folder containing germline fasta files.'
-            )
-        gml = gml + 'imgt/' + org + '/vdj/'
+    
+    if self.__class__ != Dandelion:
+        if germline is None:
+            try:
+                gml = env['GERMLINE']
+            except:
+                raise KeyError(
+                    'Environmental variable GERMLINE must be set. ' +
+                    'Otherwise, please provide path to folder containing germline fasta files.'
+                )
+            gml = gml + 'imgt/' + org + '/vdj/'
+        else:
+            if os.path.isdir(germline):
+                env['GERMLINE'] = germline
+                gml = germline
+            elif type(germline) is list:
+                gml = germline
+            elif type(germline) is dict:
+                gml = germline
     else:
-        if os.path.isdir(germline):
-            env['GERMLINE'] = germline
-            gml = germline
+        if len(self.germline) == 0:
+            if germline is None:
+                try:
+                    gml = env['GERMLINE']
+                except:
+                    raise KeyError(
+                        'Environmental variable GERMLINE must be set. ' +
+                        'Otherwise, please provide path to folder containing germline fasta files.'
+                    )
+                gml = gml + 'imgt/' + org + '/vdj/'
+            else:
+                if os.path.isdir(germline):
+                    env['GERMLINE'] = germline
+                    gml = germline
+                elif type(germline) is list:
+                    gml = germline
+                elif type(germline) is dict:
+                    gml = germline
 
     def _parseChangeO(record):
         """

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-09 09:46:10
+# @Last Modified time: 2022-06-10 15:34:44
 
 import os
 from collections import defaultdict
@@ -23,6 +23,7 @@ from ..utilities._utilities import *
 from ..utilities._io import *
 from typing import Union, Sequence, Tuple, Dict, Optional
 from tqdm import tqdm
+from pathlib import Path
 
 
 class Dandelion:
@@ -269,29 +270,7 @@ class Dandelion:
                 ))
             gml = gml + 'imgt/' + org + '/vdj/'
         else:
-            if os.path.isdir(germline):
-                gml = germline
-            elif type(germline) is not list:
-                germline_ = [germline]
-                if len(germline_) < 3:
-                    raise TypeError((
-                        'Input for germline is incorrect. Please provide path to folder containing germline IGHV, '
-                        +
-                        'IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ '
-                        + 'fasta files (with .fasta extension) as a list.'))
-                else:
-                    gml = []
-                    for x in germline_:
-                        if not x.endswith('.fasta'):
-                            raise TypeError((
-                                'Input for germline is incorrect. Please provide path to folder containing germline '
-                                +
-                                'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, '
-                                +
-                                'and IGHJ fasta files (with .fasta extension) as a list.'
-                            ))
-                        gml.append(x)
-            elif type(germline) is list:
+            if type(germline) is list:
                 if len(germline) < 3:
                     raise TypeError((
                         'Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, '
@@ -301,13 +280,45 @@ class Dandelion:
                 else:
                     gml = []
                     for x in germline:
-                        if not x.endswith('.fasta'):
+                        if not x.endswith(('.fasta', '.fa')):
                             raise TypeError((
                                 'Input for germline is incorrect. Please provide path to folder containing germline '
                                 +
                                 'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta '
                                 + 'files (with .fasta extension) as a list.'))
                         gml.append(x)
+            elif type(germline) is not list:
+                if os.path.isdir(germline):
+                    germline_ = [
+                        str(Path(germline, g)) for g in os.listdir(germline)
+                    ]
+                    if len(germline_) < 3:
+                        raise TypeError((
+                            'Input for germline is incorrect. Please provide path to folder containing germline IGHV, '
+                            +
+                            'IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ '
+                            +
+                            'fasta files (with .fasta extension) as a list.'))
+                    else:
+                        gml = []
+                        for x in germline_:
+                            if not x.endswith(('.fasta', '.fa')):
+                                raise TypeError((
+                                    'Input for germline is incorrect. Please provide path to folder containing germline '
+                                    +
+                                    'IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, '
+                                    +
+                                    'and IGHJ fasta files (with .fasta extension) as a list.'
+                                ))
+                            gml.append(x)
+                elif os.path.isfile(germline) and str(germline).endswith(
+                    ('.fasta', '.fa')):
+                    gml = []
+                    gml.append(germline)
+                    warnings.warn(
+                        'Only 1 fasta file provided to updating germline slot. Please check if this is intended.',
+                        RuntimeWarning,
+                        stacklevel=2)
 
         if type(gml) is not list:
             gml = [gml]
