@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-10 17:25:09
+# @Last Modified time: 2022-06-11 17:25:13
 
 import pandas as pd
 import numpy as np
@@ -167,6 +167,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                   disable=disable):
         tmp = dat_seq.loc[membership[t]]
         if tmp.shape[0] > 1:
+            tmp = tmp.replace(
+                '[.]', '',
+                regex=True)  # replace gaps before calculating distances
             for x in tmp.columns:
                 tdarray = np.array(np.array(tmp[x])).reshape(-1, 1)
                 d_mat_tmp = squareform(
