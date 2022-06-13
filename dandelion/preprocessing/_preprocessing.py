@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 09:45:23
+# @Last Modified time: 2022-06-13 10:15:59
 
 import os
 import pandas as pd
@@ -2071,7 +2071,7 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         # final check
         barcodes_final = list(set(_dat['cell_id']))
         check_dat_barcodes = list(
-            set_dat[_dat['locus'].isin(HEAVYLONG)]['cell_id'])
+            set(_dat[_dat['locus'].isin(HEAVYLONG)]['cell_id']))
         filter_ids2 = list(set(barcodes_final) - set(check_dat_barcodes))
         _dat = _dat[~(_dat['cell_id'].isin(filter_ids2))].copy()
 
