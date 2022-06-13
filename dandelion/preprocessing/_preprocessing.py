@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-10 15:40:24
+# @Last Modified time: 2022-06-13 08:51:50
 
 import os
 import pandas as pd
@@ -1471,7 +1471,7 @@ def create_germlines(
     """
     start = logg.info('Reconstructing germline sequences')
     env = os.environ.copy()
-    
+
     if self.__class__ != Dandelion:
         if germline is None:
             try:
@@ -2026,42 +2026,17 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
     if len(umi_adjustment) > 0:
         dat['duplicate_count'].update(umi_adjustment)
 
-    poorqual = {}
-    hdoublet = {}
-    ldoublet = {}
-    if adata_provided:
-        for c in tqdm(adata_.obs_names,
-                      desc='Annotating in anndata obs slot '):
-            if c in poor_qual:
-                poorqual.update({c: 'True'})
-            else:
-                poorqual.update({c: 'False'})
+    poorqual = {c: 'False' for c in adata_.obs_names}
+    hdoublet = {c: 'False' for c in adata_.obs_names}
+    ldoublet = {c: 'False' for c in adata_.obs_names}
 
-            if c in h_doublet:
-                hdoublet.update({c: 'True'})
-            else:
-                hdoublet.update({c: 'False'})
+    poorqual_ = {x: 'True' for x in poor_qual}
+    hdoublet_ = {x: 'True' for x in h_doublet}
+    ldoublet_ = {x: 'True' for x in l_doublet}
 
-            if c in l_doublet:
-                ldoublet.update({c: 'True'})
-            else:
-                ldoublet.update({c: 'False'})
-    else:
-        for c in adata_.obs_names:
-            if c in poor_qual:
-                poorqual.update({c: 'True'})
-            else:
-                poorqual.update({c: 'False'})
-
-            if c in h_doublet:
-                hdoublet.update({c: 'True'})
-            else:
-                hdoublet.update({c: 'False'})
-
-            if c in l_doublet:
-                ldoublet.update({c: 'True'})
-            else:
-                ldoublet.update({c: 'False'})
+    poorqual.update(poorqual_)
+    hdoublet.update(hdoublet_)
+    ldoublet.update(ldoublet_)
 
     adata_.obs['filter_contig_quality'] = pd.Series(poorqual)
     adata_.obs['filter_contig_VDJ'] = pd.Series(hdoublet)
