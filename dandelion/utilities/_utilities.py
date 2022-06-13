@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 12:26:17
+# @Last Modified time: 2022-06-13 13:59:32
 
 import os
 import re
@@ -369,6 +369,11 @@ def sanitize_data(data, ignore='clone_id'):
     except:
         pass
 
+    if 'duplicate_count' and 'productive' in data:  # sort so that the productive contig with the largest umi is first
+        data.sort_values(by=['productive', 'duplicate_count'],
+                         inplace=True,
+                         ascending=False)
+
     # check if airr-standards is happy
     validate_airr(data)
     return (data)
@@ -604,12 +609,12 @@ def _validate_counts_vector(counts, suppress_cast=False):
 
 def deprecated(details, deprecated_in, removed_in):
     """Decorator to mark a function as deprecated"""
-
     def deprecated_decorator(func):
         def deprecated_func(*args, **kwargs):
             warnings.warn(
                 "{} is a deprecated in {} and will be removed in {}."
-                " {}".format(func.__name__, deprecated_in, removed_in, details),
+                " {}".format(func.__name__, deprecated_in, removed_in,
+                             details),
                 category=DeprecationWarning,
                 stacklevel=2,
             )
