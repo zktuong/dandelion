@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 22:57:53
+# @Last Modified time: 2022-06-13 23:20:38
 
 import os
 from collections import defaultdict
@@ -874,16 +874,16 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
     tmp_metadata['locus_status'] = format_locus(tmp_metadata)
     tmp_metadata['productive_status'] = format_productive(tmp_metadata)
 
-    tmp_metadata['VDJ_chain_status'] = [
+    tmp_metadata['rearrangement_VDJ_status'] = [
         x if '|' not in x else 'Multi' for x in
         ['|'.join(list(set([v, d, j]))) for v, d, j in zip(v3, d3, j3)]
     ]
-    tmp_metadata['VJ_chain_status'] = [
+    tmp_metadata['rearrangement_VDJ_status'] = [
         x if '|' not in x else 'Multi'
         for x in ['|'.join(list(set([v, j]))) for v, j in zip(v4, j4)]
     ]
-    tmp_metadata['VDJ_constant_status'] = vdj_constant_status
-    tmp_metadata['VJ_constant_status'] = vj_constant_status
+    tmp_metadata['constant_VDJ_status'] = vdj_constant_status
+    tmp_metadata['constant_VJ_status'] = vj_constant_status
 
     if 'isotype' in tmp_metadata:
         if all(tmp_metadata['isotype'] == 'None'):
