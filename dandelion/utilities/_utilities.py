@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 13:59:32
+# @Last Modified time: 2022-06-13 14:16:27
 
 import os
 import re
@@ -369,7 +369,8 @@ def sanitize_data(data, ignore='clone_id'):
     except:
         pass
 
-    if 'duplicate_count' and 'productive' in data:  # sort so that the productive contig with the largest umi is first
+    if pd.Series(['duplicate_count', 'productive']).isin(data.columns).all(
+    ):  # sort so that the productive contig with the largest umi is first
         data.sort_values(by=['productive', 'duplicate_count'],
                          inplace=True,
                          ascending=False)
