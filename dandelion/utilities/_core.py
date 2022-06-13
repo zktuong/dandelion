@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 23:20:38
+# @Last Modified time: 2022-06-13 23:39:41
 
 import os
 from collections import defaultdict
@@ -878,7 +878,7 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         x if '|' not in x else 'Multi' for x in
         ['|'.join(list(set([v, d, j]))) for v, d, j in zip(v3, d3, j3)]
     ]
-    tmp_metadata['rearrangement_VDJ_status'] = [
+    tmp_metadata['rearrangement_VJ_status'] = [
         x if '|' not in x else 'Multi'
         for x in ['|'.join(list(set([v, j]))) for v, j in zip(v4, j4)]
     ]
