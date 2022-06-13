@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-10 15:34:44
+# @Last Modified time: 2022-06-13 13:31:11
 
 import os
 from collections import defaultdict
@@ -732,112 +732,6 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 [str(clonekey), str(clonekey) + '_by_size']
             ]]
 
-    for i in tmp_metadata.index:
-        if 'locus' + suffix_h in tmp_metadata:
-            if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_h]):
-                if 'locus' + suffix_l in tmp_metadata:
-                    if not check_missing(tmp_metadata.loc[i,
-                                                          'locus' + suffix_l]):
-                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
-                            i, 'locus' +
-                            suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' +
-                                                                 suffix_l]
-                    else:
-                        if '|' in tmp_metadata.at[i, 'locus' + suffix_h]:
-                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
-                        else:
-                            tmp_metadata.at[i,
-                                            'locus_status'] = tmp_metadata.loc[
-                                                i,
-                                                'locus' + suffix_h] + '_only'
-                else:
-                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
-                        i, 'locus' + suffix_h] + '_only'
-            else:
-                if 'locus' + suffix_l in tmp_metadata:
-                    if not check_missing(tmp_metadata.loc[i,
-                                                          'locus' + suffix_l]):
-                        if '|' in tmp_metadata.at[i, 'locus' + suffix_l]:
-                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
-                        else:
-                            tmp_metadata.at[i,
-                                            'locus_status'] = tmp_metadata.loc[
-                                                i,
-                                                'locus' + suffix_l] + '_only'
-                    else:
-                        tmp_metadata.at[i, 'locus_status'] = 'unassigned'
-                else:
-                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
-        else:
-            if 'locus' + suffix_l in tmp_metadata:
-                if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
-                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
-                        i, 'locus' + suffix_l] + '_only'
-                else:
-                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
-            else:
-                tmp_metadata.at[i, 'locus_status'] = 'unassigned'
-
-    tmp_metadata['locus_status_summary'] = [
-        'Multi' if '|' in i else i for i in tmp_metadata['locus_status']
-    ]
-    acceptable = [
-        'TRB + TRA', 'TRD + TRG', 'IGH + IGK', 'IGH + IGL', 'IGH_only',
-        'TRB_only', 'TRD_only', 'TRA_only', 'TRG_only', 'IGK_only', 'IGL_only',
-        'Multi', 'unassigned'
-    ]
-    tmp_metadata['locus_status'] = [
-        'Multi' if i not in acceptable else i
-        for i in tmp_metadata['locus_status']
-    ]
-    tmp_metadata['locus_status_summary'] = [
-        'Multi' if i == 'Multi' else i for i in tmp_metadata['locus_status']
-    ]
-
-    for i in tmp_metadata.index:
-        if 'productive' + suffix_h in tmp_metadata:
-            if not check_missing(tmp_metadata.loc[i, 'productive' + suffix_h]):
-                if 'productive' + suffix_l in tmp_metadata:
-                    if not check_missing(
-                            tmp_metadata.loc[i, 'productive' + suffix_l]):
-                        tmp_metadata.at[
-                            i, 'productive_status'] = tmp_metadata.loc[
-                                i, 'productive' +
-                                suffix_h] + ' + ' + tmp_metadata.loc[
-                                    i, 'productive' + suffix_l]
-                    else:
-                        tmp_metadata.at[
-                            i, 'productive_status'] = tmp_metadata.loc[
-                                i, 'productive' + suffix_h]
-                else:
-                    tmp_metadata.at[i, 'productive_status'] = tmp_metadata.loc[
-                        i, 'productive' + suffix_h]
-            else:
-                if 'productive' + suffix_l in tmp_metadata:
-                    if not check_missing(
-                            tmp_metadata.loc[i, 'productive' + suffix_l]):
-                        tmp_metadata.at[
-                            i, 'productive_status'] = tmp_metadata.loc[
-                                i, 'productive' + suffix_l]
-                    else:
-                        tmp_metadata.at[i, 'productive_status'] = 'unassigned'
-                else:
-                    tmp_metadata.at[i, 'productive_status'] = 'unassigned'
-        else:
-            if 'productive' + suffix_l in tmp_metadata:
-                if not check_missing(
-                        tmp_metadata.loc[i, 'productive' + suffix_l]):
-                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
-                        i, 'productive' + suffix_l]
-                else:
-                    tmp_metadata.at[i, 'productive_status'] = 'unassigned'
-            else:
-                tmp_metadata.at[i, 'productive_status'] = 'unassigned'
-
-    tmp_metadata['productive_summary'] = [
-        'Multi' if '|' in i else i for i in tmp_metadata['productive_status']
-    ]
-
     conversion_dict = {
         'igha': 'IgA',
         'igha1': 'IgA',
@@ -885,6 +779,8 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
     }
 
     isotype = []
+    multi, multic = {}, {}
+
     if 'c_call' + suffix_h in tmp_metadata:
         for k in tmp_metadata['c_call' + suffix_h]:
             if isinstance(k, str):
@@ -924,9 +820,91 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                                     ]))
                             ]) for t in tmp_metadata[c]
                         ]
-    multi = {}
-    multic = {}
+
     for i in tmp_metadata.index:
+        if 'locus' + suffix_h in tmp_metadata:
+            if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_h]):
+                if 'locus' + suffix_l in tmp_metadata:
+                    if not check_missing(tmp_metadata.loc[i,
+                                                          'locus' + suffix_l]):
+                        tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
+                            i, 'locus' +
+                            suffix_h] + ' + ' + tmp_metadata.loc[i, 'locus' +
+                                                                 suffix_l]
+                    else:
+                        if '|' in tmp_metadata.at[i, 'locus' + suffix_h]:
+                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
+                        else:
+                            tmp_metadata.at[i,
+                                            'locus_status'] = tmp_metadata.loc[
+                                                i,
+                                                'locus' + suffix_h] + '_only'
+                else:
+                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
+                        i, 'locus' + suffix_h] + '_only'
+            else:
+                if 'locus' + suffix_l in tmp_metadata:
+                    if not check_missing(tmp_metadata.loc[i,
+                                                          'locus' + suffix_l]):
+                        if '|' in tmp_metadata.at[i, 'locus' + suffix_l]:
+                            tmp_metadata.at[i, 'locus_status'] = 'Multi'
+                        else:
+                            tmp_metadata.at[i,
+                                            'locus_status'] = tmp_metadata.loc[
+                                                i,
+                                                'locus' + suffix_l] + '_only'
+                    else:
+                        tmp_metadata.at[i, 'locus_status'] = 'unassigned'
+                else:
+                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
+        else:
+            if 'locus' + suffix_l in tmp_metadata:
+                if not check_missing(tmp_metadata.loc[i, 'locus' + suffix_l]):
+                    tmp_metadata.at[i, 'locus_status'] = tmp_metadata.loc[
+                        i, 'locus' + suffix_l] + '_only'
+                else:
+                    tmp_metadata.at[i, 'locus_status'] = 'unassigned'
+            else:
+                tmp_metadata.at[i, 'locus_status'] = 'unassigned'
+
+        if 'productive' + suffix_h in tmp_metadata:
+            if not check_missing(tmp_metadata.loc[i, 'productive' + suffix_h]):
+                if 'productive' + suffix_l in tmp_metadata:
+                    if not check_missing(
+                            tmp_metadata.loc[i, 'productive' + suffix_l]):
+                        tmp_metadata.at[
+                            i, 'productive_status'] = tmp_metadata.loc[
+                                i, 'productive' +
+                                suffix_h] + ' + ' + tmp_metadata.loc[
+                                    i, 'productive' + suffix_l]
+                    else:
+                        tmp_metadata.at[
+                            i, 'productive_status'] = tmp_metadata.loc[
+                                i, 'productive' + suffix_h]
+                else:
+                    tmp_metadata.at[i, 'productive_status'] = tmp_metadata.loc[
+                        i, 'productive' + suffix_h]
+            else:
+                if 'productive' + suffix_l in tmp_metadata:
+                    if not check_missing(
+                            tmp_metadata.loc[i, 'productive' + suffix_l]):
+                        tmp_metadata.at[
+                            i, 'productive_status'] = tmp_metadata.loc[
+                                i, 'productive' + suffix_l]
+                    else:
+                        tmp_metadata.at[i, 'productive_status'] = 'unassigned'
+                else:
+                    tmp_metadata.at[i, 'productive_status'] = 'unassigned'
+        else:
+            if 'productive' + suffix_l in tmp_metadata:
+                if not check_missing(
+                        tmp_metadata.loc[i, 'productive' + suffix_l]):
+                    tmp_metadata.at[i, 'productive'] = tmp_metadata.loc[
+                        i, 'productive' + suffix_l]
+                else:
+                    tmp_metadata.at[i, 'productive_status'] = 'unassigned'
+            else:
+                tmp_metadata.at[i, 'productive_status'] = 'unassigned'
         try:
             if 'v_call_genotyped' in cols:
                 if 'v_call_genotyped' + suffix_h in tmp_metadata:
@@ -985,10 +963,7 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 lc_ = tmp_metadata.at[i, 'c_call' + suffix_l].split('|')
             except:
                 lc_ = tmp_metadata.at[i, 'c_call' + suffix_l]
-        multi_h = []
-        multi_l = []
-        multi_hc = []
-        multi_lc = []
+        multi_h, multi_l, multi_hc, multi_lc = [], [], [], []
         if 'hv_' in locals():
             if len(hv_) > 1:
                 multi_h.append(['Multi' + suffix_h + '_v'])
@@ -1049,6 +1024,27 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                 multic[i] = multihc
         else:
             multic[i] = 'unassigned'
+
+    tmp_metadata['locus_status_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['locus_status']
+    ]
+    acceptable = [
+        'TRB + TRA', 'TRD + TRG', 'IGH + IGK', 'IGH + IGL', 'IGH_only',
+        'TRB_only', 'TRD_only', 'TRA_only', 'TRG_only', 'IGK_only', 'IGL_only',
+        'Multi', 'unassigned'
+    ]
+    tmp_metadata['locus_status'] = [
+        'Multi' if i not in acceptable else i
+        for i in tmp_metadata['locus_status']
+    ]
+    tmp_metadata['locus_status_summary'] = [
+        'Multi' if i == 'Multi' else i for i in tmp_metadata['locus_status']
+    ]
+
+    tmp_metadata['productive_summary'] = [
+        'Multi' if '|' in i else i for i in tmp_metadata['productive_status']
+    ]
+
     tmp_metadata['vdj_status'] = pd.Series(multi)
     tmp_metadata['vdj_status_summary'] = [
         'Multi' if 'Multi' + suffix_h in i else 'Single'
