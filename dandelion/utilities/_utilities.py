@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 16:57:07
+# @Last Modified time: 2022-06-13 12:26:17
 
 import os
 import re
@@ -308,12 +308,12 @@ def check_missing(x):
     return (pd.isnull(x) or x == '')
 
 
-def check_mix_dtype(data):
-    """Utility function to check if mixed dtypes."""
-    return (any([
-        True for c in data.columns
-        if pd.api.types.infer_dtype(data[c]).startswith("mixed")
-    ]))
+# def check_mix_dtype(data):
+#     """Utility function to check if mixed dtypes."""
+#     return (any([
+#         True for c in data.columns
+#         if pd.api.types.infer_dtype(data[c]).startswith("mixed")
+#     ]))
 
 
 def return_mix_dtype(data):

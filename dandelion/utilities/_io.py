@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-09 09:10:56
+# @Last Modified time: 2022-06-13 12:25:22
 
 import os
 import json
@@ -170,12 +170,12 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     """
     try:
         data = pd.read_hdf(filename, 'data')
-        data = sanitize_data(data)
+        # data = sanitize_data(data)
 
-        if check_mix_dtype(data):
-            for x in return_mix_dtype(data):
-                data[x].replace('', pd.NA, inplace=True)
-            data = sanitize_data(data)
+        # if check_mix_dtype(data):
+        #     for x in return_mix_dtype(data):
+        #        data[x].replace('', pd.NA, inplace=True)
+        #     data = sanitize_data(data)
     except:
         raise AttributeError(
             '{} does not contain attribute `data`'.format(filename))
