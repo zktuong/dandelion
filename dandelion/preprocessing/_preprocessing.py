@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 08:51:50
+# @Last Modified time: 2022-06-13 09:45:23
 
 import os
 import pandas as pd
@@ -2063,21 +2063,16 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         filter_ids = list(set(filter_ids))
 
         if filter_missing:
-            for c in dat['cell_id']:
-                if c not in adata_.obs_names:
-                    filter_ids.append(c)
+            dat = dat[dat['cell_id'].isin(adata_.obs_names)].copy()
 
         _dat = dat[~(dat['cell_id'].isin(filter_ids))].copy()
         _dat = _dat[~(_dat['sequence_id'].isin(drop_contig))].copy()
 
         # final check
         barcodes_final = list(set(_dat['cell_id']))
-        filter_ids2 = []
-        for b in barcodes_final:
-            check_dat = _dat[(_dat['locus'].isin(HEAVYLONG))
-                             & (_dat['cell_id'].isin([b]))].copy()
-            if check_dat.shape[0] < 1:
-                filter_ids2.append(b)
+        check_dat_barcodes = list(
+            set_dat[_dat['locus'].isin(HEAVYLONG)]['cell_id'])
+        filter_ids2 = list(set(barcodes_final) - set(check_dat_barcodes))
         _dat = _dat[~(_dat['cell_id'].isin(filter_ids2))].copy()
 
         if _dat.shape[0] == 0:
@@ -2115,12 +2110,10 @@ def filter_contigs(data: Union[Dandelion, pd.DataFrame, str],
         out_dat.germline = data.germline
 
     if adata_provided:
-        bc_2 = {}
-        for b in barcode2:
-            bc_2.update({b: 'True'})
+        bc_2 = {b: 'True' for b in barcode2}
         if filter_contig:
-            for b in failed:
-                bc_2.update({b: 'False'})
+            failed2 = {b: 'False' for b in failed}
+            bc_2.update(failed2)
         contig_check['contig_QC_pass'] = pd.Series(bc_2)
         contig_check.replace(np.nan, 'No_contig', inplace=True)
         adata_.obs['contig_QC_pass'] = pd.Series(
