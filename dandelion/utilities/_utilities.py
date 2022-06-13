@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 14:16:27
+# @Last Modified time: 2022-06-13 22:19:02
 
 import os
 import re
@@ -298,22 +298,14 @@ def present(x):
     return (pd.notnull(x) and x != '')
 
 
-def all_missing(x):
-    """Utility function to check if all x is not null or blank."""
-    return (all(pd.isnull(x)) or all(x == ''))
-
-
 def check_missing(x):
-    """Utility function to check if x is not null or blank."""
+    """Utility function to check if x is null or blank."""
     return (pd.isnull(x) or x == '')
 
 
-# def check_mix_dtype(data):
-#     """Utility function to check if mixed dtypes."""
-#     return (any([
-#         True for c in data.columns
-#         if pd.api.types.infer_dtype(data[c]).startswith("mixed")
-#     ]))
+def all_missing(x):
+    """Utility function to check if all x is not null or blank."""
+    return (all(pd.isnull(x)) or all(x == ''))
 
 
 def return_mix_dtype(data):
@@ -496,7 +488,7 @@ def check_travdv(data):
     return (data)
 
 
-def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
+def load_data(obj: Optional[Union[pd.DataFrame, str]]) -> pd.DataFrame:
     """
     Read in or copy dataframe object and set sequence_id as index without dropping.
 
@@ -509,25 +501,33 @@ def load_data(obj: Union[pd.DataFrame, str]) -> pd.DataFrame:
     -------
     pandas DataFrame object.
     """
-    if os.path.isfile(str(obj)):
-        try:
-            obj_ = pd.read_csv(obj, sep='\t')
-        except FileNotFoundError as e:
-            print(e)
-    elif isinstance(obj, pd.DataFrame):
-        obj_ = obj.copy()
-    else:
-        raise FileNotFoundError(
-            "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
-        )
+    if obj is not None:
+        if os.path.isfile(str(obj)):
+            try:
+                obj_ = pd.read_csv(obj, sep='\t')
+            except FileNotFoundError as e:
+                print(e)
+        elif isinstance(obj, pd.DataFrame):
+            obj_ = obj.copy()
+        else:
+            raise FileNotFoundError(
+                "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
+            )
 
-    if 'sequence_id' in obj_.columns:
-        obj_.set_index('sequence_id', drop=False, inplace=True)
-        obj_['cell_id'] = [c.split('_contig')[0] for c in obj_['sequence_id']]
-    else:
-        raise KeyError("'sequence_id' not found in columns of input")
+        if 'sequence_id' in obj_.columns:
+            obj_.set_index('sequence_id', drop=False, inplace=True)
+            obj_['cell_id'] = [
+                c.split('_contig')[0] for c in obj_['sequence_id']
+            ]
+        else:
+            raise KeyError("'sequence_id' not found in columns of input")
 
-    return (obj_)
+        if 'umi_count' in obj_.columns:
+            if 'duplicate_count' not in obj_.columns:
+                obj_.rename(columns={'umi_count': 'duplicate_count'},
+                            inplace=True)
+
+        return (obj_)
 
 
 class ContigDict(dict):
@@ -624,3 +624,114 @@ def deprecated(details, deprecated_in, removed_in):
         return deprecated_func
 
     return deprecated_decorator
+
+
+def format_call(metadata: pd.DataFrame,
+                call: str,
+                suffix_h: str = '_VDJ',
+                suffix_l: str = '_VJ') -> list:
+    '''Extract v/d/j/c call values from data.'''
+    call_dict = {
+        'Multi': 'Multi',
+        'None': 'None',
+        '': 'None',
+        'unassigned': 'None'
+    }
+    if suffix_l is not None:
+        call_1 = {
+            x[0]: x[1] if present(x[1]) else 'None'
+            for x, y in zip(metadata[call + suffix_h].items(),
+                            list(metadata[call + suffix_l]))
+        }
+        call_2 = {
+            x[0]: x[1] if present(x[1]) else 'None'
+            for x, y in zip(metadata[call + suffix_l].items(),
+                            list(metadata[call + suffix_h]))
+        }
+        call_2 = {x: y if '|' not in y else 'Multi' for x, y in call_2.items()}
+        call_4 = {
+            x: 'Single' if y not in call_dict else call_dict[y]
+            for x, y in call_2.items()
+        }
+    else:
+        call_1 = {
+            x: y if present(y) else 'None'
+            for x, y in metadata[call + suffix_h].items()
+        }
+        call_2 = {x: 'None' for x in call_1.keys()}
+        call_4 = call_3 = call_2
+    call_1 = {x: y if '|' not in y else 'Multi' for x, y in call_1.items()}
+    call_3 = {
+        x: 'Single' if y not in call_dict else call_dict[y]
+        for x, y in call_1.items()
+    }
+    return (
+        list(call_1.values()),
+        list(call_2.values()),
+        list(call_3.values()),
+        list(call_4.values()),
+    )
+
+
+def format_locus(metadata: pd.DataFrame,
+                 suffix_h: str = '_VDJ',
+                 suffix_l: str = '_VJ') -> list:
+    '''Extract locus call value from data.'''
+    locus_1 = {
+        x[0]: x[1] if present(x[1]) else y
+        for x, y in zip(metadata['locus' + suffix_h].items(),
+                        list(metadata['locus' + suffix_l]))
+    }
+    locus_2 = {
+        x[0]: x[1] if present(x[1]) else y
+        for x, y in zip(metadata['locus' + suffix_l].items(),
+                        list(metadata['locus' + suffix_h]))
+    }
+    multi_1 = {
+        x: 'Multi'
+        for x, y in metadata['locus' + suffix_h].items() if '|' in y
+    }
+    multi_2 = {
+        x: 'Multi'
+        for x, y in metadata['locus' + suffix_l].items() if '|' in y
+    }
+    locus_1.update(multi_1)
+    locus_2.update(multi_2)
+    result = [
+        str(x) + ' + ' + str(y) if str(x) != str(y) else str(x) + '_only'
+        for x, y in zip(locus_1.values(), locus_2.values())
+    ]
+    result = [x if 'Multi' not in x else 'Multi' for x in result]
+    return (result)
+
+
+def format_productive(metadata: pd.DataFrame,
+                      suffix_h: str = '_VDJ',
+                      suffix_l: str = '_VJ') -> list:
+    '''Extract productive value from data.'''
+    productive_1 = {
+        x[0]: x[1] if present(x[1]) else 'None'
+        for x, y in zip(metadata['productive' + suffix_h].items(),
+                        list(metadata['productive' + suffix_l]))
+    }
+    productive_2 = {
+        x[0]: x[1] if present(x[1]) else 'None'
+        for x, y in zip(metadata['productive' + suffix_l].items(),
+                        list(metadata['productive' + suffix_h]))
+    }
+    multi_1 = {
+        x: 'Multi'
+        for x, y in metadata['productive' + suffix_h].items() if '|' in y
+    }
+    multi_2 = {
+        x: 'Multi'
+        for x, y in metadata['productive' + suffix_l].items() if '|' in y
+    }
+    productive_1.update(multi_1)
+    productive_2.update(multi_2)
+    result = [
+        str(x) + ' + ' + str(y)
+        for x, y in zip(productive_1.values(), productive_2.values())
+    ]
+    # result = [x if 'Multi' not in x else 'Multi' for x in result]
+    return (result)
