@@ -219,7 +219,7 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     assert vdj.data.shape[0] == 14
     assert vdj.data.shape[1] == 50
     assert vdj.metadata.shape[0] == 7
-    assert vdj.metadata.shape[1] == 28
+    assert vdj.metadata.shape[1] == 29
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key='sequence')
     ddl.tl.transfer(adata, vdj)
