@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 12:25:22
+# @Last Modified time: 2022-06-13 23:12:58
 
 import os
 import json
@@ -226,7 +226,7 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
             pass
 
         try:
-            threshold = np.float(np.array(hf['threshold']))
+            threshold = float(np.array(hf['threshold']))
         except:
             threshold = None
 
