@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 11:54:51
+# @Last Modified time: 2022-06-14 12:26:15
 
 import os
 import sys
@@ -481,7 +481,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         dat[clone_key] = [fintree[x] for x in dat['cell_id']]
 
     dat_[clone_key] = pd.Series(dat[clone_key])
-    dat_[clone_key].replace('', 'unassigned')
+    # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(self)):
         write_airr(
             dat_,
