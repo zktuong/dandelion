@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 09:12:58
+# @Last Modified time: 2022-06-14 11:54:51
 
 import os
 import sys
@@ -1357,7 +1357,7 @@ def clone_overlap(
 
     # get rid of problematic rows that appear because of category conversion?
     data = data[~(data[clone_].isin(
-        [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', None]))]
+        [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
 
     # prepare a summary table
     datc_ = data[clone_].str.split('|', expand=True).stack()
@@ -1366,7 +1366,7 @@ def clone_overlap(
     datc_.columns = ['cell_id', 'tmp', clone_]
     datc_.drop('tmp', inplace=True, axis=1)
     datc_ = datc_[~(datc_[clone_].isin(
-        ['', np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', None]))]
+        ['', np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
     dictg_ = dict(data[groupby])
     datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 

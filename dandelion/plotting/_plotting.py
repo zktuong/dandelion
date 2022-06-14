@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 14:09:49
+# @Last Modified time: 2022-06-14 11:55:26
 
 import seaborn as sns
 import pandas as pd
@@ -739,7 +739,7 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         data = self.obs.copy()
         # get rid of problematic rows that appear because of category conversion?
         data = data[~(data[clone_].isin(
-            [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', None]))]
+            [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
         if 'clone_overlap' in self.uns:
             overlap = self.uns['clone_overlap'].copy()
         else:
@@ -771,7 +771,7 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         data = self.metadata.copy()
         # get rid of problematic rows that appear because of category conversion?
         data = data[~(data[clone_].isin(
-            [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', None]))]
+            [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
 
         # prepare a summary table
         datc_ = data[clone_].str.split('|', expand=True).stack()
