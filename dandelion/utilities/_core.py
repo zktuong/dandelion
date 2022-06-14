@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 23:39:41
+# @Last Modified time: 2022-06-14 11:35:22
 
 import os
 from collections import defaultdict
@@ -641,9 +641,9 @@ class Query:
                     try:
                         out[x] = pd.to_numeric(out[x])
                     except:
-                        out[x].fillna('', inplace=True)
+                        out[x].fillna('None', inplace=True)
             else:
-                out.fillna('', inplace=True)
+                out.fillna('None', inplace=True)
         return (out)
 
 
@@ -705,6 +705,8 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
     for rc in reqcols:
         if rc not in tmp_metadata:
             tmp_metadata[rc] = ''
+    if 'd_call_VJ' in tmp_metadata:
+        tmp_metadata.drop('d_call_VJ', axis=1, inplace=True)
 
     if 'locus_VDJ' in tmp_metadata:
         suffix_h = '_VDJ'
@@ -890,6 +892,8 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
             tmp_metadata.drop(['isotype', 'isotype_status'],
                               axis=1,
                               inplace=True)
+    for rc in reqcols:
+        tmp_metadata[rc].replace('', 'None', inplace=True)
 
     self.metadata = tmp_metadata.copy()
 
