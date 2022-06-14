@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 11:35:22
+# @Last Modified time: 2022-06-14 12:16:56
 
 import os
 from collections import defaultdict
@@ -716,8 +716,7 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
         suffix_l = ''
 
     if clonekey in init_dict:
-        tmp_metadata[str(clonekey)] = tmp_metadata[str(clonekey)].replace(
-            '', 'None')
+        tmp_metadata[str(clonekey)].replace('', 'None', inplace = True)
 
         clones = tmp_metadata[str(clonekey)].str.split('|', expand=False)
         tmpclones = []
@@ -894,6 +893,8 @@ def initialize_metadata(self, cols: Sequence, clonekey: str,
                               inplace=True)
     for rc in reqcols:
         tmp_metadata[rc].replace('', 'None', inplace=True)
+    if clonekey in init_dict:
+        tmp_metadata[clonekey].replace('', 'None', inplace=True)
 
     self.metadata = tmp_metadata.copy()
 
