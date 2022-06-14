@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-10 17:40:41
+# @Last Modified time: 2022-06-14 09:12:58
 
 import os
 import sys
@@ -977,7 +977,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             v_call = 'v_call'
             j_call = 'j_call'
             junction_length = 'junction_length'
-            umi_count = 'umi_count'
+            umi_count = 'duplicate_count'
         else:
             sys.exit("Invalid format %s" % fileformat)
 
