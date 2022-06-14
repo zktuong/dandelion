@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 10:15:59
+# @Last Modified time: 2022-06-14 18:17:22
 
 import os
 import pandas as pd
@@ -2709,29 +2709,31 @@ class FilterContigs:
         j_dict = dict(zip(data['sequence_id'], data['j_call']))
         c_dict = dict(zip(data['sequence_id'], data['c_call']))
         for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
-            cell = Contig(row).contig['cell_id']
-            if Contig(row).contig['locus'] in HEAVYLONG:
-                if Contig(row).contig['productive'] in TRUES:
-                    self.Cell[cell]['VDJ']['P'][Contig(row).contig].value = 1
-                elif Contig(row).contig['productive'] in FALSES:
-                    self.Cell[cell]['VDJ']['NP'][Contig(row).contig].value = 1
-            elif Contig(row).contig['locus'] in LIGHTSHORT:
-                if Contig(row).contig['productive'] in TRUES:
-                    self.Cell[cell]['VJ']['P'][Contig(row).contig].value = 1
-                elif Contig(row).contig['productive'] in FALSES:
-                    self.Cell[cell]['VJ']['NP'][Contig(row).contig].value = 1
+            cell = row['cell_id']
+            if row['locus'] in HEAVYLONG:
+                if row['productive'] in TRUES:
+                    self.Cell[cell]['VDJ']['P'][contig].update(row)
+                elif row['productive'] in FALSES:
+                    self.Cell[cell]['VDJ']['NP'][contig].update(row)
+            elif row['locus'] in LIGHTSHORT:
+                if row['productive'] in TRUES:
+                    self.Cell[cell]['VJ']['P'][contig].update(row)
+                elif row['productive'] in FALSES:
+                    self.Cell[cell]['VJ']['NP'][contig].update(row)
         for cell in tqdm(self.Cell,
                          desc='Scanning for poor quality/ambiguous contigs'):
             if len(self.Cell[cell]['VDJ']['P']) > 0:
-                data1 = pd.DataFrame([
-                    x for x in self.Cell[cell]['VDJ']['P']
-                    if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                data1 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VDJ']['P'][x]
+                        for x in self.Cell[cell]['VDJ']['P']
+                        if isinstance(self.Cell[cell]['VDJ']['P'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VDJ']['P'][x]['sequence_id']
+                        for x in self.Cell[cell]['VDJ']['P']
+                        if isinstance(self.Cell[cell]['VDJ']['P'][x], dict)
+                    ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -2816,15 +2818,17 @@ class FilterContigs:
                                     [data1.loc[keep_hc_contig]])
                                 h_p = list(data1['sequence_id'])
             if len(self.Cell[cell]['VDJ']['NP']) > 0:
-                data2 = pd.DataFrame([
-                    x for x in self.Cell[cell]['VDJ']['NP']
-                    if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                data2 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VDJ']['NP'][x]
+                        for x in self.Cell[cell]['VDJ']['NP']
+                        if isinstance(self.Cell[cell]['VDJ']['NP'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VDJ']['NP'][x]['sequence_id']
+                        for x in self.Cell[cell]['VDJ']['NP']
+                        if isinstance(self.Cell[cell]['VDJ']['NP'][x], dict)
+                    ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
@@ -2858,15 +2862,17 @@ class FilterContigs:
                             for x in pd.to_numeric(data2['duplicate_count'])
                         ]
             if len(self.Cell[cell]['VJ']['P']) > 0:
-                data3 = pd.DataFrame([
-                    x
-                    for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                data3 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VJ']['P'][x]
+                        for x in self.Cell[cell]['VJ']['P']
+                        if isinstance(self.Cell[cell]['VJ']['P'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VJ']['P'][x]['sequence_id']
+                        for x in self.Cell[cell]['VJ']['P']
+                        if isinstance(self.Cell[cell]['VJ']['P'][x], dict)
+                    ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -2941,15 +2947,17 @@ class FilterContigs:
                             data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
                             l_p = list(data3['sequence_id'])
             if len(self.Cell[cell]['VJ']['NP']) > 0:
-                data4 = pd.DataFrame([
-                    x for x in self.Cell[cell]['VJ']['NP']
-                    if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                data4 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VJ']['NP'][x]
+                        for x in self.Cell[cell]['VJ']['NP']
+                        if isinstance(self.Cell[cell]['VJ']['NP'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VJ']['NP'][x]['sequence_id']
+                        for x in self.Cell[cell]['VJ']['NP']
+                        if isinstance(self.Cell[cell]['VJ']['NP'][x], dict)
+                    ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
@@ -3261,29 +3269,31 @@ class FilterContigsLite:
         j_dict = dict(zip(data['sequence_id'], data['j_call']))
         c_dict = dict(zip(data['sequence_id'], data['c_call']))
         for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
-            cell = Contig(row).contig['cell_id']
-            if Contig(row).contig['locus'] in HEAVYLONG:
-                if Contig(row).contig['productive'] in TRUES:
-                    self.Cell[cell]['VDJ']['P'][Contig(row).contig].value = 1
-                elif Contig(row).contig['productive'] in FALSES:
-                    self.Cell[cell]['VDJ']['NP'][Contig(row).contig].value = 1
-            elif Contig(row).contig['locus'] in LIGHTSHORT:
-                if Contig(row).contig['productive'] in TRUES:
-                    self.Cell[cell]['VJ']['P'][Contig(row).contig].value = 1
-                elif Contig(row).contig['productive'] in FALSES:
-                    self.Cell[cell]['VJ']['NP'][Contig(row).contig].value = 1
+            cell = row['cell_id']
+            if row['locus'] in HEAVYLONG:
+                if row['productive'] in TRUES:
+                    self.Cell[cell]['VDJ']['P'][contig].update(row)
+                elif row['productive'] in FALSES:
+                    self.Cell[cell]['VDJ']['NP'][contig].update(row)
+            elif row['locus'] in LIGHTSHORT:
+                if row['productive'] in TRUES:
+                    self.Cell[cell]['VJ']['P'][contig].update(row)
+                elif row['productive'] in FALSES:
+                    self.Cell[cell]['VJ']['NP'][contig].update(row)
         for cell in tqdm(self.Cell,
                          desc='Scanning for poor quality/ambiguous contigs'):
             if len(self.Cell[cell]['VDJ']['P']) > 0:
-                data1 = pd.DataFrame([
-                    x for x in self.Cell[cell]['VDJ']['P']
-                    if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                data1 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VDJ']['P'][x]
+                        for x in self.Cell[cell]['VDJ']['P']
+                        if isinstance(self.Cell[cell]['VDJ']['P'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VDJ']['P'][x]['sequence_id']
+                        for x in self.Cell[cell]['VDJ']['P']
+                        if isinstance(self.Cell[cell]['VDJ']['P'][x], dict)
+                    ])
                 h_p = list(data1['sequence_id'])
                 h_umi_p = [
                     int(x) for x in pd.to_numeric(data1['duplicate_count'])
@@ -3321,29 +3331,33 @@ class FilterContigsLite:
                                         data1['duplicate_count'])
                                 ]
             if len(self.Cell[cell]['VDJ']['NP']) > 0:
-                data2 = pd.DataFrame([
-                    x for x in self.Cell[cell]['VDJ']['NP']
-                    if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VDJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                data2 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VDJ']['NP'][x]
+                        for x in self.Cell[cell]['VDJ']['NP']
+                        if isinstance(self.Cell[cell]['VDJ']['NP'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VDJ']['NP'][x]['sequence_id']
+                        for x in self.Cell[cell]['VDJ']['NP']
+                        if isinstance(self.Cell[cell]['VDJ']['NP'][x], dict)
+                    ])
                 h_np = list(data2['sequence_id'])
                 h_umi_np = [
                     int(x) for x in pd.to_numeric(data2['duplicate_count'])
                 ]
             if len(self.Cell[cell]['VJ']['P']) > 0:
-                data3 = pd.DataFrame([
-                    x
-                    for x in self.Cell[cell]['VJ']['P'] if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['P']
-                                         if isinstance(x, dict)
-                                     ])
+                data3 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VJ']['P'][x]
+                        for x in self.Cell[cell]['VJ']['P']
+                        if isinstance(self.Cell[cell]['VJ']['P'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VJ']['P'][x]['sequence_id']
+                        for x in self.Cell[cell]['VJ']['P']
+                        if isinstance(self.Cell[cell]['VJ']['P'][x], dict)
+                    ])
                 l_p = list(data3['sequence_id'])
                 l_umi_p = [
                     int(x) for x in pd.to_numeric(data3['duplicate_count'])
@@ -3378,15 +3392,17 @@ class FilterContigsLite:
                                     data3['duplicate_count'])
                             ]
             if len(self.Cell[cell]['VJ']['NP']) > 0:
-                data4 = pd.DataFrame([
-                    x for x in self.Cell[cell]['VJ']['NP']
-                    if isinstance(x, dict)
-                ],
-                                     index=[
-                                         x['sequence_id']
-                                         for x in self.Cell[cell]['VJ']['NP']
-                                         if isinstance(x, dict)
-                                     ])
+                data4 = pd.DataFrame(
+                    [
+                        self.Cell[cell]['VJ']['NP'][x]
+                        for x in self.Cell[cell]['VJ']['NP']
+                        if isinstance(self.Cell[cell]['VJ']['NP'][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]['VJ']['NP'][x]['sequence_id']
+                        for x in self.Cell[cell]['VJ']['NP']
+                        if isinstance(self.Cell[cell]['VJ']['NP'][x], dict)
+                    ])
                 l_np = list(data4['sequence_id'])
                 l_umi_np = [
                     int(x) for x in pd.to_numeric(data4['duplicate_count'])
