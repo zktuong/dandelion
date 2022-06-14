@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-13 23:12:58
+# @Last Modified time: 2022-06-14 07:52:20
 
 import os
 import json
@@ -299,7 +299,7 @@ def read_10x_airr(file: str) -> Dandelion:
     return (Dandelion(dat))
 
 
-def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
+def to_scirpy(data: Dandelion, transfer: bool = False, **kwargs) -> AnnData:
     """
     Convert a `Dandelion` object to scirpy's format.
 
@@ -310,6 +310,8 @@ def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
     transfer : bool
         Whether to execute :func:`dandelion.tl.transfer` to transfer all data
         to the :class:`anndata.AnnData` instance.
+    **kwargs
+        Additional arguments passed to :func:`scirpy.io.read_airr`.
 
     Returns
     -------
@@ -334,7 +336,7 @@ def to_scirpy(data: Dandelion, transfer: bool = False) -> AnnData:
     ]:
         if h not in data.data:
             data.data[h] = None
-    return (ir.io.from_dandelion(data, transfer))
+    return (ir.io.from_dandelion(data, transfer, **kwargs))
 
 
 def from_scirpy(adata: AnnData) -> Dandelion:
