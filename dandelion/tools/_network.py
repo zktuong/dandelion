@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 14:31:26
+# @Last Modified time: 2022-06-15 15:09:04
 
 import pandas as pd
 import numpy as np
@@ -25,6 +25,7 @@ from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg
 from typing import Union, Sequence, Tuple, Optional
+
 
 def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                      key: Optional[str] = None,
@@ -587,13 +588,15 @@ def _generate_layout(vertices: Sequence,
             try:
                 from graph_tool.all import sfdp_layout
             except ImportError:
-                raise ImportError("Please install graph-tool: conda install -c conda-forge graph-tool")
+                raise ImportError(
+                    "Please install graph-tool: conda install -c conda-forge graph-tool"
+                )
             gtg = nx2gt(G)
             gtg_ = nx2gt(G_)
             posx = sfdp_layout(gtg, **kwargs)
             posx_ = sfdp_layout(gtg_, **kwargs)
-            pos = dict(zip(G.nodes, list(posx)))
-            pos_ = dict(zip(G.nodes, list(posx_)))
+            pos = dict(zip(list(gtg.vertex_properties['id']), list(posx)))
+            pos_ = dict(zip(list(gtg_.vertex_properties['id']), list(posx_)))
         return (G, G_, pos, pos_)
     else:
         return (G, G_, None, None)
@@ -997,7 +1000,9 @@ def nx2gt(nxG):
     try:
         import graph_tool as gt
     except ImportError:
-        raise ImportError("Please install graph-tool: conda install -c conda-forge graph-tool")
+        raise ImportError(
+            "Please install graph-tool: conda install -c conda-forge graph-tool"
+        )
     # Phase 0: Create a directed or undirected graph-tool Graph
     gtG = gt.Graph(directed=nxG.is_directed())
 
