@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 15:09:04
+# @Last Modified time: 2022-06-15 15:31:51
 
 import pandas as pd
 import numpy as np
@@ -573,7 +573,7 @@ def _generate_layout(vertices: Sequence,
         if edges is not None:
             remove = [
                 node for node, degree in dict(G.degree()).items()
-                if degree > min_size
+                if degree < min_size
             ]
             G_.remove_nodes_from(remove)
         else:
@@ -588,15 +588,19 @@ def _generate_layout(vertices: Sequence,
             try:
                 from graph_tool.all import sfdp_layout
             except ImportError:
-                raise ImportError(
-                    "Please install graph-tool: conda install -c conda-forge graph-tool"
-                )
-            gtg = nx2gt(G)
-            gtg_ = nx2gt(G_)
-            posx = sfdp_layout(gtg, **kwargs)
-            posx_ = sfdp_layout(gtg_, **kwargs)
-            pos = dict(zip(list(gtg.vertex_properties['id']), list(posx)))
-            pos_ = dict(zip(list(gtg_.vertex_properties['id']), list(posx_)))
+                print('To benefit for faster layout computation, please install graph-tool: '
+                      'conda install -c conda-forge graph-tool')
+                nographtool = True
+            if 'nographtool' in locals():
+                pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
+                pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
+            else:
+                gtg = nx2gt(G)
+                gtg_ = nx2gt(G_)
+                posx = sfdp_layout(gtg, **kwargs)
+                posx_ = sfdp_layout(gtg_, **kwargs)
+                pos = dict(zip(list(gtg.vertex_properties['id']), list(posx)))
+                pos_ = dict(zip(list(gtg_.vertex_properties['id']), list(posx_)))
         return (G, G_, pos, pos_)
     else:
         return (G, G_, None, None)
