@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 15:41:44
+# @Last Modified time: 2022-06-15 15:50:52
 
 import pandas as pd
 import numpy as np
@@ -588,7 +588,7 @@ def _generate_layout(vertices: Sequence,
             try:
                 from graph_tool.all import sfdp_layout
             except ImportError:
-                print('To benefit for faster layout computation, please install graph-tool: '
+                print('To benefit from faster layout computation, please install graph-tool: '
                       'conda install -c conda-forge graph-tool')
                 nographtool = True
             if 'nographtool' in locals():
