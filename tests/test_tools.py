@@ -7,11 +7,13 @@ import dandelion as ddl
 import scanpy as sc
 from pathlib import Path
 
-from fixtures import (airr_reannotated, airr_reannotated2, dummy_adata, dummy_adata2, create_testfolder,
-                      json_10x_cr6, dummy_adata_cr6)
+from fixtures import (airr_reannotated, airr_reannotated2, dummy_adata,
+                      dummy_adata2, create_testfolder, json_10x_cr6,
+                      dummy_adata_cr6)
 
 
-def test_setup(create_testfolder, airr_reannotated, airr_reannotated2, dummy_adata):
+def test_setup(create_testfolder, airr_reannotated, airr_reannotated2,
+               dummy_adata):
     vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
     vdj2 = ddl.pp.filter_contigs(airr_reannotated2)
     assert airr_reannotated.shape[0] == 8
@@ -81,6 +83,18 @@ def test_generate_network(create_testfolder, resample, expected):
     assert vdj.data.clone_id.dtype == 'object'
     ddl.tl.generate_network(vdj)
     assert vdj.edges is not None
+
+
+def test_generate_network_sfdp(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    ddl.tl.generate_network(vdj, compute_layout=False)
+    assert vdj.layout is None
+    ddl.tl.generate_network(vdj, layout_method='mod_fr')
+    assert vdj.layout is not None
+    vdj.layout = None
+    ddl.tl.generate_network(vdj, layout_method='sfdp')
+    assert vdj.layout is not None
 
 
 def test_find_clones_key(create_testfolder):
