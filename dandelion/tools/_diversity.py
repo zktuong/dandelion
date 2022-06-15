@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-07 15:35:18
+# @Last Modified time: 2022-06-15 13:12:57
 
 import pandas as pd
 import numpy as np
@@ -274,7 +274,7 @@ def clone_networkstats(self: Dandelion,
     if self.__class__ == Dandelion:
         if self.graph is None:
             raise AttributeError(
-                'Graph not found. Plase run tl.generate_network.')
+                'Graph not found. Please run tl.generate_network.')
         else:
             if expanded_only:
                 G = self.graph[1]
@@ -500,6 +500,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                                                      clone_key=clonekey,
                                                      downsample=minsize,
                                                      verbose=False,
+                                                     compute_layout=False,
                                                      **kwargs)
                         if met == 'clone_network':
                             n_n, v_s, c_s = clone_networkstats(
@@ -632,6 +633,7 @@ def diversity_gini(self: Union[Dandelion, AnnData],
                             generate_network(ddl_dat,
                                              clone_key=clonekey,
                                              verbose=False,
+                                             compute_layout=False,
                                              **kwargs)
                             n_n, v_s, c_s = clone_networkstats(
                                 ddl_dat,
