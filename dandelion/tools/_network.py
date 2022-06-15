@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 15:31:51
+# @Last Modified time: 2022-06-15 15:41:44
 
 import pandas as pd
 import numpy as np
@@ -573,7 +573,7 @@ def _generate_layout(vertices: Sequence,
         if edges is not None:
             remove = [
                 node for node, degree in dict(G.degree()).items()
-                if degree < min_size
+                if degree < min_size - 1
             ]
             G_.remove_nodes_from(remove)
         else:
