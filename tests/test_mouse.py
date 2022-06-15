@@ -98,6 +98,9 @@ def test_generate_network(create_testfolder):
     assert vdj.n_obs == 392
     assert vdj.layout is not None
     assert vdj.graph is not None
+    assert len(vdj.graph[1]) == 6
+    ddl.tl.generate_network(vdj, compute_layout=False, min_size = 3)
+    assert len(vdj.graph[1]) == 0
 
 
 def test_filtercontigs_drop_contigs(create_testfolder, processed_files, dummy_adata_mouse):
