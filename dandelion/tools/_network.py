@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 14:19:45
+# @Last Modified time: 2022-06-15 14:31:26
 
 import pandas as pd
 import numpy as np
@@ -585,7 +585,6 @@ def _generate_layout(vertices: Sequence,
             pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
         elif layout_method == 'sfdp':
             try:
-                import graph_tool as gt
                 from graph_tool.all import sfdp_layout
             except ImportError:
                 raise ImportError("Please install graph-tool: conda install -c conda-forge graph-tool")
@@ -995,6 +994,10 @@ def nx2gt(nxG):
     """
     Converts a networkx graph to a graph-tool graph.
     """
+    try:
+        import graph_tool as gt
+    except ImportError:
+        raise ImportError("Please install graph-tool: conda install -c conda-forge graph-tool")
     # Phase 0: Create a directed or undirected graph-tool Graph
     gtG = gt.Graph(directed=nxG.is_directed())
 
