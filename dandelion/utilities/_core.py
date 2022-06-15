@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 12:16:56
+# @Last Modified time: 2022-06-15 17:32:15
 
 import os
 from collections import defaultdict
@@ -399,7 +399,7 @@ class Dandelion:
         data.to_csv(filename, sep='\t', index=False, **kwargs)
 
     @deprecated(deprecated_in="0.2.2",
-                removed_in="0.2.3",
+                removed_in="0.4.0",
                 details="write_h5ddl will be the recommended way to save.")
     def write_h5(self,
                  filename: str = 'dandelion_data.h5ddl',

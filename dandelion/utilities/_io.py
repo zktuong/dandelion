@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 07:52:20
+# @Last Modified time: 2022-06-15 17:32:01
 
 import os
 import json
@@ -153,7 +153,7 @@ def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
 
 
 @deprecated(deprecated_in="0.2.2",
-            removed_in="0.2.3",
+            removed_in="0.4.0",
             details="read_h5ddl will be the recommended way to read.")
 def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     """
