@@ -2,11 +2,14 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-11 17:25:13
+# @Last Modified time: 2022-06-15 13:12:00
 
 import pandas as pd
 import numpy as np
 import networkx as nx
+import graph_tool as gt
+import sys
+
 from polyleven import levenshtein
 from ..utilities._utilities import *
 from ..utilities._core import *
@@ -23,6 +26,7 @@ from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg
 from typing import Union, Sequence, Tuple, Optional
+from graph_tool.all import sfdp_layout
 
 
 def generate_network(self: Union[Dandelion, pd.DataFrame, str],
@@ -31,7 +35,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                      min_size: int = 2,
                      downsample: Optional[int] = None,
                      verbose: bool = True,
-                     generate_layout: bool = True,
+                     compute_layout: bool = True,
+                     layout_method: Literal['sfdp', 'mod_fr'] = 'sfdp',
                      **kwargs) -> Dandelion:
     """
     Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
@@ -49,12 +54,15 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph. This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
     downsample : int, Optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be randomly sampled to the integer provided. A new Dandelion class will be returned.
-    generate_layout : bool
-        whether or not to generate the Fruchterman-Reingold layout. May be time consuming if too many cells.
+    compute_layout : bool
+        whether or not to generate the layout. May be time consuming if too many cells.
+    layout_method : Literal
+        accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast) whereas 
+        'mod_fr' refers to modified Fruchterman-Reingold layout originally implemented in dandelion (python implementation; slow).
     verbose : bool
         whether or not to print the progress bars.
     **kwargs
-        additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout`.
+        additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or `graph_tool.draw.sfdp_layout`.
 
     Returns
     -------
@@ -373,7 +381,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                                         min_size=min_size,
                                         weight=None,
                                         verbose=verbose,
-                                        generate_layout=generate_layout,
+                                        compute_layout=compute_layout,
+                                        layout_method=layout_method,
                                         **kwargs)
 
     if verbose:
@@ -547,7 +556,8 @@ def _generate_layout(vertices: Sequence,
                      min_size: int = 2,
                      weight: Optional[str] = None,
                      verbose: bool = True,
-                     generate_layout: bool = True,
+                     compute_layout: bool = True,
+                     layout_method: Literal['sfdp', 'mod_fr'] = 'sfdp',
                      **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     G = nx.Graph()
     G.add_nodes_from(vertices)
@@ -570,13 +580,19 @@ def _generate_layout(vertices: Sequence,
             G_.remove_nodes_from(remove)
         else:
             pass
-    # if edges is not None:
-    # edges_, weights_ = zip(*nx.get_edge_attributes(G_,'weight').items())
-    if generate_layout:
+    if compute_layout:
         if verbose:
             print('generating network layout')
-        pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
-        pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
+        if layout_method == 'mod_fr':
+            pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
+            pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
+        elif layout_method == 'sfdp':
+            gtg = nx2gt(G)
+            gtg_ = nx2gt(G_)
+            posx = sfdp_layout(gtg, **kwargs)
+            posx_ = sfdp_layout(gtg_, **kwargs)
+            pos = dict(zip(G.nodes, list(posx)))
+            pos_ = dict(zip(G.nodes, list(posx_)))
         return (G, G_, pos, pos_)
     else:
         return (G, G_, None, None)
@@ -970,3 +986,116 @@ def extract_edge_weights(self: Dandelion,
                 .format(e))
     if 'weights' in locals():
         return (weights)
+
+
+# from https://bbengfort.github.io/2016/06/graph-tool-from-networkx/
+def nx2gt(nxG):
+    """
+    Converts a networkx graph to a graph-tool graph.
+    """
+    # Phase 0: Create a directed or undirected graph-tool Graph
+    gtG = gt.Graph(directed=nxG.is_directed())
+
+    # Add the Graph properties as "internal properties"
+    for key, value in nxG.graph.items():
+        # Convert the value and key into a type for graph-tool
+        tname, value, key = get_prop_type(value, key)
+
+        prop = gtG.new_graph_property(tname)  # Create the PropertyMap
+        gtG.graph_properties[key] = prop  # Set the PropertyMap
+        gtG.graph_properties[key] = value  # Set the actual value
+
+    # Phase 1: Add the vertex and edge property maps
+    # Go through all nodes and edges and add seen properties
+    # Add the node properties first
+    nprops = set()  # cache keys to only add properties once
+    for node, data in list(nxG.nodes(data=True)):
+
+        # Go through all the properties if not seen and add them.
+        for key, val in data.items():
+            if key in nprops: continue  # Skip properties already added
+
+            # Convert the value and key into a type for graph-tool
+            tname, _, key = get_prop_type(val, key)
+
+            prop = gtG.new_vertex_property(tname)  # Create the PropertyMap
+            gtG.vertex_properties[key] = prop  # Set the PropertyMap
+
+            # Add the key to the already seen properties
+            nprops.add(key)
+
+    # Also add the node id: in NetworkX a node can be any hashable type, but
+    # in graph-tool node are defined as indices. So we capture any strings
+    # in a special PropertyMap called 'id' -- modify as needed!
+    gtG.vertex_properties['id'] = gtG.new_vertex_property('string')
+
+    # Add the edge properties second
+    eprops = set()  # cache keys to only add properties once
+    for src, dst, data in list(nxG.edges(data=True)):
+
+        # Go through all the edge properties if not seen and add them.
+        for key, val in data.items():
+            if key in eprops: continue  # Skip properties already added
+
+            # Convert the value and key into a type for graph-tool
+            tname, _, key = get_prop_type(val, key)
+
+            prop = gtG.new_edge_property(tname)  # Create the PropertyMap
+            gtG.edge_properties[key] = prop  # Set the PropertyMap
+
+            # Add the key to the already seen properties
+            eprops.add(key)
+
+    # Phase 2: Actually add all the nodes and vertices with their properties
+    # Add the nodes
+    vertices = {}  # vertex mapping for tracking edges later
+    for node, data in list(nxG.nodes(data=True)):
+
+        # Create the vertex and annotate for our edges later
+        v = gtG.add_vertex()
+        vertices[node] = v
+
+        # Set the vertex properties, not forgetting the id property
+        data['id'] = str(node)
+        for key, value in data.items():
+            gtG.vp[key][v] = value  # vp is short for vertex_properties
+
+    # Add the edges
+    for src, dst, data in list(nxG.edges(data=True)):
+
+        # Look up the vertex structs from our vertices mapping and add edge.
+        e = gtG.add_edge(vertices[src], vertices[dst])
+
+        # Add the edge properties
+        for key, value in data.items():
+            gtG.ep[key][e] = value  # ep is short for edge_properties
+
+    # Done, finally!
+    return gtG
+
+
+def get_prop_type(value, key=None):
+    """
+    Performs typing and value conversion for the graph_tool PropertyMap class.
+    If a key is provided, it also ensures the key is in a format that can be
+    used with the PropertyMap. Returns a tuple, (type name, value, key)
+    """
+    # Deal with the value
+    if isinstance(value, bool):
+        tname = 'bool'
+
+    elif isinstance(value, int):
+        tname = 'float'
+        value = float(value)
+
+    elif isinstance(value, float):
+        tname = 'float'
+
+    elif isinstance(value, dict):
+        tname = 'object'
+
+    else:
+        tname = 'string'
+        value = str(value)
+
+    return tname, value, key
