@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pandas as pd
 import dandelion as ddl
+import pytest
 from pathlib import Path
 
 from fixtures_mouse import (fasta_10x_mouse, annotation_10x_mouse,
@@ -78,3 +79,9 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     assert vdj.data.shape[0] == 776
     assert vdj.metadata.shape[0] == 389
     assert adata.n_obs == 547
+
+def test_generate_network_min_size(create_testfolder):
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    with pytest.raises(ValueError):
+        ddl.tl.generate_network(vdj, compute_layout=False)
