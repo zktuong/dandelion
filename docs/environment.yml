@@ -9,7 +9,6 @@ dependencies:
 - pandoc
 - pyyaml
 - ipython_genutils
-- graph-tool
 - adjustText
 - statsmodels
 - pytables
