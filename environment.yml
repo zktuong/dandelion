@@ -15,6 +15,7 @@ dependencies:
 - numba
 - pytables
 - pytest
+- graph-tool
 - pip
 - tbb
 - pip:

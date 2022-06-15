@@ -85,6 +85,9 @@ python/conda packages
     conda install -c conda-forge python-igraph leidenalg
     pip install scanpy
 
+    # with version >=0.2.2, it is reccomended to install graph-tool to enable hyperfast layout calculations
+   conda install -c conda-forge graph-tool
+   
     # skip if doing pre-processing via container
     conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
 

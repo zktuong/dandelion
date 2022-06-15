@@ -2,12 +2,11 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 13:12:00
+# @Last Modified time: 2022-06-15 14:19:45
 
 import pandas as pd
 import numpy as np
 import networkx as nx
-import graph_tool as gt
 import sys
 
 from polyleven import levenshtein
@@ -26,8 +25,6 @@ from tqdm import tqdm
 from time import sleep
 from scanpy import logging as logg
 from typing import Union, Sequence, Tuple, Optional
-from graph_tool.all import sfdp_layout
-
 
 def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                      key: Optional[str] = None,
@@ -587,6 +584,11 @@ def _generate_layout(vertices: Sequence,
             pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
             pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
         elif layout_method == 'sfdp':
+            try:
+                import graph_tool as gt
+                from graph_tool.all import sfdp_layout
+            except ImportError:
+                raise ImportError("Please install graph-tool: conda install -c conda-forge graph-tool")
             gtg = nx2gt(G)
             gtg_ = nx2gt(G_)
             posx = sfdp_layout(gtg, **kwargs)
