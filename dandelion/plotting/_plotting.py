@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 11:55:26
+# @Last Modified time: 2022-06-17 12:40:38
 
 import seaborn as sns
 import pandas as pd
@@ -20,7 +20,7 @@ from plotnine import ggplot, theme_classic, aes, geom_line, xlab, ylab, options,
 from scanpy.plotting import palettes
 from time import sleep
 import matplotlib.pyplot as plt
-from itertools import combinations
+from itertools import combinations, cycle
 from typing import Union, Sequence, Tuple, Dict, Optional
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -120,7 +120,7 @@ def clone_rarefaction(self: Union[AnnData, Dandelion],
                 elif len(list(set((pred.variable)))) <= 102:
                     pal = palettes.default_102
                 else:
-                    pal = None
+                    pal = cycle(palettes.default_102)
 
             if pal is not None:
                 p = (ggplot(pred, aes(x="value", y="yhat", color="variable")) +
@@ -673,7 +673,6 @@ def clone_overlap(self: Union[AnnData, Dandelion],
     A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.
 
     Written with nxviz < 0.7.3. Will need to revisit for newer nxviz versions, or change how it's called?
-    TODO: workout how to modify edge thickness with both old and new versions.
 
     Parameters
     ----------
@@ -722,7 +721,8 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         import nxviz as nxv
     except:
         raise (ImportError(
-            "Unable to import module `nxviz`. Have you done install nxviz? Try pip install git+https://github.com/zktuong/nxviz.git"
+            "Unable to import module `nxviz`. Have you done install nxviz? "
+            "Try pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges"
         ))
 
     if min_clone_size is None:
@@ -854,13 +854,24 @@ def clone_overlap(self: Union[AnnData, Dandelion],
     groupby_dict = dict(zip(data[groupby], data[colorby]))
     if color_mapping is None:
         if self.__class__ == AnnData:
-            if pd.api.types.is_categorical_dtype(self.obs[groupby]):
-                try:
+            if str(colorby) + '_colors' in self.uns:
+                if pd.api.types.is_categorical_dtype(self.obs[groupby]):
                     colorby_dict = dict(
                         zip(list(self.obs[str(colorby)].cat.categories),
                             self.uns[str(colorby) + '_colors']))
-                except:
-                    pass
+                else:
+                    colorby_dict = dict(
+                        zip(list(self.obs[str(colorby)].unique()),
+                            self.uns[str(colorby) + '_colors']))
+            else:
+                if len(self.obs[str(colorby)].unique()) <= 20:
+                    pal = cycle(palettes.default_20)
+                elif len(self.obs[str(colorby)].unique()) <= 28:
+                    pal = cycle(palettes.default_28)
+                else:
+                    pal = cycle(palettes.default_102)
+                colorby_dict = dict(
+                    zip(list(self.obs[str(colorby)].unique()), pal))
     else:
         if type(color_mapping) is dict:
             colorby_dict = color_mapping
@@ -885,9 +896,13 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         from importlib.metadata import version
         NXVIZVERSION = version("nxviz")
     except:
-        from pkg_resources import get_distribution
-        NXVIZVERSION = get_distribution("nxviz").version
+        try:
+            from pkg_resources import get_distribution
+            NXVIZVERSION = get_distribution("nxviz").version
+        except:
+            NXVIZVERSION = '0.7.4'  # just for local
     if NXVIZVERSION < '0.7.3':
+        # some limited support for previous nxviz plotting api
         c = nxv.CircosPlot(G,
                            node_color=colorby,
                            node_grouping=colorby,
@@ -909,16 +924,16 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         if return_graph:
             return (c)
     else:
-        # some limited support for future nxviz plotting api
         from nxviz import annotate
         c = nxv.circos(
             G,
             group_by=colorby,
             node_color_by=colorby,
             edge_lw_by=weighted_attr,
+            node_palette=colorby_dict,
         )  # group_by
         annotate.circos_group(G, group_by=colorby)
-        annotate.node_colormapping(G, color_by=colorby)
+        annotate.node_colormapping(G, color_by=colorby, palette=colorby_dict)
         if show_plot:
             plt.show()
         if save is not None:
