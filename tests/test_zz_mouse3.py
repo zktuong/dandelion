@@ -105,23 +105,11 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-def test_generate_network_min_size(create_testfolder):
-    """test generate network size"""
-    f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
-    with pytest.raises(ValueError):
-        ddl.tl.generate_network(vdj, compute_layout=False)
-
-
-@pytest.mark.usefixtures("create_testfolder")
 def test_generate_network_sfdp(create_testfolder):
     """test generate network sfdp"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
-    ddl.tl.generate_network(vdj, compute_layout=False)
-    assert vdj.layout is None
-    ddl.tl.generate_network(vdj, layout_method="mod_fr")
-    assert vdj.layout is not None
-    vdj.layout = None
+    with pytest.raises(ValueError):
+        ddl.tl.generate_network(vdj, compute_layout=False)
     ddl.tl.generate_network(vdj, layout_method="sfdp")
     assert vdj.layout is not None
