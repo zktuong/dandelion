@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 10:12:51
+# @Last Modified time: 2022-06-18 10:17:37
 
 import os
 import sys
@@ -701,7 +701,10 @@ def transfer(
         else:
             cell_indices = Tree()
             for x, y in self.obs[clonekey].iteritems():
-                if y not in ['', 'unassigned', np.nan, 'NaN', 'NA', 'nan', 'None', None, 'none']:
+                if y not in [
+                        '', 'unassigned', np.nan, 'NaN', 'NA', 'nan', 'None',
+                        None, 'none'
+                ]:
                     cell_indices[y][x].value = 1
             cell_indices = {
                 str(x): np.array(list(r))
@@ -1375,7 +1378,7 @@ def clone_overlap(
     for x in allgroups:
         if x not in overlap:
             overlap[x] = 0
-            
+
     if min_size == 0:
         raise ValueError('min_size must be greater than 0.')
     if not weighted_overlap:
