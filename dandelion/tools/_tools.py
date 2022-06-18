@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 12:26:15
+# @Last Modified time: 2022-06-18 10:12:51
 
 import os
 import sys
@@ -1356,6 +1356,7 @@ def clone_overlap(
         clone_ = clone_key
 
     # get rid of problematic rows that appear because of category conversion?
+    allgroups = list(data[groupby].unique())
     data = data[~(data[clone_].isin(
         [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
 
@@ -1371,7 +1372,10 @@ def clone_overlap(
     datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
     overlap = pd.crosstab(datc_[clone_], datc_[groupby])
-
+    for x in allgroups:
+        if x not in overlap:
+            overlap[x] = 0
+            
     if min_size == 0:
         raise ValueError('min_size must be greater than 0.')
     if not weighted_overlap:
