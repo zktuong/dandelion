@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-14 18:17:22
+# @Last Modified time: 2022-06-18 10:48:43
 
 import os
 import pandas as pd
@@ -2274,6 +2274,7 @@ def quantify_mutations(self: Union[Dandelion, str, PathLike],
                                          combine=combine,
                                          **kwargs)
         if rpy2.__version__ >= '3.4.5':
+            from rpy2.robjects.conversion import localconverter
             with localconverter(rpy2.robjects.default_converter +
                                 pandas2ri.converter):
                 results_h = rpy2.robjects.conversion.rpy2py(results_h)
