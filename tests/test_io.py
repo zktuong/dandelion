@@ -1,11 +1,10 @@
 #!/usr/bin/env python
+"""test io"""
 import os
 import json
 import pytest
 import dandelion as ddl
 import pandas as pd
-
-"""test io"""
 
 
 @pytest.mark.usefixtures("create_testfolder", "airr_10x")
