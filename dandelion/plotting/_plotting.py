@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-17 12:40:38
+# @Last Modified time: 2022-06-18 10:15:33
 
 import seaborn as sns
 import pandas as pd
@@ -658,16 +658,16 @@ def clone_overlap(self: Union[AnnData, Dandelion],
                   clone_key: Optional[str] = None,
                   color_mapping: Optional[Union[Sequence, Dict]] = None,
                   node_labels: bool = True,
-                  node_label_layout: Literal[None, 'rotation',
-                                             'numbers'] = 'rotation',
-                  group_label_position: Literal['beginning', 'middle',
-                                                'end'] = 'middle',
-                  group_label_offset: int = 8,
-                  figsize: Tuple[Union[int, float], Union[int,
-                                                          float]] = (8, 8),
                   return_graph: bool = False,
                   save: Optional[str] = None,
-                  show_plot: bool = True,
+                  legend_kwargs: dict = {
+                      'ncol': 2,
+                      'bbox_to_anchor': (1, 0.5),
+                      'frameon': False,
+                      'loc': 'center left'
+                  },
+                  node_label_size: int = 10,
+                  as_heatmap: bool = False,
                   **kwargs):
     """
     A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.
@@ -690,25 +690,21 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         index instead.
     clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
-    color_maopping : Dict, Sequence, Optional
+    color_mapping : Dict, Sequence, Optional
         custom color mapping provided as a sequence (correpsonding to order of categories or
         alpha-numeric order ifdtype is not category), or dictionary containing custom {category:color} mapping.
     node_labels : bool, Optional
         whether to use node objects as labels or not
-    node_label_layout : bool, Optional
-        which/whether (a) node layout is used. One of 'rotation', 'numbers' or None.
-    group_label_position : str
-        The position of the group label. One of 'beginning', 'middle' or 'end'.
-    group_label_offset : int, float
-        how much to offset the group labels, so that they are not overlapping with node labels.
-    figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (8, 8).
     return_graph : bool
         whether or not to return the graph for fine tuning. Default is False.
+    legend_kwargs : dict
+        options for adjusting legend placement
+    node_label_size : int
+        size of labels if node_labels = True
+    as_heatmap: bool
+        whether to return plot as heatmap.
     save : str
         file path for saving plot
-    show_plot : bool
-        whether or not to show the plot.
     **kwargs
         passed to `matplotlib.pyplot.savefig`.
 
@@ -738,11 +734,13 @@ def clone_overlap(self: Union[AnnData, Dandelion],
     if self.__class__ == AnnData:
         data = self.obs.copy()
         # get rid of problematic rows that appear because of category conversion?
-        data = data[~(data[clone_].isin(
-            [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
         if 'clone_overlap' in self.uns:
             overlap = self.uns['clone_overlap'].copy()
         else:
+            allgroups = list(data[groupby].unique())
+            data = data[~(data[clone_].isin([
+                np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None
+            ]))]
             # prepare a summary table
             datc_ = data[clone_].str.split('|', expand=True).stack()
             datc_ = pd.DataFrame(datc_)
@@ -755,7 +753,9 @@ def clone_overlap(self: Union[AnnData, Dandelion],
             datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
             overlap = pd.crosstab(datc_[clone_], datc_[groupby])
-
+            for x in allgroups:
+                if x not in overlap:
+                    overlap[x] = 0
             if min_size == 0:
                 raise ValueError('min_size must be greater than 0.')
             if not weighted_overlap:
@@ -769,6 +769,7 @@ def clone_overlap(self: Union[AnnData, Dandelion],
             overlap.columns.name = None
     elif self.__class__ == Dandelion:
         data = self.metadata.copy()
+        allgroups = list(data[groupby].unique())
         # get rid of problematic rows that appear because of category conversion?
         data = data[~(data[clone_].isin(
             [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
@@ -783,6 +784,9 @@ def clone_overlap(self: Union[AnnData, Dandelion],
         datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
 
         overlap = pd.crosstab(datc_[clone_], datc_[groupby])
+        for x in allgroups:
+            if x not in overlap:
+                overlap[x] = 0
         if min_size == 0:
             raise ValueError('min_size must be greater than 0.')
         if not weighted_overlap:
@@ -851,7 +855,6 @@ def clone_overlap(self: Union[AnnData, Dandelion],
     else:
         weighted_attr = 'weight'
 
-    groupby_dict = dict(zip(data[groupby], data[colorby]))
     if color_mapping is None:
         if self.__class__ == AnnData:
             if str(colorby) + '_colors' in self.uns:
@@ -901,42 +904,34 @@ def clone_overlap(self: Union[AnnData, Dandelion],
             NXVIZVERSION = get_distribution("nxviz").version
         except:
             NXVIZVERSION = '0.7.4'  # just for local
-    if NXVIZVERSION < '0.7.3':
-        # some limited support for previous nxviz plotting api
-        c = nxv.CircosPlot(G,
-                           node_color=colorby,
-                           node_grouping=colorby,
-                           node_labels=node_labels,
-                           node_label_layout=node_label_layout,
-                           group_label_position=group_label_position,
-                           group_label_offset=group_label_offset,
-                           edge_width=weighted_attr,
-                           figsize=figsize)
-        c.nodes = list(df[groupby])
-        if 'colorby_dict' in locals():
-            c.node_colors = [colorby_dict[groupby_dict[c]] for c in c.nodes]
-        c.compute_group_label_positions()
-        c.compute_group_colors()
-        if show_plot:
-            c.draw()
-        if save is not None:
-            plt.savefig(save, bbox_inches='tight', **kwargs)
-        if return_graph:
-            return (c)
+    if NXVIZVERSION < '0.7.4':
+        raise ImportError(
+            "please upgrade nxviz: "
+            "pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges"
+        )
     else:
-        from nxviz import annotate
-        c = nxv.circos(
-            G,
-            group_by=colorby,
-            node_color_by=colorby,
-            edge_lw_by=weighted_attr,
-            node_palette=colorby_dict,
-        )  # group_by
-        annotate.circos_group(G, group_by=colorby)
-        annotate.node_colormapping(G, color_by=colorby, palette=colorby_dict)
-        if show_plot:
-            plt.show()
+        if as_heatmap:
+            hm = nx.to_pandas_adjacency(G)
+            sns.clustermap(hm, **kwargs)
+        else:
+            from nxviz import annotate
+            ax = nxv.circos(
+                G,
+                group_by=colorby,
+                node_color_by=colorby,
+                edge_lw_by=weighted_attr,
+                node_palette=colorby_dict,
+            )  # group_by
+            if node_labels:
+                annotate.circos_group(G,
+                                      group_by=colorby,
+                                      midpoint=False,
+                                      fontdict={'size': node_label_size})
+            annotate.node_colormapping(G,
+                                       color_by=colorby,
+                                       palette=colorby_dict,
+                                       legend_kwargs=legend_kwargs)
         if save is not None:
             plt.savefig(save, bbox_inches='tight', **kwargs)
         if return_graph:
-            return (c.fig, c.ax)
+            return (G)
