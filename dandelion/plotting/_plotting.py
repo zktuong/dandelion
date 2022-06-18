@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:31:32
+# @Last Modified time: 2022-06-18 15:05:57
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -650,7 +650,7 @@ def spectratype(
         H: Literal["/"] = "/",
         **kwargs,
     ) -> Tuple[Figure, Axes]:
-    """Stacked spectratype plots."""
+        """Stacked spectratype plots."""
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
