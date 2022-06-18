@@ -106,6 +106,7 @@ def dummy_adata2():
 
     return (adata)
 
+
 @pytest.fixture
 def dummy_adata_cr6():
     """Dummy anndata for tests."""
