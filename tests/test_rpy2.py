@@ -15,8 +15,6 @@ def test_importrpy2():
 
     assert sh.__module__ == "rpy2.robjects.packages"
 
-    assert "NULL" in locals()
-
 
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated")
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
