@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-import pandas as pd
+import sys
 import dandelion as ddl
-from pathlib import Path
+import pytest
 
 from fixtures_mouse import (annotation_10x_mouse, database_paths_mouse,
                             dummy_adata_mouse)
 from fixtures import create_testfolder
 
 
+@pytest.mark.skipif(sys.platform == 'darwin', reason="macos CI stalls.")
 def test_setup(create_testfolder, annotation_10x_mouse, dummy_adata_mouse):
     annot_file = str(
         create_testfolder) + "/test_filtered_contig_annotations.csv"
@@ -43,4 +44,4 @@ def test_setup(create_testfolder, annotation_10x_mouse, dummy_adata_mouse):
     ddl.pl.clone_overlap(dummy_adata_mouse,
                          groupby='sample_idx',
                          colorby='sample_idx',
-                         show_plot = False)
+                         show_plot=False)
