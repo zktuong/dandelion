@@ -5,6 +5,7 @@ import dandelion as ddl
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_mouse")
 def test_write_fasta(create_testfolder, fasta_10x_mouse):
+    """test_write_fasta"""
     out_fasta = str(create_testfolder) + "/filtered_contig.fasta"
     fh = open(out_fasta, "w")
     fh.close()
@@ -17,6 +18,7 @@ def test_write_fasta(create_testfolder, fasta_10x_mouse):
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x_mouse")
 def test_write_annotation(create_testfolder, annotation_10x_mouse):
+    """test_write_annotation"""
     out_file = str(create_testfolder) + "/filtered_contig_annotations.csv"
     annotation_10x_mouse.to_csv(out_file, index=False)
     assert len(list(create_testfolder.iterdir())) == 2
@@ -24,12 +26,14 @@ def test_write_annotation(create_testfolder, annotation_10x_mouse):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
+    """test_formatfasta"""
     ddl.pp.format_fastas(str(create_testfolder))
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reannotategenes_original(create_testfolder, database_paths_mouse):
+    """test_reannotategenes_original"""
     ddl.pp.format_fastas(str(create_testfolder))
     ddl.pp.reannotate_genes(
         str(create_testfolder),
@@ -43,6 +47,7 @@ def test_reannotategenes_original(create_testfolder, database_paths_mouse):
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reannotategenes_other(create_testfolder, database_paths_mouse):
+    """test_reannotategenes_other"""
     ddl.pp.format_fastas(str(create_testfolder))
     ddl.pp.reannotate_genes(
         str(create_testfolder),

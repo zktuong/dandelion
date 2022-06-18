@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 16:07:24
-
+# @Last Modified time: 2022-06-18 14:32:35
+"""gini module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency
 

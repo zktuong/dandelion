@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:36:50
-
+# @Last Modified time: 2022-06-18 14:38:34
+"""core module."""
 import _pickle as cPickle
 import bz2
 import copy
@@ -93,6 +93,7 @@ class Dandelion:
             self.n_obs = 0
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
+        """Report."""
         # inspire by AnnData's function
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
         for attr in ["data", "metadata", "edges"]:
@@ -115,6 +116,7 @@ class Dandelion:
         return descr
 
     def __repr__(self) -> str:
+        """Report."""
         # inspire by AnnData's function
         return self._gen_repr(self.n_obs, self.n_contigs)
 
@@ -821,9 +823,11 @@ class Query:
 
     @property
     def querydtype(self):
+        """Check dtype."""
         return str(self.data[self.query].dtype)
 
     def retrieve(self, query, retrieve_mode):
+        """Retrieve query."""
         self.query = query
         ret = {}
         for cell in self.Cell:
@@ -956,6 +960,7 @@ class Query:
 def initialize_metadata(
     self, cols: Sequence, clonekey: str, collapse_alleles: bool
 ) -> Dandelion:
+    """Initialize Dandelion metadata."""
     init_dict = {}
     for col in cols:
         init_dict.update(

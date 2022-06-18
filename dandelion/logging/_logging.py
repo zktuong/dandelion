@@ -2,7 +2,8 @@
 # @Author: Kelvin
 # @Date:   2021-02-06 13:18:58
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:06:20
+# @Last Modified time: 2022-06-18 14:31:46
+"""logging module."""
 from typing import Sequence
 
 modules = [
@@ -19,6 +20,7 @@ modules = [
 
 # borrowed from scanpy's logging module
 def _versions_dependencies(dependencies: Sequence):
+    """Version dependencies."""
     for mod in dependencies:
         mod_name, dist_name = mod if isinstance(mod, tuple) else (mod, mod)
         try:

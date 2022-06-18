@@ -6,6 +6,7 @@ from subprocess import run
 
 
 def test_callscript():
+    """Test script to run preprocessing."""
     p = run(
         ["python", "/share/dandelion_preprocess.py", "-h"],
         capture_output=True,
@@ -16,6 +17,7 @@ def test_callscript():
 
 
 def test_container():
+    """Test script to run container."""
     os.system(
         "cd /tests; python /share/dandelion_preprocess.py --meta test.csv;"
     )

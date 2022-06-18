@@ -110,6 +110,7 @@ def parse_args():
 
 
 def main():
+    """Main dandelion-preprocess."""
     logg.info("Software versions:\n")
     ddl.logging.print_header()
     # sponge up command line arguments to begin with

@@ -6,6 +6,7 @@ import scanpy as sc
 
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated", "dummy_adata")
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
+    """test_setup"""
     vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
     assert airr_reannotated.shape[0] == 8
     assert vdj.data.shape[0] == 7
@@ -25,6 +26,7 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_plot_network(create_testfolder):
+    """test_plot_network"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
     ddl.pl.clone_network(adata, color=["isotype"], show=False, return_fig=False)
@@ -41,6 +43,7 @@ def test_plot_network(create_testfolder):
     ],
 )
 def test_plot_bar(create_testfolder, sort, norm):
+    """test_plot_bar"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ax = ddl.pl.barplot(vdj, color="v_call_genotyped_VDJ")
@@ -54,6 +57,7 @@ def test_plot_bar(create_testfolder, sort, norm):
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize("norm", [True, False])
 def test_plot_stackedbar(create_testfolder, norm):
+    """test_plot_stackedbar"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ax = ddl.pl.stackedbarplot(
@@ -64,6 +68,7 @@ def test_plot_stackedbar(create_testfolder, norm):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_plot_spectratype(create_testfolder):
+    """test_plot_spectratype"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ax = ddl.pl.spectratype(

@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:38:38
-
+# @Last Modified time: 2022-06-18 15:03:08
+"""tools module."""
 import math
 import networkx as nx
 import numpy as np
@@ -16,6 +16,7 @@ from anndata import AnnData
 from changeo.Gene import getGene
 from collections import defaultdict
 from distance import hamming
+from itertools import combinations
 from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform

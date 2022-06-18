@@ -2,8 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:33:29
-
+# @Last Modified time: 2022-06-18 14:46:02
+"""utilities module."""
 import numpy as np
 import os
 import pandas as pd
@@ -39,6 +39,8 @@ except ImportError:
                 return type("Literal_", (Literal,), dict(__args__=values))
 
         class Literal(metaclass=LiteralMeta):
+            """Literal type."""
+
             pass
 
 
@@ -161,10 +163,12 @@ def bh(pvalues: np.array) -> np.array:
 
 
 def is_categorical(array_like) -> bool:
+    """Check if categorical."""
     return array_like.dtype.name == "category"
 
 
 def type_check(dataframe, key) -> bool:
+    """Check dtype."""
     return (
         dataframe[key].dtype == str
         or dataframe[key].dtype == object
@@ -174,12 +178,14 @@ def type_check(dataframe, key) -> bool:
 
 
 def isGZIP(filename: str) -> bool:
+    """Check if is gzipped file."""
     if filename.split(".")[-1] == "gz":
         return True
     return False
 
 
 def isBZIP(filename: str) -> bool:
+    """Check if is bzipped file."""
     if filename.split(".")[-1] == "pbz2":
         return True
     return False
@@ -191,6 +197,7 @@ def check_filepath(
     endswith: Optional[str] = None,
     subdir: Optional[str] = None,
 ):
+    """Check filepath."""
     if filename_prefix is None:
         filename_pre = "filtered"
     else:
@@ -231,6 +238,7 @@ def check_filepath(
 
 
 def check_fastapath(fasta, filename_prefix: Optional[str] = None):
+    """Check fastapath."""
     if filename_prefix is None:
         filename_pre = "filtered"
     else:
@@ -272,21 +280,27 @@ def cmp_to_key(mycmp):
             self.obj = obj
 
         def __lt__(self, other):
+            """Less than."""
             return mycmp(self.obj, other.obj) < 0
 
         def __gt__(self, other):
+            """Greater than."""
             return mycmp(self.obj, other.obj) > 0
 
         def __eq__(self, other):
+            """Equal."""
             return mycmp(self.obj, other.obj) == 0
 
         def __le__(self, other):
+            """Less than or equal."""
             return mycmp(self.obj, other.obj) <= 0
 
         def __ge__(self, other):
+            """Greater than or equal."""
             return mycmp(self.obj, other.obj) >= 0
 
         def __ne__(self, other):
+            """Not equal."""
             return mycmp(self.obj, other.obj) != 0
 
     return K
@@ -498,6 +512,7 @@ def validate_airr(data):
 
 
 def check_travdv(data):
+    """Check if locus is TRA/D."""
     data = load_data(data)
     contig = [x for x in data["sequence_id"]]
     v = [x for x in data["v_call"]]
@@ -589,10 +604,12 @@ class Contig:
 
     @property
     def contig(self):
+        """Contig slot."""
         return self._contig
 
 
 def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
+    """Mask d/j assignment."""
     for i in range(0, len(data)):
         filePath = check_filepath(
             data[i],
@@ -621,11 +638,13 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
 
 
 def write_airr(data, save):
+    """Save as airr formatted file."""
     data = sanitize_data(data)
     data.to_csv(save, sep="\t", index=False)
 
 
 def write_blastn(data, save):
+    """Write blast output."""
     data = sanitize_blastn(data)
     data.to_csv(save, sep="\t", index=False)
 
@@ -650,7 +669,10 @@ def deprecated(details, deprecated_in, removed_in):
     """Decorator to mark a function as deprecated"""
 
     def deprecated_decorator(func):
+        """Deprecate dectorator"""
+
         def deprecated_func(*args, **kwargs):
+            """Deprecate function"""
             warnings.warn(
                 "{} is a deprecated in {} and will be removed in {}."
                 " {}".format(func.__name__, deprecated_in, removed_in, details),

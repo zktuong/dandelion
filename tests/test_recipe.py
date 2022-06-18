@@ -7,6 +7,7 @@ import pytest
 
 
 def test_recipe():
+    """test_recipe"""
     try:
         adata = sc.datasets.pbmc3k()
     except:
@@ -36,6 +37,7 @@ def test_recipe():
 
 @pytest.mark.usefixtures("airr_reannotated")
 def test_update_plus(airr_reannotated):
+    """test_update_plus"""
     vdj = ddl.Dandelion(airr_reannotated)
     vdj.update_plus()
     assert "mu_count" in vdj.metadata

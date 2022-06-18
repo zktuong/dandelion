@@ -2,8 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 18:42:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:20:55
-
+# @Last Modified time: 2022-06-18 14:31:05
+"""init module."""
 from ._preprocessing import (
     assigngenes_igblast,
     makedb_igblast,

@@ -6,6 +6,7 @@ import pytest
 
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated", "dummy_adata")
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
+    """test setup"""
     vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
     assert airr_reannotated.shape[0] == 8
     assert vdj.data.shape[0] == 7
@@ -20,6 +21,7 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_find_clones(create_testfolder):
+    """test find clones"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ddl.tl.find_clones(vdj, collapse_label=True)

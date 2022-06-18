@@ -6,7 +6,10 @@ import pytest
 @pytest.mark.usefixtures(
     "create_testfolder", "annotation_10x", "dummy_adata_mouse"
 )
-def test_setup(create_testfolder, annotation_10x_mouse, dummy_adata_mouse):
+def test_clone_overlap(
+    create_testfolder, annotation_10x_mouse, dummy_adata_mouse
+):
+    """test_clone_overlap"""
     annot_file = (
         str(create_testfolder) + "/test_filtered_contig_annotations.csv"
     )

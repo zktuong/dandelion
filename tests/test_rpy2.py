@@ -7,6 +7,7 @@ import pytest
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_importrpy2():
+    """test_importrpy2"""
 
     from rpy2.robjects.packages import importr
 
@@ -20,6 +21,7 @@ def test_importrpy2():
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated")
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_mutation(create_testfolder, airr_reannotated):
+    """test_mutation"""
     f = create_testfolder / "test.tsv"
     airr_reannotated.to_csv(f, sep="\t", index=False)
     ddl.pp.quantify_mutations(f)
@@ -33,6 +35,7 @@ def test_mutation(create_testfolder, airr_reannotated):
 @pytest.mark.usefixtures("create_testfolder", "database_paths")
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_create_germlines(create_testfolder, database_paths):
+    """test create germlines"""
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
@@ -43,6 +46,7 @@ def test_create_germlines(create_testfolder, database_paths):
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_manual_threshold_and_define_clones(create_testfolder):
+    """test threshold"""
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)

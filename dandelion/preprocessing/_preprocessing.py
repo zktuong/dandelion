@@ -2,7 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:43:13
+# @Last Modified time: 2022-06-18 14:31:22
+"""preprocessing module."""
 import anndata as ad
 import functools
 import numpy as np
@@ -502,6 +503,7 @@ def assign_isotype(
     aligner = Align.PairwiseAligner()
 
     def two_gene_correction(self, i, dictionary):
+        """Pairwise alignmet for two genes."""
         key1, key2 = dictionary.keys()
         seq = self.loc[i, "c_sequence_alignment"].replace("-", "")
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -516,6 +518,7 @@ def assign_isotype(
             self.at[i, "c_call"] = str(key2)
 
     def three_gene_correction(self, i, dictionary):
+        """Pairwise alignmet for three genes."""
         key1, key2, key3 = dictionary.keys()
         seq = self.loc[i, "c_sequence_alignment"].replace("-", "")
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -540,6 +543,7 @@ def assign_isotype(
             self.at[i, "c_call"] = str(key2) + "," + str(key3)
 
     def four_gene_correction(self, i, dictionary):
+        """Pairwise alignmet for four genes."""
         key1, key2, key3, key4 = dictionary.keys()
         seq = self.loc[i, "c_sequence_alignment"].replace("-", "")
         alignments1 = aligner.align(dictionary[key1], seq)
@@ -584,6 +588,7 @@ def assign_isotype(
             self.at[i, "c_call"] = str(key2) + "," + str(key3) + "," + str(key4)
 
     def _correct_c_call(data, primers_dict=None):
+        """Pairiwise alignment for c genes."""
         dat = data.copy()
         if primers_dict is None:
             primer_dict = {
@@ -4426,6 +4431,7 @@ def transfer_assignment(
     call: Literal["v", "d", "j", "c"] = "c",
     overwrite: bool = False,
 ):
+    """Update gene calls with blastn results."""
     if os.path.isfile(passfile):
         db_pass = load_data(passfile)
     else:

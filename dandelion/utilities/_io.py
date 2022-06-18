@@ -2,8 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:53:11
-
+# @Last Modified time: 2022-06-18 14:41:28
+"""io module."""
 
 import _pickle as cPickle
 import bz2
@@ -585,6 +585,7 @@ def read_10x_vdj(
 
 
 def parse_json(data: list) -> defaultdict:
+    """Parse json file."""
     main_dict1 = {
         "barcode": "cell_id",
         "contig_name": "sequence_id",
@@ -699,6 +700,7 @@ def parse_json(data: list) -> defaultdict:
 
 
 def parse_annotation(data: pd.DataFrame) -> defaultdict:
+    """Parse annotation file."""
     out = defaultdict(OrderedDict)
     swap_dict = dict(zip(CELLRANGER, AIRR))
     for _, row in data.iterrows():
@@ -799,6 +801,7 @@ def change_file_location(
 def move_to_tmp(
     data: Sequence, filename_prefix: Optional[Union[Sequence, str]] = None
 ):
+    """Move file to tmp."""
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -826,6 +829,7 @@ def make_all(
     filename_prefix: Optional[Union[Sequence, str]] = None,
     loci: Literal["ig", "tr"] = "tr",
 ):
+    """Construct db-all tsv file."""
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -887,6 +891,7 @@ def rename_dandelion(
     filename_prefix: Optional[Union[Sequence, str]] = None,
     endswith="_igblast_db-pass_genotyped.tsv",
 ):
+    """Rename final dandlion file."""
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:

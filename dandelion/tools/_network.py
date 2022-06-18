@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:41:37
-
+# @Last Modified time: 2022-06-18 14:37:07
+"""network module."""
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -598,6 +598,7 @@ def _generate_layout(
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     **kwargs,
 ) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
+    """Generate layout."""
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
@@ -664,7 +665,7 @@ def _generate_layout(
 
 
 def _process_params(G, center, dim):
-    # Some boilerplate code.
+    """Some boilerplate code."""
 
     if not isinstance(G, nx.Graph):
         empty_graph = nx.Graph()
@@ -832,6 +833,7 @@ def _fruchterman_reingold(
     seed=None,
     **kwargs,
 ):
+    """Fruchterman Reingold algorithm."""
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
     import numpy as np
@@ -904,6 +906,7 @@ def _sparse_fruchterman_reingold(
     seed=None,
     **kwargs,
 ):
+    """Sparse Fruchterman Reingold algorithm."""
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
     # Sparse version

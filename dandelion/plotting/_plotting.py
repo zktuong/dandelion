@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:43:59
-
+# @Last Modified time: 2022-06-18 14:31:32
+"""plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -220,6 +220,7 @@ def clone_rarefaction(
 
 
 def random_palette(n: int) -> Sequence:
+    """A random palette of colours."""
     # a list of 900+colours
     cols = list(sns.xkcd_rgb.keys())
     # if max_colors_needed1 > len(cols):
@@ -649,6 +650,7 @@ def spectratype(
         H: Literal["/"] = "/",
         **kwargs,
     ) -> Tuple[Figure, Axes]:
+    """Stacked spectratype plots."""
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)

@@ -20,8 +20,8 @@ jobs:
       - name: Run black
         run: black --config pyproject.toml --check .
 
-  interrogate:
-    name: Check interrogate compliance.
+  docstring:
+    name: Check docstring compliance.
     runs-on: ubuntu-latest
 
     steps:

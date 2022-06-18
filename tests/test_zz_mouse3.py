@@ -7,6 +7,7 @@ from pathlib import Path
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_mouse")
 def test_write_fasta(create_testfolder, fasta_10x_mouse):
+    """test write fasta"""
     out_fasta = str(create_testfolder) + "/filtered_contig.fasta"
     fh = open(out_fasta, "w")
     fh.close()
@@ -19,6 +20,7 @@ def test_write_fasta(create_testfolder, fasta_10x_mouse):
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x_mouse")
 def test_write_annotation(create_testfolder, annotation_10x_mouse):
+    """test write annot"""
     out_file = str(create_testfolder) + "/filtered_contig_annotations.csv"
     annotation_10x_mouse.to_csv(out_file, index=False)
     assert len(list(create_testfolder.iterdir())) == 2
@@ -26,12 +28,14 @@ def test_write_annotation(create_testfolder, annotation_10x_mouse):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
+    """test format fasta"""
     ddl.pp.format_fastas(str(create_testfolder))
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
+    """test reannotate"""
     ddl.pp.format_fastas(str(create_testfolder))
     ddl.pp.reannotate_genes(
         str(create_testfolder),
@@ -46,6 +50,7 @@ def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reassignalleles(create_testfolder, database_paths_mouse):
+    """test reassign"""
     ddl.pp.reassign_alleles(
         str(create_testfolder),
         combined_folder="test_mouse",
@@ -59,6 +64,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
 
 @pytest.mark.usefixtures("database_paths_mouse")
 def test_updateblastdb(database_paths_mouse):
+    """test update blast"""
     ddl.utl.makeblastdb(database_paths_mouse["blastdb_fasta"])
     assert len(list(Path(database_paths_mouse["blastdb"]).iterdir())) == 10
 
@@ -69,6 +75,7 @@ def test_updateblastdb(database_paths_mouse):
 def test_assignsisotypes(
     create_testfolder, database_paths_mouse, balbc_ighg_primers
 ):
+    """test assign isotype"""
     ddl.pp.assign_isotypes(
         str(create_testfolder),
         blastdb=database_paths_mouse["blastdb_fasta"],
@@ -82,6 +89,7 @@ def test_assignsisotypes(
     "create_testfolder", "processed_files", "dummy_adata_mouse"
 )
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
+    """test filter contigs"""
     f = create_testfolder / str("dandelion/" + processed_files["filtered"])
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
@@ -97,6 +105,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_generate_network_min_size(create_testfolder):
+    """test generate network size"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     with pytest.raises(ValueError):
@@ -105,6 +114,7 @@ def test_generate_network_min_size(create_testfolder):
 
 @pytest.mark.usefixtures("create_testfolder")
 def test_generate_network_sfdp(create_testfolder):
+    """test generate network sfdp"""
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ddl.tl.generate_network(vdj, compute_layout=False)

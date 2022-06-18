@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:42:05
-
+# @Last Modified time: 2022-06-18 14:35:48
+"""diversity module."""
 
 import numpy as np
 import networkx as nx
@@ -297,6 +297,7 @@ def clone_networkstats(
     network_clustersize: bool = False,
     verbose: bool = True,
 ):
+    """Retrieve network stats."""
     if verbose:
         start = logg.info("Calculating vertex size of nodes after contraction")
         disable = False
@@ -436,6 +437,7 @@ def diversity_gini(
         key_added: Optional[str] = None,
         **kwargs,
     ) -> pd.DataFrame:
+        """gini indices."""
         if self.__class__ == AnnData:
             raise TypeError("Only Dandelion class object accepted.")
         elif self.__class__ == Dandelion:
@@ -798,6 +800,7 @@ def diversity_gini(
     def transfer_gini_indices(
         self: Dandelion, gini_results: pd.DataFrame, groupby: str
     ) -> Dandelion:
+        """Transfer gini indicies."""
         metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
@@ -896,6 +899,7 @@ def diversity_chao1(
         downsample: Optional[int] = None,
         key_added: Optional[str] = None,
     ) -> pd.DataFrame:
+        """Chao1 estimates."""
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -994,6 +998,7 @@ def diversity_chao1(
         chao1_results: pd.DataFrame,
         groupby: str,
     ):
+        """Transfer chao1 estimates."""
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -1114,6 +1119,7 @@ def diversity_shannon(
         downsample: Optional[int] = None,
         key_added: Optional[str] = None,
     ) -> pd.DataFrame:
+        """Shannon entropy."""
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:
@@ -1253,6 +1259,7 @@ def diversity_shannon(
         shannon_results: pd.DataFrame,
         groupby: str,
     ):
+        """Transfer shannon entropy."""
         if self.__class__ == AnnData:
             metadata = self.obs.copy()
         elif self.__class__ == Dandelion:

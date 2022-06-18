@@ -2,8 +2,8 @@
 # @Author: kt16
 # @Date:   2020-05-12 18:42:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 13:23:08
-
+# @Last Modified time: 2022-06-18 14:30:56
+"""init module."""
 from . import external
 from ._preprocessing import (
     format_fasta,

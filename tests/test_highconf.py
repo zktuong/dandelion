@@ -8,6 +8,7 @@ import dandelion as ddl
     "filename,expected", [pytest.param("filtered", 1), pytest.param("all", 2)]
 )
 def test_write_fasta(create_testfolder, fasta_10x, filename, expected):
+    """test_write_fasta"""
     out_fasta = str(create_testfolder) + "/" + filename + "_contig.fasta"
     fh = open(out_fasta, "w")
     fh.close()
@@ -25,6 +26,7 @@ def test_write_fasta(create_testfolder, fasta_10x, filename, expected):
 def test_write_annotation(
     create_testfolder, annotation_10x, filename, expected
 ):
+    """test_write_annotation"""
     out_file = (
         str(create_testfolder) + "/" + filename + "_contig_annotations.csv"
     )
@@ -42,6 +44,7 @@ def test_write_annotation(
     ],
 )
 def test_formatfasta(create_testfolder, filename, expected):
+    """test_formatfasta"""
     ddl.pp.format_fastas(
         str(create_testfolder),
         filename_prefix=filename,
