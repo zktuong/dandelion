@@ -1,10 +1,9 @@
 #!/usr/bin/env python
+"""test filter"""
 import json
 import os
 import dandelion as ddl
 import pytest
-
-"""test filter"""
 
 
 @pytest.mark.usefixtures("create_testfolder", "dummy_adata_cr6", "json_10x_cr6")
