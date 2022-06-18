@@ -2232,7 +2232,7 @@ def filter_contigs(
     productive_only: bool = True,
     simple: bool = False,
     save: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
     """
     Filter doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData`.
@@ -2477,7 +2477,7 @@ def quantify_mutations(
     mutation_definition: Optional[str] = None,
     frequency: bool = False,
     combine: bool = True,
-    **kwargs
+    **kwargs,
 ) -> Union[pd.DataFrame, Dandelion]:
     """
     Run basic mutation load analysis.
@@ -2571,7 +2571,7 @@ def quantify_mutations(
             mutationDefinition=mut_d,
             frequency=frequency,
             combine=combine,
-            **kwargs
+            **kwargs,
         )
         if rpy2.__version__ >= "3.4.5":
             from rpy2.robjects.conversion import localconverter
@@ -2609,7 +2609,7 @@ def quantify_mutations(
             mutationDefinition=mut_d,
             frequency=frequency,
             combine=combine,
-            **kwargs
+            **kwargs,
         )
         results_l = sh.observedMutations(
             dat_l_r,
@@ -2619,7 +2619,7 @@ def quantify_mutations(
             mutationDefinition=mut_d,
             frequency=frequency,
             combine=combine,
-            **kwargs
+            **kwargs,
         )
         if rpy2.__version__ >= "3.4.5":
             from rpy2.robjects.conversion import localconverter
@@ -2741,7 +2741,7 @@ def calculate_threshold(
     plot_group: Optional[str] = None,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4.5, 2.5),
     ncpu: int = 1,
-    **kwargs
+    **kwargs,
 ) -> Dandelion:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam`.
@@ -2892,7 +2892,7 @@ def calculate_threshold(
                 normalize=norm_,
                 model=model_,
                 nproc=ncpu,
-                **kwargs
+                **kwargs,
             )
         except:
             print(
@@ -2911,7 +2911,7 @@ def calculate_threshold(
                 model=model_,
                 normalize=norm_,
                 nproc=ncpu,
-                **kwargs
+                **kwargs,
             )
     if rpy2.__version__ >= "3.4.5":
         from rpy2.robjects.conversion import localconverter

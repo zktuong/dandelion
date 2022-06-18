@@ -262,7 +262,7 @@ def barplot(
     xtick_rotation: Optional[Union[int, float]] = None,
     min_clone_size: Optional[int] = None,
     clone_key: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> Tuple[Figure, Axes]:
     """
     A barplot function to plot usage of V/J genes in the data.
@@ -362,7 +362,7 @@ def stackedbarplot(
     labels: Optional[Sequence] = None,
     min_clone_size: Optional[int] = None,
     clone_key: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> Tuple[Figure, Axes]:
     """
     A stackedbarplot function to plot usage of V/J genes in the data split by groups.
@@ -449,7 +449,7 @@ def stackedbarplot(
         legend_options: Tuple[str, Tuple[float, float], int] = None,
         hide_legend: bool = True,
         H: Literal["/"] = "/",
-        **kwargs
+        **kwargs,
     ) -> Tuple[Figure, Axes]:
         """
         Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
@@ -480,7 +480,7 @@ def stackedbarplot(
                 ax=ax,
                 legend=False,
                 grid=False,
-                **kwargs
+                **kwargs,
             )  # make bar plots
         (
             h,
@@ -551,7 +551,7 @@ def stackedbarplot(
         xtick_rotation=xtick_rotation,
         legend_options=legend_options,
         hide_legend=hide_legend,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -567,7 +567,7 @@ def spectratype(
     hide_legend: bool = True,
     legend_options: Tuple[str, Tuple[float, float], int] = None,
     labels: Optional[Sequence] = None,
-    **kwargs
+    **kwargs,
 ) -> Tuple[Figure, Axes]:
     """
     A spectratype function to plot usage of CDR3 length.
@@ -647,7 +647,7 @@ def spectratype(
         legend_options: Tuple[str, Tuple[float, float], int] = None,
         hide_legend: bool = True,
         H: Literal["/"] = "/",
-        **kwargs
+        **kwargs,
     ) -> Tuple[Figure, Axes]:
         if type(dfall) is not list:
             dfall = [dfall]
@@ -668,7 +668,7 @@ def spectratype(
                 ax=ax,
                 legend=False,
                 grid=False,
-                **kwargs
+                **kwargs,
             )  # make bar plots
         (
             h,
@@ -735,7 +735,7 @@ def spectratype(
         xtick_rotation=xtick_rotation,
         legend_options=legend_options,
         hide_legend=hide_legend,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -758,7 +758,7 @@ def clone_overlap(
     },
     node_label_size: int = 10,
     as_heatmap: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """
     A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.

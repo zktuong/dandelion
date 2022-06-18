@@ -18,7 +18,8 @@ from .utilities import (
     Dandelion,
     update_metadata,
     concat,
-    load_data)
+    load_data,
+)
 from .logging import __version__, __author__, __email__, __classifiers__
 from . import logging
 
