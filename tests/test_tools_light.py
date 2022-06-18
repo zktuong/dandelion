@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import pandas as pd
 import dandelion as ddl
+import pytest
 
-from fixtures import (airr_reannotated, dummy_adata, create_testfolder)
 
-
+@pytest.mark.usefixtures("create_testfolder", "airr_reannotated", "dummy_adata")
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
     assert airr_reannotated.shape[0] == 8
@@ -18,11 +18,12 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     assert vdj2.metadata is not None
 
 
+@pytest.mark.usefixtures("create_testfolder")
 def test_find_clones(create_testfolder):
     f = create_testfolder / "test.h5"
     vdj = ddl.read_h5(f)
     ddl.tl.find_clones(vdj, collapse_label=True)
     assert not vdj.data.clone_id.empty
     assert not vdj.metadata.clone_id.empty
-    assert len(set(x for x in vdj.metadata['clone_id'] if pd.notnull(x))) == 4
+    assert len(set(x for x in vdj.metadata["clone_id"] if pd.notnull(x))) == 4
     vdj.write_h5(f)

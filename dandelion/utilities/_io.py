@@ -2,99 +2,103 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 17:32:01
+# @Last Modified time: 2022-06-18 13:53:11
 
-import os
-import json
-import re
+
+import _pickle as cPickle
 import bz2
 import gzip
-import pandas as pd
-import numpy as np
-import scipy.sparse
+import json
 import networkx as nx
-import _pickle as cPickle
-from ..utilities._utilities import *
-from ..utilities._core import *
+import numpy as np
+import os
+import pandas as pd
+import re
+
+from anndata import AnnData
+from collections import defaultdict, OrderedDict
 from os import PathLike
 from typing import Union, Sequence, Optional
-from collections import defaultdict, OrderedDict
+
+from ..utilities._core import *
+from ..utilities._utilities import *
+
 
 AIRR = [
-    'cell_id',
-    'sequence_id',
-    'sequence',
-    'sequence_aa',
-    'productive',
-    'complete_vdj',
-    'vj_in_frame',
-    'locus',
-    'v_call',
-    'd_call',
-    'j_call',
-    'c_call',
-    'junction',
-    'junction_aa',
-    'consensus_count',
-    'duplicate_count',
-    'cdr3_start',
-    'cdr3_end',
-    'sequence_length_10x',
-    'high_confidence_10x',
-    'is_cell_10x',
-    'fwr1_aa',
-    'fwr1',
-    'cdr1_aa',
-    'cdr1',
-    'fwr2_aa',
-    'fwr2',
-    'cdr2_aa',
-    'cdr2',
-    'fwr3_aa',
-    'fwr3',
-    'fwr4_aa',
-    'fwr4',
-    'clone_id',
-    'raw_consensus_id_10x',
-    'exact_subclonotype_id_10x',
+    "cell_id",
+    "sequence_id",
+    "sequence",
+    "sequence_aa",
+    "productive",
+    "complete_vdj",
+    "vj_in_frame",
+    "locus",
+    "v_call",
+    "d_call",
+    "j_call",
+    "c_call",
+    "junction",
+    "junction_aa",
+    "consensus_count",
+    "duplicate_count",
+    "cdr3_start",
+    "cdr3_end",
+    "sequence_length_10x",
+    "high_confidence_10x",
+    "is_cell_10x",
+    "fwr1_aa",
+    "fwr1",
+    "cdr1_aa",
+    "cdr1",
+    "fwr2_aa",
+    "fwr2",
+    "cdr2_aa",
+    "cdr2",
+    "fwr3_aa",
+    "fwr3",
+    "fwr4_aa",
+    "fwr4",
+    "clone_id",
+    "raw_consensus_id_10x",
+    "exact_subclonotype_id_10x",
 ]
 CELLRANGER = [
-    'barcode',
-    'contig_id',
-    'sequence',
-    'aa_sequence',
-    'productive',
-    'full_length',
-    'frame',
-    'chain',
-    'v_gene',
-    'd_gene',
-    'j_gene',
-    'c_gene',
-    'cdr3_nt',
-    'cdr3',
-    'reads',
-    'umis',
-    'cdr3_start',
-    'cdr3_stop',
-    'length',
-    'high_confidence',
-    'is_cell',
-    'fwr1',
-    'fwr1_nt',
-    'cdr1',
-    'cdr1_nt',
-    'fwr2',
-    'fwr2_nt',
-    'cdr2',
-    'cdr2_nt',
-    'fwr3',
-    'fwr3_nt',
-    'fwr4',
-    'fwr4_nt',
-    'raw_clonotype_id',
-    'raw_consensus_id',
-    'exact_subclonotype_id',
+    "barcode",
+    "contig_id",
+    "sequence",
+    "aa_sequence",
+    "productive",
+    "full_length",
+    "frame",
+    "chain",
+    "v_gene",
+    "d_gene",
+    "j_gene",
+    "c_gene",
+    "cdr3_nt",
+    "cdr3",
+    "reads",
+    "umis",
+    "cdr3_start",
+    "cdr3_stop",
+    "length",
+    "high_confidence",
+    "is_cell",
+    "fwr1",
+    "fwr1_nt",
+    "cdr1",
+    "cdr1_nt",
+    "fwr2",
+    "fwr2_nt",
+    "cdr2",
+    "cdr2_nt",
+    "fwr3",
+    "fwr3_nt",
+    "fwr4",
+    "fwr4_nt",
+    "raw_clonotype_id",
+    "raw_consensus_id",
+    "exact_subclonotype_id",
 ]
 
 
@@ -102,7 +106,7 @@ def fasta_iterator(fh: str):
     """Read in a fasta file as an iterator."""
     while True:
         line = fh.readline()
-        if line.startswith('>'):
+        if line.startswith(">"):
             break
     while True:
         header = line[1:-1].rstrip()
@@ -111,7 +115,7 @@ def fasta_iterator(fh: str):
             line = fh.readline()
             if not line:
                 break
-            if line.startswith('>'):
+            if line.startswith(">"):
                 break
             sequence += line.rstrip()
         yield (header, sequence)
@@ -127,7 +131,7 @@ def Write_output(out: str, file: str):
     return ()
 
 
-def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
+def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     """
     Read in and returns a `Dandelion` class saved using pickle format.
 
@@ -141,21 +145,23 @@ def read_pkl(filename: str = 'dandelion_data.pkl.pbz2') -> Dandelion:
     Dandelion object.
     """
     if isBZIP(filename):
-        data = bz2.BZ2File(filename, 'rb')
+        data = bz2.BZ2File(filename, "rb")
         data = cPickle.load(data)
     elif isGZIP(filename):
-        data = gzip.open(filename, 'rb')
+        data = gzip.open(filename, "rb")
         data = cPickle.load(data)
     else:
-        with open(filename, 'rb') as f:
+        with open(filename, "rb") as f:
             data = cPickle.load(f)
-    return (data)
+    return data
 
 
-@deprecated(deprecated_in="0.2.2",
-            removed_in="0.4.0",
-            details="read_h5ddl will be the recommended way to read.")
-def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
+@deprecated(
+    deprecated_in="0.2.2",
+    removed_in="0.4.0",
+    details="read_h5ddl will be the recommended way to read.",
+)
+def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
     """
     Read in and returns a `Dandelion` class from .h5 format.
 
@@ -169,7 +175,7 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
     `Dandelion` object.
     """
     try:
-        data = pd.read_hdf(filename, 'data')
+        data = pd.read_hdf(filename, "data")
         # data = sanitize_data(data)
 
         # if check_mix_dtype(data):
@@ -178,20 +184,21 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         #     data = sanitize_data(data)
     except:
         raise AttributeError(
-            '{} does not contain attribute `data`'.format(filename))
+            "{} does not contain attribute `data`".format(filename)
+        )
     try:
-        metadata = pd.read_hdf(filename, 'metadata')
+        metadata = pd.read_hdf(filename, "metadata")
     except:
         pass
 
     try:
-        edges = pd.read_hdf(filename, 'edges')
+        edges = pd.read_hdf(filename, "edges")
     except:
         pass
 
     try:
-        g_0 = pd.read_hdf(filename, 'graph/graph_0')
-        g_1 = pd.read_hdf(filename, 'graph/graph_1')
+        g_0 = pd.read_hdf(filename, "graph/graph_0")
+        g_1 = pd.read_hdf(filename, "graph/graph_1")
         g_0 = g_0 + 1
         g_0 = g_0.fillna(0)
         g_1 = g_1 + 1
@@ -199,59 +206,59 @@ def read_h5(filename: str = 'dandelion_data.h5') -> Dandelion:
         graph0 = nx.from_pandas_adjacency(g_0)
         graph1 = nx.from_pandas_adjacency(g_1)
         for u, v, d in graph0.edges(data=True):
-            d['weight'] = d['weight'] - 1
+            d["weight"] = d["weight"] - 1
         for u, v, d in graph1.edges(data=True):
-            d['weight'] = d['weight'] - 1
+            d["weight"] = d["weight"] - 1
         graph = (graph0, graph1)
     except:
         pass
 
-    with h5py.File(filename, 'r') as hf:
+    with h5py.File(filename, "r") as hf:
         try:
             layout0 = {}
-            for k in hf['layout/layout_0'].attrs.keys():
-                layout0.update({k: np.array(hf['layout/layout_0'].attrs[k])})
+            for k in hf["layout/layout_0"].attrs.keys():
+                layout0.update({k: np.array(hf["layout/layout_0"].attrs[k])})
             layout1 = {}
-            for k in hf['layout/layout_1'].attrs.keys():
-                layout1.update({k: np.array(hf['layout/layout_1'].attrs[k])})
+            for k in hf["layout/layout_1"].attrs.keys():
+                layout1.update({k: np.array(hf["layout/layout_1"].attrs[k])})
             layout = (layout0, layout1)
         except:
             pass
 
         germline = {}
         try:
-            for g in hf['germline'].attrs:
-                germline.update({g: hf['germline'].attrs[g]})
+            for g in hf["germline"].attrs:
+                germline.update({g: hf["germline"].attrs[g]})
         except:
             pass
 
         try:
-            threshold = float(np.array(hf['threshold']))
+            threshold = float(np.array(hf["threshold"]))
         except:
             threshold = None
 
     constructor = {}
-    constructor['data'] = data
-    if 'metadata' in locals():
-        constructor['metadata'] = metadata
-    if 'germline' in locals():
-        constructor['germline'] = germline
-    if 'edges' in locals():
-        constructor['edges'] = edges
-    if 'layout' in locals():
-        constructor['layout'] = layout
-    if 'graph' in locals():
-        constructor['graph'] = graph
+    constructor["data"] = data
+    if "metadata" in locals():
+        constructor["metadata"] = metadata
+    if "germline" in locals():
+        constructor["germline"] = germline
+    if "edges" in locals():
+        constructor["edges"] = edges
+    if "layout" in locals():
+        constructor["layout"] = layout
+    if "graph" in locals():
+        constructor["graph"] = graph
     try:
         res = Dandelion(**constructor)
     except:
         res = Dandelion(**constructor, initialize=False)
 
-    if 'threshold' in locals():
+    if "threshold" in locals():
         res.threshold = threshold
     else:
         pass
-    return (res)
+    return res
 
 
 def read_10x_airr(file: str) -> Dandelion:
@@ -270,33 +277,37 @@ def read_10x_airr(file: str) -> Dandelion:
     """
     dat = load_data(file)
     # get all the v,d,j,c calls
-    if 'locus' not in dat:
-        tmp = [(v, d, j, c) for v, d, j, c in zip(
-            dat['v_call'], dat['d_call'], dat['j_call'], dat['c_call'])]
+    if "locus" not in dat:
+        tmp = [
+            (v, d, j, c)
+            for v, d, j, c in zip(
+                dat["v_call"], dat["d_call"], dat["j_call"], dat["c_call"]
+            )
+        ]
         locus = []
         for t in tmp:
-            if all('IGH' in x for x in t if pd.notnull(x)):
-                locus.append('IGH')
-            elif all('IGK' in x for x in t if pd.notnull(x)):
-                locus.append('IGK')
-            elif all('IGL' in x for x in t if pd.notnull(x)):
-                locus.append('IGL')
-            elif all('TRA' in x for x in t if pd.notnull(x)):
-                locus.append('TRA')
-            elif all('TRB' in x for x in t if pd.notnull(x)):
-                locus.append('TRB')
-            elif all('TRD' in x for x in t if pd.notnull(x)):
-                locus.append('TRD')
-            elif all('TRG' in x for x in t if pd.notnull(x)):
-                locus.append('TRG')
+            if all("IGH" in x for x in t if pd.notnull(x)):
+                locus.append("IGH")
+            elif all("IGK" in x for x in t if pd.notnull(x)):
+                locus.append("IGK")
+            elif all("IGL" in x for x in t if pd.notnull(x)):
+                locus.append("IGL")
+            elif all("TRA" in x for x in t if pd.notnull(x)):
+                locus.append("TRA")
+            elif all("TRB" in x for x in t if pd.notnull(x)):
+                locus.append("TRB")
+            elif all("TRD" in x for x in t if pd.notnull(x)):
+                locus.append("TRD")
+            elif all("TRG" in x for x in t if pd.notnull(x)):
+                locus.append("TRG")
             else:
                 locus.append(np.nan)
-        dat['locus'] = locus
+        dat["locus"] = locus
     null_columns = [col for col in dat.columns if all_missing(dat[col])]
     if len(null_columns) > 0:
         dat.drop(null_columns, inplace=True, axis=1)
 
-    return (Dandelion(dat))
+    return Dandelion(dat)
 
 
 def to_scirpy(data: Dandelion, transfer: bool = False, **kwargs) -> AnnData:
@@ -321,22 +332,22 @@ def to_scirpy(data: Dandelion, transfer: bool = False, **kwargs) -> AnnData:
     try:
         import scirpy as ir
     except:
-        raise ImportError('Please install scirpy. pip install scirpy')
+        raise ImportError("Please install scirpy. pip install scirpy")
 
-    if 'duplicate_count' not in data.data and 'umi_count' in data.data:
-        data.data['duplicate_count'] = data.data['umi_count']
+    if "duplicate_count" not in data.data and "umi_count" in data.data:
+        data.data["duplicate_count"] = data.data["umi_count"]
     for h in [
-            "sequence",
-            "rev_comp",
-            "sequence_alignment",
-            "germline_alignment",
-            "v_cigar",
-            "d_cigar",
-            "j_cigar",
+        "sequence",
+        "rev_comp",
+        "sequence_alignment",
+        "germline_alignment",
+        "v_cigar",
+        "d_cigar",
+        "j_cigar",
     ]:
         if h not in data.data:
             data.data[h] = None
-    return (ir.io.from_dandelion(data, transfer, **kwargs))
+    return ir.io.from_dandelion(data, transfer, **kwargs)
 
 
 def from_scirpy(adata: AnnData) -> Dandelion:
@@ -356,13 +367,14 @@ def from_scirpy(adata: AnnData) -> Dandelion:
     try:
         import scirpy as ir
     except:
-        raise ImportError('Please install scirpy. pip install scirpy')
+        raise ImportError("Please install scirpy. pip install scirpy")
 
-    return (ir.io.to_dandelion(adata))
+    return ir.io.to_dandelion(adata)
 
 
-def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
-           check_unique: bool = True) -> Dandelion:
+def concat(
+    arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool = True
+) -> Dandelion:
     """
     Concatenate dataframe and return as `Dandelion` object.
 
@@ -390,8 +402,8 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
             df = pd.concat(arrays_, verify_integrity=True)
         except:
             for i in range(0, len(arrays)):
-                arrays_[i]['sequence_id'] = [
-                    x + '__' + str(i) for x in arrays_[i]['sequence_id']
+                arrays_[i]["sequence_id"] = [
+                    x + "__" + str(i) for x in arrays_[i]["sequence_id"]
                 ]
             arrays_ = [load_data(x) for x in arrays_]
             df = pd.concat(arrays_, verify_integrity=True)
@@ -401,13 +413,15 @@ def concat(arrays: Sequence[Union[pd.DataFrame, Dandelion]],
         out = Dandelion(df)
     except:
         out = Dandelion(df, initialize=False)
-    return (out)
+    return out
 
 
-def read_10x_vdj(path: Union[str, PathLike],
-                 filename_prefix: Optional[str] = None,
-                 return_dandelion: bool = True,
-                 verbose: bool = False) -> Union[Dandelion, pd.DataFrame]:
+def read_10x_vdj(
+    path: Union[str, PathLike],
+    filename_prefix: Optional[str] = None,
+    return_dandelion: bool = True,
+    verbose: bool = False,
+) -> Union[Dandelion, pd.DataFrame]:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outouts.
 
@@ -434,7 +448,7 @@ def read_10x_vdj(path: Union[str, PathLike],
 
     """
     if filename_prefix is None:
-        filename_pre = 'filtered'
+        filename_pre = "filtered"
     else:
         filename_pre = filename_prefix
 
@@ -442,29 +456,33 @@ def read_10x_vdj(path: Union[str, PathLike],
         files = os.listdir(path)
         filelist = []
         for fx in files:
-            if re.search(filename_pre + '_contig', fx):
-                if fx.endswith('.fasta') or fx.endswith('.csv'):
+            if re.search(filename_pre + "_contig", fx):
+                if fx.endswith(".fasta") or fx.endswith(".csv"):
                     filelist.append(fx)
-            if re.search('all_contig_annotations', fx):
-                if fx.endswith('.json'):
+            if re.search("all_contig_annotations", fx):
+                if fx.endswith(".json"):
                     filelist.append(fx)
-        csv_idx = [i for i, j in enumerate(filelist) if j.endswith('.csv')]
-        json_idx = [i for i, j in enumerate(filelist) if j.endswith('.json')]
+        csv_idx = [i for i, j in enumerate(filelist) if j.endswith(".csv")]
+        json_idx = [i for i, j in enumerate(filelist) if j.endswith(".json")]
         if len(csv_idx) == 1:
-            file = str(path) + '/' + str(filelist[csv_idx[0]])
+            file = str(path) + "/" + str(filelist[csv_idx[0]])
             if verbose:
                 print("Reading {}".format(str(file)))
             raw = pd.read_csv(str(file))
-            raw.set_index('contig_id', drop=False, inplace=True)
-            fasta_file = str(file).split('_annotations.csv')[0] + '.fasta'
-            json_file = re.sub(filename_pre + '_contig_annotations',
-                               'all_contig_annotations',
-                               str(file).split('.csv')[0] + '.json')
+            raw.set_index("contig_id", drop=False, inplace=True)
+            fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
+            json_file = re.sub(
+                filename_pre + "_contig_annotations",
+                "all_contig_annotations",
+                str(file).split(".csv")[0] + ".json",
+            )
             if os.path.exists(json_file):
                 if verbose:
                     print(
                         "Found {} file. Extracting extra information.".format(
-                            str(json_file)))
+                            str(json_file)
+                        )
+                    )
                 out = parse_annotation(raw)
                 with open(json_file) as f:
                     raw_json = json.load(f)
@@ -474,18 +492,20 @@ def read_10x_vdj(path: Union[str, PathLike],
                 if verbose:
                     print(
                         "Found {} file. Extracting extra information.".format(
-                            str(fasta_file)))
+                            str(fasta_file)
+                        )
+                    )
                 seqs = {}
-                fh = open(fasta_file, 'r')
+                fh = open(fasta_file, "r")
                 for header, sequence in fasta_iterator(fh):
                     seqs[header] = sequence
-                raw['sequence'] = pd.Series(seqs)
+                raw["sequence"] = pd.Series(seqs)
                 out = parse_annotation(raw)
             else:
                 out = parse_annotation(raw)
         elif len(csv_idx) < 1:
             if len(json_idx) == 1:
-                json_file = str(path) + '/' + str(filelist[json_idx[0]])
+                json_file = str(path) + "/" + str(filelist[json_idx[0]])
                 if verbose:
                     print("Reading {}".format(json_file))
                 if os.path.exists(json_file):
@@ -494,28 +514,36 @@ def read_10x_vdj(path: Union[str, PathLike],
                     out = parse_json(raw)
             else:
                 raise IOError(
-                    "{}_contig_annotations.csv and all_contig_annotations.json file(s) not found in {} folder."
-                    .format(str(filename_pre), str(path)))
+                    "{}_contig_annotations.csv and all_contig_annotations.json file(s) not found in {} folder.".format(
+                        str(filename_pre), str(path)
+                    )
+                )
         elif len(csv_idx) > 1:
             raise IOError(
-                "There are multiple input .csv files with the same filename prefix {} in {} folder."
-                .format(str(filename_pre), str(path)))
+                "There are multiple input .csv files with the same filename prefix {} in {} folder.".format(
+                    str(filename_pre), str(path)
+                )
+            )
     elif os.path.isfile(str(path)):
         file = path
-        if str(file).endswith('.csv'):
+        if str(file).endswith(".csv"):
             if verbose:
                 print("Reading {}.".format(str(file)))
             raw = pd.read_csv(str(file))
-            raw.set_index('contig_id', drop=False, inplace=True)
-            fasta_file = str(file).split('_annotations.csv')[0] + '.fasta'
-            json_file = re.sub(filename_pre + '_contig_annotations',
-                               'all_contig_annotations',
-                               str(file).split('.csv')[0] + '.json')
+            raw.set_index("contig_id", drop=False, inplace=True)
+            fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
+            json_file = re.sub(
+                filename_pre + "_contig_annotations",
+                "all_contig_annotations",
+                str(file).split(".csv")[0] + ".json",
+            )
             if os.path.exists(json_file):
                 if verbose:
                     print(
                         "Found {} file. Extracting extra information.".format(
-                            str(json_file)))
+                            str(json_file)
+                        )
+                    )
                 out = parse_annotation(raw)
                 with open(json_file) as f:
                     raw_json = json.load(f)
@@ -525,16 +553,18 @@ def read_10x_vdj(path: Union[str, PathLike],
                 if verbose:
                     print(
                         "Found {} file. Extracting extra information.".format(
-                            str(fasta_file)))
+                            str(fasta_file)
+                        )
+                    )
                 seqs = {}
-                fh = open(fasta_file, 'r')
+                fh = open(fasta_file, "r")
                 for header, sequence in fasta_iterator(fh):
                     seqs[header] = sequence
-                raw['sequence'] = pd.Series(seqs)
+                raw["sequence"] = pd.Series(seqs)
                 out = parse_annotation(raw)
             else:
                 out = parse_annotation(raw)
-        elif str(file).endswith('.json'):
+        elif str(file).endswith(".json"):
             if os.path.exists(file):
                 if verbose:
                     print("Reading {}".format(file))
@@ -545,13 +575,13 @@ def read_10x_vdj(path: Union[str, PathLike],
                 raise IOError("{} not found.".format(file))
     else:
         raise IOError("{} not found.".format(path))
-    res = pd.DataFrame.from_dict(out, orient='index')
+    res = pd.DataFrame.from_dict(out, orient="index")
     # quick check if locus is malformed
-    res = res[~res['locus'].str.contains('[|]')]
+    res = res[~res["locus"].str.contains("[|]")]
     if return_dandelion:
-        return (Dandelion(res))
+        return Dandelion(res)
     else:
-        return (res)
+        return res
 
 
 def parse_json(data: list) -> defaultdict:
@@ -560,8 +590,8 @@ def parse_json(data: list) -> defaultdict:
         "contig_name": "sequence_id",
         "sequence": "sequence",
         "aa_sequence": "sequence_aa",
-        "productive": 'productive',
-        "full_length": 'complete_vdj',
+        "productive": "productive",
+        "full_length": "complete_vdj",
         "frame": "vj_in_frame",
         "cdr3_seq": "junction",
         "cdr3": "junction_aa",
@@ -573,57 +603,62 @@ def parse_json(data: list) -> defaultdict:
         "cdr3_stop": "cdr3_end",
     }
     main_dict3 = {
-        "high_confidence": 'high_confidence_10x',
-        "filtered": 'filtered_10x',
-        "is_gex_cell": 'is_cell_10x',
-        "is_asm_cell": 'is_asm_cell_10x',
+        "high_confidence": "high_confidence_10x",
+        "filtered": "filtered_10x",
+        "is_gex_cell": "is_cell_10x",
+        "is_asm_cell": "is_asm_cell_10x",
     }
     info_dict = {
-        "raw_clonotype_id": 'clone_id',
-        "raw_consensus_id": 'raw_consensus_id_10x',
-        "exact_subclonotype_id": 'exact_subclonotype_id_10x',
+        "raw_clonotype_id": "clone_id",
+        "raw_consensus_id": "raw_consensus_id_10x",
+        "exact_subclonotype_id": "exact_subclonotype_id_10x",
     }
     region_type_dict = {
-        'L-REGION+V-REGION': 'v_call',
-        'D-REGION': 'd_call',
-        'J-REGION': 'j_call',
-        'C-REGION': 'c_call',
+        "L-REGION+V-REGION": "v_call",
+        "D-REGION": "d_call",
+        "J-REGION": "j_call",
+        "C-REGION": "c_call",
     }
-    required_calls = ['v_call', 'd_call', 'j_call', 'c_call']
-    region_keys = ['fwr1', 'cdr1', 'fwr2', 'cdr2', 'fwr3', 'fwr4']
+    required_calls = ["v_call", "d_call", "j_call", "c_call"]
+    region_keys = ["fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "fwr4"]
     out = defaultdict(OrderedDict)
     for i in range(len(data)):
-        if data[i]['contig_name'] is not None:
-            key = data[i]['contig_name']
+        if data[i]["contig_name"] is not None:
+            key = data[i]["contig_name"]
         else:
             continue
         for k in main_dict1.keys():
             if data[i][k] is not None:
                 out[key].update({main_dict1[k]: data[i][k]})
             else:
-                out[key].update({main_dict1[k]: ''})
-        if data[i]['annotations'] is not None:
+                out[key].update({main_dict1[k]: ""})
+        if data[i]["annotations"] is not None:
             chains = []
-            for j in range(len(data[i]['annotations'])):
-                chains.append(data[i]['annotations'][j]['feature']['chain'])
-            out[key].update({'locus': '|'.join(list(set(chains)))})
-            for j in range(len(data[i]['annotations'])):
-                rtype = data[i]['annotations'][j]['feature']['region_type']
+            for j in range(len(data[i]["annotations"])):
+                chains.append(data[i]["annotations"][j]["feature"]["chain"])
+            out[key].update({"locus": "|".join(list(set(chains)))})
+            for j in range(len(data[i]["annotations"])):
+                rtype = data[i]["annotations"][j]["feature"]["region_type"]
                 if rtype in region_type_dict.keys():
                     call = region_type_dict[rtype]
                 else:
                     continue
-                if data[i]['annotations'][j]['feature'][
-                        'gene_name'] is not None:
-                    out[key].update({
-                        call:
-                        data[i]['annotations'][j]['feature']['gene_name']
-                    })
+                if (
+                    data[i]["annotations"][j]["feature"]["gene_name"]
+                    is not None
+                ):
+                    out[key].update(
+                        {
+                            call: data[i]["annotations"][j]["feature"][
+                                "gene_name"
+                            ]
+                        }
+                    )
                 else:
-                    out[key].update({call: ''})
+                    out[key].update({call: ""})
         for rc in required_calls:
             if rc not in out[key]:
-                out[key].update({rc: ''})
+                out[key].update({rc: ""})
         for k in main_dict2.keys():
             if data[i][k] is not None:
                 out[key].update({main_dict2[k]: data[i][k]})
@@ -632,58 +667,59 @@ def parse_json(data: list) -> defaultdict:
         for rk in region_keys:
             if data[i][rk] is not None:
                 for k in data[i][rk]:
-                    if k == 'start':
-                        ka = rk + '_start'
-                    elif k == 'stop':
-                        ka = rk + '_end'
-                    elif k == 'nt_seq':
-                        ka = rk + ''
-                    elif k == 'aa_seq':
-                        ka = rk + '_aa'
+                    if k == "start":
+                        ka = rk + "_start"
+                    elif k == "stop":
+                        ka = rk + "_end"
+                    elif k == "nt_seq":
+                        ka = rk + ""
+                    elif k == "aa_seq":
+                        ka = rk + "_aa"
                     else:
                         continue
                     out[key].update({ka: data[i][rk][k]})
             else:
                 for k in region_keys:
-                    out[key].update({k + '_start': np.nan})
-                    out[key].update({k + '_end': np.nan})
-                    out[key].update({k + '': ''})
-                    out[key].update({k + '_aa': ''})
-        if data[i]['info'] is not None:
-            for info in data[i]['info']:
-                if data[i]['info'][info] is not None:
-                    out[key].update({info_dict[info]: data[i]['info'][info]})
+                    out[key].update({k + "_start": np.nan})
+                    out[key].update({k + "_end": np.nan})
+                    out[key].update({k + "": ""})
+                    out[key].update({k + "_aa": ""})
+        if data[i]["info"] is not None:
+            for info in data[i]["info"]:
+                if data[i]["info"][info] is not None:
+                    out[key].update({info_dict[info]: data[i]["info"][info]})
                 else:
-                    out[key].update({info_dict[info]: ''})
+                    out[key].update({info_dict[info]: ""})
         for k in main_dict3.keys():
             if data[i][k] is not None:
                 out[key].update({main_dict3[k]: data[i][k]})
             else:
-                out[key].update({main_dict3[k]: ''})
-    return (out)
+                out[key].update({main_dict3[k]: ""})
+    return out
 
 
 def parse_annotation(data: pd.DataFrame) -> defaultdict:
     out = defaultdict(OrderedDict)
     swap_dict = dict(zip(CELLRANGER, AIRR))
     for _, row in data.iterrows():
-        contig = Contig(row, swap_dict).contig['sequence_id']
+        contig = Contig(row, swap_dict).contig["sequence_id"]
         out[contig] = Contig(row, swap_dict).contig
-        if out[contig]['locus'] in ['None', 'none', None, np.nan, '']:
+        if out[contig]["locus"] in ["None", "none", None, np.nan, ""]:
             calls = []
-            for call in ['v_call', 'd_call', 'j_call', 'c_call']:
-                if out[contig][call] not in ['None', 'none', None, np.nan, '']:
+            for call in ["v_call", "d_call", "j_call", "c_call"]:
+                if out[contig][call] not in ["None", "none", None, np.nan, ""]:
                     calls.append(out[contig][call])
-            out[contig]['locus'] = '|'.join(
-                list(set([str(c)[:3] for c in calls])))
-        if out[contig]['locus'] == 'None' or out[contig]['locus'] == '':
-            out[contig]['locus'] = '|'
-    return (out)
+            out[contig]["locus"] = "|".join(
+                list(set([str(c)[:3] for c in calls]))
+            )
+        if out[contig]["locus"] == "None" or out[contig]["locus"] == "":
+            out[contig]["locus"] = "|"
+    return out
 
 
-def change_file_location(data: Sequence,
-                         filename_prefix: Optional[Union[Sequence,
-                                                         str]] = None):
+def change_file_location(
+    data: Sequence, filename_prefix: Optional[Union[Sequence, str]] = None
+):
     """
     Move file from tmp folder to dandelion folder.
 
@@ -701,7 +737,7 @@ def change_file_location(data: Sequence,
     -------
     Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
     """
-    fileformat = 'blast'
+    fileformat = "blast"
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -710,9 +746,9 @@ def change_file_location(data: Sequence,
         filename_prefix = [None for d in data]
 
     informat_dict = {
-        'changeo': '_igblast_db-pass.tsv',
-        'blast': '_igblast_db-pass.tsv',
-        'airr': '_igblast_gap.tsv'
+        "changeo": "_igblast_db-pass.tsv",
+        "blast": "_igblast_db-pass.tsv",
+        "airr": "_igblast_gap.tsv",
     }
     # informat_dict2 = {
     #     'changeo': '_igblast_db-fail.tsv',
@@ -723,35 +759,46 @@ def change_file_location(data: Sequence,
     filePath = None
 
     for i in range(0, len(data)):
-        filePath = check_filepath(data[i],
-                                  filename_prefix=filename_prefix[i],
-                                  endswith=informat_dict[fileformat],
-                                  subdir='tmp')
+        filePath = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith=informat_dict[fileformat],
+            subdir="tmp",
+        )
         if filePath is None:
             raise FileNotFoundError(
-                'Path to .tsv file for {} is unknown. '.format(data[i]) +
-                'Please specify path to reannotated .tsv file or folder containing reannotated .tsv file.'
+                "Path to .tsv file for {} is unknown. ".format(data[i])
+                + "Please specify path to reannotated .tsv file or folder containing reannotated .tsv file."
             )
         tmp = check_travdv(filePath)
-        _airrfile = filePath.replace('_db-pass.tsv', '.tsv')
+        _airrfile = filePath.replace("_db-pass.tsv", ".tsv")
         airr_output = load_data(_airrfile)
         cols_to_merge = [
-            'junction_aa_length', 'fwr1_aa', 'fwr2_aa', 'fwr3_aa', 'fwr4_aa',
-            'cdr1_aa', 'cdr2_aa', 'cdr3_aa', 'sequence_alignment_aa',
-            'v_sequence_alignment_aa', 'd_sequence_alignment_aa',
-            'j_sequence_alignment_aa'
+            "junction_aa_length",
+            "fwr1_aa",
+            "fwr2_aa",
+            "fwr3_aa",
+            "fwr4_aa",
+            "cdr1_aa",
+            "cdr2_aa",
+            "cdr3_aa",
+            "sequence_alignment_aa",
+            "v_sequence_alignment_aa",
+            "d_sequence_alignment_aa",
+            "j_sequence_alignment_aa",
         ]
         for x in cols_to_merge:
             tmp[x] = pd.Series(airr_output[x])
 
         write_airr(tmp, filePath)
 
-        cmd = ['rsync', '-azvh', filePath, filePath.rsplit('/', 2)[0]]
+        cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
         run(cmd)
 
 
-def move_to_tmp(data: Sequence,
-                filename_prefix: Optional[Union[Sequence, str]] = None):
+def move_to_tmp(
+    data: Sequence, filename_prefix: Optional[Union[Sequence, str]] = None
+):
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -760,21 +807,25 @@ def move_to_tmp(data: Sequence,
         filename_prefix = [None for d in data]
 
     for i in range(0, len(data)):
-        filePath1 = check_filepath(data[i],
-                                   filename_prefix=filename_prefix[i],
-                                   endswith='_annotations.csv')
-        filePath2 = check_filepath(data[i],
-                                   filename_prefix=filename_prefix[i],
-                                   endswith='.fasta')
-        cmd1 = ['mv', '-f', filePath1, filePath1.rsplit('/', 1)[0] + '/tmp']
-        cmd2 = ['mv', '-f', filePath2, filePath2.rsplit('/', 1)[0] + '/tmp']
+        filePath1 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_annotations.csv",
+        )
+        filePath2 = check_filepath(
+            data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
+        )
+        cmd1 = ["mv", "-f", filePath1, filePath1.rsplit("/", 1)[0] + "/tmp"]
+        cmd2 = ["mv", "-f", filePath2, filePath2.rsplit("/", 1)[0] + "/tmp"]
         run(cmd1)
         run(cmd2)
 
 
-def make_all(data: Sequence,
-             filename_prefix: Optional[Union[Sequence, str]] = None,
-             loci: Literal['ig', 'tr'] = 'tr'):
+def make_all(
+    data: Sequence,
+    filename_prefix: Optional[Union[Sequence, str]] = None,
+    loci: Literal["ig", "tr"] = "tr",
+):
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -783,50 +834,59 @@ def make_all(data: Sequence,
         filename_prefix = [None for d in data]
 
     for i in range(0, len(data)):
-        if loci == 'tr':
-            filePath1 = check_filepath(data[i],
-                                       filename_prefix=filename_prefix[i],
-                                       endswith='_igblast_db-pass.tsv',
-                                       subdir='tmp')
+        if loci == "tr":
+            filePath1 = check_filepath(
+                data[i],
+                filename_prefix=filename_prefix[i],
+                endswith="_igblast_db-pass.tsv",
+                subdir="tmp",
+            )
         else:
             filePath1 = check_filepath(
                 data[i],
                 filename_prefix=filename_prefix[i],
-                endswith='_igblast_db-pass_genotyped.tsv',
-                subdir='tmp')
-        filePath2 = check_filepath(data[i],
-                                   filename_prefix=filename_prefix[i],
-                                   endswith='_igblast_db-fail.tsv',
-                                   subdir='tmp')
+                endswith="_igblast_db-pass_genotyped.tsv",
+                subdir="tmp",
+            )
+        filePath2 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_igblast_db-fail.tsv",
+            subdir="tmp",
+        )
         if filePath1 is not None:
-            df1 = pd.read_csv(filePath1, sep='\t')
+            df1 = pd.read_csv(filePath1, sep="\t")
             if filePath2 is not None:
-                df2 = pd.read_csv(filePath2, sep='\t')
+                df2 = pd.read_csv(filePath2, sep="\t")
                 df = pd.concat([df1, df2])
-                if loci == 'tr':
+                if loci == "tr":
                     write_airr(
-                        df,
-                        filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
+                        df, filePath1.rsplit("db-pass.tsv")[0] + "db-all.tsv"
+                    )
                 else:
                     write_airr(
                         df,
-                        filePath1.rsplit('db-pass_genotyped.tsv')[0] +
-                        'db-all.tsv')
+                        filePath1.rsplit("db-pass_genotyped.tsv")[0]
+                        + "db-all.tsv",
+                    )
             else:
-                if loci == 'tr':
+                if loci == "tr":
                     write_airr(
-                        df1,
-                        filePath1.rsplit('db-pass.tsv')[0] + 'db-all.tsv')
+                        df1, filePath1.rsplit("db-pass.tsv")[0] + "db-all.tsv"
+                    )
                 else:
                     write_airr(
                         df1,
-                        filePath1.rsplit('db-pass_genotyped.tsv')[0] +
-                        'db-all.tsv')
+                        filePath1.rsplit("db-pass_genotyped.tsv")[0]
+                        + "db-all.tsv",
+                    )
 
 
-def rename_dandelion(data: Sequence,
-                     filename_prefix: Optional[Union[Sequence, str]] = None,
-                     endswith='_igblast_db-pass_genotyped.tsv'):
+def rename_dandelion(
+    data: Sequence,
+    filename_prefix: Optional[Union[Sequence, str]] = None,
+    endswith="_igblast_db-pass_genotyped.tsv",
+):
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:
@@ -836,10 +896,12 @@ def rename_dandelion(data: Sequence,
 
     for i in range(0, len(data)):
         filePath = check_filepath(
-            data[i], filename_prefix=filename_prefix[i],
-            endswith=endswith)  # must be whatever's after contig
+            data[i], filename_prefix=filename_prefix[i], endswith=endswith
+        )  # must be whatever's after contig
         cmd = [
-            'mv', '-f', filePath,
-            filePath.rsplit(endswith)[0] + '_dandelion.tsv'
+            "mv",
+            "-f",
+            filePath,
+            filePath.rsplit(endswith)[0] + "_dandelion.tsv",
         ]
         run(cmd)

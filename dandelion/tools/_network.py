@@ -2,42 +2,44 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-15 15:50:52
+# @Last Modified time: 2022-06-18 13:41:37
 
-import pandas as pd
-import numpy as np
 import networkx as nx
-import sys
+import numpy as np
+import pandas as pd
+
 
 from polyleven import levenshtein
-from ..utilities._utilities import *
-from ..utilities._core import *
-from ..utilities._io import *
+from scanpy import logging as logg
+from scipy.sparse.csgraph import minimum_spanning_tree
+from scipy.spatial.distance import pdist, squareform
+from time import sleep
+from tqdm import tqdm
+from typing import Union, Sequence, Tuple, Optional
+
 try:
     from networkx.utils import np_random_state as random_state
 except:
     from networkx.utils import random_state
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import minimum_spanning_tree
-from scipy.spatial.distance import pdist, squareform
-from itertools import combinations
-from tqdm import tqdm
-from time import sleep
-from scanpy import logging as logg
-from typing import Union, Sequence, Tuple, Optional
+
+from ..utilities._core import *
+from ..utilities._io import *
+from ..utilities._utilities import *
 
 
-def generate_network(self: Union[Dandelion, pd.DataFrame, str],
-                     key: Optional[str] = None,
-                     clone_key: Optional[str] = None,
-                     min_size: int = 2,
-                     downsample: Optional[int] = None,
-                     verbose: bool = True,
-                     compute_layout: bool = True,
-                     layout_method: Literal['sfdp', 'mod_fr'] = 'sfdp',
-                     **kwargs) -> Dandelion:
+def generate_network(
+    self: Union[Dandelion, pd.DataFrame, str],
+    key: Optional[str] = None,
+    clone_key: Optional[str] = None,
+    min_size: int = 2,
+    downsample: Optional[int] = None,
+    verbose: bool = True,
+    compute_layout: bool = True,
+    layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
+    **kwargs,
+) -> Dandelion:
     """
-    Generates a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
+    Generate a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
     The distance matrices are then combined into a singular matrix.
 
     Parameters
@@ -55,7 +57,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     compute_layout : bool
         whether or not to generate the layout. May be time consuming if too many cells.
     layout_method : Literal
-        accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast) whereas 
+        accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast) whereas
         'mod_fr' refers to modified Fruchterman-Reingold layout originally implemented in dandelion (python implementation; slow).
     verbose : bool
         whether or not to print the progress bars.
@@ -67,7 +69,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     `Dandelion` object with `.edges`, `.layout`, `.graph` initialized.
     """
     if verbose:
-        start = logg.info('Generating network')
+        start = logg.info("Generating network")
         disable = False
     else:
         disable = True
@@ -78,7 +80,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         dat = load_data(self)
 
     if key is None:
-        key_ = 'sequence_alignment_aa'  # default
+        key_ = "sequence_alignment_aa"  # default
     else:
         key_ = key
 
@@ -86,12 +88,13 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         raise ValueError("key {} not found in input table.".format(key_))
 
     if clone_key is None:
-        clonekey = 'clone_id'
+        clonekey = "clone_id"
     else:
         clonekey = clone_key
     if clonekey not in dat:
         raise ValueError(
-            'Data does not contain clone information. Please run find_clones.')
+            "Data does not contain clone information. Please run find_clones."
+        )
 
     dat = sanitize_data(dat, ignore=clonekey)
 
@@ -101,49 +104,39 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         # if downsample >= dat_h.shape[0]:
         if downsample >= self.metadata.shape[0]:
             if verbose:
-                print('Cannot downsample to {} cells. Using all {} cells.'.
-                      format(str(downsample), self.metadata.shape[0]))
+                print(
+                    "Cannot downsample to {} cells. Using all {} cells.".format(
+                        str(downsample), self.metadata.shape[0]
+                    )
+                )
         else:
             if verbose:
-                print('Downsampling to {} cells.'.format(str(downsample)))
-            dat_h = dat[dat['locus'].isin(['IGH', 'TRB', 'TRD'])].copy()
-            dat_l = dat[dat['locus'].isin(['IGK', 'IGL', 'TRA', 'TRG'])].copy()
+                print("Downsampling to {} cells.".format(str(downsample)))
+            dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
+            dat_l = dat[dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])].copy()
             dat_h = dat_h.sample(downsample)
-            dat_l = dat_l[dat_l['cell_id'].isin(list(dat_h['cell_id']))].copy()
+            dat_l = dat_l[dat_l["cell_id"].isin(list(dat_h["cell_id"]))].copy()
             dat_ = dat_h.append(dat_l)
             dat_ = sanitize_data(dat_, ignore=clonekey)
     else:
         dat_ = dat.copy()
 
     querier = Query(dat_, verbose=verbose)
-    dat_seq = querier.retrieve(query=key_, retrieve_mode='split')
-    dat_seq.columns = [re.sub(key_ + '_', '', i) for i in dat_seq.columns]
-    dat_clone = querier.retrieve(query=clonekey,
-                                 retrieve_mode='merge and unique only')
+    dat_seq = querier.retrieve(query=key_, retrieve_mode="split")
+    dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
+    dat_clone = querier.retrieve(
+        query=clonekey, retrieve_mode="merge and unique only"
+    )
 
-    # calculate a distance matrix for all vs all and this can be referenced later on to
-    # extract the distance between the right pairs
-    # dmat = Tree()
-    # sleep(0.5)
-    # for x in tqdm(dat_seq.columns,
-    #               desc='Calculating distances... ',
-    #               disable=disable):
-    #     tdarray = np.array(np.array(dat_seq[x])).reshape(-1, 1)
-    #     # d_mat = squareform([levenshtein(x[0],y[0]) for x,y in combinations(tdarray, 2)
-    #     # if (x[0] == x[0]) and (y[0] == y[0]) else 0])
-    #     d_mat = squareform(
-    #         pdist(
-    #             tdarray, lambda x, y: levenshtein(x[0], y[0])
-    #             if (x[0] == x[0]) and (y[0] == y[0]) else 0))
-    #     dmat[x] = d_mat
-
-    clone_counts = dat_clone[clonekey].mask(lambda x: x.eq('')).value_counts()
-    clone_counts = clone_counts[(clone_counts > 1) | list(
-        re.search('[|]', c) for c in clone_counts.index)]
+    clone_counts = dat_clone[clonekey].mask(lambda x: x.eq("")).value_counts()
+    clone_counts = clone_counts[
+        (clone_counts > 1)
+        | list(re.search("[|]", c) for c in clone_counts.index)
+    ]
     clone_tree_dict = Tree()
     for c in clone_counts.index:
-        if re.search('[|]', c):
-            sub = c.split('|')
+        if re.search("[|]", c):
+            sub = c.split("|")
             for cc in sub:
                 for ccc in sub:
                     clone_tree_dict[cc][ccc].value = 1
@@ -151,10 +144,9 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                 clone_tree_dict[c][cc].value = 1
         clone_tree_dict[c][c].value = 1
     clone_tree_dict = {
-        k: '|'.join(sorted(r))
-        for k, r in clone_tree_dict.items()
+        k: "|".join(sorted(r)) for k, r in clone_tree_dict.items()
     }
-    dat_clone['tmpcloneid'] = [
+    dat_clone["tmpcloneid"] = [
         clone_tree_dict[x] if x in clone_tree_dict else None
         for x in dat_clone[clonekey]
     ]
@@ -168,23 +160,27 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
     membership = {i: list(j) for i, j in dict(membership).items()}
     df = pd.DataFrame(columns=dat_seq.index, index=dat_seq.index)
     dmat = Tree()
-    for t in tqdm(membership,
-                  desc='Calculating distances... ',
-                  disable=disable):
+    for t in tqdm(
+        membership, desc="Calculating distances... ", disable=disable
+    ):
         tmp = dat_seq.loc[membership[t]]
         if tmp.shape[0] > 1:
             tmp = tmp.replace(
-                '[.]', '',
-                regex=True)  # replace gaps before calculating distances
+                "[.]", "", regex=True
+            )  # replace gaps before calculating distances
             for x in tmp.columns:
                 tdarray = np.array(np.array(tmp[x])).reshape(-1, 1)
                 d_mat_tmp = squareform(
                     pdist(
-                        tdarray, lambda x, y: levenshtein(x[0], y[0])
-                        if (x[0] == x[0]) and (y[0] == y[0]) else 0))
-                dmat[x][t] = pd.DataFrame(d_mat_tmp,
-                                          index=tmp.index,
-                                          columns=tmp.index)
+                        tdarray,
+                        lambda x, y: levenshtein(x[0], y[0])
+                        if (x[0] == x[0]) and (y[0] == y[0])
+                        else 0,
+                    )
+                )
+                dmat[x][t] = pd.DataFrame(
+                    d_mat_tmp, index=tmp.index, columns=tmp.index
+                )
     if len(dmat) > 0:
         for x in dmat:
             dmat[x] = pd.concat(dmat[x])
@@ -209,16 +205,17 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         else:  # re-initiate a Dandelion class object
             out = Dandelion(dat_)
 
-        tmp_totaldist = pd.DataFrame(total_dist,
-                                     index=dat_seq.index,
-                                     columns=dat_seq.index)
+        tmp_totaldist = pd.DataFrame(
+            total_dist, index=dat_seq.index, columns=dat_seq.index
+        )
         tmp_clusterdist = Tree()
         overlap = []
         for i in out.metadata.index:
-            if len(out.metadata.loc[i, str(clonekey)].split('|')) > 1:
+            if len(out.metadata.loc[i, str(clonekey)].split("|")) > 1:
                 overlap.append(
-                    [c for c in out.metadata.loc[i, str(clonekey)].split('|')])
-                for c in out.metadata.loc[i, str(clonekey)].split('|'):
+                    [c for c in out.metadata.loc[i, str(clonekey)].split("|")]
+                )
+                for c in out.metadata.loc[i, str(clonekey)].split("|"):
                     tmp_clusterdist[c][i].value = 1
             else:
                 cx = out.metadata.loc[i, str(clonekey)]
@@ -232,16 +229,17 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
                 for ol in overlap:
                     if c_ in ol:
                         idx = list(
-                            set(flatten([tmp_clusterdist2[c_x]
-                                         for c_x in ol])))
+                            set(flatten([tmp_clusterdist2[c_x] for c_x in ol]))
+                        )
                         if len(list(set(idx))) > 1:
                             dist_mat_ = tmp_totaldist.loc[idx, idx]
                             s1, s2 = dist_mat_.shape
                             if s1 > 1 and s2 > 1:
-                                cluster_dist['|'.join(ol)] = dist_mat_
+                                cluster_dist["|".join(ol)] = dist_mat_
             else:
-                dist_mat_ = tmp_totaldist.loc[tmp_clusterdist2[c_],
-                                              tmp_clusterdist2[c_]]
+                dist_mat_ = tmp_totaldist.loc[
+                    tmp_clusterdist2[c_], tmp_clusterdist2[c_]
+                ]
                 s1, s2 = dist_mat_.shape
                 if s1 > 1 and s2 > 1:
                     cluster_dist[c_] = dist_mat_
@@ -251,7 +249,7 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         sleep(0.5)
 
         edge_list = Tree()
-        for c in tqdm(mst_tree, desc='Generating edge list ', disable=disable):
+        for c in tqdm(mst_tree, desc="Generating edge list ", disable=disable):
             G = nx.from_pandas_adjacency(mst_tree[c])
             edge_list[c] = nx.to_pandas_edgelist(G)
 
@@ -260,8 +258,8 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
         clone_ref = dict(out.metadata[clonekey])
         tmp_clone_tree = Tree()
         for x in out.metadata.index:
-            if '|' in clone_ref[x]:
-                for x_ in clone_ref[x].split('|'):
+            if "|" in clone_ref[x]:
+                for x_ in clone_ref[x].split("|"):
                     tmp_clone_tree[x_][x].value = 1
             else:
                 tmp_clone_tree[clone_ref[x]][x].value = 1
@@ -271,35 +269,44 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
         tmp_clone_tree3 = Tree()
         tmp_clone_tree3_overlap = Tree()
-        for x in tqdm(tmp_clone_tree2,
-                      desc='Computing overlap ',
-                      disable=disable):
+        for x in tqdm(
+            tmp_clone_tree2, desc="Computing overlap ", disable=disable
+        ):
             # this is to catch all possible cells that may potentially match up with this clone that's joined together
             if x in list(flatten(overlap)):
                 for ol in overlap:
                     if x in ol:
                         if len(tmp_clone_tree2[x]) > 1:
                             for x_ in tmp_clone_tree2[x]:
-                                tmp_clone_tree3_overlap['|'.join(ol)][''.join(
-                                    x_)].value = 1
+                                tmp_clone_tree3_overlap["|".join(ol)][
+                                    "".join(x_)
+                                ].value = 1
                         else:
-                            tmp_clone_tree3_overlap['|'.join(ol)][''.join(
-                                tmp_clone_tree2[x])].value = 1
+                            tmp_clone_tree3_overlap["|".join(ol)][
+                                "".join(tmp_clone_tree2[x])
+                            ].value = 1
             else:
-                tmp_ = pd.DataFrame(index=tmp_clone_tree2[x],
-                                    columns=tmp_clone_tree2[x])
-                tmp_ = pd.DataFrame(np.tril(tmp_) + 1,
-                                    index=tmp_clone_tree2[x],
-                                    columns=tmp_clone_tree2[x])
+                tmp_ = pd.DataFrame(
+                    index=tmp_clone_tree2[x], columns=tmp_clone_tree2[x]
+                )
+                tmp_ = pd.DataFrame(
+                    np.tril(tmp_) + 1,
+                    index=tmp_clone_tree2[x],
+                    columns=tmp_clone_tree2[x],
+                )
                 tmp_.fillna(0, inplace=True)
                 tmp_clone_tree3[x] = tmp_
 
         for x in tmp_clone_tree3_overlap:  # repeat for the overlap clones
-            tmp_ = pd.DataFrame(index=tmp_clone_tree3_overlap[x],
-                                columns=tmp_clone_tree3_overlap[x])
-            tmp_ = pd.DataFrame(np.tril(tmp_) + 1,
-                                index=tmp_clone_tree3_overlap[x],
-                                columns=tmp_clone_tree3_overlap[x])
+            tmp_ = pd.DataFrame(
+                index=tmp_clone_tree3_overlap[x],
+                columns=tmp_clone_tree3_overlap[x],
+            )
+            tmp_ = pd.DataFrame(
+                np.tril(tmp_) + 1,
+                index=tmp_clone_tree3_overlap[x],
+                columns=tmp_clone_tree3_overlap[x],
+            )
             tmp_.fillna(0, inplace=True)
             tmp_clone_tree3[x] = tmp_
 
@@ -312,51 +319,60 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
         # free up memory
         del tmp_totaldist
-        tmp_totaldiststack.columns = ['source', 'target', 'weight']
+        tmp_totaldiststack.columns = ["source", "target", "weight"]
         tmp_totaldiststack.index = [
-            str(s) + '|' + str(t) for s, t in zip(tmp_totaldiststack['source'],
-                                                  tmp_totaldiststack['target'])
+            str(s) + "|" + str(t)
+            for s, t in zip(
+                tmp_totaldiststack["source"], tmp_totaldiststack["target"]
+            )
         ]
-        tmp_totaldiststack['keep'] = [
-            False if len(list(set(i.split('|')))) == 1 else True
+        tmp_totaldiststack["keep"] = [
+            False if len(list(set(i.split("|")))) == 1 else True
             for i in tmp_totaldiststack.index
         ]
         tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop(
-            'keep', axis=1)
+            "keep", axis=1
+        )
 
         tmp_edge_list = Tree()
-        for c in tqdm(tmp_clone_tree3, desc='Linking edges ', disable=disable):
+        for c in tqdm(tmp_clone_tree3, desc="Linking edges ", disable=disable):
             if len(tmp_clone_tree3[c]) > 1:
                 G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
                 tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                 tmp_edge_list[c].index = [
-                    str(s) + '|' + str(t) for s, t in zip(
-                        tmp_edge_list[c]['source'], tmp_edge_list[c]['target'])
+                    str(s) + "|" + str(t)
+                    for s, t in zip(
+                        tmp_edge_list[c]["source"], tmp_edge_list[c]["target"]
+                    )
                 ]
-                tmp_edge_list[c]['weight'].update(tmp_totaldiststack['weight'])
+                tmp_edge_list[c]["weight"].update(tmp_totaldiststack["weight"])
                 # keep only edges when there is 100% identity, to minimise crowding
-                tmp_edge_list[c] = tmp_edge_list[c][tmp_edge_list[c]['weight']
-                                                    == 0]
+                tmp_edge_list[c] = tmp_edge_list[c][
+                    tmp_edge_list[c]["weight"] == 0
+                ]
                 tmp_edge_list[c].reset_index(inplace=True)
 
         # try to catch situations where there's no edge (only singletons)
         try:
             edge_listx = pd.concat([edge_list[x] for x in edge_list])
             edge_listx.index = [
-                str(s) + '|' + str(t)
-                for s, t in zip(edge_listx['source'], edge_listx['target'])
+                str(s) + "|" + str(t)
+                for s, t in zip(edge_listx["source"], edge_listx["target"])
             ]
 
             tmp_edge_listx = pd.concat(
-                [tmp_edge_list[x] for x in tmp_edge_list])
-            tmp_edge_listx.drop('index', axis=1, inplace=True)
+                [tmp_edge_list[x] for x in tmp_edge_list]
+            )
+            tmp_edge_listx.drop("index", axis=1, inplace=True)
             tmp_edge_listx.index = [
-                str(s) + '|' + str(t) for s, t in zip(tmp_edge_listx['source'],
-                                                      tmp_edge_listx['target'])
+                str(s) + "|" + str(t)
+                for s, t in zip(
+                    tmp_edge_listx["source"], tmp_edge_listx["target"]
+                )
             ]
 
             edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-            edge_list_final['weight'].update(tmp_totaldiststack['weight'])
+            edge_list_final["weight"].update(tmp_totaldiststack["weight"])
             # return the edge list
             edge_list_final.reset_index(drop=True, inplace=True)
         except:
@@ -374,27 +390,30 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
 
     sleep(0.5)
     # and now to actually generate the network
-    g, g_, lyt, lyt_ = _generate_layout(vertice_list,
-                                        edge_list_final,
-                                        min_size=min_size,
-                                        weight=None,
-                                        verbose=verbose,
-                                        compute_layout=compute_layout,
-                                        layout_method=layout_method,
-                                        **kwargs)
+    g, g_, lyt, lyt_ = _generate_layout(
+        vertice_list,
+        edge_list_final,
+        min_size=min_size,
+        weight=None,
+        verbose=verbose,
+        compute_layout=compute_layout,
+        layout_method=layout_method,
+        **kwargs,
+    )
 
     if verbose:
         logg.info(
-            ' finished',
+            " finished",
             time=start,
-            deep=
-            ('Updated Dandelion object: \n'
-             '   \'data\', contig-indexed clone table\n'
-             '   \'metadata\', cell-indexed clone table\n'
-             '   \'edges\', graph edges\n'
-             '   \'layout\', graph layout\n'
-             '   \'graph\', network constructed from distance matrices of VDJ- and VJ- chains'
-             ))
+            deep=(
+                "Updated Dandelion object: \n"
+                "   'data', contig-indexed clone table\n"
+                "   'metadata', cell-indexed clone table\n"
+                "   'edges', graph edges\n"
+                "   'layout', graph layout\n"
+                "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
+            ),
+        )
     if self.__class__ == Dandelion:
         if self.germline is not None:
             germline_ = self.germline
@@ -406,50 +425,62 @@ def generate_network(self: Union[Dandelion, pd.DataFrame, str],
             threshold_ = None
         if downsample is not None:
             if (lyt and lyt_) is not None:
-                out = Dandelion(data=dat_,
-                                edges=edge_list_final,
-                                layout=(lyt, lyt_),
-                                graph=(g, g_),
-                                germline=germline_)
+                out = Dandelion(
+                    data=dat_,
+                    edges=edge_list_final,
+                    layout=(lyt, lyt_),
+                    graph=(g, g_),
+                    germline=germline_,
+                )
             else:
-                out = Dandelion(data=dat_,
-                                edges=edge_list_final,
-                                graph=(g, g_),
-                                germline=germline_)
+                out = Dandelion(
+                    data=dat_,
+                    edges=edge_list_final,
+                    graph=(g, g_),
+                    germline=germline_,
+                )
             out.threshold = threshold_
-            return (out)
+            return out
         else:
             if (lyt and lyt_) is not None:
-                self.__init__(data=self.data,
-                              metadata=self.metadata,
-                              edges=edge_list_final,
-                              layout=(lyt, lyt_),
-                              graph=(g, g_),
-                              germline=germline_,
-                              initialize=False)
+                self.__init__(
+                    data=self.data,
+                    metadata=self.metadata,
+                    edges=edge_list_final,
+                    layout=(lyt, lyt_),
+                    graph=(g, g_),
+                    germline=germline_,
+                    initialize=False,
+                )
             else:
-                self.__init__(data=self.data,
-                              metadata=self.metadata,
-                              edges=edge_list_final,
-                              layout=None,
-                              graph=(g, g_),
-                              germline=germline_,
-                              initialize=False)
+                self.__init__(
+                    data=self.data,
+                    metadata=self.metadata,
+                    edges=edge_list_final,
+                    layout=None,
+                    graph=(g, g_),
+                    germline=germline_,
+                    initialize=False,
+                )
             self.threshold = threshold_
     else:
         if (lyt and lyt_) is not None:
-            out = Dandelion(data=dat_,
-                            edges=edge_list_final,
-                            layout=(lyt, lyt_),
-                            graph=(g, g_),
-                            clone_key=clone_key)
+            out = Dandelion(
+                data=dat_,
+                edges=edge_list_final,
+                layout=(lyt, lyt_),
+                graph=(g, g_),
+                clone_key=clone_key,
+            )
         else:
-            out = Dandelion(data=dat_,
-                            edges=edge_list_final,
-                            layout=None,
-                            graph=(g, g_),
-                            clone_key=clone_key)
-        return (out)
+            out = Dandelion(
+                data=dat_,
+                edges=edge_list_final,
+                layout=None,
+                graph=(g, g_),
+                clone_key=clone_key,
+            )
+        return out
 
 
 def mst(mat: dict) -> Tree:
@@ -467,16 +498,17 @@ def mst(mat: dict) -> Tree:
     """
     mst_tree = Tree()
     for c in mat:
-        mst_tree[c] = pd.DataFrame(minimum_spanning_tree(np.triu(
-            mat[c])).toarray().astype(int),
-                                   index=mat[c].index,
-                                   columns=mat[c].columns)
-    return (mst_tree)
+        mst_tree[c] = pd.DataFrame(
+            minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int),
+            index=mat[c].index,
+            columns=mat[c].columns,
+        )
+    return mst_tree
 
 
-def clone_degree(self: Dandelion,
-                 weight: Optional[str] = None,
-                 verbose: bool = True) -> Dandelion:
+def clone_degree(
+    self: Dandelion, weight: Optional[str] = None, verbose: bool = True
+) -> Dandelion:
     """
     Calculates node degree in BCR network.
 
@@ -494,22 +526,25 @@ def clone_degree(self: Dandelion,
     Dandelion object with metadata updated with node degree information.
     """
     if verbose:
-        start = logg.info('Calculating node degree')
+        start = logg.info("Calculating node degree")
     if self.__class__ == Dandelion:
         if self.graph is None:
             raise AttributeError(
-                'Graph not found. Plase run tl.generate_network.')
+                "Graph not found. Plase run tl.generate_network."
+            )
         else:
             G = self.graph[0]
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
-            self.metadata['clone_degree'] = pd.Series(cd[1])
+            self.metadata["clone_degree"] = pd.Series(cd[1])
             if verbose:
-                logg.info(' finished',
-                          time=start,
-                          deep=('Updated Dandelion metadata\n'))
+                logg.info(
+                    " finished",
+                    time=start,
+                    deep=("Updated Dandelion metadata\n"),
+                )
     else:
-        raise TypeError('Input object must be of {}'.format(Dandelion))
+        raise TypeError("Input object must be of {}".format(Dandelion))
 
 
 def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
@@ -528,40 +563,52 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
     Dandelion object with metadata updated with node closeness centrality information.
     """
     if verbose:
-        start = logg.info('Calculating node closeness centrality')
+        start = logg.info("Calculating node closeness centrality")
     if self.__class__ == Dandelion:
         if self.graph is None:
             raise AttributeError(
-                'Graph not found. Plase run tl.generate_network.')
+                "Graph not found. Plase run tl.generate_network."
+            )
         else:
             G = self.graph[0]
             cc = nx.closeness_centrality(G)
-            cc = pd.DataFrame.from_dict(cc,
-                                        orient='index',
-                                        columns=['clone_centrality'])
-            self.metadata['clone_centrality'] = pd.Series(
-                cc['clone_centrality'])
+            cc = pd.DataFrame.from_dict(
+                cc, orient="index", columns=["clone_centrality"]
+            )
+            self.metadata["clone_centrality"] = pd.Series(
+                cc["clone_centrality"]
+            )
             if verbose:
-                logg.info(' finished',
-                          time=start,
-                          deep=('Updated Dandelion metadata\n'))
+                logg.info(
+                    " finished",
+                    time=start,
+                    deep=("Updated Dandelion metadata\n"),
+                )
     else:
-        raise TypeError('Input object must be of {}'.format(Dandelion))
+        raise TypeError("Input object must be of {}".format(Dandelion))
 
 
-def _generate_layout(vertices: Sequence,
-                     edges: pd.DataFrame = None,
-                     min_size: int = 2,
-                     weight: Optional[str] = None,
-                     verbose: bool = True,
-                     compute_layout: bool = True,
-                     layout_method: Literal['sfdp', 'mod_fr'] = 'sfdp',
-                     **kwargs) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
+def _generate_layout(
+    vertices: Sequence,
+    edges: pd.DataFrame = None,
+    min_size: int = 2,
+    weight: Optional[str] = None,
+    verbose: bool = True,
+    compute_layout: bool = True,
+    layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
+    **kwargs,
+) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
-        G.add_weighted_edges_from([(x, y, z) for x, y, z in zip(
-            edges['source'], edges['target'], edges['weight'])])
+        G.add_weighted_edges_from(
+            [
+                (x, y, z)
+                for x, y, z in zip(
+                    edges["source"], edges["target"], edges["weight"]
+                )
+            ]
+        )
     degree = G.degree()
     G_ = G.copy()
     if min_size == 2:
@@ -572,7 +619,8 @@ def _generate_layout(vertices: Sequence,
     elif min_size > 2:
         if edges is not None:
             remove = [
-                node for node, degree in dict(G.degree()).items()
+                node
+                for node, degree in dict(G.degree()).items()
                 if degree < min_size - 1
             ]
             G_.remove_nodes_from(remove)
@@ -580,18 +628,20 @@ def _generate_layout(vertices: Sequence,
             pass
     if compute_layout:
         if verbose:
-            print('generating network layout')
-        if layout_method == 'mod_fr':
+            print("generating network layout")
+        if layout_method == "mod_fr":
             pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
             pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
-        elif layout_method == 'sfdp':
+        elif layout_method == "sfdp":
             try:
                 from graph_tool.all import sfdp_layout
             except ImportError:
-                print('To benefit from faster layout computation, please install graph-tool: '
-                      'conda install -c conda-forge graph-tool')
+                print(
+                    "To benefit from faster layout computation, please install graph-tool: "
+                    "conda install -c conda-forge graph-tool"
+                )
                 nographtool = True
-            if 'nographtool' in locals():
+            if "nographtool" in locals():
                 pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
                 pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
             else:
@@ -599,8 +649,10 @@ def _generate_layout(vertices: Sequence,
                 gtg_ = nx2gt(G_)
                 posx = sfdp_layout(gtg, **kwargs)
                 posx_ = sfdp_layout(gtg_, **kwargs)
-                pos = dict(zip(list(gtg.vertex_properties['id']), list(posx)))
-                pos_ = dict(zip(list(gtg_.vertex_properties['id']), list(posx_)))
+                pos = dict(zip(list(gtg.vertex_properties["id"]), list(posx)))
+                pos_ = dict(
+                    zip(list(gtg_.vertex_properties["id"]), list(posx_))
+                )
         return (G, G_, pos, pos_)
     else:
         return (G, G_, None, None)
@@ -750,16 +802,18 @@ def _fruchterman_reingold_layout(
             # We must adjust k by domain size for layouts not near 1x1
             nnodes, _ = A.shape
             k = dom_size / np.sqrt(nnodes)
-        pos = _sparse_fruchterman_reingold(A, k, pos_arr, fixed, iterations,
-                                           threshold, dim, seed)
+        pos = _sparse_fruchterman_reingold(
+            A, k, pos_arr, fixed, iterations, threshold, dim, seed
+        )
     except ValueError:
         A = nx.to_numpy_array(G, weight=weight)
         if k is None and fixed is not None:
             # We must adjust k by domain size for layouts not near 1x1
             nnodes, _ = A.shape
             k = dom_size / np.sqrt(nnodes)
-        pos = _fruchterman_reingold(A, k, pos_arr, fixed, iterations,
-                                    threshold, dim, seed)
+        pos = _fruchterman_reingold(
+            A, k, pos_arr, fixed, iterations, threshold, dim, seed
+        )
     if fixed is None and scale is not None:
         pos = _rescale_layout(pos, scale=scale) + center
     pos = dict(zip(G, pos))
@@ -818,8 +872,9 @@ def _fruchterman_reingold(
         # enforce minimum distance of 0.01
         np.clip(distance, 0.001, None, out=distance)
         # displacement "force"
-        displacement = np.einsum("ijk,ij->ik", delta,
-                                 (k * k / distance**2 - A * distance / k))
+        displacement = np.einsum(
+            "ijk,ij->ik", delta, (k * k / distance**2 - A * distance / k)
+        )
         displacement = displacement - pos / (k * np.sqrt(nnodes))
         # update positions
         length = np.linalg.norm(displacement, axis=-1)
@@ -907,10 +962,9 @@ def _sparse_fruchterman_reingold(
             # the adjacency matrix row
             Ai = np.asarray(A.getrowview(i).toarray())
             # displacement "force"
-            displacement[:,
-                         i] += (delta *
-                                (k * k / distance**2 - Ai * distance / k)).sum(
-                                    axis=1)
+            displacement[:, i] += (
+                delta * (k * k / distance**2 - Ai * distance / k)
+            ).sum(axis=1)
         displacement = displacement - pos / (k * np.sqrt(nnodes))
         # update positions
         length = np.sqrt((displacement**2).sum(axis=0))
@@ -960,8 +1014,9 @@ def _rescale_layout(pos, scale=1):
     return pos
 
 
-def extract_edge_weights(self: Dandelion,
-                         expanded_only: bool = False) -> Sequence:
+def extract_edge_weights(
+    self: Dandelion, expanded_only: bool = False
+) -> Sequence:
     """
     Retrieves edge weights (BCR levenshtein distance) from graph.
 
@@ -979,21 +1034,27 @@ def extract_edge_weights(self: Dandelion,
     if expanded_only:
         try:
             edges, weights = zip(
-                *nx.get_edge_attributes(self.graph[1], 'weight').items())
+                *nx.get_edge_attributes(self.graph[1], "weight").items()
+            )
         except ValueError as e:
             print(
-                '{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'
-                .format(e))
+                "{} i.e. the graph does not contain edges. Therefore, edge weights not returned.".format(
+                    e
+                )
+            )
     else:
         try:
             edges, weights = zip(
-                *nx.get_edge_attributes(self.graph[0], 'weight').items())
+                *nx.get_edge_attributes(self.graph[0], "weight").items()
+            )
         except ValueError as e:
             print(
-                '{} i.e. the graph does not contain edges. Therefore, edge weights not returned.'
-                .format(e))
-    if 'weights' in locals():
-        return (weights)
+                "{} i.e. the graph does not contain edges. Therefore, edge weights not returned.".format(
+                    e
+                )
+            )
+    if "weights" in locals():
+        return weights
 
 
 # from https://bbengfort.github.io/2016/06/graph-tool-from-networkx/
@@ -1027,7 +1088,8 @@ def nx2gt(nxG):
 
         # Go through all the properties if not seen and add them.
         for key, val in data.items():
-            if key in nprops: continue  # Skip properties already added
+            if key in nprops:
+                continue  # Skip properties already added
 
             # Convert the value and key into a type for graph-tool
             tname, _, key = get_prop_type(val, key)
@@ -1041,7 +1103,7 @@ def nx2gt(nxG):
     # Also add the node id: in NetworkX a node can be any hashable type, but
     # in graph-tool node are defined as indices. So we capture any strings
     # in a special PropertyMap called 'id' -- modify as needed!
-    gtG.vertex_properties['id'] = gtG.new_vertex_property('string')
+    gtG.vertex_properties["id"] = gtG.new_vertex_property("string")
 
     # Add the edge properties second
     eprops = set()  # cache keys to only add properties once
@@ -1049,7 +1111,8 @@ def nx2gt(nxG):
 
         # Go through all the edge properties if not seen and add them.
         for key, val in data.items():
-            if key in eprops: continue  # Skip properties already added
+            if key in eprops:
+                continue  # Skip properties already added
 
             # Convert the value and key into a type for graph-tool
             tname, _, key = get_prop_type(val, key)
@@ -1070,7 +1133,7 @@ def nx2gt(nxG):
         vertices[node] = v
 
         # Set the vertex properties, not forgetting the id property
-        data['id'] = str(node)
+        data["id"] = str(node)
         for key, value in data.items():
             gtG.vp[key][v] = value  # vp is short for vertex_properties
 
@@ -1096,20 +1159,20 @@ def get_prop_type(value, key=None):
     """
     # Deal with the value
     if isinstance(value, bool):
-        tname = 'bool'
+        tname = "bool"
 
     elif isinstance(value, int):
-        tname = 'float'
+        tname = "float"
         value = float(value)
 
     elif isinstance(value, float):
-        tname = 'float'
+        tname = "float"
 
     elif isinstance(value, dict):
-        tname = 'object'
+        tname = "object"
 
     else:
-        tname = 'string'
+        tname = "string"
         value = str(value)
 
     return tname, value, key

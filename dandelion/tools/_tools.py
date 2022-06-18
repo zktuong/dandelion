@@ -2,47 +2,45 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 10:17:37
+# @Last Modified time: 2022-06-18 13:38:38
 
-import os
-import sys
-import re
 import math
-import copy
-import functools
-import warnings
-
-import pandas as pd
-import numpy as np
 import networkx as nx
+import numpy as np
+import os
+import pandas as pd
+import re
+import sys
 
+from anndata import AnnData
+from changeo.Gene import getGene
+from collections import defaultdict
+from distance import hamming
+from scanpy import logging as logg
+from scipy.sparse import csr_matrix
+from scipy.spatial.distance import pdist, squareform
+from subprocess import run
+from time import sleep
 from tqdm import tqdm
-from ..utilities._utilities import *
+from typing import Union, Sequence, Optional
+
 from ..utilities._core import *
 from ..utilities._io import *
+from ..utilities._utilities import *
 from ._network import *
-from collections import defaultdict
-from itertools import groupby
-from scipy.spatial.distance import pdist, squareform
-from scipy.sparse import csr_matrix
-from distance import hamming
-from time import sleep
-from scanpy import logging as logg
-from subprocess import run
-from changeo.Gene import getGene
-from anndata import AnnData
-from typing import Union, Sequence, Tuple, Optional
 
 
-def find_clones(self: Union[Dandelion, pd.DataFrame],
-                identity: float = 0.85,
-                key: Optional[str] = None,
-                locus: Optional[Literal['ig', 'tr']] = None,
-                by_alleles: bool = False,
-                key_added: Optional[str] = None,
-                recalculate_length: bool = True,
-                productive_only: bool = True,
-                collapse_label: bool = False) -> Dandelion:
+def find_clones(
+    self: Union[Dandelion, pd.DataFrame],
+    identity: float = 0.85,
+    key: Optional[str] = None,
+    locus: Optional[Literal["ig", "tr"]] = None,
+    by_alleles: bool = False,
+    key_added: Optional[str] = None,
+    recalculate_length: bool = True,
+    productive_only: bool = True,
+    collapse_label: bool = False,
+) -> Dandelion:
     """
     Find clones based on heavy chain and light chain CDR3 junction hamming distance.
 
@@ -74,22 +72,22 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
     -------
     `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
-    start = logg.info('Finding clonotypes')
+    start = logg.info("Finding clonotypes")
     if self.__class__ == Dandelion:
         dat_ = load_data(self.data)
     else:
         dat_ = load_data(self)
 
     if productive_only:
-        dat = dat_[dat_['productive'].isin(['T', 'True', 'TRUE', True])].copy()
+        dat = dat_[dat_["productive"].isin(["T", "True", "TRUE", True])].copy()
     else:
         dat = dat_.copy()
 
-    locus_dict1 = {'ig': ['IGH'], 'tr': ['TRB', 'TRD']}
-    locus_dict2 = {'ig': ['IGK', 'IGL'], 'tr': ['TRA', 'TRG']}
+    locus_dict1 = {"ig": ["IGH"], "tr": ["TRB", "TRD"]}
+    locus_dict2 = {"ig": ["IGK", "IGL"], "tr": ["TRA", "TRG"]}
 
     if key is None:
-        key_ = 'junction_aa'  # default
+        key_ = "junction_aa"  # default
     else:
         key_ = key
 
@@ -97,60 +95,64 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
         raise ValueError("key {} not found in input table.".format(key_))
 
     if locus is None:
-        locus = 'ig'
+        locus = "ig"
 
     locus_1 = locus_dict1[locus]
     locus_2 = locus_dict2[locus]
 
-    locus_log1_dict = {'ig': 'IGH', 'tr': 'TRB/TRD'}
-    locus_log2_dict = {'ig': 'IGL/IGL', 'tr': 'TRA/TRG'}
+    locus_log1_dict = {"ig": "IGH", "tr": "TRB/TRD"}
+    locus_log2_dict = {"ig": "IGL/IGL", "tr": "TRA/TRG"}
 
-    dat_light = dat[dat['locus'].isin(locus_2)].copy()
-    dat_heavy = dat[dat['locus'].isin(locus_1)].copy()
+    dat_light = dat[dat["locus"].isin(locus_2)].copy()
+    dat_heavy = dat[dat["locus"].isin(locus_1)].copy()
 
     if dat_light.shape[0] > 0:
-        dump = dat_light[~(
-            dat_light['cell_id'].isin(dat_heavy['cell_id']))].copy()
+        dump = dat_light[
+            ~(dat_light["cell_id"].isin(dat_heavy["cell_id"]))
+        ].copy()
         if dump.shape[0] > 0:
-            dat = dat[~(dat['cell_id'].isin(dump['cell_id']))].copy()
-    dat_heavy = dat[dat['locus'].isin(locus_1)].copy()
-    pd.set_option('mode.chained_assignment', None)
+            dat = dat[~(dat["cell_id"].isin(dump["cell_id"]))].copy()
+    dat_heavy = dat[dat["locus"].isin(locus_1)].copy()
+    pd.set_option("mode.chained_assignment", None)
 
     if key_added is None:
-        clone_key = 'clone_id'
+        clone_key = "clone_id"
     else:
         clone_key = key_added
 
     # retrieve the J genes and J genes
     if not by_alleles:
-        if 'v_call_genotyped' in dat_heavy.columns:
+        if "v_call_genotyped" in dat_heavy.columns:
             V = [
-                re.sub('[*][0-9][0-9]', '', v)
-                for v in dat_heavy['v_call_genotyped']
+                re.sub("[*][0-9][0-9]", "", v)
+                for v in dat_heavy["v_call_genotyped"]
             ]
         else:
-            V = [re.sub('[*][0-9][0-9]', '', v) for v in dat_heavy['v_call']]
-        J = [re.sub('[*][0-9][0-9]', '', j) for j in dat_heavy['j_call']]
+            V = [re.sub("[*][0-9][0-9]", "", v) for v in dat_heavy["v_call"]]
+        J = [re.sub("[*][0-9][0-9]", "", j) for j in dat_heavy["j_call"]]
     else:
-        if 'v_call_genotyped' in dat_heavy.columns:
-            V = [v for v in dat_heavy['v_call_genotyped']]
+        if "v_call_genotyped" in dat_heavy.columns:
+            V = [v for v in dat_heavy["v_call_genotyped"]]
         else:
-            V = [v for v in dat_heavy['v_call']]
-        J = [j for j in dat_heavy['j_call']]
+            V = [v for v in dat_heavy["v_call"]]
+        J = [j for j in dat_heavy["j_call"]]
 
     # collapse the alleles to just genes
-    V = [','.join(list(set(v.split(',')))) for v in V]
-    J = [','.join(list(set(j.split(',')))) for j in J]
+    V = [",".join(list(set(v.split(",")))) for v in V]
+    J = [",".join(list(set(j.split(",")))) for j in J]
 
     seq = dict(zip(dat_heavy.index, dat_heavy[key_]))
     if recalculate_length:
         seq_length = [len(str(l)) for l in dat_heavy[key_]]
     else:
         try:
-            seq_length = [l for l in dat_heavy[key_ + '_length']]
+            seq_length = [l for l in dat_heavy[key_ + "_length"]]
         except:
-            raise ValueError("{} not found in {} input table.".format(
-                key_ + '_length', locus_log1_dict[locus]))
+            raise ValueError(
+                "{} not found in {} input table.".format(
+                    key_ + "_length", locus_log1_dict[locus]
+                )
+            )
     seq_length_dict = dict(zip(dat_heavy.index, seq_length))
 
     # Create a dictionary and group sequence ids with same V and J genes
@@ -179,12 +181,11 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                         vj_len_grp[g][s][c] = seq[c]
     clones = Tree()
     # for each seq group, calculate the hamming distance matrix
-    for g in tqdm(seq_grp, desc='Finding clones based on VDJ chains '):
+    for g in tqdm(seq_grp, desc="Finding clones based on VDJ chains "):
         for l in seq_grp[g]:
             seq_ = list(seq_grp[g][l])
             tdarray = np.array(seq_).reshape(-1, 1)
-            d_mat = squareform(pdist(tdarray,
-                                     lambda x, y: hamming(x[0], y[0])))
+            d_mat = squareform(pdist(tdarray, lambda x, y: hamming(x[0], y[0])))
             # then calculate what the acceptable threshold is for each length of sequence
             tr = math.floor(int(l) * (1 - identity))
             # convert diagonal and upper triangle to zeroes
@@ -223,9 +224,9 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
             else:
                 seq_tmp_dict = {seq_[0]: tuple([seq_[0]])}
             # sort the list so that clones that are larger have a smaller number
-            clones_tmp = sorted(list(set(seq_tmp_dict.values())),
-                                key=len,
-                                reverse=True)
+            clones_tmp = sorted(
+                list(set(seq_tmp_dict.values())), key=len, reverse=True
+            )
             for x in range(0, len(clones_tmp)):
                 clones[g][l][x + 1] = clones_tmp[x]
 
@@ -266,48 +267,56 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                     if type(v) is int:
                         break
                     # instead of converting to another tree, i will just make it a dictionary
-                    clone_dict[v] = str(first_key_dict[g]) + '_' + str(
-                        second_key_dict[l]) + '_' + str(third_key_dict[key])
+                    clone_dict[v] = (
+                        str(first_key_dict[g])
+                        + "_"
+                        + str(second_key_dict[l])
+                        + "_"
+                        + str(third_key_dict[key])
+                    )
     # add it to the original dataframes
     dat_heavy[clone_key] = pd.Series(clone_dict)
     dat[clone_key] = pd.Series(dat_heavy[clone_key])
 
-    dat_light_c = dat[dat['locus'].isin(locus_2)].copy()
+    dat_light_c = dat[dat["locus"].isin(locus_2)].copy()
     if dat_light_c.shape[0] != 0:
         if not by_alleles:
-            if 'v_call_genotyped' in dat_light_c.columns:
+            if "v_call_genotyped" in dat_light_c.columns:
                 Vlight = [
-                    re.sub('[*][0-9][0-9]', '', v)
-                    for v in dat_light_c['v_call_genotyped']
+                    re.sub("[*][0-9][0-9]", "", v)
+                    for v in dat_light_c["v_call_genotyped"]
                 ]
             else:
                 Vlight = [
-                    re.sub('[*][0-9][0-9]', '', v)
-                    for v in dat_light_c['v_call']
+                    re.sub("[*][0-9][0-9]", "", v)
+                    for v in dat_light_c["v_call"]
                 ]
             Jlight = [
-                re.sub('[*][0-9][0-9]', '', j) for j in dat_light_c['j_call']
+                re.sub("[*][0-9][0-9]", "", j) for j in dat_light_c["j_call"]
             ]
         else:
-            if 'v_call_genotyped' in dat_light_c.columns:
-                Vlight = [v for v in dat_light_c['v_call_genotyped']]
+            if "v_call_genotyped" in dat_light_c.columns:
+                Vlight = [v for v in dat_light_c["v_call_genotyped"]]
             else:
-                Vlight = [v for v in dat_light_c['v_call']]
-            Jlight = [j for j in dat_light_c['j_call']]
+                Vlight = [v for v in dat_light_c["v_call"]]
+            Jlight = [j for j in dat_light_c["j_call"]]
         # collapse the alleles to just genes
-        Vlight = [','.join(list(set(v.split(',')))) for v in Vlight]
-        Jlight = [','.join(list(set(j.split(',')))) for j in Jlight]
+        Vlight = [",".join(list(set(v.split(",")))) for v in Vlight]
+        Jlight = [",".join(list(set(j.split(",")))) for j in Jlight]
         seq = dict(zip(dat_light_c.index, dat_light_c[key_]))
         if recalculate_length:
             seq_length = [len(str(l)) for l in dat_light_c[key_]]
         else:
             try:
                 seq_length = [
-                    len(str(l)) for l in dat_light_c[key_ + '_length']
+                    len(str(l)) for l in dat_light_c[key_ + "_length"]
                 ]
             except:
-                raise ValueError("{} not found in {} input table.".format(
-                    key_ + '_length', locus_log2_dict[locus]))
+                raise ValueError(
+                    "{} not found in {} input table.".format(
+                        key_ + "_length", locus_log2_dict[locus]
+                    )
+                )
         seq_length_dict = dict(zip(dat_light_c.index, seq_length))
         # Create a dictionary and group sequence ids with same V and J genes
         V_Jlight = dict(zip(dat_light_c.index, zip(Vlight, Jlight)))
@@ -339,7 +348,8 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 seq_ = list(seq_lightgrp[g][l])
                 tdarray = np.array(seq_).reshape(-1, 1)
                 d_mat = squareform(
-                    pdist(tdarray, lambda x, y: hamming(x[0], y[0])))
+                    pdist(tdarray, lambda x, y: hamming(x[0], y[0]))
+                )
                 # then calculate what the acceptable threshold is for each length of sequence
                 tr = math.floor(int(l) * (1 - identity))
                 d_mat = np.tril(d_mat)
@@ -378,9 +388,9 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 else:
                     seq_tmp_dict_l = {seq_[0]: tuple([seq_[0]])}
                 # sort the list so that clones that are larger have a smaller number
-                clones_tmp_l = sorted(list(set(seq_tmp_dict_l.values())),
-                                      key=len,
-                                      reverse=True)
+                clones_tmp_l = sorted(
+                    list(set(seq_tmp_dict_l.values())), key=len, reverse=True
+                )
                 for x in range(0, len(clones_tmp_l)):
                     clones_light[g][l][x + 1] = clones_tmp_l[x]
 
@@ -408,8 +418,8 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                 second_key.append(k2)
             second_key = list(set(second_key))
             second_key_dict = dict(
-                zip(second_key, range(1,
-                                      len(second_key) + 1)))
+                zip(second_key, range(1, len(second_key) + 1))
+            )
             for l in cid_light[g]:
                 # and now for the last key
                 third_key = []
@@ -417,28 +427,32 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
                     third_key.append(k3)
                 third_key = list(set(third_key))
                 third_key_dict = dict(
-                    zip(third_key, range(1,
-                                         len(third_key) + 1)))
+                    zip(third_key, range(1, len(third_key) + 1))
+                )
                 for key, value in dict(cid_light[g][l]).items():
                     vL = []
                     for v in value:
                         if type(v) is int:
                             break
                         # instead of converting to another tree, i will just make it a dictionary
-                        clone_dict_light[v] = str(
-                            first_key_dict[g]) + '_' + str(
-                                second_key_dict[l]) + '_' + str(
-                                    third_key_dict[key])
+                        clone_dict_light[v] = (
+                            str(first_key_dict[g])
+                            + "_"
+                            + str(second_key_dict[l])
+                            + "_"
+                            + str(third_key_dict[key])
+                        )
         lclones = list(clone_dict_light.values())
         renamed_clone_dict_light = {}
         if collapse_label:
             # will just update the main dat directly
             if len(list(set(lclones))) > 1:
                 lclones_dict = dict(
-                    zip(sorted(list(set(lclones))), [
-                        str(x) for x in range(1,
-                                              len(list(set(lclones))) + 1)
-                    ]))
+                    zip(
+                        sorted(list(set(lclones))),
+                        [str(x) for x in range(1, len(list(set(lclones))) + 1)],
+                    )
+                )
             else:
                 lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
             for key, value in clone_dict_light.items():
@@ -449,7 +463,7 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
 
         cellclonetree = Tree()
         seqcellclonetree = Tree()
-        for c, s, z in zip(dat['cell_id'], dat['sequence_id'], dat[clone_key]):
+        for c, s, z in zip(dat["cell_id"], dat["sequence_id"], dat[clone_key]):
             seqcellclonetree[c][s].value = 1
             if pd.notnull(z):
                 cellclonetree[c][z].value = 1
@@ -459,41 +473,49 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
 
         fintree = Tree()
         for c in tqdm(
-                cellclonetree,
-                desc='Refining clone assignment based on VJ chain pairing '):
+            cellclonetree,
+            desc="Refining clone assignment based on VJ chain pairing ",
+        ):
             suffix = [
-                renamed_clone_dict_light[x] for x in seqcellclonetree[c]
+                renamed_clone_dict_light[x]
+                for x in seqcellclonetree[c]
                 if x in renamed_clone_dict_light
             ]
             fintree[c] = []
             if len(suffix) > 1:
                 for s in suffix:
                     for cl in cellclonetree[c]:
-                        fintree[c].append(cl + '_' + s)
+                        fintree[c].append(cl + "_" + s)
                 fintree[c] = sorted(fintree[c])
             else:
                 for cl in cellclonetree[c]:
                     if len(suffix) > 0:
-                        fintree[c].append(cl + '_' + ''.join(suffix))
+                        fintree[c].append(cl + "_" + "".join(suffix))
                     else:
                         fintree[c].append(cl)
-            fintree[c] = '|'.join(fintree[c])
-        dat[clone_key] = [fintree[x] for x in dat['cell_id']]
+            fintree[c] = "|".join(fintree[c])
+        dat[clone_key] = [fintree[x] for x in dat["cell_id"]]
 
     dat_[clone_key] = pd.Series(dat[clone_key])
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(self)):
         write_airr(
             dat_,
-            "{}/{}_clone.tsv".format(os.path.dirname(self),
-                                     os.path.basename(self).split('.tsv')[0]))
+            "{}/{}_clone.tsv".format(
+                os.path.dirname(self), os.path.basename(self).split(".tsv")[0]
+            ),
+        )
 
     sleep(0.5)
-    logg.info(' finished',
-              time=start,
-              deep=('Updated Dandelion object: \n'
-                    '   \'data\', contig-indexed clone table\n'
-                    '   \'metadata\', cell-indexed clone table\n'))
+    logg.info(
+        " finished",
+        time=start,
+        deep=(
+            "Updated Dandelion object: \n"
+            "   'data', contig-indexed clone table\n"
+            "   'metadata', cell-indexed clone table\n"
+        ),
+    )
     if self.__class__ == Dandelion:
         if self.germline is not None:
             germline_ = self.germline
@@ -515,53 +537,64 @@ def find_clones(self: Union[Dandelion, pd.DataFrame],
             threshold_ = self.threshold
         else:
             threshold_ = None
-        if ('clone_id' in self.data.columns) and (key_added is None):
+        if ("clone_id" in self.data.columns) and (key_added is None):
             # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
-            self.__init__(data=dat_,
-                          germline=germline_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_)
+            self.__init__(
+                data=dat_,
+                germline=germline_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+            )
             update_metadata(self, reinitialize=True)
-        elif ('clone_id' in self.data.columns) and (key_added is not None):
-            self.__init__(data=dat_,
-                          germline=germline_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_)
-            update_metadata(self,
-                            reinitialize=True,
-                            clone_key='clone_id',
-                            retrieve=clone_key,
-                            retrieve_mode='merge and unique only')
+        elif ("clone_id" in self.data.columns) and (key_added is not None):
+            self.__init__(
+                data=dat_,
+                germline=germline_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+            )
+            update_metadata(
+                self,
+                reinitialize=True,
+                clone_key="clone_id",
+                retrieve=clone_key,
+                retrieve_mode="merge and unique only",
+            )
         else:
-            self.__init__(data=dat_,
-                          germline=germline_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_,
-                          clone_key=clone_key)
+            self.__init__(
+                data=dat_,
+                germline=germline_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+                clone_key=clone_key,
+            )
             update_metadata(self, reinitialize=True, clone_key=clone_key)
         self.threshold = threshold_
 
     else:
-        out = Dandelion(data=dat_,
-                        clone_key=clone_key,
-                        retrieve=clone_key,
-                        retrieve_mode='merge and unique only')
-        return (out)
+        out = Dandelion(
+            data=dat_,
+            clone_key=clone_key,
+            retrieve=clone_key,
+            retrieve_mode="merge and unique only",
+        )
+        return out
 
 
 def transfer(
-        self: AnnData,
-        dandelion: Dandelion,
-        expanded_only: bool = False,
-        neighbors_key: Optional[str] = None,
-        rna_key: Optional[str] = None,
-        vdj_key: Optional[str] = None,
-        clone_key: Optional[str] = None,
-        collapse_nodes: bool = False,
-        overwrite: Optional[Union[bool, Sequence, str]] = None) -> AnnData:
+    self: AnnData,
+    dandelion: Dandelion,
+    expanded_only: bool = False,
+    neighbors_key: Optional[str] = None,
+    rna_key: Optional[str] = None,
+    vdj_key: Optional[str] = None,
+    clone_key: Optional[str] = None,
+    collapse_nodes: bool = False,
+    overwrite: Optional[Union[bool, Sequence, str]] = None,
+) -> AnnData:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -591,7 +624,7 @@ def transfer(
     ----------
     `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
     """
-    start = logg.info('Transferring network')
+    start = logg.info("Transferring network")
     # always overwrite with whatever columns are in dandelion's metadata:
     for x in dandelion.metadata.columns:
         if x not in self.obs.columns:
@@ -599,8 +632,8 @@ def transfer(
         elif overwrite is True:
             self.obs[x] = pd.Series(dandelion.metadata[x])
         if type_check(dandelion.metadata, x):
-            self.obs[x].replace(np.nan, 'No_contig', inplace=True)
-        if self.obs[x].dtype == 'bool':
+            self.obs[x].replace(np.nan, "No_contig", inplace=True)
+        if self.obs[x].dtype == "bool":
             self.obs[x] = [str(x) for x in self.obs[x]]
 
     if overwrite is not None and overwrite is not True:
@@ -609,29 +642,30 @@ def transfer(
         for ow in overwrite:
             self.obs[ow] = pd.Series(dandelion.metadata[ow])
             if type_check(dandelion.metadata, ow):
-                self.obs[ow].replace(np.nan, 'No_contig', inplace=True)
+                self.obs[ow].replace(np.nan, "No_contig", inplace=True)
 
     if dandelion.graph is not None:
         if expanded_only:
             G = dandelion.graph[1]
         else:
             G = dandelion.graph[0]
-        print('converting matrices')
-        distances = nx.to_pandas_adjacency(G,
-                                           dtype=np.float32,
-                                           weight='weight',
-                                           nonedge=np.nan)
-        df_distances = distances.reindex(index=self.obs_names,
-                                         columns=self.obs_names)
-        connectivities = nx.to_pandas_adjacency(G,
-                                                dtype=np.float32,
-                                                weight='weight',
-                                                nonedge=np.nan)
+        print("converting matrices")
+        distances = nx.to_pandas_adjacency(
+            G, dtype=np.float32, weight="weight", nonedge=np.nan
+        )
+        df_distances = distances.reindex(
+            index=self.obs_names, columns=self.obs_names
+        )
+        connectivities = nx.to_pandas_adjacency(
+            G, dtype=np.float32, weight="weight", nonedge=np.nan
+        )
         # convert to connectivity
         distances[~distances.isnull()] = 1 / np.exp(
-            distances[~distances.isnull()])
-        df_connectivities = distances.reindex(index=self.obs_names,
-                                              columns=self.obs_names)
+            distances[~distances.isnull()]
+        )
+        df_connectivities = distances.reindex(
+            index=self.obs_names, columns=self.obs_names
+        )
 
         df_connectivities = df_connectivities.values
         df_connectivities[np.isnan(df_connectivities)] = 0
@@ -641,54 +675,57 @@ def transfer(
         df_connectivities_ = csr_matrix(df_connectivities, dtype=np.float32)
         df_distances = csr_matrix(df_distances, dtype=np.float32)
 
-        print('Updating anndata slots')
+        print("Updating anndata slots")
         if neighbors_key is None:
             neighbors_key = "neighbors"
         if neighbors_key not in self.uns:
             skip_stash = True
             self.uns[neighbors_key] = {}
 
-        rna_neighbors_key = 'rna_' + neighbors_key
-        vdj_neighbors_key = 'vdj_' + neighbors_key
+        rna_neighbors_key = "rna_" + neighbors_key
+        vdj_neighbors_key = "vdj_" + neighbors_key
         if rna_neighbors_key not in self.uns:
             self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
 
         if rna_key is None:
-            r_connectivities_key = 'rna_connectivities'
-            r_distances_key = 'rna_distances'
+            r_connectivities_key = "rna_connectivities"
+            r_distances_key = "rna_distances"
         else:
-            r_connectivities_key = rna_key + '_connectivitites'
-            r_distances_key = rna_key + '_distances'
+            r_connectivities_key = rna_key + "_connectivitites"
+            r_distances_key = rna_key + "_distances"
 
         if vdj_key is None:
-            b_connectivities_key = 'vdj_connectivities'
-            b_distances_key = 'vdj_distances'
+            b_connectivities_key = "vdj_connectivities"
+            b_distances_key = "vdj_distances"
         else:
-            b_connectivities_key = vdj_key + '_connectivitites'
-            b_distances_key = vdj_key + '_distances'
+            b_connectivities_key = vdj_key + "_connectivitites"
+            b_distances_key = vdj_key + "_distances"
 
         # stash_rna_connectivities:
         if r_connectivities_key not in self.obsp:
-            if 'skip_stash' not in locals():
+            if "skip_stash" not in locals():
                 try:
                     self.obsp[r_connectivities_key] = self.obsp[
-                        "connectivities"].copy()
+                        "connectivities"
+                    ].copy()
                     self.obsp[r_distances_key] = self.obsp["distances"].copy()
                 except:
                     self.obsp[r_connectivities_key] = self.uns[neighbors_key][
-                        "connectivities"]
+                        "connectivities"
+                    ]
                     self.obsp[r_distances_key] = self.uns[neighbors_key][
-                        "distances"]
+                        "distances"
+                    ]
 
         # always overwrite the bcr slots
-        self.obsp['connectivities'] = df_connectivities_.copy()
-        self.obsp['distances'] = df_distances.copy()
+        self.obsp["connectivities"] = df_connectivities_.copy()
+        self.obsp["distances"] = df_distances.copy()
         self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
         self.obsp[b_distances_key] = self.obsp["distances"].copy()
 
         # create the dictionary that will enable the use of scirpy's plotting.
         if clone_key is None:
-            clonekey = 'clone_id'
+            clonekey = "clone_id"
         else:
             clonekey = clone_key
 
@@ -702,17 +739,26 @@ def transfer(
             cell_indices = Tree()
             for x, y in self.obs[clonekey].iteritems():
                 if y not in [
-                        '', 'unassigned', np.nan, 'NaN', 'NA', 'nan', 'None',
-                        None, 'none'
+                    "",
+                    "unassigned",
+                    np.nan,
+                    "NaN",
+                    "NA",
+                    "nan",
+                    "None",
+                    None,
+                    "none",
                 ]:
                     cell_indices[y][x].value = 1
             cell_indices = {
                 str(x): np.array(list(r))
-                for x, r in zip(range(0, len(cell_indices)),
-                                cell_indices.values())
+                for x, r in zip(
+                    range(0, len(cell_indices)), cell_indices.values()
+                )
             }
             df_connectivities_ = np.zeros(
-                [len(cell_indices), len(cell_indices)])
+                [len(cell_indices), len(cell_indices)]
+            )
             np.fill_diagonal(df_connectivities_, 1)
             df_connectivities_ = csr_matrix(df_connectivities_)
 
@@ -729,47 +775,63 @@ def transfer(
     if dandelion.graph is not None:
         if dandelion.layout is not None:
             if expanded_only:
-                coord = pd.DataFrame.from_dict(dandelion.layout[1],
-                                               orient='index')
+                coord = pd.DataFrame.from_dict(
+                    dandelion.layout[1], orient="index"
+                )
             else:
-                coord = pd.DataFrame.from_dict(dandelion.layout[0],
-                                               orient='index')
+                coord = pd.DataFrame.from_dict(
+                    dandelion.layout[0], orient="index"
+                )
             for x in coord.columns:
                 tmp[x] = coord[x]
 
             X_vdj = np.array(tmp[[0, 1]], dtype=np.float32)
-            self.obsm['X_vdj'] = X_vdj
+            self.obsm["X_vdj"] = X_vdj
 
         logg.info(
-            ' finished',
+            " finished",
             time=start,
             deep=(
-                'updated `.obs` with `.metadata`\n'
-                'added to `.uns[\'' + neighbors_key + '\']` and `.uns[\'' +
-                clonekey + '\']`\n'
-                'and `.obsp`\n'
-                '   \'distances\', clonotype-weighted adjacency matrix\n'
-                '   \'connectivities\', clonotype-weighted adjacency matrix'))
+                "updated `.obs` with `.metadata`\n"
+                "added to `.uns['"
+                + neighbors_key
+                + "']` and `.uns['"
+                + clonekey
+                + "']`\n"
+                "and `.obsp`\n"
+                "   'distances', clonotype-weighted adjacency matrix\n"
+                "   'connectivities', clonotype-weighted adjacency matrix"
+            ),
+        )
     else:
-        logg.info(' finished',
-                  time=start,
-                  deep=('updated `.obs` with `.metadata`\n'))
+        logg.info(
+            " finished", time=start, deep=("updated `.obs` with `.metadata`\n")
+        )
 
 
-def define_clones(self: Union[Dandelion, pd.DataFrame, str],
-                  dist: Optional[float] = None,
-                  action: Literal['first', 'set'] = 'set',
-                  model: Literal['ham', 'aa', 'hh_s1f', 'hh_s5f', 'mk_rs1nf',
-                                 'mk_rs5nf', 'hs1f_compat',
-                                 'm1n_compat'] = 'ham',
-                  norm: Literal['len', 'mut', 'none'] = 'len',
-                  doublets: Literal['drop', 'count'] = 'drop',
-                  fileformat: Literal['changeo', 'airr'] = 'airr',
-                  ncpu: Optional[int] = None,
-                  dirs: Optional[str] = None,
-                  outFilePrefix: Optional[int] = None,
-                  key_added: Optional[int] = None,
-                  verbose: bool = False) -> Dandelion:
+def define_clones(
+    self: Union[Dandelion, pd.DataFrame, str],
+    dist: Optional[float] = None,
+    action: Literal["first", "set"] = "set",
+    model: Literal[
+        "ham",
+        "aa",
+        "hh_s1f",
+        "hh_s5f",
+        "mk_rs1nf",
+        "mk_rs5nf",
+        "hs1f_compat",
+        "m1n_compat",
+    ] = "ham",
+    norm: Literal["len", "mut", "none"] = "len",
+    doublets: Literal["drop", "count"] = "drop",
+    fileformat: Literal["changeo", "airr"] = "airr",
+    ncpu: Optional[int] = None,
+    dirs: Optional[str] = None,
+    outFilePrefix: Optional[int] = None,
+    key_added: Optional[int] = None,
+    verbose: bool = False,
+) -> Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
 
@@ -817,14 +879,14 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
     -------
     `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
-    start = logg.info('Finding clones')
+    start = logg.info("Finding clones")
     if ncpu is None:
         nproc = 1
     else:
         nproc = ncpu
 
     if key_added is None:
-        clone_key = 'clone_id'
+        clone_key = "clone_id"
     else:
         clone_key = key_added
 
@@ -834,14 +896,15 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         dat = load_data(self)
     if os.path.isfile(str(self)):
         dat = load_data(self)
-    dat_h = dat[dat['locus'] == 'IGH']
-    dat_l = dat[dat['locus'].isin(['IGK', 'IGL'])]
+    dat_h = dat[dat["locus"] == "IGH"]
+    dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]
 
     if os.path.isfile(str(self)):
         tmpFolder = "{}/tmp".format(os.path.dirname(self))
         outFolder = "{}".format(os.path.dirname(self))
     else:
         import tempfile
+
         tmpFolder = "{}/tmp".format(tempfile.TemporaryDirectory().name)
         outFolder = "{}".format(tempfile.TemporaryDirectory().name)
 
@@ -852,22 +915,22 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
 
     if os.path.isfile(str(self)):
         h_file1 = "{}/{}_heavy-clone.tsv".format(
-            tmpFolder,
-            os.path.basename(self).split('.tsv')[0])
+            tmpFolder, os.path.basename(self).split(".tsv")[0]
+        )
         h_file2 = "{}/{}_heavy-clone.tsv".format(
-            outFolder,
-            os.path.basename(self).split('.tsv')[0])
+            outFolder, os.path.basename(self).split(".tsv")[0]
+        )
         l_file = "{}/{}_light.tsv".format(
-            tmpFolder,
-            os.path.basename(self).split('.tsv')[0])
+            tmpFolder, os.path.basename(self).split(".tsv")[0]
+        )
         outfile = "{}/{}_clone.tsv".format(
-            outFolder,
-            os.path.basename(self).split('.tsv')[0])
+            outFolder, os.path.basename(self).split(".tsv")[0]
+        )
     else:
         if outFilePrefix is not None:
             out_FilePrefix = outFilePrefix
         else:
-            out_FilePrefix = 'dandelion_define_clones'
+            out_FilePrefix = "dandelion_define_clones"
         h_file1 = "{}/{}_heavy-clone.tsv".format(tmpFolder, out_FilePrefix)
         h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, out_FilePrefix)
         l_file = "{}/{}_light.tsv".format(tmpFolder, out_FilePrefix)
@@ -876,10 +939,10 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
     write_airr(dat_h, h_file1)
     write_airr(dat_l, l_file)
 
-    if 'v_call_genotyped' in dat.columns:
-        v_field = 'v_call_genotyped'
+    if "v_call_genotyped" in dat.columns:
+        v_field = "v_call_genotyped"
     else:
-        v_field = 'v_call'
+        v_field = "v_call"
 
     if dist is None:
         if self.__class__ == Dandelion:
@@ -887,20 +950,33 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                 dist_ = self.threshold
             else:
                 raise ValueError(
-                    'Threshold value in Dandelion object is None. Please run calculate_threshold first'
+                    "Threshold value in Dandelion object is None. Please run calculate_threshold first"
                 )
         else:
             raise ValueError(
-                'Distance value is None. Please provide a distance value (float)'
+                "Distance value is None. Please provide a distance value (float)"
             )
     else:
         dist_ = dist
 
     cmd = [
-        'DefineClones.py', '-d', h_file1, '-o', h_file2, '--act', action,
-        '--model', model, '--norm', norm, '--dist',
-        str(dist_), '--nproc',
-        str(nproc), '--vf', v_field
+        "DefineClones.py",
+        "-d",
+        h_file1,
+        "-o",
+        h_file2,
+        "--act",
+        action,
+        "--model",
+        model,
+        "--norm",
+        norm,
+        "--dist",
+        str(dist_),
+        "--nproc",
+        str(nproc),
+        "--vf",
+        v_field,
     ]
 
     def clusterLinkage(cell_series, group_series):
@@ -935,10 +1011,13 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                 for cluster in cluster_dict:
                     # if initial_dict[group] and cluster_dict[cluster] share common cells, add initial_dict[group] to
                     # cluster
-                    if cluster != i and any(cell in initial_dict[group]
-                                            for cell in cluster_dict[cluster]):
-                        cluster_dict[cluster] = cluster_dict[cluster] + \
-                            initial_dict[group]
+                    if cluster != i and any(
+                        cell in initial_dict[group]
+                        for cell in cluster_dict[cluster]
+                    ):
+                        cluster_dict[cluster] = (
+                            cluster_dict[cluster] + initial_dict[group]
+                        )
                         del cluster_dict[i]
                         break
             # break if clusters stop changing, otherwise restart
@@ -949,8 +1028,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
 
         # invert cluster_dict for return
         assign_dict = {
-            cell: k
-            for k, v in cluster_dict.items() for cell in set(v)
+            cell: k for k, v in cluster_dict.items() for cell in set(v)
         }
 
         return assign_dict
@@ -967,74 +1045,88 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         format (str): file format. one of 'changeo' or 'airr'.
         """
         # Set column names
-        if fileformat == 'changeo':
-            cell_id = 'cell_id'
-            clone_id = 'clone_id'
-            v_call = 'v_call'
-            j_call = 'j_call'
-            junction_length = 'junction_length'
-            umi_count = 'umicount'
-        elif fileformat == 'airr':
-            cell_id = 'cell_id'
-            clone_id = 'clone_id'
-            v_call = 'v_call'
-            j_call = 'j_call'
-            junction_length = 'junction_length'
-            umi_count = 'duplicate_count'
+        if fileformat == "changeo":
+            cell_id = "cell_id"
+            clone_id = "clone_id"
+            v_call = "v_call"
+            j_call = "j_call"
+            junction_length = "junction_length"
+            umi_count = "umicount"
+        elif fileformat == "airr":
+            cell_id = "cell_id"
+            clone_id = "clone_id"
+            v_call = "v_call"
+            j_call = "j_call"
+            junction_length = "junction_length"
+            umi_count = "duplicate_count"
         else:
             sys.exit("Invalid format %s" % fileformat)
 
         # read in heavy and light DFs
-        heavy_df = pd.read_csv(heavy_file,
-                               dtype='object',
-                               na_values=['', 'None', 'NA'],
-                               sep='\t')
-        light_df = pd.read_csv(light_file,
-                               dtype='object',
-                               na_values=['', 'None', 'NA'],
-                               sep='\t')
+        heavy_df = pd.read_csv(
+            heavy_file, dtype="object", na_values=["", "None", "NA"], sep="\t"
+        )
+        light_df = pd.read_csv(
+            light_file, dtype="object", na_values=["", "None", "NA"], sep="\t"
+        )
 
         # column checking
         expected_heavy_columns = [
-            cell_id, clone_id, v_call, j_call, junction_length, umi_count
+            cell_id,
+            clone_id,
+            v_call,
+            j_call,
+            junction_length,
+            umi_count,
         ]
         if set(expected_heavy_columns).issubset(heavy_df.columns) is False:
             raise ValueError(
-                "Missing one or more columns in heavy chain file: " +
-                ", ".join(expected_heavy_columns))
+                "Missing one or more columns in heavy chain file: "
+                + ", ".join(expected_heavy_columns)
+            )
         expected_light_columns = [
-            cell_id, v_call, j_call, junction_length, umi_count
+            cell_id,
+            v_call,
+            j_call,
+            junction_length,
+            umi_count,
         ]
         if set(expected_light_columns).issubset(light_df.columns) is False:
             raise ValueError(
-                "Missing one or more columns in light chain file: " +
-                ", ".join(expected_light_columns))
+                "Missing one or more columns in light chain file: "
+                + ", ".join(expected_light_columns)
+            )
 
         # Fix types
         try:
-            heavy_df[junction_length] = heavy_df[junction_length].astype('int')
-            light_df[junction_length] = light_df[junction_length].astype('int')
+            heavy_df[junction_length] = heavy_df[junction_length].astype("int")
+            light_df[junction_length] = light_df[junction_length].astype("int")
         except:
             heavy_df[junction_length] = heavy_df[junction_length].replace(
-                np.nan, pd.NA, inplace=True)
+                np.nan, pd.NA, inplace=True
+            )
             light_df[junction_length] = light_df[junction_length].replace(
-                np.nan, pd.NA, inplace=True)
+                np.nan, pd.NA, inplace=True
+            )
             heavy_df[junction_length] = heavy_df[junction_length].astype(
-                'Int64')
+                "Int64"
+            )
             light_df[junction_length] = light_df[junction_length].astype(
-                'Int64')
+                "Int64"
+            )
 
         # filter multiple heavy chains
-        if doublets == 'drop':
+        if doublets == "drop":
             heavy_df = heavy_df.drop_duplicates(cell_id, keep=False)
             if heavy_df.empty is True:
                 raise ValueError(
                     "Empty heavy chain data, after doublets drop. Are you combining experiments in a single file? If so, split your data into multiple files."
                 )
-        elif doublets == 'count':
-            heavy_df[umi_count] = heavy_df[umi_count].astype('int')
-            heavy_df = heavy_df.groupby(
-                cell_id, sort=False).apply(lambda x: x.nlargest(1, umi_count))
+        elif doublets == "count":
+            heavy_df[umi_count] = heavy_df[umi_count].astype("int")
+            heavy_df = heavy_df.groupby(cell_id, sort=False).apply(
+                lambda x: x.nlargest(1, umi_count)
+            )
 
         # transfer clone IDs from heavy chain df to light chain df
         clone_dict = {
@@ -1042,59 +1134,72 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
             for k, v in heavy_df[[clone_id, cell_id]].T.to_dict().items()
         }
         light_df = light_df.loc[
-            light_df[cell_id].apply(lambda x: x in clone_dict.keys()), ]
+            light_df[cell_id].apply(lambda x: x in clone_dict.keys()),
+        ]
         light_df[clone_id] = light_df.apply(
-            lambda row: clone_dict[row[cell_id]], axis=1)
+            lambda row: clone_dict[row[cell_id]], axis=1
+        )
 
         # generate a "cluster_dict" of CELL:CLONE dictionary from light df  (TODO: use receptor object V/J gene names)
         cluster_dict = clusterLinkage(
             light_df[cell_id],
             light_df.apply(
-                lambda row: getGene(row[v_call]) + ',' + getGene(row[j_call]) +
-                ',' + str(row[junction_length]) + ',' + row[clone_id],
-                axis=1))
+                lambda row: getGene(row[v_call])
+                + ","
+                + getGene(row[j_call])
+                + ","
+                + str(row[junction_length])
+                + ","
+                + row[clone_id],
+                axis=1,
+            ),
+        )
 
         # add assignments to heavy_df
         heavy_df = heavy_df.loc[
-            heavy_df[cell_id].apply(lambda x: x in cluster_dict.keys()), :]
-        heavy_df[clone_id] = heavy_df[clone_id] + '_' + \
-            heavy_df.apply(lambda row: str(cluster_dict[row[cell_id]]), axis=1)
+            heavy_df[cell_id].apply(lambda x: x in cluster_dict.keys()), :
+        ]
+        heavy_df[clone_id] = (
+            heavy_df[clone_id]
+            + "_"
+            + heavy_df.apply(
+                lambda row: str(cluster_dict[row[cell_id]]), axis=1
+            )
+        )
 
         # write heavy chains
         write_airr(heavy_df, out_file)
         return (heavy_df, light_df)
 
     if verbose:
-        print('Running command: %s\n' % (' '.join(cmd)))
+        print("Running command: %s\n" % (" ".join(cmd)))
     run(cmd)
 
-    h_df, l_df = _lightCluster(h_file2,
-                               l_file,
-                               outfile,
-                               doublets=doublets,
-                               fileformat=fileformat)
+    h_df, l_df = _lightCluster(
+        h_file2, l_file, outfile, doublets=doublets, fileformat=fileformat
+    )
 
     h_df = load_data(h_df)
     # create a dictionary for cell_id : clone_id from h_df
-    linked_clones = dict(zip(h_df['cell_id'], h_df['clone_id']))
+    linked_clones = dict(zip(h_df["cell_id"], h_df["clone_id"]))
 
     # create a clone_reference
-    clone_ref = list(set(h_df['clone_id']))
-    clone_ref = [c.split('_')[1] if c is not np.nan else c for c in clone_ref]
+    clone_ref = list(set(h_df["clone_id"]))
+    clone_ref = [c.split("_")[1] if c is not np.nan else c for c in clone_ref]
     l_df = load_data(l_df)
 
     for x in l_df.index:
-        if l_df.loc[x, 'clone_id'] in clone_ref:
-            l_df.at[x, 'clone_id'] = linked_clones[l_df.loc[x, 'cell_id']]
+        if l_df.loc[x, "clone_id"] in clone_ref:
+            l_df.at[x, "clone_id"] = linked_clones[l_df.loc[x, "cell_id"]]
         else:
             try:
-                l_df.at[x, 'clone_id'] = l_df.loc[x, 'cell_id'] + '_notlinked'
+                l_df.at[x, "clone_id"] = l_df.loc[x, "cell_id"] + "_notlinked"
             except:
                 pass
 
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
-    dat[str(clone_key)] = pd.Series(cloned_['clone_id'])
+    dat[str(clone_key)] = pd.Series(cloned_["clone_id"])
 
     if self.__class__ == Dandelion:
         if self.germline is not None:
@@ -1118,7 +1223,7 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
         else:
             threshold_ = None
 
-        if ('clone_id' in self.data.columns) and (clone_key is not None):
+        if ("clone_id" in self.data.columns) and (clone_key is not None):
             self.__init__(
                 data=dat,
                 germline=germline_,
@@ -1127,9 +1232,9 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                 graph=graph_,
                 initialize=True,
                 retrieve=clone_key,
-                retrieve_mode='merge and unique only',
+                retrieve_mode="merge and unique only",
             )
-        elif ('clone_id' not in self.data.columns) and (clone_key is not None):
+        elif ("clone_id" not in self.data.columns) and (clone_key is not None):
             self.__init__(
                 data=dat,
                 germline=germline_,
@@ -1139,40 +1244,48 @@ def define_clones(self: Union[Dandelion, pd.DataFrame, str],
                 initialize=True,
                 clone_key=clone_key,
                 retrieve=clone_key,
-                retrieve_mode='merge and unique only',
+                retrieve_mode="merge and unique only",
             )
         else:
-            self.__init__(data=dat,
-                          germline=germline_,
-                          edges=edge_,
-                          layout=layout_,
-                          graph=graph_,
-                          initialize=True,
-                          clone_key=clone_key)
+            self.__init__(
+                data=dat,
+                germline=germline_,
+                edges=edge_,
+                layout=layout_,
+                graph=graph_,
+                initialize=True,
+                clone_key=clone_key,
+            )
         self.threshold = threshold_
     else:
-        if ('clone_id' in dat.columns) and (clone_key is not None):
+        if ("clone_id" in dat.columns) and (clone_key is not None):
             out = Dandelion(
                 data=dat,
                 retrieve=clone_key,
-                retrieve_mode='merge and unique only',
+                retrieve_mode="merge and unique only",
             )
-        elif ('clone_id' not in dat.columns) and (clone_key is not None):
+        elif ("clone_id" not in dat.columns) and (clone_key is not None):
             out = Dandelion(data=dat, clone_key=clone_key)
         else:
             out = Dandelion(data=dat)
-        return (out)
-    logg.info(' finished',
-              time=start,
-              deep=('Updated Dandelion object: \n'
-                    '   \'data\', contig-indexed clone table\n'
-                    '   \'metadata\', cell-indexed clone table\n'))
+        return out
+    logg.info(
+        " finished",
+        time=start,
+        deep=(
+            "Updated Dandelion object: \n"
+            "   'data', contig-indexed clone table\n"
+            "   'metadata', cell-indexed clone table\n"
+        ),
+    )
 
 
-def clone_size(self: Dandelion,
-               max_size: Optional[int] = None,
-               clone_key: Optional[str] = None,
-               key_added: Optional[str] = None):
+def clone_size(
+    self: Dandelion,
+    max_size: Optional[int] = None,
+    clone_key: Optional[str] = None,
+    key_added: Optional[str] = None,
+):
     """
     Quantifies size of clones
 
@@ -1192,27 +1305,27 @@ def clone_size(self: Dandelion,
     `Dandelion` object with clone size columns annotated in `.metadata` slot.
     """
 
-    start = logg.info('Quantifying clone sizes')
+    start = logg.info("Quantifying clone sizes")
 
     metadata_ = self.metadata.copy()
 
     if clone_key is None:
-        clonekey = 'clone_id'
+        clonekey = "clone_id"
     else:
         clonekey = clone_key
 
-    tmp = metadata_[str(clonekey)].str.split('|', expand=True).stack()
+    tmp = metadata_[str(clonekey)].str.split("|", expand=True).stack()
     tmp = tmp.reset_index(drop=False)
-    tmp.columns = ['cell_id', 'tmp', str(clonekey)]
+    tmp.columns = ["cell_id", "tmp", str(clonekey)]
 
     clonesize = tmp[str(clonekey)].value_counts()
 
     if max_size is not None:
-        clonesize_ = clonesize.astype('object')
+        clonesize_ = clonesize.astype("object")
         for i in clonesize.index:
             if clonesize.loc[i] >= max_size:
-                clonesize_.at[i] = '>= ' + str(max_size)
-        clonesize_ = clonesize_.astype('category')
+                clonesize_.at[i] = ">= " + str(max_size)
+        clonesize_ = clonesize_.astype("category")
     else:
         clonesize_ = clonesize.copy()
 
@@ -1221,104 +1334,171 @@ def clone_size(self: Dandelion,
     if max_size is not None:
         if key_added is None:
             self.metadata[
-                str(clonekey) + '_size_max_' + str(max_size)] = pd.Series(
-                    dict(
-                        zip(metadata_.index, [
-                            str(y) for y in [
-                                sorted(list(
-                                    set([
-                                        clonesize_dict[c_]
-                                        for c_ in c.split('|')
-                                    ])),
-                                       key=lambda x: int(x.split('>= ')[1])
-                                       if type(x) is str else int(x),
-                                       reverse=True)[0] if '|' in
-                                c else clonesize_dict[c]
+                str(clonekey) + "_size_max_" + str(max_size)
+            ] = pd.Series(
+                dict(
+                    zip(
+                        metadata_.index,
+                        [
+                            str(y)
+                            for y in [
+                                sorted(
+                                    list(
+                                        set(
+                                            [
+                                                clonesize_dict[c_]
+                                                for c_ in c.split("|")
+                                            ]
+                                        )
+                                    ),
+                                    key=lambda x: int(x.split(">= ")[1])
+                                    if type(x) is str
+                                    else int(x),
+                                    reverse=True,
+                                )[0]
+                                if "|" in c
+                                else clonesize_dict[c]
                                 for c in metadata_[str(clonekey)]
                             ]
-                        ])))
-            self.metadata[str(clonekey) + '_size_max_' +
-                          str(max_size)] = self.metadata[
-                              str(clonekey) + '_size_max_' +
-                              str(max_size)].astype('category')
+                        ],
+                    )
+                )
+            )
+            self.metadata[
+                str(clonekey) + "_size_max_" + str(max_size)
+            ] = self.metadata[
+                str(clonekey) + "_size_max_" + str(max_size)
+            ].astype(
+                "category"
+            )
         else:
             self.metadata[key_added] = pd.Series(
                 dict(
-                    zip(metadata_.index, [
-                        str(y) for y in [
-                            sorted(list(
-                                set([
-                                    clonesize_dict[c_] for c_ in c.split('|')
-                                ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
-                            c else clonesize_dict[c]
-                            for c in metadata_[str(clonekey)]
-                        ]
-                    ])))
-            self.metadata[str(clonekey) + '_size_max_' +
-                          str(max_size)] = self.metadata[
-                              str(clonekey) + '_size_max_' +
-                              str(max_size)].astype('category')
+                    zip(
+                        metadata_.index,
+                        [
+                            str(y)
+                            for y in [
+                                sorted(
+                                    list(
+                                        set(
+                                            [
+                                                clonesize_dict[c_]
+                                                for c_ in c.split("|")
+                                            ]
+                                        )
+                                    ),
+                                    key=lambda x: int(x.split(">= ")[1])
+                                    if type(x) is str
+                                    else int(x),
+                                    reverse=True,
+                                )[0]
+                                if "|" in c
+                                else clonesize_dict[c]
+                                for c in metadata_[str(clonekey)]
+                            ]
+                        ],
+                    )
+                )
+            )
+            self.metadata[
+                str(clonekey) + "_size_max_" + str(max_size)
+            ] = self.metadata[
+                str(clonekey) + "_size_max_" + str(max_size)
+            ].astype(
+                "category"
+            )
     else:
         if key_added is None:
-            self.metadata[str(clonekey) + '_size'] = pd.Series(
+            self.metadata[str(clonekey) + "_size"] = pd.Series(
                 dict(
-                    zip(metadata_.index, [
-                        str(y) for y in [
-                            sorted(list(
-                                set([
-                                    clonesize_dict[c_] for c_ in c.split('|')
-                                ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
-                            c else clonesize_dict[c]
-                            for c in metadata_[str(clonekey)]
-                        ]
-                    ])))
+                    zip(
+                        metadata_.index,
+                        [
+                            str(y)
+                            for y in [
+                                sorted(
+                                    list(
+                                        set(
+                                            [
+                                                clonesize_dict[c_]
+                                                for c_ in c.split("|")
+                                            ]
+                                        )
+                                    ),
+                                    key=lambda x: int(x.split(">= ")[1])
+                                    if type(x) is str
+                                    else int(x),
+                                    reverse=True,
+                                )[0]
+                                if "|" in c
+                                else clonesize_dict[c]
+                                for c in metadata_[str(clonekey)]
+                            ]
+                        ],
+                    )
+                )
+            )
             try:
-                self.metadata[str(clonekey) + '_size'] = [
-                    int(x) for x in self.metadata[str(clonekey) + '_size']
+                self.metadata[str(clonekey) + "_size"] = [
+                    int(x) for x in self.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
         else:
             self.metadata[key_added] = pd.Series(
                 dict(
-                    zip(metadata_.index, [
-                        str(y) for y in [
-                            sorted(list(
-                                set([
-                                    clonesize_dict[c_] for c_ in c.split('|')
-                                ])),
-                                   key=lambda x: int(x.split('>= ')[1])
-                                   if type(x) is str else int(x),
-                                   reverse=True)[0] if '|' in
-                            c else clonesize_dict[c]
-                            for c in metadata_[str(clonekey)]
-                        ]
-                    ])))
+                    zip(
+                        metadata_.index,
+                        [
+                            str(y)
+                            for y in [
+                                sorted(
+                                    list(
+                                        set(
+                                            [
+                                                clonesize_dict[c_]
+                                                for c_ in c.split("|")
+                                            ]
+                                        )
+                                    ),
+                                    key=lambda x: int(x.split(">= ")[1])
+                                    if type(x) is str
+                                    else int(x),
+                                    reverse=True,
+                                )[0]
+                                if "|" in c
+                                else clonesize_dict[c]
+                                for c in metadata_[str(clonekey)]
+                            ]
+                        ],
+                    )
+                )
+            )
             try:
                 self.metadata[key_added] = [
-                    int(x) for x in self.metadata[str(clonekey) + '_size']
+                    int(x) for x in self.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
-    logg.info(' finished',
-              time=start,
-              deep=('Updated Dandelion object: \n'
-                    '   \'metadata\', cell-indexed clone table'))
+    logg.info(
+        " finished",
+        time=start,
+        deep=(
+            "Updated Dandelion object: \n"
+            "   'metadata', cell-indexed clone table"
+        ),
+    )
 
 
 def clone_overlap(
-        self: Union[Dandelion, AnnData],
-        groupby: str,
-        colorby: str,
-        min_clone_size: Optional[int] = None,
-        weighted_overlap: bool = False,
-        clone_key: Optional[str] = None) -> Union[AnnData, pd.DataFrame]:
+    self: Union[Dandelion, AnnData],
+    groupby: str,
+    colorby: str,
+    min_clone_size: Optional[int] = None,
+    weighted_overlap: bool = False,
+    clone_key: Optional[str] = None,
+) -> Union[AnnData, pd.DataFrame]:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
 
@@ -1342,7 +1522,7 @@ def clone_overlap(
     -------
     a `pandas DataFrame`.
     """
-    start = logg.info('Finding clones')
+    start = logg.info("Finding clones")
     if self.__class__ == Dandelion:
         data = self.metadata.copy()
     elif self.__class__ == AnnData:
@@ -1354,25 +1534,44 @@ def clone_overlap(
         min_size = int(min_clone_size)
 
     if clone_key is None:
-        clone_ = 'clone_id'
+        clone_ = "clone_id"
     else:
         clone_ = clone_key
 
     # get rid of problematic rows that appear because of category conversion?
     allgroups = list(data[groupby].unique())
-    data = data[~(data[clone_].isin(
-        [np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
+    data = data[
+        ~(
+            data[clone_].isin(
+                [np.nan, "nan", "NaN", "No_contig", "unassigned", "None", None]
+            )
+        )
+    ]
 
     # prepare a summary table
-    datc_ = data[clone_].str.split('|', expand=True).stack()
+    datc_ = data[clone_].str.split("|", expand=True).stack()
     datc_ = pd.DataFrame(datc_)
     datc_.reset_index(drop=False, inplace=True)
-    datc_.columns = ['cell_id', 'tmp', clone_]
-    datc_.drop('tmp', inplace=True, axis=1)
-    datc_ = datc_[~(datc_[clone_].isin(
-        ['', np.nan, 'nan', 'NaN', 'No_contig', 'unassigned', 'None', None]))]
+    datc_.columns = ["cell_id", "tmp", clone_]
+    datc_.drop("tmp", inplace=True, axis=1)
+    datc_ = datc_[
+        ~(
+            datc_[clone_].isin(
+                [
+                    "",
+                    np.nan,
+                    "nan",
+                    "NaN",
+                    "No_contig",
+                    "unassigned",
+                    "None",
+                    None,
+                ]
+            )
+        )
+    ]
     dictg_ = dict(data[groupby])
-    datc_[groupby] = [dictg_[l] for l in datc_['cell_id']]
+    datc_[groupby] = [dictg_[l] for l in datc_["cell_id"]]
 
     overlap = pd.crosstab(datc_[clone_], datc_[groupby])
     for x in allgroups:
@@ -1380,7 +1579,7 @@ def clone_overlap(
             overlap[x] = 0
 
     if min_size == 0:
-        raise ValueError('min_size must be greater than 0.')
+        raise ValueError("min_size must be greater than 0.")
     if not weighted_overlap:
         if min_size > 2:
             overlap[overlap < min_size] = 0
@@ -1392,13 +1591,14 @@ def clone_overlap(
     overlap.columns.name = None
 
     if self.__class__ == AnnData:
-        self.uns['clone_overlap'] = overlap.copy()
-        logg.info(' finished',
-                  time=start,
-                  deep=('Updated AnnData: \n'
-                        '   \'uns\', clone overlap table'))
+        self.uns["clone_overlap"] = overlap.copy()
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Updated AnnData: \n" "   'uns', clone overlap table"),
+        )
     else:
-        return (overlap)
+        return overlap
 
 
 def clustering(distance_dict, threshold, sequences_dict):
@@ -1407,12 +1607,20 @@ def clustering(distance_dict, threshold, sequences_dict):
     # find out the unique indices in this subset
     i_unique = list(set(flatten(distance_dict)))
     # for every pair of i1,i2 is their dictance smaller than the thresholdeshold?
-    i_pair_d = {(i1, i2): distance_dict[(i1, i2)] <= threshold if
-                (i1, i2) in distance_dict else False
-                for i1, i2 in combinations(i_unique, 2)}
-    i_pair_d.update({(i2, i1): distance_dict[(i2, i1)] <= threshold if
-                     (i2, i1) in distance_dict else False
-                     for i1, i2 in combinations(i_unique, 2)})
+    i_pair_d = {
+        (i1, i2): distance_dict[(i1, i2)] <= threshold
+        if (i1, i2) in distance_dict
+        else False
+        for i1, i2 in combinations(i_unique, 2)
+    }
+    i_pair_d.update(
+        {
+            (i2, i1): distance_dict[(i2, i1)] <= threshold
+            if (i2, i1) in distance_dict
+            else False
+            for i1, i2 in combinations(i_unique, 2)
+        }
+    )
     # so which indices should not be part of a clone?
     canbetogether = defaultdict(list)
     for ii1, ii2 in combinations(i_unique, 2):
@@ -1429,17 +1637,24 @@ def clustering(distance_dict, threshold, sequences_dict):
                 canbetogether[ii2].append(())
     for x in canbetogether:
         canbetogether[x] = list(
-            set([y for y in canbetogether[x] if len(y) > 0]))
+            set([y for y in canbetogether[x] if len(y) > 0])
+        )
     # convert the indices to sequences
     for x in canbetogether:
         if len(canbetogether[x]) > 0:
             out_dict[sequences_dict[x]] = tuple(
                 sorted(
                     set(
-                        list([
-                            sequences_dict[y]
-                            for y in flatten(canbetogether[x])
-                        ]) + [sequences_dict[x]])))
+                        list(
+                            [
+                                sequences_dict[y]
+                                for y in flatten(canbetogether[x])
+                            ]
+                        )
+                        + [sequences_dict[x]]
+                    )
+                )
+            )
         else:
             out_dict[sequences_dict[x]] = tuple([sequences_dict[x]])
-    return (out_dict)
+    return out_dict

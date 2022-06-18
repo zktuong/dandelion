@@ -17,6 +17,7 @@
 import numpy as np
 from ..utilities._utilities import _validate_counts_vector
 
+
 def shannon(counts, base=2):
     r"""Calculate Shannon entropy of counts, default in bits.
     Shannon-Wiener diversity index is defined as:

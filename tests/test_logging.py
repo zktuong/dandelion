@@ -1,15 +1,18 @@
+#!/usr/bin/env python
 import dandelion as ddl
 from subprocess import run
 
 
 def test_badge():
-    p = run(["python", "dandelion/logging/_badge.py"],
-            capture_output=True,
-            encoding='utf8')
+    p = run(
+        ["python", "dandelion/logging/_badge.py"],
+        capture_output=True,
+        encoding="utf8",
+    )
     assert p.returncode == 0
     assert p.stderr == ""
     assert p.stdout != ""
-    assert p.stdout.strip('\n') == ddl.__version__
+    assert p.stdout.strip("\n") == ddl.__version__
 
 
 def test_logging():

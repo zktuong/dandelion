@@ -2,11 +2,19 @@
 # @Author: Kelvin
 # @Date:   2021-02-06 13:18:58
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 16:18:14
-from typing import Union, Sequence, Tuple
+# @Last Modified time: 2022-06-18 13:06:20
+from typing import Sequence
 
-modules = ['dandelion', 'pandas', 'numpy', 'matplotlib',
-           'networkx', 'scipy', 'distance', 'polyleven']
+modules = [
+    "dandelion",
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "networkx",
+    "scipy",
+    "distance",
+    "polyleven",
+]
 
 
 # borrowed from scanpy's logging module
@@ -21,20 +29,22 @@ def _versions_dependencies(dependencies: Sequence):
 
 
 def print_versions(dependencies: Sequence = modules):
-    '''
+    """
     Versions that are essential for dandelion's operation.
-    '''
-    print(' '.join(
-        f'{mod}=={ver}'
-        for mod, ver in _versions_dependencies(dependencies)
-    ))
+    """
+    print(
+        " ".join(
+            f"{mod}=={ver}" for mod, ver in _versions_dependencies(dependencies)
+        )
+    )
 
 
 def print_header(dependencies: Sequence = modules):
-    '''
+    """
     Versions that are essential for dandelion's operation.
-    '''
-    print(' '.join(
-        f'{mod}=={ver}'
-        for mod, ver in _versions_dependencies(dependencies)
-    ))
+    """
+    print(
+        " ".join(
+            f"{mod}=={ver}" for mod, ver in _versions_dependencies(dependencies)
+        )
+    )

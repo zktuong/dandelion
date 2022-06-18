@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-import sys
 import dandelion as ddl
 import pytest
 
-from fixtures_mouse import (annotation_10x_mouse, database_paths_mouse,
-                            dummy_adata_mouse)
-from fixtures import create_testfolder
 
-
-@pytest.mark.skipif(sys.platform == 'darwin', reason="macos CI stalls.")
+@pytest.mark.usefixtures(
+    "create_testfolder", "annotation_10x", "dummy_adata_mouse"
+)
 def test_setup(create_testfolder, annotation_10x_mouse, dummy_adata_mouse):
-    annot_file = str(
-        create_testfolder) + "/test_filtered_contig_annotations.csv"
+    annot_file = (
+        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
+    )
     annotation_10x_mouse.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     ddl.pp.filter_contigs(vdj)
@@ -24,24 +22,26 @@ def test_setup(create_testfolder, annotation_10x_mouse, dummy_adata_mouse):
     label = []
     for x in range(0, dummy_adata_mouse.n_obs):
         if x < 100:
-            label.append('A')
+            label.append("A")
         elif x < 200:
-            label.append('B')
+            label.append("B")
         elif x < 300:
-            label.append('C')
+            label.append("C")
         elif x < 400:
-            label.append('D')
+            label.append("D")
         elif x < 500:
-            label.append('E')
+            label.append("E")
         else:
-            label.append('F')
-    dummy_adata_mouse.obs['sample_idx'] = label
+            label.append("F")
+    dummy_adata_mouse.obs["sample_idx"] = label
     dummy_adata_mouse.write(str(create_testfolder) + "/test_adata.h5ad")
-    ddl.tl.clone_overlap(dummy_adata_mouse,
-                         groupby='sample_idx',
-                         colorby='sample_idx')
-    assert 'clone_overlap' in dummy_adata_mouse.uns
-    ddl.pl.clone_overlap(dummy_adata_mouse,
-                         groupby='sample_idx',
-                         colorby='sample_idx',
-                         show_plot=False)
+    ddl.tl.clone_overlap(
+        dummy_adata_mouse, groupby="sample_idx", colorby="sample_idx"
+    )
+    assert "clone_overlap" in dummy_adata_mouse.uns
+    ddl.pl.clone_overlap(
+        dummy_adata_mouse,
+        groupby="sample_idx",
+        colorby="sample_idx",
+        show_plot=False,
+    )
