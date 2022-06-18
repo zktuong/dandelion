@@ -111,5 +111,6 @@ def test_generate_network_sfdp(create_testfolder):
     vdj = ddl.read_h5(f)
     with pytest.raises(ValueError):
         ddl.tl.generate_network(vdj, compute_layout=False)
+    ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, layout_method="sfdp")
     assert vdj.layout is not None
