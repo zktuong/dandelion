@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2022-06-18 11:41:31
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 11:44:43
-
+# @Last Modified time: 2022-06-18 15:17:00
+"""conftest module."""
 from .fixtures.fixtures import (
     create_testfolder,
     database_paths,

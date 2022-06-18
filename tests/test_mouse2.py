@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""test mouse 2"""
 import pytest
 import dandelion as ddl
 

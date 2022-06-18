@@ -42434,6 +42434,7 @@ def annotation_10x_mouse():
 
 @pytest.fixture
 def balbc_ighg_primers():
+    """Primer sequences for mouse ighg"""
     primer_dict = {
         "IGHG2": {
             "IGHG2A": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGATACAACTGGC",

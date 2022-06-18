@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""test plotting"""
 import pytest
 import dandelion as ddl
 import scanpy as sc

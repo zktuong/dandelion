@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:38:34
+# @Last Modified time: 2022-06-18 15:20:15
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -809,6 +809,8 @@ class Dandelion:
 
 
 class Query:
+    """Query class"""
+
     def __init__(self, data, verbose=False):
         self.data = data.copy()
         self.Cell = Tree()

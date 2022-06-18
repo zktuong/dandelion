@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""test generate network"""
 import pandas as pd
 import dandelion as ddl
 import pytest

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:46:02
+# @Last Modified time: 2022-06-18 15:19:52
 """utilities module."""
 import numpy as np
 import os
@@ -276,6 +276,8 @@ def cmp_to_key(mycmp):
     """Convert a cmp= function into a key= function."""
 
     class K:
+        """Key class"""
+
         def __init__(self, obj, *args):
             self.obj = obj
 
@@ -593,6 +595,8 @@ class ContigDict(dict):
 
 
 class Contig:
+    """Class Object to hold contig."""
+
     def __init__(self, contig, mapper=None):
         if mapper is not None:
             mapper.update({k: k for k in contig.keys() if k not in mapper})
