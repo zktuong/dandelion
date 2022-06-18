@@ -4,7 +4,7 @@ import scanpy as sc
 import scipy.sparse
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def create_testfolder(tmp_path_factory):
     """Create test folder."""
     fn = tmp_path_factory.mktemp("testfolder")
