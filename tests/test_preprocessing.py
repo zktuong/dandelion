@@ -210,7 +210,7 @@ def test_update_germlines(create_testfolder, processed_files, database_paths):
     """test_update_germlines"""
     f = create_testfolder / str("dandelion/" + processed_files["filtered"])
     vdj = ddl.Dandelion(f)
-    vdj.update_germline(database_paths["germline"])
+    vdj.update_germline(germline=database_paths["germline"])
     assert len(vdj.germline) > 0
 
 
