@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:37:07
+# @Last Modified time: 2022-06-20 13:59:33
 """network module."""
 import networkx as nx
 import numpy as np
@@ -158,7 +158,10 @@ def generate_network(
                 if j == x:
                     membership[x][i].value = 1
     membership = {i: list(j) for i, j in dict(membership).items()}
-    df = pd.DataFrame(columns=dat_seq.index, index=dat_seq.index)
+    tmp_ = np.zeros((dat_seq.shape[0], dat_seq.shape[0]))
+    df = pd.DataFrame(tmp_)
+    df.index = dat_seq.index
+    df.columns = dat_seq.index
     dmat = Tree()
     for t in tqdm(
         membership, desc="Calculating distances... ", disable=disable
