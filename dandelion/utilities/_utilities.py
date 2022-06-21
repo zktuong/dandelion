@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-21 20:49:09
+# @Last Modified time: 2022-06-21 21:40:09
 """utilities module."""
 import numpy as np
 import os
@@ -567,9 +567,10 @@ def load_data(obj: Optional[Union[pd.DataFrame, str]]) -> pd.DataFrame:
 
         if "sequence_id" in obj_.columns:
             obj_.set_index("sequence_id", drop=False, inplace=True)
-            obj_["cell_id"] = [
-                c.split("_contig")[0] for c in obj_["sequence_id"]
-            ]
+            if "cell_id" not in obj_.columns:
+                obj_["cell_id"] = [
+                    c.split("_contig")[0] for c in obj_["sequence_id"]
+                ]
         else:
             raise KeyError("'sequence_id' not found in columns of input")
 
