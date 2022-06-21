@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-20 13:59:33
+# @Last Modified time: 2022-06-21 11:46:25
 """network module."""
 import networkx as nx
 import numpy as np
@@ -96,8 +96,6 @@ def generate_network(
             "Data does not contain clone information. Please run find_clones."
         )
 
-    dat = sanitize_data(dat, ignore=clonekey)
-
     # calculate distance
 
     if downsample is not None:
@@ -119,7 +117,7 @@ def generate_network(
             dat_ = dat_h.append(dat_l)
             dat_ = sanitize_data(dat_, ignore=clonekey)
     else:
-        dat_ = dat.copy()
+        dat_ = sanitize_data(dat, ignore=clonekey)
 
     querier = Query(dat_, verbose=verbose)
     dat_seq = querier.retrieve(query=key_, retrieve_mode="split")
@@ -128,35 +126,12 @@ def generate_network(
         query=clonekey, retrieve_mode="merge and unique only"
     )
 
-    clone_counts = dat_clone[clonekey].mask(lambda x: x.eq("")).value_counts()
-    clone_counts = clone_counts[
-        (clone_counts > 1)
-        | list(re.search("[|]", c) for c in clone_counts.index)
-    ]
-    clone_tree_dict = Tree()
-    for c in clone_counts.index:
-        if re.search("[|]", c):
-            sub = c.split("|")
-            for cc in sub:
-                for ccc in sub:
-                    clone_tree_dict[cc][ccc].value = 1
-                clone_tree_dict[cc][c].value = 1
-                clone_tree_dict[c][cc].value = 1
-        clone_tree_dict[c][c].value = 1
-    clone_tree_dict = {
-        k: "|".join(sorted(r)) for k, r in clone_tree_dict.items()
-    }
-    dat_clone["tmpcloneid"] = [
-        clone_tree_dict[x] if x in clone_tree_dict else None
-        for x in dat_clone[clonekey]
-    ]
-    clones = list(set(dat_clone.tmpcloneid))
+    dat_clone = dat_clone[clonekey].str.split("|", expand=True)
     membership = Tree()
-    for x in clones:
-        for i, j in dat_clone.tmpcloneid.iteritems():
-            if j is not None:
-                if j == x:
-                    membership[x][i].value = 1
+    for i, j in dat_clone.iterrows():
+        jjj = [jj for jj in j if present(jj)]
+        for ij in jjj:
+            membership[ij][i].value = 1
     membership = {i: list(j) for i, j in dict(membership).items()}
     tmp_ = np.zeros((dat_seq.shape[0], dat_seq.shape[0]))
     df = pd.DataFrame(tmp_)
