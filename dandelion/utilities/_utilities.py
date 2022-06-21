@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 15:19:52
+# @Last Modified time: 2022-06-21 20:49:09
 """utilities module."""
 import numpy as np
 import os
@@ -813,3 +813,11 @@ def format_productive(
     ]
     # result = [x if 'Multi' not in x else 'Multi' for x in result]
     return result
+
+
+def sum_col(vals):
+    """Sum columns if not NaN."""
+    if all(pd.isnull(vals)):
+        return np.nan
+    else:
+        return sum(vals)

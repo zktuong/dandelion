@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-21 11:46:25
+# @Last Modified time: 2022-06-21 20:49:58
 """network module."""
 import networkx as nx
 import numpy as np
@@ -163,6 +163,17 @@ def generate_network(
         for x in dmat:
             dmat[x] = pd.concat(dmat[x])
             dmat[x] = dmat[x].droplevel(level=0)
+            if any(dmat[x].index.duplicated()):
+                tmp_dmat = dmat[x].copy()
+                dup_indices = tmp_dmat.index[tmp_dmat.index.duplicated()]
+                tmp_dmatx = tmp_dmat.drop(dup_indices)
+                for di in list(set(dup_indices)):
+                    _tmpdmat = tmp_dmat.loc[di]
+                    _tmpdmat = _tmpdmat.apply(lambda r: sum_col(r), axis=0)
+                    tmp_dmatx = pd.concat(
+                        [tmp_dmatx, pd.DataFrame(_tmpdmat, columns=[di]).T]
+                    )
+                dmat[x] = tmp_dmatx.copy()
             dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
             dmat[x] = dmat[x].values
 
