@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 16:07:24
-
+# @Last Modified time: 2022-06-18 14:32:35
+"""gini module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency
 
@@ -17,7 +17,8 @@
 import numpy as np
 from ..utilities._utilities import _validate_counts_vector
 
-def gini_index(data, method='rectangles'):
+
+def gini_index(data, method="rectangles"):
     r"""Calculate the Gini index.
     The Gini index is defined as
     .. math::
@@ -94,15 +95,17 @@ def _lorenz_curve_integrator(lc_pts, method):
     # each point differs by 1/n
     dx = 1 / x.shape[0]
 
-    if method == 'trapezoids':
+    if method == "trapezoids":
         # 0 percent of the population has zero percent of the goods
         h_0 = 0.0
         h_n = y[-1]
         # the 0th entry is at x=1/n
         sum_hs = y[:-1].sum()
         return dx * ((h_0 + h_n) / 2 + sum_hs)
-    elif method == 'rectangles':
+    elif method == "rectangles":
         return dx * y.sum()
     else:
-        raise ValueError("Method '%s' not implemented. Available methods: "
-                         "'rectangles', 'trapezoids'." % method)
+        raise ValueError(
+            "Method '%s' not implemented. Available methods: "
+            "'rectangles', 'trapezoids'." % method
+        )

@@ -34,12 +34,11 @@ The raw files for the examples can be downloaded from 10X's Single Cell Immune P
 
 ### Singularity container
 
-`dandelion` now comes ready in the form of a singularity container:
+`dandelion` now comes ready in the form of a singularity container which has all the required dependencies installed:
 ```bash
 singularity pull library://kt16/default/sc-dandelion:latest
 singularity shell --writable-tmpfs -B $PWD sc-dandelion_latest.sif
 ```
-This will load up a conda-environment that has all the required dependencies installed.
 This can be used for the preprocessing steps by navigating to the data folder and use:
 ```bash
 singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess
@@ -63,6 +62,9 @@ conda activate dandelion
 conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg
 pip install scanpy
+
+# with version >=0.2.2, it is reccomended to install graph-tool to enable hyperfast layout calculations
+conda install -c conda-forge graph-tool
 
 # skip if doing pre-processing via container
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
@@ -140,6 +142,7 @@ pytables>=3.6.1 (conda-forge)
 seaborn>=0.10.1 (conda-forge)
 leidenalg>=0.8.0 (conda-forge)
 plotnine>=0.6.0 (conda-forge)
+graph-tool>=2.3.5 (conda-forge) # optional
 
 # Other executables (through conda)
 blast>=2.10.1 (bioconda)

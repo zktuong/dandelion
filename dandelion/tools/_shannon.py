@@ -2,8 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-05-18 16:14:13
-
+# @Last Modified time: 2022-06-18 14:32:52
+"""shannon module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency
 
@@ -16,6 +16,7 @@
 # ----------------------------------------------------------------------------
 import numpy as np
 from ..utilities._utilities import _validate_counts_vector
+
 
 def shannon(counts, base=2):
     r"""Calculate Shannon entropy of counts, default in bits.

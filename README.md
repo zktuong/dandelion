@@ -67,6 +67,9 @@ conda install seaborn scikit-learn statsmodels numba pytables
 conda install -c conda-forge python-igraph leidenalg
 pip install scanpy
 
+# with version >=0.3.0, it is reccomended to install graph-tool to enable hyperfast layout calculations
+conda install -c conda-forge graph-tool
+
 # skip if doing pre-processing via container
 conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
 
@@ -144,6 +147,7 @@ pytables>=3.6.1 (conda-forge)
 seaborn>=0.10.1 (conda-forge)
 leidenalg>=0.8.0 (conda-forge)
 plotnine>=0.6.0 (conda-forge)
+graph-tool>=2.3.5 (conda-forge) # optional
 
 # Other executables (through conda)
 blast>=2.10.1 (bioconda)

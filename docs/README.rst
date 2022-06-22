@@ -40,17 +40,15 @@ Installation
 Singularity container
 ~~~~~~~~~~~~~~~~~~~~~
 
-``dandelion`` now comes ready in the form of a singularity container:
+``dandelion`` now comes ready in the form of a singularity container which has all the required dependencies installed:
 
 .. code:: bash
 
     singularity pull library://kt16/default/sc-dandelion:latest
     singularity shell --writable-tmpfs -B $PWD sc-dandelion_latest.sif
 
-| This will load up a conda-environment that has all the required
-dependencies installed.
-| This can be used for the preprocessing steps by navigating to the data
-folder and use:
+
+This can be used for the preprocessing steps by navigating to the data folder and use:
 
 .. code:: bash
 
@@ -85,6 +83,9 @@ python/conda packages
     conda install -c conda-forge python-igraph leidenalg
     pip install scanpy
 
+    # with version >=0.3.0, it is reccomended to install graph-tool to enable hyperfast layout calculations
+   conda install -c conda-forge graph-tool
+   
     # skip if doing pre-processing via container
     conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
 
@@ -200,6 +201,7 @@ Python packages
     seaborn>=0.10.1 (conda-forge)
     leidenalg>=0.8.0 (conda-forge)
     plotnine>=0.6.0 (conda-forge)
+    graph-tool>=2.3.5 (conda-forge) # optional
 
     # Other executables (through conda)
     blast>=2.10.1 (bioconda)
@@ -216,7 +218,7 @@ Python packages
     rpy2>=3.4.2
 
     # optional
-    nxviz>=0.6.3
+    nxviz>=0.6.3 (pypi)
 
 R packages
 
