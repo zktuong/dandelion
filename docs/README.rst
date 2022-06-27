@@ -101,6 +101,10 @@ python/conda packages
     # or pip install git+https://github.com/zktuong/dandelion.git
     # for the development branch, run this: pip install git+https://github.com/zktuong/dandelion.git@devel
 
+    # to use ddl.pl.clone_overlap, please install nxviz:
+    pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
+    # separately until the PR is approved and merged.
+
 R packages
 ^^^^^^^^^^
 
