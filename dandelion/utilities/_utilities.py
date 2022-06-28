@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-21 21:40:09
+# @Last Modified time: 2022-06-28 21:17:00
 """utilities module."""
 import numpy as np
 import os
@@ -771,10 +771,14 @@ def format_locus(
     locus_1.update(multi_1)
     locus_2.update(multi_2)
     result = [
-        str(x) + " + " + str(y) if str(x) != str(y) else str(x) + "_only"
+        str(x) + " + " + str(y)
+        if ((str(x) != str(y)) & (str(x) != "None") & (str(y) != "None"))
+        else str(x) + "_only"
+        if ((x != "Multi") & (y != "Multi"))
+        else str(x) + " + " + str(y)
         for x, y in zip(locus_1.values(), locus_2.values())
     ]
-    result = [x if "Multi" not in x else "Multi" for x in result]
+    # result = [x if "Multi" not in x else "Multi" for x in result]
     return result
 
 

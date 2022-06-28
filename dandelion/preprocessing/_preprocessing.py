@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:31:22
+# @Last Modified time: 2022-06-28 19:09:10
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2232,7 +2232,8 @@ def filter_contigs(
     filter_poorqualitycontig: bool = False,
     keep_highest_umi: bool = True,
     umi_foldchange_cutoff: int = 2,
-    filter_vj_chains: bool = True,
+    filter_extra_vdj_chains: bool = True,
+    filter_extra_vj_chains: bool = False,
     filter_missing: bool = True,
     productive_only: bool = True,
     simple: bool = False,
@@ -2250,7 +2251,7 @@ def filter_contigs(
     > umi_foldchange_cutoff (default is empirically set at 2) will be retained. For productive heavy/long chains,
     if there are multiple contigs that survive the umi testing, then all contigs will be filtered. The default behaviour
     is to also filter cells with multiple light/short chains but this may sometimes be a true biological occurrence;
-    toggling filter_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no corresponding
+    toggling filter_extra_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no corresponding
     cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to
     False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
@@ -2274,8 +2275,11 @@ def filter_contigs(
     umi_foldchange_cutoff : int
         related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as
         doublets. Default is empirically set at 2-fold.
-    filter_vj_chains : bool
-        cells with multiple light chains will be marked to filter. Default is True.
+    filter_extra_vdj_chains : bool
+        cells with multiple heavy chains will be marked to filter. Default is True because of allelic exclusion.
+        Exception is with TRD chains where allelic inclusion has been reported.
+    filter_extra_vj_chains : bool
+        cells with multiple light chains will be marked to filter. Default is False because of allelic inclusion.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful
         for toggling to False if integrating with bulk data.
@@ -2346,6 +2350,8 @@ def filter_contigs(
             keep_highest_umi,
             umi_foldchange_cutoff,
             filter_poorqualitycontig,
+            filter_extra_vdj_chains,
+            filter_extra_vj_chains,
         )
     else:
         tofilter = FilterContigsLite(dat)
@@ -2380,16 +2386,18 @@ def filter_contigs(
     filter_ids = []
     if filter_contig:
         print("Finishing up filtering")
-        if not filter_vj_chains:
-            if filter_poorqualitycontig:
-                filter_ids = list(set(h_doublet + poor_qual))
-            else:
-                filter_ids = list(set(h_doublet))
+        if filter_poorqualitycontig:
+            filter_ids = poor_qual
         else:
-            if filter_poorqualitycontig:
-                filter_ids = list(set(h_doublet + l_doublet + poor_qual))
-            else:
-                filter_ids = list(set(h_doublet + l_doublet))
+            filter_ids = []
+
+        if filter_extra_vdj_chains:
+            filter_ids = filter_ids + h_doublet
+
+        if filter_extra_vj_chains:
+            filter_ids = filter_ids + l_doublet
+
+        filter_ids = list(set(filter_ids))
 
         filter_ids = filter_ids + list(
             adata_[adata_.obs["filter_rna"].isin(TRUES)].obs_names
@@ -3102,6 +3110,8 @@ class FilterContigs:
         keep_highest_umi,
         umi_foldchange_cutoff,
         filter_poorqualitycontig,
+        filter_extra_vdj_chains,
+        filter_extra_vj_chains,
     ):
         self.Cell = Tree()
         self.poor_qual = []
@@ -3149,6 +3159,7 @@ class FilterContigs:
                     int(x) for x in pd.to_numeric(data1["duplicate_count"])
                 ]
                 h_ccall_p = list(data1["c_call"])
+                h_locus_p = list(data1["locus"])
                 if len(h_p) > 1:
                     if "sequence_alignment" in data1:
                         h_seq_p = list(data1["sequence_alignment"])
@@ -3208,19 +3219,203 @@ class FilterContigs:
                             + h_umi_p[keep_index_h:]
                         ]
                         sum_umi = sum(h_umi_p)
-                        if "IGHM" and "IGHD" in h_ccall_p:
-                            if all(
-                                cc_ == "IGHM" or cc_ == "IGHD"
-                                for cc_ in h_ccall_p
-                            ):
-                                pass
+                        if "IGHD" in h_ccall_p:
+                            if all(x in ["IGHM", "IGHD"] for x in h_ccall_p):
+                                if len(list(set(h_ccall_p))) == 2:
+                                    h_ccall_p_igm_count = dict(
+                                        data1[data1["c_call"] == "IGHM"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+                                    h_ccall_p_igd_count = dict(
+                                        data1[data1["c_call"] == "IGHD"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+
+                                if len(h_ccall_p_igm_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_igm_count = max(
+                                            h_ccall_p_igm_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_ccall_p_igm_count.items()
+                                            if v == max_igm_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_ccall_p_igm_count.items()
+                                                if v < max_igm_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                                if len(h_ccall_p_igd_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_igd_count = max(
+                                            h_ccall_p_igd_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_ccall_p_igd_count.items()
+                                            if v == max_igd_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_ccall_p_igd_count.items()
+                                                if v < max_igd_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                            else:
+                                if len(highest_umi_idx) > 1:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if sum_umi < 4:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if any(umi_test):
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if len(highest_umi_idx) == 1:
+                                    other_umi_idx = [
+                                        i
+                                        for i, j in enumerate(h_umi_p)
+                                        if j != highest_umi_h
+                                    ]
+                                    umi_test_ = [
+                                        highest_umi_h / x
+                                        >= umi_foldchange_cutoff
+                                        for x in h_umi_p[:keep_index_h]
+                                        + h_umi_p[keep_index_h:]
+                                    ]
+                                    umi_test_dict = dict(
+                                        zip(other_umi_idx, umi_test_)
+                                    )
+                                    for otherindex in umi_test_dict:
+                                        if umi_test_dict[otherindex]:
+                                            if keep_highest_umi:
+                                                self.drop_contig.append(
+                                                    h_p[otherindex]
+                                                )
+                                    # refresh
+                                    data1 = pd.DataFrame(
+                                        [data1.loc[keep_hc_contig]]
+                                    )
+                                    h_p = list(data1["sequence_id"])
+                        elif all(x in ["TRB", "TRD"] for x in h_locus_p):
+                            if len(list(set(h_locus_p))) == 2:
+                                h_locus_p_trb_count = dict(
+                                    data1[data1["locus"] == "TRB"][
+                                        "duplicate_count"
+                                    ]
+                                )
+                                h_locus_p_trd_count = dict(
+                                    data1[data1["locus"] == "TRD"][
+                                        "duplicate_count"
+                                    ]
+                                )
+
+                                if len(h_locus_p_trb_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_trb_count = max(
+                                            h_locus_p_trb_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_locus_p_trb_count.items()
+                                            if v == max_trb_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_locus_p_trb_count.items()
+                                                if v < max_trb_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                                if len(h_locus_p_trd_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_trd_count = max(
+                                            h_locus_p_trd_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_locus_p_trd_count.items()
+                                            if v == max_trd_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_locus_p_trd_count.items()
+                                                if v < max_trd_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                            else:
+                                if len(highest_umi_idx) > 1:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if sum_umi < 4:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if any(umi_test):
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if len(highest_umi_idx) == 1:
+                                    other_umi_idx = [
+                                        i
+                                        for i, j in enumerate(h_umi_p)
+                                        if j != highest_umi_h
+                                    ]
+                                    umi_test_ = [
+                                        highest_umi_h / x
+                                        >= umi_foldchange_cutoff
+                                        for x in h_umi_p[:keep_index_h]
+                                        + h_umi_p[keep_index_h:]
+                                    ]
+                                    umi_test_dict = dict(
+                                        zip(other_umi_idx, umi_test_)
+                                    )
+                                    for otherindex in umi_test_dict:
+                                        if umi_test_dict[otherindex]:
+                                            if keep_highest_umi:
+                                                self.drop_contig.append(
+                                                    h_p[otherindex]
+                                                )
+                                    # refresh
+                                    data1 = pd.DataFrame(
+                                        [data1.loc[keep_hc_contig]]
+                                    )
+                                    h_p = list(data1["sequence_id"])
                         else:
                             if len(highest_umi_idx) > 1:
-                                self.h_doublet.append(cell)
+                                if filter_extra_vdj_chains:
+                                    self.h_doublet.append(cell)
                             if sum_umi < 4:
-                                self.h_doublet.append(cell)
+                                if filter_extra_vdj_chains:
+                                    self.h_doublet.append(cell)
                             if any(umi_test):
-                                self.h_doublet.append(cell)
+                                if filter_extra_vdj_chains:
+                                    self.h_doublet.append(cell)
                             if len(highest_umi_idx) == 1:
                                 other_umi_idx = [
                                     i
@@ -3241,7 +3436,7 @@ class FilterContigs:
                                             self.drop_contig.append(
                                                 h_p[otherindex]
                                             )
-                                            # refresh
+                                # refresh
                                 data1 = pd.DataFrame(
                                     [data1.loc[keep_hc_contig]]
                                 )
@@ -3363,11 +3558,14 @@ class FilterContigs:
                         ]
                         sum_umi = sum(l_umi_p)
                         if len(highest_umi_l_idx) > 1:
-                            self.l_doublet.append(cell)
+                            if filter_extra_vj_chains:
+                                self.l_doublet.append(cell)
                         if sum_umi < 4:
-                            self.l_doublet.append(cell)
+                            if filter_extra_vj_chains:
+                                self.l_doublet.append(cell)
                         if any(umi_test):
-                            self.l_doublet.append(cell)
+                            if filter_extra_vj_chains:
+                                self.l_doublet.append(cell)
                         if len(highest_umi_l_idx) == 1:
                             other_umi_idx_l = [
                                 i
@@ -3623,17 +3821,17 @@ class FilterContigs:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(cell)
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(cell)
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(cell)
                             self.drop_contig.append(lx)
@@ -3649,9 +3847,11 @@ class FilterContigs:
                                     self.poor_qual.append(cell)
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                if filter_poorqualitycontig:
-                                    self.poor_qual.append(cell)
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        if filter_poorqualitycontig:
+                                            self.poor_qual.append(cell)
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 if filter_poorqualitycontig:
                                     self.poor_qual.append(cell)
@@ -3667,13 +3867,13 @@ class FilterContigs:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             self.drop_contig.append(lx)
 
                     if present(j):
@@ -3683,7 +3883,9 @@ class FilterContigs:
                             elif not_same_call(v, j, "IGL"):
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 self.drop_contig.append(lx)
                     else:
@@ -3967,13 +4169,13 @@ class FilterContigsLite:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             self.drop_contig.append(lx)
 
                     if present(j):
@@ -3983,7 +4185,9 @@ class FilterContigsLite:
                             elif not_same_call(v, j, "IGL"):
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 self.drop_contig.append(lx)
                     else:
@@ -3995,13 +4199,13 @@ class FilterContigsLite:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             self.drop_contig.append(lx)
 
                     if present(j):
@@ -4011,7 +4215,9 @@ class FilterContigsLite:
                             elif not_same_call(v, j, "IGL"):
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 self.drop_contig.append(lx)
                     else:

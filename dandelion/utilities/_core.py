@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 15:20:15
+# @Last Modified time: 2022-06-28 19:00:07
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -441,14 +441,14 @@ class Dandelion:
                 update_metadata(
                     self,
                     retrieve=seqinfo,
-                    retrieve_mode="split and unique only",
+                    retrieve_mode="split and merge",
                 )
         if option == "sequence":
             if len(seqinfo) > 0:
                 update_metadata(
                     self,
                     retrieve=seqinfo,
-                    retrieve_mode="split and unique only",
+                    retrieve_mode="split and merge",
                 )
         if option == "mutations":
             if len(mutations) > 0:
@@ -863,6 +863,23 @@ class Query:
                             )
                         }
                     )
+            elif retrieve_mode == "split and merge":
+                if len(vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_VDJ": "|".join(
+                                str(x) for x in vdj if present(x)
+                            )
+                        }
+                    )
+                if len(vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_VJ": "|".join(str(x) for x in vj if present(x))
+                        }
+                    )
             elif retrieve_mode == "merge and unique only":
                 cols.update(
                     {
@@ -969,7 +986,7 @@ def initialize_metadata(
             {
                 col: {
                     "query": col,
-                    "retrieve_mode": "split and unique only",
+                    "retrieve_mode": "split and merge",
                 }
             }
         )
@@ -1165,33 +1182,25 @@ def initialize_metadata(
     if "c_call" + suffix_h in tmp_metadata:
         for k in tmp_metadata["c_call" + suffix_h]:
             if isinstance(k, str):
-                if "," in k:
-                    k = "|".join(k.split(","))
-                if "|" in k:
-                    isotype.append(
-                        "|".join(
-                            [
-                                str(z)
-                                for z in [
-                                    conversion_dict[y.lower()]
-                                    for y in set(
-                                        [
-                                            re.sub("[0-9]", "", x)
-                                            for x in k.split("|")
-                                        ]
-                                    )
+                isotype.append(
+                    "|".join(
+                        [
+                            str(z)
+                            for z in [
+                                conversion_dict[y.split(",")[0].lower()]
+                                for y in [
+                                    re.sub("[0-9]", "", x) for x in k.split("|")
                                 ]
                             ]
-                        )
+                        ]
                     )
-                else:
-                    isotype.append(conversion_dict[k.lower()])
+                )
             else:
                 isotype.append("None")
         tmp_metadata["isotype"] = isotype
         tmp_metadata["isotype_status"] = [
-            i
-            if i == "IgM|IgD" or i == "IgD|IgM"
+            "IgM/IgD"
+            if (i == "IgM|IgD") or (i == "IgD|IgM")
             else "Multi"
             if "|" in i
             else i
@@ -1201,6 +1210,7 @@ def initialize_metadata(
     vdj_gene_calls = ["v_call", "d_call", "j_call"]
     if collapse_alleles:
         for x in vdj_gene_calls:
+
             if x in self.data:
                 for c in tmp_metadata:
                     if x in c:
@@ -1209,12 +1219,10 @@ def initialize_metadata(
                                 [
                                     ",".join(list(set(yy.split(","))))
                                     for yy in list(
-                                        set(
-                                            [
-                                                re.sub("[*][0-9][0-9]", "", tx)
-                                                for tx in t.split("|")
-                                            ]
-                                        )
+                                        [
+                                            re.sub("[*][0-9][0-9]", "", tx)
+                                            for tx in t.split("|")
+                                        ]
                                     )
                                 ]
                             )
@@ -1276,13 +1284,14 @@ def update_metadata(
     retrieve_mode: Literal[
         "split and unique only",
         "merge and unique only",
+        "split and merge",
         "split and sum",
         "split and average",
         "split",
         "merge",
         "sum",
         "average",
-    ] = "split and unique only",
+    ] = "split and merge",
     collapse_alleles: bool = True,
     reinitialize: bool = False,
     verbose: bool = False,
@@ -1299,9 +1308,10 @@ def update_metadata(
     clone_key : str, Optional
         Column name of clone id. None defaults to 'clone_id'.
     retrieve_mode: str
-        One of ['split and unique only', 'merge and unique only', 'split and sum', 'split and average', 'split', 'merge', 'sum', 'average'].
+        One of ['split and unique only', 'merge and unique only', 'split and merge'. 'split and sum', 'split and average', 'split', 'merge', 'sum', 'average'].
         `split and unique only` returns the retrieval splitted into two columns, i.e. one for VDJ and one for VJ chains, separated by '|' for unique elements.
         `merge and unique only` returns the retrieval merged into one column, separated by '|' for unique elements.
+        `split and merge` returns the retrieval splitted into two columns, i.e. one for VDJ and one for VJ chains, separated by '|' for every elements.
         `split` returns the retrieval splitted into separate columns for each contig.
         `merge` returns the retrieval merged into one columns for each contig, separated by '|' for unique elements.
         'split and sum' returns the retrieval sumed in the VDJ and VJ columns (separately).

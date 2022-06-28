@@ -341,6 +341,10 @@ References
    *nxviz: Composable and rational network visualizations in matplotlib*,
    `Github <https://github.com/ericmjl/nxviz>`__.
 
+.. [Sleckman1998] Sleckman *et al.* (1998)
+   *Assembly of productive T cell receptor delta variable region genes exhibits allelic inclusion*,
+   `Journal of Experimental Medicine <https://rupress.org/jem/article-lookup/doi/10.1084/jem.188.8.1465>`__.
+
 .. [Stephenson2021] Stephenson *et al.* (2021),
    *Single-cell multi-omics analysis of the immune response in COVID-19*,
    `Nature Medicine <https://www.nature.com/articles/s41591-021-01329-2>`__.
