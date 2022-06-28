@@ -253,10 +253,10 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     vdj, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 14
+    assert vdj.data.shape[0] == 17
     assert vdj.data.shape[1] == 50
-    assert vdj.metadata.shape[0] == 7
-    assert vdj.metadata.shape[1] == 29
+    assert vdj.metadata.shape[0] == 8
+    assert vdj.metadata.shape[1] == 30
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")
     ddl.tl.transfer(adata, vdj)
