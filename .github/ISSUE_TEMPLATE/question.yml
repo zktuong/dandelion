@@ -1,8 +1,6 @@
 name: Question
-about: Ask a question about the package. IF IT IS NOT A BUG, PLEASE POST THIS IN THE DISCUSSIONS (or I will convert it for you).
-title: "[QUESTION]"
+description: Ask a question about the package. IF IT IS NOT A BUG, PLEASE POST THIS IN THE DISCUSSIONS (or I will convert it for you).
 labels: question
-assignees: ''
 body:
   - type: markdown
     attributes:
@@ -49,19 +47,19 @@ body:
     id: os
     attributes:
       label: OS information
-      description: |
+      placeholder: |
         e.g. MacOS
 
   - type: textarea
     id: versions
     attributes:
       label: Version information
-      description: |
+      placeholder: |
         Please paste the output of `dandelion.logging.print_header()` here.
   
   - type: textarea
     id: context
     attributes:
       label: Additional context
-      description: |
+      placeholder: |
         Add any other context about the problem here.
