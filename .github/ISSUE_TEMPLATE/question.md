@@ -1,10 +1,69 @@
 ---
 name: Question
-about: Ask a question about the package. IF IT IS NOT A BUG, PLEASE POST THIS IN THE DISCUSSIONS.
+about: Ask a question about the package. IF IT IS NOT A BUG, PLEASE POST THIS IN THE DISCUSSIONS (or I will convert it for you).
 title: "[QUESTION]"
 labels: question
 assignees: ''
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Note**: If it is not a bug, please post directly to the [discussions](https://github.com/zktuong/dandelion/discussions), or convert this post after you have made it.
 
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the question
+      description: A clear and concise description of what the main question is.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: repex
+    attributes:
+      label: Minimal example
+      description: A code snippet that you have tried and have questions about
+      render: python
+      placeholder: |
+        import dandelion as ddl
+        vdj = ddl.Dandelion(airr_dataframe)
+
+        ddl.do_something_that_you_are_wondering_about(vdj)
+
+  - type: textarea
+    id: stacktrace
+    attributes:
+      label: Any error message produced by the code above
+      description: Please paste the entire error message if any
+      render: pytb
+      placeholder: |
+        ---------------------------------------------------------------------------
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "/Users/kt16/Documents/Github/dandelion/dandelion/utilities/_core.py", line 49, in __init__
+            self.data = load_data(data)
+          File "/Users/kt16/Documents/Github/dandelion/dandelion/utilities/_utilities.py", line 564, in load_data
+            raise FileNotFoundError(
+        FileNotFoundError: Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist.
+   
+  - type: textarea
+    id: os
+    attributes:
+      label: OS information
+      description: |
+        e.g. MacOS
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Version information
+      description: |
+        Please paste the output of `dandelion.logging.print_header()` here.
+  
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: |
+        Add any other context about the problem here.
 ---
-
-If it is not a bug, please post this in the [discussions](https://github.com/zktuong/dandelion/discussions).

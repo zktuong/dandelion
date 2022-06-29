@@ -3,29 +3,62 @@ name: Bug report
 about: Create a report to help us improve
 title: "[BUG]"
 labels: bug
-assignees: ''
+assignees: zktuong
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: repex
+    attributes:
+      label: Minimal reproducible example
+      description: A code snipped that we can copy&paste to reproduce the bug without having any data
+      render: python
+      placeholder: |
+        import dandelion as ddl
+        vdj = ddl.Dandelion(airr_dataframe)
 
+        ddl.do_something_that_doesnt_work(vdj)
+
+  - type: textarea
+    id: stacktrace
+    attributes:
+      label: The error message produced by the code above
+      description: Please paste the entire error message
+      render: pytb
+      placeholder: |
+        ---------------------------------------------------------------------------
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "/Users/kt16/Documents/Github/dandelion/dandelion/utilities/_core.py", line 49, in __init__
+            self.data = load_data(data)
+          File "/Users/kt16/Documents/Github/dandelion/dandelion/utilities/_utilities.py", line 564, in load_data
+            raise FileNotFoundError(
+        FileNotFoundError: Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist.
+   
+  - type: textarea
+    id: os
+    attributes:
+      label: OS information
+      description: |
+        e.g. MacOS
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Version information
+      description: |
+        Please paste the output of `dandelion.logging.print_header()` here.
+  
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: |
+        Add any other context about the problem here.
 ---
-
-**Describe the bug**
-A clear and concise description of what the bug is.
-
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Desktop (please complete the following information):**
- - OS: [e.g. MacOS]
- - dandelion Version [e.g. 0.1.10. use `ddl.logging.print_header`]
-
-**Additional context**
-Add any other context about the problem here.
