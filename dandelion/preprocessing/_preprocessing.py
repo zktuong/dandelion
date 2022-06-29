@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-28 19:09:10
+# @Last Modified time: 2022-06-29 14:43:39
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -3126,6 +3126,7 @@ class FilterContigs:
         d_dict = dict(zip(data["sequence_id"], data["d_call"]))
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
+        l_dict = dict(zip(data["sequence_id"], data["locus"]))
         for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
             cell = row["cell_id"]
             if row["locus"] in HEAVYLONG:
@@ -3639,7 +3640,40 @@ class FilterContigs:
 
             # marking doublets defined by VJ chains
             if (len(h_p) == 1) & (len(l_p) > 1):
-                self.l_doublet.append(cell)
+                if filter_extra_vj_chains:
+                    self.l_doublet.append(cell)
+
+            # ok check here for bad combinations
+            if len(h_p) > 0:
+                loci_h = [l_dict[hx] for hx in h_p]
+            else:
+                loci_h = []
+            if len(l_p) > 0:
+                loci_l = [l_dict[lx] for lx in l_p]
+            else:
+                loci_l = []
+
+            loci_ = list(set(loci_h + loci_l))
+            if len(loci_) > 0:
+                if all(lc in ["IGK", "IGL", "TRG", "TRA"] for lc in loci_):
+                    if len(loci_) >= 2:
+                        self.drop_contig.append(l_p)
+                elif all(lc in ["TRA", "TRD"] for lc in loci_):
+                    if len(loci_) == 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                elif all(lc in ["TRB", "TRG"] for lc in loci_):
+                    if len(loci_) == 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                elif all(lc in ["TRB", "IGK", "IGL"] for lc in loci_):
+                    if len(loci_) >= 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                elif all(lc in ["IGH", "TRA", "TRG"] for lc in loci_):
+                    if len(loci_) >= 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
 
             # marking poor bcr quality, defined as those with only VJ chains, those
             # that were have conflicting assignment of locus and V(D)J v-, d-, j- and c- calls,

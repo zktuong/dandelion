@@ -82,32 +82,32 @@ def test_filtercontigs_no_adata(create_testfolder):
 def test_generic(airr_generic):
     """test data loading and filtering"""
     tmp = ddl.Dandelion(airr_generic)
-    assert tmp.metadata.shape[0] == 21
+    assert tmp.metadata.shape[0] == 27
     assert tmp.data.shape[0] == airr_generic.shape[0]
 
     tmp2 = ddl.pp.filter_contigs(tmp)
-    assert tmp2.metadata.shape[0] == 12
+    assert tmp2.metadata.shape[0] == 11
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 29
+    assert tmp2.data.shape[0] == 26
 
     tmp2 = ddl.pp.filter_contigs(tmp, filter_extra_vj_chains=True)
-    assert tmp2.metadata.shape[0] == 10
+    assert tmp2.metadata.shape[0] == 9
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 22
+    assert tmp2.data.shape[0] == 19
 
     tmp2 = ddl.pp.filter_contigs(
         tmp, filter_extra_vdj_chains=False, filter_extra_vj_chains=True
     )
-    assert tmp2.metadata.shape[0] == 13
+    assert tmp2.metadata.shape[0] == 12
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 32
+    assert tmp2.data.shape[0] == 29
 
     tmp2 = ddl.pp.filter_contigs(
         tmp, filter_extra_vdj_chains=False, filter_extra_vj_chains=False
     )
-    assert tmp2.metadata.shape[0] == 15
+    assert tmp2.metadata.shape[0] == 14
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 39
+    assert tmp2.data.shape[0] == 36
 
     tmp2 = ddl.pp.filter_contigs(
         tmp,
@@ -115,11 +115,11 @@ def test_generic(airr_generic):
         filter_extra_vj_chains=False,
         productive_only=False,
     )
-    assert tmp2.metadata.shape[0] == 15
+    assert tmp2.metadata.shape[0] == 14
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 42
+    assert tmp2.data.shape[0] == 40
 
     tmp2 = ddl.pp.filter_contigs(tmp, productive_only=False)
-    assert tmp2.metadata.shape[0] == 12
+    assert tmp2.metadata.shape[0] == 11
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 32
+    assert tmp2.data.shape[0] == 30
