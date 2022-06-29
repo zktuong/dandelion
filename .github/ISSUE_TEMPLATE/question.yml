@@ -54,8 +54,11 @@ body:
     id: versions
     attributes:
       label: Version information
+      description: |
+        Please paste the output of `dandelion.logging.print_header()` and `scanpy.logging.print_header()` here.
       placeholder: |
-        Please paste the output of `dandelion.logging.print_header()` here.
+        dandelion==0.2.4 pandas==1.4.2 numpy==1.21.6 matplotlib==3.5.2 networkx==2.8.4 scipy==1.8.1
+        scanpy==1.9.1 anndata==0.8.0 umap==0.5.3 numpy==1.21.6 scipy==1.8.1 pandas==1.4.2 scikit-learn==1.1.1 statsmodels==0.13.2 python-igraph==0.9.11 pynndescent==0.5.7
   
   - type: textarea
     id: context
