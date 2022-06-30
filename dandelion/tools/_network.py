@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-21 20:49:58
+# @Last Modified time: 2022-06-30 09:10:40
 """network module."""
 import networkx as nx
 import numpy as np
@@ -74,7 +74,7 @@ def generate_network(
     else:
         disable = True
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat = load_data(self.data)
     else:
         dat = load_data(self)
@@ -187,7 +187,7 @@ def generate_network(
         del dist_mat_list
 
         # generate edge list
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             out = self.copy()
             if downsample is not None:
                 out = Dandelion(dat_)
@@ -403,7 +403,7 @@ def generate_network(
                 "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
             ),
         )
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.germline is not None:
             germline_ = self.germline
         else:
@@ -516,7 +516,7 @@ def clone_degree(
     """
     if verbose:
         start = logg.info("Calculating node degree")
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.graph is None:
             raise AttributeError(
                 "Graph not found. Plase run tl.generate_network."
@@ -553,7 +553,7 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
     """
     if verbose:
         start = logg.info("Calculating node closeness centrality")
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.graph is None:
             raise AttributeError(
                 "Graph not found. Plase run tl.generate_network."
