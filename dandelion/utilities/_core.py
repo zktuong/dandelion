@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-28 19:00:07
+# @Last Modified time: 2022-06-30 09:03:54
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -21,7 +21,7 @@ from collections import defaultdict
 from pathlib import Path
 from scanpy import logging as logg
 from tqdm import tqdm
-from typing import Union, Sequence, Dict, Optional
+from typing import Union, Sequence, Dict, Optional, Tuple
 
 from ..utilities._io import *
 from ..utilities._utilities import *
@@ -37,16 +37,17 @@ class Dandelion:
 
     def __init__(
         self,
-        data=None,
-        metadata=None,
-        germline=None,
-        edges=None,
-        layout=None,
-        graph=None,
-        initialize=True,
+        data: Optional[pd.DataFrame] = None,
+        metadata: Optional[pd.DataFrame] = None,
+        germline: Optional[Dict] = None,
+        edges: Optional[pd.DataFrame] = None,
+        layout: Optional[pd.DataFrame] = None,
+        graph: Optional[Tuple[NetworkxGraph, NetworkxGraph]] = None,
+        initialize: bool = True,
+        library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
         **kwargs,
     ):
-        self.data = load_data(data)
+        self.data = data
         self.metadata = metadata
         self.edges = edges
         self.layout = layout
@@ -58,10 +59,16 @@ class Dandelion:
         if germline is not None:
             self.germline.update(germline)
 
-        if os.path.isfile(str(self.data)):
-            self.data = load_data(self.data)
-
         if self.data is not None:
+            if library_type is not None:
+                acceptable = lib_type(library_type)
+            else:
+                acceptable = None
+
+            self.data = load_data(self.data)
+            if acceptable is not None:
+                self.data = self.data[self.data.locus.isin(acceptable)].copy()
+
             try:
                 self.data = check_travdv(self.data)
             except:
@@ -476,6 +483,11 @@ class Dandelion:
                     self, retrieve=vdjlengths, retrieve_mode="split and average"
                 )
 
+    @deprecated(
+        deprecated_in="0.2.4",
+        removed_in="0.4.0",
+        details="The name is misleading. Going forward, it will be renamed as store_germline_reference",
+    )
     def update_germline(
         self,
         corrected: Optional[Union[Dict, str]] = None,
@@ -600,6 +612,8 @@ class Dandelion:
                 "   'germline', updated germline reference\n"
             ),
         )
+
+    store_germline_reference = update_germline
 
     def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
         """
