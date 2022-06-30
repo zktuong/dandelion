@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 15:05:57
+# @Last Modified time: 2022-06-30 09:06:14
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -69,9 +69,9 @@ def clone_rarefaction(
     -------
     rarefaction curve plot.
     """
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         metadata = self.obs.copy()
-    elif self.__class__ == Dandelion:
+    elif isinstance(self, Dandelion):
         metadata = self.metadata.copy()
     if clone_key is None:
         clonekey = "clone_id"
@@ -132,7 +132,7 @@ def clone_rarefaction(
 
     options.figure_size = figsize
     if palette is None:
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             try:
                 pal = self.uns[str(color) + "_colors"]
             except:
@@ -302,9 +302,9 @@ def barplot(
     -------
     a seaborn barplot.
     """
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         data = self.metadata.copy()
-    elif self.__class__ == AnnData:
+    elif isinstance(self, AnnData):
         data = self.obs.copy()
 
     if min_clone_size is None:
@@ -403,9 +403,9 @@ def stackedbarplot(
     -------
     stacked bar plot.
     """
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         data = self.metadata.copy()
-    elif self.__class__ == AnnData:
+    elif isinstance(self, AnnData):
         data = self.obs.copy()
     # quick fix to prevent dropping of nan
     data[groupby] = [str(l) for l in data[groupby]]
@@ -606,7 +606,7 @@ def spectratype(
     -------
     spectratype plot
     """
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         data = self.data.copy()
     else:
         try:
@@ -614,7 +614,7 @@ def spectratype(
         except:
             AttributeError(
                 "Please provide a <class 'Dandelion'> class object or a pandas dataframe instead of %s."
-                % self.__class__
+                % type(self)
             )
 
     if "locus" not in data.columns:
@@ -827,7 +827,7 @@ def clone_overlap(
     else:
         clone_ = clone_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         data = self.obs.copy()
         # get rid of problematic rows that appear because of category conversion?
         if "clone_overlap" in self.uns:
@@ -888,7 +888,7 @@ def clone_overlap(
 
             overlap.index.name = None
             overlap.columns.name = None
-    elif self.__class__ == Dandelion:
+    elif isinstance(self, Dandelion):
         data = self.metadata.copy()
         allgroups = list(data[groupby].unique())
         # get rid of problematic rows that appear because of category conversion?
@@ -1011,7 +1011,7 @@ def clone_overlap(
         weighted_attr = "weight"
 
     if color_mapping is None:
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             if str(colorby) + "_colors" in self.uns:
                 if pd.api.types.is_categorical_dtype(self.obs[groupby]):
                     colorby_dict = dict(
