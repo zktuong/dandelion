@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:10:40
+# @Last Modified time: 2022-06-30 09:42:07
 """network module."""
 import networkx as nx
 import numpy as np
@@ -139,7 +139,10 @@ def generate_network(
     df.columns = dat_seq.index
     dmat = Tree()
     for t in tqdm(
-        membership, desc="Calculating distances... ", disable=disable
+        membership,
+        desc="Calculating distances... ",
+        disable=disable,
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
         tmp = dat_seq.loc[membership[t]]
         if tmp.shape[0] > 1:
@@ -238,7 +241,12 @@ def generate_network(
         sleep(0.5)
 
         edge_list = Tree()
-        for c in tqdm(mst_tree, desc="Generating edge list ", disable=disable):
+        for c in tqdm(
+            mst_tree,
+            desc="Generating edge list ",
+            disable=disable,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
             G = nx.from_pandas_adjacency(mst_tree[c])
             edge_list[c] = nx.to_pandas_edgelist(G)
 
@@ -259,7 +267,10 @@ def generate_network(
         tmp_clone_tree3 = Tree()
         tmp_clone_tree3_overlap = Tree()
         for x in tqdm(
-            tmp_clone_tree2, desc="Computing overlap ", disable=disable
+            tmp_clone_tree2,
+            desc="Computing overlap ",
+            disable=disable,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
             # this is to catch all possible cells that may potentially match up with this clone that's joined together
             if x in list(flatten(overlap)):
@@ -324,7 +335,12 @@ def generate_network(
         )
 
         tmp_edge_list = Tree()
-        for c in tqdm(tmp_clone_tree3, desc="Linking edges ", disable=disable):
+        for c in tqdm(
+            tmp_clone_tree3,
+            desc="Linking edges ",
+            disable=disable,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
             if len(tmp_clone_tree3[c]) > 1:
                 G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
                 tmp_edge_list[c] = nx.to_pandas_edgelist(G)

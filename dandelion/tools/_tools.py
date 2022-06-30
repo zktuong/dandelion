@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:11:01
+# @Last Modified time: 2022-06-30 09:43:07
 """tools module."""
 import math
 import networkx as nx
@@ -182,7 +182,11 @@ def find_clones(
                         vj_len_grp[g][s][c] = seq[c]
     clones = Tree()
     # for each seq group, calculate the hamming distance matrix
-    for g in tqdm(seq_grp, desc="Finding clones based on VDJ chains "):
+    for g in tqdm(
+        seq_grp,
+        desc="Finding clones based on VDJ chains ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         for l in seq_grp[g]:
             seq_ = list(seq_grp[g][l])
             tdarray = np.array(seq_).reshape(-1, 1)
@@ -476,6 +480,7 @@ def find_clones(
         for c in tqdm(
             cellclonetree,
             desc="Refining clone assignment based on VJ chain pairing ",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
             suffix = [
                 renamed_clone_dict_light[x]

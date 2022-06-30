@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:06:14
+# @Last Modified time: 2022-06-30 09:43:31
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -105,7 +105,11 @@ def clone_rarefaction(
 
     # append the results to a dictionary
     rarecurve = {}
-    for i in tqdm(range(0, nr), desc="Calculating rarefaction curve "):
+    for i in tqdm(
+        range(0, nr),
+        desc="Calculating rarefaction curve ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         n = np.arange(1, tot[i], step=10)
         if n[-1:] != tot[i]:
             n = np.append(n, tot[i])

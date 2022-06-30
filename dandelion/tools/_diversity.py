@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:10:25
+# @Last Modified time: 2022-06-30 09:42:55
 """diversity module."""
 
 import numpy as np
@@ -90,7 +90,11 @@ def clone_rarefaction(
     # append the results to a dictionary
     rarecurve = {}
     sleep(0.5)
-    for i in tqdm(range(0, nr), desc="Calculating rarefaction curve "):
+    for i in tqdm(
+        range(0, nr),
+        desc="Calculating rarefaction curve ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         n = np.arange(1, tot[i], step=10)
         if n[-1:] != tot[i]:
             n = np.append(n, tot[i])
@@ -323,6 +327,7 @@ def clone_networkstats(
                 nx.connected_components(G),
                 desc="Reducing graph ",
                 disable=disable,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             ):
                 nodes = sorted(list(subg))
                 # just assign the value in a single cell, because this will be representative of the clone
@@ -546,7 +551,10 @@ def diversity_gini(
                 sizelist = []
                 if isinstance(self, Dandelion):
                     graphlist = []
-                for i in tqdm(range(0, n_resample)):
+                for i in tqdm(
+                    range(0, n_resample),
+                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                ):
                     if isinstance(self, Dandelion):
                         resampled = generate_network(
                             ddl_dat,
@@ -947,7 +955,10 @@ def diversity_chao1(
             if resample:
                 sizelist = []
                 graphlist = []
-                for i in tqdm(range(0, n_resample)):
+                for i in tqdm(
+                    range(0, n_resample),
+                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                ):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
                     if "nan" in _tab.index or np.nan in _tab.index:
@@ -1169,7 +1180,10 @@ def diversity_shannon(
                 sizelist = []
                 graphlist = []
 
-                for i in tqdm(range(0, n_resample)):
+                for i in tqdm(
+                    range(0, n_resample),
+                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                ):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
                     if "nan" in _tab.index or np.nan in _tab.index:

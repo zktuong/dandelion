@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:03:54
+# @Last Modified time: 2022-06-30 09:50:56
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -833,7 +833,9 @@ class Query:
         else:
             disable = True
         for contig, row in tqdm(
-            data.iterrows(), desc="Setting up data", disable=disable
+            data.iterrows(),
+            desc="Setting up data",
+            disable=disable,
         ):
             self.Cell[row["cell_id"]][contig].update(row)
 
