@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-20 09:34:30
+# @Last Modified time: 2022-06-30 09:10:25
 """diversity module."""
 
 import numpy as np
@@ -53,9 +53,9 @@ def clone_rarefaction(
     """
     start = logg.info("Constructing rarefaction curve")
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         metadata = self.obs.copy()
-    elif self.__class__ == Dandelion:
+    elif isinstance(self, Dandelion):
         metadata = self.metadata.copy()
 
     if clone_key is None:
@@ -116,7 +116,7 @@ def clone_rarefaction(
     else:
         diversitykey = diversity_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         if diversitykey not in self.uns:
             self.uns[diversitykey] = {}
         self.uns[diversitykey] = {
@@ -128,7 +128,7 @@ def clone_rarefaction(
         time=start,
         deep=("updated `.uns` with rarefaction curves.\n"),
     )
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         return {"rarefaction_cells_x": pred, "rarefaction_clones_y": y}
 
 
@@ -304,7 +304,7 @@ def clone_networkstats(
     else:
         disable = True
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.graph is None:
             raise AttributeError(
                 "Graph not found. Please run tl.generate_network."
@@ -438,9 +438,9 @@ def diversity_gini(
         **kwargs,
     ) -> pd.DataFrame:
         """gini indices."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             raise TypeError("Only Dandelion class object accepted.")
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = "clone_id"
@@ -544,10 +544,10 @@ def diversity_gini(
             ddl_dat = Dandelion(_data, metadata=_dat)
             if resample:
                 sizelist = []
-                if self.__class__ == Dandelion:
+                if isinstance(self, Dandelion):
                     graphlist = []
                 for i in tqdm(range(0, n_resample)):
-                    if self.__class__ == Dandelion:
+                    if isinstance(self, Dandelion):
                         resampled = generate_network(
                             ddl_dat,
                             clone_key=clonekey,
@@ -693,7 +693,7 @@ def diversity_gini(
                     else:
                         g_c = 0
                     res1.update({g: g_c})
-                if self.__class__ == Dandelion:
+                if isinstance(self, Dandelion):
                     if met == "clone_network":
                         if reconstruct_network:
                             generate_network(
@@ -836,7 +836,7 @@ def diversity_gini(
         res_ = res.copy()
         transfer_gini_indices(self, res_, groupby)
         sleep(0.5)
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             logg.info(
                 " finished",
                 time=start,
@@ -900,9 +900,9 @@ def diversity_chao1(
         key_added: Optional[str] = None,
     ) -> pd.DataFrame:
         """Chao1 estimates."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = "clone_id"
@@ -999,9 +999,9 @@ def diversity_chao1(
         groupby: str,
     ):
         """Transfer chao1 estimates."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
@@ -1011,9 +1011,9 @@ def diversity_chao1(
                 for i in metadata.index:
                     if metadata.at[i, groupby] == g:
                         metadata.at[i, c] = chao1_results[c][g]
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             self.obs = metadata.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             self.metadata = metadata.copy()
 
     res = chao1_estimates(
@@ -1030,7 +1030,7 @@ def diversity_chao1(
     else:
         diversitykey = diversity_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         if diversitykey not in self.uns:
             self.uns[diversitykey] = {}
         self.uns[diversitykey].update({"chao1": res})
@@ -1039,13 +1039,13 @@ def diversity_chao1(
         res_ = res.copy()
         transfer_chao1_estimates(self, res_, groupby)
         sleep(0.5)
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             logg.info(
                 " finished",
                 time=start,
                 deep=("updated `.metadata` with Chao1 estimates.\n"),
             )
-        elif self.__class__ == AnnData:
+        elif isinstance(self, AnnData):
             logg.info(
                 " finished",
                 time=start,
@@ -1054,7 +1054,7 @@ def diversity_chao1(
     else:
         res_ = res.copy()
         sleep(0.5)
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             logg.info(
                 " finished",
                 time=start,
@@ -1120,9 +1120,9 @@ def diversity_shannon(
         key_added: Optional[str] = None,
     ) -> pd.DataFrame:
         """Shannon entropy."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = "clone_id"
@@ -1260,9 +1260,9 @@ def diversity_shannon(
         groupby: str,
     ):
         """Transfer shannon entropy."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
@@ -1272,9 +1272,9 @@ def diversity_shannon(
                 for i in metadata.index:
                     if metadata.at[i, groupby] == g:
                         metadata.at[i, c] = shannon_results[c][g]
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             self.obs = metadata.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             self.metadata = metadata.copy()
 
     res = shannon_entropy(
@@ -1292,7 +1292,7 @@ def diversity_shannon(
     else:
         diversitykey = diversity_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         if diversitykey not in self.uns:
             self.uns[diversitykey] = {}
         self.uns[diversitykey].update({"shannon": res})
@@ -1301,7 +1301,7 @@ def diversity_shannon(
         res_ = res.copy()
         transfer_shannon_entropy(self, res_, groupby)
         sleep(0.5)
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if normalize:
                 logg.info(
                     " finished",
@@ -1316,7 +1316,7 @@ def diversity_shannon(
                     time=start,
                     deep=("updated `.metadata` with Shannon entropy.\n"),
                 )
-        elif self.__class__ == AnnData:
+        elif isinstance(self, AnnData):
             if normalize:
                 logg.info(
                     " finished",
@@ -1334,7 +1334,7 @@ def diversity_shannon(
     else:
         res_ = res.copy()
         sleep(0.5)
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             if normalize:
                 logg.info(
                     " finished",
