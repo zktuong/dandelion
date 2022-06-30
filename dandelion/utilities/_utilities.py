@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-28 21:17:00
+# @Last Modified time: 2022-06-30 09:02:09
 """utilities module."""
 import numpy as np
 import os
@@ -13,7 +13,9 @@ import warnings
 from airr import RearrangementSchema
 from collections import defaultdict
 from subprocess import run
-from typing import Sequence, Tuple, Dict, Union, Optional
+from typing import Sequence, Tuple, Dict, Union, Optional, TypeVar
+
+NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
 # for compatibility with python>=3.10
 try:
@@ -826,3 +828,13 @@ def sum_col(vals):
         return np.nan
     else:
         return sum(vals)
+
+
+def lib_type(lib: str):
+    """Dictionary of acceptable loci for library type."""
+    librarydict = {
+        "tr-ab": ["TRA", "TRB"],
+        "tr-gd": ["TRG", "TRD"],
+        "ig": ["IGH", "IGK", "IGL"],
+    }
+    return librarydict[lib]
