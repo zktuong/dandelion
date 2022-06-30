@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:41:28
+# @Last Modified time: 2022-06-30 09:23:21
 """io module."""
 
 import _pickle as cPickle
@@ -18,7 +18,7 @@ import re
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
 from os import PathLike
-from typing import Union, Sequence, Optional
+from typing import Union, Sequence, Optional, List
 
 from ..utilities._core import *
 from ..utilities._utilities import *
@@ -373,7 +373,11 @@ def from_scirpy(adata: AnnData) -> Dandelion:
 
 
 def concat(
-    arrays: Sequence[Union[pd.DataFrame, Dandelion]], check_unique: bool = True
+    arrays: Sequence[Union[pd.DataFrame, Dandelion]],
+    check_unique: bool = True,
+    sep: str = "-",
+    suffixes: Optional[List] = None,
+    prefixes: Optional[List] = None,
 ) -> Dandelion:
     """
     Concatenate dataframe and return as `Dandelion` object.
@@ -385,6 +389,14 @@ def concat(
     check_unique : bool
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
+    sep : str
+        the separator to append suffix/prefix.
+    suffixes : Optional, List
+        List of suffixes to append to sequence_id.
+        If both suffixes and prefixes are None and check_unique is True, then a sequential number suffix will be appended.
+    prefixes : Optional, List
+        List of prefixes to append to sequence_id.
+        If both suffixes and prefixes are None and check_unique is True, then a sequential number suffix will be appended.
 
     Returns
     -------
@@ -397,14 +409,41 @@ def concat(
     except:
         arrays_ = [x.copy() for x in arrays]
 
+    if (suffixes is not None) and (prefixes is not None):
+        raise ValueError("Please provide only prefixes or suffixes, not both.")
+
+    if suffixes is not None:
+        if len(arrays_) != len(suffixes):
+            raise ValueError(
+                "Please provide the same number of suffixes as the number of objects to concatenate."
+            )
+
+    if prefixes is not None:
+        if len(arrays_) != len(prefixes):
+            raise ValueError(
+                "Please provide the same number of prefixes as the number of objects to concatenate."
+            )
+
     if check_unique:
         try:
             df = pd.concat(arrays_, verify_integrity=True)
         except:
             for i in range(0, len(arrays)):
-                arrays_[i]["sequence_id"] = [
-                    x + "__" + str(i) for x in arrays_[i]["sequence_id"]
-                ]
+                if (suffixes is None) and (prefixes is None):
+                    ii = str(i)
+                    arrays_[i]["sequence_id"] = [
+                        x + sep + ii for x in arrays_[i]["sequence_id"]
+                    ]
+                elif suffixes is not None:
+                    ii = str(suffixes[i])
+                    arrays_[i]["sequence_id"] = [
+                        x + sep + ii for x in arrays_[i]["sequence_id"]
+                    ]
+                elif prefixes is not None:
+                    ii = str(prefixes[i])
+                    arrays_[i]["sequence_id"] = [
+                        ii + sep + x for x in arrays_[i]["sequence_id"]
+                    ]
             arrays_ = [load_data(x) for x in arrays_]
             df = pd.concat(arrays_, verify_integrity=True)
     else:
