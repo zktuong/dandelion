@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 15:03:08
+# @Last Modified time: 2022-06-30 09:11:01
 """tools module."""
 import math
 import networkx as nx
@@ -74,7 +74,7 @@ def find_clones(
     `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     start = logg.info("Finding clonotypes")
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat_ = load_data(self.data)
     else:
         dat_ = load_data(self)
@@ -517,7 +517,7 @@ def find_clones(
             "   'metadata', cell-indexed clone table\n"
         ),
     )
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.germline is not None:
             germline_ = self.germline
         else:
@@ -891,7 +891,7 @@ def define_clones(
     else:
         clone_key = key_added
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat = load_data(self.data)
     else:
         dat = load_data(self)
@@ -946,7 +946,7 @@ def define_clones(
         v_field = "v_call"
 
     if dist is None:
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if self.threshold is not None:
                 dist_ = self.threshold
             else:
@@ -1202,7 +1202,7 @@ def define_clones(
     # transfer the new clone_id to the heavy + light file
     dat[str(clone_key)] = pd.Series(cloned_["clone_id"])
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.germline is not None:
             germline_ = self.germline
         else:
@@ -1524,9 +1524,9 @@ def clone_overlap(
     a `pandas DataFrame`.
     """
     start = logg.info("Finding clones")
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         data = self.metadata.copy()
-    elif self.__class__ == AnnData:
+    elif isinstance(self, AnnData):
         data = self.obs.copy()
 
     if min_clone_size is None:
@@ -1591,7 +1591,7 @@ def clone_overlap(
     overlap.index.name = None
     overlap.columns.name = None
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         self.uns["clone_overlap"] = overlap.copy()
         logg.info(
             " finished",
