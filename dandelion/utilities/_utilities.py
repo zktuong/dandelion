@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 15:57:11
+# @Last Modified time: 2022-07-01 17:02:43
 """utilities module."""
 import numpy as np
 import os
@@ -13,7 +13,7 @@ import warnings
 from airr import RearrangementSchema
 from collections import defaultdict
 from subprocess import run
-from typing import Sequence, Tuple, Dict, Union, Optional, TypeVar
+from typing import Sequence, Tuple, Dict, Union, Optional, TypeVar, List
 
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
@@ -342,6 +342,11 @@ def check_missing(x):
 def all_missing(x):
     """Utility function to check if all x is not null or blank."""
     return all(pd.isnull(x)) or all(x == "")
+
+
+def all_missing2(x):
+    """Utility function to check if all x is not null or blank or the word None."""
+    return all(pd.isnull(x)) or all(x == "") or all(x == "None")
 
 
 def return_mix_dtype(data):
@@ -916,3 +921,19 @@ def lib_type(lib: str):
         "ig": ["IGH", "IGK", "IGL"],
     }
     return librarydict[lib]
+
+
+def movecol(
+    df: pd.DataFrame,
+    cols_to_move: List = [],
+    ref_col: str = "",
+) -> pd.DataFrame:
+    """A way to order columns."""
+    # https://towardsdatascience.com/reordering-pandas-dataframe-columns-thumbs-down-on-standard-solutions-1ff0bc2941d5
+    cols = df.columns.tolist()
+    seg1 = cols[: list(cols).index(ref_col) + 1]
+    seg2 = cols_to_move
+
+    seg1 = [i for i in seg1 if i not in seg2]
+    seg3 = [i for i in cols if i not in seg1 + seg2]
+    return df[seg1 + seg2 + seg3]
