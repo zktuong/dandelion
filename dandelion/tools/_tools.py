@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 18:50:39
+# @Last Modified time: 2022-07-01 22:49:09
 """tools module."""
 import math
 import networkx as nx
@@ -77,6 +77,8 @@ def find_clones(
     pd.set_option("mode.chained_assignment", None)
     if isinstance(self, Dandelion):
         dat_ = load_data(self.data)
+        if "ambiguous" in self.data:
+            dat_ = dat_[dat_["ambiguous"] == "F"].copy()
     else:
         dat_ = load_data(self)
 
@@ -89,9 +91,6 @@ def find_clones(
         dat = dat_[dat_["productive"].isin(TRUES)].copy()
     else:
         dat = dat_.copy()
-
-    if "ambiguous" in self.data:
-        dat = dat[dat["ambiguous"] == "F"].copy()
 
     locus_log = {"ig": "B", "tr-ab": "abT", "tr-gd": "gdT"}
     locus_dict1 = {"ig": ["IGH"], "tr-ab": ["TRB"], "tr-gd": ["TRD"]}
@@ -715,7 +714,7 @@ def transfer(
         if self.obs[x].dtype == "bool":
             self.obs[x] = [str(x) for x in self.obs[x]]
 
-    if overwrite is not None and overwrite is not True:
+    if (overwrite is not None) and (overwrite is not True):
         if not type(overwrite) is list:
             overwrite = [overwrite]
         for ow in overwrite:
@@ -971,13 +970,12 @@ def define_clones(
 
     if isinstance(self, Dandelion):
         dat = load_data(self.data)
+        if "ambiguous" in self.data:
+            dat = dat[dat["ambiguous"] == "F"].copy()
     else:
         dat = load_data(self)
     if os.path.isfile(str(self)):
         dat = load_data(self)
-
-    if "ambiguous" in self.data:
-        dat = dat[dat["ambiguous"] == "F"].copy()
 
     dat_h = dat[dat["locus"] == "IGH"]
     dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]

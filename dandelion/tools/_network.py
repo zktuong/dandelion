@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 17:45:45
+# @Last Modified time: 2022-07-01 22:48:30
 """network module."""
 import networkx as nx
 import numpy as np
@@ -76,11 +76,10 @@ def generate_network(
 
     if isinstance(self, Dandelion):
         dat = load_data(self.data)
+        if "ambiguous" in self.data:
+            dat = dat[dat["ambiguous"] == "F"].copy()
     else:
         dat = load_data(self)
-
-    if "ambiguous" in self.data:
-        dat = dat[dat["ambiguous"] == "F"].copy()
 
     if key is None:
         key_ = "sequence_alignment_aa"  # default
