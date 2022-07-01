@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 17:02:49
+# @Last Modified time: 2022-07-01 21:37:02
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -1450,7 +1450,13 @@ def initialize_metadata(
             init_dict.pop(k)
             continue
         meta_[k] = querier.retrieve(**v)
-        if k in ["v_call", "v_call_genotyped", "d_call", "j_call"]:
+        if k in [
+            "v_call",
+            "v_call_genotyped",
+            "d_call",
+            "j_call",
+            "productive",
+        ]:
             meta_[k + "_split"] = querier.retrieve_celltype(**v)
         if k in ["duplicate_count"]:
             v.update({"retrieve_mode": "split and sum"})
@@ -1463,12 +1469,12 @@ def initialize_metadata(
 
     reqcols1 = [
         "locus_VDJ",
-        "locus_VJ",
-        "productive_VDJ",
-        "productive_VJ",
     ]
     if "v_call_genotyped" in self.data:
         reqcols2 = [
+            "locus_VJ",
+            "productive_VDJ",
+            "productive_VJ",
             "v_call_genotyped_VDJ",
             "d_call_VDJ",
             "j_call_VDJ",
@@ -1487,6 +1493,8 @@ def initialize_metadata(
             "j_call_B_VJ",
             "c_call_B_VDJ",
             "c_call_B_VJ",
+            "productive_B_VDJ",
+            "productive_B_VJ",
             "v_call_genotyped_abT_VDJ",
             "d_call_abT_VDJ",
             "j_call_abT_VDJ",
@@ -1494,6 +1502,8 @@ def initialize_metadata(
             "j_call_abT_VJ",
             "c_call_abT_VDJ",
             "c_call_abT_VJ",
+            "productive_abT_VDJ",
+            "productive_abT_VJ",
             "v_call_genotyped_gdT_VDJ",
             "d_call_gdT_VDJ",
             "j_call_gdT_VDJ",
@@ -1501,9 +1511,14 @@ def initialize_metadata(
             "j_call_gdT_VJ",
             "c_call_gdT_VDJ",
             "c_call_gdT_VJ",
+            "productive_gdT_VDJ",
+            "productive_gdT_VJ",
         ]
     else:
         reqcols2 = [
+            "locus_VJ",
+            "productive_VDJ",
+            "productive_VJ",
             "v_call_VDJ",
             "d_call_VDJ",
             "j_call_VDJ",
@@ -1522,6 +1537,8 @@ def initialize_metadata(
             "j_call_B_VJ",
             "c_call_B_VDJ",
             "c_call_B_VJ",
+            "productive_B_VDJ",
+            "productive_B_VJ",
             "v_call_abT_VDJ",
             "d_call_abT_VDJ",
             "j_call_abT_VDJ",
@@ -1529,6 +1546,8 @@ def initialize_metadata(
             "j_call_abT_VJ",
             "c_call_abT_VDJ",
             "c_call_abT_VJ",
+            "productive_abT_VDJ",
+            "productive_abT_VJ",
             "v_call_gdT_VDJ",
             "d_call_gdT_VDJ",
             "j_call_gdT_VDJ",
@@ -1536,6 +1555,8 @@ def initialize_metadata(
             "j_call_gdT_VJ",
             "c_call_gdT_VDJ",
             "c_call_gdT_VJ",
+            "productive_gdT_VDJ",
+            "productive_gdT_VJ",
         ]
 
     reqcols = reqcols1 + reqcols2
@@ -1729,18 +1750,9 @@ def initialize_metadata(
     )
 
     tmp_metadata["locus_status"] = format_locus(tmp_metadata)
-    tmp_metadata["productive_status"] = format_productive(tmp_metadata)
-
-    tmp_metadata["rearrangement_VDJ_status"] = [
-        x if "|" not in x else "Multi"
-        for x in ["|".join(list(set([v, d, j]))) for v, d, j in zip(v3, d3, j3)]
-    ]
-    tmp_metadata["rearrangement_VJ_status"] = [
-        x if "|" not in x else "Multi"
-        for x in ["|".join(list(set([v, j]))) for v, j in zip(v4, j4)]
-    ]
-    tmp_metadata["constant_VDJ_status"] = vdj_constant_status
-    tmp_metadata["constant_VJ_status"] = vj_constant_status
+    tmp_metadata["chain_status"] = format_chain_status(
+        tmp_metadata["locus_status"]
+    )
 
     if "isotype" in tmp_metadata:
         if all(tmp_metadata["isotype"] == "None"):
@@ -1753,7 +1765,7 @@ def initialize_metadata(
         tmp_metadata[clonekey].replace("", "None", inplace=True)
 
     tmp_metadata = movecol(
-        tmp_metadata, cols_to_move=reqcols2, ref_col="productive_VJ"
+        tmp_metadata, cols_to_move=reqcols2, ref_col="locus_VDJ"
     )
 
     for tmpm in tmp_metadata:

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 17:46:00
+# @Last Modified time: 2022-07-01 20:53:54
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5249,7 +5249,7 @@ def check_contigs(
         adata_provided = True
         adata_ = adata.copy()
         contig_check = pd.DataFrame(index=adata_.obs_names)
-        bc_ = {b: "False"}
+        bc_ = {}
         for b in barcode:
             bc_.update({b: "True"})
         contig_check["has_contig"] = pd.Series(bc_)
@@ -5305,13 +5305,13 @@ def check_contigs(
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
     if adata_provided:
-        transfer(out_adata, out_dat)
+        transfer(adata_, out_dat)
         logg.info(
             " finished",
             time=start,
             deep=("Returning Dandelion and AnnData objects: \n"),
         )
-        return (out_dat, out_adata)
+        return (out_dat, adata_)
     else:
         logg.info(
             " finished",
