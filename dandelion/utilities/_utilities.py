@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 12:10:10
+# @Last Modified time: 2022-07-01 15:57:11
 """utilities module."""
 import numpy as np
 import os
@@ -16,6 +16,11 @@ from subprocess import run
 from typing import Sequence, Tuple, Dict, Union, Optional, TypeVar
 
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
+
+TRUES = ["T", "True", "true", "TRUE", True]
+FALSES = ["F", "False", "false", "FALSE", False]
+HEAVYLONG = ["IGH", "TRB", "TRD"]
+LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
 
 # for compatibility with python>=3.10
 try:
@@ -752,39 +757,108 @@ def format_call(
 
 def format_locus(
     metadata: pd.DataFrame, suffix_h: str = "_VDJ", suffix_l: str = "_VJ"
-) -> list:
+) -> pd.Series:
     """Extract locus call value from data."""
-    locus_1 = {
-        x[0]: x[1] if present(x[1]) else y
-        for x, y in zip(
-            metadata["locus" + suffix_h].items(),
-            list(metadata["locus" + suffix_l]),
-        )
-    }
-    locus_2 = {
-        x[0]: x[1] if present(x[1]) else y
-        for x, y in zip(
-            metadata["locus" + suffix_l].items(),
-            list(metadata["locus" + suffix_h]),
-        )
-    }
-    multi_1 = {
-        x: "Multi" for x, y in metadata["locus" + suffix_h].items() if "|" in y
-    }
-    multi_2 = {
-        x: "Multi" for x, y in metadata["locus" + suffix_l].items() if "|" in y
-    }
-    locus_1.update(multi_1)
-    locus_2.update(multi_2)
-    result = [
-        str(x) + " + " + str(y)
-        if ((str(x) != str(y)) & (str(x) != "None") & (str(y) != "None"))
-        else str(x) + "_only"
-        if ((x != "Multi") & (y != "Multi"))
-        else str(x) + " + " + str(y)
-        for x, y in zip(locus_1.values(), locus_2.values())
-    ]
-    # result = [x if "Multi" not in x else "Multi" for x in result]
+    locus_1 = dict(metadata["locus" + suffix_h])
+    locus_2 = dict(metadata["locus" + suffix_l])
+    productive_1 = dict(metadata["productive" + suffix_h])
+    productive_2 = dict(metadata["productive" + suffix_l])
+    constant_1 = dict(metadata["isotype_status"])
+
+    locus_dict = {}
+    for i in metadata.index:
+        pro1 = {
+            e: p
+            for e, p in enumerate([pp for pp in productive_1[i].split("|")])
+        }
+        loc1 = {
+            e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
+        }
+        pro2 = {
+            e: p
+            for e, p in enumerate([pp for pp in productive_2[i].split("|")])
+        }
+        loc2 = {
+            e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
+        }
+        loc1x, loc2x = [], []
+        if not all([px == "None" for px in pro1.values()]):
+            if all([px_ != "F" for px_ in pro1.values()]):
+                for j in pro1:
+                    if pro1[j] in TRUES:
+                        loc1x.append(loc1[j])
+                loc1xx = loc1x
+                loc1x = [ij[:2] for ij in loc1x]
+
+        if not all([px == "None" for px in pro2.values()]):
+            if all([px_ != "F" for px_ in pro1.values()]):
+                for j in pro2:
+                    if pro2[j] in TRUES:
+                        loc2x.append(loc2[j])
+                loc2xx = loc2x
+                loc2x = [ij[:2] for ij in loc2x]
+
+        if len(loc1x) > 0:
+            if len(list(set(loc1x))) > 1:
+                tmp1 = "ambiguous"
+            else:
+                if len(loc1x) > 1:
+                    if constant_1[i] == "IgM/IgD":
+                        tmp1 = "IgM/IgD"
+                    elif (all(x in ["TRB", "TRD"] for x in loc1xx)) and (
+                        len(list(set(loc1xx))) == 2
+                    ):
+                        tmp1 = "Multi-exception"
+                    else:
+                        tmp1 = "Multi"
+                else:
+                    tmp1 = loc1xx[0]
+
+                if len(loc2x) > 0:
+                    if len(list(set(loc2x))) > 1:
+                        tmp2 = "ambiguous"
+                    else:
+                        if len(loc2x) > 1:
+                            if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
+                                len(list(set(loc2xx))) == 2
+                            ):
+                                tmp2 = "Multi-exception"
+                            else:
+                                tmp2 = "Multi"
+                        else:
+                            tmp2 = loc2xx[0]
+                else:
+                    tmp2 = "None"
+
+                if (tmp1 not in ["Multi", "None", "Multi-exception"]) and (
+                    tmp1 not in ["Multi", "None", "Multi-exception"]
+                ):
+                    if list(set(loc1x)) != list(set(loc2x)):
+                        tmp1 = "ambiguous"
+                        tmp2 = "ambiguous"
+        else:
+            tmp1 = "None"
+            if len(loc2x) > 0:
+                if len(list(set(loc2x))) > 1:
+                    tmp2 = "ambiguous"
+                else:
+                    if len(loc2x) > 1:
+                        if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
+                            len(list(set(loc2xx))) == 2
+                        ):
+                            tmp2 = "Multi-exception"
+                        else:
+                            tmp2 = "Multi"
+                    else:
+                        tmp2 = loc2xx[0]
+            else:
+                tmp2 = "None"
+        if any(tmp == "ambiguous" for tmp in [tmp1, tmp2]):
+            locus_dict.update({i: "ambiguous"})
+        else:
+            locus_dict.update({i: tmp1 + " + " + tmp2})
+
+    result = pd.Series(locus_dict)
     return result
 
 

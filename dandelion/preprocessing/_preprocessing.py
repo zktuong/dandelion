@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 12:40:44
+# @Last Modified time: 2022-07-01 13:51:01
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -59,12 +59,6 @@ from ..utilities._core import *
 from ..utilities._io import *
 from ..utilities._utilities import *
 from ..tools._tools import transfer
-
-
-TRUES = ["T", "True", "true", "TRUE", True]
-FALSES = ["F", "False", "false", "FALSE", False]
-HEAVYLONG = ["IGH", "TRB", "TRD"]
-LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
 
 
 def format_fasta(
