@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 18:42:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:30:56
+# @Last Modified time: 2022-07-01 12:38:27
 """init module."""
 from . import external
 from ._preprocessing import (
@@ -10,6 +10,7 @@ from ._preprocessing import (
     format_fastas,
     assign_isotype,
     assign_isotypes,
+    check_contigs,
     reassign_alleles,
     reannotate_genes,
     create_germlines,
@@ -25,6 +26,7 @@ __all__ = [
     "format_fastas",
     "assign_isotype",
     "assign_isotypes",
+    "check_contigs",
     "reassign_alleles",
     "reannotate_genes",
     "create_germlines",

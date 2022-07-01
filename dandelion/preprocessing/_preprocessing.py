@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 11:16:04
+# @Last Modified time: 2022-07-01 12:40:44
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -17,6 +17,7 @@ from changeo.Gene import buildGermline
 from changeo.IO import getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 from collections import OrderedDict
+from operator import countOf
 from os import PathLike
 from plotnine import (
     ggplot,
@@ -44,7 +45,7 @@ from scanpy import logging as logg
 from subprocess import run
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Sequence, Tuple, Optional
+from typing import Union, Sequence, Tuple, Optional, List
 
 from .external._preprocessing import (
     assigngenes_igblast,
@@ -57,6 +58,7 @@ from .external._preprocessing import (
 from ..utilities._core import *
 from ..utilities._io import *
 from ..utilities._utilities import *
+from ..tools._tools import transfer
 
 
 TRUES = ["T", "True", "true", "TRUE", True]
@@ -3193,48 +3195,20 @@ class FilterContigs:
                 h_locus_p = list(data1["locus"])
                 if len(h_p) > 1:
                     if "sequence_alignment" in data1:
-                        h_seq_p = list(data1["sequence_alignment"])
-                        if len(set(h_seq_p)) == 1:
-                            if len(set(h_ccall_p)) == 1:
-                                highest_umi_h = max(h_umi_p)
-                                highest_umi_h_idx = [
-                                    i
-                                    for i, j in enumerate(h_umi_p)
-                                    if j == highest_umi_h
-                                ]
-                                keep_index_h = highest_umi_h_idx[0]
-                                self.drop_contig.append(
-                                    h_p[:keep_index_h] + h_p[keep_index_h:]
-                                )
-                                keep_hc_contig = h_p[keep_index_h]
-                                data1[keep_hc_contig, "duplicate_count"] = int(
-                                    np.sum(
-                                        h_umi_p[:keep_index_h]
-                                        + h_umi_p[keep_index_h:]
-                                    )
-                                )
-                                self.umi_adjustment.update(
-                                    {
-                                        keep_hc_contig: int(
-                                            np.sum(
-                                                h_umi_p[:keep_index_h]
-                                                + h_umi_p[keep_index_h:]
-                                            )
-                                        )
-                                    }
-                                )
-                                # refresh
-                                data1 = pd.DataFrame(
-                                    [data1.loc[keep_hc_contig]]
-                                )
-                                h_p = list(data1["sequence_id"])
-                                h_umi_p = [
-                                    int(x)
-                                    for x in pd.to_numeric(
-                                        data1["duplicate_count"]
-                                    )
-                                ]
-                                h_ccall_p = list(data1["c_call"])
+
+                        (
+                            data1,
+                            h_p,
+                            h_umi_p,
+                            h_ccall_p,
+                            umi_adjust_h,
+                            drop_h,
+                        ) = check_update_same_seq(data1)
+                        if len(umi_adjust_h) > 0:
+                            self.umi_adjustment.update(umi_adjust_h)
+                        if len(drop_h) > 0:
+                            for d_h in drop_h:
+                                self.drop_contig.append(d_h)
                     if len(h_p) > 1:
                         highest_umi_h = max(h_umi_p)
                         highest_umi_idx = [
@@ -3537,42 +3511,19 @@ class FilterContigs:
                 ]
                 if len(l_p) > 1:
                     if "sequence_alignment" in data3:
-                        l_seq_p = list(data3["sequence_alignment"])
-                        if len(list(set(l_seq_p))) == 1:
-                            highest_umi_l = max(l_umi_p)
-                            highest_umi_l_idx = [
-                                i
-                                for i, j in enumerate(l_umi_p)
-                                if j == highest_umi_l
-                            ]
-                            keep_index_l = highest_umi_l_idx[0]
-                            self.drop_contig.append(
-                                l_p[:keep_index_l] + l_p[keep_index_l:]
-                            )
-                            keep_lc_contig = l_p[keep_index_l]
-                            data3.at[keep_lc_contig, "duplicate_count"] = int(
-                                np.sum(
-                                    l_umi_p[:keep_index_l]
-                                    + l_umi_p[keep_index_l:]
-                                )
-                            )
-                            self.umi_adjustment.update(
-                                {
-                                    keep_lc_contig: int(
-                                        np.sum(
-                                            l_umi_p[:keep_index_l]
-                                            + l_umi_p[keep_index_l:]
-                                        )
-                                    )
-                                }
-                            )
-                            # refresh
-                            data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
-                            l_p = list(data3["sequence_id"])
-                            l_umi_p = [
-                                int(x)
-                                for x in pd.to_numeric(data3["duplicate_count"])
-                            ]
+                        (
+                            data3,
+                            l_p,
+                            l_umi_p,
+                            l_ccall_p,
+                            umi_adjust_l,
+                            drop_l,
+                        ) = check_update_same_seq(data3)
+                        if len(umi_adjust_l) > 0:
+                            self.umi_adjustment.update(umi_adjust_l)
+                        if len(drop_l) > 0:
+                            for d_l in drop_l:
+                                self.drop_contig.append(d_l)
                     if len(l_p) > 1:
                         highest_umi_l = max(l_umi_p)
                         highest_umi_l_idx = [
@@ -5213,3 +5164,777 @@ def transfer_assignment(
             # fill in blanks
             db_fail = sanitize_data(db_fail)
             db_fail.to_csv(failfile, sep="\t", index=False)
+
+
+def check_contigs(
+    data: Union[Dandelion, pd.DataFrame, str],
+    adata: Optional[AnnData] = None,
+    productive_only: bool = True,
+    library_type: Optional[Literal["ig", "tr-ab", "tr-gd"]] = None,
+    umi_foldchange_cutoff: int = 2,
+    filter_missing: bool = True,
+    save: Optional[str] = None,
+    **kwargs,
+) -> Tuple[Dandelion, AnnData]:
+    """
+    Check contigs for whether they can be considered as ambiguous or not.
+
+    Returns an `ambiguous` column with boolean T/F in the data. If the `sequence_alignment` is an exact match between contigs, the contigs
+    will be merged into the one with the highest umi count, summing the umi/duplicate count. After this check, if there are still multiple
+    contigs, cells with multiple contigs checked for whether there is a clear dominance in terms of UMI count resulting in two scenarios:
+    1) if true, all other contigs will be flagged as ambiguous; 2) if false, all contigs will be flagged as ambiguous. This is repeated for
+    each cell, for their productive and non-productive VDJ and VJ contigs separately. Dominance is assessed by whether or not the umi counts
+    demonstrate a > umi_foldchange_cutoff. There are some exceptions: 1) IgM and IgD are allowed to co-exist in the same B cell if no other
+    isotypes are detected; 2) TRD and TRB contigs are allowed in the same cell because rearrangement of TRB and TRD loci happens at the same
+    time during development and TRD variable region genes exhibits allelic inclusion. Thus this can potentially result in some situations
+    where T cells expressing productive TRA-TRB chains can also express productive TRD chains.
+
+    Default behvaiour is to only consider productive contigs and remove all non-productive before checking, toggled by `productive_only`
+    argument.
+
+    If library_type is provided, it will remove all contigs that do not belong to the related loci. The rationale is that the choice of
+    the library type should mean that the primers used would most likely amplify those related sequences and if there's any unexpected loci,
+    they likely represent artifacts and shouldn't be analysed.
+
+    If an `adata` object is provided, contigs with no corresponding cell barcode in the `AnnData` object is filtered in the output if
+    filter_missing is True.
+
+    Parameters
+    ----------
+    data : Dandeion, pd.DataDrame, str
+        V(D)J AIRR data to check. Can be `Dandelion`, pandas `DataFrame` and file path to AIRR `.tsv` file.
+    adata : AnnData, Optional
+        AnnData object to filter. If not provided, it will assume to keep all cells in the airr table and just return a Dandelion object.
+    productive_only : bool
+        whether or not to retain only productive contigs.
+    library_type : bools
+        if specified, it will first filter based on the expected type of contigs:
+            ig: IGH, IGK, IGL
+            tr-ab: TRA, TRB
+            tr-gd: TRG, TRD
+    umi_foldchange_cutoff : int
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as
+        doublets. Default is empirically set at 2-fold.
+    filter_missing : bool
+        cells in V(D)J data not found in `AnnData` object will removed from the dandelion object. Default is True.
+    save : str, Optional
+        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table
+        with a `_checked.tsv` suffix extension.
+    **kwargs
+        additional kwargs passed to `dandelion.utilities._core.Dandelion`.
+
+    Returns
+    -------
+    `Dandelion` object in airr format and/or `AnnData` object.
+    """
+    start = logg.info("Filtering contigs")
+    if isinstance(data, Dandelion):
+        dat_ = load_data(data.data)
+    else:
+        dat_ = load_data(data)
+
+    if library_type is not None:
+        acceptable = lib_type(library_type)
+    else:
+        acceptable = None
+
+    if productive_only:
+        dat = dat_[dat_["productive"].isin(TRUES)].copy()
+    else:
+        dat = dat_.copy()
+
+    if acceptable is not None:
+        dat = dat[dat.locus.isin(acceptable)].copy()
+
+    barcode = list(set(dat.cell_id))
+
+    if adata is not None:
+        adata_provided = True
+        adata_ = adata.copy()
+        contig_check = pd.DataFrame(index=adata_.obs_names)
+        bc_ = {b: "False"}
+        for b in barcode:
+            bc_.update({b: "True"})
+        contig_check["has_contig"] = pd.Series(bc_)
+        contig_check.replace(np.nan, "No_contig", inplace=True)
+        adata_.obs["has_contig"] = pd.Series(contig_check["has_contig"])
+    else:
+        adata_provided = False
+        obs = pd.DataFrame(index=barcode)
+        adata_ = ad.AnnData(obs=obs)
+        adata_.obs["has_contig"] = "True"
+    contig_status = MarkAmbiguousContigs(
+        dat,
+        umi_foldchange_cutoff,
+    )
+
+    ambigous = contig_status.ambiguous_contigs.copy()
+    umi_adjustment = contig_status.umi_adjustment.copy()
+    if len(umi_adjustment) > 0:
+        dat["duplicate_count"].update(umi_adjustment)
+
+    ambi = {c: "F" for c in dat_.sequence_id}
+    ambiguous_ = {x: "T" for x in ambigous}
+    ambi.update(ambiguous_)
+    dat["ambiguous"] = pd.Series(ambi)
+
+    if filter_missing:
+        dat = dat[dat["cell_id"].isin(adata_.obs_names)].copy()
+
+    if dat.shape[0] == 0:
+        raise IndexError(
+            "No contigs passed filtering. Are you sure that the cell barcodes are matching?"
+        )
+    if os.path.isfile(str(data)):
+        write_airr(
+            dat,
+            "{}/{}_checked.tsv".format(
+                os.path.dirname(data),
+                os.path.basename(data).split(".tsv")[0],
+            ),
+        )
+    else:
+        if save is not None:
+            if save.endswith(".tsv"):
+                write_airr(dat, str(save))
+            else:
+                raise ValueError(
+                    "{} not suitable. Please provide a file name that ends with .tsv".format(
+                        str(save)
+                    )
+                )
+    print("Initializing Dandelion object")
+    out_dat = Dandelion(data=dat, **kwargs)
+    if isinstance(data, Dandelion):
+        out_dat.germline = data.germline
+    if adata_provided:
+        transfer(out_adata, out_dat)
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion and AnnData objects: \n"),
+        )
+        return (out_dat, out_adata)
+    else:
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion object: \n"),
+        )
+        return out_dat
+
+
+class MarkAmbiguousContigs:
+    """
+    `MarkAmbiguousContigs` class object.
+
+    New main class object to run filter_contigs.
+
+    """
+
+    def __init__(
+        self, data: pd.DataFrame, umi_foldchange_cutoff: Union[int, float]
+    ):
+        self.ambiguous_contigs = []
+        self.umi_adjustment = {}
+        if "v_call_genotyped" in data.columns:
+            v_dict = dict(zip(data["sequence_id"], data["v_call_genotyped"]))
+        else:
+            v_dict = dict(zip(data["sequence_id"], data["v_call"]))
+        d_dict = dict(zip(data["sequence_id"], data["d_call"]))
+        j_dict = dict(zip(data["sequence_id"], data["j_call"]))
+        c_dict = dict(zip(data["sequence_id"], data["c_call"]))
+        l_dict = dict(zip(data["sequence_id"], data["locus"]))
+        cells = list(set(data["cell_id"]))
+
+        for cell in tqdm(
+            cells,
+            desc="Scanning for poor quality/ambiguous contigs",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
+            data1, data2, data3, data4 = None, None, None, None
+            # VDJ productive
+            data1 = data[
+                (data.cell_id == cell)
+                & (data.locus.isin(HEAVYLONG))
+                & (data.productive.isin(TRUES))
+            ].copy()
+            if data1.shape[0] > 0:
+                vdj_p = list(data1["sequence_id"])
+                vdj_umi_p = [
+                    int(x) for x in pd.to_numeric(data1["duplicate_count"])
+                ]
+                vdj_ccall_p = list(data1["c_call"])
+                vdj_locus_p = list(data1["locus"])
+                if len(vdj_p) > 1:
+                    if "sequence_alignment" in data1:
+                        (
+                            data1,
+                            vdj_p,
+                            vdj_umi_p,
+                            vdj_ccall_p,
+                            umi_adjust_vdj,
+                            ambi_cont_vdj,
+                        ) = check_update_same_seq(data1)
+                        if len(umi_adjust_vdj) > 0:
+                            self.umi_adjustment.update(umi_adjust_vdj)
+                        if len(ambi_cont_vdj) > 0:
+                            for avdj in ambi_cont_vdj:
+                                self.ambiguous_contigs.append(avdj)
+                    if len(vdj_p) > 1:
+                        if "IGHD" in vdj_ccall_p:
+                            if all(x in ["IGHM", "IGHD"] for x in vdj_ccall_p):
+                                if len(list(set(vdj_ccall_p))) == 2:
+                                    vdj_ccall_p_igm_count = dict(
+                                        data1[data1["c_call"] == "IGHM"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+                                    vdj_ccall_p_igd_count = dict(
+                                        data1[data1["c_call"] == "IGHD"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+
+                                if len(vdj_ccall_p_igm_count) > 1:
+                                    (
+                                        keep_igm,
+                                        extra_igm,
+                                        ambiguous_igm,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_igm_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_igm, extra_igm, ambiguous_igm = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                if len(vdj_ccall_p_igd_count) > 1:
+                                    (
+                                        keep_igd,
+                                        extra_igd,
+                                        ambiguous_igd,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_igd_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_igd, extra_igd, ambiguous_igd = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                vdj_p = keep_igm + keep_igd
+                                extra_vdj = extra_igm + extra_igd
+                                ambiguous_vdj = ambiguous_igm + ambiguous_igd
+                            else:
+                                vdj_ccall_p_count = dict(
+                                    data1["duplicate_count"]
+                                )
+                                if len(vdj_ccall_p_count) > 1:
+                                    (
+                                        vdj_p,
+                                        extra_vdj,
+                                        ambiguous_vdj,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_count, umi_foldchange_cutoff
+                                    )
+                                else:
+                                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                        elif all(x in ["TRB", "TRD"] for x in vdj_locus_p):
+                            if len(list(set(vdj_locus_p))) == 2:
+                                vdj_locus_p_trb_count = dict(
+                                    data1[data1["locus"] == "TRB"][
+                                        "duplicate_count"
+                                    ]
+                                )
+                                vdj_locus_p_trd_count = dict(
+                                    data1[data1["locus"] == "TRD"][
+                                        "duplicate_count"
+                                    ]
+                                )
+
+                                if len(vdj_locus_p_trb_count) > 1:
+                                    (
+                                        keep_trb,
+                                        extra_trb,
+                                        ambiguous_trb,
+                                    ) = check_productive_vdj(
+                                        vdj_locus_p_trb_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_trb, extra_trb, ambiguous_trb = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                if len(vdj_locus_p_trd_count) > 1:
+                                    (
+                                        keep_trd,
+                                        extra_trd,
+                                        ambiguous_trd,
+                                    ) = check_productive_vdj(
+                                        vdj_locus_p_trd_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_trd, extra_trd, ambiguous_trd = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                vdj_p = keep_trb + keep_trd
+                                extra_vdj = extra_trb + extra_trd
+                                ambiguous_vdj = ambiguous_trb + ambiguous_trd
+                            else:
+                                vdj_ccall_p_count = dict(
+                                    data1["duplicate_count"]
+                                )
+                                if len(vdj_ccall_p_count) > 1:
+                                    (
+                                        vdj_p,
+                                        extra_vdj,
+                                        ambiguous_vdj,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_count, umi_foldchange_cutoff
+                                    )
+                                else:
+                                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                        else:
+                            vdj_ccall_p_count = dict(data1["duplicate_count"])
+                            if len(vdj_ccall_p_count) > 1:
+                                (
+                                    vdj_p,
+                                    extra_vdj,
+                                    ambiguous_vdj,
+                                ) = check_productive_vdj(
+                                    vdj_ccall_p_count, umi_foldchange_cutoff
+                                )
+                            else:
+                                vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                    else:
+                        vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                else:
+                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+
+                if len(ambiguous_vdj) > 0:
+                    for a in ambiguous_vdj:
+                        self.ambiguous_contigs.append(a)
+
+            # VDJ non-productive
+            data2 = data[
+                (data.cell_id == cell)
+                & (data.locus.isin(HEAVYLONG))
+                & (data.productive.isin(FALSES))
+            ].copy()
+            if data2.shape[0] > 0:
+                vdj_np = list(data2["sequence_id"])
+                (
+                    data2,
+                    vdj_np,
+                    _,
+                    _,
+                    umi_adjust_vdjnp,
+                    ambi_cont_vdjnp,
+                ) = check_update_same_seq(data2)
+                if len(umi_adjust_vdjnp) > 0:
+                    self.umi_adjustment.update(umi_adjust_vdjnp)
+                if len(ambi_cont_vdjnp) > 0:
+                    for avdj in ambi_cont_vdjnp:
+                        self.ambiguous_contigs.append(avdj)
+
+            # VJ productive
+            data3 = data[
+                (data.cell_id == cell)
+                & (data.locus.isin(LIGHTSHORT))
+                & (data.productive.isin(TRUES))
+            ].copy()
+            if data3.shape[0] > 0:
+                vj_p = list(data3["sequence_id"])
+                vj_umi_p = [
+                    int(x) for x in pd.to_numeric(data3["duplicate_count"])
+                ]
+                if len(vj_p) > 1:
+                    if "sequence_alignment" in data3:
+                        (
+                            data3,
+                            vj_p,
+                            vj_umi_p,
+                            vj_ccall_p,
+                            umi_adjust_vj,
+                            ambi_cont_vj,
+                        ) = check_update_same_seq(data3)
+                        if len(umi_adjust_vj) > 0:
+                            self.umi_adjustment.update(umi_adjust_vj)
+                        if len(ambi_cont_vj) > 0:
+                            for avj in ambi_cont_vj:
+                                self.ambiguous_contigs.append(avj)
+                    if len(vj_p) > 1:
+                        vj_ccall_p_count = dict(data3["duplicate_count"])
+                        # maximum keep 2?
+                        vj_p, extra_vj, ambiguous_vj = check_productive_vj(
+                            vj_ccall_p_count
+                        )
+                    else:
+                        vj_p, extra_vj, ambiguous_vj = [], [], []
+                else:
+                    vj_p, extra_vj, ambiguous_vj = [], [], []
+
+                if len(ambiguous_vj) > 0:
+                    for a in ambiguous_vj:
+                        self.ambiguous_contigs.append(a)
+
+            # VJ non-productive
+            data4 = data[
+                (data.cell_id == cell)
+                & (data.locus.isin(LIGHTSHORT))
+                & (data.productive.isin(FALSES))
+            ].copy()
+            if data4.shape[0] > 0:
+                (
+                    data4,
+                    vj_np,
+                    _,
+                    _,
+                    umi_adjust_vjnp,
+                    ambi_cont_vjnp,
+                ) = check_update_same_seq(data4)
+                if len(umi_adjust_vjnp) > 0:
+                    self.umi_adjustment.update(umi_adjust_vjnp)
+                if len(ambi_cont_vjnp) > 0:
+                    for avj in ambi_cont_vjnp:
+                        self.ambiguous_contigs.append(avj)
+
+            if "vdj_p" not in locals():
+                vdj_p = []
+            if "vj_p" not in locals():
+                vj_p = []
+            if "vdj_np" not in locals():
+                vdj_np = []
+            if "vj_np" not in locals():
+                vj_np = []
+            if "extra_vdj" not in locals():
+                extra_vdj = []
+            if "extra_vj" not in locals():
+                extra_vj = []
+
+            # check here for bad combinations
+            # marking poor bcr quality, defined as those with conflicting assignment of
+            # locus and V(D)J v-, d-, j- and c- calls, and also those that are missing
+            # j calls.
+            if len(vdj_p) > 0:
+                for vdjx in vdj_p:
+                    v = v_dict[vdjx]
+                    d = d_dict[vdjx]
+                    j = j_dict[vdjx]
+                    c = c_dict[vdjx]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(vdjx)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(vdjx)
+                    else:
+                        self.ambiguous_contigs.append(vdjx)
+
+            if len(vdj_np) > 0:
+                for vdjx in vdj_np:
+                    v = v_dict[vdjx]
+                    d = d_dict[vdjx]
+                    j = j_dict[vdjx]
+                    c = c_dict[vdjx]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(vdjx)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(vdjx)
+                    else:
+                        self.ambiguous_contigs.append(vdjx)
+            if len(vj_p) > 0:
+                for vjx in vj_p:
+                    v = v_dict[vjx]
+                    j = j_dict[vjx]
+                    c = c_dict[vjx]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(vjx)
+
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(vjx)
+                    else:
+                        self.ambiguous_contigs.append(vjx)
+
+            if len(vj_np) > 0:
+                for vjx in vj_np:
+                    v = v_dict[vjx]
+                    j = j_dict[vjx]
+                    c = c_dict[vjx]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(vjx)
+
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(vjx)
+                    else:
+                        self.ambiguous_contigs.append(vjx)
+
+            if len(extra_vdj) > 0:
+                for evdj in extra_vdj:
+                    v = v_dict[evdj]
+                    d = d_dict[evdj]
+                    j = j_dict[evdj]
+                    c = c_dict[evdj]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(evdj)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(evdj)
+                    else:
+                        self.ambiguous_contigs.append(evdj)
+
+            if len(extra_vj) > 0:
+                for evj in extra_vj:
+                    v = v_dict[evj]
+                    j = j_dict[evj]
+                    c = c_dict[evj]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(evj)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(evj)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(evj)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(evj)
+
+
+def check_productive_vdj(
+    vdj_contigs: Dict, umi_foldchange_cutoff: Union[int, float]
+) -> Tuple[List, List, List]:
+    """Keep top productive because of allelic exclusion."""
+    keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
+    counts = vdj_contigs.values()
+    max_count = max(counts)
+    max_id_keys = [k for k, v in vdj_contigs.items() if v == max_count]
+    if len(max_id_keys) == 1:
+        other_counts = {
+            k: v for k, v in vdj_contigs.items() if k != max_id_keys[0]
+        }
+        umi_test = {
+            i: ((max_count / j) < umi_foldchange_cutoff)
+            for i, j in other_counts.items()
+        }
+        if any(umi_test.values()):
+            for dk in vdj_contigs.keys():
+                ambiguous_contigs.append(dk)
+        elif max_count >= 3:
+            drop_keys = [k for k, v in vdj_contigs.items() if v < max_count]
+            for dk in drop_keys:
+                extra_contigs.append(dk)
+            for kk in max_id_keys:
+                keep_contigs.append(kk)
+        else:
+            for dk in vdj_contigs.keys():
+                ambiguous_contigs.append(dk)
+    else:
+        for dk in vdj_contigs.keys():
+            ambiguous_contigs.append(dk)
+    return keep_contigs, extra_contigs, ambiguous_contigs
+
+
+def check_productive_vj(vj_contigs: Dict) -> Tuple[List, List, List]:
+    """Keep top two productive because of allelic inclusions."""
+    keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
+    counts = vj_contigs.values()
+    max_counts = max(counts)
+    if len(vj_contigs) > 2:
+        if max(counts) >= 3:
+            set_counts = set(counts)
+            set_counts.remove(max_counts)
+            max_id_keys = [
+                k for k, v in vj_contigs.items() if v >= max(set_counts)
+            ]
+            if len(max_id_keys) > 2:
+                for dk in vj_contigs.keys():
+                    ambiguous_contigs.append(dk)
+            else:
+                drop_keys = [
+                    k for k, v in vj_contigs.items() if v < max(set_counts)
+                ]
+                for dk in drop_keys:
+                    extra_contigs.append(dk)
+                for kk in max_id_keys:
+                    keep_contigs.append(kk)
+        else:
+            for dk in vj_contigs.keys():
+                ambiguous_contigs.append(dk)
+    else:
+        for k in vj_contigs.keys():
+            keep_contigs.append(k)
+    return keep_contigs, extra_contigs, ambiguous_contigs
+
+
+def check_update_same_seq(data: pd.DataFrame):
+    umi_adjust = {}
+    ambi_cont = []
+    seq_ = list(data.sequence_alignment)
+    if len(set(seq_)) < len(seq_):
+        _count = dict(data.duplicate_count)
+        _seq = dict(data.sequence_alignment)
+        rep_seq = [
+            seq for seq in set(_seq.values()) if countOf(_seq.values(), seq) > 1
+        ]
+        keep_seqs = [
+            seq
+            for seq in set(_seq.values())
+            if countOf(_seq.values(), seq) == 1
+        ]
+        keep_seqs_ids = [i for i, seq in _seq.items() if seq in keep_seqs]
+        if len(rep_seq) > 0:
+            for rep in rep_seq:
+                dup_keys = [k for k, v in _seq.items() if v == rep]
+                keep_index_vj = dup_keys[0]
+                keep_index_count = int(_count[keep_index_vj])
+                sum_rep_counts = np.sum([_count[k] for k in dup_keys[1:]])
+                umi_adjust.update(
+                    {
+                        keep_index_vj: int(
+                            np.sum(
+                                [
+                                    sum_rep_counts,
+                                    keep_index_count,
+                                ],
+                            )
+                        )
+                    }
+                )
+                for dk in dup_keys[1:]:
+                    ambi_cont.append(dk)
+                keep_seqs_ids.append(keep_index_vj)
+                data.duplicate_count.update({keep_index_vj: keep_index_count})
+            # refresh
+            data = data.loc[keep_seqs_ids]
+    keep_id = list(data.sequence_id)
+    keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
+    keep_ccall = list(data.c_call)
+
+    return (data, keep_id, keep_umi, keep_ccall, umi_adjust, ambi_cont)
