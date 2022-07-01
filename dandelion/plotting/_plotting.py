@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:43:31
+# @Last Modified time: 2022-07-01 22:54:35
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,6 +45,23 @@ def clone_rarefaction(
     clone_key: Optional[str] = None,
     palette: Optional[Sequence] = None,
     figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4),
+    chain_status_include: List[
+        Literal[
+            "Single pair",
+            "Orphan VDJ",
+            "Orphan VDJ-exception",
+            "Orphan VJ",
+            "Orphan VJ-exception",
+            "Extra pair",
+            "Extra pair-exception",
+        ]
+    ] = [
+        "Single pair",
+        "Orphan VDJ",
+        "Orphan VDJ-exception",
+        "Extra pair",
+        "Extra pair-exception",
+    ],
     save: Optional[str] = None,
 ) -> ggplot:
     """
@@ -62,6 +79,11 @@ def clone_rarefaction(
         Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
     figsize :  Tuple[Union[int,float], Union[int,float]]
         Size of plot.
+    chain_status_exclude : List
+        Non-exhaustive list of chains to into the analysis. e.g.
+        "Single pair", "Orphan VDJ", "Orphan VDJ-exception",
+        "Orphan VJ", "Orphan VJ-exception", "Extra pair",
+        "Extra pair-exception",
     save : str, Optional
         Save path.
 
@@ -79,7 +101,11 @@ def clone_rarefaction(
         clonekey = clone_key
 
     groups = list(set(metadata[color]))
-    metadata = metadata[metadata["contig_QC_pass"].isin([True, "True"])]
+    if "contig_QC_pass" in metadata:
+        metadata = metadata[metadata["contig_QC_pass"].isin(TRUES)]
+    elif "chain_status" in metadata:
+        metadata = metadata[metadata["chain_status"].isin(chain_status_exclude)]
+
     if type(metadata[clonekey]) == "category":
         metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
@@ -612,6 +638,8 @@ def spectratype(
     """
     if isinstance(self, Dandelion):
         data = self.data.copy()
+        if "ambiguous" in self.data:
+            data = data[data["ambiguous"] == "F"].copy()
     else:
         try:
             data = self.copy()
