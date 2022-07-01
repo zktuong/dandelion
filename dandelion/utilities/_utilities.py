@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 17:02:43
+# @Last Modified time: 2022-07-01 21:27:38
 """utilities module."""
 import numpy as np
 import os
@@ -813,9 +813,9 @@ def format_locus(
                     elif (all(x in ["TRB", "TRD"] for x in loc1xx)) and (
                         len(list(set(loc1xx))) == 2
                     ):
-                        tmp1 = "Multi-exception"
+                        tmp1 = "Extra VDJ-exception"
                     else:
-                        tmp1 = "Multi"
+                        tmp1 = "Extra VDJ"
                 else:
                     tmp1 = loc1xx[0]
 
@@ -827,17 +827,17 @@ def format_locus(
                             if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
                                 len(list(set(loc2xx))) == 2
                             ):
-                                tmp2 = "Multi-exception"
+                                tmp2 = "Extra VJ-exception"
                             else:
-                                tmp2 = "Multi"
+                                tmp2 = "Extra VJ"
                         else:
                             tmp2 = loc2xx[0]
                 else:
                     tmp2 = "None"
 
-                if (tmp1 not in ["Multi", "None", "Multi-exception"]) and (
-                    tmp1 not in ["Multi", "None", "Multi-exception"]
-                ):
+                if (
+                    tmp1 not in ["None", "Extra VDJ", "Extra VDJ-exception"]
+                ) and (tmp2 not in ["None", "Extra VJ", "Extra VJ-exception"]):
                     if list(set(loc1x)) != list(set(loc2x)):
                         tmp1 = "ambiguous"
                         tmp2 = "ambiguous"
@@ -851,9 +851,9 @@ def format_locus(
                         if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
                             len(list(set(loc2xx))) == 2
                         ):
-                            tmp2 = "Multi-exception"
+                            tmp2 = "Extra VJ-exception"
                         else:
-                            tmp2 = "Multi"
+                            tmp2 = "Extra VJ"
                     else:
                         tmp2 = loc2xx[0]
             else:
@@ -862,6 +862,12 @@ def format_locus(
             locus_dict.update({i: "ambiguous"})
         else:
             locus_dict.update({i: tmp1 + " + " + tmp2})
+
+        if any(tmp == "None" for tmp in [tmp1, tmp2]):
+            if tmp1 == "None":
+                locus_dict.update({i: "Orphan " + tmp2})
+            elif tmp2 == "None":
+                locus_dict.update({i: "Orphan " + tmp1})
 
     result = pd.Series(locus_dict)
     return result
@@ -937,3 +943,28 @@ def movecol(
     seg1 = [i for i in seg1 if i not in seg2]
     seg3 = [i for i in cols if i not in seg1 + seg2]
     return df[seg1 + seg2 + seg3]
+
+
+def format_chain_status(locus_status):
+    """Format chain status from locus status."""
+    chain_status = []
+    for ls in locus_status:
+        if ("Orphan" in ls) and (re.search("TRB|IGH|TRD|VDJ", ls)):
+            if not re.search("exception", ls):
+                chain_status.append("Orphan VDJ")
+            else:
+                chain_status.append("Orphan VDJ-exception")
+        elif ("Orphan" in ls) and (re.search("TRA|TRG|IGK|IGL|VJ", ls)):
+            if not re.search("exception", ls):
+                chain_status.append("Orphan VJ")
+            else:
+                chain_status.append("Orphan VJ-exception")
+        elif re.search("exception|IgM/IgD", ls):
+            chain_status.append("Extra pair-exception")
+        elif re.search("Extra", ls):
+            chain_status.append("Extra pair")
+        elif re.search("ambiguous", ls):
+            chain_status.append("ambiguous")
+        else:
+            chain_status.append("Single pair")
+    return chain_status
