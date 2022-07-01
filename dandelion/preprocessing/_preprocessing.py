@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-29 14:43:39
+# @Last Modified time: 2022-07-01 11:16:04
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -11,6 +11,7 @@ import os
 import pandas as pd
 import re
 
+from anndata import AnnData
 from Bio import Align
 from changeo.Gene import buildGermline
 from changeo.IO import getFormatOperators, readGermlines, checkFields
@@ -377,7 +378,11 @@ def format_fastas(
             suffix = [suffix]
         suffix_dict = dict(zip(fastas, suffix))
 
-    for i in tqdm(range(0, len(fastas)), desc="Formating fasta(s) "):
+    for i in tqdm(
+        range(0, len(fastas)),
+        desc="Formating fasta(s) ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         if prefix is None and suffix is None:
             format_fasta(
                 fastas[i],
@@ -1002,7 +1007,11 @@ def reannotate_genes(
         filename_prefix = [None for d in data]
 
     filePath = None
-    for i in tqdm(range(0, len(data)), desc="Assigning genes "):
+    for i in tqdm(
+        range(0, len(data)),
+        desc="Assigning genes ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         filePath = check_filepath(
             data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
         )
@@ -1216,7 +1225,11 @@ def reassign_alleles(
     filePath = None
     sampleNames_dict = {}
     filePath_dict = {}
-    for i in tqdm(range(0, len(data)), desc="Processing data file(s) "):
+    for i in tqdm(
+        range(0, len(data)),
+        desc="Processing data file(s) ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
@@ -1635,7 +1648,11 @@ def reassign_alleles(
             "Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv`"
             "extension for convenience."
         )
-    for s in tqdm(data, desc="Writing out to individual folders "):
+    for s in tqdm(
+        data,
+        desc="Writing out to individual folders ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         if sample_id_dictionary is not None:
             out_file = dat_[dat_["sample_id"] == sample_id_dictionary[s]]
         else:
@@ -1691,7 +1708,7 @@ def create_germlines(
     start = logg.info("Reconstructing germline sequences")
     env = os.environ.copy()
 
-    if self.__class__ != Dandelion:
+    if not isinstance(self, Dandelion):
         if germline is None:
             try:
                 gml = env["GERMLINE"]
@@ -1848,7 +1865,7 @@ def create_germlines(
             "np2_length",
         ]
 
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if isinstance(self.data, pd.DataFrame):
                 # Check for required columns
                 try:
@@ -1890,7 +1907,7 @@ def create_germlines(
                 raise LookupError(
                     "Please initialise the Dandelion object with a dataframe in data slot."
                 )
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             try:
                 checkFields(required, self.columns, schema=schema)
             except LookupError as e:
@@ -1968,12 +1985,12 @@ def create_germlines(
                 out.update({key: annotations})
         germline_df = pd.DataFrame.from_dict(out, orient="index")
 
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             # datx = load_data(self.data)
             for x in germline_df.columns:
                 self.data[x] = pd.Series(germline_df[x])
 
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             datx = load_data(self)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
@@ -2143,7 +2160,7 @@ def create_germlines(
         return out
 
     if (type(germline) is dict) or (type(germline) is list):
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             _create_germlines_object(
                 self,
                 germline,
@@ -2154,7 +2171,7 @@ def create_germlines(
                 germ_types,
                 fileformat,
             )
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             return _create_germlines_object(
                 self,
                 germline,
@@ -2177,7 +2194,7 @@ def create_germlines(
                 fileformat,
             )
     else:
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if len(self.germline) != 0:
                 _create_germlines_object(
                     self,
@@ -2200,7 +2217,7 @@ def create_germlines(
                     germ_types,
                     fileformat,
                 )
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             return _create_germlines_object(
                 self,
                 gml,
@@ -2228,6 +2245,7 @@ def filter_contigs(
     data: Union[Dandelion, pd.DataFrame, str],
     adata: Optional[AnnData] = None,
     filter_contig: bool = True,
+    library_type: Optional[Literal["ig", "tr-ab", "tr-gd"]] = None,
     filter_rna: bool = False,
     filter_poorqualitycontig: bool = False,
     keep_highest_umi: bool = True,
@@ -2263,6 +2281,13 @@ def filter_contigs(
         AnnData object to filter. If not provided, will assume to keep all cells in the airr table.
     filter_contig : bool
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
+    library_type : bools
+        if specified, it will first filter based on the expected type of contigs:
+            ig: IGH, IGK, IGL
+            tr-ab: TRA, TRB
+            tr-gd: TRG, TRD
+        The rationale is that the choice of the library type should mean that the primers used would most likely
+        amplify those related sequences and if there's any unexpected contigs, then they shouldn't be analysed.
     filter_rna : bool
         If True, `AnnData` object returned will be filtered based on potential V(D)J doublets. Default is False.
     filter_poorqualitycontig : bool
@@ -2296,11 +2321,16 @@ def filter_contigs(
     -------
     V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
-    start = logg.info("Filtering BCRs")
-    if data.__class__ == Dandelion:
+    start = logg.info("Filtering contigs")
+    if isinstance(data, Dandelion):
         dat_ = load_data(data.data)
     else:
         dat_ = load_data(data)
+
+    if library_type is not None:
+        acceptable = lib_type(library_type)
+    else:
+        acceptable = None
 
     if not simple:
         if productive_only:
@@ -2310,10 +2340,8 @@ def filter_contigs(
     else:
         dat = dat_.copy()
 
-    if "cell_id" not in dat.columns:
-        raise AttributeError(
-            "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering."
-        )
+    if acceptable is not None:
+        dat = dat[dat.locus.isin(acceptable)].copy()
 
     barcode = list(set(dat["cell_id"]))
 
@@ -2335,14 +2363,6 @@ def filter_contigs(
         adata_ = ad.AnnData(obs=obs)
         adata_.obs["filter_rna"] = "False"
         adata_.obs["has_contig"] = "True"
-
-    # rather than leaving a nan cell, i will create a 0 column for now
-    if "duplicate_count" in dat and "umi_count" not in dat:
-        dat["umi_count"] = dat["duplicate_count"]  # just do a simple swap?
-    elif "duplicate_count" not in dat and "umi_count" in dat:
-        dat["duplicate_count"] = dat["umi_count"]
-    elif "duplicate_count" in dat and "umi_count" in dat:
-        dat["umi_count"] = dat["duplicate_count"]
 
     if not simple:
         tofilter = FilterContigs(
@@ -2436,7 +2456,7 @@ def filter_contigs(
                 if save.endswith(".tsv"):
                     write_airr(_dat, str(save))
                 else:
-                    raise FileNotFoundError(
+                    raise ValueError(
                         "{} not suitable. Please provide a file name that ends with .tsv".format(
                             str(save)
                         )
@@ -2454,7 +2474,7 @@ def filter_contigs(
 
     print("Initializing Dandelion object")
     out_dat = Dandelion(data=_dat, **kwargs)
-    if data.__class__ == Dandelion:
+    if isinstance(data, Dandelion):
         out_dat.germline = data.germline
 
     if adata_provided:
@@ -2478,6 +2498,11 @@ def filter_contigs(
         )
         return (out_dat, out_adata)
     else:
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion object: \n"),
+        )
         return out_dat
 
 
@@ -2537,7 +2562,7 @@ def quantify_mutations(
 
     sh = importr("shazam")
     base = importr("base")
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat = load_data(self.data)
     else:
         dat = load_data(self)
@@ -2655,7 +2680,7 @@ def quantify_mutations(
         cols_to_return = cols_to_return
 
     res = {}
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         for x in cols_to_return:
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
@@ -2710,7 +2735,7 @@ def quantify_mutations(
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             dat[x] = [str(r) for r in res[x]]
         # dat = sanitize_data(dat)
-        if self.__class__ == pd.DataFrame:
+        if isinstance(self, pd.DataFrame):
             logg.info(" finished", time=start, deep=("Returning DataFrame\n"))
             return dat
         elif os.path.isfile(self):
@@ -2848,9 +2873,9 @@ def calculate_threshold(
             )
         )
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
+    elif isinstance(self, pd.DataFrame) or os.path.isfile(str(self)):
         dat = load_data(self)
         warnings.filterwarnings("ignore")
 
@@ -3080,7 +3105,7 @@ def calculate_threshold(
             + "\n method = "
             + str(threshold_method_)
         )
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         self.threshold = tr
         logg.info(
             " finished",
@@ -3127,7 +3152,10 @@ class FilterContigs:
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
         l_dict = dict(zip(data["sequence_id"], data["locus"]))
-        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
+        for contig, row in tqdm(
+            data.iterrows(),
+            desc="Preparing data",
+        ):
             cell = row["cell_id"]
             if row["locus"] in HEAVYLONG:
                 if row["productive"] in TRUES:
@@ -3140,7 +3168,9 @@ class FilterContigs:
                 elif row["productive"] in FALSES:
                     self.Cell[cell]["VJ"]["NP"][contig].update(row)
         for cell in tqdm(
-            self.Cell, desc="Scanning for poor quality/ambiguous contigs"
+            self.Cell,
+            desc="Scanning for poor quality/ambiguous contigs",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
             if len(self.Cell[cell]["VDJ"]["P"]) > 0:
                 data1 = pd.DataFrame(
@@ -3654,10 +3684,12 @@ class FilterContigs:
                 loci_l = []
 
             loci_ = list(set(loci_h + loci_l))
+
             if len(loci_) > 0:
                 if all(lc in ["IGK", "IGL", "TRG", "TRA"] for lc in loci_):
                     if len(loci_) >= 2:
-                        self.drop_contig.append(l_p)
+                        if filter_extra_vj_chains:
+                            self.drop_contig.append(l_p)
                 elif all(lc in ["TRA", "TRD"] for lc in loci_):
                     if len(loci_) == 2:
                         self.drop_contig.append(l_p)
@@ -3948,7 +3980,10 @@ class FilterContigsLite:
         d_dict = dict(zip(data["sequence_id"], data["d_call"]))
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
-        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
+        for contig, row in tqdm(
+            data.iterrows(),
+            desc="Preparing data",
+        ):
             cell = row["cell_id"]
             if row["locus"] in HEAVYLONG:
                 if row["productive"] in TRUES:
@@ -3961,7 +3996,9 @@ class FilterContigsLite:
                 elif row["productive"] in FALSES:
                     self.Cell[cell]["VJ"]["NP"][contig].update(row)
         for cell in tqdm(
-            self.Cell, desc="Scanning for poor quality/ambiguous contigs"
+            self.Cell,
+            desc="Scanning for poor quality/ambiguous contigs",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
             if len(self.Cell[cell]["VDJ"]["P"]) > 0:
                 data1 = pd.DataFrame(
