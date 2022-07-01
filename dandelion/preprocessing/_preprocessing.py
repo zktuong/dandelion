@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 17:36:12
+# @Last Modified time: 2022-07-01 17:46:00
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2564,7 +2564,7 @@ def quantify_mutations(
         dat = load_data(self)
 
     if "ambiguous" in self.data:
-        dat = dat[dat["ambiguous"] == "F"]
+        dat = dat[dat["ambiguous"] == "F"].copy()
 
     pandas2ri.activate()
     warnings.filterwarnings("ignore")

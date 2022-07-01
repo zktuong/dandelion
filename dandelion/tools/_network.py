@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 17:35:40
+# @Last Modified time: 2022-07-01 17:45:45
 """network module."""
 import networkx as nx
 import numpy as np
@@ -80,7 +80,7 @@ def generate_network(
         dat = load_data(self)
 
     if "ambiguous" in self.data:
-        dat = dat[dat["ambiguous"] == "F"]
+        dat = dat[dat["ambiguous"] == "F"].copy()
 
     if key is None:
         key_ = "sequence_alignment_aa"  # default
