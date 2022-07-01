@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:02:09
+# @Last Modified time: 2022-07-01 11:06:26
 """utilities module."""
 import numpy as np
 import os
@@ -397,10 +397,14 @@ def sanitize_data(data, ignore="clone_id"):
         pass
 
     if (
-        pd.Series(["duplicate_count", "productive"]).isin(data.columns).all()
+        pd.Series(["cell_id", "duplicate_count", "productive"])
+        .isin(data.columns)
+        .all()
     ):  # sort so that the productive contig with the largest umi is first
         data.sort_values(
-            by=["productive", "duplicate_count"], inplace=True, ascending=False
+            by=["cell_id", "productive", "duplicate_count"],
+            inplace=True,
+            ascending=False,
         )
 
     # check if airr-standards is happy

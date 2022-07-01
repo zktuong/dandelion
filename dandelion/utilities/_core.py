@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 11:44:30
+# @Last Modified time: 2022-07-01 11:05:30
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -74,12 +74,12 @@ class Dandelion:
             except:
                 pass
             if (
-                pd.Series(["duplicate_count", "productive"])
+                pd.Series(["cell_id", "duplicate_count", "productive"])
                 .isin(self.data.columns)
                 .all()
             ):  # sort so that the productive contig with the largest umi is first
                 self.data.sort_values(
-                    by=["productive", "duplicate_count"],
+                    by=["cell_id", "productive", "duplicate_count"],
                     inplace=True,
                     ascending=False,
                 )
