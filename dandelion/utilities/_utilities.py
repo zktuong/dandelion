@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 11:06:26
+# @Last Modified time: 2022-07-01 12:10:10
 """utilities module."""
 import numpy as np
 import os
@@ -404,7 +404,7 @@ def sanitize_data(data, ignore="clone_id"):
         data.sort_values(
             by=["cell_id", "productive", "duplicate_count"],
             inplace=True,
-            ascending=False,
+            ascending=[True, False, False],
         )
 
     # check if airr-standards is happy

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 11:05:30
+# @Last Modified time: 2022-07-01 12:09:45
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -81,7 +81,7 @@ class Dandelion:
                 self.data.sort_values(
                     by=["cell_id", "productive", "duplicate_count"],
                     inplace=True,
-                    ascending=False,
+                    ascending=[True, False, False],
                 )
             # self.data = sanitize_data(self.data) # this is too slow. and unnecessary at this point.
             self.n_contigs = self.data.shape[0]
