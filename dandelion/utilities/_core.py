@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:50:56
+# @Last Modified time: 2022-06-30 11:44:30
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -1036,7 +1036,7 @@ def initialize_metadata(
             init_dict.pop(k)
             continue
         meta_[k] = querier.retrieve(**v)
-        if k in ["duplicate_count", "umi_count", "mu_count", "mu_freq"]:
+        if k in ["duplicate_count", "mu_count", "mu_freq"]:
             v.update({"retrieve_mode": "split"})
             meta_[k + "_split"] = querier.retrieve(**v)
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
@@ -1324,20 +1324,25 @@ def update_metadata(
     clone_key : str, Optional
         Column name of clone id. None defaults to 'clone_id'.
     retrieve_mode: str
-        One of ['split and unique only', 'merge and unique only', 'split and merge'. 'split and sum', 'split and average', 'split', 'merge', 'sum', 'average'].
-        `split and unique only` returns the retrieval splitted into two columns, i.e. one for VDJ and one for VJ chains, separated by '|' for unique elements.
-        `merge and unique only` returns the retrieval merged into one column, separated by '|' for unique elements.
-        `split and merge` returns the retrieval splitted into two columns, i.e. one for VDJ and one for VJ chains, separated by '|' for every elements.
-        `split` returns the retrieval splitted into separate columns for each contig.
-        `merge` returns the retrieval merged into one columns for each contig, separated by '|' for unique elements.
-        'split and sum' returns the retrieval sumed in the VDJ and VJ columns (separately).
-        'split and average' returns the retrieval averaged in the VDJ and VJ columns (separately).
-        'sum' returns the retrieval sumed into one column for all contigs.
-        'average' returns the retrieval averaged into one column for all contigs.
+        One of:
+            `split and unique only` returns the retrieval splitted into two columns,
+                i.e. one for VDJ and one for VJ chains, separated by '|' for unique elements.
+            `merge and unique only` returns the retrieval merged into one column,
+                separated by '|' for unique elements.
+            `split and merge` returns the retrieval splitted into two columns,
+                i.e. one for VDJ and one for VJ chains, separated by '|' for every elements.
+            `split` returns the retrieval splitted into separate columns for each contig.
+            `merge` returns the retrieval merged into one columns for each contig,
+                separated by '|' for unique elements.
+            'split and sum' returns the retrieval sumed in the VDJ and VJ columns (separately).
+            'split and average' returns the retrieval averaged in the VDJ and VJ columns (separately).
+            'sum' returns the retrieval sumed into one column for all contigs.
+            'average' returns the retrieval averaged into one column for all contigs.
     collapse_alleles : bool
         Returns the V(D)J genes with allelic calls if False.
     reinitialize : bool
-        Whether or not to reinitialize the current metadata. Useful when updating older versions of `dandelion` to newer version.
+        Whether or not to reinitialize the current metadata.
+        Useful when updating older versions of `dandelion` to newer version.
     Returns
     -------
     `Dandelion` object with `.metadata` slot initialized.
@@ -1363,26 +1368,15 @@ def update_metadata(
     ]
 
     if "duplicate_count" not in self.data:
-        try:
-            self.data["duplicate_count"] = self.data["umi_count"]
-        except:
-            cols = list(
-                map(
-                    lambda x: "umi_count" if x == "duplicate_count" else x, cols
-                )
-            )
-            if "umi_count" not in self.data:
-                raise ValueError(
-                    "Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
-                )
-    if (
-        "cell_id" not in self.data
-    ):  # shortcut for bulk data to pretend every unique sequence is a cell?
-        self.data["cell_id"] = self.data["sequence_id"]
+        raise ValueError(
+            "Unable to initialize metadata due to missing keys. "
+            "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
+        )
 
     if not all([c in self.data for c in cols]):
         raise ValueError(
-            "Unable to initialize metadata due to missing keys. Please ensure the input data contains all the following columns: {}".format(
+            "Unable to initialize metadata due to missing keys. "
+            "Please ensure the input data contains all the following columns: {}".format(
                 cols
             )
         )
