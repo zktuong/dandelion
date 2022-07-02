@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 21:18:37
+# @Last Modified time: 2022-07-02 21:28:56
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -120,16 +120,10 @@ class Dandelion:
                 keys = []
             if len(keys) > 0:
                 descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
-            else:
-                descr += f"\n    {attr}: {str(None)}"
         if self.layout is not None:
             descr += f"\n    layout: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1])])}"
-        else:
-            descr += f"\n    layout: {str(None)}"
         if self.graph is not None:
             descr += f"\n    graph: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
-        else:
-            descr += f"\n    graph: {str(None)}"
         return descr
 
     def __repr__(self) -> str:
