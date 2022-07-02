@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 01:10:47
+# @Last Modified time: 2022-07-02 21:18:37
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -16,10 +16,17 @@ import pandas as pd
 import re
 import warnings
 
+from anndata._core.index import (
+    _normalize_index,
+    Index,
+    unpack_index,
+)
 from changeo.IO import readGermlines
 from collections import defaultdict
+from pandas.api.types import infer_dtype
 from pathlib import Path
 from scanpy import logging as logg
+from textwrap import dedent
 from tqdm import tqdm
 from typing import Union, Sequence, Dict, Optional, Tuple
 
@@ -47,21 +54,24 @@ class Dandelion:
         library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
         **kwargs,
     ):
-        self.data = data
-        self.metadata = metadata
+        self._data = data
+        self._metadata = metadata
         self.edges = edges
         self.layout = layout
         self.graph = graph
         self.threshold = None
         self.germline = {}
         self.querier = None
+        self.library_type = library_type
+        self.data = self._data
+        self.metadata = self._metadata
 
         if germline is not None:
             self.germline.update(germline)
 
         if self.data is not None:
-            if library_type is not None:
-                acceptable = lib_type(library_type)
+            if self.library_type is not None:
+                acceptable = lib_type(self.library_type)
             else:
                 acceptable = None
 
@@ -126,6 +136,124 @@ class Dandelion:
         """Report."""
         # inspire by AnnData's function
         return self._gen_repr(self.n_obs, self.n_contigs)
+
+    def __getitem__(self, index: Index) -> "Dandelion":
+        """Returns a sliced view of the object."""
+        idx, idxtype = self._normalize_indices(index[index].index)
+        if idxtype == "metadata":
+
+            return Dandelion(
+                self._data[
+                    self._data.cell_id.isin(self._metadata.iloc[idx].index)
+                ],
+                self._metadata.iloc[idx],
+            )
+        elif idxtype == "data":
+            return Dandelion(
+                self._data.iloc[idx],
+                self._metadata[
+                    self._metadata.index.isin(self._data.iloc[idx].cell_id)
+                ],
+            )
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """One-dimensional annotation of contig observations (`pd.DataFrame`)."""
+        return self._data
+
+    @data.setter
+    def data(self, value: pd.DataFrame):
+        # if isinstance(value, Dandelion):
+        #    self._set_dim_df(value.data, "data")
+        # else:
+        self._set_dim_df(value, "data")
+
+    @data.deleter
+    def data(self):
+        self.data = pd.DataFrame(index=self.data_names)
+
+    @property
+    def data_names(self) -> pd.Index:
+        """Names of observations (alias for `.data.index`)."""
+        return self.data.index
+
+    @data_names.setter
+    def data_names(self, names: Sequence[str]):
+        names = self._prep_dim_index(names, "data")
+        self._set_dim_index(names, "data")
+
+    @property
+    def metadata(self) -> pd.DataFrame:
+        """One-dimensional annotation of cell observations (`pd.DataFrame`)."""
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value: pd.DataFrame):
+        self._set_dim_df(value, "metadata")
+
+    @metadata.deleter
+    def metadata(self):
+        self.metadata = pd.DataFrame(index=self.metadata_names)
+
+    @property
+    def metadata_names(self) -> pd.Index:
+        """Names of observations (alias for `.metadata.index`)."""
+        return self.metadata.index
+
+    @metadata_names.setter
+    def metadata_names(self, names: Sequence[str]):
+        names = self._prep_dim_index(names, "metadata")
+        self._set_dim_index(names, "metadata")
+
+    def _normalize_indices(self, index: Optional[Index]) -> Tuple[slice, str]:
+        return _normalize_indices(index, self.metadata_names, self.data_names)
+
+    def _set_dim_df(self, value: pd.DataFrame, attr: str):
+        if value is not None:
+            if not isinstance(value, pd.DataFrame):
+                raise ValueError(f"Can only assign pd.DataFrame to {attr}.")
+            value_idx = self._prep_dim_index(value.index, attr)
+            setattr(self, f"_{attr}", value)
+
+    def _prep_dim_index(self, value, attr: str) -> pd.Index:
+        """Prepares index to be uses as obs_names or var_names for AnnData object.AssertionError
+        If a pd.Index is passed, this will use a reference, otherwise a new index object is created.
+        """
+        if isinstance(value, pd.Index) and not isinstance(
+            value.name, (str, type(None))
+        ):
+            raise ValueError(
+                f"Dandelion expects .{attr}.index.name to be a string or None, "
+                f"but you passed a name of type {type(value.name).__name__!r}"
+            )
+        else:
+            value = pd.Index(value)
+            if not isinstance(value.name, (str, type(None))):
+                value.name = None
+        # fmt: off
+        if (
+            not isinstance(value, pd.RangeIndex)
+            and not infer_dtype(value) in ("string", "bytes")
+        ):
+            sample = list(value[: min(len(value), 5)])
+            warnings.warn(dedent(
+                f"""
+                Dandelion expects .{attr}.index to contain strings, but got values like:
+                    {sample}
+                    Inferred to be: {infer_dtype(value)}
+                """
+                ), # noqa
+                stacklevel=2,
+            )
+        # fmt: on
+        return value
+
+    def _set_dim_index(self, value: pd.Index, attr: str):
+        # Assumes _prep_dim_index has been run
+        getattr(self, attr).index = value
+        for v in getattr(self, f"{attr}m").values():
+            if isinstance(v, pd.DataFrame):
+                v.index = value
 
     def copy(self):
         """
@@ -1966,3 +2094,31 @@ def update_metadata(
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
         self.metadata = tmp_metadata.copy()
+
+
+def _normalize_indices(
+    index: Optional[Index], names0: pd.Index, names1: pd.Index
+) -> Tuple[slice, str]:
+    # deal with tuples of length 1
+    if isinstance(index, tuple) and len(index) == 1:
+        index = index[0]
+    # deal with pd.Series
+    if isinstance(index, pd.Series):
+        index = index.values
+    if isinstance(index, tuple):
+        if len(index) > 2:
+            raise ValueError("AnnData can only be sliced in rows and columns.")
+        # deal with pd.Series
+        # TODO: The series should probably be aligned first
+        if isinstance(index[1], pd.Series):
+            index = index[0], index[1].values
+        if isinstance(index[0], pd.Series):
+            index = index[0].values, index[1]
+    ax0_, _ = unpack_index(index)
+    if all(ax_ in names0 for ax_ in ax0_):
+        ax0 = _normalize_index(ax0_, names0)
+        axtype = "metadata"
+    elif all(ax_ in names1 for ax_ in ax0_):
+        ax0 = _normalize_index(ax0_, names1)
+        axtype = "data"
+    return ax0, axtype
