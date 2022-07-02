@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 21:27:38
+# @Last Modified time: 2022-07-02 00:38:36
 """utilities module."""
 import numpy as np
 import os
@@ -710,8 +710,8 @@ def deprecated(details, deprecated_in, removed_in):
 def format_call(
     metadata: pd.DataFrame,
     call: str,
-    suffix_h: str = "_VDJ",
-    suffix_l: str = "_VJ",
+    suffix_vdj: str = "_VDJ",
+    suffix_vj: str = "_VJ",
 ) -> list:
     """Extract v/d/j/c call values from data."""
     call_dict = {
@@ -720,19 +720,19 @@ def format_call(
         "": "None",
         "unassigned": "None",
     }
-    if suffix_l is not None:
+    if suffix_vj is not None:
         call_1 = {
             x[0]: x[1] if present(x[1]) else "None"
             for x, y in zip(
-                metadata[call + suffix_h].items(),
-                list(metadata[call + suffix_l]),
+                metadata[call + suffix_vdj].items(),
+                list(metadata[call + suffix_vj]),
             )
         }
         call_2 = {
             x[0]: x[1] if present(x[1]) else "None"
             for x, y in zip(
-                metadata[call + suffix_l].items(),
-                list(metadata[call + suffix_h]),
+                metadata[call + suffix_vj].items(),
+                list(metadata[call + suffix_vdj]),
             )
         }
         call_2 = {x: y if "|" not in y else "Multi" for x, y in call_2.items()}
@@ -743,7 +743,7 @@ def format_call(
     else:
         call_1 = {
             x: y if present(y) else "None"
-            for x, y in metadata[call + suffix_h].items()
+            for x, y in metadata[call + suffix_vdj].items()
         }
         call_2 = {x: "None" for x in call_1.keys()}
         call_4 = call_3 = call_2
@@ -761,13 +761,13 @@ def format_call(
 
 
 def format_locus(
-    metadata: pd.DataFrame, suffix_h: str = "_VDJ", suffix_l: str = "_VJ"
+    metadata: pd.DataFrame, suffix_vdj: str = "_VDJ", suffix_vj: str = "_VJ"
 ) -> pd.Series:
     """Extract locus call value from data."""
-    locus_1 = dict(metadata["locus" + suffix_h])
-    locus_2 = dict(metadata["locus" + suffix_l])
-    productive_1 = dict(metadata["productive" + suffix_h])
-    productive_2 = dict(metadata["productive" + suffix_l])
+    locus_1 = dict(metadata["locus" + suffix_vdj])
+    locus_2 = dict(metadata["locus" + suffix_vj])
+    productive_1 = dict(metadata["productive" + suffix_vdj])
+    productive_2 = dict(metadata["productive" + suffix_vj])
     constant_1 = dict(metadata["isotype_status"])
 
     locus_dict = {}
@@ -873,44 +873,6 @@ def format_locus(
     return result
 
 
-def format_productive(
-    metadata: pd.DataFrame, suffix_h: str = "_VDJ", suffix_l: str = "_VJ"
-) -> list:
-    """Extract productive value from data."""
-    productive_1 = {
-        x[0]: x[1] if present(x[1]) else "None"
-        for x, y in zip(
-            metadata["productive" + suffix_h].items(),
-            list(metadata["productive" + suffix_l]),
-        )
-    }
-    productive_2 = {
-        x[0]: x[1] if present(x[1]) else "None"
-        for x, y in zip(
-            metadata["productive" + suffix_l].items(),
-            list(metadata["productive" + suffix_h]),
-        )
-    }
-    multi_1 = {
-        x: "Multi"
-        for x, y in metadata["productive" + suffix_h].items()
-        if "|" in y
-    }
-    multi_2 = {
-        x: "Multi"
-        for x, y in metadata["productive" + suffix_l].items()
-        if "|" in y
-    }
-    productive_1.update(multi_1)
-    productive_2.update(multi_2)
-    result = [
-        str(x) + " + " + str(y)
-        for x, y in zip(productive_1.values(), productive_2.values())
-    ]
-    # result = [x if 'Multi' not in x else 'Multi' for x in result]
-    return result
-
-
 def sum_col(vals):
     """Sum columns if not NaN."""
     if all(pd.isnull(vals)):
@@ -968,3 +930,32 @@ def format_chain_status(locus_status):
         else:
             chain_status.append("Single pair")
     return chain_status
+
+
+def update_rearrangement_status(self):
+    """Check rearrangement status."""
+    if "v_call_genotyped" in self.data:
+        vcall = "v_call_genotyped"
+    else:
+        vcall = "v_call"
+    contig_status = []
+    for v, j, c in zip(
+        self.data[vcall], self.data["j_call"], self.data["c_call"]
+    ):
+        if present(v):
+            if present(j):
+                if present(c):
+                    if len(list(set([v[:3], j[:3], c[:3]]))) > 1:
+                        contig_status.append("chimeric")
+                    else:
+                        contig_status.append("standard")
+                else:
+                    if len(list(set([v[:3], j[:3]]))) > 1:
+                        contig_status.append("chimeric")
+                    else:
+                        contig_status.append("standard")
+            else:
+                contig_status.append("unknown")
+        else:
+            contig_status.append("unknown")
+    self.data["rearrangement_status"] = contig_status

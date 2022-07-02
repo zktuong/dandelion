@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 21:37:02
+# @Last Modified time: 2022-07-02 00:42:20
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -1434,6 +1434,8 @@ def initialize_metadata(
                 }
             }
         )
+    update_rearrangement_status(self)
+
     if "ambiguous" in self.data:
         dataq = self.data[self.data["ambiguous"] == "F"]
     else:
@@ -1568,11 +1570,11 @@ def initialize_metadata(
             tmp_metadata.drop(dc, axis=1, inplace=True)
 
     if "locus_VDJ" in tmp_metadata:
-        suffix_h = "_VDJ"
-        suffix_l = "_VJ"
+        suffix_vdj = "_VDJ"
+        suffix_vj = "_VJ"
     else:
-        suffix_h = ""
-        suffix_l = ""
+        suffix_vdj = ""
+        suffix_vj = ""
 
     if clonekey in init_dict:
         tmp_metadata[str(clonekey)].replace("", "None", inplace=True)
@@ -1678,8 +1680,8 @@ def initialize_metadata(
     isotype = []
     multi, multic = {}, {}
 
-    if "c_call" + suffix_h in tmp_metadata:
-        for k in tmp_metadata["c_call" + suffix_h]:
+    if "c_call" + suffix_vdj in tmp_metadata:
+        for k in tmp_metadata["c_call" + suffix_vdj]:
             if isinstance(k, str):
                 isotype.append(
                     "|".join(
@@ -1728,27 +1730,6 @@ def initialize_metadata(
                             for t in tmp_metadata[c]
                         ]
 
-    if "v_call_genotyped" in cols:
-        v1, v2, v3, v4 = format_call(
-            tmp_metadata,
-            "v_call_genotyped",
-            suffix_h=suffix_h,
-            suffix_l=suffix_l,
-        )
-    else:
-        v1, v2, v3, v4 = format_call(
-            tmp_metadata, "v_call", suffix_h=suffix_h, suffix_l=suffix_l
-        )
-    d1, _, d3, _ = format_call(
-        tmp_metadata, "d_call", suffix_h=suffix_h, suffix_l=None
-    )
-    j1, j2, j3, j4 = format_call(
-        tmp_metadata, "j_call", suffix_h=suffix_h, suffix_l=suffix_l
-    )
-    c1, c2, vdj_constant_status, vj_constant_status = format_call(
-        tmp_metadata, "c_call", suffix_h=suffix_h, suffix_l=suffix_l
-    )
-
     tmp_metadata["locus_status"] = format_locus(tmp_metadata)
     tmp_metadata["chain_status"] = format_chain_status(
         tmp_metadata["locus_status"]
@@ -1771,6 +1752,30 @@ def initialize_metadata(
     for tmpm in tmp_metadata:
         if all_missing2(tmp_metadata[tmpm]):
             tmp_metadata.drop(tmpm, axis=1, inplace=True)
+
+    tmpxregstat = querier.retrieve(
+        query="rearrangement_status", retrieve_mode="split and unique only"
+    )
+
+    for x in tmpxregstat:
+        tmpxregstat[x] = [
+            "chimeric"
+            if re.search("chimeric", y)
+            else "Multi"
+            if "|" in y
+            else y
+            for y in tmpxregstat[x]
+        ]
+        tmp_metadata[x] = pd.Series(tmpxregstat[x])
+
+    tmp_metadata = movecol(
+        tmp_metadata,
+        cols_to_move=[
+            "rearrangement_status_VDJ",
+            "rearrangement_status_VJ",
+        ],
+        ref_col="chain_status",
+    )
 
     self.metadata = tmp_metadata.copy()
 
