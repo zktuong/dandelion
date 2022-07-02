@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 21:32:36
+# @Last Modified time: 2022-07-02 21:34:27
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -248,6 +248,7 @@ class Dandelion:
         return value
 
     def _set_dim_index(self, value: pd.Index, attr: str):
+        """set dim index"""
         # Assumes _prep_dim_index has been run
         getattr(self, attr).index = value
         for v in getattr(self, f"{attr}m").values():
