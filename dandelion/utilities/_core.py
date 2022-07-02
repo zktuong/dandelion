@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 21:28:56
+# @Last Modified time: 2022-07-02 21:32:36
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -157,13 +157,12 @@ class Dandelion:
 
     @data.setter
     def data(self, value: pd.DataFrame):
-        # if isinstance(value, Dandelion):
-        #    self._set_dim_df(value.data, "data")
-        # else:
+        """data setter"""
         self._set_dim_df(value, "data")
 
     @data.deleter
     def data(self):
+        """data deleter"""
         self.data = pd.DataFrame(index=self.data_names)
 
     @property
@@ -173,6 +172,7 @@ class Dandelion:
 
     @data_names.setter
     def data_names(self, names: Sequence[str]):
+        """data names setter"""
         names = self._prep_dim_index(names, "data")
         self._set_dim_index(names, "data")
 
@@ -183,10 +183,12 @@ class Dandelion:
 
     @metadata.setter
     def metadata(self, value: pd.DataFrame):
+        """metadata setter"""
         self._set_dim_df(value, "metadata")
 
     @metadata.deleter
     def metadata(self):
+        """metadata deleter"""
         self.metadata = pd.DataFrame(index=self.metadata_names)
 
     @property
@@ -196,13 +198,16 @@ class Dandelion:
 
     @metadata_names.setter
     def metadata_names(self, names: Sequence[str]):
+        """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
 
     def _normalize_indices(self, index: Optional[Index]) -> Tuple[slice, str]:
+        """retrieve indices"""
         return _normalize_indices(index, self.metadata_names, self.data_names)
 
     def _set_dim_df(self, value: pd.DataFrame, attr: str):
+        """dim df setter"""
         if value is not None:
             if not isinstance(value, pd.DataFrame):
                 raise ValueError(f"Can only assign pd.DataFrame to {attr}.")
@@ -2093,6 +2098,7 @@ def update_metadata(
 def _normalize_indices(
     index: Optional[Index], names0: pd.Index, names1: pd.Index
 ) -> Tuple[slice, str]:
+    """return indices"""
     # deal with tuples of length 1
     if isinstance(index, tuple) and len(index) == 1:
         index = index[0]
