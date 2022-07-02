@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 01:50:54
+# @Last Modified time: 2022-07-02 10:55:17
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2265,9 +2265,9 @@ def filter_contigs(
     > umi_foldchange_cutoff (default is empirically set at 2) will be retained. For productive heavy/long chains,
     if there are multiple contigs that survive the umi testing, then all contigs will be filtered. The default behaviour
     is to also filter cells with multiple light/short chains but this may sometimes be a true biological occurrence;
-    toggling filter_extra_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no corresponding
-    cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to
-    False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
+    toggling filter_extra_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no
+    corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful
+    to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
     Parameters
     ----------
@@ -2326,7 +2326,13 @@ def filter_contigs(
     if library_type is not None:
         acceptable = lib_type(library_type)
     else:
-        acceptable = None
+        if isinstance(data, Dandelion):
+            if data.library_type is not None:
+                acceptable = lib_type(data.library_type)
+            else:
+                acceptable = None
+        else:
+            acceptable = None
 
     if not simple:
         if productive_only:
@@ -5175,32 +5181,35 @@ def check_contigs(
     """
     Check contigs for whether they can be considered as ambiguous or not.
 
-    Returns an `ambiguous` column with boolean T/F in the data. If the `sequence_alignment` is an exact match between contigs, the contigs
-    will be merged into the one with the highest umi count, summing the umi/duplicate count. After this check, if there are still multiple
-    contigs, cells with multiple contigs checked for whether there is a clear dominance in terms of UMI count resulting in two scenarios:
-    1) if true, all other contigs will be flagged as ambiguous; 2) if false, all contigs will be flagged as ambiguous. This is repeated for
-    each cell, for their productive and non-productive VDJ and VJ contigs separately. Dominance is assessed by whether or not the umi counts
-    demonstrate a > umi_foldchange_cutoff. There are some exceptions: 1) IgM and IgD are allowed to co-exist in the same B cell if no other
-    isotypes are detected; 2) TRD and TRB contigs are allowed in the same cell because rearrangement of TRB and TRD loci happens at the same
-    time during development and TRD variable region genes exhibits allelic inclusion. Thus this can potentially result in some situations
-    where T cells expressing productive TRA-TRB chains can also express productive TRD chains.
+    Returns an `ambiguous` column with boolean T/F in the data. If the `sequence_alignment` is an exact match between
+    contigs, the contigs will be merged into the one with the highest umi count, summing the umi/duplicate count. After
+    this check, if there are still multiple contigs, cells with multiple contigs checked for whether there is a clear
+    dominance in terms of UMI count resulting in two scenarios: 1) if true, all other contigs will be flagged as
+    ambiguous; 2) if false, all contigs will be flagged as ambiguous. This is repeated for each cell, for their
+    productive and non-productive VDJ and VJ contigs separately. Dominance is assessed by whether or not the umi counts
+    demonstrate a > umi_foldchange_cutoff. There are some exceptions: 1) IgM and IgD are allowed to co-exist in the same
+    B cell if no other isotypes are detected; 2) TRD and TRB contigs are allowed in the same cell because rearrangement
+    of TRB and TRD loci happens at the same time during development and TRD variable region genes exhibits allelic
+    inclusion. Thus this can potentially result in some situations where T cells expressing productive TRA-TRB chains
+    can also express productive TRD chains.
 
-    Default behvaiour is to only consider productive contigs and remove all non-productive before checking, toggled by `productive_only`
-    argument.
+    Default behvaiour is to only consider productive contigs and remove all non-productive before checking, toggled by
+    `productive_only` argument.
 
-    If library_type is provided, it will remove all contigs that do not belong to the related loci. The rationale is that the choice of
-    the library type should mean that the primers used would most likely amplify those related sequences and if there's any unexpected loci,
-    they likely represent artifacts and shouldn't be analysed.
+    If library_type is provided, it will remove all contigs that do not belong to the related loci. The rationale is
+    that the choice of the library type should mean that the primers used would most likely amplify those related
+    sequences and if there's any unexpected loci, they likely represent artifacts and shouldn't be analysed.
 
-    If an `adata` object is provided, contigs with no corresponding cell barcode in the `AnnData` object is filtered in the output if
-    filter_missing is True.
+    If an `adata` object is provided, contigs with no corresponding cell barcode in the `AnnData` object is filtered in
+    the output if filter_missing is True.
 
     Parameters
     ----------
     data : Dandeion, pd.DataDrame, str
         V(D)J AIRR data to check. Can be `Dandelion`, pandas `DataFrame` and file path to AIRR `.tsv` file.
     adata : AnnData, Optional
-        AnnData object to filter. If not provided, it will assume to keep all cells in the airr table and just return a Dandelion object.
+        AnnData object to filter. If not provided, it will assume to keep all cells in the airr table and just return a
+        Dandelion object.
     productive_only : bool
         whether or not to retain only productive contigs.
     library_type : bools
@@ -5232,7 +5241,13 @@ def check_contigs(
     if library_type is not None:
         acceptable = lib_type(library_type)
     else:
-        acceptable = None
+        if isinstance(data, Dandelion):
+            if data.library_type is not None:
+                acceptable = lib_type(data.library_type)
+            else:
+                acceptable = None
+        else:
+            acceptable = None
 
     if productive_only:
         dat = dat_[dat_["productive"].isin(TRUES)].copy()
