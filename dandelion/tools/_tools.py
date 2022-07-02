@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 22:49:09
+# @Last Modified time: 2022-07-02 01:03:38
 """tools module."""
 import math
 import networkx as nx
@@ -97,7 +97,7 @@ def find_clones(
     locus_dict2 = {"ig": ["IGK", "IGL"], "tr-ab": ["TRA"], "tr-gd": ["TRG"]}
     locus_log1_dict = {"ig": "IGH", "tr-ab": "TRB", "tr-gd": "TRD"}
     locus_log2_dict = {"ig": "IGL/IGL", "tr-ab": "TRA", "tr-gd": "TRG"}
-
+    DEFAULTIDENTITY = {"ig": 0.85, "tr-ab": 1, "tr-gd": 1}
     if key is None:
         key_ = "junction_aa"  # default
     else:
@@ -130,6 +130,17 @@ def find_clones(
             locus_1 = locus_dict1[locusx]
             locus_2 = locus_dict2[locusx]
             if isinstance(identity, dict):
+                if locusx not in identity:
+                    identity.update({locusx: DEFAULTIDENTITY})
+                    warnings.warn(
+                        UserWarning(
+                            "Identity value for {} chains not specified "
+                            + "in provided dictionary. ".format(locusx)
+                            + "Defaulting to {} for {} chains.".format(
+                                DEFAULTIDENTITY, locusx
+                            )
+                        )
+                    )
                 identity_ = identity[locusx]
             else:
                 identity_ = identity
