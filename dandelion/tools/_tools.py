@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 01:28:41
+# @Last Modified time: 2022-07-02 01:30:15
 """tools module."""
 import math
 import networkx as nx
@@ -131,13 +131,13 @@ def find_clones(
             locus_2 = locus_dict2[locusx]
             if isinstance(identity, dict):
                 if locusx not in identity:
-                    identity.update({locusx: DEFAULTIDENTITY})
+                    identity.update({locusx: DEFAULTIDENTITY[locusx]})
                     warnings.warn(
                         UserWarning(
                             "Identity value for {} chains not specified "
                             + "in provided dictionary. ".format(locusx)
                             + "Defaulting to {} for {} chains.".format(
-                                DEFAULTIDENTITY, locusx
+                                DEFAULTIDENTITY[locusx], locusx
                             )
                         )
                     )
