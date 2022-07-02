@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 00:42:20
+# @Last Modified time: 2022-07-02 01:10:47
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -1746,7 +1746,9 @@ def initialize_metadata(
         tmp_metadata[clonekey].replace("", "None", inplace=True)
 
     tmp_metadata = movecol(
-        tmp_metadata, cols_to_move=reqcols2, ref_col="locus_VDJ"
+        tmp_metadata,
+        cols_to_move=[rc2 for rc2 in reqcols2 if rc2 in tmp_metadata],
+        ref_col="locus_VDJ",
     )
 
     for tmpm in tmp_metadata:
@@ -1771,8 +1773,12 @@ def initialize_metadata(
     tmp_metadata = movecol(
         tmp_metadata,
         cols_to_move=[
-            "rearrangement_status_VDJ",
-            "rearrangement_status_VJ",
+            rs
+            for rs in [
+                "rearrangement_status_VDJ",
+                "rearrangement_status_VJ",
+            ]
+            if rs in tmp_metadata
         ],
         ref_col="chain_status",
     )
