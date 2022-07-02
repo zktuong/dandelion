@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 22:49:47
+# @Last Modified time: 2022-07-02 01:50:54
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5890,6 +5890,7 @@ def check_productive_vj(vj_contigs: Dict) -> Tuple[List, List, List]:
 
 
 def check_update_same_seq(data: pd.DataFrame):
+    """Check if sequences are the same."""
     umi_adjust = {}
     ambi_cont = []
     seq_ = list(data.sequence_alignment)

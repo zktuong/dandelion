@@ -315,6 +315,7 @@ def test_tofro_scirpy_cr6_transfer(
 
 @pytest.mark.usefixtures("airr_generic")
 def test_librarytype(airr_generic):
+    """test library type"""
     tmp = ddl.Dandelion(airr_generic)
     assert tmp.data.shape[0] == 105
     assert tmp.metadata.shape[0] == 40
