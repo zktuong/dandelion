@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 01:03:38
+# @Last Modified time: 2022-07-02 01:28:41
 """tools module."""
 import math
 import networkx as nx
@@ -416,7 +416,7 @@ def find_clones(
                                 pdist(tdarray, lambda x, y: hamming(x[0], y[0]))
                             )
                             # then calculate what the acceptable threshold is for each length of sequence
-                            tr = math.floor(int(l) * (1 - identity))
+                            tr = math.floor(int(l) * (1 - identity_))
                             d_mat = np.tril(d_mat)
                             np.fill_diagonal(d_mat, 0)
                             # convert diagonal and upper triangle to zeroes
