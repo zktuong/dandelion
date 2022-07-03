@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:55:19
+# @Last Modified time: 2022-07-03 23:34:56
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -76,7 +76,7 @@ def clone_rarefaction(
 
     # remove those with no counts
     logg.info(
-        "removing due to zero counts:",
+        "removing due to zero counts: "
         ", ".join(
             [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]
         ),
