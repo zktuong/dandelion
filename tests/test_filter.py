@@ -167,5 +167,4 @@ def test_generic_check(airr_generic):
     assert not tmp2.metadata.clone_id.empty
 
     ddl.tl.generate_network(tmp2, key="junction_aa", compute_layout=False)
-    assert tmp2.edges is not None
     assert tmp2.graph is not None

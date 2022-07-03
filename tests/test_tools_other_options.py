@@ -26,3 +26,20 @@ def test_find_clones_file(create_testfolder, airr_generic):
     airr_generic.to_csv(in_file, sep="\t", index=False)
     ddl.tl.find_clones(in_file)
     assert Path(out_file) in list(create_testfolder.iterdir())
+
+
+@pytest.mark.usefixtures("airr_generic")
+def test_find_clones_after_network(airr_generic):
+    """Test find clones."""
+    vdj = ddl.pp.check_contigs(airr_generic)
+    ddl.tl.find_clones(vdj)
+    ddl.tl.generate_network(vdj, key="junction_aa", layout_method="mod_fr")
+    vdj2 = vdj.copy()
+    vdj2.threshold = 0.01
+    vdj2.germline = {"dummy": "something"}
+    ddl.tl.find_clones(vdj2)
+    assert not vdj2.data.clone_id.empty
+    assert not vdj2.metadata.clone_id.empty
+    ddl.tl.find_clones(vdj2, key_added="cloned_idx")
+    assert not vdj2.data.cloned_idx.empty
+    assert not vdj2.metadata.cloned_idx.empty

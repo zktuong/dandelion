@@ -128,7 +128,6 @@ def test_generate_network(create_testfolder):
         ddl.tl.generate_network(vdj, compute_layout=False)
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, layout_method="mod_fr")
-    assert vdj.edges is not None
     assert vdj.n_obs == 448
     assert vdj.layout is not None
     assert vdj.graph is not None

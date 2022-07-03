@@ -77,13 +77,11 @@ def test_generate_network(create_testfolder, resample, expected):
         vdj = ddl.tl.generate_network(
             vdj, downsample=resample, layout_method="mod_fr"
         )
-        assert vdj.edges is None
         assert vdj.n_obs == expected
         assert vdj.layout is not None
         assert vdj.graph is not None
     else:
         ddl.tl.generate_network(vdj2, layout_method="mod_fr")
-        assert vdj2.edges is not None
         assert vdj2.n_obs == expected
         assert vdj2.layout is not None
         assert vdj2.graph is not None
@@ -91,7 +89,7 @@ def test_generate_network(create_testfolder, resample, expected):
     vdj = ddl.Dandelion(vdj.data)
     assert vdj.data.clone_id.dtype == "object"
     ddl.tl.generate_network(vdj, layout_method="mod_fr")
-    assert vdj.edges is not None
+    assert vdj.layout is not None
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -103,7 +101,6 @@ def test_find_clones_key(create_testfolder):
     assert not vdj.metadata.test_clone.empty
     assert vdj.data.test_clone.dtype == "object"
     ddl.tl.generate_network(vdj, clone_key="test_clone", layout_method="mod_fr")
-    assert vdj.edges is None
     assert vdj.layout is not None
     assert vdj.graph is not None
 
