@@ -40,3 +40,6 @@ def test_find_clonesfromfile(airr_reannotated):
     vdj = ddl.tl.find_clones(airr_reannotated, collapse_label=True)
     assert not vdj.data.clone_id.empty
     assert not vdj.metadata.clone_id.empty
+    vdj2 = ddl.tl.find_clones(airr_reannotated, by_alleles=True)
+    assert not vdj2.data.clone_id.empty
+    assert not vdj2.metadata.clone_id.empty
