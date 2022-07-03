@@ -2,22 +2,23 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-30 09:23:21
+# @Last Modified time: 2022-07-03 21:54:54
 """io module."""
-
-import _pickle as cPickle
 import bz2
 import gzip
 import json
+import os
+import re
+
+import _pickle as cPickle
 import networkx as nx
 import numpy as np
-import os
 import pandas as pd
-import re
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
 from os import PathLike
+from scanpy import logging as logg
 from typing import Union, Sequence, Optional, List
 
 from ..utilities._core import *
@@ -505,8 +506,7 @@ def read_10x_vdj(
         json_idx = [i for i, j in enumerate(filelist) if j.endswith(".json")]
         if len(csv_idx) == 1:
             file = str(path) + "/" + str(filelist[csv_idx[0]])
-            if verbose:
-                print("Reading {}".format(str(file)))
+            logg.info("Reading {}".format(str(file)))
             raw = pd.read_csv(str(file))
             raw.set_index("contig_id", drop=False, inplace=True)
             fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
@@ -516,24 +516,22 @@ def read_10x_vdj(
                 str(file).split(".csv")[0] + ".json",
             )
             if os.path.exists(json_file):
-                if verbose:
-                    print(
-                        "Found {} file. Extracting extra information.".format(
-                            str(json_file)
-                        )
+                logg.info(
+                    "Found {} file. Extracting extra information.".format(
+                        str(json_file)
                     )
+                )
                 out = parse_annotation(raw)
                 with open(json_file) as f:
                     raw_json = json.load(f)
                 out_json = parse_json(raw_json)
                 out.update(out_json)
             elif os.path.exists(fasta_file):
-                if verbose:
-                    print(
-                        "Found {} file. Extracting extra information.".format(
-                            str(fasta_file)
-                        )
+                logg.info(
+                    "Found {} file. Extracting extra information.".format(
+                        str(fasta_file)
                     )
+                )
                 seqs = {}
                 fh = open(fasta_file, "r")
                 for header, sequence in fasta_iterator(fh):
@@ -545,8 +543,7 @@ def read_10x_vdj(
         elif len(csv_idx) < 1:
             if len(json_idx) == 1:
                 json_file = str(path) + "/" + str(filelist[json_idx[0]])
-                if verbose:
-                    print("Reading {}".format(json_file))
+                logg.info("Reading {}".format(json_file))
                 if os.path.exists(json_file):
                     with open(json_file) as f:
                         raw = json.load(f)
@@ -566,8 +563,7 @@ def read_10x_vdj(
     elif os.path.isfile(str(path)):
         file = path
         if str(file).endswith(".csv"):
-            if verbose:
-                print("Reading {}.".format(str(file)))
+            logg.info("Reading {}.".format(str(file)))
             raw = pd.read_csv(str(file))
             raw.set_index("contig_id", drop=False, inplace=True)
             fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
@@ -577,24 +573,22 @@ def read_10x_vdj(
                 str(file).split(".csv")[0] + ".json",
             )
             if os.path.exists(json_file):
-                if verbose:
-                    print(
-                        "Found {} file. Extracting extra information.".format(
-                            str(json_file)
-                        )
+                logg.info(
+                    "Found {} file. Extracting extra information.".format(
+                        str(json_file)
                     )
+                )
                 out = parse_annotation(raw)
                 with open(json_file) as f:
                     raw_json = json.load(f)
                 out_json = parse_json(raw_json)
                 out.update(out_json)
             elif os.path.exists(fasta_file):
-                if verbose:
-                    print(
-                        "Found {} file. Extracting extra information.".format(
-                            str(fasta_file)
-                        )
+                logg.info(
+                    "Found {} file. Extracting extra information.".format(
+                        str(fasta_file)
                     )
+                )
                 seqs = {}
                 fh = open(fasta_file, "r")
                 for header, sequence in fasta_iterator(fh):
@@ -605,8 +599,7 @@ def read_10x_vdj(
                 out = parse_annotation(raw)
         elif str(file).endswith(".json"):
             if os.path.exists(file):
-                if verbose:
-                    print("Reading {}".format(file))
+                logg.info("Reading {}".format(file))
                 with open(file) as f:
                     raw = json.load(f)
                 out = parse_json(raw)

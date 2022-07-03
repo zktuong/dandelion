@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 10:55:17
+# @Last Modified time: 2022-07-03 21:32:03
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -604,12 +604,16 @@ def assign_isotype(
                     "IGHA2": "GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC",
                 },
                 "IGLC7": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
-                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCGTAA",
+                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
+                    "TGTCTCATAA",
+                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
+                    "GTGTCTCGTAA",
                 },
                 "IGLC3": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
-                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
+                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
+                    "TGTCTCATAA",
+                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
+                    "GTGTCTCATAA",
                 },
                 "IGLC6": {
                     "IGLC": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA",
@@ -681,8 +685,7 @@ def assign_isotype(
         os.path.basename(filePath).split(".fasta")[0] + format_dict[fileformat],
     )
 
-    if verbose:
-        print("Loading 10X annotations \n")
+    logg.info("Loading 10X annotations \n")
     try:
         dat_10x = load_data(_file)
     except FileNotFoundError:
@@ -695,8 +698,7 @@ def assign_isotype(
         dat_10x = load_data(_file)
     res_10x = pd.DataFrame(dat_10x["c_call"])
     res_10x["c_call"] = res_10x["c_call"].fillna(value="None")
-    if verbose:
-        print("Preparing new calls \n")
+    logg.info("Preparing new calls \n")
     dat = load_data(_file)
     for col in [
         "c_call",
@@ -729,8 +731,7 @@ def assign_isotype(
     if (
         correct_c_call
     ):  # TODO: figure out if i need to set up a None correction?
-        if verbose:
-            print("Correcting C calls \n")
+        logg.info("Correcting C calls \n")
         dat = _correct_c_call(dat, primers_dict=correction_dict)
         res_corrected = pd.DataFrame(dat["c_call"])
         res_corrected = res_corrected.fillna(value="None")
@@ -753,8 +754,7 @@ def assign_isotype(
         sorted(list(set(res["c_call"])), reverse=True)
     )
 
-    if verbose:
-        print("Finishing up \n")
+    logg.info("Finishing up \n")
     dat["c_call_10x"] = pd.Series(dat_10x["c_call"])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
@@ -878,8 +878,7 @@ def assign_isotypes(
     if all(t is None for t in filename_prefix):
         filename_prefix = [None for f in fastas]
 
-    if verbose:
-        print("Assign isotypes \n")
+    logg.info("Assign isotypes \n")
 
     for i in range(0, len(fastas)):
         assign_isotype(
@@ -1025,8 +1024,7 @@ def reannotate_genes(
                     + "Please specify path to fasta file or folder containing fasta file."
                 )
 
-        if verbose:
-            print("Processing {} \n".format(filePath))
+        logg.info("Processing {} \n".format(filePath))
 
         if flavour == "original":
             assigngenes_igblast(
@@ -1268,7 +1266,7 @@ def reassign_alleles(
 
     # concatenate
     if len(filepathlist_heavy) > 1:
-        print("Concatenating objects")
+        logg.info("Concatenating objects")
         cmd1 = " ".join(
             [
                 'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
@@ -1303,16 +1301,17 @@ def reassign_alleles(
             + [outDir + "/" + outDir + "_light" + informat_dict[fileformat]]
         )
 
-    if verbose:
-        print("Running command: %s\n" % (cmd1))
-        print("Running command: %s\n" % (cmd2))
+    logg.info("Running command: %s\n" % (cmd1))
+    logg.info("Running command: %s\n" % (cmd2))
     os.system(cmd1)
     os.system(cmd2)
 
     novel_dict = {True: "YES", False: "NO"}
     if novel:
         try:
-            print("      Running tigger-genotype with novel allele discovery.")
+            logg.info(
+                "      Running tigger-genotype with novel allele discovery."
+            )
             tigger_genotype(
                 outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
                 v_germline=v_germline,
@@ -1343,8 +1342,8 @@ def reassign_alleles(
             )
         except:
             try:
-                print("      Novel allele discovery execution halted.")
-                print(
+                logg.info("      Novel allele discovery execution halted.")
+                logg.info(
                     "      Attempting to run tigger-genotype without novel allele discovery."
                 )
                 tigger_genotype(
@@ -1384,13 +1383,13 @@ def reassign_alleles(
                     + fileformat_passed_dict[fileformat]
                 )
             except:
-                print(
+                logg.info(
                     "     Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls."
                 )
                 tigger_failed = ""
     else:
         try:
-            print(
+            logg.info(
                 "      Running tigger-genotype without novel allele discovery."
             )
             tigger_genotype(
@@ -1422,7 +1421,7 @@ def reassign_alleles(
                 + fileformat_passed_dict[fileformat]
             )
         except:
-            print(
+            logg.info(
                 "      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls."
             )
             tigger_failed = ""
@@ -1448,14 +1447,14 @@ def reassign_alleles(
             verbose=verbose,
             cloned=cloned,
         )
-        print(
+        logg.info(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
         )
         heavy = load_data(
             outDir + "/" + outDir + "_heavy" + germpass_dict[fileformat]
         )
         heavy["v_call_genotyped"] = heavy["v_call"]
-        print(
+        logg.info(
             "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
         )
         light = load_data(
@@ -1480,7 +1479,7 @@ def reassign_alleles(
             + "_heavy"
             + fileformat_passed_dict[fileformat]
         )
-        print(
+        logg.info(
             "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
         )
         light = load_data(
@@ -1504,7 +1503,7 @@ def reassign_alleles(
 
     if plot:
         if "tigger_failed" not in locals():
-            print("Returning summary plot")
+            logg.info("Returning summary plot")
             inferred_genotype = (
                 outDir
                 + "/"
@@ -1633,14 +1632,14 @@ def reassign_alleles(
                     if show_plot:
                         print(p)
             except:
-                print("Error in plotting encountered. Skipping.")
+                logg.info("Error in plotting encountered. Skipping.")
                 pass
         else:
             pass
     sleep(0.5)
     # if split_write_out:
     if "tigger_failed" in locals():
-        print(
+        logg.info(
             "Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv`"
             "extension for convenience."
         )
@@ -2252,6 +2251,7 @@ def filter_contigs(
     productive_only: bool = True,
     simple: bool = False,
     save: Optional[str] = None,
+    verbose: bool = True,
     **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
     """
@@ -2374,9 +2374,10 @@ def filter_contigs(
             filter_poorqualitycontig,
             filter_extra_vdj_chains,
             filter_extra_vj_chains,
+            verbose,
         )
     else:
-        tofilter = FilterContigsLite(dat)
+        tofilter = FilterContigsLite(dat, verbose)
 
     poor_qual = tofilter.poor_qual.copy()
     h_doublet = tofilter.h_doublet.copy()
@@ -2407,7 +2408,7 @@ def filter_contigs(
 
     filter_ids = []
     if filter_contig:
-        print("Finishing up filtering")
+        logg.info("Finishing up filtering")
         if filter_poorqualitycontig:
             filter_ids = poor_qual
         else:
@@ -2474,7 +2475,7 @@ def filter_contigs(
     if filter_contig:
         failed = list(set(barcode1) ^ set(barcode2))
 
-    print("Initializing Dandelion object")
+    logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=_dat, **kwargs)
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
@@ -2937,7 +2938,7 @@ def calculate_threshold(
                 **kwargs,
             )
         except:
-            print(
+            logg.info(
                 "Rerun this after filtering. For now, switching to heavy mode."
             )
             dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
@@ -2977,7 +2978,7 @@ def calculate_threshold(
         )
         threshold = np.array(dist_threshold.slots["threshold"])[0]
         if np.isnan(threshold):
-            print(
+            logg.info(
                 "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
             )
             threshold_method_ = "gmm"
@@ -3103,7 +3104,7 @@ def calculate_threshold(
             )
         )
     else:
-        print(
+        logg.info(
             "Automatic Threshold : "
             + str(np.around(threshold, decimals=2))
             + "\n method = "
@@ -3135,12 +3136,13 @@ class FilterContigs:
 
     def __init__(
         self,
-        data,
-        keep_highest_umi,
-        umi_foldchange_cutoff,
-        filter_poorqualitycontig,
-        filter_extra_vdj_chains,
-        filter_extra_vj_chains,
+        data: pd.DataFrame,
+        keep_highest_umi: bool,
+        umi_foldchange_cutoff: Union[int, float],
+        filter_poorqualitycontig: bool,
+        filter_extra_vdj_chains: bool,
+        filter_extra_vj_chains: bool,
+        verbose: bool,
     ):
         self.Cell = Tree()
         self.poor_qual = []
@@ -3175,6 +3177,7 @@ class FilterContigs:
             self.Cell,
             desc="Scanning for poor quality/ambiguous contigs",
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            disable=not verbose,
         ):
             if len(self.Cell[cell]["VDJ"]["P"]) > 0:
                 data1 = pd.DataFrame(
@@ -3919,7 +3922,7 @@ class FilterContigsLite:
 
     """
 
-    def __init__(self, data):
+    def __init__(self, data: pd.DataFrame, verbose: bool):
         self.Cell = Tree()
         self.poor_qual = []
         self.h_doublet = []
@@ -3952,6 +3955,7 @@ class FilterContigsLite:
             self.Cell,
             desc="Scanning for poor quality/ambiguous contigs",
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            disable=not verbose,
         ):
             if len(self.Cell[cell]["VDJ"]["P"]) > 0:
                 data1 = pd.DataFrame(
@@ -4369,8 +4373,7 @@ def run_igblastn(
                 str(min_d_match),
             ]
 
-        if verbose:
-            print("Running command: %s\n" % (" ".join(cmd)))
+        logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
 
@@ -4607,8 +4610,7 @@ def run_blastn(
         os.path.basename(fasta).split(".fasta")[0] + "_" + call + "_blast",
     )
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     with open(blast_out, "w") as out:
         run(cmd, stdout=out, env=env)
     try:
@@ -5176,6 +5178,7 @@ def check_contigs(
     umi_foldchange_cutoff: int = 2,
     filter_missing: bool = True,
     save: Optional[str] = None,
+    verbose: bool = True,
     **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
     """
@@ -5222,6 +5225,8 @@ def check_contigs(
         doublets. Default is empirically set at 2-fold.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will removed from the dandelion object. Default is True.
+    verbose : bool
+        whether to print progress when marking contigs.
     save : str, Optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table
         with a `_checked.tsv` suffix extension.
@@ -5274,10 +5279,7 @@ def check_contigs(
         obs = pd.DataFrame(index=barcode)
         adata_ = ad.AnnData(obs=obs)
         adata_.obs["has_contig"] = "True"
-    contig_status = MarkAmbiguousContigs(
-        dat,
-        umi_foldchange_cutoff,
-    )
+    contig_status = MarkAmbiguousContigs(dat, umi_foldchange_cutoff, verbose)
 
     ambigous = contig_status.ambiguous_contigs.copy()
     umi_adjustment = contig_status.umi_adjustment.copy()
@@ -5314,10 +5316,11 @@ def check_contigs(
                         str(save)
                     )
                 )
-    print("Initializing Dandelion object")
+    logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=dat, **kwargs)
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
+        out_dat.threshold = data.threshold
     if adata_provided:
         transfer(adata_, out_dat)
         logg.info(
@@ -5344,7 +5347,10 @@ class MarkAmbiguousContigs:
     """
 
     def __init__(
-        self, data: pd.DataFrame, umi_foldchange_cutoff: Union[int, float]
+        self,
+        data: pd.DataFrame,
+        umi_foldchange_cutoff: Union[int, float],
+        verbose: bool,
     ):
         self.ambiguous_contigs = []
         self.umi_adjustment = {}
@@ -5362,6 +5368,7 @@ class MarkAmbiguousContigs:
             cells,
             desc="Scanning for poor quality/ambiguous contigs",
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            disable=not verbose,
         ):
             data1, data2, data3, data4 = None, None, None, None
             # VDJ productive

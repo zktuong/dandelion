@@ -2,19 +2,20 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 12:35:06
+# @Last Modified time: 2022-07-03 21:50:22
 """core module."""
-import _pickle as cPickle
 import bz2
 import copy
 import gzip
 import h5py
-import networkx as nx
-import numpy as np
 import os
-import pandas as pd
 import re
 import warnings
+
+import _pickle as cPickle
+import networkx as nx
+import numpy as np
+import pandas as pd
 
 from anndata._core.index import (
     _normalize_index,
@@ -131,23 +132,59 @@ class Dandelion:
         return self._gen_repr(self.n_obs, self.n_contigs)
 
     def __getitem__(self, index: Index) -> "Dandelion":
-        """Returns a sliced view of the object."""
-        idx, idxtype = self._normalize_indices(index[index].index)
+        """Returns a sliced object."""
+        if isinstance(index, np.ndarray):
+            if len(index) == self._metadata.shape[0]:
+                idx, idxtype = self._normalize_indices(
+                    self._metadata.index[index]
+                )
+            elif len(index) == self._data.shape[0]:
+                idx, idxtype = self._normalize_indices(self._data.index[index])
+        else:
+            idx, idxtype = self._normalize_indices(index[index].index)
         if idxtype == "metadata":
-
-            return Dandelion(
-                self._data[
-                    self._data.cell_id.isin(self._metadata.iloc[idx].index)
-                ],
-                self._metadata.iloc[idx],
-            )
+            _data = self._data[
+                self._data.cell_id.isin(self._metadata.iloc[idx].index)
+            ]
+            _metadata = self._metadata.iloc[idx]
         elif idxtype == "data":
-            return Dandelion(
-                self._data.iloc[idx],
-                self._metadata[
-                    self._metadata.index.isin(self._data.iloc[idx].cell_id)
-                ],
+            _data = self._data.iloc[idx]
+            _metadata = self._metadata[
+                self._metadata.index.isin(self._data.iloc[idx].cell_id)
+            ]
+        _keep_cells = _metadata.index
+        if self.edges is not None:
+            _edges = self.edges[
+                (self.edges.source.isin(_keep_cells))
+                & (self.edges.target.isin(_keep_cells))
+            ]
+        else:
+            _edges = None
+        if self.layout is not None:
+            _layout0 = {
+                k: r for k, r in self.layout[0].items() if k in _keep_cells
+            }
+            _layout1 = {
+                k: r for k, r in self.layout[1].items() if k in _keep_cells
+            }
+            _layout = (_layout0, _layout1)
+        else:
+            _layout = None
+        if self.graph is not None:
+            _g0 = self.graph[0].subgraph(_keep_cells)
+            _g1 = self.graph[1].subgraph(
+                [n for n in self.graph[1].nodes if n in _keep_cells]
             )
+            _graph = (_g0, _g1)
+        else:
+            _graph = None
+        return Dandelion(
+            data=_data,
+            metadata=_metadata,
+            edges=_edges,
+            layout=_layout,
+            graph=_graph,
+        )
 
     @property
     def data(self) -> pd.DataFrame:
@@ -192,7 +229,7 @@ class Dandelion:
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
 
-    def _normalize_indices(self, index: Optional[Index]) -> Tuple[slice, str]:
+    def _normalize_indices(self, index: Index) -> Tuple[slice, str]:
         """retrieve indices"""
         return _normalize_indices(index, self.metadata_names, self.data_names)
 
@@ -205,7 +242,7 @@ class Dandelion:
             setattr(self, f"_{attr}", value)
 
     def _prep_dim_index(self, value, attr: str) -> pd.Index:
-        """Prepares index to be uses as obs_names or var_names for AnnData object.AssertionError
+        """Prepares index to be uses as metadata_names or data_names for Dandelion object.
         If a pd.Index is passed, this will use a reference, otherwise a new index object is created.
         """
         if isinstance(value, pd.Index) and not isinstance(
@@ -946,14 +983,10 @@ class Query:
     def __init__(self, data, verbose=False):
         self.data = data.copy()
         self.Cell = Tree()
-        if verbose:
-            disable = False
-        else:
-            disable = True
         for contig, row in tqdm(
             data.iterrows(),
             desc="Setting up data",
-            disable=disable,
+            disable=not verbose,
         ):
             self.Cell[row["cell_id"]][contig].update(row)
 
@@ -2102,7 +2135,9 @@ def _normalize_indices(
         index = index.values
     if isinstance(index, tuple):
         if len(index) > 2:
-            raise ValueError("AnnData can only be sliced in rows and columns.")
+            raise ValueError(
+                "Dandelion can only be sliced in data or metadata rows."
+            )
         # deal with pd.Series
         # TODO: The series should probably be aligned first
         if isinstance(index[1], pd.Series):

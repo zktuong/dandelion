@@ -2,13 +2,14 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 00:38:36
+# @Last Modified time: 2022-07-03 21:50:37
 """utilities module."""
-import numpy as np
 import os
-import pandas as pd
 import re
 import warnings
+
+import numpy as np
+import pandas as pd
 
 from airr import RearrangementSchema
 from collections import defaultdict

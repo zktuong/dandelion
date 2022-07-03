@@ -2,15 +2,16 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 01:31:37
+# @Last Modified time: 2022-07-03 21:49:46
 """tools module."""
 import math
-import networkx as nx
-import numpy as np
 import os
-import pandas as pd
 import re
 import sys
+
+import networkx as nx
+import numpy as np
+import pandas as pd
 
 from anndata import AnnData
 from changeo.Gene import getGene
@@ -40,6 +41,7 @@ def find_clones(
     recalculate_length: bool = True,
     productive_only: bool = True,
     collapse_label: bool = False,
+    verbose: bool = True,
 ) -> Dandelion:
     """
     Find clones based on VDJ chain and VJ chain CDR3 junction hamming distance.
@@ -229,6 +231,7 @@ def find_clones(
                         locus_log[locusx]
                     ),
                     bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                    disable=not verbose,
                 ):
                     for l in seq_grp[g]:
                         seq_ = list(seq_grp[g][l])
@@ -262,7 +265,8 @@ def find_clones(
                             indices_j.append(seq_[b1])
                         # retain only the unique sequences
                         indices_j_f = list(set(indices_j))
-                        # convert the distance matrix to coordinate (source) and distance (target) and create it as a dictionary
+                        # convert the distance matrix to coordinate (source) and distance (target) and create it
+                        # as a dictionary
                         source, target = d_mat.nonzero()
                         source_target = list(
                             zip(source.tolist(), target.tolist())
@@ -560,6 +564,7 @@ def find_clones(
                         cellclonetree,
                         desc="Refining clone assignment based on VJ chain pairing ",
                         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                        disable=not verbose,
                     ):
                         suffix = [
                             renamed_clone_dict_light[x]
@@ -595,7 +600,6 @@ def find_clones(
             ),
         )
 
-    sleep(0.5)
     logg.info(
         " finished",
         time=start,
@@ -704,7 +708,8 @@ def transfer(
     clone_key : str, Optional
         column name of clone/clonotype ids. Only used for integration with scirpy.
     collapse_nodes : bool
-        Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for integration with scirpy.
+        Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for
+        integration with scirpy.
     overwrite : str, bool, list, Optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
         list of column names will overwrite that specific column(s).
@@ -738,7 +743,7 @@ def transfer(
             G = dandelion.graph[1]
         else:
             G = dandelion.graph[0]
-        print("converting matrices")
+        logg.info("converting matrices")
         distances = nx.to_pandas_adjacency(
             G, dtype=np.float32, weight="weight", nonedge=np.nan
         )
@@ -764,7 +769,7 @@ def transfer(
         df_connectivities_ = csr_matrix(df_connectivities, dtype=np.float32)
         df_distances = csr_matrix(df_distances, dtype=np.float32)
 
-        print("Updating anndata slots")
+        logg.info("Updating anndata slots")
         if neighbors_key is None:
             neighbors_key = "neighbors"
         if neighbors_key not in self.uns:
@@ -855,7 +860,8 @@ def transfer(
             # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
             # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
             "distances": df_connectivities_,
-            # '0' refers to the row/col index in the `distances` matrix (numeric index, but needs to be str because of h5py)
+            # '0' refers to the row/col index in the `distances` matrix
+            # (numeric index, but needs to be strbecause of h5py)
             # np.array(["cell1", "cell2"]) points to the rows in `adata.obs`
             "cell_indices": cell_indices,
         }
@@ -1073,7 +1079,9 @@ def define_clones(
 
     def clusterLinkage(cell_series, group_series):
         """
-        Return a dictionary of {cell_id : cluster_id} that identifies clusters of cells by analyzing their shared
+        Return a dictionary of {cell_id : cluster_id}.
+
+        that identifies clusters of cells by analyzing their shared
         features (group_series) using single linkage.
 
         Arguments:
@@ -1084,7 +1092,6 @@ def define_clones(
         dict:  dictionary of {cell_id : cluster_id}.
 
         """
-
         # assign initial clusters
         # initial_dict = {cluster1: [cell1], cluster2: [cell1]}
         initial_dict = {}
@@ -1212,7 +1219,8 @@ def define_clones(
             heavy_df = heavy_df.drop_duplicates(cell_id, keep=False)
             if heavy_df.empty is True:
                 raise ValueError(
-                    "Empty heavy chain data, after doublets drop. Are you combining experiments in a single file? If so, split your data into multiple files."
+                    "Empty heavy chain data, after doublets drop. Are you combining experiments "
+                    "in a single file? If so, split your data into multiple files."
                 )
         elif doublets == "count":
             heavy_df[umi_count] = heavy_df[umi_count].astype("int")
@@ -1263,8 +1271,7 @@ def define_clones(
         write_airr(heavy_df, out_file)
         return (heavy_df, light_df)
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     run(cmd)
 
     h_df, l_df = _lightCluster(
@@ -1379,7 +1386,7 @@ def clone_size(
     key_added: Optional[str] = None,
 ):
     """
-    Quantifies size of clones
+    Quantify size of clones.
 
     Parameters
     ----------
@@ -1396,7 +1403,6 @@ def clone_size(
     -------
     `Dandelion` object with clone size columns annotated in `.metadata` slot.
     """
-
     start = logg.info("Quantifying clone sizes")
 
     metadata_ = self.metadata.copy()
@@ -1590,6 +1596,7 @@ def clone_overlap(
     min_clone_size: Optional[int] = None,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
+    verbose: bool = True,
 ) -> Union[AnnData, pd.DataFrame]:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
@@ -1609,7 +1616,8 @@ def clone_overlap(
         In the future, there will be the option to use something like a jaccard index.
     clone_key : str, Optional
         column name for clones. None defaults to 'clone_id'.
-
+    verbose: bool
+        whether to print progress
     Returns
     -------
     a `pandas DataFrame`.

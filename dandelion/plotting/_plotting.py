@@ -2,12 +2,13 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-01 22:54:35
+# @Last Modified time: 2022-07-03 21:52:51
 """plotting module."""
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import random
 import seaborn as sns
 
 from anndata import AnnData
@@ -15,16 +16,16 @@ from itertools import combinations, cycle
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from plotnine import (
-    ggplot,
-    theme_classic,
     aes,
     geom_line,
-    xlab,
-    ylab,
-    options,
+    ggplot,
     ggtitle,
     labs,
+    options,
     scale_color_manual,
+    theme_classic,
+    xlab,
+    ylab,
 )
 from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding

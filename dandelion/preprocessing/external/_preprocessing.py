@@ -2,18 +2,20 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:31:16
+# @Last Modified time: 2022-07-03 21:49:03
 """preprocessing module."""
-import numpy as np
 import os
-import pandas as pd
 import re
-import scanpy as sc
 import scipy.stats
+
+import numpy as np
+import pandas as pd
+import scanpy as sc
 
 from anndata import AnnData
 from datetime import timedelta
 from os import PathLike
+from scanpy import logging as logg
 from sklearn import mixture
 from subprocess import run
 from time import time
@@ -89,8 +91,7 @@ def assigngenes_igblast(
             "{}/{}".format(outfolder, outfile),
         ]
 
-        if verbose:
-            print("Running command: %s\n" % (" ".join(cmd)))
+        logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
 
@@ -205,11 +206,9 @@ def makedb_igblast(
             "--failed",
         ]
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd1)))
+    logg.info("Running command: %s\n" % (" ".join(cmd1)))
     run(cmd1, env=env)  # logs are printed to terminal
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd2)))
+    logg.info("Running command: %s\n" % (" ".join(cmd2)))
     run(cmd2, env=env)  # logs are printed to terminal
 
 
@@ -243,8 +242,7 @@ def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
         outname,
     ]
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     run(cmd)  # logs are printed to terminal
 
 
@@ -278,8 +276,7 @@ def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
         outname,
     ]
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     run(cmd)  # logs are printed to terminal
 
 
@@ -703,8 +700,7 @@ def creategermlines(
                         v_field,
                     ]
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     run(cmd, env=env)  # logs are printed to terminal
 
 
@@ -803,8 +799,7 @@ def tigger_genotype(
     ]
 
     print("      Reassigning alleles")
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     run(cmd, env=env)  # logs are printed to terminal
     elapsed_time_secs = time() - start_time
     msg = (
@@ -812,8 +807,7 @@ def tigger_genotype(
         % timedelta(seconds=round(elapsed_time_secs))
         + " secs (Wall clock time)\n"
     )
-    if verbose:
-        print(msg)
+    logg.info(msg)
 
 
 def recipe_scanpy_qc(
