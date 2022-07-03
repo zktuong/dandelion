@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:50:22
+# @Last Modified time: 2022-07-03 23:10:32
 """core module."""
 import bz2
 import copy
@@ -48,7 +48,6 @@ class Dandelion:
         data: Optional[pd.DataFrame] = None,
         metadata: Optional[pd.DataFrame] = None,
         germline: Optional[Dict] = None,
-        edges: Optional[pd.DataFrame] = None,
         layout: Optional[pd.DataFrame] = None,
         graph: Optional[Tuple[NetworkxGraph, NetworkxGraph]] = None,
         initialize: bool = True,
@@ -57,7 +56,6 @@ class Dandelion:
     ):
         self._data = data
         self._metadata = metadata
-        self.edges = edges
         self.layout = layout
         self.graph = graph
         self.threshold = None
@@ -113,7 +111,7 @@ class Dandelion:
         """Report."""
         # inspire by AnnData's function
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
-        for attr in ["data", "metadata", "edges"]:
+        for attr in ["data", "metadata"]:
             try:
                 keys = getattr(self, attr).keys()
             except:
@@ -148,18 +146,11 @@ class Dandelion:
             ]
             _metadata = self._metadata.iloc[idx]
         elif idxtype == "data":
-            _data = self._data.iloc[idx]
             _metadata = self._metadata[
                 self._metadata.index.isin(self._data.iloc[idx].cell_id)
             ]
+            _data = self._data.iloc[idx]
         _keep_cells = _metadata.index
-        if self.edges is not None:
-            _edges = self.edges[
-                (self.edges.source.isin(_keep_cells))
-                & (self.edges.target.isin(_keep_cells))
-            ]
-        else:
-            _edges = None
         if self.layout is not None:
             _layout0 = {
                 k: r for k, r in self.layout[0].items() if k in _keep_cells
@@ -181,7 +172,6 @@ class Dandelion:
         return Dandelion(
             data=_data,
             metadata=_metadata,
-            edges=_edges,
             layout=_layout,
             graph=_graph,
         )
@@ -919,18 +909,6 @@ class Dandelion:
                 nan_rep=np.nan,
                 **kwargs,
             )
-        try:
-            if "index" in self.edges.columns:
-                self.edges.drop("index", axis=1, inplace=True)
-            self.edges.to_hdf(
-                filename,
-                "edges",
-                complib=comp,
-                complevel=compression_level,
-                **kwargs,
-            )
-        except:
-            pass
 
         graph_counter = 0
         try:

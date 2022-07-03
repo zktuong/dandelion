@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:49:46
+# @Last Modified time: 2022-07-03 23:14:20
 """tools module."""
 import math
 import os
@@ -614,10 +614,6 @@ def find_clones(
             germline_ = self.germline
         else:
             germline_ = None
-        if self.edges is not None:
-            edge_ = self.edges
-        else:
-            edge_ = None
         if self.layout is not None:
             layout_ = self.layout
         else:
@@ -635,7 +631,6 @@ def find_clones(
             self.__init__(
                 data=dat_,
                 germline=germline_,
-                edges=edge_,
                 layout=layout_,
                 graph=graph_,
             )
@@ -644,7 +639,6 @@ def find_clones(
             self.__init__(
                 data=dat_,
                 germline=germline_,
-                edges=edge_,
                 layout=layout_,
                 graph=graph_,
             )
@@ -659,7 +653,6 @@ def find_clones(
             self.__init__(
                 data=dat_,
                 germline=germline_,
-                edges=edge_,
                 layout=layout_,
                 graph=graph_,
                 clone_key=clone_key,
@@ -1305,10 +1298,6 @@ def define_clones(
             germline_ = self.germline
         else:
             germline_ = None
-        if self.edges is not None:
-            edge_ = self.edges
-        else:
-            edge_ = None
         if self.layout is not None:
             layout_ = self.layout
         else:
@@ -1326,7 +1315,6 @@ def define_clones(
             self.__init__(
                 data=dat,
                 germline=germline_,
-                edges=edge_,
                 layout=layout_,
                 graph=graph_,
                 initialize=True,
@@ -1337,7 +1325,6 @@ def define_clones(
             self.__init__(
                 data=dat,
                 germline=germline_,
-                edges=edge_,
                 layout=layout_,
                 graph=graph_,
                 initialize=True,
@@ -1349,7 +1336,6 @@ def define_clones(
             self.__init__(
                 data=dat,
                 germline=germline_,
-                edges=edge_,
                 layout=layout_,
                 graph=graph_,
                 initialize=True,

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:55:25
+# @Last Modified time: 2022-07-03 23:12:27
 """network module."""
 import networkx as nx
 import numpy as np
@@ -10,7 +10,6 @@ import pandas as pd
 
 from polyleven import levenshtein
 from scanpy import logging as logg
-from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.spatial.distance import pdist, squareform
 from time import sleep
 from tqdm import tqdm
@@ -206,13 +205,19 @@ def generate_network(
         for i in out.metadata.index:
             if len(out.metadata.loc[i, str(clonekey)].split("|")) > 1:
                 overlap.append(
-                    [c for c in out.metadata.loc[i, str(clonekey)].split("|")]
+                    [
+                        c
+                        for c in out.metadata.loc[i, str(clonekey)].split("|")
+                        if c != "None"
+                    ]
                 )
                 for c in out.metadata.loc[i, str(clonekey)].split("|"):
-                    tmp_clusterdist[c][i].value = 1
+                    if c != "None":
+                        tmp_clusterdist[c][i].value = 1
             else:
                 cx = out.metadata.loc[i, str(clonekey)]
-                tmp_clusterdist[cx][i].value = 1
+                if cx != "None":
+                    tmp_clusterdist[cx][i].value = 1
         tmp_clusterdist2 = {}
         for x in tmp_clusterdist:
             tmp_clusterdist2[x] = list(tmp_clusterdist[x])
@@ -240,7 +245,6 @@ def generate_network(
         # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for
         # each group/clone to connect the shortest path
         mst_tree = mst(cluster_dist)
-        sleep(0.5)
 
         edge_list = Tree()
         for c in tqdm(
@@ -249,19 +253,24 @@ def generate_network(
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
-            G = nx.from_pandas_adjacency(mst_tree[c])
-            edge_list[c] = nx.to_pandas_edgelist(G)
-
-        sleep(0.5)
+            edge_list[c] = nx.to_pandas_edgelist(mst_tree[c])
+            if edge_list[c].shape[0] > 0:
+                edge_list[c]["weight"] = edge_list[c]["weight"] - 1
+                edge_list[c]["weight"][
+                    edge_list[c]["weight"] < 0
+                ] = 0  # just in case
 
         clone_ref = dict(out.metadata[clonekey])
+        clone_ref = {k: r for k, r in clone_ref.items() if r != "None"}
         tmp_clone_tree = Tree()
         for x in out.metadata.index:
-            if "|" in clone_ref[x]:
-                for x_ in clone_ref[x].split("|"):
-                    tmp_clone_tree[x_][x].value = 1
-            else:
-                tmp_clone_tree[clone_ref[x]][x].value = 1
+            if x in clone_ref:
+                if "|" in clone_ref[x]:
+                    for x_ in clone_ref[x].split("|"):
+                        if x_ != "None":
+                            tmp_clone_tree[x_][x].value = 1
+                else:
+                    tmp_clone_tree[clone_ref[x]][x].value = 1
         tmp_clone_tree2 = Tree()
         for x in tmp_clone_tree:
             tmp_clone_tree2[x] = list(tmp_clone_tree[x])
@@ -396,7 +405,6 @@ def generate_network(
         vertice_list = list(df.index)
     # and finally the vertex list which is super easy
 
-    sleep(0.5)
     # and now to actually generate the network
     g, g_, lyt, lyt_ = _generate_layout(
         vertice_list,
@@ -416,7 +424,6 @@ def generate_network(
             "Updated Dandelion object: \n"
             "   'data', contig-indexed clone table\n"
             "   'metadata', cell-indexed clone table\n"
-            "   'edges', graph edges\n"
             "   'layout', graph layout\n"
             "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
         ),
@@ -434,7 +441,6 @@ def generate_network(
             if (lyt and lyt_) is not None:
                 out = Dandelion(
                     data=dat_,
-                    edges=edge_list_final,
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
@@ -442,7 +448,6 @@ def generate_network(
             else:
                 out = Dandelion(
                     data=dat_,
-                    edges=edge_list_final,
                     graph=(g, g_),
                     germline=germline_,
                 )
@@ -453,7 +458,6 @@ def generate_network(
                 self.__init__(
                     data=self.data,
                     metadata=self.metadata,
-                    edges=edge_list_final,
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
@@ -463,7 +467,6 @@ def generate_network(
                 self.__init__(
                     data=self.data,
                     metadata=self.metadata,
-                    edges=edge_list_final,
                     layout=None,
                     graph=(g, g_),
                     germline=germline_,
@@ -474,7 +477,6 @@ def generate_network(
         if (lyt and lyt_) is not None:
             out = Dandelion(
                 data=dat_,
-                edges=edge_list_final,
                 layout=(lyt, lyt_),
                 graph=(g, g_),
                 clone_key=clone_key,
@@ -482,7 +484,6 @@ def generate_network(
         else:
             out = Dandelion(
                 data=dat_,
-                edges=edge_list_final,
                 layout=None,
                 graph=(g, g_),
                 clone_key=clone_key,
@@ -505,11 +506,10 @@ def mst(mat: dict) -> Tree:
     """
     mst_tree = Tree()
     for c in mat:
-        mst_tree[c] = pd.DataFrame(
-            minimum_spanning_tree(np.triu(mat[c])).toarray().astype(int),
-            index=mat[c].index,
-            columns=mat[c].columns,
-        )
+        tmp = mat[c] + 1
+        tmp[np.isnan(tmp)] = 0
+        G = nx.from_pandas_adjacency(tmp)
+        mst_tree[c] = nx.minimum_spanning_tree(G)
     return mst_tree
 
 

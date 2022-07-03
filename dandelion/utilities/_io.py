@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:54:54
+# @Last Modified time: 2022-07-03 23:10:51
 """io module."""
 import bz2
 import gzip
@@ -193,11 +193,6 @@ def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
         pass
 
     try:
-        edges = pd.read_hdf(filename, "edges")
-    except:
-        pass
-
-    try:
         g_0 = pd.read_hdf(filename, "graph/graph_0")
         g_1 = pd.read_hdf(filename, "graph/graph_1")
         g_0 = g_0 + 1
@@ -244,8 +239,6 @@ def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
         constructor["metadata"] = metadata
     if "germline" in locals():
         constructor["germline"] = germline
-    if "edges" in locals():
-        constructor["edges"] = edges
     if "layout" in locals():
         constructor["layout"] = layout
     if "graph" in locals():
