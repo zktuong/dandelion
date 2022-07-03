@@ -16,3 +16,25 @@ def test_load_data(airr_reannotated):
     tmp = vdj.data.drop("cell_id", axis=1)
     vdj = ddl.Dandelion(tmp)
     assert all([x == y for x, y in zip(vdj.data["cell_id"], cell_ids)])
+
+
+@pytest.mark.usefixtures("airr_generic")
+def test_slice_data(airr_generic):
+    """test load_data"""
+    vdj = ddl.Dandelion(airr_generic)
+    assert vdj.data.shape[0] == 105
+    assert vdj.metadata.shape[0] == 40
+    vdj2 = vdj[vdj.data["productive"] == "T"]
+    assert vdj2.data.shape[0] == 94
+    assert vdj2.metadata.shape[0] == 38
+    vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
+    assert vdj2.data.shape[0] == 36
+    assert vdj2.metadata.shape[0] == 17
+
+
+@pytest.mark.usefixtures("airr_generic")
+def test_names(airr_generic):
+    """test load_data"""
+    vdj = ddl.Dandelion(airr_generic)
+    assert all(i == j for i, j in zip(vdj.data_names, vdj.data.index))
+    assert all(i == j for i, j in zip(vdj.metadata_names, vdj.metadata.index))

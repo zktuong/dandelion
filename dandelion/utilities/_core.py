@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 10:21:09
+# @Last Modified time: 2022-07-03 12:35:06
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -160,11 +160,6 @@ class Dandelion:
         value = load_data(value)
         self._set_dim_df(value, "data")
 
-    @data.deleter
-    def data(self):
-        """data deleter"""
-        self.data = pd.DataFrame(index=self.data_names)
-
     @property
     def data_names(self) -> pd.Index:
         """Names of observations (alias for `.data.index`)."""
@@ -185,11 +180,6 @@ class Dandelion:
     def metadata(self, value: pd.DataFrame):
         """metadata setter"""
         self._set_dim_df(value, "metadata")
-
-    @metadata.deleter
-    def metadata(self):
-        """metadata deleter"""
-        self.metadata = pd.DataFrame(index=self.metadata_names)
 
     @property
     def metadata_names(self) -> pd.Index:
@@ -1932,6 +1922,7 @@ def update_metadata(
     collapse_alleles: bool = True,
     reinitialize: bool = False,
     verbose: bool = False,
+    by_celltype: bool = False,
 ) -> Dandelion:
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -2056,7 +2047,10 @@ def update_metadata(
         retrieve_ = defaultdict(dict)
         for k, v in ret_dict.items():
             if k in self.data.columns:
-                retrieve_[k] = querier.retrieve(**v)
+                if by_celltype:
+                    retrieve_[k] = querier.retrieve_celltype(**v)
+                else:
+                    retrieve_[k] = querier.retrieve(**v)
             else:
                 raise KeyError(
                     "Cannot retrieve '%s' : Unknown column name." % k

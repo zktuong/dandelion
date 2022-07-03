@@ -30,3 +30,13 @@ def test_find_clones(create_testfolder):
     assert not vdj.metadata.clone_id.empty
     assert len(set(x for x in vdj.metadata["clone_id"] if pd.notnull(x))) == 4
     vdj.write_h5(f)
+    with pytest.raises(ValueError):
+        ddl.tl.find_clones(vdj, key="random_column")
+
+
+@pytest.mark.usefixtures("airr_reannotated")
+def test_find_clonesfromfile(airr_reannotated):
+    """test find clones"""
+    vdj = ddl.tl.find_clones(airr_reannotated, collapse_label=True)
+    assert not vdj.data.clone_id.empty
+    assert not vdj.metadata.clone_id.empty
