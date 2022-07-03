@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-02 21:34:27
+# @Last Modified time: 2022-07-03 10:21:09
 """core module."""
 import _pickle as cPickle
 import bz2
@@ -75,7 +75,6 @@ class Dandelion:
             else:
                 acceptable = None
 
-            self.data = load_data(self.data)
             if acceptable is not None:
                 self.data = self.data[self.data.locus.isin(acceptable)].copy()
 
@@ -158,6 +157,7 @@ class Dandelion:
     @data.setter
     def data(self, value: pd.DataFrame):
         """data setter"""
+        value = load_data(value)
         self._set_dim_df(value, "data")
 
     @data.deleter
