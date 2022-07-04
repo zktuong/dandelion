@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-04 08:57:40
+# @Last Modified time: 2022-07-04 09:27:34
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -103,7 +103,7 @@ def clone_rarefaction(
     if "contig_QC_pass" in metadata:
         metadata = metadata[metadata["contig_QC_pass"].isin(TRUES)]
     elif "chain_status" in metadata:
-        metadata = metadata[metadata["chain_status"].isin(chain_status_exclude)]
+        metadata = metadata[metadata["chain_status"].isin(chain_status_include)]
 
     if type(metadata[clonekey]) == "category":
         metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
