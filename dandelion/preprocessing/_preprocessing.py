@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:32:03
+# @Last Modified time: 2022-07-04 08:29:46
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5322,7 +5322,7 @@ def check_contigs(
         out_dat.germline = data.germline
         out_dat.threshold = data.threshold
     if adata_provided:
-        transfer(adata_, out_dat)
+        transfer(adata_, out_dat, overwrite=True)
         logg.info(
             " finished",
             time=start,

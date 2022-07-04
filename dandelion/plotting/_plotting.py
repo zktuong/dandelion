@@ -2,10 +2,8 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:52:51
+# @Last Modified time: 2022-07-04 08:57:40
 """plotting module."""
-import random
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -248,16 +246,6 @@ def clone_rarefaction(
         )
 
     return p
-
-
-def random_palette(n: int) -> Sequence:
-    """A random palette of colours."""
-    # a list of 900+colours
-    cols = list(sns.xkcd_rgb.keys())
-    # if max_colors_needed1 > len(cols):
-    cols2 = list(sns.color_palette("husl", n))
-    palette = random.sample(sns.xkcd_palette(cols) + cols2, n)
-    return palette
 
 
 def clone_network(
@@ -642,16 +630,10 @@ def spectratype(
         if "ambiguous" in self.data:
             data = data[data["ambiguous"] == "F"].copy()
     else:
-        try:
-            data = self.copy()
-        except:
-            AttributeError(
-                "Please provide a <class 'Dandelion'> class object or a pandas dataframe instead of %s."
-                % type(self)
-            )
-
-    if "locus" not in data.columns:
-        raise AttributeError("Please ensure dataframe contains 'locus' column")
+        raise ValueError(
+            "Please provide a <class 'Dandelion'> class object instead of %s."
+            % type(self)
+        )
 
     if type(locus) is not list:
         locus = [locus]
@@ -775,7 +757,7 @@ def spectratype(
 
 
 def clone_overlap(
-    self: Union[AnnData, Dandelion],
+    self: AnnData,
     groupby: str,
     colorby: str,
     min_clone_size: Optional[int] = None,
@@ -802,12 +784,12 @@ def clone_overlap(
 
     Parameters
     ----------
-    self : Dandelion, AnnData
-        `Dandelion` or `AnnData` object.
+    self : AnnData
+        `AnnData` object.
     groupby : str
-        column name in obs/metadata for collapsing to nodes in circos plot.
+        column name in obs for collapsing to nodes in circos plot.
     colorby : str
-        column name in obs/metadata for grouping and color of nodes in circos plot.
+        column name in obs for grouping and color of nodes in circos plot.
     min_clone_size : int, Optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     weighted_overlapt : bool
@@ -866,105 +848,11 @@ def clone_overlap(
         if "clone_overlap" in self.uns:
             overlap = self.uns["clone_overlap"].copy()
         else:
-            allgroups = list(data[groupby].unique())
-            data = data[
-                ~(
-                    data[clone_].isin(
-                        [
-                            np.nan,
-                            "nan",
-                            "NaN",
-                            "No_contig",
-                            "unassigned",
-                            "None",
-                            None,
-                        ]
-                    )
-                )
-            ]
-            # prepare a summary table
-            datc_ = data[clone_].str.split("|", expand=True).stack()
-            datc_ = pd.DataFrame(datc_)
-            datc_.reset_index(drop=False, inplace=True)
-            datc_.columns = ["cell_id", "tmp", clone_]
-            datc_.drop("tmp", inplace=True, axis=1)
-            datc_ = datc_[
-                ~(
-                    datc_[clone_].isin(
-                        [
-                            "",
-                            np.nan,
-                            "nan",
-                            "NaN",
-                            "No_contig",
-                            "unassigned",
-                            None,
-                        ]
-                    )
-                )
-            ]
-            dictg_ = dict(data[groupby])
-            datc_[groupby] = [dictg_[l] for l in datc_["cell_id"]]
-
-            overlap = pd.crosstab(datc_[clone_], datc_[groupby])
-            for x in allgroups:
-                if x not in overlap:
-                    overlap[x] = 0
-            if min_size == 0:
-                raise ValueError("min_size must be greater than 0.")
-            if not weighted_overlap:
-                if min_size > 2:
-                    overlap[overlap < min_size] = 0
-                    overlap[overlap >= min_size] = 1
-                elif min_size == 2:
-                    overlap[overlap >= min_size] = 1
-
-            overlap.index.name = None
-            overlap.columns.name = None
-    elif isinstance(self, Dandelion):
-        data = self.metadata.copy()
-        allgroups = list(data[groupby].unique())
-        # get rid of problematic rows that appear because of category conversion?
-        data = data[
-            ~(
-                data[clone_].isin(
-                    [
-                        np.nan,
-                        "nan",
-                        "NaN",
-                        "No_contig",
-                        "unassigned",
-                        "None",
-                        None,
-                    ]
-                )
+            raise KeyError(
+                "`clone_overlap` not found in `adata.uns`. Did you run `tl.clone_overlap`?"
             )
-        ]
-
-        # prepare a summary table
-        datc_ = data[clone_].str.split("|", expand=True).stack()
-        datc_ = pd.DataFrame(datc_)
-        datc_.reset_index(drop=False, inplace=True)
-        datc_.columns = ["cell_id", "tmp", clone_]
-        datc_.drop("tmp", inplace=True, axis=1)
-        dictg_ = dict(data[groupby])
-        datc_[groupby] = [dictg_[l] for l in datc_["cell_id"]]
-
-        overlap = pd.crosstab(datc_[clone_], datc_[groupby])
-        for x in allgroups:
-            if x not in overlap:
-                overlap[x] = 0
-        if min_size == 0:
-            raise ValueError("min_size must be greater than 0.")
-        if not weighted_overlap:
-            if min_size > 2:
-                overlap[overlap < min_size] = 0
-                overlap[overlap >= min_size] = 1
-            elif min_size == 2:
-                overlap[overlap >= min_size] = 1
-
-        overlap.index.name = None
-        overlap.columns.name = None
+    else:
+        raise ValueError("Please provide a AnnData object.")
 
     edges = {}
     if not weighted_overlap:
