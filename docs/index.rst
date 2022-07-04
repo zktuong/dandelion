@@ -11,8 +11,8 @@
    :maxdepth: 1
    :caption: Singularity Tutorial:
 
-   notebooks/singularity_preprocessing.ipynb
-   notebooks/gamma_delta.ipynb
+   notebooks/singularity_preprocessing.rst
+   notebooks/gamma_delta.rst
 
 .. toctree::
    :hidden:
@@ -20,7 +20,7 @@
    :caption: Tutorial:
 
    tutorial_short.rst
-   notebooks/7_dandelion_TCR_data_10x_data.ipynb
+   notebooks/7_dandelion_TCR_data_10x_data.rst
 
 .. toctree::
    :maxdepth: 1
