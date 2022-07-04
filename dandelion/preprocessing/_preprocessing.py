@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-04 08:29:46
+# @Last Modified time: 2022-07-04 14:25:26
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -1495,7 +1495,7 @@ def reassign_alleles(
         heavy["sample_id"].update(dat_f["sample_id"])
         light["sample_id"].update(dat_f["sample_id"])
 
-    dat_ = heavy.append(light)
+    dat_ = pd.concat([heavy, light])
     if "cell_id" in dat_.columns:
         dat_.sort_values(by="cell_id", inplace=True)
     else:
@@ -1597,12 +1597,12 @@ def reassign_alleles(
                 not_in_genotype_table["var_group"] = not_in_genotype_table[
                     "var_group"
                 ].astype("category")
-                ambiguous_table["var_group"].cat.reorder_categories(
-                    ["before", "after"], inplace=True
-                )
-                not_in_genotype_table["var_group"].cat.reorder_categories(
-                    ["before", "after"], inplace=True
-                )
+                ambiguous_table["var_group"] = ambiguous_table[
+                    "var_group"
+                ].cat.reorder_categories(["before", "after"])
+                not_in_genotype_table["var_group"] = not_in_genotype_table[
+                    "var_group"
+                ].cat.reorder_categories(["before", "after"])
 
                 options.figure_size = figsize
                 final_table = pd.concat(
