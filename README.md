@@ -27,7 +27,7 @@ Original preprint:
 
 Illustration of the `Dandelion` class slots
 
-![](docs/notebooks/img/dandelion_class.png)
+![](docs/notebooks/img/dandelion_class2.png)
 
 Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/latest/docs/notebooks/):
 

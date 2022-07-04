@@ -378,4 +378,4 @@ References
    :target: https://colab.research.google.com/github/zktuong/dandelion/blob/master/container/dandelion_singularity.ipynb
 .. |logo| image:: notebooks/img/dandelion_logo_illustration.png
 .. |overview| image:: notebooks/img/dandelion_overview.png
-.. |class| image:: notebooks/img/dandelion_class.png
+.. |class| image:: notebooks/img/dandelion_class2.png

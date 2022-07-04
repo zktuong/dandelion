@@ -19,7 +19,7 @@ Hi there! I have put together a python package for analyzing single cell BCR/V(D
 
 Illustration of the `Dandelion` class slots
 
-![](notebooks/img/dandelion_class.png)
+![](notebooks/img/dandelion_class2.png)
 
 Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/latest/docs/notebooks/):
 
