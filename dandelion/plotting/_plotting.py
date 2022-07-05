@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-04 09:27:34
+# @Last Modified time: 2022-07-05 13:59:27
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -275,7 +275,7 @@ def barplot(
     self: Union[AnnData, Dandelion],
     color: str,
     palette: str = "Set1",
-    figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4),
+    figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
     normalize: bool = True,
     sort_descending: bool = True,
     title: Optional[str] = None,
@@ -300,7 +300,7 @@ def barplot(
         or a dictionary mapping hue levels to matplotlib colors.
         See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).
     figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (12, 4).
+        figure size. Default is (8, 3).
     normalize : bool
         if True, will return as proportion out of 1.
         Otherwise False will return counts. Default is True.
@@ -372,7 +372,7 @@ def stackedbarplot(
     self: Union[AnnData, Dandelion],
     color: str,
     groupby: Optional[str],
-    figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4),
+    figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
     normalize: bool = False,
     title: Optional[str] = None,
     sort_descending: bool = True,
@@ -396,7 +396,7 @@ def stackedbarplot(
     groupby : str
         column name in metadata to split by during plotting.
     figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (12, 4).
+        figure size. Default is (8, 3).
     normalize : bool
         if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
     sort_descending : bool
@@ -463,7 +463,7 @@ def stackedbarplot(
     def _plot_bar_stacked(
         dfall: pd.DataFrame,
         labels: Optional[Sequence] = None,
-        figsize: Tuple[Union[int, float], Union[int, float]] = (12, 4),
+        figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
         title: str = "multiple stacked bar plot",
         xtick_rotation: Optional[Union[int, float]] = None,
         legend_options: Tuple[str, Tuple[float, float], int] = None,
@@ -580,7 +580,7 @@ def spectratype(
     color: str,
     groupby: str,
     locus: str,
-    figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4),
+    figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
     width: Optional[Union[int, float]] = None,
     title: Optional[str] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
@@ -603,7 +603,7 @@ def spectratype(
     locus : str
         either IGH or IGL.
     figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (6, 4).
+        figure size. Default is (5, 3).
     width : float, int, Optional
         width of bars.
     title : str, Optional
@@ -656,7 +656,7 @@ def spectratype(
     def _plot_spectra_stacked(
         dfall: pd.DataFrame,
         labels: Optional[Sequence] = None,
-        figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4),
+        figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
         title: str = "multiple stacked bar plot",
         width: Optional[Union[int, float]] = None,
         xtick_rotation: Optional[Union[int, float]] = None,
