@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-04 14:25:26
+# @Last Modified time: 2022-07-05 19:35:20
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5915,6 +5915,9 @@ def check_update_same_seq(data: pd.DataFrame):
     """Check if sequences are the same."""
     umi_adjust = {}
     ambi_cont = []
+    data.sequence_alignment.fillna(
+        "", inplace=True
+    )  # incase it's missing, like in the J only assignments.
     seq_ = list(data.sequence_alignment)
     if len(set(seq_)) < len(seq_):
         _count = dict(data.duplicate_count)
