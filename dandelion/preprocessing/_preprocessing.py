@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-05 19:35:20
+# @Last Modified time: 2022-07-05 19:57:57
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5352,6 +5352,7 @@ class MarkAmbiguousContigs:
         umi_foldchange_cutoff: Union[int, float],
         verbose: bool,
     ):
+        self.Cell = Tree()
         self.ambiguous_contigs = []
         self.umi_adjustment = {}
         if "v_call_genotyped" in data.columns:
@@ -5362,22 +5363,42 @@ class MarkAmbiguousContigs:
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
         l_dict = dict(zip(data["sequence_id"], data["locus"]))
-        cells = list(set(data["cell_id"]))
+        for contig, row in tqdm(
+            data.iterrows(),
+            desc="Preparing data",
+        ):
+            cell = row["cell_id"]
+            if row["locus"] in HEAVYLONG:
+                if row["productive"] in TRUES:
+                    self.Cell[cell]["VDJ"]["P"][contig].update(row)
+                elif row["productive"] in FALSES:
+                    self.Cell[cell]["VDJ"]["NP"][contig].update(row)
+            elif row["locus"] in LIGHTSHORT:
+                if row["productive"] in TRUES:
+                    self.Cell[cell]["VJ"]["P"][contig].update(row)
+                elif row["productive"] in FALSES:
+                    self.Cell[cell]["VJ"]["NP"][contig].update(row)
 
         for cell in tqdm(
-            cells,
+            self.Cell,
             desc="Scanning for poor quality/ambiguous contigs",
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             disable=not verbose,
         ):
-            data1, data2, data3, data4 = None, None, None, None
-            # VDJ productive
-            data1 = data[
-                (data.cell_id == cell)
-                & (data.locus.isin(HEAVYLONG))
-                & (data.productive.isin(TRUES))
-            ].copy()
-            if data1.shape[0] > 0:
+            if len(self.Cell[cell]["VDJ"]["P"]) > 0:
+                # VDJ productive
+                data1 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VDJ"]["P"][x]
+                        for x in self.Cell[cell]["VDJ"]["P"]
+                        if isinstance(self.Cell[cell]["VDJ"]["P"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VDJ"]["P"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VDJ"]["P"]
+                        if isinstance(self.Cell[cell]["VDJ"]["P"][x], dict)
+                    ],
+                )
                 vdj_p = list(data1["sequence_id"])
                 vdj_umi_p = [
                     int(x) for x in pd.to_numeric(data1["duplicate_count"])
@@ -5547,12 +5568,19 @@ class MarkAmbiguousContigs:
                         self.ambiguous_contigs.append(a)
 
             # VDJ non-productive
-            data2 = data[
-                (data.cell_id == cell)
-                & (data.locus.isin(HEAVYLONG))
-                & (data.productive.isin(FALSES))
-            ].copy()
-            if data2.shape[0] > 0:
+            if len(self.Cell[cell]["VDJ"]["NP"]) > 0:
+                data2 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VDJ"]["NP"][x]
+                        for x in self.Cell[cell]["VDJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VDJ"]["NP"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VDJ"]["NP"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VDJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VDJ"]["NP"][x], dict)
+                    ],
+                )
                 vdj_np = list(data2["sequence_id"])
                 (
                     data2,
@@ -5569,12 +5597,19 @@ class MarkAmbiguousContigs:
                         self.ambiguous_contigs.append(avdj)
 
             # VJ productive
-            data3 = data[
-                (data.cell_id == cell)
-                & (data.locus.isin(LIGHTSHORT))
-                & (data.productive.isin(TRUES))
-            ].copy()
-            if data3.shape[0] > 0:
+            if len(self.Cell[cell]["VJ"]["P"]) > 0:
+                data3 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VJ"]["P"][x]
+                        for x in self.Cell[cell]["VJ"]["P"]
+                        if isinstance(self.Cell[cell]["VJ"]["P"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VJ"]["P"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VJ"]["P"]
+                        if isinstance(self.Cell[cell]["VJ"]["P"][x], dict)
+                    ],
+                )
                 vj_p = list(data3["sequence_id"])
                 vj_umi_p = [
                     int(x) for x in pd.to_numeric(data3["duplicate_count"])
@@ -5610,12 +5645,19 @@ class MarkAmbiguousContigs:
                         self.ambiguous_contigs.append(a)
 
             # VJ non-productive
-            data4 = data[
-                (data.cell_id == cell)
-                & (data.locus.isin(LIGHTSHORT))
-                & (data.productive.isin(FALSES))
-            ].copy()
-            if data4.shape[0] > 0:
+            if len(self.Cell[cell]["VJ"]["NP"]) > 0:
+                data4 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VJ"]["NP"][x]
+                        for x in self.Cell[cell]["VJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VJ"]["NP"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VJ"]["NP"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VJ"]["NP"][x], dict)
+                    ],
+                )
                 (
                     data4,
                     vj_np,
@@ -5915,13 +5957,13 @@ def check_update_same_seq(data: pd.DataFrame):
     """Check if sequences are the same."""
     umi_adjust = {}
     ambi_cont = []
-    data.sequence_alignment.fillna(
-        "", inplace=True
-    )  # incase it's missing, like in the J only assignments.
     seq_ = list(data.sequence_alignment)
-    if len(set(seq_)) < len(seq_):
-        _count = dict(data.duplicate_count)
-        _seq = dict(data.sequence_alignment)
+    seq_2 = [s for s in seq_ if present(s)]
+    if len(set(seq_2)) < len(seq_2):
+        _seq = {
+            k: r for k, r in dict(data.sequence_alignment).items() if present(r)
+        }
+        _count = {k: r for k, r in dict(data.duplicate_count) if k in _seq}
         rep_seq = [
             seq for seq in set(_seq.values()) if countOf(_seq.values(), seq) > 1
         ]
@@ -5954,6 +5996,13 @@ def check_update_same_seq(data: pd.DataFrame):
                 keep_seqs_ids.append(keep_index_vj)
                 data.duplicate_count.update({keep_index_vj: keep_index_count})
             # refresh
+            empty_seqs_ids = [
+                k
+                for k, r in dict(data.sequence_alignment).items()
+                if not present(r)
+            ]
+            if len(empty_seqs_ids) > 0:
+                keep_seqs_ids = keep_seqs_ids + empty_seqs_ids
             data = data.loc[keep_seqs_ids]
     keep_id = list(data.sequence_id)
     keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
