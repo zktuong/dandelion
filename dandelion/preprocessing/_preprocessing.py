@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-05 19:57:57
+# @Last Modified time: 2022-07-05 20:36:48
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5963,7 +5963,9 @@ def check_update_same_seq(data: pd.DataFrame):
         _seq = {
             k: r for k, r in dict(data.sequence_alignment).items() if present(r)
         }
-        _count = {k: r for k, r in dict(data.duplicate_count) if k in _seq}
+        _count = {
+            k: r for k, r in dict(data.duplicate_count).items() if k in _seq
+        }
         rep_seq = [
             seq for seq in set(_seq.values()) if countOf(_seq.values(), seq) > 1
         ]
