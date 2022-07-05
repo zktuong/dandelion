@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 23:10:32
+# @Last Modified time: 2022-07-05 17:10:03
 """core module."""
 import bz2
 import copy
@@ -1586,6 +1586,7 @@ def initialize_metadata(
             "v_call_genotyped",
             "d_call",
             "j_call",
+            "c_call",
             "productive",
         ]:
             meta_[k + "_split"] = querier.retrieve_celltype(**v)
