@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-05 13:59:27
+# @Last Modified time: 2022-07-05 14:11:11
 """plotting module."""
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,7 +43,7 @@ def clone_rarefaction(
     color: str,
     clone_key: Optional[str] = None,
     palette: Optional[Sequence] = None,
-    figsize: Tuple[Union[int, float], Union[int, float]] = (6, 4),
+    figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
     chain_status_include: List[
         Literal[
             "Single pair",
