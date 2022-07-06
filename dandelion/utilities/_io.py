@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 23:10:51
+# @Last Modified time: 2022-07-06 08:08:00
 """io module."""
 import bz2
 import gzip
@@ -163,6 +163,99 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     details="read_h5ddl will be the recommended way to read.",
 )
 def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
+    """
+    Read in and returns a `Dandelion` class from .h5 format.
+
+    Parameters
+    ----------
+    filename : str
+        path to `.h5` file
+
+    Returns
+    -------
+    `Dandelion` object.
+    """
+    try:
+        data = pd.read_hdf(filename, "data")
+        # data = sanitize_data(data)
+
+        # if check_mix_dtype(data):
+        #     for x in return_mix_dtype(data):
+        #        data[x].replace('', pd.NA, inplace=True)
+        #     data = sanitize_data(data)
+    except:
+        raise AttributeError(
+            "{} does not contain attribute `data`".format(filename)
+        )
+    try:
+        metadata = pd.read_hdf(filename, "metadata")
+    except:
+        pass
+
+    try:
+        g_0 = pd.read_hdf(filename, "graph/graph_0")
+        g_1 = pd.read_hdf(filename, "graph/graph_1")
+        g_0 = g_0 + 1
+        g_0 = g_0.fillna(0)
+        g_1 = g_1 + 1
+        g_1 = g_1.fillna(0)
+        graph0 = nx.from_pandas_adjacency(g_0)
+        graph1 = nx.from_pandas_adjacency(g_1)
+        for u, v, d in graph0.edges(data=True):
+            d["weight"] = d["weight"] - 1
+        for u, v, d in graph1.edges(data=True):
+            d["weight"] = d["weight"] - 1
+        graph = (graph0, graph1)
+    except:
+        pass
+
+    with h5py.File(filename, "r") as hf:
+        try:
+            layout0 = {}
+            for k in hf["layout/layout_0"].attrs.keys():
+                layout0.update({k: np.array(hf["layout/layout_0"].attrs[k])})
+            layout1 = {}
+            for k in hf["layout/layout_1"].attrs.keys():
+                layout1.update({k: np.array(hf["layout/layout_1"].attrs[k])})
+            layout = (layout0, layout1)
+        except:
+            pass
+
+        germline = {}
+        try:
+            for g in hf["germline"].attrs:
+                germline.update({g: hf["germline"].attrs[g]})
+        except:
+            pass
+
+        try:
+            threshold = float(np.array(hf["threshold"]))
+        except:
+            threshold = None
+
+    constructor = {}
+    constructor["data"] = data
+    if "metadata" in locals():
+        constructor["metadata"] = metadata
+    if "germline" in locals():
+        constructor["germline"] = germline
+    if "layout" in locals():
+        constructor["layout"] = layout
+    if "graph" in locals():
+        constructor["graph"] = graph
+    try:
+        res = Dandelion(**constructor)
+    except:
+        res = Dandelion(**constructor, initialize=False)
+
+    if "threshold" in locals():
+        res.threshold = threshold
+    else:
+        pass
+    return res
+
+
+def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     """
     Read in and returns a `Dandelion` class from .h5 format.
 

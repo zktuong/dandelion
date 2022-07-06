@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-05 17:10:03
+# @Last Modified time: 2022-07-06 08:08:46
 """core module."""
 import bz2
 import copy
@@ -758,7 +758,130 @@ class Dandelion:
             ),
         )
 
-    store_germline_reference = update_germline
+    def store_germline_reference(
+        self,
+        corrected: Optional[Union[Dict, str]] = None,
+        germline: Optional[str] = None,
+        org: Literal["human", "mouse"] = "human",
+    ):
+        """
+        Update germline reference with corrected sequences and store in `Dandelion` object.
+
+        Parameters
+        ----------
+        self : Dandelion
+            `Dandelion` object.
+        corrected : dict, str, Optional
+            dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
+        germline : str, Optional
+            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+        org : str
+            organism of reference folder. Default is 'human'.
+
+        Returns
+        -------
+        updated germline reference diciontary in `.germline` slot.
+        """
+        start = logg.info("Updating germline reference")
+        env = os.environ.copy()
+        if germline is None:
+            try:
+                gml = env["GERMLINE"]
+            except:
+                raise KeyError(
+                    (
+                        "Environmental variable GERMLINE must be set. Otherwise, "
+                        + "please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files."
+                    )
+                )
+            gml = gml + "imgt/" + org + "/vdj/"
+        else:
+            if type(germline) is list:
+                if len(germline) < 3:
+                    raise TypeError(
+                        (
+                            "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, "
+                            + "and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta "
+                            + "files (with .fasta extension) as a list."
+                        )
+                    )
+                else:
+                    gml = []
+                    for x in germline:
+                        if not x.endswith((".fasta", ".fa")):
+                            raise TypeError(
+                                (
+                                    "Input for germline is incorrect. Please provide path to folder containing germline "
+                                    + "IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta "
+                                    + "files (with .fasta extension) as a list."
+                                )
+                            )
+                        gml.append(x)
+            elif type(germline) is not list:
+                if os.path.isdir(germline):
+                    germline_ = [
+                        str(Path(germline, g)) for g in os.listdir(germline)
+                    ]
+                    if len(germline_) < 3:
+                        raise TypeError(
+                            (
+                                "Input for germline is incorrect. Please provide path to folder containing germline IGHV, "
+                                + "IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ "
+                                + "fasta files (with .fasta extension) as a list."
+                            )
+                        )
+                    else:
+                        gml = []
+                        for x in germline_:
+                            if not x.endswith((".fasta", ".fa")):
+                                raise TypeError(
+                                    (
+                                        "Input for germline is incorrect. Please provide path to folder containing germline "
+                                        + "IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, "
+                                        + "and IGHJ fasta files (with .fasta extension) as a list."
+                                    )
+                                )
+                            gml.append(x)
+                elif os.path.isfile(germline) and str(germline).endswith(
+                    (".fasta", ".fa")
+                ):
+                    gml = []
+                    gml.append(germline)
+                    warnings.warn(
+                        "Only 1 fasta file provided to updating germline slot. Please check if this is intended.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+
+        if type(gml) is not list:
+            gml = [gml]
+
+        germline_ref = readGermlines(gml)
+        if corrected is not None:
+            if type(corrected) is dict:
+                personalized_ref_dict = corrected
+            elif os.path.isfile(str(corrected)):
+                personalized_ref_dict = readGermlines([corrected])
+            # update with the personalized germline database
+            if "personalized_ref_dict" in locals():
+                germline_ref.update(personalized_ref_dict)
+            else:
+                raise TypeError(
+                    (
+                        "Input for corrected germline fasta is incorrect. Please provide path to file containing "
+                        + "corrected germline fasta sequences."
+                    )
+                )
+
+        self.germline.update(germline_ref)
+        logg.info(
+            " finished",
+            time=start,
+            deep=(
+                "Updated Dandelion object: \n"
+                "   'germline', updated germline reference\n"
+            ),
+        )
 
     def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
         """
@@ -952,7 +1075,150 @@ class Dandelion:
                 tr = self.threshold
                 hf.create_dataset("threshold", data=tr)
 
-    write = write_h5ddl = write_h5  # shortcut
+
+def write_h5ddl(
+    self,
+    filename: str = "dandelion_data.h5ddl",
+    complib: Literal[
+        "zlib",
+        "lzo",
+        "bzip2",
+        "blosc",
+        "blosc:blosclz",
+        "blosc:lz4",
+        "blosc:lz4hc",
+        "blosc:snappy",
+        "blosc:zlib",
+        "blosc:zstd",
+    ] = None,
+    compression: Literal[
+        "zlib",
+        "lzo",
+        "bzip2",
+        "blosc",
+        "blosc:blosclz",
+        "blosc:lz4",
+        "blosc:lz4hc",
+        "blosc:snappy",
+        "blosc:zlib",
+        "blosc:zstd",
+    ] = None,
+    compression_level: Optional[int] = None,
+    **kwargs,
+):
+    """
+    Writes a `Dandelion` class to .h5 format.
+
+    Parameters
+    ----------
+    filename
+        path to `.h5` file.
+    complib : str, Optional
+        method for compression for data frames. see
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
+    compression : str, Optional
+        same call as complib. Just a convenience option.
+    compression_opts : {0-9}, Optional
+        Specifies a compression level for data. A value of 0 disables compression.
+    **kwargs
+        passed to `pd.DataFrame.to_hdf`.
+    """
+    if compression_level is None:
+        compression_level = 9
+    else:
+        compression_level = compression_level
+
+    # a little hack to overwrite the existing file?
+    with h5py.File(filename, "w") as hf:
+        for datasetname in hf.keys():
+            del hf[datasetname]
+
+    if complib is None and compression is None:
+        comp = None
+    elif complib is not None and compression is None:
+        comp = complib
+    elif complib is None and compression is not None:
+        comp = compression
+    if complib is not None and compression is not None:
+        raise ValueError(
+            "Please specify only complib or compression. They do the same thing."
+        )
+
+    # now to actually saving
+    data = self.data.copy()
+    data = sanitize_data(data)
+    data = sanitize_data_for_saving(data)
+    data.to_hdf(
+        filename,
+        "data",
+        complib=comp,
+        complevel=compression_level,
+        **kwargs,
+    )
+
+    if self.metadata is not None:
+        metadata = self.metadata.copy()
+        for col in metadata.columns:
+            weird = (
+                metadata[[col]].applymap(type)
+                != metadata[[col]].iloc[0].apply(type)
+            ).any(axis=1)
+            if len(metadata[weird]) > 0:
+                metadata[col] = metadata[col].where(
+                    pd.notnull(metadata[col]), ""
+                )
+        metadata.to_hdf(
+            filename,
+            "metadata",
+            complib=comp,
+            complevel=compression_level,
+            format="table",
+            nan_rep=np.nan,
+            **kwargs,
+        )
+
+    graph_counter = 0
+    try:
+        for g in self.graph:
+            G = nx.to_pandas_adjacency(g, nonedge=np.nan)
+            G.to_hdf(
+                filename,
+                "graph/graph_" + str(graph_counter),
+                complib=comp,
+                complevel=compression_level,
+                **kwargs,
+            )
+            graph_counter += 1
+    except:
+        pass
+
+    with h5py.File(filename, "a") as hf:
+        try:
+            layout_counter = 0
+            for l in self.layout:
+                try:
+                    hf.create_group("layout/layout_" + str(layout_counter))
+                except:
+                    pass
+                for k in l.keys():
+                    hf["layout/layout_" + str(layout_counter)].attrs[k] = l[k]
+                layout_counter += 1
+        except:
+            pass
+
+        if len(self.germline) > 0:
+            try:
+                hf.create_group("germline")
+            except:
+                pass
+            for k in self.germline.keys():
+                hf["germline"].attrs[k] = self.germline[k]
+        if self.threshold is not None:
+            tr = self.threshold
+            hf.create_dataset("threshold", data=tr)
+
+
+write = write_h5ddl
 
 
 class Query:
