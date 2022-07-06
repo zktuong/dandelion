@@ -16,13 +16,13 @@ def test_filtercontigs(create_testfolder, dummy_adata_cr6, json_10x_cr6):
     vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix="test_all")
     vdj2, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6)
     assert vdj.data.shape[0] == 26
-    assert vdj2.data.shape[0] == 14
+    assert vdj2.data.shape[0] == 17
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(
         vdj, dummy_adata_cr6, productive_only=False
     )
     assert vdj.data.shape[0] == 26
-    assert vdj2.data.shape[0] == 23
+    assert vdj2.data.shape[0] == 26
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(
         vdj, dummy_adata_cr6, productive_only=True, simple=True
@@ -37,21 +37,24 @@ def test_filtercontigs(create_testfolder, dummy_adata_cr6, json_10x_cr6):
     assert vdj2.data.shape[0] == 26
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(
-        vdj, dummy_adata_cr6, productive_only=True, filter_vj_chains=False
+        vdj, dummy_adata_cr6, productive_only=True, filter_extra_vj_chains=False
     )
     assert vdj.data.shape[0] == 26
     assert vdj2.data.shape[0] == 17
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(
-        vdj, dummy_adata_cr6, filter_vj_chains=False, keep_highest_umi=False
+        vdj,
+        dummy_adata_cr6,
+        filter_extra_vj_chains=False,
+        keep_highest_umi=False,
     )
     assert vdj.data.shape[0] == 26
     assert vdj2.data.shape[0] == 17
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6, filter_rna=True)
     assert vdj.data.shape[0] == 26
-    assert vdj2.data.shape[0] == 14
-    assert adata.obs.shape[0] == 9
+    assert vdj2.data.shape[0] == 17
+    assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(
         vdj,
         dummy_adata_cr6,
@@ -59,7 +62,7 @@ def test_filtercontigs(create_testfolder, dummy_adata_cr6, json_10x_cr6):
         filter_poorqualitycontig=True,
     )
     assert vdj.data.shape[0] == 26
-    assert vdj2.data.shape[0] == 23
+    assert vdj2.data.shape[0] == 26
     assert adata.obs.shape[0] == 10
     vdj2, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6, save=out_file)
     assert os.path.exists(out_file)
@@ -72,4 +75,96 @@ def test_filtercontigs_no_adata(create_testfolder):
     vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix="test_all")
     vdj2 = ddl.pp.filter_contigs(vdj)
     assert vdj.data.shape[0] == 26
-    assert vdj2.data.shape[0] == 14
+    assert vdj2.data.shape[0] == 17
+
+
+@pytest.mark.usefixtures("airr_generic")
+def test_generic_filter(airr_generic):
+    """test data loading and filtering"""
+    tmp = ddl.Dandelion(airr_generic)
+    assert tmp.metadata.shape[0] == 40
+    assert tmp.data.shape[0] == airr_generic.shape[0]
+
+    tmp2 = ddl.pp.filter_contigs(tmp)
+    assert tmp2.metadata.shape[0] == 14
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 35
+
+    tmp2 = ddl.pp.filter_contigs(tmp, filter_extra_vj_chains=True)
+    assert tmp2.metadata.shape[0] == 12
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 28
+
+    tmp2 = ddl.pp.filter_contigs(
+        tmp, filter_extra_vdj_chains=False, filter_extra_vj_chains=True
+    )
+    assert tmp2.metadata.shape[0] == 17
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 41
+
+    tmp2 = ddl.pp.filter_contigs(
+        tmp, filter_extra_vdj_chains=False, filter_extra_vj_chains=False
+    )
+    assert tmp2.metadata.shape[0] == 19
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 48
+
+    tmp2 = ddl.pp.filter_contigs(
+        tmp,
+        filter_extra_vdj_chains=False,
+        filter_extra_vj_chains=False,
+        productive_only=False,
+    )
+    assert tmp2.metadata.shape[0] == 20
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 58
+
+    tmp2 = ddl.pp.filter_contigs(tmp, productive_only=False)
+    assert tmp2.metadata.shape[0] == 15
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 44
+
+    tmp2 = ddl.pp.filter_contigs(tmp, library_type="ig")
+    assert tmp2.metadata.shape[0] == 12
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 25
+
+    tmp2 = ddl.pp.filter_contigs(tmp, library_type="tr-ab")
+    assert tmp2.metadata.shape[0] == 8
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 15
+
+    tmp2 = ddl.pp.filter_contigs(tmp, library_type="tr-gd")
+    assert tmp2.metadata.shape[0] == 4
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 4
+
+
+@pytest.mark.usefixtures("airr_generic")
+def test_generic_check(airr_generic):
+    """test data loading and filtering"""
+    tmp = ddl.Dandelion(airr_generic)
+    assert tmp.metadata.shape[0] == 40
+    assert tmp.data.shape[0] == airr_generic.shape[0]
+
+    tmp2 = ddl.pp.check_contigs(tmp, productive_only=False)
+    assert tmp2.metadata.shape[0] == 39
+    assert tmp2.data.shape[0] == tmp.data.shape[0]
+
+    tmp2 = ddl.pp.check_contigs(tmp, productive_only=False, library_type="ig")
+    assert tmp2.metadata.shape[0] == 20
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 59
+
+    tmp2 = ddl.pp.check_contigs(tmp)
+    assert tmp2.metadata.shape[0] == 37
+    assert tmp2.data.shape[0] != tmp.data.shape[0]
+    assert tmp2.data.shape[0] == 94
+
+    ddl.tl.find_clones(tmp2, identity={"tr-ab": 1})
+    assert "clone_id" in tmp2.data
+    assert "clone_id" in tmp2.metadata
+    assert not tmp2.metadata.clone_id.empty
+
+    ddl.tl.generate_network(tmp2, key="junction_aa", compute_layout=False)
+    assert tmp2.graph is not None

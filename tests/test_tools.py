@@ -77,13 +77,11 @@ def test_generate_network(create_testfolder, resample, expected):
         vdj = ddl.tl.generate_network(
             vdj, downsample=resample, layout_method="mod_fr"
         )
-        assert vdj.edges is None
         assert vdj.n_obs == expected
         assert vdj.layout is not None
         assert vdj.graph is not None
     else:
         ddl.tl.generate_network(vdj2, layout_method="mod_fr")
-        assert vdj2.edges is not None
         assert vdj2.n_obs == expected
         assert vdj2.layout is not None
         assert vdj2.graph is not None
@@ -91,7 +89,7 @@ def test_generate_network(create_testfolder, resample, expected):
     vdj = ddl.Dandelion(vdj.data)
     assert vdj.data.clone_id.dtype == "object"
     ddl.tl.generate_network(vdj, layout_method="mod_fr")
-    assert vdj.edges is not None
+    assert vdj.layout is not None
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -103,7 +101,6 @@ def test_find_clones_key(create_testfolder):
     assert not vdj.metadata.test_clone.empty
     assert vdj.data.test_clone.dtype == "object"
     ddl.tl.generate_network(vdj, clone_key="test_clone", layout_method="mod_fr")
-    assert vdj.edges is None
     assert vdj.layout is not None
     assert vdj.graph is not None
 
@@ -253,10 +250,8 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     vdj, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 14
-    assert vdj.data.shape[1] == 50
-    assert vdj.metadata.shape[0] == 7
-    assert vdj.metadata.shape[1] == 29
+    assert vdj.data.shape[0] == 17
+    assert vdj.metadata.shape[0] == 8
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")
     ddl.tl.transfer(adata, vdj)

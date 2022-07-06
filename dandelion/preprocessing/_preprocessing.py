@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:31:22
+# @Last Modified time: 2022-07-05 20:36:48
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -11,11 +11,13 @@ import os
 import pandas as pd
 import re
 
+from anndata import AnnData
 from Bio import Align
 from changeo.Gene import buildGermline
 from changeo.IO import getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 from collections import OrderedDict
+from operator import countOf
 from os import PathLike
 from plotnine import (
     ggplot,
@@ -43,7 +45,7 @@ from scanpy import logging as logg
 from subprocess import run
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Sequence, Tuple, Optional
+from typing import Union, Sequence, Tuple, Optional, List
 
 from .external._preprocessing import (
     assigngenes_igblast,
@@ -56,12 +58,7 @@ from .external._preprocessing import (
 from ..utilities._core import *
 from ..utilities._io import *
 from ..utilities._utilities import *
-
-
-TRUES = ["T", "True", "true", "TRUE", True]
-FALSES = ["F", "False", "false", "FALSE", False]
-HEAVYLONG = ["IGH", "TRB", "TRD"]
-LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
+from ..tools._tools import transfer
 
 
 def format_fasta(
@@ -377,7 +374,11 @@ def format_fastas(
             suffix = [suffix]
         suffix_dict = dict(zip(fastas, suffix))
 
-    for i in tqdm(range(0, len(fastas)), desc="Formating fasta(s) "):
+    for i in tqdm(
+        range(0, len(fastas)),
+        desc="Formating fasta(s) ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         if prefix is None and suffix is None:
             format_fasta(
                 fastas[i],
@@ -603,12 +604,16 @@ def assign_isotype(
                     "IGHA2": "GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC",
                 },
                 "IGLC7": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
-                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCGTAA",
+                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
+                    "TGTCTCATAA",
+                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
+                    "GTGTCTCGTAA",
                 },
                 "IGLC3": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
-                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
+                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
+                    "TGTCTCATAA",
+                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
+                    "GTGTCTCATAA",
                 },
                 "IGLC6": {
                     "IGLC": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA",
@@ -680,8 +685,7 @@ def assign_isotype(
         os.path.basename(filePath).split(".fasta")[0] + format_dict[fileformat],
     )
 
-    if verbose:
-        print("Loading 10X annotations \n")
+    logg.info("Loading 10X annotations \n")
     try:
         dat_10x = load_data(_file)
     except FileNotFoundError:
@@ -694,8 +698,7 @@ def assign_isotype(
         dat_10x = load_data(_file)
     res_10x = pd.DataFrame(dat_10x["c_call"])
     res_10x["c_call"] = res_10x["c_call"].fillna(value="None")
-    if verbose:
-        print("Preparing new calls \n")
+    logg.info("Preparing new calls \n")
     dat = load_data(_file)
     for col in [
         "c_call",
@@ -728,8 +731,7 @@ def assign_isotype(
     if (
         correct_c_call
     ):  # TODO: figure out if i need to set up a None correction?
-        if verbose:
-            print("Correcting C calls \n")
+        logg.info("Correcting C calls \n")
         dat = _correct_c_call(dat, primers_dict=correction_dict)
         res_corrected = pd.DataFrame(dat["c_call"])
         res_corrected = res_corrected.fillna(value="None")
@@ -752,8 +754,7 @@ def assign_isotype(
         sorted(list(set(res["c_call"])), reverse=True)
     )
 
-    if verbose:
-        print("Finishing up \n")
+    logg.info("Finishing up \n")
     dat["c_call_10x"] = pd.Series(dat_10x["c_call"])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
@@ -877,8 +878,7 @@ def assign_isotypes(
     if all(t is None for t in filename_prefix):
         filename_prefix = [None for f in fastas]
 
-    if verbose:
-        print("Assign isotypes \n")
+    logg.info("Assign isotypes \n")
 
     for i in range(0, len(fastas)):
         assign_isotype(
@@ -1002,7 +1002,11 @@ def reannotate_genes(
         filename_prefix = [None for d in data]
 
     filePath = None
-    for i in tqdm(range(0, len(data)), desc="Assigning genes "):
+    for i in tqdm(
+        range(0, len(data)),
+        desc="Assigning genes ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         filePath = check_filepath(
             data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
         )
@@ -1020,8 +1024,7 @@ def reannotate_genes(
                     + "Please specify path to fasta file or folder containing fasta file."
                 )
 
-        if verbose:
-            print("Processing {} \n".format(filePath))
+        logg.info("Processing {} \n".format(filePath))
 
         if flavour == "original":
             assigngenes_igblast(
@@ -1216,7 +1219,11 @@ def reassign_alleles(
     filePath = None
     sampleNames_dict = {}
     filePath_dict = {}
-    for i in tqdm(range(0, len(data)), desc="Processing data file(s) "):
+    for i in tqdm(
+        range(0, len(data)),
+        desc="Processing data file(s) ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
@@ -1259,7 +1266,7 @@ def reassign_alleles(
 
     # concatenate
     if len(filepathlist_heavy) > 1:
-        print("Concatenating objects")
+        logg.info("Concatenating objects")
         cmd1 = " ".join(
             [
                 'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
@@ -1294,16 +1301,17 @@ def reassign_alleles(
             + [outDir + "/" + outDir + "_light" + informat_dict[fileformat]]
         )
 
-    if verbose:
-        print("Running command: %s\n" % (cmd1))
-        print("Running command: %s\n" % (cmd2))
+    logg.info("Running command: %s\n" % (cmd1))
+    logg.info("Running command: %s\n" % (cmd2))
     os.system(cmd1)
     os.system(cmd2)
 
     novel_dict = {True: "YES", False: "NO"}
     if novel:
         try:
-            print("      Running tigger-genotype with novel allele discovery.")
+            logg.info(
+                "      Running tigger-genotype with novel allele discovery."
+            )
             tigger_genotype(
                 outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
                 v_germline=v_germline,
@@ -1334,8 +1342,8 @@ def reassign_alleles(
             )
         except:
             try:
-                print("      Novel allele discovery execution halted.")
-                print(
+                logg.info("      Novel allele discovery execution halted.")
+                logg.info(
                     "      Attempting to run tigger-genotype without novel allele discovery."
                 )
                 tigger_genotype(
@@ -1375,13 +1383,13 @@ def reassign_alleles(
                     + fileformat_passed_dict[fileformat]
                 )
             except:
-                print(
+                logg.info(
                     "     Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls."
                 )
                 tigger_failed = ""
     else:
         try:
-            print(
+            logg.info(
                 "      Running tigger-genotype without novel allele discovery."
             )
             tigger_genotype(
@@ -1413,7 +1421,7 @@ def reassign_alleles(
                 + fileformat_passed_dict[fileformat]
             )
         except:
-            print(
+            logg.info(
                 "      Insufficient contigs for running tigger-genotype. Defaulting to original heavy chain v_calls."
             )
             tigger_failed = ""
@@ -1439,14 +1447,14 @@ def reassign_alleles(
             verbose=verbose,
             cloned=cloned,
         )
-        print(
+        logg.info(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
         )
         heavy = load_data(
             outDir + "/" + outDir + "_heavy" + germpass_dict[fileformat]
         )
         heavy["v_call_genotyped"] = heavy["v_call"]
-        print(
+        logg.info(
             "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
         )
         light = load_data(
@@ -1471,7 +1479,7 @@ def reassign_alleles(
             + "_heavy"
             + fileformat_passed_dict[fileformat]
         )
-        print(
+        logg.info(
             "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
         )
         light = load_data(
@@ -1487,7 +1495,7 @@ def reassign_alleles(
         heavy["sample_id"].update(dat_f["sample_id"])
         light["sample_id"].update(dat_f["sample_id"])
 
-    dat_ = heavy.append(light)
+    dat_ = pd.concat([heavy, light])
     if "cell_id" in dat_.columns:
         dat_.sort_values(by="cell_id", inplace=True)
     else:
@@ -1495,7 +1503,7 @@ def reassign_alleles(
 
     if plot:
         if "tigger_failed" not in locals():
-            print("Returning summary plot")
+            logg.info("Returning summary plot")
             inferred_genotype = (
                 outDir
                 + "/"
@@ -1589,12 +1597,12 @@ def reassign_alleles(
                 not_in_genotype_table["var_group"] = not_in_genotype_table[
                     "var_group"
                 ].astype("category")
-                ambiguous_table["var_group"].cat.reorder_categories(
-                    ["before", "after"], inplace=True
-                )
-                not_in_genotype_table["var_group"].cat.reorder_categories(
-                    ["before", "after"], inplace=True
-                )
+                ambiguous_table["var_group"] = ambiguous_table[
+                    "var_group"
+                ].cat.reorder_categories(["before", "after"])
+                not_in_genotype_table["var_group"] = not_in_genotype_table[
+                    "var_group"
+                ].cat.reorder_categories(["before", "after"])
 
                 options.figure_size = figsize
                 final_table = pd.concat(
@@ -1624,18 +1632,22 @@ def reassign_alleles(
                     if show_plot:
                         print(p)
             except:
-                print("Error in plotting encountered. Skipping.")
+                logg.info("Error in plotting encountered. Skipping.")
                 pass
         else:
             pass
     sleep(0.5)
     # if split_write_out:
     if "tigger_failed" in locals():
-        print(
+        logg.info(
             "Although tigger-genotype was not run successfully, file will still be saved with `_genotyped.tsv`"
             "extension for convenience."
         )
-    for s in tqdm(data, desc="Writing out to individual folders "):
+    for s in tqdm(
+        data,
+        desc="Writing out to individual folders ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         if sample_id_dictionary is not None:
             out_file = dat_[dat_["sample_id"] == sample_id_dictionary[s]]
         else:
@@ -1691,7 +1703,7 @@ def create_germlines(
     start = logg.info("Reconstructing germline sequences")
     env = os.environ.copy()
 
-    if self.__class__ != Dandelion:
+    if not isinstance(self, Dandelion):
         if germline is None:
             try:
                 gml = env["GERMLINE"]
@@ -1848,7 +1860,7 @@ def create_germlines(
             "np2_length",
         ]
 
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if isinstance(self.data, pd.DataFrame):
                 # Check for required columns
                 try:
@@ -1890,7 +1902,7 @@ def create_germlines(
                 raise LookupError(
                     "Please initialise the Dandelion object with a dataframe in data slot."
                 )
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             try:
                 checkFields(required, self.columns, schema=schema)
             except LookupError as e:
@@ -1968,12 +1980,12 @@ def create_germlines(
                 out.update({key: annotations})
         germline_df = pd.DataFrame.from_dict(out, orient="index")
 
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             # datx = load_data(self.data)
             for x in germline_df.columns:
                 self.data[x] = pd.Series(germline_df[x])
 
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             datx = load_data(self)
             for x in germline_df.columns:
                 datx[x] = pd.Series(germline_df[x])
@@ -2143,7 +2155,7 @@ def create_germlines(
         return out
 
     if (type(germline) is dict) or (type(germline) is list):
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             _create_germlines_object(
                 self,
                 germline,
@@ -2154,7 +2166,7 @@ def create_germlines(
                 germ_types,
                 fileformat,
             )
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             return _create_germlines_object(
                 self,
                 germline,
@@ -2177,7 +2189,7 @@ def create_germlines(
                 fileformat,
             )
     else:
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if len(self.germline) != 0:
                 _create_germlines_object(
                     self,
@@ -2200,7 +2212,7 @@ def create_germlines(
                     germ_types,
                     fileformat,
                 )
-        elif self.__class__ == pd.DataFrame:
+        elif isinstance(self, pd.DataFrame):
             return _create_germlines_object(
                 self,
                 gml,
@@ -2228,15 +2240,18 @@ def filter_contigs(
     data: Union[Dandelion, pd.DataFrame, str],
     adata: Optional[AnnData] = None,
     filter_contig: bool = True,
+    library_type: Optional[Literal["ig", "tr-ab", "tr-gd"]] = None,
     filter_rna: bool = False,
     filter_poorqualitycontig: bool = False,
     keep_highest_umi: bool = True,
     umi_foldchange_cutoff: int = 2,
-    filter_vj_chains: bool = True,
+    filter_extra_vdj_chains: bool = True,
+    filter_extra_vj_chains: bool = False,
     filter_missing: bool = True,
     productive_only: bool = True,
     simple: bool = False,
     save: Optional[str] = None,
+    verbose: bool = True,
     **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
     """
@@ -2250,9 +2265,9 @@ def filter_contigs(
     > umi_foldchange_cutoff (default is empirically set at 2) will be retained. For productive heavy/long chains,
     if there are multiple contigs that survive the umi testing, then all contigs will be filtered. The default behaviour
     is to also filter cells with multiple light/short chains but this may sometimes be a true biological occurrence;
-    toggling filter_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no corresponding
-    cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful to toggle to
-    False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
+    toggling filter_extra_vj_chains to False will rescue the mutltiplet light chains. Lastly, contigs with no
+    corresponding cell barcode in the AnnData object is filtered if filter_missing is True. However, this may be useful
+    to toggle to False if more contigs are preferred to be kept or for integrating with bulk reperotire seq data.
 
     Parameters
     ----------
@@ -2262,6 +2277,13 @@ def filter_contigs(
         AnnData object to filter. If not provided, will assume to keep all cells in the airr table.
     filter_contig : bool
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
+    library_type : bools
+        if specified, it will first filter based on the expected type of contigs:
+            ig: IGH, IGK, IGL
+            tr-ab: TRA, TRB
+            tr-gd: TRG, TRD
+        The rationale is that the choice of the library type should mean that the primers used would most likely
+        amplify those related sequences and if there's any unexpected contigs, then they shouldn't be analysed.
     filter_rna : bool
         If True, `AnnData` object returned will be filtered based on potential V(D)J doublets. Default is False.
     filter_poorqualitycontig : bool
@@ -2274,8 +2296,11 @@ def filter_contigs(
     umi_foldchange_cutoff : int
         related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as
         doublets. Default is empirically set at 2-fold.
-    filter_vj_chains : bool
-        cells with multiple light chains will be marked to filter. Default is True.
+    filter_extra_vdj_chains : bool
+        cells with multiple heavy chains will be marked to filter. Default is True because of allelic exclusion.
+        Exception is with TRD chains where allelic inclusion has been reported.
+    filter_extra_vj_chains : bool
+        cells with multiple light chains will be marked to filter. Default is False because of allelic inclusion.
     filter_missing : bool
         cells in V(D)J data not found in `AnnData` object will be marked to filter. Default is True. This may be useful
         for toggling to False if integrating with bulk data.
@@ -2292,11 +2317,22 @@ def filter_contigs(
     -------
     V(D)J `DataFrame` object in airr/changeo format and `AnnData` object.
     """
-    start = logg.info("Filtering BCRs")
-    if data.__class__ == Dandelion:
+    start = logg.info("Filtering contigs")
+    if isinstance(data, Dandelion):
         dat_ = load_data(data.data)
     else:
         dat_ = load_data(data)
+
+    if library_type is not None:
+        acceptable = lib_type(library_type)
+    else:
+        if isinstance(data, Dandelion):
+            if data.library_type is not None:
+                acceptable = lib_type(data.library_type)
+            else:
+                acceptable = None
+        else:
+            acceptable = None
 
     if not simple:
         if productive_only:
@@ -2306,10 +2342,8 @@ def filter_contigs(
     else:
         dat = dat_.copy()
 
-    if "cell_id" not in dat.columns:
-        raise AttributeError(
-            "VDJ data does not contain 'cell_id' column. Please make sure this is populated before filtering."
-        )
+    if acceptable is not None:
+        dat = dat[dat.locus.isin(acceptable)].copy()
 
     barcode = list(set(dat["cell_id"]))
 
@@ -2332,23 +2366,18 @@ def filter_contigs(
         adata_.obs["filter_rna"] = "False"
         adata_.obs["has_contig"] = "True"
 
-    # rather than leaving a nan cell, i will create a 0 column for now
-    if "duplicate_count" in dat and "umi_count" not in dat:
-        dat["umi_count"] = dat["duplicate_count"]  # just do a simple swap?
-    elif "duplicate_count" not in dat and "umi_count" in dat:
-        dat["duplicate_count"] = dat["umi_count"]
-    elif "duplicate_count" in dat and "umi_count" in dat:
-        dat["umi_count"] = dat["duplicate_count"]
-
     if not simple:
         tofilter = FilterContigs(
             dat,
             keep_highest_umi,
             umi_foldchange_cutoff,
             filter_poorqualitycontig,
+            filter_extra_vdj_chains,
+            filter_extra_vj_chains,
+            verbose,
         )
     else:
-        tofilter = FilterContigsLite(dat)
+        tofilter = FilterContigsLite(dat, verbose)
 
     poor_qual = tofilter.poor_qual.copy()
     h_doublet = tofilter.h_doublet.copy()
@@ -2379,17 +2408,19 @@ def filter_contigs(
 
     filter_ids = []
     if filter_contig:
-        print("Finishing up filtering")
-        if not filter_vj_chains:
-            if filter_poorqualitycontig:
-                filter_ids = list(set(h_doublet + poor_qual))
-            else:
-                filter_ids = list(set(h_doublet))
+        logg.info("Finishing up filtering")
+        if filter_poorqualitycontig:
+            filter_ids = poor_qual
         else:
-            if filter_poorqualitycontig:
-                filter_ids = list(set(h_doublet + l_doublet + poor_qual))
-            else:
-                filter_ids = list(set(h_doublet + l_doublet))
+            filter_ids = []
+
+        if filter_extra_vdj_chains:
+            filter_ids = filter_ids + h_doublet
+
+        if filter_extra_vj_chains:
+            filter_ids = filter_ids + l_doublet
+
+        filter_ids = list(set(filter_ids))
 
         filter_ids = filter_ids + list(
             adata_[adata_.obs["filter_rna"].isin(TRUES)].obs_names
@@ -2428,7 +2459,7 @@ def filter_contigs(
                 if save.endswith(".tsv"):
                     write_airr(_dat, str(save))
                 else:
-                    raise FileNotFoundError(
+                    raise ValueError(
                         "{} not suitable. Please provide a file name that ends with .tsv".format(
                             str(save)
                         )
@@ -2444,9 +2475,9 @@ def filter_contigs(
     if filter_contig:
         failed = list(set(barcode1) ^ set(barcode2))
 
-    print("Initializing Dandelion object")
+    logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=_dat, **kwargs)
-    if data.__class__ == Dandelion:
+    if isinstance(data, Dandelion):
         out_dat.germline = data.germline
 
     if adata_provided:
@@ -2470,6 +2501,11 @@ def filter_contigs(
         )
         return (out_dat, out_adata)
     else:
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion object: \n"),
+        )
         return out_dat
 
 
@@ -2529,8 +2565,10 @@ def quantify_mutations(
 
     sh = importr("shazam")
     base = importr("base")
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat = load_data(self.data)
+        if "ambiguous" in self.data:
+            dat = dat[dat["ambiguous"] == "F"].copy()
     else:
         dat = load_data(self)
 
@@ -2647,7 +2685,7 @@ def quantify_mutations(
         cols_to_return = cols_to_return
 
     res = {}
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         for x in cols_to_return:
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
@@ -2702,7 +2740,7 @@ def quantify_mutations(
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             dat[x] = [str(r) for r in res[x]]
         # dat = sanitize_data(dat)
-        if self.__class__ == pd.DataFrame:
+        if isinstance(self, pd.DataFrame):
             logg.info(" finished", time=start, deep=("Returning DataFrame\n"))
             return dat
         elif os.path.isfile(self):
@@ -2840,9 +2878,9 @@ def calculate_threshold(
             )
         )
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         dat = load_data(self.data)
-    elif self.__class__ == pd.DataFrame or os.path.isfile(str(self)):
+    elif isinstance(self, pd.DataFrame) or os.path.isfile(str(self)):
         dat = load_data(self)
         warnings.filterwarnings("ignore")
 
@@ -2900,7 +2938,7 @@ def calculate_threshold(
                 **kwargs,
             )
         except:
-            print(
+            logg.info(
                 "Rerun this after filtering. For now, switching to heavy mode."
             )
             dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
@@ -2940,7 +2978,7 @@ def calculate_threshold(
         )
         threshold = np.array(dist_threshold.slots["threshold"])[0]
         if np.isnan(threshold):
-            print(
+            logg.info(
                 "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
             )
             threshold_method_ = "gmm"
@@ -3066,13 +3104,13 @@ def calculate_threshold(
             )
         )
     else:
-        print(
+        logg.info(
             "Automatic Threshold : "
             + str(np.around(threshold, decimals=2))
             + "\n method = "
             + str(threshold_method_)
         )
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         self.threshold = tr
         logg.info(
             " finished",
@@ -3098,10 +3136,13 @@ class FilterContigs:
 
     def __init__(
         self,
-        data,
-        keep_highest_umi,
-        umi_foldchange_cutoff,
-        filter_poorqualitycontig,
+        data: pd.DataFrame,
+        keep_highest_umi: bool,
+        umi_foldchange_cutoff: Union[int, float],
+        filter_poorqualitycontig: bool,
+        filter_extra_vdj_chains: bool,
+        filter_extra_vj_chains: bool,
+        verbose: bool,
     ):
         self.Cell = Tree()
         self.poor_qual = []
@@ -3116,7 +3157,11 @@ class FilterContigs:
         d_dict = dict(zip(data["sequence_id"], data["d_call"]))
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
-        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
+        l_dict = dict(zip(data["sequence_id"], data["locus"]))
+        for contig, row in tqdm(
+            data.iterrows(),
+            desc="Preparing data",
+        ):
             cell = row["cell_id"]
             if row["locus"] in HEAVYLONG:
                 if row["productive"] in TRUES:
@@ -3129,7 +3174,10 @@ class FilterContigs:
                 elif row["productive"] in FALSES:
                     self.Cell[cell]["VJ"]["NP"][contig].update(row)
         for cell in tqdm(
-            self.Cell, desc="Scanning for poor quality/ambiguous contigs"
+            self.Cell,
+            desc="Scanning for poor quality/ambiguous contigs",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            disable=not verbose,
         ):
             if len(self.Cell[cell]["VDJ"]["P"]) > 0:
                 data1 = pd.DataFrame(
@@ -3149,50 +3197,23 @@ class FilterContigs:
                     int(x) for x in pd.to_numeric(data1["duplicate_count"])
                 ]
                 h_ccall_p = list(data1["c_call"])
+                h_locus_p = list(data1["locus"])
                 if len(h_p) > 1:
                     if "sequence_alignment" in data1:
-                        h_seq_p = list(data1["sequence_alignment"])
-                        if len(set(h_seq_p)) == 1:
-                            if len(set(h_ccall_p)) == 1:
-                                highest_umi_h = max(h_umi_p)
-                                highest_umi_h_idx = [
-                                    i
-                                    for i, j in enumerate(h_umi_p)
-                                    if j == highest_umi_h
-                                ]
-                                keep_index_h = highest_umi_h_idx[0]
-                                self.drop_contig.append(
-                                    h_p[:keep_index_h] + h_p[keep_index_h:]
-                                )
-                                keep_hc_contig = h_p[keep_index_h]
-                                data1[keep_hc_contig, "duplicate_count"] = int(
-                                    np.sum(
-                                        h_umi_p[:keep_index_h]
-                                        + h_umi_p[keep_index_h:]
-                                    )
-                                )
-                                self.umi_adjustment.update(
-                                    {
-                                        keep_hc_contig: int(
-                                            np.sum(
-                                                h_umi_p[:keep_index_h]
-                                                + h_umi_p[keep_index_h:]
-                                            )
-                                        )
-                                    }
-                                )
-                                # refresh
-                                data1 = pd.DataFrame(
-                                    [data1.loc[keep_hc_contig]]
-                                )
-                                h_p = list(data1["sequence_id"])
-                                h_umi_p = [
-                                    int(x)
-                                    for x in pd.to_numeric(
-                                        data1["duplicate_count"]
-                                    )
-                                ]
-                                h_ccall_p = list(data1["c_call"])
+
+                        (
+                            data1,
+                            h_p,
+                            h_umi_p,
+                            h_ccall_p,
+                            umi_adjust_h,
+                            drop_h,
+                        ) = check_update_same_seq(data1)
+                        if len(umi_adjust_h) > 0:
+                            self.umi_adjustment.update(umi_adjust_h)
+                        if len(drop_h) > 0:
+                            for d_h in drop_h:
+                                self.drop_contig.append(d_h)
                     if len(h_p) > 1:
                         highest_umi_h = max(h_umi_p)
                         highest_umi_idx = [
@@ -3208,19 +3229,203 @@ class FilterContigs:
                             + h_umi_p[keep_index_h:]
                         ]
                         sum_umi = sum(h_umi_p)
-                        if "IGHM" and "IGHD" in h_ccall_p:
-                            if all(
-                                cc_ == "IGHM" or cc_ == "IGHD"
-                                for cc_ in h_ccall_p
-                            ):
-                                pass
+                        if "IGHD" in h_ccall_p:
+                            if all(x in ["IGHM", "IGHD"] for x in h_ccall_p):
+                                if len(list(set(h_ccall_p))) == 2:
+                                    h_ccall_p_igm_count = dict(
+                                        data1[data1["c_call"] == "IGHM"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+                                    h_ccall_p_igd_count = dict(
+                                        data1[data1["c_call"] == "IGHD"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+
+                                if len(h_ccall_p_igm_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_igm_count = max(
+                                            h_ccall_p_igm_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_ccall_p_igm_count.items()
+                                            if v == max_igm_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_ccall_p_igm_count.items()
+                                                if v < max_igm_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                                if len(h_ccall_p_igd_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_igd_count = max(
+                                            h_ccall_p_igd_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_ccall_p_igd_count.items()
+                                            if v == max_igd_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_ccall_p_igd_count.items()
+                                                if v < max_igd_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                            else:
+                                if len(highest_umi_idx) > 1:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if sum_umi < 4:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if any(umi_test):
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if len(highest_umi_idx) == 1:
+                                    other_umi_idx = [
+                                        i
+                                        for i, j in enumerate(h_umi_p)
+                                        if j != highest_umi_h
+                                    ]
+                                    umi_test_ = [
+                                        highest_umi_h / x
+                                        >= umi_foldchange_cutoff
+                                        for x in h_umi_p[:keep_index_h]
+                                        + h_umi_p[keep_index_h:]
+                                    ]
+                                    umi_test_dict = dict(
+                                        zip(other_umi_idx, umi_test_)
+                                    )
+                                    for otherindex in umi_test_dict:
+                                        if umi_test_dict[otherindex]:
+                                            if keep_highest_umi:
+                                                self.drop_contig.append(
+                                                    h_p[otherindex]
+                                                )
+                                    # refresh
+                                    data1 = pd.DataFrame(
+                                        [data1.loc[keep_hc_contig]]
+                                    )
+                                    h_p = list(data1["sequence_id"])
+                        elif all(x in ["TRB", "TRD"] for x in h_locus_p):
+                            if len(list(set(h_locus_p))) == 2:
+                                h_locus_p_trb_count = dict(
+                                    data1[data1["locus"] == "TRB"][
+                                        "duplicate_count"
+                                    ]
+                                )
+                                h_locus_p_trd_count = dict(
+                                    data1[data1["locus"] == "TRD"][
+                                        "duplicate_count"
+                                    ]
+                                )
+
+                                if len(h_locus_p_trb_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_trb_count = max(
+                                            h_locus_p_trb_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_locus_p_trb_count.items()
+                                            if v == max_trb_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_locus_p_trb_count.items()
+                                                if v < max_trb_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                                if len(h_locus_p_trd_count) > 1:
+                                    if filter_extra_vdj_chains:
+                                        max_trd_count = max(
+                                            h_locus_p_trd_count.values()
+                                        )
+                                        max_id_keys = [
+                                            k
+                                            for k, v in h_locus_p_trd_count.items()
+                                            if v == max_trd_count
+                                        ]
+                                        if len(max_id_keys) == 1:
+                                            drop_keys = [
+                                                k
+                                                for k, v in h_locus_p_trd_count.items()
+                                                if v < max_trd_count
+                                            ]
+                                            for dk in drop_keys:
+                                                self.drop_contig.append(
+                                                    drop_keys
+                                                )
+                                        else:
+                                            self.h_doublet.append(cell)
+                            else:
+                                if len(highest_umi_idx) > 1:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if sum_umi < 4:
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if any(umi_test):
+                                    if filter_extra_vdj_chains:
+                                        self.h_doublet.append(cell)
+                                if len(highest_umi_idx) == 1:
+                                    other_umi_idx = [
+                                        i
+                                        for i, j in enumerate(h_umi_p)
+                                        if j != highest_umi_h
+                                    ]
+                                    umi_test_ = [
+                                        highest_umi_h / x
+                                        >= umi_foldchange_cutoff
+                                        for x in h_umi_p[:keep_index_h]
+                                        + h_umi_p[keep_index_h:]
+                                    ]
+                                    umi_test_dict = dict(
+                                        zip(other_umi_idx, umi_test_)
+                                    )
+                                    for otherindex in umi_test_dict:
+                                        if umi_test_dict[otherindex]:
+                                            if keep_highest_umi:
+                                                self.drop_contig.append(
+                                                    h_p[otherindex]
+                                                )
+                                    # refresh
+                                    data1 = pd.DataFrame(
+                                        [data1.loc[keep_hc_contig]]
+                                    )
+                                    h_p = list(data1["sequence_id"])
                         else:
                             if len(highest_umi_idx) > 1:
-                                self.h_doublet.append(cell)
+                                if filter_extra_vdj_chains:
+                                    self.h_doublet.append(cell)
                             if sum_umi < 4:
-                                self.h_doublet.append(cell)
+                                if filter_extra_vdj_chains:
+                                    self.h_doublet.append(cell)
                             if any(umi_test):
-                                self.h_doublet.append(cell)
+                                if filter_extra_vdj_chains:
+                                    self.h_doublet.append(cell)
                             if len(highest_umi_idx) == 1:
                                 other_umi_idx = [
                                     i
@@ -3241,7 +3446,7 @@ class FilterContigs:
                                             self.drop_contig.append(
                                                 h_p[otherindex]
                                             )
-                                            # refresh
+                                # refresh
                                 data1 = pd.DataFrame(
                                     [data1.loc[keep_hc_contig]]
                                 )
@@ -3311,42 +3516,19 @@ class FilterContigs:
                 ]
                 if len(l_p) > 1:
                     if "sequence_alignment" in data3:
-                        l_seq_p = list(data3["sequence_alignment"])
-                        if len(list(set(l_seq_p))) == 1:
-                            highest_umi_l = max(l_umi_p)
-                            highest_umi_l_idx = [
-                                i
-                                for i, j in enumerate(l_umi_p)
-                                if j == highest_umi_l
-                            ]
-                            keep_index_l = highest_umi_l_idx[0]
-                            self.drop_contig.append(
-                                l_p[:keep_index_l] + l_p[keep_index_l:]
-                            )
-                            keep_lc_contig = l_p[keep_index_l]
-                            data3.at[keep_lc_contig, "duplicate_count"] = int(
-                                np.sum(
-                                    l_umi_p[:keep_index_l]
-                                    + l_umi_p[keep_index_l:]
-                                )
-                            )
-                            self.umi_adjustment.update(
-                                {
-                                    keep_lc_contig: int(
-                                        np.sum(
-                                            l_umi_p[:keep_index_l]
-                                            + l_umi_p[keep_index_l:]
-                                        )
-                                    )
-                                }
-                            )
-                            # refresh
-                            data3 = pd.DataFrame([data3.loc[keep_lc_contig]])
-                            l_p = list(data3["sequence_id"])
-                            l_umi_p = [
-                                int(x)
-                                for x in pd.to_numeric(data3["duplicate_count"])
-                            ]
+                        (
+                            data3,
+                            l_p,
+                            l_umi_p,
+                            l_ccall_p,
+                            umi_adjust_l,
+                            drop_l,
+                        ) = check_update_same_seq(data3)
+                        if len(umi_adjust_l) > 0:
+                            self.umi_adjustment.update(umi_adjust_l)
+                        if len(drop_l) > 0:
+                            for d_l in drop_l:
+                                self.drop_contig.append(d_l)
                     if len(l_p) > 1:
                         highest_umi_l = max(l_umi_p)
                         highest_umi_l_idx = [
@@ -3363,11 +3545,14 @@ class FilterContigs:
                         ]
                         sum_umi = sum(l_umi_p)
                         if len(highest_umi_l_idx) > 1:
-                            self.l_doublet.append(cell)
+                            if filter_extra_vj_chains:
+                                self.l_doublet.append(cell)
                         if sum_umi < 4:
-                            self.l_doublet.append(cell)
+                            if filter_extra_vj_chains:
+                                self.l_doublet.append(cell)
                         if any(umi_test):
-                            self.l_doublet.append(cell)
+                            if filter_extra_vj_chains:
+                                self.l_doublet.append(cell)
                         if len(highest_umi_l_idx) == 1:
                             other_umi_idx_l = [
                                 i
@@ -3441,7 +3626,42 @@ class FilterContigs:
 
             # marking doublets defined by VJ chains
             if (len(h_p) == 1) & (len(l_p) > 1):
-                self.l_doublet.append(cell)
+                if filter_extra_vj_chains:
+                    self.l_doublet.append(cell)
+
+            # ok check here for bad combinations
+            if len(h_p) > 0:
+                loci_h = [l_dict[hx] for hx in h_p]
+            else:
+                loci_h = []
+            if len(l_p) > 0:
+                loci_l = [l_dict[lx] for lx in l_p]
+            else:
+                loci_l = []
+
+            loci_ = list(set(loci_h + loci_l))
+
+            if len(loci_) > 0:
+                if all(lc in ["IGK", "IGL", "TRG", "TRA"] for lc in loci_):
+                    if len(loci_) >= 2:
+                        if filter_extra_vj_chains:
+                            self.drop_contig.append(l_p)
+                elif all(lc in ["TRA", "TRD"] for lc in loci_):
+                    if len(loci_) == 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                elif all(lc in ["TRB", "TRG"] for lc in loci_):
+                    if len(loci_) == 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                elif all(lc in ["TRB", "IGK", "IGL"] for lc in loci_):
+                    if len(loci_) >= 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
+                elif all(lc in ["IGH", "TRA", "TRG"] for lc in loci_):
+                    if len(loci_) >= 2:
+                        self.drop_contig.append(l_p)
+                        self.drop_contig.append(h_p)
 
             # marking poor bcr quality, defined as those with only VJ chains, those
             # that were have conflicting assignment of locus and V(D)J v-, d-, j- and c- calls,
@@ -3623,17 +3843,17 @@ class FilterContigs:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(cell)
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(cell)
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             if filter_poorqualitycontig:
                                 self.poor_qual.append(cell)
                             self.drop_contig.append(lx)
@@ -3649,9 +3869,11 @@ class FilterContigs:
                                     self.poor_qual.append(cell)
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                if filter_poorqualitycontig:
-                                    self.poor_qual.append(cell)
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        if filter_poorqualitycontig:
+                                            self.poor_qual.append(cell)
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 if filter_poorqualitycontig:
                                     self.poor_qual.append(cell)
@@ -3667,13 +3889,13 @@ class FilterContigs:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             self.drop_contig.append(lx)
 
                     if present(j):
@@ -3683,7 +3905,9 @@ class FilterContigs:
                             elif not_same_call(v, j, "IGL"):
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 self.drop_contig.append(lx)
                     else:
@@ -3698,7 +3922,7 @@ class FilterContigsLite:
 
     """
 
-    def __init__(self, data):
+    def __init__(self, data: pd.DataFrame, verbose: bool):
         self.Cell = Tree()
         self.poor_qual = []
         self.h_doublet = []
@@ -3712,7 +3936,10 @@ class FilterContigsLite:
         d_dict = dict(zip(data["sequence_id"], data["d_call"]))
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
-        for contig, row in tqdm(data.iterrows(), desc="Preparing data"):
+        for contig, row in tqdm(
+            data.iterrows(),
+            desc="Preparing data",
+        ):
             cell = row["cell_id"]
             if row["locus"] in HEAVYLONG:
                 if row["productive"] in TRUES:
@@ -3725,7 +3952,10 @@ class FilterContigsLite:
                 elif row["productive"] in FALSES:
                     self.Cell[cell]["VJ"]["NP"][contig].update(row)
         for cell in tqdm(
-            self.Cell, desc="Scanning for poor quality/ambiguous contigs"
+            self.Cell,
+            desc="Scanning for poor quality/ambiguous contigs",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            disable=not verbose,
         ):
             if len(self.Cell[cell]["VDJ"]["P"]) > 0:
                 data1 = pd.DataFrame(
@@ -3967,13 +4197,13 @@ class FilterContigsLite:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             self.drop_contig.append(lx)
 
                     if present(j):
@@ -3983,7 +4213,9 @@ class FilterContigsLite:
                             elif not_same_call(v, j, "IGL"):
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 self.drop_contig.append(lx)
                     else:
@@ -3995,13 +4227,13 @@ class FilterContigsLite:
                     j = j_dict[lx]
                     c = c_dict[lx]
                     if present(v):
-                        if re.search("IGH|TR[BD]", v):
+                        if re.search("IGH|TRB", v):
                             self.drop_contig.append(lx)
                     if present(j):
-                        if re.search("IGH|TR[BD]", j):
+                        if re.search("IGH|TRB", j):
                             self.drop_contig.append(lx)
                     if present(c):
-                        if re.search("IGH|TR[BD]", c):
+                        if re.search("IGH|TRB", c):
                             self.drop_contig.append(lx)
 
                     if present(j):
@@ -4011,7 +4243,9 @@ class FilterContigsLite:
                             elif not_same_call(v, j, "IGL"):
                                 self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRA"):
-                                self.drop_contig.append(lx)
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.drop_contig.append(lx)
                             elif not_same_call(v, j, "TRG"):
                                 self.drop_contig.append(lx)
                     else:
@@ -4139,8 +4373,7 @@ def run_igblastn(
                 str(min_d_match),
             ]
 
-        if verbose:
-            print("Running command: %s\n" % (" ".join(cmd)))
+        logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
 
@@ -4377,8 +4610,7 @@ def run_blastn(
         os.path.basename(fasta).split(".fasta")[0] + "_" + call + "_blast",
     )
 
-    if verbose:
-        print("Running command: %s\n" % (" ".join(cmd)))
+    logg.info("Running command: %s\n" % (" ".join(cmd)))
     with open(blast_out, "w") as out:
         run(cmd, stdout=out, env=env)
     try:
@@ -4936,3 +5168,846 @@ def transfer_assignment(
             # fill in blanks
             db_fail = sanitize_data(db_fail)
             db_fail.to_csv(failfile, sep="\t", index=False)
+
+
+def check_contigs(
+    data: Union[Dandelion, pd.DataFrame, str],
+    adata: Optional[AnnData] = None,
+    productive_only: bool = True,
+    library_type: Optional[Literal["ig", "tr-ab", "tr-gd"]] = None,
+    umi_foldchange_cutoff: int = 2,
+    filter_missing: bool = True,
+    save: Optional[str] = None,
+    verbose: bool = True,
+    **kwargs,
+) -> Tuple[Dandelion, AnnData]:
+    """
+    Check contigs for whether they can be considered as ambiguous or not.
+
+    Returns an `ambiguous` column with boolean T/F in the data. If the `sequence_alignment` is an exact match between
+    contigs, the contigs will be merged into the one with the highest umi count, summing the umi/duplicate count. After
+    this check, if there are still multiple contigs, cells with multiple contigs checked for whether there is a clear
+    dominance in terms of UMI count resulting in two scenarios: 1) if true, all other contigs will be flagged as
+    ambiguous; 2) if false, all contigs will be flagged as ambiguous. This is repeated for each cell, for their
+    productive and non-productive VDJ and VJ contigs separately. Dominance is assessed by whether or not the umi counts
+    demonstrate a > umi_foldchange_cutoff. There are some exceptions: 1) IgM and IgD are allowed to co-exist in the same
+    B cell if no other isotypes are detected; 2) TRD and TRB contigs are allowed in the same cell because rearrangement
+    of TRB and TRD loci happens at the same time during development and TRD variable region genes exhibits allelic
+    inclusion. Thus this can potentially result in some situations where T cells expressing productive TRA-TRB chains
+    can also express productive TRD chains.
+
+    Default behvaiour is to only consider productive contigs and remove all non-productive before checking, toggled by
+    `productive_only` argument.
+
+    If library_type is provided, it will remove all contigs that do not belong to the related loci. The rationale is
+    that the choice of the library type should mean that the primers used would most likely amplify those related
+    sequences and if there's any unexpected loci, they likely represent artifacts and shouldn't be analysed.
+
+    If an `adata` object is provided, contigs with no corresponding cell barcode in the `AnnData` object is filtered in
+    the output if filter_missing is True.
+
+    Parameters
+    ----------
+    data : Dandeion, pd.DataDrame, str
+        V(D)J AIRR data to check. Can be `Dandelion`, pandas `DataFrame` and file path to AIRR `.tsv` file.
+    adata : AnnData, Optional
+        AnnData object to filter. If not provided, it will assume to keep all cells in the airr table and just return a
+        Dandelion object.
+    productive_only : bool
+        whether or not to retain only productive contigs.
+    library_type : bools
+        if specified, it will first filter based on the expected type of contigs:
+            ig: IGH, IGK, IGL
+            tr-ab: TRA, TRB
+            tr-gd: TRG, TRD
+    umi_foldchange_cutoff : int
+        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as
+        doublets. Default is empirically set at 2-fold.
+    filter_missing : bool
+        cells in V(D)J data not found in `AnnData` object will removed from the dandelion object. Default is True.
+    verbose : bool
+        whether to print progress when marking contigs.
+    save : str, Optional
+        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table
+        with a `_checked.tsv` suffix extension.
+    **kwargs
+        additional kwargs passed to `dandelion.utilities._core.Dandelion`.
+
+    Returns
+    -------
+    `Dandelion` object in airr format and/or `AnnData` object.
+    """
+    start = logg.info("Filtering contigs")
+    if isinstance(data, Dandelion):
+        dat_ = load_data(data.data)
+    else:
+        dat_ = load_data(data)
+
+    if library_type is not None:
+        acceptable = lib_type(library_type)
+    else:
+        if isinstance(data, Dandelion):
+            if data.library_type is not None:
+                acceptable = lib_type(data.library_type)
+            else:
+                acceptable = None
+        else:
+            acceptable = None
+
+    if productive_only:
+        dat = dat_[dat_["productive"].isin(TRUES)].copy()
+    else:
+        dat = dat_.copy()
+
+    if acceptable is not None:
+        dat = dat[dat.locus.isin(acceptable)].copy()
+
+    barcode = list(set(dat.cell_id))
+
+    if adata is not None:
+        adata_provided = True
+        adata_ = adata.copy()
+        contig_check = pd.DataFrame(index=adata_.obs_names)
+        bc_ = {}
+        for b in barcode:
+            bc_.update({b: "True"})
+        contig_check["has_contig"] = pd.Series(bc_)
+        contig_check.replace(np.nan, "No_contig", inplace=True)
+        adata_.obs["has_contig"] = pd.Series(contig_check["has_contig"])
+    else:
+        adata_provided = False
+        obs = pd.DataFrame(index=barcode)
+        adata_ = ad.AnnData(obs=obs)
+        adata_.obs["has_contig"] = "True"
+    contig_status = MarkAmbiguousContigs(dat, umi_foldchange_cutoff, verbose)
+
+    ambigous = contig_status.ambiguous_contigs.copy()
+    umi_adjustment = contig_status.umi_adjustment.copy()
+    if len(umi_adjustment) > 0:
+        dat["duplicate_count"].update(umi_adjustment)
+
+    ambi = {c: "F" for c in dat_.sequence_id}
+    ambiguous_ = {x: "T" for x in ambigous}
+    ambi.update(ambiguous_)
+    dat["ambiguous"] = pd.Series(ambi)
+
+    if filter_missing:
+        dat = dat[dat["cell_id"].isin(adata_.obs_names)].copy()
+
+    if dat.shape[0] == 0:
+        raise IndexError(
+            "No contigs passed filtering. Are you sure that the cell barcodes are matching?"
+        )
+    if os.path.isfile(str(data)):
+        write_airr(
+            dat,
+            "{}/{}_checked.tsv".format(
+                os.path.dirname(data),
+                os.path.basename(data).split(".tsv")[0],
+            ),
+        )
+    else:
+        if save is not None:
+            if save.endswith(".tsv"):
+                write_airr(dat, str(save))
+            else:
+                raise ValueError(
+                    "{} not suitable. Please provide a file name that ends with .tsv".format(
+                        str(save)
+                    )
+                )
+    logg.info("Initializing Dandelion object")
+    out_dat = Dandelion(data=dat, **kwargs)
+    if isinstance(data, Dandelion):
+        out_dat.germline = data.germline
+        out_dat.threshold = data.threshold
+    if adata_provided:
+        transfer(adata_, out_dat, overwrite=True)
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion and AnnData objects: \n"),
+        )
+        return (out_dat, adata_)
+    else:
+        logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion object: \n"),
+        )
+        return out_dat
+
+
+class MarkAmbiguousContigs:
+    """
+    `MarkAmbiguousContigs` class object.
+
+    New main class object to run filter_contigs.
+
+    """
+
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        umi_foldchange_cutoff: Union[int, float],
+        verbose: bool,
+    ):
+        self.Cell = Tree()
+        self.ambiguous_contigs = []
+        self.umi_adjustment = {}
+        if "v_call_genotyped" in data.columns:
+            v_dict = dict(zip(data["sequence_id"], data["v_call_genotyped"]))
+        else:
+            v_dict = dict(zip(data["sequence_id"], data["v_call"]))
+        d_dict = dict(zip(data["sequence_id"], data["d_call"]))
+        j_dict = dict(zip(data["sequence_id"], data["j_call"]))
+        c_dict = dict(zip(data["sequence_id"], data["c_call"]))
+        l_dict = dict(zip(data["sequence_id"], data["locus"]))
+        for contig, row in tqdm(
+            data.iterrows(),
+            desc="Preparing data",
+        ):
+            cell = row["cell_id"]
+            if row["locus"] in HEAVYLONG:
+                if row["productive"] in TRUES:
+                    self.Cell[cell]["VDJ"]["P"][contig].update(row)
+                elif row["productive"] in FALSES:
+                    self.Cell[cell]["VDJ"]["NP"][contig].update(row)
+            elif row["locus"] in LIGHTSHORT:
+                if row["productive"] in TRUES:
+                    self.Cell[cell]["VJ"]["P"][contig].update(row)
+                elif row["productive"] in FALSES:
+                    self.Cell[cell]["VJ"]["NP"][contig].update(row)
+
+        for cell in tqdm(
+            self.Cell,
+            desc="Scanning for poor quality/ambiguous contigs",
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            disable=not verbose,
+        ):
+            if len(self.Cell[cell]["VDJ"]["P"]) > 0:
+                # VDJ productive
+                data1 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VDJ"]["P"][x]
+                        for x in self.Cell[cell]["VDJ"]["P"]
+                        if isinstance(self.Cell[cell]["VDJ"]["P"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VDJ"]["P"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VDJ"]["P"]
+                        if isinstance(self.Cell[cell]["VDJ"]["P"][x], dict)
+                    ],
+                )
+                vdj_p = list(data1["sequence_id"])
+                vdj_umi_p = [
+                    int(x) for x in pd.to_numeric(data1["duplicate_count"])
+                ]
+                vdj_ccall_p = list(data1["c_call"])
+                vdj_locus_p = list(data1["locus"])
+                if len(vdj_p) > 1:
+                    if "sequence_alignment" in data1:
+                        (
+                            data1,
+                            vdj_p,
+                            vdj_umi_p,
+                            vdj_ccall_p,
+                            umi_adjust_vdj,
+                            ambi_cont_vdj,
+                        ) = check_update_same_seq(data1)
+                        if len(umi_adjust_vdj) > 0:
+                            self.umi_adjustment.update(umi_adjust_vdj)
+                        if len(ambi_cont_vdj) > 0:
+                            for avdj in ambi_cont_vdj:
+                                self.ambiguous_contigs.append(avdj)
+                    if len(vdj_p) > 1:
+                        if "IGHD" in vdj_ccall_p:
+                            if all(x in ["IGHM", "IGHD"] for x in vdj_ccall_p):
+                                if len(list(set(vdj_ccall_p))) == 2:
+                                    vdj_ccall_p_igm_count = dict(
+                                        data1[data1["c_call"] == "IGHM"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+                                    vdj_ccall_p_igd_count = dict(
+                                        data1[data1["c_call"] == "IGHD"][
+                                            "duplicate_count"
+                                        ]
+                                    )
+
+                                if len(vdj_ccall_p_igm_count) > 1:
+                                    (
+                                        keep_igm,
+                                        extra_igm,
+                                        ambiguous_igm,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_igm_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_igm, extra_igm, ambiguous_igm = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                if len(vdj_ccall_p_igd_count) > 1:
+                                    (
+                                        keep_igd,
+                                        extra_igd,
+                                        ambiguous_igd,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_igd_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_igd, extra_igd, ambiguous_igd = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                vdj_p = keep_igm + keep_igd
+                                extra_vdj = extra_igm + extra_igd
+                                ambiguous_vdj = ambiguous_igm + ambiguous_igd
+                            else:
+                                vdj_ccall_p_count = dict(
+                                    data1["duplicate_count"]
+                                )
+                                if len(vdj_ccall_p_count) > 1:
+                                    (
+                                        vdj_p,
+                                        extra_vdj,
+                                        ambiguous_vdj,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_count, umi_foldchange_cutoff
+                                    )
+                                else:
+                                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                        elif all(x in ["TRB", "TRD"] for x in vdj_locus_p):
+                            if len(list(set(vdj_locus_p))) == 2:
+                                vdj_locus_p_trb_count = dict(
+                                    data1[data1["locus"] == "TRB"][
+                                        "duplicate_count"
+                                    ]
+                                )
+                                vdj_locus_p_trd_count = dict(
+                                    data1[data1["locus"] == "TRD"][
+                                        "duplicate_count"
+                                    ]
+                                )
+
+                                if len(vdj_locus_p_trb_count) > 1:
+                                    (
+                                        keep_trb,
+                                        extra_trb,
+                                        ambiguous_trb,
+                                    ) = check_productive_vdj(
+                                        vdj_locus_p_trb_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_trb, extra_trb, ambiguous_trb = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                if len(vdj_locus_p_trd_count) > 1:
+                                    (
+                                        keep_trd,
+                                        extra_trd,
+                                        ambiguous_trd,
+                                    ) = check_productive_vdj(
+                                        vdj_locus_p_trd_count,
+                                        umi_foldchange_cutoff,
+                                    )
+                                else:
+                                    keep_trd, extra_trd, ambiguous_trd = (
+                                        [],
+                                        [],
+                                        [],
+                                    )
+
+                                vdj_p = keep_trb + keep_trd
+                                extra_vdj = extra_trb + extra_trd
+                                ambiguous_vdj = ambiguous_trb + ambiguous_trd
+                            else:
+                                vdj_ccall_p_count = dict(
+                                    data1["duplicate_count"]
+                                )
+                                if len(vdj_ccall_p_count) > 1:
+                                    (
+                                        vdj_p,
+                                        extra_vdj,
+                                        ambiguous_vdj,
+                                    ) = check_productive_vdj(
+                                        vdj_ccall_p_count, umi_foldchange_cutoff
+                                    )
+                                else:
+                                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                        else:
+                            vdj_ccall_p_count = dict(data1["duplicate_count"])
+                            if len(vdj_ccall_p_count) > 1:
+                                (
+                                    vdj_p,
+                                    extra_vdj,
+                                    ambiguous_vdj,
+                                ) = check_productive_vdj(
+                                    vdj_ccall_p_count, umi_foldchange_cutoff
+                                )
+                            else:
+                                vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                    else:
+                        vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                else:
+                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+
+                if len(ambiguous_vdj) > 0:
+                    for a in ambiguous_vdj:
+                        self.ambiguous_contigs.append(a)
+
+            # VDJ non-productive
+            if len(self.Cell[cell]["VDJ"]["NP"]) > 0:
+                data2 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VDJ"]["NP"][x]
+                        for x in self.Cell[cell]["VDJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VDJ"]["NP"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VDJ"]["NP"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VDJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VDJ"]["NP"][x], dict)
+                    ],
+                )
+                vdj_np = list(data2["sequence_id"])
+                (
+                    data2,
+                    vdj_np,
+                    _,
+                    _,
+                    umi_adjust_vdjnp,
+                    ambi_cont_vdjnp,
+                ) = check_update_same_seq(data2)
+                if len(umi_adjust_vdjnp) > 0:
+                    self.umi_adjustment.update(umi_adjust_vdjnp)
+                if len(ambi_cont_vdjnp) > 0:
+                    for avdj in ambi_cont_vdjnp:
+                        self.ambiguous_contigs.append(avdj)
+
+            # VJ productive
+            if len(self.Cell[cell]["VJ"]["P"]) > 0:
+                data3 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VJ"]["P"][x]
+                        for x in self.Cell[cell]["VJ"]["P"]
+                        if isinstance(self.Cell[cell]["VJ"]["P"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VJ"]["P"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VJ"]["P"]
+                        if isinstance(self.Cell[cell]["VJ"]["P"][x], dict)
+                    ],
+                )
+                vj_p = list(data3["sequence_id"])
+                vj_umi_p = [
+                    int(x) for x in pd.to_numeric(data3["duplicate_count"])
+                ]
+                if len(vj_p) > 1:
+                    if "sequence_alignment" in data3:
+                        (
+                            data3,
+                            vj_p,
+                            vj_umi_p,
+                            vj_ccall_p,
+                            umi_adjust_vj,
+                            ambi_cont_vj,
+                        ) = check_update_same_seq(data3)
+                        if len(umi_adjust_vj) > 0:
+                            self.umi_adjustment.update(umi_adjust_vj)
+                        if len(ambi_cont_vj) > 0:
+                            for avj in ambi_cont_vj:
+                                self.ambiguous_contigs.append(avj)
+                    if len(vj_p) > 1:
+                        vj_ccall_p_count = dict(data3["duplicate_count"])
+                        # maximum keep 2?
+                        vj_p, extra_vj, ambiguous_vj = check_productive_vj(
+                            vj_ccall_p_count
+                        )
+                    else:
+                        vj_p, extra_vj, ambiguous_vj = [], [], []
+                else:
+                    vj_p, extra_vj, ambiguous_vj = [], [], []
+
+                if len(ambiguous_vj) > 0:
+                    for a in ambiguous_vj:
+                        self.ambiguous_contigs.append(a)
+
+            # VJ non-productive
+            if len(self.Cell[cell]["VJ"]["NP"]) > 0:
+                data4 = pd.DataFrame(
+                    [
+                        self.Cell[cell]["VJ"]["NP"][x]
+                        for x in self.Cell[cell]["VJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VJ"]["NP"][x], dict)
+                    ],
+                    index=[
+                        self.Cell[cell]["VJ"]["NP"][x]["sequence_id"]
+                        for x in self.Cell[cell]["VJ"]["NP"]
+                        if isinstance(self.Cell[cell]["VJ"]["NP"][x], dict)
+                    ],
+                )
+                (
+                    data4,
+                    vj_np,
+                    _,
+                    _,
+                    umi_adjust_vjnp,
+                    ambi_cont_vjnp,
+                ) = check_update_same_seq(data4)
+                if len(umi_adjust_vjnp) > 0:
+                    self.umi_adjustment.update(umi_adjust_vjnp)
+                if len(ambi_cont_vjnp) > 0:
+                    for avj in ambi_cont_vjnp:
+                        self.ambiguous_contigs.append(avj)
+
+            if "vdj_p" not in locals():
+                vdj_p = []
+            if "vj_p" not in locals():
+                vj_p = []
+            if "vdj_np" not in locals():
+                vdj_np = []
+            if "vj_np" not in locals():
+                vj_np = []
+            if "extra_vdj" not in locals():
+                extra_vdj = []
+            if "extra_vj" not in locals():
+                extra_vj = []
+
+            # check here for bad combinations
+            # marking poor bcr quality, defined as those with conflicting assignment of
+            # locus and V(D)J v-, d-, j- and c- calls, and also those that are missing
+            # j calls.
+            if len(vdj_p) > 0:
+                for vdjx in vdj_p:
+                    v = v_dict[vdjx]
+                    d = d_dict[vdjx]
+                    j = j_dict[vdjx]
+                    c = c_dict[vdjx]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(vdjx)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(vdjx)
+                    else:
+                        self.ambiguous_contigs.append(vdjx)
+
+            if len(vdj_np) > 0:
+                for vdjx in vdj_np:
+                    v = v_dict[vdjx]
+                    d = d_dict[vdjx]
+                    j = j_dict[vdjx]
+                    c = c_dict[vdjx]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(vdjx)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(vdjx)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(vdjx)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(vdjx)
+                    else:
+                        self.ambiguous_contigs.append(vdjx)
+            if len(vj_p) > 0:
+                for vjx in vj_p:
+                    v = v_dict[vjx]
+                    j = j_dict[vjx]
+                    c = c_dict[vjx]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(vjx)
+
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(vjx)
+                    else:
+                        self.ambiguous_contigs.append(vjx)
+
+            if len(vj_np) > 0:
+                for vjx in vj_np:
+                    v = v_dict[vjx]
+                    j = j_dict[vjx]
+                    c = c_dict[vjx]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(vjx)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(vjx)
+
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(vjx)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(vjx)
+                    else:
+                        self.ambiguous_contigs.append(vjx)
+
+            if len(extra_vdj) > 0:
+                for evdj in extra_vdj:
+                    v = v_dict[evdj]
+                    d = d_dict[evdj]
+                    j = j_dict[evdj]
+                    c = c_dict[evdj]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(evdj)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(evdj)
+                    else:
+                        self.ambiguous_contigs.append(evdj)
+
+            if len(extra_vj) > 0:
+                for evj in extra_vj:
+                    v = v_dict[evj]
+                    j = j_dict[evj]
+                    c = c_dict[evj]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(evj)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(evj)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(evj)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(evj)
+
+
+def check_productive_vdj(
+    vdj_contigs: Dict, umi_foldchange_cutoff: Union[int, float]
+) -> Tuple[List, List, List]:
+    """Keep top productive because of allelic exclusion."""
+    keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
+    counts = vdj_contigs.values()
+    max_count = max(counts)
+    max_id_keys = [k for k, v in vdj_contigs.items() if v == max_count]
+    if len(max_id_keys) == 1:
+        other_counts = {
+            k: v for k, v in vdj_contigs.items() if k != max_id_keys[0]
+        }
+        umi_test = {
+            i: ((max_count / j) < umi_foldchange_cutoff)
+            for i, j in other_counts.items()
+        }
+        if any(umi_test.values()):
+            for dk in vdj_contigs.keys():
+                ambiguous_contigs.append(dk)
+        elif max_count >= 3:
+            drop_keys = [k for k, v in vdj_contigs.items() if v < max_count]
+            for dk in drop_keys:
+                extra_contigs.append(dk)
+            for kk in max_id_keys:
+                keep_contigs.append(kk)
+        else:
+            for dk in vdj_contigs.keys():
+                ambiguous_contigs.append(dk)
+    else:
+        for dk in vdj_contigs.keys():
+            ambiguous_contigs.append(dk)
+    return keep_contigs, extra_contigs, ambiguous_contigs
+
+
+def check_productive_vj(vj_contigs: Dict) -> Tuple[List, List, List]:
+    """Keep top two productive because of allelic inclusions."""
+    keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
+    counts = vj_contigs.values()
+    max_counts = max(counts)
+    if len(vj_contigs) > 2:
+        if max(counts) >= 3:
+            set_counts = set(counts)
+            set_counts.remove(max_counts)
+            max_id_keys = [
+                k for k, v in vj_contigs.items() if v >= max(set_counts)
+            ]
+            if len(max_id_keys) > 2:
+                for dk in vj_contigs.keys():
+                    ambiguous_contigs.append(dk)
+            else:
+                drop_keys = [
+                    k for k, v in vj_contigs.items() if v < max(set_counts)
+                ]
+                for dk in drop_keys:
+                    extra_contigs.append(dk)
+                for kk in max_id_keys:
+                    keep_contigs.append(kk)
+        else:
+            for dk in vj_contigs.keys():
+                ambiguous_contigs.append(dk)
+    else:
+        for k in vj_contigs.keys():
+            keep_contigs.append(k)
+    return keep_contigs, extra_contigs, ambiguous_contigs
+
+
+def check_update_same_seq(data: pd.DataFrame):
+    """Check if sequences are the same."""
+    umi_adjust = {}
+    ambi_cont = []
+    seq_ = list(data.sequence_alignment)
+    seq_2 = [s for s in seq_ if present(s)]
+    if len(set(seq_2)) < len(seq_2):
+        _seq = {
+            k: r for k, r in dict(data.sequence_alignment).items() if present(r)
+        }
+        _count = {
+            k: r for k, r in dict(data.duplicate_count).items() if k in _seq
+        }
+        rep_seq = [
+            seq for seq in set(_seq.values()) if countOf(_seq.values(), seq) > 1
+        ]
+        keep_seqs = [
+            seq
+            for seq in set(_seq.values())
+            if countOf(_seq.values(), seq) == 1
+        ]
+        keep_seqs_ids = [i for i, seq in _seq.items() if seq in keep_seqs]
+        if len(rep_seq) > 0:
+            for rep in rep_seq:
+                dup_keys = [k for k, v in _seq.items() if v == rep]
+                keep_index_vj = dup_keys[0]
+                keep_index_count = int(_count[keep_index_vj])
+                sum_rep_counts = np.sum([_count[k] for k in dup_keys[1:]])
+                umi_adjust.update(
+                    {
+                        keep_index_vj: int(
+                            np.sum(
+                                [
+                                    sum_rep_counts,
+                                    keep_index_count,
+                                ],
+                            )
+                        )
+                    }
+                )
+                for dk in dup_keys[1:]:
+                    ambi_cont.append(dk)
+                keep_seqs_ids.append(keep_index_vj)
+                data.duplicate_count.update({keep_index_vj: keep_index_count})
+            # refresh
+            empty_seqs_ids = [
+                k
+                for k, r in dict(data.sequence_alignment).items()
+                if not present(r)
+            ]
+            if len(empty_seqs_ids) > 0:
+                keep_seqs_ids = keep_seqs_ids + empty_seqs_ids
+            data = data.loc[keep_seqs_ids]
+    keep_id = list(data.sequence_id)
+    keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
+    keep_ccall = list(data.c_call)
+
+    return (data, keep_id, keep_umi, keep_ccall, umi_adjust, ambi_cont)

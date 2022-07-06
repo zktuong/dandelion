@@ -38,7 +38,12 @@ def test_clone_overlap(
         else:
             label.append("F")
     dummy_adata_mouse.obs["sample_idx"] = label
-    dummy_adata_mouse.write(str(create_testfolder) + "/test_adata.h5ad")
+    with pytest.raises(KeyError):
+        ddl.pl.clone_overlap(
+            dummy_adata_mouse,
+            groupby="sample_idx",
+            colorby="sample_idx",
+        )
     ddl.tl.clone_overlap(
         dummy_adata_mouse, groupby="sample_idx", colorby="sample_idx"
     )
@@ -47,5 +52,26 @@ def test_clone_overlap(
         dummy_adata_mouse,
         groupby="sample_idx",
         colorby="sample_idx",
-        show_plot=False,
+    )
+    with pytest.raises(ValueError):
+        ddl.pl.clone_overlap(
+            vdj,
+            groupby="sample_idx",
+            colorby="sample_idx",
+        )
+    G = ddl.pl.clone_overlap(
+        dummy_adata_mouse,
+        groupby="sample_idx",
+        colorby="sample_idx",
+        weighted_overlap=False,
+        save="test.png",
+        return_graph=True,
+    )
+    assert G is not None
+
+    ddl.pl.clone_overlap(
+        dummy_adata_mouse,
+        groupby="sample_idx",
+        colorby="sample_idx",
+        as_heatmap=True,
     )

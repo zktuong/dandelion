@@ -2,18 +2,26 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-21 21:40:09
+# @Last Modified time: 2022-07-03 21:50:37
 """utilities module."""
-import numpy as np
 import os
-import pandas as pd
 import re
 import warnings
+
+import numpy as np
+import pandas as pd
 
 from airr import RearrangementSchema
 from collections import defaultdict
 from subprocess import run
-from typing import Sequence, Tuple, Dict, Union, Optional
+from typing import Sequence, Tuple, Dict, Union, Optional, TypeVar, List
+
+NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
+
+TRUES = ["T", "True", "true", "TRUE", True]
+FALSES = ["F", "False", "false", "FALSE", False]
+HEAVYLONG = ["IGH", "TRB", "TRD"]
+LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
 
 # for compatibility with python>=3.10
 try:
@@ -337,6 +345,11 @@ def all_missing(x):
     return all(pd.isnull(x)) or all(x == "")
 
 
+def all_missing2(x):
+    """Utility function to check if all x is not null or blank or the word None."""
+    return all(pd.isnull(x)) or all(x == "") or all(x == "None")
+
+
 def return_mix_dtype(data):
     """Utility function to return mixed dtypes columns."""
     check = [
@@ -395,10 +408,14 @@ def sanitize_data(data, ignore="clone_id"):
         pass
 
     if (
-        pd.Series(["duplicate_count", "productive"]).isin(data.columns).all()
+        pd.Series(["cell_id", "duplicate_count", "productive"])
+        .isin(data.columns)
+        .all()
     ):  # sort so that the productive contig with the largest umi is first
         data.sort_values(
-            by=["productive", "duplicate_count"], inplace=True, ascending=False
+            by=["cell_id", "productive", "duplicate_count"],
+            inplace=True,
+            ascending=[True, False, False],
         )
 
     # check if airr-standards is happy
@@ -694,8 +711,8 @@ def deprecated(details, deprecated_in, removed_in):
 def format_call(
     metadata: pd.DataFrame,
     call: str,
-    suffix_h: str = "_VDJ",
-    suffix_l: str = "_VJ",
+    suffix_vdj: str = "_VDJ",
+    suffix_vj: str = "_VJ",
 ) -> list:
     """Extract v/d/j/c call values from data."""
     call_dict = {
@@ -704,19 +721,19 @@ def format_call(
         "": "None",
         "unassigned": "None",
     }
-    if suffix_l is not None:
+    if suffix_vj is not None:
         call_1 = {
             x[0]: x[1] if present(x[1]) else "None"
             for x, y in zip(
-                metadata[call + suffix_h].items(),
-                list(metadata[call + suffix_l]),
+                metadata[call + suffix_vdj].items(),
+                list(metadata[call + suffix_vj]),
             )
         }
         call_2 = {
             x[0]: x[1] if present(x[1]) else "None"
             for x, y in zip(
-                metadata[call + suffix_l].items(),
-                list(metadata[call + suffix_h]),
+                metadata[call + suffix_vj].items(),
+                list(metadata[call + suffix_vdj]),
             )
         }
         call_2 = {x: y if "|" not in y else "Multi" for x, y in call_2.items()}
@@ -727,7 +744,7 @@ def format_call(
     else:
         call_1 = {
             x: y if present(y) else "None"
-            for x, y in metadata[call + suffix_h].items()
+            for x, y in metadata[call + suffix_vdj].items()
         }
         call_2 = {x: "None" for x in call_1.keys()}
         call_4 = call_3 = call_2
@@ -745,74 +762,115 @@ def format_call(
 
 
 def format_locus(
-    metadata: pd.DataFrame, suffix_h: str = "_VDJ", suffix_l: str = "_VJ"
-) -> list:
+    metadata: pd.DataFrame, suffix_vdj: str = "_VDJ", suffix_vj: str = "_VJ"
+) -> pd.Series:
     """Extract locus call value from data."""
-    locus_1 = {
-        x[0]: x[1] if present(x[1]) else y
-        for x, y in zip(
-            metadata["locus" + suffix_h].items(),
-            list(metadata["locus" + suffix_l]),
-        )
-    }
-    locus_2 = {
-        x[0]: x[1] if present(x[1]) else y
-        for x, y in zip(
-            metadata["locus" + suffix_l].items(),
-            list(metadata["locus" + suffix_h]),
-        )
-    }
-    multi_1 = {
-        x: "Multi" for x, y in metadata["locus" + suffix_h].items() if "|" in y
-    }
-    multi_2 = {
-        x: "Multi" for x, y in metadata["locus" + suffix_l].items() if "|" in y
-    }
-    locus_1.update(multi_1)
-    locus_2.update(multi_2)
-    result = [
-        str(x) + " + " + str(y) if str(x) != str(y) else str(x) + "_only"
-        for x, y in zip(locus_1.values(), locus_2.values())
-    ]
-    result = [x if "Multi" not in x else "Multi" for x in result]
-    return result
+    locus_1 = dict(metadata["locus" + suffix_vdj])
+    locus_2 = dict(metadata["locus" + suffix_vj])
+    productive_1 = dict(metadata["productive" + suffix_vdj])
+    productive_2 = dict(metadata["productive" + suffix_vj])
+    constant_1 = dict(metadata["isotype_status"])
 
+    locus_dict = {}
+    for i in metadata.index:
+        pro1 = {
+            e: p
+            for e, p in enumerate([pp for pp in productive_1[i].split("|")])
+        }
+        loc1 = {
+            e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
+        }
+        pro2 = {
+            e: p
+            for e, p in enumerate([pp for pp in productive_2[i].split("|")])
+        }
+        loc2 = {
+            e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
+        }
+        loc1x, loc2x = [], []
+        if not all([px == "None" for px in pro1.values()]):
+            if all([px_ != "F" for px_ in pro1.values()]):
+                for j in pro1:
+                    if pro1[j] in TRUES:
+                        loc1x.append(loc1[j])
+                loc1xx = loc1x
+                loc1x = [ij[:2] for ij in loc1x]
 
-def format_productive(
-    metadata: pd.DataFrame, suffix_h: str = "_VDJ", suffix_l: str = "_VJ"
-) -> list:
-    """Extract productive value from data."""
-    productive_1 = {
-        x[0]: x[1] if present(x[1]) else "None"
-        for x, y in zip(
-            metadata["productive" + suffix_h].items(),
-            list(metadata["productive" + suffix_l]),
-        )
-    }
-    productive_2 = {
-        x[0]: x[1] if present(x[1]) else "None"
-        for x, y in zip(
-            metadata["productive" + suffix_l].items(),
-            list(metadata["productive" + suffix_h]),
-        )
-    }
-    multi_1 = {
-        x: "Multi"
-        for x, y in metadata["productive" + suffix_h].items()
-        if "|" in y
-    }
-    multi_2 = {
-        x: "Multi"
-        for x, y in metadata["productive" + suffix_l].items()
-        if "|" in y
-    }
-    productive_1.update(multi_1)
-    productive_2.update(multi_2)
-    result = [
-        str(x) + " + " + str(y)
-        for x, y in zip(productive_1.values(), productive_2.values())
-    ]
-    # result = [x if 'Multi' not in x else 'Multi' for x in result]
+        if not all([px == "None" for px in pro2.values()]):
+            if all([px_ != "F" for px_ in pro1.values()]):
+                for j in pro2:
+                    if pro2[j] in TRUES:
+                        loc2x.append(loc2[j])
+                loc2xx = loc2x
+                loc2x = [ij[:2] for ij in loc2x]
+
+        if len(loc1x) > 0:
+            if len(list(set(loc1x))) > 1:
+                tmp1 = "ambiguous"
+            else:
+                if len(loc1x) > 1:
+                    if constant_1[i] == "IgM/IgD":
+                        tmp1 = "IgM/IgD"
+                    elif (all(x in ["TRB", "TRD"] for x in loc1xx)) and (
+                        len(list(set(loc1xx))) == 2
+                    ):
+                        tmp1 = "Extra VDJ-exception"
+                    else:
+                        tmp1 = "Extra VDJ"
+                else:
+                    tmp1 = loc1xx[0]
+
+                if len(loc2x) > 0:
+                    if len(list(set(loc2x))) > 1:
+                        tmp2 = "ambiguous"
+                    else:
+                        if len(loc2x) > 1:
+                            if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
+                                len(list(set(loc2xx))) == 2
+                            ):
+                                tmp2 = "Extra VJ-exception"
+                            else:
+                                tmp2 = "Extra VJ"
+                        else:
+                            tmp2 = loc2xx[0]
+                else:
+                    tmp2 = "None"
+
+                if (
+                    tmp1 not in ["None", "Extra VDJ", "Extra VDJ-exception"]
+                ) and (tmp2 not in ["None", "Extra VJ", "Extra VJ-exception"]):
+                    if list(set(loc1x)) != list(set(loc2x)):
+                        tmp1 = "ambiguous"
+                        tmp2 = "ambiguous"
+        else:
+            tmp1 = "None"
+            if len(loc2x) > 0:
+                if len(list(set(loc2x))) > 1:
+                    tmp2 = "ambiguous"
+                else:
+                    if len(loc2x) > 1:
+                        if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
+                            len(list(set(loc2xx))) == 2
+                        ):
+                            tmp2 = "Extra VJ-exception"
+                        else:
+                            tmp2 = "Extra VJ"
+                    else:
+                        tmp2 = loc2xx[0]
+            else:
+                tmp2 = "None"
+        if any(tmp == "ambiguous" for tmp in [tmp1, tmp2]):
+            locus_dict.update({i: "ambiguous"})
+        else:
+            locus_dict.update({i: tmp1 + " + " + tmp2})
+
+        if any(tmp == "None" for tmp in [tmp1, tmp2]):
+            if tmp1 == "None":
+                locus_dict.update({i: "Orphan " + tmp2})
+            elif tmp2 == "None":
+                locus_dict.update({i: "Orphan " + tmp1})
+
+    result = pd.Series(locus_dict)
     return result
 
 
@@ -822,3 +880,83 @@ def sum_col(vals):
         return np.nan
     else:
         return sum(vals)
+
+
+def lib_type(lib: str):
+    """Dictionary of acceptable loci for library type."""
+    librarydict = {
+        "tr-ab": ["TRA", "TRB"],
+        "tr-gd": ["TRG", "TRD"],
+        "ig": ["IGH", "IGK", "IGL"],
+    }
+    return librarydict[lib]
+
+
+def movecol(
+    df: pd.DataFrame,
+    cols_to_move: List = [],
+    ref_col: str = "",
+) -> pd.DataFrame:
+    """A way to order columns."""
+    # https://towardsdatascience.com/reordering-pandas-dataframe-columns-thumbs-down-on-standard-solutions-1ff0bc2941d5
+    cols = df.columns.tolist()
+    seg1 = cols[: list(cols).index(ref_col) + 1]
+    seg2 = cols_to_move
+
+    seg1 = [i for i in seg1 if i not in seg2]
+    seg3 = [i for i in cols if i not in seg1 + seg2]
+    return df[seg1 + seg2 + seg3]
+
+
+def format_chain_status(locus_status):
+    """Format chain status from locus status."""
+    chain_status = []
+    for ls in locus_status:
+        if ("Orphan" in ls) and (re.search("TRB|IGH|TRD|VDJ", ls)):
+            if not re.search("exception", ls):
+                chain_status.append("Orphan VDJ")
+            else:
+                chain_status.append("Orphan VDJ-exception")
+        elif ("Orphan" in ls) and (re.search("TRA|TRG|IGK|IGL|VJ", ls)):
+            if not re.search("exception", ls):
+                chain_status.append("Orphan VJ")
+            else:
+                chain_status.append("Orphan VJ-exception")
+        elif re.search("exception|IgM/IgD", ls):
+            chain_status.append("Extra pair-exception")
+        elif re.search("Extra", ls):
+            chain_status.append("Extra pair")
+        elif re.search("ambiguous", ls):
+            chain_status.append("ambiguous")
+        else:
+            chain_status.append("Single pair")
+    return chain_status
+
+
+def update_rearrangement_status(self):
+    """Check rearrangement status."""
+    if "v_call_genotyped" in self.data:
+        vcall = "v_call_genotyped"
+    else:
+        vcall = "v_call"
+    contig_status = []
+    for v, j, c in zip(
+        self.data[vcall], self.data["j_call"], self.data["c_call"]
+    ):
+        if present(v):
+            if present(j):
+                if present(c):
+                    if len(list(set([v[:3], j[:3], c[:3]]))) > 1:
+                        contig_status.append("chimeric")
+                    else:
+                        contig_status.append("standard")
+                else:
+                    if len(list(set([v[:3], j[:3]]))) > 1:
+                        contig_status.append("chimeric")
+                    else:
+                        contig_status.append("standard")
+            else:
+                contig_status.append("unknown")
+        else:
+            contig_status.append("unknown")
+    self.data["rearrangement_status"] = contig_status

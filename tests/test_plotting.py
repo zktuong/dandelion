@@ -56,6 +56,26 @@ def test_plot_bar(create_testfolder, sort, norm):
 
 
 @pytest.mark.usefixtures("create_testfolder")
+def test_plot_bar2(create_testfolder):
+    """test_plot_bar2"""
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5ddl(f)
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    ax = ddl.pl.barplot(
+        vdj,
+        color="v_call_genotyped_VDJ",
+        min_clone_size=2,
+        clone_key="clone_id",
+        title="test",
+        xtick_rotation=90,
+    )
+    assert ax is not None
+    ax = ddl.pl.barplot(adata, color="v_call_genotyped_VDJ")
+    assert ax is not None
+
+
+@pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize("norm", [True, False])
 def test_plot_stackedbar(create_testfolder, norm):
     """test_plot_stackedbar"""
@@ -63,6 +83,32 @@ def test_plot_stackedbar(create_testfolder, norm):
     vdj = ddl.read_h5(f)
     ax = ddl.pl.stackedbarplot(
         vdj, color="v_call_genotyped_VDJ", groupby="isotype", normalize=norm
+    )
+    assert ax is not None
+
+
+@pytest.mark.usefixtures("create_testfolder")
+@pytest.mark.parametrize("norm", [True, False])
+def test_plot_stackedbar2(create_testfolder, norm):
+    """test_plot_stackedbar2"""
+    f = create_testfolder / "test.h5"
+    vdj = ddl.read_h5(f)
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    ax = ddl.pl.stackedbarplot(
+        vdj,
+        color="v_call_genotyped_VDJ",
+        groupby="isotype",
+        min_clone_size=2,
+        clone_key="clone_id",
+        title="test",
+        xtick_rotation=90,
+    )
+    assert ax is not None
+    ax = ddl.pl.stackedbarplot(
+        adata,
+        color="v_call_genotyped_VDJ",
+        groupby="isotype",
     )
     assert ax is not None
 
@@ -76,3 +122,21 @@ def test_plot_spectratype(create_testfolder):
         vdj, color="junction_length", groupby="c_call", locus="IGH"
     )
     assert ax is not None
+    ax = ddl.pl.spectratype(
+        vdj,
+        color="junction_length",
+        groupby="c_call",
+        locus="IGH",
+        hide_legend=False,
+        width=1,
+        xtick_rotation=90,
+        title="test",
+        labels="test",
+    )
+    assert ax is not None
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    with pytest.raises(ValueError):
+        ddl.pl.spectratype(
+            adata, color="junction_length", groupby="c_call", locus="IGH"
+        )

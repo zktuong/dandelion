@@ -2,24 +2,22 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:21:45
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:30:52
+# @Last Modified time: 2022-07-04 08:29:04
 """init module."""
 from ._plotting import (
-    random_palette,
-    clone_network,
     barplot,
-    stackedbarplot,
-    spectratype,
-    clone_rarefaction,
+    clone_network,
     clone_overlap,
+    clone_rarefaction,
+    spectratype,
+    stackedbarplot,
 )
 
 __all__ = [
-    "random_palette",
-    "clone_network",
     "barplot",
-    "stackedbarplot",
-    "spectratype",
-    "clone_rarefaction",
+    "clone_network",
     "clone_overlap",
+    "clone_rarefaction",
+    "spectratype",
+    "stackedbarplot",
 ]

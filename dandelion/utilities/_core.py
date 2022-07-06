@@ -2,26 +2,34 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 15:20:15
+# @Last Modified time: 2022-07-06 08:58:11
 """core module."""
-import _pickle as cPickle
 import bz2
 import copy
 import gzip
 import h5py
-import networkx as nx
-import numpy as np
 import os
-import pandas as pd
 import re
 import warnings
 
+import _pickle as cPickle
+import networkx as nx
+import numpy as np
+import pandas as pd
+
+from anndata._core.index import (
+    _normalize_index,
+    Index,
+    unpack_index,
+)
 from changeo.IO import readGermlines
 from collections import defaultdict
+from pandas.api.types import infer_dtype
 from pathlib import Path
 from scanpy import logging as logg
+from textwrap import dedent
 from tqdm import tqdm
-from typing import Union, Sequence, Dict, Optional
+from typing import Union, Sequence, Dict, Optional, Tuple
 
 from ..utilities._io import *
 from ..utilities._utilities import *
@@ -37,44 +45,51 @@ class Dandelion:
 
     def __init__(
         self,
-        data=None,
-        metadata=None,
-        germline=None,
-        edges=None,
-        layout=None,
-        graph=None,
-        initialize=True,
+        data: Optional[pd.DataFrame] = None,
+        metadata: Optional[pd.DataFrame] = None,
+        germline: Optional[Dict] = None,
+        layout: Optional[pd.DataFrame] = None,
+        graph: Optional[Tuple[NetworkxGraph, NetworkxGraph]] = None,
+        initialize: bool = True,
+        library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
         **kwargs,
     ):
-        self.data = load_data(data)
-        self.metadata = metadata
-        self.edges = edges
+        self._data = data
+        self._metadata = metadata
         self.layout = layout
         self.graph = graph
         self.threshold = None
         self.germline = {}
         self.querier = None
+        self.library_type = library_type
+        self.data = self._data
+        self.metadata = self._metadata
 
         if germline is not None:
             self.germline.update(germline)
 
-        if os.path.isfile(str(self.data)):
-            self.data = load_data(self.data)
-
         if self.data is not None:
+            if self.library_type is not None:
+                acceptable = lib_type(self.library_type)
+            else:
+                acceptable = None
+
+            if acceptable is not None:
+                self.data = self.data[self.data.locus.isin(acceptable)].copy()
+
             try:
                 self.data = check_travdv(self.data)
             except:
                 pass
             if (
-                pd.Series(["duplicate_count", "productive"])
+                pd.Series(["cell_id", "duplicate_count", "productive"])
                 .isin(self.data.columns)
                 .all()
             ):  # sort so that the productive contig with the largest umi is first
                 self.data.sort_values(
-                    by=["productive", "duplicate_count"],
+                    by=["cell_id", "productive", "duplicate_count"],
                     inplace=True,
-                    ascending=False,
+                    ascending=[True, False, False],
                 )
             # self.data = sanitize_data(self.data) # this is too slow. and unnecessary at this point.
             self.n_contigs = self.data.shape[0]
@@ -96,29 +111,166 @@ class Dandelion:
         """Report."""
         # inspire by AnnData's function
         descr = f"Dandelion class object with n_obs = {n_obs} and n_contigs = {n_contigs}"
-        for attr in ["data", "metadata", "edges"]:
+        for attr in ["data", "metadata"]:
             try:
                 keys = getattr(self, attr).keys()
             except:
                 keys = []
             if len(keys) > 0:
                 descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
-            else:
-                descr += f"\n    {attr}: {str(None)}"
         if self.layout is not None:
             descr += f"\n    layout: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1])])}"
-        else:
-            descr += f"\n    layout: {str(None)}"
         if self.graph is not None:
             descr += f"\n    graph: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1])])} "
-        else:
-            descr += f"\n    graph: {str(None)}"
         return descr
 
     def __repr__(self) -> str:
         """Report."""
         # inspire by AnnData's function
         return self._gen_repr(self.n_obs, self.n_contigs)
+
+    def __getitem__(self, index: Index) -> "Dandelion":
+        """Returns a sliced object."""
+        if isinstance(index, np.ndarray):
+            if len(index) == self._metadata.shape[0]:
+                idx, idxtype = self._normalize_indices(
+                    self._metadata.index[index]
+                )
+            elif len(index) == self._data.shape[0]:
+                idx, idxtype = self._normalize_indices(self._data.index[index])
+        else:
+            idx, idxtype = self._normalize_indices(index[index].index)
+        if idxtype == "metadata":
+            _data = self._data[
+                self._data.cell_id.isin(self._metadata.iloc[idx].index)
+            ]
+            _metadata = self._metadata.iloc[idx]
+        elif idxtype == "data":
+            _metadata = self._metadata[
+                self._metadata.index.isin(self._data.iloc[idx].cell_id)
+            ]
+            _data = self._data.iloc[idx]
+        _keep_cells = _metadata.index
+        if self.layout is not None:
+            _layout0 = {
+                k: r for k, r in self.layout[0].items() if k in _keep_cells
+            }
+            _layout1 = {
+                k: r for k, r in self.layout[1].items() if k in _keep_cells
+            }
+            _layout = (_layout0, _layout1)
+        else:
+            _layout = None
+        if self.graph is not None:
+            _g0 = self.graph[0].subgraph(_keep_cells)
+            _g1 = self.graph[1].subgraph(
+                [n for n in self.graph[1].nodes if n in _keep_cells]
+            )
+            _graph = (_g0, _g1)
+        else:
+            _graph = None
+        return Dandelion(
+            data=_data,
+            metadata=_metadata,
+            layout=_layout,
+            graph=_graph,
+        )
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """One-dimensional annotation of contig observations (`pd.DataFrame`)."""
+        return self._data
+
+    @data.setter
+    def data(self, value: pd.DataFrame):
+        """data setter"""
+        value = load_data(value)
+        self._set_dim_df(value, "data")
+
+    @property
+    def data_names(self) -> pd.Index:
+        """Names of observations (alias for `.data.index`)."""
+        return self.data.index
+
+    @data_names.setter
+    def data_names(self, names: Sequence[str]):
+        """data names setter"""
+        names = self._prep_dim_index(names, "data")
+        self._set_dim_index(names, "data")
+
+    @property
+    def metadata(self) -> pd.DataFrame:
+        """One-dimensional annotation of cell observations (`pd.DataFrame`)."""
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value: pd.DataFrame):
+        """metadata setter"""
+        self._set_dim_df(value, "metadata")
+
+    @property
+    def metadata_names(self) -> pd.Index:
+        """Names of observations (alias for `.metadata.index`)."""
+        return self.metadata.index
+
+    @metadata_names.setter
+    def metadata_names(self, names: Sequence[str]):
+        """metadata names setter"""
+        names = self._prep_dim_index(names, "metadata")
+        self._set_dim_index(names, "metadata")
+
+    def _normalize_indices(self, index: Index) -> Tuple[slice, str]:
+        """retrieve indices"""
+        return _normalize_indices(index, self.metadata_names, self.data_names)
+
+    def _set_dim_df(self, value: pd.DataFrame, attr: str):
+        """dim df setter"""
+        if value is not None:
+            if not isinstance(value, pd.DataFrame):
+                raise ValueError(f"Can only assign pd.DataFrame to {attr}.")
+            value_idx = self._prep_dim_index(value.index, attr)
+            setattr(self, f"_{attr}", value)
+
+    def _prep_dim_index(self, value, attr: str) -> pd.Index:
+        """Prepares index to be uses as metadata_names or data_names for Dandelion object.
+        If a pd.Index is passed, this will use a reference, otherwise a new index object is created.
+        """
+        if isinstance(value, pd.Index) and not isinstance(
+            value.name, (str, type(None))
+        ):
+            raise ValueError(
+                f"Dandelion expects .{attr}.index.name to be a string or None, "
+                f"but you passed a name of type {type(value.name).__name__!r}"
+            )
+        else:
+            value = pd.Index(value)
+            if not isinstance(value.name, (str, type(None))):
+                value.name = None
+        # fmt: off
+        if (
+            not isinstance(value, pd.RangeIndex)
+            and not infer_dtype(value) in ("string", "bytes")
+        ):
+            sample = list(value[: min(len(value), 5)])
+            warnings.warn(dedent(
+                f"""
+                Dandelion expects .{attr}.index to contain strings, but got values like:
+                    {sample}
+                    Inferred to be: {infer_dtype(value)}
+                """
+                ), # noqa
+                stacklevel=2,
+            )
+        # fmt: on
+        return value
+
+    def _set_dim_index(self, value: pd.Index, attr: str):
+        """set dim index"""
+        # Assumes _prep_dim_index has been run
+        getattr(self, attr).index = value
+        for v in getattr(self, f"{attr}m").values():
+            if isinstance(v, pd.DataFrame):
+                v.index = value
 
     def copy(self):
         """
@@ -441,14 +593,14 @@ class Dandelion:
                 update_metadata(
                     self,
                     retrieve=seqinfo,
-                    retrieve_mode="split and unique only",
+                    retrieve_mode="split and merge",
                 )
         if option == "sequence":
             if len(seqinfo) > 0:
                 update_metadata(
                     self,
                     retrieve=seqinfo,
-                    retrieve_mode="split and unique only",
+                    retrieve_mode="split and merge",
                 )
         if option == "mutations":
             if len(mutations) > 0:
@@ -476,7 +628,137 @@ class Dandelion:
                     self, retrieve=vdjlengths, retrieve_mode="split and average"
                 )
 
+    @deprecated(
+        deprecated_in="0.2.4",
+        removed_in="0.4.0",
+        details="The name is misleading. Going forward, it will be renamed as store_germline_reference",
+    )
     def update_germline(
+        self,
+        corrected: Optional[Union[Dict, str]] = None,
+        germline: Optional[str] = None,
+        org: Literal["human", "mouse"] = "human",
+    ):
+        """
+        Update germline reference with corrected sequences and store in `Dandelion` object.
+
+        Parameters
+        ----------
+        self : Dandelion
+            `Dandelion` object.
+        corrected : dict, str, Optional
+            dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
+        germline : str, Optional
+            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
+        org : str
+            organism of reference folder. Default is 'human'.
+
+        Returns
+        -------
+        updated germline reference diciontary in `.germline` slot.
+        """
+        start = logg.info("Updating germline reference")
+        env = os.environ.copy()
+        if germline is None:
+            try:
+                gml = env["GERMLINE"]
+            except:
+                raise KeyError(
+                    (
+                        "Environmental variable GERMLINE must be set. Otherwise, "
+                        + "please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files."
+                    )
+                )
+            gml = gml + "imgt/" + org + "/vdj/"
+        else:
+            if type(germline) is list:
+                if len(germline) < 3:
+                    raise TypeError(
+                        (
+                            "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, "
+                            + "and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta "
+                            + "files (with .fasta extension) as a list."
+                        )
+                    )
+                else:
+                    gml = []
+                    for x in germline:
+                        if not x.endswith((".fasta", ".fa")):
+                            raise TypeError(
+                                (
+                                    "Input for germline is incorrect. Please provide path to folder containing germline "
+                                    + "IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta "
+                                    + "files (with .fasta extension) as a list."
+                                )
+                            )
+                        gml.append(x)
+            elif type(germline) is not list:
+                if os.path.isdir(germline):
+                    germline_ = [
+                        str(Path(germline, g)) for g in os.listdir(germline)
+                    ]
+                    if len(germline_) < 3:
+                        raise TypeError(
+                            (
+                                "Input for germline is incorrect. Please provide path to folder containing germline IGHV, "
+                                + "IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ "
+                                + "fasta files (with .fasta extension) as a list."
+                            )
+                        )
+                    else:
+                        gml = []
+                        for x in germline_:
+                            if not x.endswith((".fasta", ".fa")):
+                                raise TypeError(
+                                    (
+                                        "Input for germline is incorrect. Please provide path to folder containing germline "
+                                        + "IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, "
+                                        + "and IGHJ fasta files (with .fasta extension) as a list."
+                                    )
+                                )
+                            gml.append(x)
+                elif os.path.isfile(germline) and str(germline).endswith(
+                    (".fasta", ".fa")
+                ):
+                    gml = []
+                    gml.append(germline)
+                    warnings.warn(
+                        "Only 1 fasta file provided to updating germline slot. Please check if this is intended.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+
+        if type(gml) is not list:
+            gml = [gml]
+
+        germline_ref = readGermlines(gml)
+        if corrected is not None:
+            if type(corrected) is dict:
+                personalized_ref_dict = corrected
+            elif os.path.isfile(str(corrected)):
+                personalized_ref_dict = readGermlines([corrected])
+            # update with the personalized germline database
+            if "personalized_ref_dict" in locals():
+                germline_ref.update(personalized_ref_dict)
+            else:
+                raise TypeError(
+                    (
+                        "Input for corrected germline fasta is incorrect. Please provide path to file containing "
+                        + "corrected germline fasta sequences."
+                    )
+                )
+
+        self.germline.update(germline_ref)
+        logg.info(
+            " finished",
+            time=start,
+            deep=(
+                "Updated Dandelion object: \n"
+                "   'germline', updated germline reference\n"
+            ),
+        )
+
+    def store_germline_reference(
         self,
         corrected: Optional[Union[Dict, str]] = None,
         germline: Optional[str] = None,
@@ -750,18 +1032,6 @@ class Dandelion:
                 nan_rep=np.nan,
                 **kwargs,
             )
-        try:
-            if "index" in self.edges.columns:
-                self.edges.drop("index", axis=1, inplace=True)
-            self.edges.to_hdf(
-                filename,
-                "edges",
-                complib=comp,
-                complevel=compression_level,
-                **kwargs,
-            )
-        except:
-            pass
 
         graph_counter = 0
         try:
@@ -805,7 +1075,150 @@ class Dandelion:
                 tr = self.threshold
                 hf.create_dataset("threshold", data=tr)
 
-    write = write_h5ddl = write_h5  # shortcut
+    def write_h5ddl(
+        self,
+        filename: str = "dandelion_data.h5ddl",
+        complib: Literal[
+            "zlib",
+            "lzo",
+            "bzip2",
+            "blosc",
+            "blosc:blosclz",
+            "blosc:lz4",
+            "blosc:lz4hc",
+            "blosc:snappy",
+            "blosc:zlib",
+            "blosc:zstd",
+        ] = None,
+        compression: Literal[
+            "zlib",
+            "lzo",
+            "bzip2",
+            "blosc",
+            "blosc:blosclz",
+            "blosc:lz4",
+            "blosc:lz4hc",
+            "blosc:snappy",
+            "blosc:zlib",
+            "blosc:zstd",
+        ] = None,
+        compression_level: Optional[int] = None,
+        **kwargs,
+    ):
+        """
+        Writes a `Dandelion` class to .h5 format.
+
+        Parameters
+        ----------
+        filename
+            path to `.h5` file.
+        complib : str, Optional
+            method for compression for data frames. see
+            https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
+        compression : str, Optional
+            same call as complib. Just a convenience option.
+        compression_opts : {0-9}, Optional
+            Specifies a compression level for data. A value of 0 disables compression.
+        **kwargs
+            passed to `pd.DataFrame.to_hdf`.
+        """
+        if compression_level is None:
+            compression_level = 9
+        else:
+            compression_level = compression_level
+
+        # a little hack to overwrite the existing file?
+        with h5py.File(filename, "w") as hf:
+            for datasetname in hf.keys():
+                del hf[datasetname]
+
+        if complib is None and compression is None:
+            comp = None
+        elif complib is not None and compression is None:
+            comp = complib
+        elif complib is None and compression is not None:
+            comp = compression
+        if complib is not None and compression is not None:
+            raise ValueError(
+                "Please specify only complib or compression. They do the same thing."
+            )
+
+        # now to actually saving
+        data = self.data.copy()
+        data = sanitize_data(data)
+        data = sanitize_data_for_saving(data)
+        data.to_hdf(
+            filename,
+            "data",
+            complib=comp,
+            complevel=compression_level,
+            **kwargs,
+        )
+
+        if self.metadata is not None:
+            metadata = self.metadata.copy()
+            for col in metadata.columns:
+                weird = (
+                    metadata[[col]].applymap(type)
+                    != metadata[[col]].iloc[0].apply(type)
+                ).any(axis=1)
+                if len(metadata[weird]) > 0:
+                    metadata[col] = metadata[col].where(
+                        pd.notnull(metadata[col]), ""
+                    )
+            metadata.to_hdf(
+                filename,
+                "metadata",
+                complib=comp,
+                complevel=compression_level,
+                format="table",
+                nan_rep=np.nan,
+                **kwargs,
+            )
+
+        graph_counter = 0
+        try:
+            for g in self.graph:
+                G = nx.to_pandas_adjacency(g, nonedge=np.nan)
+                G.to_hdf(
+                    filename,
+                    "graph/graph_" + str(graph_counter),
+                    complib=comp,
+                    complevel=compression_level,
+                    **kwargs,
+                )
+                graph_counter += 1
+        except:
+            pass
+
+        with h5py.File(filename, "a") as hf:
+            try:
+                layout_counter = 0
+                for l in self.layout:
+                    try:
+                        hf.create_group("layout/layout_" + str(layout_counter))
+                    except:
+                        pass
+                    for k in l.keys():
+                        hf["layout/layout_" + str(layout_counter)].attrs[k] = l[
+                            k
+                        ]
+                    layout_counter += 1
+            except:
+                pass
+
+            if len(self.germline) > 0:
+                try:
+                    hf.create_group("germline")
+                except:
+                    pass
+                for k in self.germline.keys():
+                    hf["germline"].attrs[k] = self.germline[k]
+            if self.threshold is not None:
+                tr = self.threshold
+                hf.create_dataset("threshold", data=tr)
+
+    write = write_h5ddl
 
 
 class Query:
@@ -814,12 +1227,10 @@ class Query:
     def __init__(self, data, verbose=False):
         self.data = data.copy()
         self.Cell = Tree()
-        if verbose:
-            disable = False
-        else:
-            disable = True
         for contig, row in tqdm(
-            data.iterrows(), desc="Setting up data", disable=disable
+            data.iterrows(),
+            desc="Setting up data",
+            disable=not verbose,
         ):
             self.Cell[row["cell_id"]][contig].update(row)
 
@@ -863,6 +1274,23 @@ class Query:
                             )
                         }
                     )
+            elif retrieve_mode == "split and merge":
+                if len(vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_VDJ": "|".join(
+                                str(x) for x in vdj if present(x)
+                            )
+                        }
+                    )
+                if len(vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_VJ": "|".join(str(x) for x in vj if present(x))
+                        }
+                    )
             elif retrieve_mode == "merge and unique only":
                 cols.update(
                     {
@@ -882,7 +1310,7 @@ class Query:
                         }
                     )
                 else:
-                    cols.update({query + "VDJ": np.nan})
+                    cols.update({query + "_VDJ": np.nan})
                 if len(vj) > 0:
                     cols.update(
                         {
@@ -893,7 +1321,7 @@ class Query:
                         }
                     )
                 else:
-                    cols.update({query + "VJ": np.nan})
+                    cols.update({query + "_VJ": np.nan})
             elif retrieve_mode == "split and average":
                 if len(vdj) > 0:
                     cols.update(
@@ -958,6 +1386,416 @@ class Query:
                 out.fillna("None", inplace=True)
         return out
 
+    def retrieve_celltype(self, query, retrieve_mode):
+        """Retrieve query."""
+        self.query = query
+        ret = {}
+        for cell in self.Cell:
+            cols, abt_vdj, gdt_vdj, b_vdj, abt_vj, gdt_vj, b_vj = (
+                {},
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+            )
+            for _, contig in self.Cell[cell].items():
+                if isinstance(contig, dict):
+                    if contig["locus"] in ["IGH"]:
+                        b_vdj.append(contig[query])
+                    elif contig["locus"] in ["IGK", "IGL"]:
+                        b_vj.append(contig[query])
+                    elif contig["locus"] in ["TRB"]:
+                        abt_vdj.append(contig[query])
+                    elif contig["locus"] in ["TRD"]:
+                        gdt_vdj.append(contig[query])
+                    elif contig["locus"] in ["TRA"]:
+                        abt_vj.append(contig[query])
+                    elif contig["locus"] in ["TRG"]:
+                        gdt_vj.append(contig[query])
+            if retrieve_mode == "split and unique only":
+                if len(b_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VDJ": "|".join(
+                                str(x)
+                                for x in list(dict.fromkeys(b_vdj))
+                                if present(x)
+                            )
+                        }
+                    )
+                if len(b_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VJ": "|".join(
+                                str(x)
+                                for x in list(dict.fromkeys(b_vj))
+                                if present(x)
+                            )
+                        }
+                    )
+
+                if len(abt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VDJ": "|".join(
+                                str(x)
+                                for x in list(dict.fromkeys(abt_vdj))
+                                if present(x)
+                            )
+                        }
+                    )
+                if len(abt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VJ": "|".join(
+                                str(x)
+                                for x in list(dict.fromkeys(abt_vj))
+                                if present(x)
+                            )
+                        }
+                    )
+
+                if len(gdt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VDJ": "|".join(
+                                str(x)
+                                for x in list(dict.fromkeys(gdt_vdj))
+                                if present(x)
+                            )
+                        }
+                    )
+                if len(gdt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VJ": "|".join(
+                                str(x)
+                                for x in list(dict.fromkeys(gdt_vj))
+                                if present(x)
+                            )
+                        }
+                    )
+            elif retrieve_mode == "split and merge":
+                if len(b_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VDJ": "|".join(
+                                str(x) for x in b_vdj if present(x)
+                            )
+                        }
+                    )
+                if len(b_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VJ": "|".join(
+                                str(x) for x in b_vj if present(x)
+                            )
+                        }
+                    )
+
+                if len(abt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VDJ": "|".join(
+                                str(x) for x in abt_vdj if present(x)
+                            )
+                        }
+                    )
+                if len(abt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VJ": "|".join(
+                                str(x) for x in abt_vj if present(x)
+                            )
+                        }
+                    )
+
+                if len(gdt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VDJ": "|".join(
+                                str(x) for x in gdt_vdj if present(x)
+                            )
+                        }
+                    )
+                if len(gdt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VJ": "|".join(
+                                str(x) for x in gdt_vj if present(x)
+                            )
+                        }
+                    )
+
+            elif retrieve_mode == "merge and unique only":
+                cols.update(
+                    {
+                        query: "|".join(
+                            str(x)
+                            for x in set(
+                                b_vdj
+                                + abt_vdj
+                                + gdt_vdj
+                                + b_vj
+                                + abt_vj
+                                + gdt_vj
+                            )
+                            if present(x)
+                        )
+                    }
+                )
+            elif retrieve_mode == "split and sum":
+                if len(b_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VDJ": np.sum(
+                                [float(x) for x in b_vdj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_B_VDJ": np.nan})
+                if len(b_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VJ": np.sum(
+                                [float(x) for x in b_vj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_B_VJ": np.nan})
+
+                if len(abt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VDJ": np.sum(
+                                [float(x) for x in abt_vdj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_abT_VDJ": np.nan})
+                if len(abt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VJ": np.sum(
+                                [float(x) for x in abt_vj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_abT_VJ": np.nan})
+
+                if len(gdt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VDJ": np.sum(
+                                [float(x) for x in gdt_vdj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_gdT_VDJ": np.nan})
+                if len(gdt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VJ": np.sum(
+                                [float(x) for x in gdt_vj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_gdT_VJ": np.nan})
+            elif retrieve_mode == "split and average":
+                if len(b_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VDJ": np.mean(
+                                [float(x) for x in b_vdj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_B_VDJ": np.nan})
+                if len(b_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_B_VJ": np.mean(
+                                [float(x) for x in b_vj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_B_VJ": np.nan})
+
+                if len(abt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VDJ": np.mean(
+                                [float(x) for x in abt_vdj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_abT_VDJ": np.nan})
+                if len(abt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_abT_VJ": np.mean(
+                                [float(x) for x in abt_vj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_abT_VJ": np.nan})
+
+                if len(gdt_vdj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VDJ": np.mean(
+                                [float(x) for x in gdt_vdj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_gdT_VDJ": np.nan})
+                if len(gdt_vj) > 0:
+                    cols.update(
+                        {
+                            query
+                            + "_gdT_VJ": np.mean(
+                                [float(x) for x in gdt_vj if present(x)]
+                            )
+                        }
+                    )
+                else:
+                    cols.update({query + "_gdT_VJ": np.nan})
+            elif retrieve_mode == "merge":
+                cols.update(
+                    {
+                        query: "|".join(
+                            x
+                            for x in set(
+                                b_vdj
+                                + abt_vdj
+                                + gdt_vdj
+                                + b_vj
+                                + abt_vj
+                                + gdt_vj
+                            )
+                            if present(x)
+                        )
+                    }
+                )
+            elif retrieve_mode == "split":
+                if len(b_vdj) > 0:
+                    for i in range(1, len(b_vdj) + 1):
+                        cols.update({query + "_B_VDJ_" + str(i): b_vdj[i - 1]})
+                if len(b_vj) > 0:
+                    for i in range(1, len(b_vj) + 1):
+                        cols.update({query + "_B_VJ_" + str(i): b_vj[i - 1]})
+                if len(abt_vdj) > 0:
+                    for i in range(1, len(abt_vdj) + 1):
+                        cols.update(
+                            {query + "_abT_VDJ_" + str(i): abt_vdj[i - 1]}
+                        )
+                if len(abt_vj) > 0:
+                    for i in range(1, len(abt_vj) + 1):
+                        cols.update(
+                            {query + "_abT_VJ_" + str(i): abt_vj[i - 1]}
+                        )
+                if len(gdt_vdj) > 0:
+                    for i in range(1, len(gdt_vdj) + 1):
+                        cols.update(
+                            {query + "_gdT_VDJ_" + str(i): gdt_vdj[i - 1]}
+                        )
+                if len(gdt_vj) > 0:
+                    for i in range(1, len(gdt_vj) + 1):
+                        cols.update(
+                            {query + "_gdT_VJ_" + str(i): gdt_vj[i - 1]}
+                        )
+            elif retrieve_mode == "sum":
+                cols.update(
+                    {
+                        query: np.sum(
+                            [
+                                float(x)
+                                for x in b_vdj
+                                + abt_vdj
+                                + gdt_vdj
+                                + b_vj
+                                + abt_vj
+                                + gdt_vj
+                                if present(x)
+                            ]
+                        )
+                    }
+                )
+                if not present(cols[query]):
+                    cols.update({query: np.nan})
+            elif retrieve_mode == "average":
+                cols.update(
+                    {
+                        query: np.mean(
+                            [
+                                float(x)
+                                for x in b_vdj
+                                + abt_vdj
+                                + gdt_vdj
+                                + b_vj
+                                + abt_vj
+                                + gdt_vj
+                                if present(x)
+                            ]
+                        )
+                    }
+                )
+                if not present(cols[query]):
+                    cols.update({query: np.nan})
+            ret.update({cell: cols})
+        out = pd.DataFrame.from_dict(ret, orient="index")
+        if retrieve_mode not in [
+            "split and sum",
+            "split and average",
+            "sum",
+            "average",
+        ]:
+            if retrieve_mode == "split":
+                for x in out:
+                    try:
+                        out[x] = pd.to_numeric(out[x])
+                    except:
+                        out[x].fillna("None", inplace=True)
+            else:
+                out.fillna("None", inplace=True)
+        return out
+
 
 def initialize_metadata(
     self, cols: Sequence, clonekey: str, collapse_alleles: bool
@@ -969,7 +1807,7 @@ def initialize_metadata(
             {
                 col: {
                     "query": col,
-                    "retrieve_mode": "split and unique only",
+                    "retrieve_mode": "split and merge",
                 }
             }
         )
@@ -991,8 +1829,14 @@ def initialize_metadata(
                 }
             }
         )
+    update_rearrangement_status(self)
+
+    if "ambiguous" in self.data:
+        dataq = self.data[self.data["ambiguous"] == "F"]
+    else:
+        dataq = self.data
     if self.querier is None:
-        querier = Query(self.data)
+        querier = Query(dataq)
         self.querier = querier
     else:
         querier = self.querier
@@ -1003,21 +1847,36 @@ def initialize_metadata(
             init_dict.pop(k)
             continue
         meta_[k] = querier.retrieve(**v)
-        if k in ["duplicate_count", "umi_count", "mu_count", "mu_freq"]:
-            v.update({"retrieve_mode": "split"})
-            meta_[k + "_split"] = querier.retrieve(**v)
+        if k in [
+            "v_call",
+            "v_call_genotyped",
+            "d_call",
+            "j_call",
+            "c_call",
+            "productive",
+        ]:
+            meta_[k + "_split"] = querier.retrieve_celltype(**v)
+        if k in ["duplicate_count"]:
+            v.update({"retrieve_mode": "split and sum"})
+            meta_[k] = querier.retrieve_celltype(**v)
+        if k in ["mu_count", "mu_freq"]:
+            v.update({"retrieve_mode": "split and average"})
+            meta_[k] = querier.retrieve_celltype(**v)
+
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")
 
+    reqcols1 = [
+        "locus_VDJ",
+    ]
     if "v_call_genotyped" in self.data:
-        reqcols = [
-            "locus_VDJ",
+        reqcols2 = [
             "locus_VJ",
             "productive_VDJ",
             "productive_VJ",
             "v_call_genotyped_VDJ",
-            "v_call_genotyped_VJ",
             "d_call_VDJ",
             "j_call_VDJ",
+            "v_call_genotyped_VJ",
             "j_call_VJ",
             "c_call_VDJ",
             "c_call_VJ",
@@ -1025,17 +1884,43 @@ def initialize_metadata(
             "junction_VJ",
             "junction_aa_VDJ",
             "junction_aa_VJ",
+            "v_call_genotyped_B_VDJ",
+            "d_call_B_VDJ",
+            "j_call_B_VDJ",
+            "v_call_genotyped_B_VJ",
+            "j_call_B_VJ",
+            "c_call_B_VDJ",
+            "c_call_B_VJ",
+            "productive_B_VDJ",
+            "productive_B_VJ",
+            "v_call_genotyped_abT_VDJ",
+            "d_call_abT_VDJ",
+            "j_call_abT_VDJ",
+            "v_call_genotyped_abT_VJ",
+            "j_call_abT_VJ",
+            "c_call_abT_VDJ",
+            "c_call_abT_VJ",
+            "productive_abT_VDJ",
+            "productive_abT_VJ",
+            "v_call_genotyped_gdT_VDJ",
+            "d_call_gdT_VDJ",
+            "j_call_gdT_VDJ",
+            "v_call_genotyped_gdT_VJ",
+            "j_call_gdT_VJ",
+            "c_call_gdT_VDJ",
+            "c_call_gdT_VJ",
+            "productive_gdT_VDJ",
+            "productive_gdT_VJ",
         ]
     else:
-        reqcols = [
-            "locus_VDJ",
+        reqcols2 = [
             "locus_VJ",
             "productive_VDJ",
             "productive_VJ",
             "v_call_VDJ",
-            "v_call_VJ",
             "d_call_VDJ",
             "j_call_VDJ",
+            "v_call_VJ",
             "j_call_VJ",
             "c_call_VDJ",
             "c_call_VJ",
@@ -1043,20 +1928,49 @@ def initialize_metadata(
             "junction_VJ",
             "junction_aa_VDJ",
             "junction_aa_VJ",
+            "v_call_B_VDJ",
+            "d_call_B_VDJ",
+            "j_call_B_VDJ",
+            "v_call_B_VJ",
+            "j_call_B_VJ",
+            "c_call_B_VDJ",
+            "c_call_B_VJ",
+            "productive_B_VDJ",
+            "productive_B_VJ",
+            "v_call_abT_VDJ",
+            "d_call_abT_VDJ",
+            "j_call_abT_VDJ",
+            "v_call_abT_VJ",
+            "j_call_abT_VJ",
+            "c_call_abT_VDJ",
+            "c_call_abT_VJ",
+            "productive_abT_VDJ",
+            "productive_abT_VJ",
+            "v_call_gdT_VDJ",
+            "d_call_gdT_VDJ",
+            "j_call_gdT_VDJ",
+            "v_call_gdT_VJ",
+            "j_call_gdT_VJ",
+            "c_call_gdT_VDJ",
+            "c_call_gdT_VJ",
+            "productive_gdT_VDJ",
+            "productive_gdT_VJ",
         ]
 
+    reqcols = reqcols1 + reqcols2
     for rc in reqcols:
         if rc not in tmp_metadata:
             tmp_metadata[rc] = ""
-    if "d_call_VJ" in tmp_metadata:
-        tmp_metadata.drop("d_call_VJ", axis=1, inplace=True)
+    for dc in ["d_call_VJ", "d_call_B_VJ", "d_call_abT_VJ", "d_call_gdT_VJ"]:
+        if dc in tmp_metadata:
+            tmp_metadata.drop(dc, axis=1, inplace=True)
 
     if "locus_VDJ" in tmp_metadata:
-        suffix_h = "_VDJ"
-        suffix_l = "_VJ"
+        suffix_vdj = "_VDJ"
+        suffix_vj = "_VJ"
     else:
-        suffix_h = ""
-        suffix_l = ""
+        suffix_vdj = ""
+        suffix_vj = ""
 
     if clonekey in init_dict:
         tmp_metadata[str(clonekey)].replace("", "None", inplace=True)
@@ -1162,36 +2076,28 @@ def initialize_metadata(
     isotype = []
     multi, multic = {}, {}
 
-    if "c_call" + suffix_h in tmp_metadata:
-        for k in tmp_metadata["c_call" + suffix_h]:
+    if "c_call" + suffix_vdj in tmp_metadata:
+        for k in tmp_metadata["c_call" + suffix_vdj]:
             if isinstance(k, str):
-                if "," in k:
-                    k = "|".join(k.split(","))
-                if "|" in k:
-                    isotype.append(
-                        "|".join(
-                            [
-                                str(z)
-                                for z in [
-                                    conversion_dict[y.lower()]
-                                    for y in set(
-                                        [
-                                            re.sub("[0-9]", "", x)
-                                            for x in k.split("|")
-                                        ]
-                                    )
+                isotype.append(
+                    "|".join(
+                        [
+                            str(z)
+                            for z in [
+                                conversion_dict[y.split(",")[0].lower()]
+                                for y in [
+                                    re.sub("[0-9]", "", x) for x in k.split("|")
                                 ]
                             ]
-                        )
+                        ]
                     )
-                else:
-                    isotype.append(conversion_dict[k.lower()])
+                )
             else:
                 isotype.append("None")
         tmp_metadata["isotype"] = isotype
         tmp_metadata["isotype_status"] = [
-            i
-            if i == "IgM|IgD" or i == "IgD|IgM"
+            "IgM/IgD"
+            if (i == "IgM|IgD") or (i == "IgD|IgM")
             else "Multi"
             if "|" in i
             else i
@@ -1201,6 +2107,7 @@ def initialize_metadata(
     vdj_gene_calls = ["v_call", "d_call", "j_call"]
     if collapse_alleles:
         for x in vdj_gene_calls:
+
             if x in self.data:
                 for c in tmp_metadata:
                     if x in c:
@@ -1209,52 +2116,20 @@ def initialize_metadata(
                                 [
                                     ",".join(list(set(yy.split(","))))
                                     for yy in list(
-                                        set(
-                                            [
-                                                re.sub("[*][0-9][0-9]", "", tx)
-                                                for tx in t.split("|")
-                                            ]
-                                        )
+                                        [
+                                            re.sub("[*][0-9][0-9]", "", tx)
+                                            for tx in t.split("|")
+                                        ]
                                     )
                                 ]
                             )
                             for t in tmp_metadata[c]
                         ]
 
-    if "v_call_genotyped" in cols:
-        v1, v2, v3, v4 = format_call(
-            tmp_metadata,
-            "v_call_genotyped",
-            suffix_h=suffix_h,
-            suffix_l=suffix_l,
-        )
-    else:
-        v1, v2, v3, v4 = format_call(
-            tmp_metadata, "v_call", suffix_h=suffix_h, suffix_l=suffix_l
-        )
-    d1, _, d3, _ = format_call(
-        tmp_metadata, "d_call", suffix_h=suffix_h, suffix_l=None
-    )
-    j1, j2, j3, j4 = format_call(
-        tmp_metadata, "j_call", suffix_h=suffix_h, suffix_l=suffix_l
-    )
-    c1, c2, vdj_constant_status, vj_constant_status = format_call(
-        tmp_metadata, "c_call", suffix_h=suffix_h, suffix_l=suffix_l
-    )
-
     tmp_metadata["locus_status"] = format_locus(tmp_metadata)
-    tmp_metadata["productive_status"] = format_productive(tmp_metadata)
-
-    tmp_metadata["rearrangement_VDJ_status"] = [
-        x if "|" not in x else "Multi"
-        for x in ["|".join(list(set([v, d, j]))) for v, d, j in zip(v3, d3, j3)]
-    ]
-    tmp_metadata["rearrangement_VJ_status"] = [
-        x if "|" not in x else "Multi"
-        for x in ["|".join(list(set([v, j]))) for v, j in zip(v4, j4)]
-    ]
-    tmp_metadata["constant_VDJ_status"] = vdj_constant_status
-    tmp_metadata["constant_VJ_status"] = vj_constant_status
+    tmp_metadata["chain_status"] = format_chain_status(
+        tmp_metadata["locus_status"]
+    )
 
     if "isotype" in tmp_metadata:
         if all(tmp_metadata["isotype"] == "None"):
@@ -1266,6 +2141,44 @@ def initialize_metadata(
     if clonekey in init_dict:
         tmp_metadata[clonekey].replace("", "None", inplace=True)
 
+    tmp_metadata = movecol(
+        tmp_metadata,
+        cols_to_move=[rc2 for rc2 in reqcols2 if rc2 in tmp_metadata],
+        ref_col="locus_VDJ",
+    )
+
+    for tmpm in tmp_metadata:
+        if all_missing2(tmp_metadata[tmpm]):
+            tmp_metadata.drop(tmpm, axis=1, inplace=True)
+
+    tmpxregstat = querier.retrieve(
+        query="rearrangement_status", retrieve_mode="split and unique only"
+    )
+
+    for x in tmpxregstat:
+        tmpxregstat[x] = [
+            "chimeric"
+            if re.search("chimeric", y)
+            else "Multi"
+            if "|" in y
+            else y
+            for y in tmpxregstat[x]
+        ]
+        tmp_metadata[x] = pd.Series(tmpxregstat[x])
+
+    tmp_metadata = movecol(
+        tmp_metadata,
+        cols_to_move=[
+            rs
+            for rs in [
+                "rearrangement_status_VDJ",
+                "rearrangement_status_VJ",
+            ]
+            if rs in tmp_metadata
+        ],
+        ref_col="chain_status",
+    )
+
     self.metadata = tmp_metadata.copy()
 
 
@@ -1276,16 +2189,18 @@ def update_metadata(
     retrieve_mode: Literal[
         "split and unique only",
         "merge and unique only",
+        "split and merge",
         "split and sum",
         "split and average",
         "split",
         "merge",
         "sum",
         "average",
-    ] = "split and unique only",
+    ] = "split and merge",
     collapse_alleles: bool = True,
     reinitialize: bool = False,
     verbose: bool = False,
+    by_celltype: bool = False,
 ) -> Dandelion:
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -1299,19 +2214,25 @@ def update_metadata(
     clone_key : str, Optional
         Column name of clone id. None defaults to 'clone_id'.
     retrieve_mode: str
-        One of ['split and unique only', 'merge and unique only', 'split and sum', 'split and average', 'split', 'merge', 'sum', 'average'].
-        `split and unique only` returns the retrieval splitted into two columns, i.e. one for VDJ and one for VJ chains, separated by '|' for unique elements.
-        `merge and unique only` returns the retrieval merged into one column, separated by '|' for unique elements.
-        `split` returns the retrieval splitted into separate columns for each contig.
-        `merge` returns the retrieval merged into one columns for each contig, separated by '|' for unique elements.
-        'split and sum' returns the retrieval sumed in the VDJ and VJ columns (separately).
-        'split and average' returns the retrieval averaged in the VDJ and VJ columns (separately).
-        'sum' returns the retrieval sumed into one column for all contigs.
-        'average' returns the retrieval averaged into one column for all contigs.
+        One of:
+            `split and unique only` returns the retrieval splitted into two columns,
+                i.e. one for VDJ and one for VJ chains, separated by '|' for unique elements.
+            `merge and unique only` returns the retrieval merged into one column,
+                separated by '|' for unique elements.
+            `split and merge` returns the retrieval splitted into two columns,
+                i.e. one for VDJ and one for VJ chains, separated by '|' for every elements.
+            `split` returns the retrieval splitted into separate columns for each contig.
+            `merge` returns the retrieval merged into one columns for each contig,
+                separated by '|' for unique elements.
+            'split and sum' returns the retrieval sumed in the VDJ and VJ columns (separately).
+            'split and average' returns the retrieval averaged in the VDJ and VJ columns (separately).
+            'sum' returns the retrieval sumed into one column for all contigs.
+            'average' returns the retrieval averaged into one column for all contigs.
     collapse_alleles : bool
         Returns the V(D)J genes with allelic calls if False.
     reinitialize : bool
-        Whether or not to reinitialize the current metadata. Useful when updating older versions of `dandelion` to newer version.
+        Whether or not to reinitialize the current metadata.
+        Useful when updating older versions of `dandelion` to newer version.
     Returns
     -------
     `Dandelion` object with `.metadata` slot initialized.
@@ -1337,26 +2258,15 @@ def update_metadata(
     ]
 
     if "duplicate_count" not in self.data:
-        try:
-            self.data["duplicate_count"] = self.data["umi_count"]
-        except:
-            cols = list(
-                map(
-                    lambda x: "umi_count" if x == "duplicate_count" else x, cols
-                )
-            )
-            if "umi_count" not in self.data:
-                raise ValueError(
-                    "Unable to initialize metadata due to missing keys. Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
-                )
-    if (
-        "cell_id" not in self.data
-    ):  # shortcut for bulk data to pretend every unique sequence is a cell?
-        self.data["cell_id"] = self.data["sequence_id"]
+        raise ValueError(
+            "Unable to initialize metadata due to missing keys. "
+            "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
+        )
 
     if not all([c in self.data for c in cols]):
         raise ValueError(
-            "Unable to initialize metadata due to missing keys. Please ensure the input data contains all the following columns: {}".format(
+            "Unable to initialize metadata due to missing keys. "
+            "Please ensure the input data contains all the following columns: {}".format(
                 cols
             )
         )
@@ -1415,7 +2325,10 @@ def update_metadata(
         retrieve_ = defaultdict(dict)
         for k, v in ret_dict.items():
             if k in self.data.columns:
-                retrieve_[k] = querier.retrieve(**v)
+                if by_celltype:
+                    retrieve_[k] = querier.retrieve_celltype(**v)
+                else:
+                    retrieve_[k] = querier.retrieve(**v)
             else:
                 raise KeyError(
                     "Cannot retrieve '%s' : Unknown column name." % k
@@ -1453,3 +2366,34 @@ def update_metadata(
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
         self.metadata = tmp_metadata.copy()
+
+
+def _normalize_indices(
+    index: Optional[Index], names0: pd.Index, names1: pd.Index
+) -> Tuple[slice, str]:
+    """return indices"""
+    # deal with tuples of length 1
+    if isinstance(index, tuple) and len(index) == 1:
+        index = index[0]
+    # deal with pd.Series
+    if isinstance(index, pd.Series):
+        index = index.values
+    if isinstance(index, tuple):
+        if len(index) > 2:
+            raise ValueError(
+                "Dandelion can only be sliced in data or metadata rows."
+            )
+        # deal with pd.Series
+        # TODO: The series should probably be aligned first
+        if isinstance(index[1], pd.Series):
+            index = index[0], index[1].values
+        if isinstance(index[0], pd.Series):
+            index = index[0].values, index[1]
+    ax0_, _ = unpack_index(index)
+    if all(ax_ in names0 for ax_ in ax0_):
+        ax0 = _normalize_index(ax0_, names0)
+        axtype = "metadata"
+    elif all(ax_ in names1 for ax_ in ax0_):
+        ax0 = _normalize_index(ax0_, names1)
+        axtype = "data"
+    return ax0, axtype

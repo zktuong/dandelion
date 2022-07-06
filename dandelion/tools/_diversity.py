@@ -2,14 +2,12 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-20 09:34:30
+# @Last Modified time: 2022-07-03 23:34:56
 """diversity module."""
-
 import numpy as np
 import networkx as nx
 import pandas as pd
 import warnings
-
 
 from anndata import AnnData
 from time import sleep
@@ -32,6 +30,7 @@ def clone_rarefaction(
     groupby: str,
     clone_key: Optional[str] = None,
     diversity_key: Optional[str] = None,
+    verbose: bool = False,
 ) -> Union[AnnData, Dict]:
     """
     Return rarefaction predictions for cell numbers vs clone size.
@@ -46,6 +45,8 @@ def clone_rarefaction(
         Column name specifying the clone_id column in metadata/obs.
     diversity_key : str, Optional
         key for 'diversity' results in AnnData's `.uns`.
+    verbose: bool
+        whether to print progess.
 
     Returns
     -------
@@ -53,9 +54,9 @@ def clone_rarefaction(
     """
     start = logg.info("Constructing rarefaction curve")
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         metadata = self.obs.copy()
-    elif self.__class__ == Dandelion:
+    elif isinstance(self, Dandelion):
         metadata = self.metadata.copy()
 
     if clone_key is None:
@@ -74,8 +75,8 @@ def clone_rarefaction(
     res_ = pd.DataFrame.from_dict(res, orient="index")
 
     # remove those with no counts
-    print(
-        "removing due to zero counts:",
+    logg.info(
+        "removing due to zero counts: "
         ", ".join(
             [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]
         ),
@@ -90,7 +91,12 @@ def clone_rarefaction(
     # append the results to a dictionary
     rarecurve = {}
     sleep(0.5)
-    for i in tqdm(range(0, nr), desc="Calculating rarefaction curve "):
+    for i in tqdm(
+        range(0, nr),
+        desc="Calculating rarefaction curve ",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        disable=not verbose,
+    ):
         n = np.arange(1, tot[i], step=10)
         if n[-1:] != tot[i]:
             n = np.append(n, tot[i])
@@ -116,7 +122,7 @@ def clone_rarefaction(
     else:
         diversitykey = diversity_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         if diversitykey not in self.uns:
             self.uns[diversitykey] = {}
         self.uns[diversitykey] = {
@@ -128,7 +134,7 @@ def clone_rarefaction(
         time=start,
         deep=("updated `.uns` with rarefaction curves.\n"),
     )
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         return {"rarefaction_cells_x": pred, "rarefaction_clones_y": y}
 
 
@@ -148,6 +154,7 @@ def clone_diversity(
     expanded_only: bool = False,
     use_contracted: bool = False,
     key_added: Optional[str] = None,
+    verbose: bool = False,
     **kwargs,
 ) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
@@ -193,6 +200,8 @@ def clone_diversity(
         This is to try and preserve the single-cell properties of the network.
     key_added : str, list, Optional
         column names for output.
+    verbose : bool
+        whether to print progress.
     **kwargs
         passed to dandelion.tl.generate_nework
     Returns
@@ -218,6 +227,7 @@ def clone_diversity(
                 expanded_only=expanded_only,
                 use_contracted=use_contracted,
                 key_added=key_added,
+                verbose=verbose,
                 **kwargs,
             )
         else:
@@ -235,6 +245,7 @@ def clone_diversity(
                 expanded_only=expanded_only,
                 use_contracted=use_contracted,
                 key_added=key_added,
+                verbose=verbose,
                 **kwargs,
             )
     if method == "chao1":
@@ -249,6 +260,7 @@ def clone_diversity(
                 n_resample=n_resample,
                 downsample=downsample,
                 key_added=key_added,
+                verbose=verbose,
             )
         else:
             return diversity_chao1(
@@ -261,6 +273,7 @@ def clone_diversity(
                 n_resample=n_resample,
                 downsample=downsample,
                 key_added=key_added,
+                verbose=verbose,
             )
     if method == "shannon":
         if update_obs_meta:
@@ -275,6 +288,7 @@ def clone_diversity(
                 normalize=normalize,
                 downsample=downsample,
                 key_added=key_added,
+                verbose=verbose,
             )
         else:
             return diversity_shannon(
@@ -288,6 +302,7 @@ def clone_diversity(
                 normalize=normalize,
                 downsample=downsample,
                 key_added=key_added,
+                verbose=verbose,
             )
 
 
@@ -295,16 +310,12 @@ def clone_networkstats(
     self: Dandelion,
     expanded_only: bool = False,
     network_clustersize: bool = False,
-    verbose: bool = True,
+    verbose: bool = False,
 ):
     """Retrieve network stats."""
-    if verbose:
-        start = logg.info("Calculating vertex size of nodes after contraction")
-        disable = False
-    else:
-        disable = True
+    start = logg.info("Calculating vertex size of nodes after contraction")
 
-    if self.__class__ == Dandelion:
+    if isinstance(self, Dandelion):
         if self.graph is None:
             raise AttributeError(
                 "Graph not found. Please run tl.generate_network."
@@ -322,7 +333,8 @@ def clone_networkstats(
             for subg in tqdm(
                 nx.connected_components(G),
                 desc="Reducing graph ",
-                disable=disable,
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             ):
                 nodes = sorted(list(subg))
                 # just assign the value in a single cell, because this will be representative of the clone
@@ -374,6 +386,7 @@ def diversity_gini(
     expanded_only: bool = False,
     use_contracted: bool = False,
     key_added: Optional[str] = None,
+    verbose: bool = False,
     **kwargs,
 ) -> Union[pd.DataFrame, Dandelion]:
     """
@@ -415,6 +428,8 @@ def diversity_gini(
         This is to try and preserve the single-cell properties of the network.
     key_added : str, list, Optional
         column names for output.
+    verbose : bool
+        whether to print progress.
     **kwargs
         passed to dandelion.tl.generate_nework
     Returns
@@ -435,12 +450,13 @@ def diversity_gini(
         expanded_only: bool = False,
         contracted: bool = False,
         key_added: Optional[str] = None,
+        verbose: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
-        """gini indices."""
-        if self.__class__ == AnnData:
+        """Gini indices."""
+        if isinstance(self, AnnData):
             raise TypeError("Only Dandelion class object accepted.")
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = "clone_id"
@@ -462,24 +478,25 @@ def diversity_gini(
         else:
             minsize = downsample
             if minsize > metadata[groupby].value_counts().min():
-                print(
-                    "Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.".format(
+                logg.info(
+                    "Downsampling size provided of {} was larger than the smallest group size. ".format(
                         downsample
                     )
+                    + "Defaulting to the smallest group size for downsampling."
                 )
                 minsize = metadata[groupby].value_counts().min()
 
         if minsize < 100:
-            warnings.warn(
-                "The minimum cell numbers when grouped by {} is {} (group {}). Exercise caution when interpreting diversity measures.".format(
-                    groupby, minsize, metadata[groupby].value_counts().idxmin()
+            logg.info(
+                "The minimum cell numbers when grouped by {} is {}.".format(
+                    groupby, minsize
                 )
+                + " Exercise caution when interpreting diversity measures."
             )
 
         res1 = {}
-        sleep(0.5)
         if met == "clone_network":
-            print(
+            logg.info(
                 "Computing Gini indices for cluster and vertex size using network."
             )
             if not reconstruct_network:
@@ -487,7 +504,7 @@ def diversity_gini(
                     self,
                     expanded_only=expanded_only,
                     network_clustersize=contracted,
-                    verbose=True,
+                    verbose=verbose,
                 )
                 g_c_v = defaultdict(dict)
                 g_c_v_res, g_c_c_res = {}, {}
@@ -517,26 +534,26 @@ def diversity_gini(
                     g_c_c_res
                 )
         elif met == "clone_centrality":
-            print(
+            logg.info(
                 "Computing gini indices for clone size using metadata and node closeness centrality using network."
             )
-            clone_centrality(self, verbose=True)
+            clone_centrality(self, verbose=verbose)
         elif met == "clone_degree":
-            print(
+            logg.info(
                 "Computing gini indices for clone size using metadata and node degree using network."
             )
-            clone_degree(self, verbose=True)
+            clone_degree(self, verbose=verbose)
         metadata = self.metadata.copy()
         data = self.data.copy()
         res2 = {}
 
         if resample:
-            print(
+            logg.info(
                 "Downsampling each group specified in `{}` to {} cells for calculating gini indices.".format(
                     groupby, minsize
                 )
             )
-        sleep(0.5)
+
         for g in groups:
             # clone size distribution
             _dat = metadata[metadata[groupby] == g]
@@ -544,15 +561,19 @@ def diversity_gini(
             ddl_dat = Dandelion(_data, metadata=_dat)
             if resample:
                 sizelist = []
-                if self.__class__ == Dandelion:
+                if isinstance(self, Dandelion):
                     graphlist = []
-                for i in tqdm(range(0, n_resample)):
-                    if self.__class__ == Dandelion:
+                for i in tqdm(
+                    range(0, n_resample),
+                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                    disable=not verbose,
+                ):
+                    if isinstance(self, Dandelion):
                         resampled = generate_network(
                             ddl_dat,
                             clone_key=clonekey,
                             downsample=minsize,
-                            verbose=False,
+                            verbose=verbose,
                             compute_layout=False,
                             **kwargs,
                         )
@@ -561,7 +582,7 @@ def diversity_gini(
                                 resampled,
                                 expanded_only=expanded_only,
                                 network_clustersize=contracted,
-                                verbose=False,
+                                verbose=verbose,
                             )
                             g_c_v = defaultdict(dict)
                             g_c_v_res, g_c_c_res = {}, {}
@@ -595,9 +616,9 @@ def diversity_gini(
                                 "clone_network_cluster_size_gini"
                             ] = pd.Series(g_c_c_res)
                         elif met == "clone_centrality":
-                            clone_centrality(resampled, verbose=False)
+                            clone_centrality(resampled, verbose=verbose)
                         elif met == "clone_degree":
-                            clone_degree(resampled, verbose=False)
+                            clone_degree(resampled, verbose=verbose)
                         else:
                             raise ValueError(
                                 (
@@ -693,13 +714,13 @@ def diversity_gini(
                     else:
                         g_c = 0
                     res1.update({g: g_c})
-                if self.__class__ == Dandelion:
+                if isinstance(self, Dandelion):
                     if met == "clone_network":
                         if reconstruct_network:
                             generate_network(
                                 ddl_dat,
                                 clone_key=clonekey,
-                                verbose=False,
+                                verbose=verbose,
                                 compute_layout=False,
                                 **kwargs,
                             )
@@ -707,7 +728,7 @@ def diversity_gini(
                                 ddl_dat,
                                 expanded_only=expanded_only,
                                 network_clustersize=contracted,
-                                verbose=False,
+                                verbose=verbose,
                             )
                             g_c_v = defaultdict(dict)
                             g_c_v_res, g_c_c_res = {}, {}
@@ -747,10 +768,12 @@ def diversity_gini(
                             )
                     else:
                         # vertex closeness centrality or weighted degree distribution
-                        # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
+                        # only calculate for expanded clones. If including non-expanded clones, the centrality is
+                        # just zero which doesn't help.
                         connectednodes = _dat[met][_dat[met] > 0]
                         graphcounts = np.array(connectednodes.value_counts())
-                        # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
+                        # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results
+                        # when the centrality measure is uniform.... so leave it out for now.
                         if len(graphcounts) > 0:
                             g_c = gini_index(graphcounts, method="trapezoids")
                             if g_c < 0 or np.isnan(g_c):
@@ -824,6 +847,7 @@ def diversity_gini(
         expanded_only=expanded_only,
         contracted=use_contracted,
         key_added=key_added,
+        verbose=verbose,
         **kwargs,
     )
 
@@ -835,8 +859,7 @@ def diversity_gini(
     if update_obs_meta:
         res_ = res.copy()
         transfer_gini_indices(self, res_, groupby)
-        sleep(0.5)
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             logg.info(
                 " finished",
                 time=start,
@@ -844,7 +867,6 @@ def diversity_gini(
             )
     else:
         res_ = res.copy()
-        sleep(0.5)
         logg.info(" finished", time=start)
         return res_
 
@@ -859,6 +881,7 @@ def diversity_chao1(
     n_resample: int = 50,
     downsample: Optional[int] = None,
     key_added: Optional[str] = None,
+    verbose: bool = False,
 ) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Chao1 estimates.
@@ -872,17 +895,21 @@ def diversity_chao1(
     clone_key : str, Optional
         Column name specifying the clone_id column in metadata.
     update_obs_meta : bool
-        If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's metadata/obs slot.
+        If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's
+        metadata/obs slot.
     diversity_key : str, Optional
         key for 'diversity' results in `.uns`.
     resample : bool
-        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity calculation. Default is False.
+        Whether or not to randomly sample cells without replacement to the minimum size of groups for the diversity
+        calculation. Default is False.
     n_resample : int
         Number of times to perform resampling. Default is 50.
     downsample : int, Optional
         number of cells to downsample to. If None, defaults to size of smallest group.
     key_added : str, list, Optional
         column names for output.
+    verbose : bool
+        whether to print progress.
 
     Returns
     -------
@@ -898,11 +925,12 @@ def diversity_chao1(
         n_resample: int = 50,
         downsample: Optional[int] = None,
         key_added: Optional[str] = None,
+        verbose: bool = False,
     ) -> pd.DataFrame:
         """Chao1 estimates."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = "clone_id"
@@ -919,35 +947,40 @@ def diversity_chao1(
         else:
             minsize = downsample
             if minsize > metadata[groupby].value_counts().min():
-                print(
-                    "Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.".format(
+                logg.info(
+                    "Downsampling size provided of {} was larger than the smallest group size. ".format(
                         downsample
                     )
+                    + "Defaulting to the smallest group size for downsampling."
                 )
                 minsize = metadata[groupby].value_counts().min()
 
         if minsize < 100:
-            warnings.warn(
-                "The minimum cell numbers when grouped by {} is {}. Exercise caution when interpreting diversity measures.".format(
+            logg.info(
+                "The minimum cell numbers when grouped by {} is {}.".format(
                     groupby, minsize
                 )
+                + " Exercise caution when interpreting diversity measures."
             )
 
         if resample:
-            print(
+            logg.info(
                 "Downsampling each group specified in `{}` to {} cells for calculating Chao1 estimates.".format(
                     groupby, minsize
                 )
             )
         res1 = {}
-        sleep(0.5)
         for g in groups:
             # clone size distribution
             _dat = metadata[metadata[groupby] == g]
             if resample:
                 sizelist = []
                 graphlist = []
-                for i in tqdm(range(0, n_resample)):
+                for i in tqdm(
+                    range(0, n_resample),
+                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                    disable=not verbose,
+                ):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
                     if "nan" in _tab.index or np.nan in _tab.index:
@@ -999,9 +1032,9 @@ def diversity_chao1(
         groupby: str,
     ):
         """Transfer chao1 estimates."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
@@ -1011,9 +1044,9 @@ def diversity_chao1(
                 for i in metadata.index:
                     if metadata.at[i, groupby] == g:
                         metadata.at[i, c] = chao1_results[c][g]
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             self.obs = metadata.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             self.metadata = metadata.copy()
 
     res = chao1_estimates(
@@ -1023,6 +1056,7 @@ def diversity_chao1(
         resample=resample,
         n_resample=n_resample,
         downsample=downsample,
+        verbose=verbose,
     )
 
     if diversity_key is None:
@@ -1030,7 +1064,7 @@ def diversity_chao1(
     else:
         diversitykey = diversity_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         if diversitykey not in self.uns:
             self.uns[diversitykey] = {}
         self.uns[diversitykey].update({"chao1": res})
@@ -1038,14 +1072,13 @@ def diversity_chao1(
     if update_obs_meta:
         res_ = res.copy()
         transfer_chao1_estimates(self, res_, groupby)
-        sleep(0.5)
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             logg.info(
                 " finished",
                 time=start,
                 deep=("updated `.metadata` with Chao1 estimates.\n"),
             )
-        elif self.__class__ == AnnData:
+        elif isinstance(self, AnnData):
             logg.info(
                 " finished",
                 time=start,
@@ -1053,8 +1086,7 @@ def diversity_chao1(
             )
     else:
         res_ = res.copy()
-        sleep(0.5)
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             logg.info(
                 " finished",
                 time=start,
@@ -1076,6 +1108,7 @@ def diversity_shannon(
     normalize: bool = True,
     downsample: Optional[int] = None,
     key_added: Optional[str] = None,
+    verbose: bool = False,
 ) -> Union[pd.DataFrame, Dandelion, AnnData]:
     """
     Compute B cell clones Shannon entropy.
@@ -1102,7 +1135,8 @@ def diversity_shannon(
         number of cells to downsample to. If None, defaults to size of smallest group.
     key_added : str, list, Optional
         column names for output.
-
+    verbose : bool
+        whether to print progress.
     Returns
     -------
     `pandas` dataframe, `Dandelion` object with updated `.metadata` slot or `AnnData` object with updated `.obs` slot.
@@ -1118,11 +1152,12 @@ def diversity_shannon(
         normalize: bool = True,
         downsample: Optional[int] = None,
         key_added: Optional[str] = None,
+        verbose: bool = False,
     ) -> pd.DataFrame:
         """Shannon entropy."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
         if clone_key is None:
             clonekey = "clone_id"
@@ -1139,22 +1174,24 @@ def diversity_shannon(
         else:
             minsize = downsample
             if minsize > metadata[groupby].value_counts().min():
-                print(
-                    "Downsampling size provided of {} was larger than the smallest group size. Defaulting to the smallest group size for downsampling.".format(
+                logg.info(
+                    "Downsampling size provided of {} was larger than the smallest group size. ".format(
                         downsample
                     )
+                    + "Defaulting to the smallest group size for downsampling."
                 )
                 minsize = metadata[groupby].value_counts().min()
 
         if minsize < 100:
-            warnings.warn(
-                "The minimum cell numbers when grouped by {} is {}. Exercise caution when interpreting diversity measures.".format(
+            logg.info(
+                "The minimum cell numbers when grouped by {} is {}.".format(
                     groupby, minsize
                 )
+                + " Exercise caution when interpreting diversity measures."
             )
 
         if resample:
-            print(
+            logg.info(
                 "Downsampling each group specified in `{}` to {} cells for calculating Shannon entropy.".format(
                     groupby, minsize
                 )
@@ -1169,7 +1206,11 @@ def diversity_shannon(
                 sizelist = []
                 graphlist = []
 
-                for i in tqdm(range(0, n_resample)):
+                for i in tqdm(
+                    range(0, n_resample),
+                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                    disable=not verbose,
+                ):
                     _dat = _dat.sample(minsize)
                     _tab = _dat[clonekey].value_counts()
                     if "nan" in _tab.index or np.nan in _tab.index:
@@ -1260,9 +1301,9 @@ def diversity_shannon(
         groupby: str,
     ):
         """Transfer shannon entropy."""
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             metadata = self.obs.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             metadata = self.metadata.copy()
 
         groups = list(set(metadata[groupby]))
@@ -1272,9 +1313,9 @@ def diversity_shannon(
                 for i in metadata.index:
                     if metadata.at[i, groupby] == g:
                         metadata.at[i, c] = shannon_results[c][g]
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             self.obs = metadata.copy()
-        elif self.__class__ == Dandelion:
+        elif isinstance(self, Dandelion):
             self.metadata = metadata.copy()
 
     res = shannon_entropy(
@@ -1292,7 +1333,7 @@ def diversity_shannon(
     else:
         diversitykey = diversity_key
 
-    if self.__class__ == AnnData:
+    if isinstance(self, AnnData):
         if diversitykey not in self.uns:
             self.uns[diversitykey] = {}
         self.uns[diversitykey].update({"shannon": res})
@@ -1300,8 +1341,7 @@ def diversity_shannon(
     if update_obs_meta:
         res_ = res.copy()
         transfer_shannon_entropy(self, res_, groupby)
-        sleep(0.5)
-        if self.__class__ == Dandelion:
+        if isinstance(self, Dandelion):
             if normalize:
                 logg.info(
                     " finished",
@@ -1316,7 +1356,7 @@ def diversity_shannon(
                     time=start,
                     deep=("updated `.metadata` with Shannon entropy.\n"),
                 )
-        elif self.__class__ == AnnData:
+        elif isinstance(self, AnnData):
             if normalize:
                 logg.info(
                     " finished",
@@ -1333,8 +1373,7 @@ def diversity_shannon(
                 )
     else:
         res_ = res.copy()
-        sleep(0.5)
-        if self.__class__ == AnnData:
+        if isinstance(self, AnnData):
             if normalize:
                 logg.info(
                     " finished",
