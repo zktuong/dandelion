@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 09:19:33
+# @Last Modified time: 2022-07-07 13:11:45
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2567,8 +2567,6 @@ def quantify_mutations(
     base = importr("base")
     if isinstance(self, Dandelion):
         dat = load_data(self.data)
-        if "ambiguous" in self.data:
-            dat = dat[dat["ambiguous"] == "F"].copy()
     else:
         dat = load_data(self)
 
@@ -2576,6 +2574,9 @@ def quantify_mutations(
     warnings.filterwarnings("ignore")
 
     dat = sanitize_data(dat)
+
+    if "ambiguous" in dat:
+        dat_ = dat[dat["ambiguous"] == "F"].copy()
 
     if sequence_column is None:
         seq_ = "sequence_alignment"
@@ -2599,12 +2600,12 @@ def quantify_mutations(
         mut_d = base.get(mutation_definition)
 
     if split_locus is False:
-        dat = dat.where(dat.isna(), dat.astype(str))
+        dat_ = dat_.where(dat_.isna(), dat_.astype(str))
         try:
-            dat_r = pandas2ri.py2rpy(dat)
+            dat_r = pandas2ri.py2rpy(dat_)
         except:
-            dat = dat.astype(str)
-            dat_r = pandas2ri.py2rpy(dat)
+            dat_ = dat_.astype(str)
+            dat_r = pandas2ri.py2rpy(dat_)
 
         results = sh.observedMutations(
             dat_r,
@@ -2627,8 +2628,8 @@ def quantify_mutations(
             # pd_df = pandas2ri.rpy2py_dataframe(results)
             pd_df = results.copy()
     else:
-        dat_h = dat[dat["locus"] == "IGH"]
-        dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]
+        dat_h = dat_[dat_["locus"] == "IGH"]
+        dat_l = dat_[dat_["locus"].isin(["IGK", "IGL"])]
 
         dat_h = dat_h.where(dat_h.isna(), dat_h.astype(str))
         try:
@@ -2689,8 +2690,8 @@ def quantify_mutations(
         for x in cols_to_return:
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
-            self.data[x] = [str(r) for r in res[x]]
-        self.data = sanitize_data(self.data)
+            dat_[x] = [str(r) for r in res[x]]
+            self.data[x] = pd.Series(dat_[x])
         if split_locus is False:
             metadata_ = self.data[["cell_id"] + list(cols_to_return)]
         else:
@@ -2719,7 +2720,7 @@ def quantify_mutations(
             )
 
         metadata_.index.name = None
-
+        self.data = sanitize_data(self.data)
         if self.metadata is None:
             self.metadata = metadata_
         else:
