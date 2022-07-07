@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-05 20:36:48
+# @Last Modified time: 2022-07-07 09:19:33
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5316,6 +5316,13 @@ def check_contigs(
                         str(save)
                     )
                 )
+
+    if productive_only:
+        dat_["duplicate_count"].update(dat["duplicate_count"])
+        dat_["ambiguous"] = dat["ambiguous"]
+        dat_["ambiguous"].fillna("T", inplace=True)
+        dat = dat_.copy()
+
     logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=dat, **kwargs)
     if isinstance(data, Dandelion):

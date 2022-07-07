@@ -158,8 +158,7 @@ def test_generic_check(airr_generic):
 
     tmp2 = ddl.pp.check_contigs(tmp)
     assert tmp2.metadata.shape[0] == 37
-    assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 94
+    assert tmp2.data.shape[0] == tmp.data.shape[0]
 
     ddl.tl.find_clones(tmp2, identity={"tr-ab": 1})
     assert "clone_id" in tmp2.data
