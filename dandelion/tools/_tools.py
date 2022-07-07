@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 08:55:49
+# @Last Modified time: 2022-07-07 09:42:56
 """tools module."""
 import math
 import os
@@ -1404,6 +1404,8 @@ def clone_size(
     tmp.columns = ["cell_id", "tmp", str(clonekey)]
 
     clonesize = tmp[str(clonekey)].value_counts()
+    if "None" in clonesize.index:
+        clonesize.drop("None", inplace=True)
 
     if max_size is not None:
         clonesize_ = clonesize.astype("object")
@@ -1415,6 +1417,7 @@ def clone_size(
         clonesize_ = clonesize.copy()
 
     clonesize_dict = dict(clonesize_)
+    clonesize_dict.update({"None": np.nan})
 
     if max_size is not None:
         if key_added is None:
@@ -2011,6 +2014,9 @@ def vj_usage_pca(
     df2["cell_type"] = list(vdj_df.index)
     vdj_df_adata = sc.AnnData(
         X=vdj_df.values, obs=df2, var=pd.DataFrame(index=vdj_df.columns)
+    )
+    vdj_df_adata.obs["cell_count"] = pd.Series(
+        dict(zip(df1[groupby], df1["cellcount"]))
     )
     sc.pp.pca(
         vdj_df_adata, n_comps=n_comps, use_highly_variable=False, **kwargs
