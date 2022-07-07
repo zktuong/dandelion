@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 13:11:45
+# @Last Modified time: 2022-07-07 13:49:31
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2577,6 +2577,8 @@ def quantify_mutations(
 
     if "ambiguous" in dat:
         dat_ = dat[dat["ambiguous"] == "F"].copy()
+    else:
+        dat_ = dat.copy()
 
     if sequence_column is None:
         seq_ = "sequence_alignment"
