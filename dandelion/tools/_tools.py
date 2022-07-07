@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 09:42:56
+# @Last Modified time: 2022-07-07 12:17:50
 """tools module."""
 import math
 import os
@@ -40,7 +40,6 @@ def find_clones(
     by_alleles: bool = False,
     key_added: Optional[str] = None,
     recalculate_length: bool = True,
-    productive_only: bool = True,
     collapse_label: bool = False,
     verbose: bool = True,
 ) -> Dandelion:
@@ -80,8 +79,6 @@ def find_clones(
     pd.set_option("mode.chained_assignment", None)
     if isinstance(self, Dandelion):
         dat_ = load_data(self.data)
-        if "ambiguous" in self.data:
-            dat_ = dat_[dat_["ambiguous"] == "F"].copy()
     else:
         dat_ = load_data(self)
 
@@ -90,10 +87,10 @@ def find_clones(
     else:
         clone_key = key_added
     dat_[clone_key] = ""
-    if productive_only:
-        dat = dat_[dat_["productive"].isin(TRUES)].copy()
-    else:
-        dat = dat_.copy()
+
+    dat = dat_.copy()
+    if "ambiguous" in dat_:
+        dat = dat_[dat_["ambiguous"] == "F"].copy()
 
     locus_log = {"ig": "B", "tr-ab": "abT", "tr-gd": "gdT"}
     locus_dict1 = {"ig": ["IGH"], "tr-ab": ["TRB"], "tr-gd": ["TRD"]}
@@ -980,14 +977,16 @@ def define_clones(
         clone_key = key_added
 
     if isinstance(self, Dandelion):
-        dat = load_data(self.data)
-        if "ambiguous" in self.data:
-            dat = dat[dat["ambiguous"] == "F"].copy()
+        dat_ = load_data(self.data)
     else:
-        dat = load_data(self)
+        dat_ = load_data(self)
     if os.path.isfile(str(self)):
-        dat = load_data(self)
+        dat_ = load_data(self)
 
+    if "ambiguous" in dat_:
+        dat = dat_[dat_["ambiguous"] == "F"].copy()
+    else:
+        dat = dat_.copy()
     dat_h = dat[dat["locus"] == "IGH"]
     dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]
 
@@ -1292,8 +1291,8 @@ def define_clones(
 
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
-    dat[str(clone_key)] = pd.Series(cloned_["clone_id"])
-
+    dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
+    dat_[str(clone_key)].fillna("", inplace=True)
     if isinstance(self, Dandelion):
         if self.germline is not None:
             germline_ = self.germline
@@ -1314,7 +1313,7 @@ def define_clones(
 
         if ("clone_id" in self.data.columns) and (clone_key is not None):
             self.__init__(
-                data=dat,
+                data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
@@ -1324,7 +1323,7 @@ def define_clones(
             )
         elif ("clone_id" not in self.data.columns) and (clone_key is not None):
             self.__init__(
-                data=dat,
+                data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
@@ -1335,7 +1334,7 @@ def define_clones(
             )
         else:
             self.__init__(
-                data=dat,
+                data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
@@ -1344,16 +1343,16 @@ def define_clones(
             )
         self.threshold = threshold_
     else:
-        if ("clone_id" in dat.columns) and (clone_key is not None):
+        if ("clone_id" in dat_.columns) and (clone_key is not None):
             out = Dandelion(
-                data=dat,
+                data=dat_,
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
             )
-        elif ("clone_id" not in dat.columns) and (clone_key is not None):
-            out = Dandelion(data=dat, clone_key=clone_key)
+        elif ("clone_id" not in dat_.columns) and (clone_key is not None):
+            out = Dandelion(data=dat_, clone_key=clone_key)
         else:
-            out = Dandelion(data=dat)
+            out = Dandelion(data=dat_)
         return out
     logg.info(
         " finished",
@@ -1529,7 +1528,7 @@ def clone_size(
             )
             try:
                 self.metadata[str(clonekey) + "_size"] = [
-                    int(x) for x in self.metadata[str(clonekey) + "_size"]
+                    float(x) for x in self.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
@@ -1565,7 +1564,7 @@ def clone_size(
             )
             try:
                 self.metadata[key_added] = [
-                    int(x) for x in self.metadata[str(clonekey) + "_size"]
+                    float(x) for x in self.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
@@ -1781,9 +1780,9 @@ def productive_ratio(
     """
     start = logg.info("Tabulating productive ratio")
     vdjx = vdj[(vdj.data.cell_id.isin(adata.obs_names))].copy()
-    if "ambiguous" in vdj.data:
+    if "ambiguous" in vdjx.data:
         tmp = vdjx[
-            (vdjx.data.locus == locus) & (vdj.data.ambiguous == "F")
+            (vdjx.data.locus == locus) & (vdjx.data.ambiguous == "F")
         ].copy()
     else:
         tmp = vdjx[(vdjx.data.locus == locus)].copy()
