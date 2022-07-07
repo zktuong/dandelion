@@ -1,4 +1,4 @@
-|Docs| |PyPI| |Master| |MasterTest| |Devel| |DevelTest| |CodeCov| |Colab|
+|Docs| |PyPI| |Master| |MasterTest| |CodeCov| |Colab|
 
 |logo|
 
@@ -98,8 +98,7 @@ python/conda packages
     # Use pip to install the following with --no-cache-dir --upgrade if necessary
     # and then lastly install this
     pip install sc-dandelion
-    # or pip install git+https://github.com/zktuong/dandelion.git
-    # for the development branch, run this: pip install git+https://github.com/zktuong/dandelion.git@devel
+    # or for the latest version, pip install git+https://github.com/zktuong/dandelion.git 
 
     # to use ddl.pl.clone_overlap, please install nxviz:
     pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
@@ -367,10 +366,6 @@ References
 .. |Master| image:: https://byob.yarr.is/zktuong/dandelion/master-version
    :target: https://github.com/zktuong/dandelion/tree/master
 .. |MasterTest| image:: https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master
-   :target: https://github.com/zktuong/dandelion/actions/workflows/tests.yml
-.. |Devel| image:: https://byob.yarr.is/zktuong/dandelion/devel-version
-   :target: https://github.com/zktuong/dandelion/tree/devel
-.. |DevelTest| image:: https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=devel
    :target: https://github.com/zktuong/dandelion/actions/workflows/tests.yml
 .. |CodeCov| image:: https://codecov.io/gh/zktuong/dandelion/branch/master/graph/badge.svg?token=661BMU1FBO
    :target: https://codecov.io/gh/zktuong/dandelion

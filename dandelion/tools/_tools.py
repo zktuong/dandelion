@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 23:14:20
+# @Last Modified time: 2022-07-07 12:17:50
 """tools module."""
 import math
 import os
@@ -12,10 +12,11 @@ import sys
 import networkx as nx
 import numpy as np
 import pandas as pd
+import scanpy as sc
 
 from anndata import AnnData
 from changeo.Gene import getGene
-from collections import defaultdict
+from collections import defaultdict, Counter
 from distance import hamming
 from itertools import combinations
 from scanpy import logging as logg
@@ -39,7 +40,6 @@ def find_clones(
     by_alleles: bool = False,
     key_added: Optional[str] = None,
     recalculate_length: bool = True,
-    productive_only: bool = True,
     collapse_label: bool = False,
     verbose: bool = True,
 ) -> Dandelion:
@@ -79,8 +79,6 @@ def find_clones(
     pd.set_option("mode.chained_assignment", None)
     if isinstance(self, Dandelion):
         dat_ = load_data(self.data)
-        if "ambiguous" in self.data:
-            dat_ = dat_[dat_["ambiguous"] == "F"].copy()
     else:
         dat_ = load_data(self)
 
@@ -89,10 +87,10 @@ def find_clones(
     else:
         clone_key = key_added
     dat_[clone_key] = ""
-    if productive_only:
-        dat = dat_[dat_["productive"].isin(TRUES)].copy()
-    else:
-        dat = dat_.copy()
+
+    dat = dat_.copy()
+    if "ambiguous" in dat_:
+        dat = dat_[dat_["ambiguous"] == "F"].copy()
 
     locus_log = {"ig": "B", "tr-ab": "abT", "tr-gd": "gdT"}
     locus_dict1 = {"ig": ["IGH"], "tr-ab": ["TRB"], "tr-gd": ["TRD"]}
@@ -979,14 +977,16 @@ def define_clones(
         clone_key = key_added
 
     if isinstance(self, Dandelion):
-        dat = load_data(self.data)
-        if "ambiguous" in self.data:
-            dat = dat[dat["ambiguous"] == "F"].copy()
+        dat_ = load_data(self.data)
     else:
-        dat = load_data(self)
+        dat_ = load_data(self)
     if os.path.isfile(str(self)):
-        dat = load_data(self)
+        dat_ = load_data(self)
 
+    if "ambiguous" in dat_:
+        dat = dat_[dat_["ambiguous"] == "F"].copy()
+    else:
+        dat = dat_.copy()
     dat_h = dat[dat["locus"] == "IGH"]
     dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]
 
@@ -1291,8 +1291,8 @@ def define_clones(
 
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
-    dat[str(clone_key)] = pd.Series(cloned_["clone_id"])
-
+    dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
+    dat_[str(clone_key)].fillna("", inplace=True)
     if isinstance(self, Dandelion):
         if self.germline is not None:
             germline_ = self.germline
@@ -1313,7 +1313,7 @@ def define_clones(
 
         if ("clone_id" in self.data.columns) and (clone_key is not None):
             self.__init__(
-                data=dat,
+                data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
@@ -1323,7 +1323,7 @@ def define_clones(
             )
         elif ("clone_id" not in self.data.columns) and (clone_key is not None):
             self.__init__(
-                data=dat,
+                data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
@@ -1334,7 +1334,7 @@ def define_clones(
             )
         else:
             self.__init__(
-                data=dat,
+                data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
@@ -1343,16 +1343,16 @@ def define_clones(
             )
         self.threshold = threshold_
     else:
-        if ("clone_id" in dat.columns) and (clone_key is not None):
+        if ("clone_id" in dat_.columns) and (clone_key is not None):
             out = Dandelion(
-                data=dat,
+                data=dat_,
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
             )
-        elif ("clone_id" not in dat.columns) and (clone_key is not None):
-            out = Dandelion(data=dat, clone_key=clone_key)
+        elif ("clone_id" not in dat_.columns) and (clone_key is not None):
+            out = Dandelion(data=dat_, clone_key=clone_key)
         else:
-            out = Dandelion(data=dat)
+            out = Dandelion(data=dat_)
         return out
     logg.info(
         " finished",
@@ -1403,6 +1403,8 @@ def clone_size(
     tmp.columns = ["cell_id", "tmp", str(clonekey)]
 
     clonesize = tmp[str(clonekey)].value_counts()
+    if "None" in clonesize.index:
+        clonesize.drop("None", inplace=True)
 
     if max_size is not None:
         clonesize_ = clonesize.astype("object")
@@ -1414,6 +1416,7 @@ def clone_size(
         clonesize_ = clonesize.copy()
 
     clonesize_dict = dict(clonesize_)
+    clonesize_dict.update({"None": np.nan})
 
     if max_size is not None:
         if key_added is None:
@@ -1525,7 +1528,7 @@ def clone_size(
             )
             try:
                 self.metadata[str(clonekey) + "_size"] = [
-                    int(x) for x in self.metadata[str(clonekey) + "_size"]
+                    float(x) for x in self.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
@@ -1561,7 +1564,7 @@ def clone_size(
             )
             try:
                 self.metadata[key_added] = [
-                    int(x) for x in self.metadata[str(clonekey) + "_size"]
+                    float(x) for x in self.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
@@ -1744,3 +1747,289 @@ def clustering(distance_dict, threshold, sequences_dict):
         else:
             out_dict[sequences_dict[x]] = tuple([sequences_dict[x]])
     return out_dict
+
+
+def productive_ratio(
+    adata: AnnData,
+    vdj: Dandelion,
+    groupby: str,
+    groups: Optional[List] = None,
+    locus: Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"] = "TRB",
+):
+    """
+    Compute the cell-level productive/non-productive contig ratio.
+
+    Only the contig with the highest umi count in a cell will be used for this
+    tabulation.
+
+    Parameters
+    ----------
+    adata : AnnData
+        AnnData object holding the cell level metadata (`.obs`).
+    vdj : Dandelion
+        Dandelion object holding the repertoire data (`.data`).
+    groupby : str
+        Name of column in `AnnData.obs` to return the row tabulations.
+    groups : Optional[List], optional
+        Optional list of categories to return.
+    locus : Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"], optional
+        One of the accepted locuses to perform the tabulation
+    Returns
+    -------
+        `AnnData` with `.uns['productive_ratio']`.
+    """
+    start = logg.info("Tabulating productive ratio")
+    vdjx = vdj[(vdj.data.cell_id.isin(adata.obs_names))].copy()
+    if "ambiguous" in vdjx.data:
+        tmp = vdjx[
+            (vdjx.data.locus == locus) & (vdjx.data.ambiguous == "F")
+        ].copy()
+    else:
+        tmp = vdjx[(vdjx.data.locus == locus)].copy()
+
+    if groups is None:
+        if is_categorical(adata.obs[groupby]):
+            groups = list(adata.obs[groupby].cat.categories)
+        else:
+            groups = list(set(adata.obs[groupby]))
+    df = tmp.data.drop_duplicates(subset="cell_id")
+    dict_df = dict(zip(df.cell_id, df.productive))
+    res = pd.DataFrame(
+        columns=["productive", "non-productive", "total"],
+        index=groups,
+    )
+
+    adata.obs[locus + "_productive"] = pd.Series(dict_df)
+    for i in range(res.shape[0]):
+        cell = res.index[i]
+        res.loc[cell, "total"] = sum(adata.obs[groupby] == cell)
+        if res.loc[cell, "total"] > 0:
+            res.loc[cell, "productive"] = (
+                sum(
+                    adata.obs.loc[
+                        adata.obs[groupby] == cell, locus + "_productive"
+                    ].isin(["T"])
+                )
+                / res.loc[cell, "total"]
+                * 100
+            )
+            res.loc[cell, "non-productive"] = (
+                sum(
+                    adata.obs.loc[
+                        adata.obs[groupby] == cell, locus + "_productive"
+                    ].isin(
+                        [
+                            "F",
+                        ]
+                    )
+                )
+                / res.loc[cell, "total"]
+                * 100
+            )
+    res[groupby] = res.index
+    res["productive+non-productive"] = res["productive"] + res["non-productive"]
+    out = {"results": res, "locus": locus, "groupby": groupby}
+    adata.uns["productive_ratio"] = out
+    logg.info(
+        " finished",
+        time=start,
+        deep=("Updated AnnData: \n" "   'uns', productive_ratio"),
+    )
+
+
+def vj_usage_pca(
+    adata: AnnData,
+    groupby: str,
+    min_size: int = 20,
+    mode: Literal["B", "abT", "gdT"] = "abT",
+    transfer_mapping=None,
+    n_comps: int = 30,
+    groups: Optional[List] = None,
+    allowed_chain_status: Optional[List] = [
+        "Single pair",
+        "Extra pair",
+        "Extra pair-exception",
+        "Orphan VDJ-exception",
+    ],
+    verbose=False,
+    **kwargs,
+):
+    """
+    Extract productive V/J gene usage from single cell data and compute PCA.
+
+    Parameters
+    ----------
+    adata : AnnData
+        AnnData object holding the cell level metadata with Dandelion VDJ info transferred.
+    groupby : str
+        Column name in `adata.obs` to groupby as observations for PCA.
+    min_size : int, optional
+        Minimum cell size numbers to keep for computing the final matrix. Defaults to 20.
+    mode : Literal['B', 'abT', 'gdT'], optional
+        Mode for extract the V/J genes.
+    transfer_mapping : None, optional
+        If provided, the columns will be mapped to the output AnnData from the original AnnData.
+    n_comps : int, optional
+        Number of principal components to compute. Defaults to 30.
+    groups : Optional[List], optional
+        If provided, only the following groups/categories will be used for computing the PCA.
+    allowed_chain_status : Optional[List], optional
+        If provided, only the ones in this list are kept from the `chain_status` column.
+        Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
+    recheck_contigs : bool, optional
+        Whether to perform `pp.check_contigs`.
+    productive_only : bool, optional
+        Whether to keep only productive contigs.
+    verbose : bool, optional
+        Whether to display progress
+    **kwargs
+        Additional keyword arguments passed to `scanpy.pp.pca`.
+
+    Returns
+    -------
+    AnnData
+        AnnData object with obs as groups and V/J genes as features.
+    """
+    start = logg.info("Computing PCA for V/J gene usage")
+    if allowed_chain_status is not None:
+        adata_ = adata[
+            adata.obs["chain_status"].isin(allowed_chain_status)
+        ].copy()
+
+    if groups is not None:
+        adata_ = adata_[adata_.obs[group].isin(groups)].copy()
+
+    if "v_call_genotyped_VDJ" in adata_.obs:
+        v_call = "v_call_genotyped_"
+    else:
+        v_call = "v_call_"
+
+    # prep data
+    adata_.obs[v_call + mode + "_VJ_main"] = [
+        x.split("|")[0] for x in adata_.obs[v_call + mode + "_VJ"]
+    ]
+    adata_.obs["j_call_" + mode + "_VJ_main"] = [
+        x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VJ"]
+    ]
+    adata_.obs[v_call + mode + "_VDJ_main"] = [
+        x.split("|")[0] for x in adata_.obs[v_call + mode + "_VDJ"]
+    ]
+    adata_.obs["j_call_" + mode + "_VDJ_main"] = [
+        x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VDJ"]
+    ]
+
+    df1 = pd.DataFrame(
+        {
+            groupby: Counter(adata_.obs[groupby]).keys(),
+            "cellcount": Counter(adata_.obs[groupby]).values(),
+        }
+    )
+    new_list = df1.loc[df1["cellcount"] >= min_size, groupby]
+
+    vj_v_list = [
+        x
+        for x in list(set(adata_.obs[v_call + mode + "_VJ_main"]))
+        if x not in ["None", "No_contig"]
+    ]
+    vj_j_list = [
+        x
+        for x in list(set(adata_.obs["j_call_" + mode + "_VJ_main"]))
+        if x not in ["None", "No_contig"]
+    ]
+    vdj_v_list = [
+        x
+        for x in list(set(adata_.obs[v_call + mode + "_VDJ_main"]))
+        if x not in ["None", "No_contig"]
+    ]
+    vdj_j_list = [
+        x
+        for x in list(set(adata_.obs["j_call_" + mode + "_VDJ_main"]))
+        if x not in ["None", "No_contig"]
+    ]
+
+    new_list = df1.loc[
+        df1["cellcount"] > min_size, groupby
+    ]  # smp_celltype of at least 20 cells
+    vdj_list = vj_v_list + vj_j_list + vdj_v_list + vdj_j_list
+
+    vdj_df = pd.DataFrame(columns=vdj_list, index=new_list)
+    # this is a bit slow
+    for i in tqdm(
+        range(vdj_df.shape[0]),
+        desc="Tabulating V/J gene usage",
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        disable=not verbose,
+    ):
+        cell = vdj_df.index[i]
+        counter1 = Counter(
+            adata_.obs.loc[adata_.obs[groupby] == cell, v_call + mode + "_VJ"]
+        )
+        for vj_v in vj_v_list:
+            vdj_df.loc[cell, vj_v] = counter1[vj_v]
+
+        counter2 = Counter(
+            adata_.obs.loc[
+                adata_.obs[groupby] == cell, "j_call_" + mode + "_VJ"
+            ]
+        )
+        for vj_j in vj_j_list:
+            vdj_df.loc[cell, vj_j] = counter2[vj_j]
+
+        counter3 = Counter(
+            adata_.obs.loc[adata_.obs[groupby] == cell, v_call + mode + "_VDJ"]
+        )
+        for vdj_v in vdj_v_list:
+            vdj_df.loc[cell, vdj_v] = counter3[vdj_v]
+        counter5 = Counter(
+            adata_.obs.loc[
+                adata_.obs[groupby] == cell, "j_call_" + mode + "_VDJ"
+            ]
+        )
+        for vdj_j in vdj_j_list:
+            vdj_df.loc[cell, vdj_j] = counter5[vdj_j]
+        # normalise
+        vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)] = (
+            vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)]
+            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)])
+            * 100
+        )
+        vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)] = (
+            vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)]
+            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)])
+            * 100
+        )
+        vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)] = (
+            vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)]
+            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)])
+            * 100
+        )
+        vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)] = (
+            vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)]
+            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)])
+            * 100
+        )
+
+    df2 = pd.DataFrame(index=vdj_df.index, columns=["cell_type"])
+    df2["cell_type"] = list(vdj_df.index)
+    vdj_df_adata = sc.AnnData(
+        X=vdj_df.values, obs=df2, var=pd.DataFrame(index=vdj_df.columns)
+    )
+    vdj_df_adata.obs["cell_count"] = pd.Series(
+        dict(zip(df1[groupby], df1["cellcount"]))
+    )
+    sc.pp.pca(
+        vdj_df_adata, n_comps=n_comps, use_highly_variable=False, **kwargs
+    )
+    if transfer_mapping is not None:
+        collapsed_obs = adata_.obs.drop_duplicates(subset=groupby)
+        for to in transfer_mapping:
+            transfer_dict = dict(zip(collapsed_obs[groupby], collapsed_obs[to]))
+            vdj_df_adata.obs[to] = [
+                transfer_dict[x] for x in vdj_df_adata.obs_names
+            ]
+    logg.info(
+        " finished",
+        time=start,
+        deep=("Returned AnnData: \n" "   'obsm', X_pca for V/J gene usage"),
+    )
+    return vdj_df_adata

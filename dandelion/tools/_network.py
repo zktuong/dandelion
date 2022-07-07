@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 23:12:27
+# @Last Modified time: 2022-07-07 10:27:23
 """network module."""
 import networkx as nx
 import numpy as np
@@ -622,12 +622,10 @@ def _generate_layout(
             pass
     elif min_size > 2:
         if edges is not None:
-            remove = [
-                node
-                for node, degree in dict(G.degree()).items()
-                if degree < min_size - 1
-            ]
-            G_.remove_nodes_from(remove)
+            for component in list(nx.connected_components(G_)):
+                if len(component) < min_size:
+                    for node in component:
+                        G_.remove_node(node)
         else:
             pass
     if compute_layout:

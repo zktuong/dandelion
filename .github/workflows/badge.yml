@@ -1,52 +1,21 @@
 name: badge
 
 on:
-  pull_request:
-    branches:
-      - "*"
   push:
     branches:
       - "master"
-      - "devel"
   create:
     tags:
       - "*"
 
 
 jobs:
-  devel:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    if: github.ref != 'refs/heads/master'
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.7'
-      - id: version
-        name: Install package
-        run: |
-          pip install setuptools wheel setuptools_scm numpy
-          pip install git+https://www.github.com/zktuong/dandelion@devel
-          echo "##[set-output name=version;]$(python dandelion/logging/_badge.py)"
-      - name: version badge
-        uses: RubbaBoy/BYOB@v1.2.0
-        with:
-          NAME: devel-version
-          LABEL: 'devel-version'
-          ICON: 'github'
-          STATUS: ${{ steps.version.outputs.version}}
-          COLOR: blue
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   master:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
-    if: github.ref != 'refs/heads/devel'
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python

@@ -99,8 +99,8 @@ def test_slice_data_with_graph(airr_generic):
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="junction", layout_method="mod_fr")
     vdj2 = vdj[vdj.data["productive"] == "T"]
-    assert vdj2.data.shape[0] == 82
-    assert vdj2.metadata.shape[0] == 37
+    assert vdj2.data.shape[0] == 94
+    assert vdj2.metadata.shape[0] == 38
     vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
     assert vdj2.data.shape[0] == 36
     assert vdj2.metadata.shape[0] == 17
@@ -115,7 +115,7 @@ def test_slice_data_with_graph(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 16
+    assert vdj2.data.shape[0] == 20
     assert vdj2.metadata.shape[0] == 5
     assert len(vdj2.layout[0]) == 5
     assert len(vdj2.layout[1]) == 5
@@ -157,7 +157,7 @@ def test_slice_data_with_graph(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 28
+    assert vdj2.data.shape[0] == 30
     assert vdj2.metadata.shape[0] == 12
     assert len(vdj2.layout[0]) == 12
     assert len(vdj2.layout[1]) == 4
