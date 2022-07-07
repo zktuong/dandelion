@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 21:42:21
+# @Last Modified time: 2022-07-07 12:40:40
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -1041,6 +1041,11 @@ def productive_ratio(
     palette: List = ["lightblue", "darkblue"],
     fontsize: Union[int, float] = 8,
     rotation: Union[int, float] = 90,
+    legend_kwargs: Dict = {
+        "bbox_to_anchor": (1, 0.5),
+        "loc": "center left",
+        "frameon": False,
+    },
 ):
     """Plot productive/non-productive contig ratio from AnnData (cell level).
 
@@ -1056,17 +1061,21 @@ def productive_ratio(
     fontsize : Union[int, float], optional
         Font size of x and y tick labels.
     rotation : Union[int, float], optional
-        Fotation of x tick labels.
+        Rotation of x tick labels.
+    legend_kwargs : Dict, optional
+        Any additional kwargs to `plt.legend`
     """
     res = adata.uns["productive_ratio"]["results"]
     locus = adata.uns["productive_ratio"]["locus"]
     groupby = adata.uns["productive_ratio"]["groupby"]
 
     plt.figure(figsize=figsize)
-    bar1 = sns.barplot(
+    ax = sns.barplot(
         x=groupby, y="productive+non-productive", data=res, color=palette[0]
     )
-    bar2 = sns.barplot(x=groupby, y="productive", data=res, color=palette[1])
+    ax = sns.barplot(
+        x=groupby, y="productive", data=res, color=palette[1], ax=ax
+    )
     legend = [
         mpatches.Patch(
             color=palette[0], label="% with non-productive " + locus
@@ -1077,7 +1086,7 @@ def productive_ratio(
     plt.yticks(fontsize=fontsize)
     plt.xlabel("")
     plt.ylabel("")
-    bar1.set(ylim=(0, 100))
+    ax.set(ylim=(0, 100))
     plt.title(locus)
     # add legend
-    plt.legend(handles=legend)
+    plt.legend(handles=legend, **legend_kwargs)
