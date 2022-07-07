@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 21:43:49
+# @Last Modified time: 2022-07-07 08:55:49
 """tools module."""
 import math
 import os
@@ -1897,15 +1897,20 @@ def vj_usage_pca(
     if groups is not None:
         adata_ = adata_[adata_.obs[group].isin(groups)].copy()
 
+    if "v_call_genotyped_VDJ" in adata_.obs:
+        v_call = "v_call_genotyped_"
+    else:
+        v_call = "v_call_"
+
     # prep data
-    adata_.obs["v_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata_.obs["v_call_" + mode + "_VJ"]
+    adata_.obs[v_call + mode + "_VJ_main"] = [
+        x.split("|")[0] for x in adata_.obs[v_call + mode + "_VJ"]
     ]
     adata_.obs["j_call_" + mode + "_VJ_main"] = [
         x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VJ"]
     ]
-    adata_.obs["v_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata_.obs["v_call_" + mode + "_VDJ"]
+    adata_.obs[v_call + mode + "_VDJ_main"] = [
+        x.split("|")[0] for x in adata_.obs[v_call + mode + "_VDJ"]
     ]
     adata_.obs["j_call_" + mode + "_VDJ_main"] = [
         x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VDJ"]
@@ -1921,7 +1926,7 @@ def vj_usage_pca(
 
     vj_v_list = [
         x
-        for x in list(set(adata_.obs["v_call_" + mode + "_VJ_main"]))
+        for x in list(set(adata_.obs[v_call + mode + "_VJ_main"]))
         if x not in ["None", "No_contig"]
     ]
     vj_j_list = [
@@ -1931,7 +1936,7 @@ def vj_usage_pca(
     ]
     vdj_v_list = [
         x
-        for x in list(set(adata_.obs["v_call_" + mode + "_VDJ_main"]))
+        for x in list(set(adata_.obs[v_call + mode + "_VDJ_main"]))
         if x not in ["None", "No_contig"]
     ]
     vdj_j_list = [
@@ -1955,9 +1960,7 @@ def vj_usage_pca(
     ):
         cell = vdj_df.index[i]
         counter1 = Counter(
-            adata_.obs.loc[
-                adata_.obs[groupby] == cell, "v_call_" + mode + "_VJ"
-            ]
+            adata_.obs.loc[adata_.obs[groupby] == cell, v_call + mode + "_VJ"]
         )
         for vj_v in vj_v_list:
             vdj_df.loc[cell, vj_v] = counter1[vj_v]
@@ -1971,9 +1974,7 @@ def vj_usage_pca(
             vdj_df.loc[cell, vj_j] = counter2[vj_j]
 
         counter3 = Counter(
-            adata_.obs.loc[
-                adata_.obs[groupby] == cell, "v_call_" + mode + "_VDJ"
-            ]
+            adata_.obs.loc[adata_.obs[groupby] == cell, v_call + mode + "_VDJ"]
         )
         for vdj_v in vdj_v_list:
             vdj_df.loc[cell, vdj_v] = counter3[vdj_v]

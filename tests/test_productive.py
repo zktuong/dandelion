@@ -54,3 +54,20 @@ def test_vj_usage_pca(create_testfolder, dummy_adata_mouse):
         transfer_mapping=["group2"],
     )
     assert "X_pca" in new_adata.obsm
+    adata2 = adata.copy()
+    adata2.obs = adata2.obs.rename(
+        columns={
+            "v_call_VDJ": "v_call_genotyped_VDJ",
+            "v_call_VJ": "v_call_genotyped_VJ",
+            "v_call_B_VDJ": "v_call_genotyped_B_VDJ",
+            "v_call_B_VJ": "v_call_genotyped_B_VJ",
+        }
+    )
+    new_adata2 = ddl.tl.vj_usage_pca(
+        adata2,
+        groupby="group",
+        mode="B",
+        n_comps=5,
+        transfer_mapping=["group2"],
+    )
+    assert "X_pca" in new_adata2.obsm
