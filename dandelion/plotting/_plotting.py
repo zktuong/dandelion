@@ -2,8 +2,9 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-05 14:11:11
+# @Last Modified time: 2022-07-06 21:42:21
 """plotting module."""
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -1032,3 +1033,51 @@ def clone_overlap(
             plt.savefig(save, bbox_inches="tight", **kwargs)
         if return_graph:
             return G
+
+
+def productive_ratio(
+    adata: AnnData,
+    figsize: Tuple[Union[int, float], Union[int, float]] = (8, 4),
+    palette: List = ["lightblue", "darkblue"],
+    fontsize: Union[int, float] = 8,
+    rotation: Union[int, float] = 90,
+):
+    """Plot productive/non-productive contig ratio from AnnData (cell level).
+
+    Parameters
+    ----------
+    adata : AnnData
+        AnnData object with `.uns['productive_ratio']` computed from
+        `tl.productive_ratio`.
+    figsize : Tuple[Union[int, float], Union[int, float]], optional
+        Size of figure.
+    palette : List[str, str], optional
+        List of colours to plot non-productive and productive respectively.
+    fontsize : Union[int, float], optional
+        Font size of x and y tick labels.
+    rotation : Union[int, float], optional
+        Fotation of x tick labels.
+    """
+    res = adata.uns["productive_ratio"]["results"]
+    locus = adata.uns["productive_ratio"]["locus"]
+    groupby = adata.uns["productive_ratio"]["groupby"]
+
+    plt.figure(figsize=figsize)
+    bar1 = sns.barplot(
+        x=groupby, y="productive+non-productive", data=res, color=palette[0]
+    )
+    bar2 = sns.barplot(x=groupby, y="productive", data=res, color=palette[1])
+    legend = [
+        mpatches.Patch(
+            color=palette[0], label="% with non-productive " + locus
+        ),
+        mpatches.Patch(color=palette[1], label="% with productive " + locus),
+    ]
+    plt.xticks(fontsize=fontsize, rotation=rotation)
+    plt.yticks(fontsize=fontsize)
+    plt.xlabel("")
+    plt.ylabel("")
+    bar1.set(ylim=(0, 100))
+    plt.title(locus)
+    # add legend
+    plt.legend(handles=legend)
