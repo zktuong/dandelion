@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 13:49:31
+# @Last Modified time: 2022-07-22 11:40:31
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -1089,6 +1089,7 @@ def reannotate_genes(
         move_to_tmp(data, filename_prefix)
         make_all(data, filename_prefix)
         rename_dandelion(data, filename_prefix, endswith="_igblast_db-pass.tsv")
+        update_j_multimap(data, filename_prefix)
 
 
 def reassign_alleles(
@@ -6021,3 +6022,134 @@ def check_update_same_seq(data: pd.DataFrame):
     keep_ccall = list(data.c_call)
 
     return (data, keep_id, keep_umi, keep_ccall, umi_adjust, ambi_cont)
+
+
+def choose_segments(
+    starts: pd.Series, ends: pd.Series, scores: pd.Series
+) -> List:
+    """Choose left most segment"""
+    starts = np.array(starts)
+    ends = np.array(ends)
+    scores = np.array(scores)
+    ind = np.arange(len(starts))
+    chosen = []
+    while len(ind) > 0:
+        best = np.argmax(scores)
+        chosen.append(ind[best])
+        overlap = (starts <= ends[best]) & (ends >= starts[best])
+        ind = ind[~overlap]
+        starts = starts[~overlap]
+        ends = ends[~overlap]
+        scores = scores[~overlap]
+    return chosen
+
+
+def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
+    """Select the left more segment as the final call"""
+    df = pd.read_csv(filename, delimiter="\t")
+    df_new = df.loc[
+        df["j_support"] < 1e-3, :
+    ]  # maybe not needing to filter if j_support has already been filtered
+    mapped = pd.DataFrame(
+        index=set(df_new["sequence_id"]),
+        columns=["multimappers", "multiplicity", "sequence_start_multimappers"],
+    )
+
+    for j in range(mapped.shape[0]):
+        id = mapped.index[j]
+        tmp = df_new.loc[
+            df_new["sequence_id"] == id,
+            ["j_sequence_start", "j_sequence_end", "j_support", "j_call"],
+        ]
+
+        starts = tmp["j_sequence_start"]
+        ends = tmp["j_sequence_end"]
+        scores = -tmp["j_support"]
+        chosen_ind = choose_segments(starts, ends, scores)
+        tmp = tmp.iloc[chosen_ind, :]
+        tmp = tmp.sort_values(by=["j_sequence_start"], ascending=True)
+
+        mapped["multimappers"][j] = ";".join(tmp["j_call"])
+        mapped["multiplicity"][j] = tmp.shape[0]
+        mapped["sequence_start_multimappers"][j] = ";".join(
+            tmp["j_sequence_start"].astype(str)
+        )
+
+    return mapped
+
+
+def update_j_multimap(data: List, filename_prefix: List):
+    """Update j multimapper call."""
+    for i in range(0, len(data)):
+        filePath0 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_j_blast.tsv",
+            subdir="tmp",
+        )
+        filePath1 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_igblast_db-pass.tsv",
+            subdir="tmp",
+        )
+        filePath2 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_igblast_db-all.tsv",
+            subdir="tmp",
+        )
+        filePath3 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_igblast_db-fail.tsv",
+            subdir="tmp",
+        )
+        filePath4 = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_dandelion.tsv",
+        )
+
+        if filePath0 is not None:
+            jmulti = multimapper(filePath0)
+            if filePath1 is not None:
+                dbpass = load_data(filePath1)
+                for col in [
+                    "multimappers",
+                    "multiplicity",
+                    "sequence_start_multimappers",
+                ]:
+                    dbpass["j_call_" + col] = ""
+                    dbpass["j_call_" + col].update(jmulti[col])
+                write_airr(dbpass, filePath1)
+            if filePath2 is not None:
+                dbfail = load_data(filePath2)
+                for col in [
+                    "multimappers",
+                    "multiplicity",
+                    "sequence_start_multimappers",
+                ]:
+                    dbfail["j_call_" + col] = ""
+                    dbfail["j_call_" + col].update(jmulti[col])
+                write_airr(dbfail, filePath2)
+            if filePath3 is not None:
+                dball = load_data(filePath3)
+                for col in [
+                    "multimappers",
+                    "multiplicity",
+                    "sequence_start_multimappers",
+                ]:
+                    dball["j_call_" + col] = ""
+                    dball["j_call_" + col].update(jmulti[col])
+                write_airr(dball, filePath3)
+            if filePath4 is not None:
+                dandy = load_data(filePath4)
+                for col in [
+                    "multimappers",
+                    "multiplicity",
+                    "sequence_start_multimappers",
+                ]:
+                    dandy["j_call_" + col] = ""
+                    dandy["j_call_" + col].update(jmulti[col])
+                write_airr(dandy, filePath4)
