@@ -18,6 +18,7 @@ dependencies:
 - graph-tool
 - pip
 - tbb
+- llvmlite<0.40,>=0.39.0dev0
 - pip:
   - nbsphinx
   - sphinx-autodoc-typehints
