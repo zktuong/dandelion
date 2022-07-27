@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-22 11:40:31
+# @Last Modified time: 2022-07-27 11:13:31
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -5940,21 +5940,22 @@ def check_productive_vj(vj_contigs: Dict) -> Tuple[List, List, List]:
     if len(vj_contigs) > 2:
         if max(counts) >= 3:
             set_counts = set(counts)
-            set_counts.remove(max_counts)
-            max_id_keys = [
-                k for k, v in vj_contigs.items() if v >= max(set_counts)
-            ]
-            if len(max_id_keys) > 2:
-                for dk in vj_contigs.keys():
-                    ambiguous_contigs.append(dk)
-            else:
-                drop_keys = [
-                    k for k, v in vj_contigs.items() if v < max(set_counts)
+            if len(set_counts) != len(counts):
+                set_counts.remove(max_counts)
+                max_id_keys = [
+                    k for k, v in vj_contigs.items() if v >= max(set_counts)
                 ]
-                for dk in drop_keys:
-                    extra_contigs.append(dk)
-                for kk in max_id_keys:
-                    keep_contigs.append(kk)
+                if len(max_id_keys) > 2:
+                    for dk in vj_contigs.keys():
+                        ambiguous_contigs.append(dk)
+                else:
+                    drop_keys = [
+                        k for k, v in vj_contigs.items() if v < max(set_counts)
+                    ]
+                    for dk in drop_keys:
+                        extra_contigs.append(dk)
+                    for kk in max_id_keys:
+                        keep_contigs.append(kk)
         else:
             for dk in vj_contigs.keys():
                 ambiguous_contigs.append(dk)
