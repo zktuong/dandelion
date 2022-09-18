@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-09-12 12:13:08
+# @Last Modified time: 2022-09-18 11:38:43
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -6083,6 +6083,8 @@ def update_j_multimap(data: List, filename_prefix: List):
     """Update j multimapper call."""
     if not isinstance(data, list):
         data = [data]
+    if not isinstance(filename_prefix, list):
+        filename_prefix = [filename_prefix]
     for i in range(0, len(data)):
         filePath0 = check_filepath(
             data[i],
