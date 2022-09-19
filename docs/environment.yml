@@ -21,6 +21,7 @@ dependencies:
 - pip:
   - nbsphinx==0.8.6
   - sphinx==4.1.2
+  - matplotlib<=3.5.3
   - sphinx_autodoc_typehints>=1.8.0
   - sphinx_rtd_theme>=0.4,<0.5
   - six
