@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-22 11:40:31
+# @Last Modified time: 2022-09-18 11:38:43
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -816,6 +816,7 @@ def assign_isotype(
     move_to_tmp(fasta, filename_prefix)
     make_all(fasta, filename_prefix)
     rename_dandelion(fasta, filename_prefix)
+    update_j_multimap(fasta, filename_prefix)
 
 
 def assign_isotypes(
@@ -6080,6 +6081,10 @@ def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
 
 def update_j_multimap(data: List, filename_prefix: List):
     """Update j multimapper call."""
+    if not isinstance(data, list):
+        data = [data]
+    if not isinstance(filename_prefix, list):
+        filename_prefix = [filename_prefix]
     for i in range(0, len(data)):
         filePath0 = check_filepath(
             data[i],
