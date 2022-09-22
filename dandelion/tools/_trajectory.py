@@ -10,8 +10,12 @@ Created on Mon Sep 19 21:30:44 2022
 import numpy as np
 import pandas as pd
 import scanpy as sc
+import scipy as sp
 from collections import Counter
 import palantir
+import rpy2
+from rpy2.robjects.packages import importr
+from rpy2.robjects.vectors import FloatVector
 
 #%%
 """
@@ -132,3 +136,77 @@ def nhood_gex(adata, adata_raw, normalize_log):
         sc.pp.log1p(nhood_adata)
 
     return nhood_adata
+
+#%%
+"""
+function to compute average gene expression in bins along pseudotime  
+
+adata: cell adata
+bin_no: number of bins to be divided along pseudotime
+genes: genes for the computation 
+pseudotime_col: column in adata.obs where pseudotime is stored
+
+[return]: gene_summary, a dataframe with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
+    
+"""
+def bin_expression(adata, bin_no, genes, pseudotime_col):
+    # define bins
+    bins = np.linspace(0, 1, bin_no+1)
+    
+    # get gene expression
+    x = np.array(adata[:,genes].X.todense())
+    # get pseudotime
+    y = np.array(adata.obs[pseudotime_col])
+    
+    # calculate average gene expression in each bin
+    gene_summary = pd.DataFrame(columns = bins[:-1], index = genes)
+    for i in range(gene_summary.shape[1]):
+        time = bins[i]
+        select = np.array(bins[i] <= y) & np.array(y < bins[i+1])
+        gene_summary.loc[:,time]= np.mean(x[select,:],axis=0)
+    
+    return gene_summary
+
+#%%
+"""
+function to compute chatterjee correlation of gene expression with pseudotime  
+
+adata: cell adata
+genes:genes selected to compute the correlation
+pseudotime_col: column in adata.obs where pseudotime is stored
+
+[return]: cor_res, 
+    a dataframe with genes as rows, 
+    with cor_res (correlation statistics), 
+    pval (p-value), 
+    adj_pval (p-value adjusted by BH method) as columns 
+    
+"""
+
+def chatterjee_corr(adata, genes, pseudotime_col):
+    # get gene expression
+    x = np.array(adata[:,genes].X.todense())
+    # add small perturbation for random tie breaking
+    x = x + np.random.randn(x.shape[0], x.shape[1]) * 1e-15  
+    # get pseudotime
+    y = list(adata.obs[pseudotime_col])
+    
+    # compute chatterjee correlation
+    # ref: Sourav Chatterjee (2021) A New Coefficient of Correlation, Journal of the American Statistical Association, 116:536, 2009-2022, DOI: 10.1080/01621459.2020.1758115
+    stat = 1 - np.sum(np.abs(np.diff(np.argsort(x[np.argsort(y), :], axis=0), axis=0)), axis=0) * 3 / (x.shape[0] ** 2 - 1)
+    stat = np.array(stat).flatten()
+    
+    pval = 1 - sp.stats.norm.cdf(stat, loc=0, scale=np.sqrt(2/5/x.shape[0]))
+    
+    # put results into dataframe cor_res
+    cor_res = pd.DataFrame({'cor_stat': stat, 'pval': pval})
+    cor_res.index = genes
+    
+    # compute adjusted pval using BH method
+    stats = importr('stats') 
+    cor_res.loc[:,'adj_pval']=stats.p_adjust(FloatVector(cor_res.loc[:,'pval']), method = 'BH')
+
+    # sort genes based on adjusted pval
+    cor_res= cor_res.sort_values(by='adj_pval')
+    
+    return cor_res
