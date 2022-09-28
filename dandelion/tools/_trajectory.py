@@ -36,10 +36,10 @@ def vdj_nhood(
     Returns
     -------
     AnnData
-        nhood_adata, whereby each observation is a cell neighbourhood:
-        VDJ usage frequency stored in nhood_adata.X
-        VDJ genes stored in nhood_adata.var
-        neighbourhood metadata stored in nhood_adata.obs
+        nhood_adata, whereby each observation is a cell neighbourhood:\n
+        VDJ usage frequency stored in nhood_adata.X\n
+        VDJ genes stored in nhood_adata.var\n
+        neighbourhood metadata stored in nhood_adata.obs\n
     """
     nhoods = adata.obsm["nhoods"].todense()
     # the .ravel() turns the four V(D)J columns to a single vector of values
@@ -115,7 +115,7 @@ def pseudotime_cell(
     -------
     AnnData
         subset of adata whereby cells that don't belong to any neighbourhood are removed
-        and projected pseudotime information stored in .obs - ['pseudotime'+suffix], and ['prob_'+term_state+suffix] for each terminal state
+        and projected pseudotime information stored in .obs - `pseudotime+suffix`, and `'prob_'+term_state+suffix` for each terminal state
     """
     # extract out cell x neighbourhood matrix
     nhoods = np.array(adata.obsm["nhoods"].todense())
@@ -165,10 +165,10 @@ def nhood_gex(
     Returns
     -------
     AnnData
-        nhood_adata whereby each observation is a cell neighbourhood
-        pseudobulked gene expression stored in nhood_adata.X
-        genes stored in nhood_adata.var
-        neighbourhood metadata stored in nhood_adata.obs
+        nhood_adata whereby each observation is a cell neighbourhood\n
+        pseudobulked gene expression stored in nhood_adata.X\n
+        genes stored in nhood_adata.var\n
+        neighbourhood metadata stored in nhood_adata.obs\n
     """
     sample_dummies = adata.obsm["nhoods"]
 
