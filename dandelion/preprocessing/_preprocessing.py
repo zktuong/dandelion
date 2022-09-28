@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-09-18 11:38:43
+# @Last Modified time: 2022-09-28 09:03:12
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -3236,17 +3236,17 @@ class FilterContigs:
                         sum_umi = sum(h_umi_p)
                         if "IGHD" in h_ccall_p:
                             if all(x in ["IGHM", "IGHD"] for x in h_ccall_p):
-                                if len(list(set(h_ccall_p))) == 2:
-                                    h_ccall_p_igm_count = dict(
-                                        data1[data1["c_call"] == "IGHM"][
-                                            "duplicate_count"
-                                        ]
-                                    )
-                                    h_ccall_p_igd_count = dict(
-                                        data1[data1["c_call"] == "IGHD"][
-                                            "duplicate_count"
-                                        ]
-                                    )
+
+                                h_ccall_p_igm_count = dict(
+                                    data1[data1["c_call"] == "IGHM"][
+                                        "duplicate_count"
+                                    ]
+                                )
+                                h_ccall_p_igd_count = dict(
+                                    data1[data1["c_call"] == "IGHD"][
+                                        "duplicate_count"
+                                    ]
+                                )
 
                                 if len(h_ccall_p_igm_count) > 1:
                                     if filter_extra_vdj_chains:
