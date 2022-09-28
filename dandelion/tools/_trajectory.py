@@ -1,45 +1,46 @@
-#!/usr/bin/env skeleton
-# -*- coding: utf-8 -*-
-#%%
-"""
-Created on Mon Sep 19 21:30:44 2022
-
-@author: chenqu
-"""
+"""Trajectory functions."""
+# Created on Mon Sep 19 21:30:44 2022
+# @author: chenqu
 
 import numpy as np
 import pandas as pd
 import scanpy as sc
 import scipy as sp
-from collections import Counter
 import palantir
-import rpy2
-from rpy2.robjects.packages import importr
-from rpy2.robjects.vectors import FloatVector
 
-#%%
-"""
-function for making neighbourhood vdj feature space
+from collections import Counter
+from anndata import AnnData
+from typing import List
 
-adata : cell adata with neighbourhood information stored in adata.uns['nhood_adata'] & adata.obsm['nhoods']
-cols : columns of VDJ in adata.obs to be used here i.e. columns of e.g. TRAV, TRAJ, TRBV, TRBJ 
-
-[return] : nhood_adata, whereby each observation is a cell neighbourhood
-     VDJ usage frequency stored in nhood_adata.X
-     VDJ genes stored in nhood_adata.var
-     neighbourhood metadata stored in nhood_adata.obs
-"""
+from ..utilities._utilities import bh
 
 
 def vdj_nhood(
-    adata,
-    cols=[
+    adata: AnnData,
+    cols: List[str] = [
         "ab_IR_VDJ_1_v_gene",
         "ab_IR_VDJ_1_j_gene",
         "ab_IR_VJ_1_v_gene",
         "ab_IR_VJ_1_j_gene",
     ],
-):
+) -> AnnData:
+    """Function for making neighbourhood vdj feature space.
+
+    Parameters
+    ----------
+    adata : AnnData
+        cell adata with neighbourhood information stored in adata.uns['nhood_adata'] & adata.obsm['nhoods']
+    cols : List[str], optional
+        columns of VDJ in adata.obs to be used here i.e. columns of e.g. TRAV, TRAJ, TRBV, TRBJ
+
+    Returns
+    -------
+    AnnData
+        nhood_adata, whereby each observation is a cell neighbourhood:
+        VDJ usage frequency stored in nhood_adata.X
+        VDJ genes stored in nhood_adata.var
+        neighbourhood metadata stored in nhood_adata.obs
+    """
     nhoods = adata.obsm["nhoods"].todense()
     # the .ravel() turns the four V(D)J columns to a single vector of values
     # and doing a .unique() of that gets us all the possible genes present in the object
@@ -74,43 +75,48 @@ def vdj_nhood(
     return nhood_adata
 
 
-#%%
-"""
-function to add pseudotime & branch probabilities into adata.obs
+def pseudotime_transfer(
+    adata: AnnData, pr_res: palantir.presults.PResults, suffix: str
+):
+    """Function to add pseudotime and branch probabilities into adata.obs in place.
 
-adata: nhood_adata for which pseudotime to be transferred to
-pre_res: palantir pseudotime inference output object
-postfix: postfix to be added after the added column names
-
-[return]: adata with newly added columns in .obs - ['pseudotime'+postfix], and ['prob_'+term_state+postfix] for each terminal state
-    
-"""
-
-
-def pseudotime_transfer(adata, pr_res, postfix):
-    adata.obs["pseudotime" + postfix] = pr_res.pseudotime.copy()
+    Parameters
+    ----------
+    adata : AnnData
+        nhood_adata for which pseudotime to be transferred to
+    pr_res : palantir.presults.PResults
+        palantir pseudotime inference output object
+    suffix : str
+        suffix to be added after the added column names
+    """
+    adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
 
     for col in pr_res.branch_probs.columns:
-        adata.obs["prob_" + col + postfix] = pr_res.branch_probs[col].copy()
+        adata.obs["prob_" + col + suffix] = pr_res.branch_probs[col].copy()
 
 
-#%%
-"""
-function to project pseudotime & branch probabilities from nhood_adata (neighbourhood adata) to adata (cell adata) 
+def pseudotime_cell(
+    adata: AnnData, nhood_adata: AnnData, term_states: List[str], suffix: str
+) -> AnnData:
+    """Function to project pseudotime & branch probabilities from nhood_adata (neighbourhood adata) to adata (cell adata).
 
-adata: cell adata
-nhood_adata: neighbourhood adata
-term_states: terminal states with branch probabilities to be transferred 
-postfix: postfix to be added after the added column names
+    Parameters
+    ----------
+    adata : AnnData
+        cell adata
+    nhood_adata : AnnData
+        neighbourhood adata
+    term_states : List[str]
+        list of terminal states with branch probabilities to be transferred
+    suffix : str
+        suffix to be added after the added column names
 
-[return]: subset of adata 
-    whereby cells that don't belong to any neighbourhood are removed
-    and projected pseudotime information stored in .obs - ['pseudotime'+postfix], and ['prob_'+term_state+postfix] for each terminal state
-    
-"""
-
-
-def pseudotime_cell(adata, nhood_adata, term_states, postfix):
+    No Longer Returned
+    ------------------
+    TYPE
+        subset of adata whereby cells that don't belong to any neighbourhood are removed
+        and projected pseudotime information stored in .obs - ['pseudotime'+suffix], and ['prob_'+term_state+suffix] for each terminal state
+    """
     # extract out cell x neighbourhood matrix
     nhoods = np.array(adata.obsm["nhoods"].todense())
 
@@ -126,8 +132,8 @@ def pseudotime_cell(adata, nhood_adata, term_states, postfix):
         nhoods_cdata, axis=0, keepdims=True
     )
 
-    col_list = ["pseudotime" + postfix] + [
-        "prob_" + state + postfix for state in term_states
+    col_list = ["pseudotime" + suffix] + [
+        "prob_" + state + suffix for state in term_states
     ]
     for col in col_list:
         cdata.obs[col] = (
@@ -142,22 +148,28 @@ def pseudotime_cell(adata, nhood_adata, term_states, postfix):
     return cdata
 
 
-#%%
-"""
-function to pseudobulk gene expression (raw count) by cell neighbourhoods  
+def nhood_gex(
+    adata: AnnData, adata_raw: AnnData, normalize_log: bool
+) -> AnnData:
+    """Function to pseudobulk gene expression (raw count) by cell neighbourhoods.
 
-adata: cell adata
-adata_raw: same cells with raw counts, nor normalised, no log1p
-normalize_log: True or False, pseudobulked expression to be normalised and log transformed 
+    Parameters
+    ----------
+    adata : AnnData
+        cell adata
+    adata_raw : AnnData
+        same cells with raw counts. Not normalised, not log1p, just raw counts.
+    normalize_log : bool
+        True or False, pseudobulked expression to be normalised and log transformed
 
-[return]: nhood_adata , whereby each observation is a cell neighbourhood
-     pseudobulked gene expression stored in nhood_adata.X
-     genes stored in nhood_adata.var
-     neighbourhood metadata stored in nhood_adata.obs
-    
-"""
-# adata_raw is the object with raw counts, not normalised, no log1p
-def nhood_gex(adata, adata_raw, normalize_log):
+    Returns
+    -------
+    AnnData
+        nhood_adata whereby each observation is a cell neighbourhood
+        pseudobulked gene expression stored in nhood_adata.X
+        genes stored in nhood_adata.var
+        neighbourhood metadata stored in nhood_adata.obs
+    """
     sample_dummies = adata.obsm["nhoods"]
 
     # make pseudobulk matrix
@@ -171,28 +183,34 @@ def nhood_gex(adata, adata_raw, normalize_log):
     nhood_adata.raw = nhood_adata.copy()
 
     # normalise and log1p
-    if normalize_log == True:
+    if normalize_log:
         sc.pp.normalize_per_cell(nhood_adata, counts_per_cell_after=10e4)
         sc.pp.log1p(nhood_adata)
 
     return nhood_adata
 
 
-#%%
-"""
-function to compute average gene expression in bins along pseudotime  
+def bin_expression(
+    adata: AnnData, bin_no: int, genes: List[str], pseudotime_col: str
+) -> pd.DataFrame:
+    """Function to compute average gene expression in bins along pseudotime.
 
-adata: cell adata
-bin_no: number of bins to be divided along pseudotime
-genes: genes for the computation 
-pseudotime_col: column in adata.obs where pseudotime is stored
+    Parameters
+    ----------
+    adata : AnnData
+        cell adata.
+    bin_no : int
+        number of bins to be divided along pseudotime.
+    genes : List
+        list of genes for the computation
+    pseudotime_col : str
+        column in adata.obs where pseudotime is stored
 
-[return]: gene_summary, a dataframe with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
-    
-"""
-
-
-def bin_expression(adata, bin_no, genes, pseudotime_col):
+    Returns
+    -------
+    pd.DataFrame
+        a dataframe with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
+    """
     # define bins
     bins = np.linspace(0, 1, bin_no + 1)
 
@@ -211,24 +229,26 @@ def bin_expression(adata, bin_no, genes, pseudotime_col):
     return gene_summary
 
 
-#%%
-"""
-function to compute chatterjee correlation of gene expression with pseudotime  
+def chatterjee_corr(
+    adata: AnnData, genes: List[str], pseudotime_col: str
+) -> pd.DataFrame:
+    """Function to compute chatterjee correlation of gene expression with pseudotime.
 
-adata: cell adata
-genes:genes selected to compute the correlation
-pseudotime_col: column in adata.obs where pseudotime is stored
+    Parameters
+    ----------
+    adata : AnnData
+        cell adata
+    genes : List[str]
+        List of genes selected to compute the correlation
+    pseudotime_col : str
+        olumn in adata.obs where pseudotime is stored
 
-[return]: cor_res, 
-    a dataframe with genes as rows, 
-    with cor_res (correlation statistics), 
-    pval (p-value), 
-    adj_pval (p-value adjusted by BH method) as columns 
-    
-"""
-
-
-def chatterjee_corr(adata, genes, pseudotime_col):
+    Returns
+    -------
+    pd.DataFrame
+        a dataframe with genes as rows, with cor_res (correlation statistics),
+        pval (p-value),  adj_pval (p-value adjusted by BH method) as columns.
+    """
     # get gene expression
     x = np.array(adata[:, genes].X.todense())
     # add small perturbation for random tie breaking
@@ -250,10 +270,7 @@ def chatterjee_corr(adata, genes, pseudotime_col):
     cor_res.index = genes
 
     # compute adjusted pval using BH method
-    stats = importr("stats")
-    cor_res.loc[:, "adj_pval"] = stats.p_adjust(
-        FloatVector(cor_res.loc[:, "pval"]), method="BH"
-    )
+    cor_res["adj_pval"] = bh(cor_res["pval"].to_numpy())
 
     # sort genes based on adjusted pval
     cor_res = cor_res.sort_values(by="adj_pval")
