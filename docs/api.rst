@@ -49,6 +49,12 @@ Tools: `tl`
    find_clones
    generate_network
    transfer
+   vdj_nhood
+   pseudotime_transfer
+   pseudotime_cell
+   nhood_gex
+   bin_expression
+   chatterjee_corr
 
 Plotting: `pl`
 ==============

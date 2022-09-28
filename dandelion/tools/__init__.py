@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:21:45
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 21:41:05
+# @Last Modified time: 2022-09-28 17:04:41
 """init module."""
 from ._tools import (
     find_clones,
@@ -20,6 +20,14 @@ from ._network import (
     generate_network,
 )
 from ._diversity import clone_diversity, clone_rarefaction
+from ._trajectory import (
+    vdj_nhood,
+    pseudotime_transfer,
+    pseudotime_cell,
+    nhood_gex,
+    bin_expression,
+    chatterjee_corr,
+)
 
 __all__ = [
     "find_clones",
@@ -36,4 +44,10 @@ __all__ = [
     "productive_ratio",
     "transfer",
     "vj_usage_pca",
+    "vdj_nhood",
+    "pseudotime_transfer",
+    "pseudotime_cell",
+    "nhood_gex",
+    "bin_expression",
+    "chatterjee_corr",
 ]
