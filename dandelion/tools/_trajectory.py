@@ -111,9 +111,9 @@ def pseudotime_cell(
     suffix : str
         suffix to be added after the added column names
 
-    No Longer Returned
-    ------------------
-    TYPE
+    Returns
+    -------
+    AnnData
         subset of adata whereby cells that don't belong to any neighbourhood are removed
         and projected pseudotime information stored in .obs - ['pseudotime'+suffix], and ['prob_'+term_state+suffix] for each terminal state
     """
