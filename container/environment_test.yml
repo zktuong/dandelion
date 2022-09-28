@@ -21,4 +21,5 @@ dependencies:
   - matplotlib<=3.5.3
   - scanpy>=1.7.0
   - rpy2==3.4.2
+  - palantir
   - git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
