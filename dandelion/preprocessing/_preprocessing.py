@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-09-28 09:03:12
+# @Last Modified time: 2022-10-08 21:16:09
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -6075,6 +6075,13 @@ def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
         mapped["sequence_start_multimappers"][j] = ";".join(
             tmp["j_sequence_start"].astype(str)
         )
+        # map left most!
+        if not present(mapped["v_call"]):
+            if len(list(tmp["j_call"])) > 1:
+                mapped["j_call"][j] = list(tmp["j_call"])[0]
+                mapped["j_sequence_start"][j] = list(tmp["j_sequence_start"])[0]
+                mapped["j_sequence_end"][j] = list(tmp["j_sequence_end"])[0]
+                mapped["j_support"][j] = list(tmp["j_support"])[0]
 
     return mapped
 
