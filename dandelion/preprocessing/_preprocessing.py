@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-09 14:00:36
+# @Last Modified time: 2022-10-09 14:59:21
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -6053,7 +6053,13 @@ def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
     ]  # maybe not needing to filter if j_support has already been filtered
     mapped = pd.DataFrame(
         index=set(df_new["sequence_id"]),
-        columns=["multimappers", "multiplicity", "sequence_start_multimappers"],
+        columns=[
+            "multimappers",
+            "multiplicity",
+            "sequence_start_multimappers",
+            "sequence_end_multimappers",
+            "score_multimappers",
+        ],
     )
 
     for j in range(mapped.shape[0]):
