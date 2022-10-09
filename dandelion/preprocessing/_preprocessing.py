@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-09-28 09:03:12
+# @Last Modified time: 2022-10-09 17:10:29
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -6053,7 +6053,13 @@ def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
     ]  # maybe not needing to filter if j_support has already been filtered
     mapped = pd.DataFrame(
         index=set(df_new["sequence_id"]),
-        columns=["multimappers", "multiplicity", "sequence_start_multimappers"],
+        columns=[
+            "multimappers",
+            "multiplicity",
+            "sequence_start_multimappers",
+            "sequence_end_multimappers",
+            "support_multimappers",
+        ],
     )
 
     for j in range(mapped.shape[0]):
@@ -6074,6 +6080,12 @@ def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
         mapped["multiplicity"][j] = tmp.shape[0]
         mapped["sequence_start_multimappers"][j] = ";".join(
             tmp["j_sequence_start"].astype(str)
+        )
+        mapped["sequence_end_multimappers"][j] = ";".join(
+            tmp["j_sequence_end"].astype(str)
+        )
+        mapped["support_multimappers"][j] = ";".join(
+            tmp["j_support"].astype(str)
         )
 
     return mapped
@@ -6116,45 +6128,74 @@ def update_j_multimap(data: List, filename_prefix: List):
             endswith="_dandelion.tsv",
         )
 
+        jmm_transfer_cols = [
+            "multimappers",
+            "multiplicity",
+            "sequence_start_multimappers",
+            "sequence_end_multimappers",
+            "support_multimappers",
+        ]
         if filePath0 is not None:
             jmulti = multimapper(filePath0)
             if filePath1 is not None:
                 dbpass = load_data(filePath1)
-                for col in [
-                    "multimappers",
-                    "multiplicity",
-                    "sequence_start_multimappers",
-                ]:
+                for col in jmm_transfer_cols:
                     dbpass["j_call_" + col] = ""
                     dbpass["j_call_" + col].update(jmulti[col])
                 write_airr(dbpass, filePath1)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
-                for col in [
-                    "multimappers",
-                    "multiplicity",
-                    "sequence_start_multimappers",
-                ]:
+                for col in jmm_transfer_cols:
                     dbfail["j_call_" + col] = ""
                     dbfail["j_call_" + col].update(jmulti[col])
+                for i in dbfail.index:
+                    if not present(dbfail.loc[i, "v_call"]):
+                        jmmappers = dbfail.at[i, "j_call_multimappers"].split(
+                            ";"
+                        )
+                        jmmappersstart = dbfail.at[
+                            i, "j_call_sequence_start_multimappers"
+                        ].split(";")
+                        jmmappersend = dbfail.at[
+                            i, "j_call_sequence_end_multimappers"
+                        ].split(";")
+                        jmmapperssupport = dbfail.at[
+                            i, "j_call_support_multimappers"
+                        ].split(";")
+                        if len(jmmappers) > 1:
+                            dbfail.at[i, "j_call"] = jmmappers[0]
+                            dbfail.at[i, "j_sequence_start"] = jmmappersstart[0]
+                            dbfail.at[i, "j_sequence_end"] = jmmappersend[0]
+                            dbfail.at[i, "j_support"] = jmmapperssupport[0]
                 write_airr(dbfail, filePath2)
             if filePath3 is not None:
                 dball = load_data(filePath3)
-                for col in [
-                    "multimappers",
-                    "multiplicity",
-                    "sequence_start_multimappers",
-                ]:
+                for col in jmm_transfer_cols:
                     dball["j_call_" + col] = ""
                     dball["j_call_" + col].update(jmulti[col])
+                for i in dball.index:
+                    if not present(dball.loc[i, "v_call"]):
+                        jmmappers = dball.at[i, "j_call_multimappers"].split(
+                            ";"
+                        )
+                        jmmappersstart = dball.at[
+                            i, "j_call_sequence_start_multimappers"
+                        ].split(";")
+                        jmmappersend = dball.at[
+                            i, "j_call_sequence_end_multimappers"
+                        ].split(";")
+                        jmmapperssupport = dball.at[
+                            i, "j_call_support_multimappers"
+                        ].split(";")
+                        if len(jmmappers) > 1:
+                            dball.at[i, "j_call"] = jmmappers[0]
+                            dball.at[i, "j_sequence_start"] = jmmappersstart[0]
+                            dball.at[i, "j_sequence_end"] = jmmappersend[0]
+                            dball.at[i, "j_support"] = jmmapperssupport[0]
                 write_airr(dball, filePath3)
             if filePath4 is not None:
                 dandy = load_data(filePath4)
-                for col in [
-                    "multimappers",
-                    "multiplicity",
-                    "sequence_start_multimappers",
-                ]:
+                for col in jmm_transfer_cols:
                     dandy["j_call_" + col] = ""
                     dandy["j_call_" + col].update(jmulti[col])
                 write_airr(dandy, filePath4)
