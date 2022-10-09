@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-09 14:59:21
+# @Last Modified time: 2022-10-09 17:10:29
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -6058,7 +6058,7 @@ def multimapper(filename: Union[PathLike, str]) -> pd.DataFrame:
             "multiplicity",
             "sequence_start_multimappers",
             "sequence_end_multimappers",
-            "score_multimappers",
+            "support_multimappers",
         ],
     )
 
