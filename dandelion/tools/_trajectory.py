@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import scipy as sp
-import palantir
 
 from collections import Counter
 from anndata import AnnData
@@ -144,7 +143,7 @@ def vdj_nhood(
 
 
 def pseudotime_transfer(
-    adata: AnnData, pr_res: palantir.presults.PResults, suffix: str
+    adata: AnnData, pr_res: "palantir.presults.PResults", suffix: str
 ):
     """Function to add pseudotime and branch probabilities into adata.obs in place.
 
