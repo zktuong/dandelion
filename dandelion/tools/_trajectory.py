@@ -1,7 +1,7 @@
 """Trajectory functions."""
 # Created on Mon Sep 19 21:30:44 2022
 # @author: chenqu
-
+import re
 import numpy as np
 import pandas as pd
 import scanpy as sc
