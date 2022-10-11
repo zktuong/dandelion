@@ -143,7 +143,7 @@ def vdj_nhood(
 
 
 def pseudotime_transfer(
-    adata: AnnData, pr_res: "palantir.presults.PResults", suffix: str
+    adata: AnnData, pr_res: "palantir.presults.PResults", suffix: str = ""
 ):
     """Function to add pseudotime and branch probabilities into adata.obs in place.
 
@@ -153,7 +153,7 @@ def pseudotime_transfer(
         nhood_adata for which pseudotime to be transferred to
     pr_res : palantir.presults.PResults
         palantir pseudotime inference output object
-    suffix : str
+    suffix : str, optional
         suffix to be added after the added column names
     """
     adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
