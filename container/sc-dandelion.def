@@ -3,8 +3,8 @@ Bootstrap: docker
 From: continuumio/miniconda3
 
 %files
-    ncbi-blast-2.12.0+ /share/ncbi-blast-2.12.0+
-    ncbi-igblast-1.17.1 /share/ncbi-igblast-1.17.1
+    ncbi-blast-2.13.0+ /share/ncbi-blast-2.13.0+
+    ncbi-igblast-1.19.0 /share/ncbi-igblast-1.19.0
     database /share/database
     environment.yml /environment.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
@@ -37,15 +37,19 @@ From: continuumio/miniconda3
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
-    echo "export PATH=/share/ncbi-blast-2.12.0+/bin:/share/ncbi-igblast-1.17.1/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
+    echo "export PATH=/share/ncbi-blast-2.13.0+/bin:/share/ncbi-igblast-1.19.0/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
     echo ". /opt/conda/etc/profile.d/conda.sh" | tee -a $SINGULARITY_ENVIRONMENT
     echo "conda activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
+    # update the database just in case
+    /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/human/human_BCR_C.fasta
+    /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/mouse/mouse_BCR_C.fasta
+    chmod +x /share/dandelion_preprocess.py
 
 %environment
     export GERMLINE=/share/database/germlines/
     export IGDATA=/share/database/igblast/
     export BLASTDB=/share/database/blast/
-    export PATH=/share/ncbi-blast-2.12.0+/bin:/share/ncbi-igblast-1.17.1/bin:$PATH
+    export PATH=/share/ncbi-blast-2.13.0+/bin:/share/ncbi-igblast-1.19.0/bin:$PATH
 
 %runscript
     alias dandelion-preprocess='/share/dandelion_preprocess.py'
