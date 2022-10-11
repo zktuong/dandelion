@@ -40,6 +40,10 @@ From: continuumio/miniconda3
     echo "export PATH=/share/ncbi-blast-2.13.0+/bin:/share/ncbi-igblast-1.19.0/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
     echo ". /opt/conda/etc/profile.d/conda.sh" | tee -a $SINGULARITY_ENVIRONMENT
     echo "conda activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
+    # update the database just in case
+    /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/human/human_BCR_C.fasta
+    /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/mouse/mouse_BCR_C.fasta
+
 
 %environment
     export GERMLINE=/share/database/germlines/
