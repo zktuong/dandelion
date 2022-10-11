@@ -43,7 +43,7 @@ From: continuumio/miniconda3
     # update the database just in case
     /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/human/human_BCR_C.fasta
     /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/mouse/mouse_BCR_C.fasta
-
+    chmod +x /share/dandelion_preprocess.py
 
 %environment
     export GERMLINE=/share/database/germlines/
