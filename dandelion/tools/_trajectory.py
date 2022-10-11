@@ -10,18 +10,20 @@ import palantir
 
 from collections import Counter
 from anndata import AnnData
-from typing import List
+from typing import List, Optional
 
-from ..utilities._utilities import bh
+from ..utilities._utilities import bh, Literal
 
 
 def vdj_nhood(
     adata: AnnData,
-    cols: List[str] = [
-        "ab_IR_VDJ_1_v_gene",
-        "ab_IR_VDJ_1_j_gene",
-        "ab_IR_VJ_1_v_gene",
-        "ab_IR_VJ_1_j_gene",
+    mode: Literal["B", "abT", "gdT"] = "abT",
+    groups: Optional[List[str]] = None,
+    allowed_chain_status: Optional[List[str]] = [
+        "Single pair",
+        "Extra pair",
+        "Extra pair-exception",
+        "Orphan VDJ-exception",
     ],
 ) -> AnnData:
     """Function for making neighbourhood vdj feature space.
@@ -30,8 +32,13 @@ def vdj_nhood(
     ----------
     adata : AnnData
         cell adata with neighbourhood information stored in adata.uns['nhood_adata'] & adata.obsm['nhoods']
-    cols : List[str], optional
-        columns of VDJ in adata.obs to be used here i.e. columns of e.g. TRAV, TRAJ, TRBV, TRBJ
+    mode : Literal['B', 'abT', 'gdT'], optional
+        Mode for extract the V/J genes.
+    groups : Optional[List], optional
+        If provided, only the following groups/categories will be used for computing the PCA.
+    allowed_chain_status : Optional[List], optional
+        If provided, only the ones in this list are kept from the `chain_status` column.
+        Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
 
     Returns
     -------
@@ -45,14 +52,53 @@ def vdj_nhood(
     # the .ravel() turns the four V(D)J columns to a single vector of values
     # and doing a .unique() of that gets us all the possible genes present in the object
     # we want a column for every single V(D)J gene encountered, so this is perfect
+
+    if allowed_chain_status is not None:
+        adata_ = adata[
+            adata.obs["chain_status"].isin(allowed_chain_status)
+        ].copy()
+
+    if groups is not None:
+        adata_ = adata_[adata_.obs[group].isin(groups)].copy()
+
+    if "v_call_genotyped_VDJ" in adata_.obs:
+        v_call = "v_call_genotyped_"
+    else:
+        v_call = "v_call_"
+
+    if "v_call_genotyped_VDJ" in adata_.obs:
+        v_call = "v_call_genotyped_"
+    else:
+        v_call = "v_call_"
+
+    adata_.obs[v_call + mode + "_VJ_main"] = [
+        x.split("|")[0] for x in adata_.obs[v_call + mode + "_VJ"]
+    ]
+    adata_.obs["j_call_" + mode + "_VJ_main"] = [
+        x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VJ"]
+    ]
+    adata_.obs[v_call + mode + "_VDJ_main"] = [
+        x.split("|")[0] for x in adata_.obs[v_call + mode + "_VDJ"]
+    ]
+    adata_.obs["j_call_" + mode + "_VDJ_main"] = [
+        x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VDJ"]
+    ]
+
+    cols = [
+        v_call + mode + "_VDJ_main",
+        "j_call_" + mode + "_VDJ_main",
+        v_call + mode + "_VJ_main",
+        "j_call_" + mode + "_VJ_main",
+    ]
+
     df = pd.DataFrame(
         0,
-        columns=pd.unique(adata.obs[cols].values.ravel("K")),
+        columns=pd.unique(adata_.obs[cols].values.ravel("K")),
         index=np.arange(nhoods.shape[1]),
     )
     for i in df.index:
         # extract the metadata for this neighbourhood, and just the V(D)J gene columns
-        sub = adata.obs.loc[nhoods[:, i] == 1, cols]
+        sub = adata_.obs.loc[nhoods[:, i] == 1, cols]
         # quickly count up the .ravel()ed form up, and this goes straight into a df - neat!
         df.loc[i, :] = Counter(sub.values.ravel("K"))
     # the above procedure leaves NaNs in unencountered locations
@@ -62,7 +108,7 @@ def vdj_nhood(
     for col in cols:
         # identify columns holding genes belonging to the category
         # and then normalise the values to 1 for each neighbourhood
-        mask = np.isin(df.columns, np.unique(adata.obs[col]))
+        mask = np.isin(df.columns, np.unique(adata_.obs[col]))
         df.loc[:, mask] = df.loc[:, mask].div(
             df.loc[:, mask].sum(axis=1), axis=0
         )
@@ -70,7 +116,7 @@ def vdj_nhood(
     nhood_adata = sc.AnnData(
         np.array(df),
         var=pd.DataFrame(index=df.columns),
-        obs=adata.uns["nhood_adata"].obs,
+        obs=adata_.uns["nhood_adata"].obs,
     )
     return nhood_adata
 
