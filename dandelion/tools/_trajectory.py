@@ -1,6 +1,6 @@
 """Trajectory functions."""
 # Created on Mon Sep 19 21:30:44 2022
-# @author: chenqu
+# @author: chenqu, kp9, kelvin
 import re
 import numpy as np
 import pandas as pd
@@ -9,12 +9,12 @@ import scipy as sp
 
 from collections import Counter
 from anndata import AnnData
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from ..utilities._utilities import bh, Literal
 
 
-def setup_vdj_nhood(
+def setup_vdj_pseudobulk(
     adata: AnnData,
     mode: Literal["B", "abT", "gdT"] = "abT",
     subsetby: Optional[str] = None,
@@ -26,7 +26,7 @@ def setup_vdj_nhood(
         "Orphan VDJ-exception",
     ],
 ) -> AnnData:
-    """Function for prepare anndata for computing neighbourhood vdj feature space.
+    """Function for prepare anndata for computing pseudobulk vdj feature space.
 
     Parameters
     ----------
@@ -46,7 +46,7 @@ def setup_vdj_nhood(
     AnnData
         filtered cell adata object.
     """
-    # keep ony relevant cells based on productive column
+    # keep ony relevant cells (ones with a pair of chains) based on productive column
     adata = adata[
         np.array(adata.obs["productive_" + mode + "_VDJ"].str.startswith("T"))
         & adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
@@ -87,39 +87,78 @@ def setup_vdj_nhood(
     return adata
 
 
-def vdj_nhood(
+def vdj_pseudobulk(
     adata: AnnData,
+    pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
+    obs_to_bulk: Optional[str] = None,
+    obs_to_take: Optional[Union[str, List[str]]] = None,
+    cols: Optional[List[str]] = None,
 ) -> AnnData:
-    """Function for making neighbourhood vdj feature space.
+    """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk`
+    needs to be specified when calling.
 
     Parameters
     ----------
     adata : AnnData
-        cell adata with neighbourhood information stored in adata.uns['nhood_adata'] & adata.obsm['nhoods']
+        Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
+    pbs: Optional[array], optional
+        Optional binary matrix with cells as rows and pseudobulk groups as columns
+    obs_to_bulk: Optional[str or List], optional
+        Optional obs column(s) to group pseudobulks into; if multiple are provided, they
+        will be combined
+    cols: : Optional[List], optional
+        If provided, use the specified obs columns to extract V(D)J calls
 
     Returns
     -------
     AnnData
-        nhood_adata, whereby each observation is a cell neighbourhood:\n
-        VDJ usage frequency stored in nhood_adata.X\n
-        VDJ genes stored in nhood_adata.var\n
-        neighbourhood metadata stored in nhood_adata.obs\n
+        pb_adata, whereby each observation is a pseudobulk:\n
+        VDJ usage frequency stored in pb_adata.X\n
+        VDJ genes stored in pb_adata.var\n
+        pseudobulk metadata stored in pb_adata.obs\n
+        pseudobulk assignment (binary matrix with input cells as rows and pseudobulks as columns) stored in pb_adata.uns['pseudobulk assignments']\n
     """
-    nhoods = adata.obsm["nhoods"].todense()
+    # well, we need some way to pseudobulk
+    if pbs is None and obs_to_bulk is None:
+        raise ValueError(
+            "You need to specify `pbs` or `obs_to_bulk` when calling the function"
+        )
+
+    # but just one
+    if pbs is not None and obs_to_bulk is not None:
+        raise ValueError("You need to specify `pbs` or `obs_to_bulk`, not both")
+
+    # turn the pseubodulk matrix dense if need be
+    if pbs is not None:
+        if sp.sparse.issparse(pbs):
+            pbs = pbs.todense()
+
+    # get the obs-derived pseudobulk
+    if obs_to_bulk is not None:
+        if type(obs_to_bulk) is list:
+            # this will create a single value by pasting all the columns together
+            tobulk = adata.obs[obs_to_bulk].T.astype(str).agg(",".join)
+        else:
+            # we just have a single column
+            tobulk = adata.obs[obs_to_bulk]
+        # this pandas function creates the exact pseudobulk assignment we want
+        pbs = pd.get_dummies(tobulk).values
+
+    # if not specified by the user, use the following default dandelion VJ columns
+    if cols is None:
+        cols = [i for i in adata.obs if re.search("_VDJ_main|_VJ_main", i)]
+
     # the .ravel() turns the four V(D)J columns to a single vector of values
     # and doing a .unique() of that gets us all the possible genes present in the object
     # we want a column for every single V(D)J gene encountered, so this is perfect
-
-    cols = [i for i in adata.obs if re.search("_VDJ_main|_VJ_main", i)]
-
     df = pd.DataFrame(
         0,
         columns=pd.unique(adata.obs[cols].values.ravel("K")),
-        index=np.arange(nhoods.shape[1]),
+        index=np.arange(pbs.shape[1]),
     )
     for i in df.index:
-        # extract the metadata for this neighbourhood, and just the V(D)J gene columns
-        sub = adata.obs.loc[nhoods[:, i] == 1, cols]
+        # extract the metadata for this pseudobulk, and just the V(D)J gene columns
+        sub = adata.obs.loc[pbs[:, i] == 1, cols]
         # quickly count up the .ravel()ed form up, and this goes straight into a df - neat!
         df.loc[i, :] = Counter(sub.values.ravel("K"))
     # the above procedure leaves NaNs in unencountered locations
@@ -128,18 +167,37 @@ def vdj_nhood(
     # loop over V(D)J gene categories
     for col in cols:
         # identify columns holding genes belonging to the category
-        # and then normalise the values to 1 for each neighbourhood
+        # and then normalise the values to 1 for each pseudobulk
         mask = np.isin(df.columns, np.unique(adata.obs[col]))
         df.loc[:, mask] = df.loc[:, mask].div(
             df.loc[:, mask].sum(axis=1), axis=0
         )
-    # store our feature space and some existing metadata into an AnnData
-    nhood_adata = sc.AnnData(
-        np.array(df),
-        var=pd.DataFrame(index=df.columns),
-        obs=adata.uns["nhood_adata"].obs,
+
+    # prepare per-pseudobulk calls of specified metadata columns
+    pbs_obs = pd.DataFrame(index=df.index)
+    if obs_to_take is not None:
+        # just in case a single is passed as a string
+        if type(obs_to_take) is not list:
+            obs_to_take = [obs_to_take]
+        # now we can iterate over this nicely
+        # using the logic of milopy's annotate_nhoods()
+        for anno_col in obs_to_take:
+            anno_dummies = pd.get_dummies(adata.obs[anno_col])
+            anno_count = pbs.T.dot(anno_dummies.values)
+            anno_frac = np.array(anno_count / anno_count.sum(1))
+            anno_frac = pd.DataFrame(
+                anno_frac, index=df.index, columns=anno_dummies.columns
+            )
+            pbs_obs[anno_col] = anno_frac.idxmax(1)
+            pbs_obs[anno_col + "_fraction"] = anno_frac.max(1)
+
+    # store our feature space and derived metadata into an AnnData
+    pb_adata = sc.AnnData(
+        np.array(df), var=pd.DataFrame(index=df.columns), obs=pbs_obs
     )
-    return nhood_adata
+    # store the pseudobulk assignments, as a sparse for storage efficiency
+    pb_adata.uns["pseudobulk_assignments"] = sp.sparse.csr_matrix(pbs)
+    return pb_adata
 
 
 def pseudotime_transfer(
@@ -150,33 +208,35 @@ def pseudotime_transfer(
     Parameters
     ----------
     adata : AnnData
-        nhood_adata for which pseudotime to be transferred to
+        pb_adata for which pseudotime to be transferred to
     pr_res : palantir.presults.PResults
         palantir pseudotime inference output object
     suffix : str, optional
-        suffix to be added after the added column names
+        suffix to be added after the added column names, default "" (none)
     """
     adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
 
     for col in pr_res.branch_probs.columns:
         adata.obs["prob_" + col + suffix] = pr_res.branch_probs[col].copy()
 
+    return adata
+
 
 def pseudotime_cell(
-    adata: AnnData, nhood_adata: AnnData, term_states: List[str], suffix: str
+    adata: AnnData, pb_adata: AnnData, term_states: List[str], suffix: str = ""
 ) -> AnnData:
-    """Function to project pseudotime & branch probabilities from nhood_adata (neighbourhood adata) to adata (cell adata).
+    """Function to project pseudotime & branch probabilities from pb_adata (pseudobulk adata) to adata (cell adata).
 
     Parameters
     ----------
     adata : AnnData
         cell adata
-    nhood_adata : AnnData
+    pb_adata : AnnData
         neighbourhood adata
     term_states : List[str]
         list of terminal states with branch probabilities to be transferred
-    suffix : str
-        suffix to be added after the added column names
+    suffix : str, optional
+        suffix to be added after the added column names, default "" (none)
 
     Returns
     -------
@@ -184,8 +244,8 @@ def pseudotime_cell(
         subset of adata whereby cells that don't belong to any neighbourhood are removed
         and projected pseudotime information stored in .obs - `pseudotime+suffix`, and `'prob_'+term_state+suffix` for each terminal state
     """
-    # extract out cell x neighbourhood matrix
-    nhoods = np.array(adata.obsm["nhoods"].todense())
+    # extract out cell x pseudobulk matrix
+    nhoods = np.array(pb_adata.uns["pseudobulk_assignments"].todense())
 
     # leave out cells that don't belong to any neighbourhood
     cdata = adata[np.sum(nhoods, axis=1) > 0].copy()
@@ -193,7 +253,7 @@ def pseudotime_cell(
         "number of cells removed", sum(np.sum(nhoods, axis=1) == 0)
     )  # print how many cells removed
 
-    # for each cell pseudotime_mean is the average of the pseudotime of all neighbourhoods the cell is in, weighted by 1/neighbourhood size
+    # for each cell pseudotime_mean is the average of the pseudotime of all pseudobulks the cell is in, weighted by 1/neighbourhood size
     nhoods_cdata = nhoods[np.sum(nhoods, axis=1) > 0, :]
     nhoods_cdata_norm = nhoods_cdata / np.sum(
         nhoods_cdata, axis=0, keepdims=True
@@ -205,7 +265,7 @@ def pseudotime_cell(
     for col in col_list:
         cdata.obs[col] = (
             np.array(
-                nhoods_cdata_norm.dot(nhood_adata.obs[col]).T
+                nhoods_cdata_norm.dot(pb_adata.obs[col]).T
                 / np.sum(nhoods_cdata_norm, axis=1)
             )
             .flatten()
