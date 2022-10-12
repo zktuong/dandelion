@@ -51,8 +51,7 @@ Please refer to the [documentation](https://sc-dandelion.readthedocs.io/en/lates
 
 Start off by creating a conda environment containing scanpy, following [official scanpy instructions](https://scanpy.readthedocs.io/en/stable/installation.html). Once done, run the following:
 
-```
-conda install -c conda-forge graph-tool
+```bash
 pip install sc-dandelion
 ```
 
@@ -90,22 +89,13 @@ networkx>=2.4
 rpy2>=3.4.2
 
 # optional
-nxviz>=0.6.4
-```
-
-R packages
-```R
-alakazam_1.0.1
-tigger_1.0.0
-airr_1.2.0
-shazam_1.0.0
-ggplot2
+nxviz>=0.6.4 (git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges)
 ```
 
 ## Acknowledgements
-I would like to acknowledge the contributions from Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna Clatworthy, who helped with the initial conception of the project and for all discussions. 
+I would like to acknowledge the contributions from Dr. Chenqu Suo, Dr. Krysztof Polanksi, Dr. Sarah Teichmann and Prof. Menna Clatworthy, who helped with the initial conception of the project and for all discussions.
 
-I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez Conde, Dr. Hamish King, Dr. Krysztof Polanksi and Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
+I would also like to acknowledge Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers, Dr. Jongeun Park,  Dr. Cecilia-Dominguez Conde, Dr. Kirsten Stewart, Dr. Hamish King and Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
 
 ## Support
  
