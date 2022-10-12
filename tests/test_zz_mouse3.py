@@ -4,6 +4,7 @@ import pandas as pd
 import dandelion as ddl
 import pytest
 from pathlib import Path
+import sys
 
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_mouse")
