@@ -365,14 +365,14 @@ def barplot(
     else:
         ax.set_ylabel("count")
     ax.set_xlabel("")
-    #modify the x ticks accordingly
+    # modify the x ticks accordingly
     xtick_params = {}
     if xtick_rotation is None:
-        xtick_params['rotation'] = 90
+        xtick_params["rotation"] = 90
     else:
-        xtick_params['rotation'] = xtick_rotation
+        xtick_params["rotation"] = xtick_rotation
     if xtick_fontsize is not None:
-        xtick_params['fontsize'] = xtick_fontsize
+        xtick_params["fontsize"] = xtick_fontsize
     plt.xticks(**xtick_params)
     return fig, ax
 
@@ -388,7 +388,11 @@ def stackedbarplot(
     xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
     hide_legend: bool = True,
-    legend_options: Tuple[str, Tuple[float, float], int] = ('upper left', (1,1), 1),
+    legend_options: Tuple[str, Tuple[float, float], int] = (
+        "upper left",
+        (1, 1),
+        1,
+    ),
     labels: Optional[Sequence] = None,
     min_clone_size: Optional[int] = None,
     clone_key: Optional[str] = None,
@@ -561,14 +565,14 @@ def stackedbarplot(
                 )
                 ax.add_artist(l2)
             ax.add_artist(l1)
-        #modify the x ticks accordingly
+        # modify the x ticks accordingly
         xtick_params = {}
         if xtick_rotation is None:
-            xtick_params['rotation'] = 90
+            xtick_params["rotation"] = 90
         else:
-            xtick_params['rotation'] = xtick_rotation
+            xtick_params["rotation"] = xtick_rotation
         if xtick_fontsize is not None:
-            xtick_params['fontsize'] = xtick_fontsize
+            xtick_params["fontsize"] = xtick_fontsize
         plt.xticks(**xtick_params)
 
         return fig, ax
@@ -604,7 +608,11 @@ def spectratype(
     xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
     hide_legend: bool = True,
-    legend_options: Tuple[str, Tuple[float, float], int] = ('upper left', (1,1), 1),
+    legend_options: Tuple[str, Tuple[float, float], int] = (
+        "upper left",
+        (1, 1),
+        1,
+    ),
     labels: Optional[Sequence] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
@@ -757,14 +765,14 @@ def spectratype(
                     frameon=False,
                 )
             ax.add_artist(l1)
-        #modify the x ticks accordingly
+        # modify the x ticks accordingly
         xtick_params = {}
         if xtick_rotation is None:
-            xtick_params['rotation'] = 90
+            xtick_params["rotation"] = 90
         else:
-            xtick_params['rotation'] = xtick_rotation
+            xtick_params["rotation"] = xtick_rotation
         if xtick_fontsize is not None:
-            xtick_params['fontsize'] = xtick_fontsize
+            xtick_params["fontsize"] = xtick_fontsize
         plt.xticks(**xtick_params)
 
         return fig, ax

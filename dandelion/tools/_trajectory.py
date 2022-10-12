@@ -155,8 +155,10 @@ def vdj_pseudobulk(
     # TODO: DENAN SOMEHOW? AS IN NAN GENES?
     # can now multiply transposed pseudobulk assignments by this vjs thing, turn to df
     vj_pb_count = pbs.T.dot(vjs.values)
-    df = pd.DataFrame(vj_pb_count, index=np.arange(pbs.shape[1]), columns=vjs.columns)
-    
+    df = pd.DataFrame(
+        vj_pb_count, index=np.arange(pbs.shape[1]), columns=vjs.columns
+    )
+
     # loop over V(D)J gene categories
     for col in cols:
         # identify columns holding genes belonging to the category
