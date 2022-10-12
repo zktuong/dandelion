@@ -215,7 +215,7 @@ def pseudotime_transfer(
     return adata
 
 
-def pseudotime_cell(
+def project_pseudotime_to_cell(
     adata: AnnData, pb_adata: AnnData, term_states: List[str], suffix: str = ""
 ) -> AnnData:
     """Function to project pseudotime & branch probabilities from pb_adata (pseudobulk adata) to adata (cell adata).
