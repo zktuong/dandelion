@@ -7,6 +7,7 @@ import os
 import pytest
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_recipe():
     """test_recipe"""
     try:
