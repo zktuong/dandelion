@@ -52,6 +52,8 @@ Please refer to the [documentation](https://sc-dandelion.readthedocs.io/en/lates
 Start off by creating a conda environment containing scanpy, following [official scanpy instructions](https://scanpy.readthedocs.io/en/stable/installation.html). Once done, run the following:
 
 ```bash
+conda install -c conda-forge graph-tool
+pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
 pip install sc-dandelion
 ```
 

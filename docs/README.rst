@@ -72,6 +72,8 @@ Once done, run the following:
 
 .. code:: bash
 
+    conda install -c conda-forge graph-tool
+    pip git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
     pip install sc-dandelion
 
 
