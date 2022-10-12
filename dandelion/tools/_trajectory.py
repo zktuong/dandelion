@@ -116,6 +116,7 @@ def vdj_pseudobulk(
         VDJ usage frequency stored in pb_adata.X\n
         VDJ genes stored in pb_adata.var\n
         pseudobulk metadata stored in pb_adata.obs\n
+        pseudobulk assignment (binary matrix with input cells as rows and pseudobulks as columns) stored in pb_adata.uns['pseudobulk assignments']\n
     """
     # well, we need some way to pseudobulk
     if pbs is None and obs_to_bulk is None:
@@ -218,6 +219,8 @@ def pseudotime_transfer(
 
     for col in pr_res.branch_probs.columns:
         adata.obs["prob_" + col + suffix] = pr_res.branch_probs[col].copy()
+    
+    return adata
 
 
 def pseudotime_cell(
@@ -263,7 +266,7 @@ def pseudotime_cell(
     for col in col_list:
         cdata.obs[col] = (
             np.array(
-                nhoods_cdata_norm.dot(nhood_adata.obs[col]).T
+                nhoods_cdata_norm.dot(pb_adata.obs[col]).T
                 / np.sum(nhoods_cdata_norm, axis=1)
             )
             .flatten()
