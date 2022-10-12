@@ -235,7 +235,7 @@ def pseudotime_cell(
         neighbourhood adata
     term_states : List[str]
         list of terminal states with branch probabilities to be transferred
-    suffix : str
+    suffix : str, optional
         suffix to be added after the added column names, default "" (none)
 
     Returns
