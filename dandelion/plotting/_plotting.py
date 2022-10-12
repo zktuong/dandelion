@@ -379,7 +379,7 @@ def stackedbarplot(
     sort_descending: bool = True,
     xtick_rotation: Optional[Union[int, float]] = None,
     hide_legend: bool = True,
-    legend_options: Tuple[str, Tuple[float, float], int] = None,
+    legend_options: Tuple[str, Tuple[float, float], int] = ('upper left', (1,1), 1),
     labels: Optional[Sequence] = None,
     min_clone_size: Optional[int] = None,
     clone_key: Optional[str] = None,
@@ -586,7 +586,7 @@ def spectratype(
     title: Optional[str] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
     hide_legend: bool = True,
-    legend_options: Tuple[str, Tuple[float, float], int] = None,
+    legend_options: Tuple[str, Tuple[float, float], int] = ('upper left', (1,1), 1),
     labels: Optional[Sequence] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
