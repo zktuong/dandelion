@@ -221,7 +221,7 @@ def pseudotime_transfer(
 
 
 def pseudotime_cell(
-    adata: AnnData, pb_adata: AnnData, term_states: List[str], suffix: str
+    adata: AnnData, pb_adata: AnnData, term_states: List[str], suffix: str = ""
 ) -> AnnData:
     """Function to project pseudotime & branch probabilities from pb_adata (pseudobulk adata) to adata (cell adata).
 
@@ -234,7 +234,7 @@ def pseudotime_cell(
     term_states : List[str]
         list of terminal states with branch probabilities to be transferred
     suffix : str
-        suffix to be added after the added column names
+        suffix to be added after the added column names, default "" (none)
 
     Returns
     -------
