@@ -242,8 +242,8 @@ def pseudotime_cell(
         subset of adata whereby cells that don't belong to any neighbourhood are removed
         and projected pseudotime information stored in .obs - `pseudotime+suffix`, and `'prob_'+term_state+suffix` for each terminal state
     """
-    # extract out cell x neighbourhood matrix
-    nhoods = np.array(adata.obsm["nhoods"].todense())
+    # extract out cell x pseudobulk matrix
+    nhoods = np.array(pb_adata.uns['pseudobulk_assignments'].todense())
 
     # leave out cells that don't belong to any neighbourhood
     cdata = adata[np.sum(nhoods, axis=1) > 0].copy()
@@ -251,7 +251,7 @@ def pseudotime_cell(
         "number of cells removed", sum(np.sum(nhoods, axis=1) == 0)
     )  # print how many cells removed
 
-    # for each cell pseudotime_mean is the average of the pseudotime of all neighbourhoods the cell is in, weighted by 1/neighbourhood size
+    # for each cell pseudotime_mean is the average of the pseudotime of all pseudobulks the cell is in, weighted by 1/neighbourhood size
     nhoods_cdata = nhoods[np.sum(nhoods, axis=1) > 0, :]
     nhoods_cdata_norm = nhoods_cdata / np.sum(
         nhoods_cdata, axis=0, keepdims=True
