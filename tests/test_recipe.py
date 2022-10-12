@@ -5,6 +5,7 @@ import scanpy as sc
 import requests
 import os
 import pytest
+import sys
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
