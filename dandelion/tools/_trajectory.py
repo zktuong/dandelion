@@ -92,9 +92,9 @@ def vdj_pseudobulk(
     pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
     obs_to_bulk: Optional[str] = None,
     obs_to_take: Optional[Union[str, List[str]]] = None,
-    cols: Optional[List[str]] = None
+    cols: Optional[List[str]] = None,
 ) -> AnnData:
-    """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk` 
+    """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk`
     needs to be specified when calling.
 
     Parameters
@@ -104,7 +104,7 @@ def vdj_pseudobulk(
     pbs: Optional[array], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
     obs_to_bulk: Optional[str or List], optional
-        Optional obs column(s) to group pseudobulks into; if multiple are provided, they 
+        Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
     cols: : Optional[List], optional
         If provided, use the specified obs columns to extract V(D)J calls
@@ -120,17 +120,19 @@ def vdj_pseudobulk(
     """
     # well, we need some way to pseudobulk
     if pbs is None and obs_to_bulk is None:
-        raise ValueError("You need to specify `pbs` or `obs_to_bulk` when calling the function")
-    
+        raise ValueError(
+            "You need to specify `pbs` or `obs_to_bulk` when calling the function"
+        )
+
     # but just one
     if pbs is not None and obs_to_bulk is not None:
         raise ValueError("You need to specify `pbs` or `obs_to_bulk`, not both")
-    
+
     # turn the pseubodulk matrix dense if need be
     if pbs is not None:
         if sp.sparse.issparse(pbs):
             pbs = pbs.todense()
-    
+
     # get the obs-derived pseudobulk
     if obs_to_bulk is not None:
         if type(obs_to_bulk) is list:
@@ -170,7 +172,7 @@ def vdj_pseudobulk(
         df.loc[:, mask] = df.loc[:, mask].div(
             df.loc[:, mask].sum(axis=1), axis=0
         )
-    
+
     # prepare per-pseudobulk calls of specified metadata columns
     pbs_obs = pd.DataFrame(index=df.index)
     if obs_to_take is not None:
@@ -182,22 +184,19 @@ def vdj_pseudobulk(
         for anno_col in obs_to_take:
             anno_dummies = pd.get_dummies(adata.obs[anno_col])
             anno_count = pbs.T.dot(anno_dummies.values)
-            anno_frac = np.array(anno_count/anno_count.sum(1))
-            anno_frac = pd.DataFrame(anno_frac,
-                                     index=df.index,
-                                     columns=anno_dummies.columns
-                                     )
+            anno_frac = np.array(anno_count / anno_count.sum(1))
+            anno_frac = pd.DataFrame(
+                anno_frac, index=df.index, columns=anno_dummies.columns
+            )
             pbs_obs[anno_col] = anno_frac.idxmax(1)
-            pbs_obs[anno_col+"_fraction"] = anno_frac.max(1)
-    
+            pbs_obs[anno_col + "_fraction"] = anno_frac.max(1)
+
     # store our feature space and derived metadata into an AnnData
     pb_adata = sc.AnnData(
-        np.array(df),
-        var=pd.DataFrame(index=df.columns),
-        obs=pbs_obs
+        np.array(df), var=pd.DataFrame(index=df.columns), obs=pbs_obs
     )
     # store the pseudobulk assignments, as a sparse for storage efficiency
-    pb_adata.uns['pseudobulk_assignments'] = sp.sparse.csr_matrix(pbs)
+    pb_adata.uns["pseudobulk_assignments"] = sp.sparse.csr_matrix(pbs)
     return pb_adata
 
 
@@ -219,7 +218,7 @@ def pseudotime_transfer(
 
     for col in pr_res.branch_probs.columns:
         adata.obs["prob_" + col + suffix] = pr_res.branch_probs[col].copy()
-    
+
     return adata
 
 
@@ -246,7 +245,7 @@ def pseudotime_cell(
         and projected pseudotime information stored in .obs - `pseudotime+suffix`, and `'prob_'+term_state+suffix` for each terminal state
     """
     # extract out cell x pseudobulk matrix
-    nhoods = np.array(pb_adata.uns['pseudobulk_assignments'].todense())
+    nhoods = np.array(pb_adata.uns["pseudobulk_assignments"].todense())
 
     # leave out cells that don't belong to any neighbourhood
     cdata = adata[np.sum(nhoods, axis=1) > 0].copy()
