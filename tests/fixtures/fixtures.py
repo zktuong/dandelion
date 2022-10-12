@@ -1,8 +1,35 @@
 """fixtures"""
 import pandas as pd
 import pytest
-import scanpy as sc
 import scipy.sparse
+
+from anndata import AnnData
+
+
+def setup_anndata(obs: pd.DataFrame) -> AnnData:
+    """Create an empty AnnData for test purposes.
+
+    Parameters
+    ----------
+    obs : pd.DataFrame
+        obs
+
+    Returns
+    -------
+    AnnData
+        empty AnnData.
+    """
+    n = obs.shape[0]
+    adata = AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
+    adata.uns["neighbors"] = {}
+    adata.uns["neighbors"]["connectivities_key"] = "connectivities"
+    adata.uns["neighbors"]["distances_key"] = "distances"
+    adata.uns["neighbors"]["params"] = {"n_neighbors": n, "method": "umap"}
+    adata.uns["neighbors"]["params"]["random_state"] = 0
+    adata.uns["neighbors"]["params"]["metric"] = "euclidean"
+    adata.obsp["distances"] = scipy.sparse.random(n, n, format="csr")
+    adata.obsp["connectivities"] = scipy.sparse.random(n, n, format="csr")
+    return adata
 
 
 @pytest.fixture(scope="module")
@@ -63,14 +90,8 @@ def dummy_adata():
     obs["group2"] = obs["group2"].astype("category")
     obs["group3"] = ["a", "a", "b", "b", "c"]
     obs["group3"] = obs["group3"].astype("category")
-
-    n = obs.shape[0]
-
-    # just create a random matrix
-    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
-
-    # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata, use_rep="X", n_neighbors=3)
+    # create a random matrix
+    adata = setup_anndata(obs)
 
     return adata
 
@@ -96,14 +117,8 @@ def dummy_adata2():
     obs["group2"] = obs["group2"].astype("category")
     obs["group3"] = ["a", "a", "b", "b", "b", "b", "b", "c"]
     obs["group3"] = obs["group3"].astype("category")
-
-    n = obs.shape[0]
-
-    # just create a random matrix
-    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
-
-    # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata, use_rep="X", n_neighbors=3)
+    # create a random matrix
+    adata = setup_anndata(obs)
 
     return adata
 
@@ -131,14 +146,8 @@ def dummy_adata_cr6():
     obs["group2"] = obs["group2"].astype("category")
     obs["group3"] = ["a", "a", "b", "b", "c", "c", "a", "b", "c", "a"]
     obs["group3"] = obs["group3"].astype("category")
-
-    n = obs.shape[0]
-
-    # just create a random matrix
-    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
-
-    # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata, use_rep="X", n_neighbors=3)
+    # create a random matrix
+    adata = setup_anndata(obs)
 
     return adata
 
@@ -151,14 +160,9 @@ def dummy_adata_tr():
         "AACTGGTTCTTTAGTC-1",
         "AAAGATGCACCCTATC-1",
     ]
-    obs = pd.DataFrame(index=barcodes)
-    n = obs.shape[0]
-
-    # just create a random matrix
-    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
-
-    # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata, use_rep="X", n_neighbors=3)
+    obs = pd.DataFrame(index=barcodes)  # just create a random matrix
+    # create a random matrix
+    adata = setup_anndata(obs)
 
     return adata
 
@@ -8255,14 +8259,9 @@ def dummy_adata_travdv():
         "AGTGGGATCGAGAACG-1",
     ]
     obs = pd.DataFrame(index=barcodes)
-    obs["sample_id"] = "sample_test"
-    n = obs.shape[0]
-
-    # just create a random matrix
-    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
-
-    # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata, use_rep="X", n_neighbors=3)
+    obs["sample_id"] = "sample_test"  # just create a random matrix
+    # create a random matrix
+    adata = setup_anndata(obs)
 
     return adata
 
