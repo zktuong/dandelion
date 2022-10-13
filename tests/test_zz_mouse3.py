@@ -4,6 +4,7 @@ import pandas as pd
 import dandelion as ddl
 import pytest
 from pathlib import Path
+import sys
 
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_mouse")
@@ -104,6 +105,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     assert adata.n_obs == 547
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 @pytest.mark.usefixtures("create_testfolder")
 def test_generate_network_sfdp(create_testfolder):
     """test generate network sfdp"""

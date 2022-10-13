@@ -148,22 +148,17 @@ def vdj_pseudobulk(
     if cols is None:
         cols = [i for i in adata.obs if re.search("_VDJ_main|_VJ_main", i)]
 
-    # the .ravel() turns the four V(D)J columns to a single vector of values
-    # and doing a .unique() of that gets us all the possible genes present in the object
-    # we want a column for every single V(D)J gene encountered, so this is perfect
-    df = pd.DataFrame(
-        0,
-        columns=pd.unique(adata.obs[cols].values.ravel("K")),
-        index=np.arange(pbs.shape[1]),
-    )
-    for i in df.index:
-        # extract the metadata for this pseudobulk, and just the V(D)J gene columns
-        sub = adata.obs.loc[pbs[:, i] == 1, cols]
-        # quickly count up the .ravel()ed form up, and this goes straight into a df - neat!
-        df.loc[i, :] = Counter(sub.values.ravel("K"))
-    # the above procedure leaves NaNs in unencountered locations
-    df.fillna(0, inplace=True)
+    # perform matrix multiplication of pseudobulks by cells matrix by a cells by VJs matrix
+    # start off by creating the cell by VJs matrix, using the pandas dummies again
+    # skip the prefix stuff as the VJ genes will be unique in the columns
+    vjs = pd.get_dummies(adata.obs[cols], prefix="", prefix_sep="")
     # TODO: DENAN SOMEHOW? AS IN NAN GENES?
+    # can now multiply transposed pseudobulk assignments by this vjs thing, turn to df
+    vj_pb_count = pbs.T.dot(vjs.values)
+    df = pd.DataFrame(
+        vj_pb_count, index=np.arange(pbs.shape[1]), columns=vjs.columns
+    )
+
     # loop over V(D)J gene categories
     for col in cols:
         # identify columns holding genes belonging to the category
@@ -222,7 +217,7 @@ def pseudotime_transfer(
     return adata
 
 
-def pseudotime_cell(
+def project_pseudotime_to_cell(
     adata: AnnData, pb_adata: AnnData, term_states: List[str], suffix: str = ""
 ) -> AnnData:
     """Function to project pseudotime & branch probabilities from pb_adata (pseudobulk adata) to adata (cell adata).

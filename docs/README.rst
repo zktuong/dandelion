@@ -40,7 +40,8 @@ Installation
 Singularity container
 ~~~~~~~~~~~~~~~~~~~~~
 
-``dandelion`` now comes ready in the form of a singularity container which has all the required dependencies installed:
+``dandelion`` now comes ready in the form of a singularity container 
+which has all the required dependencies installed:
 
 .. code:: bash
 
@@ -48,142 +49,36 @@ Singularity container
     singularity shell --writable-tmpfs -B $PWD sc-dandelion_latest.sif
 
 
-This can be used for the preprocessing steps by navigating to the data folder and use:
+This will load up a conda-environment that has all the required 
+dependencies installed.
+
+This can be used for the preprocessing steps by navigating to the data 
+folder and use:
 
 .. code:: bash
 
     singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess
 
 Please refer to the
-`tutorial <https://sc-dandelion.readthedocs.io/en/latest/notebooks/singularity_preprocessing.html>`__
+`documentation <https://sc-dandelion.readthedocs.io/en/latest/notebooks/singularity_preprocessing.html>`__
 for more information.
 
-For more fine control, as well as for the exploration steps, please
-install via following the instructions below.
+Python package
+~~~~~~~~~~~~~~
 
-Manual
-~~~~~~
-
-I would reccomend installing this in order:
-
-.. code:: bash
-
-    # in bash/zsh terminal
-    # create a conda environment with specific modules
-    conda create --name dandelion python=3.7 # or 3.8, 3.9
-    conda activate dandelion
-
-python/conda packages
-^^^^^^^^^^^^^^^^^^^^^
+Start off by creating a conda environment containing scanpy, following
+`official scanpy instructions <https://scanpy.readthedocs.io/en/stable/installation.html>`__.
+Once done, run the following:
 
 .. code:: bash
 
-    # Install scanpy https://scanpy.readthedocs.io/en/latest/installation.html
-    conda install seaborn scikit-learn statsmodels numba pytables
-    conda install -c conda-forge python-igraph leidenalg
-    pip install scanpy
-
-    # with version >=0.3.0, it is reccomended to install graph-tool to enable hyperfast layout calculations
-   conda install -c conda-forge graph-tool
-   
-    # skip if doing pre-processing via container
-    conda install -c bioconda igblast blast # if this doesn't work, download them manually (see below)
-
-    # optional: installing rpy2 (if not doing pre-processing)
-    # This is optional because it's only used for interaction with some of the R packages from the immcantation suite. Skip if prefer keeping it simple and run the different tools separately
-    # if you just want to stick with the base R
-    pip install "rpy2>=3.4" # or if you don't mind having conda manage R: conda install -c conda-forge "rpy2>=3.4"
-    # make sure not to use the same R package folder or you will end up with major issues later.
-
-    # Use pip to install the following with --no-cache-dir --upgrade if necessary
-    # and then lastly install this
+    conda install -c conda-forge graph-tool
+    pip git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
     pip install sc-dandelion
-    # or for the latest version, pip install git+https://github.com/zktuong/dandelion.git 
 
-    # to use ddl.pl.clone_overlap, please install nxviz:
-    pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
-    # separately until the PR is approved and merged.
 
-R packages
-^^^^^^^^^^
-
-If doing pre-preprocessing, ``dandelion`` requires some R packages
-intalled.
-
-.. code:: R
-
-    # in R
-    install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"))
-
-or the following if using conda to manage R:
-
-.. code:: bash
-
-    # in bash/zsh terminal
-    conda install -c conda-forge r-optparse r-alakazam r-tigger r-airr r-shazam
-
-The package should now be properly installed and when starting up
-jupyter notebook in the virtual environment, the kernel ``python3``
-should work. Otherwise, you might need to add it manually:
-
-.. code:: bash
-
-    # in bash/zsh terminal
-    python -m ipykernel install --user --name dandelion --display-name "Python (dandelion)"
-
-Required database
------------------
-
-Last but not least, you will need to download the `database folder <https://github.com/zktuong/dandelion/tree/master/container>`__ in
-the repository and place them somewhere accessible. The igblast and
-germline database folders were originally downloaded from
-`immcantation <https://immcantation.readthedocs.io/>`__
-docker image (4.2.0). The blast database were downloaded from IMGT and
-manually curated. I have uploaded a copy of the required databases in a
-separate `repository <https://github.com/zktuong/databases_for_vdj>`__
-(Last update: 01/08/2021). Once you've unpacked the folders, export the
-the path to the database folders as environmental variables in your
-``~/.bash_profile`` or ``~/.zshenv`` like below. This will allow
-dandelion to access them easily. In the future, the databases will have
-to be updated accordingly.
-
-So for example, if I unpack into ``~/Documents``
-
-.. code:: bash
-
-    # in bash/zsh terminal
-    # set up environmental variables in ~/.bash_profile
-    echo 'export GERMLINE=~/Documents/dandelion/database/germlines/' >> ~/.bash_profile # or ~/.zshenv
-    echo 'export IGDATA=~/Documents/dandelion/database/igblast/' >> ~/.bash_profile # or ~/.zshenv
-    echo 'export BLASTDB=~/Documents/dandelion/database/blast/' >> ~/.bash_profile # or ~/.zshenv
-    source ~/.bash_profile # or ~/.zshenv
-
-see https://github.com/zktuong/dandelion/issues/66 for a known issue if
-you are using a notebook via jupyterhub.
-
-This is already available in the singularity container under
-``/share/database/``.
-
-External softwares
-------------------
-
-While blast and igblast executables are managed through conda, you can
-also download
-`igblast <https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/>`__
-and
-`blast+ <https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/>`__
-manually, and store the softwares somewhere accessible. Just make sure
-to set the paths to them appropriately.
-
-.. code:: bash
-
-    # in bash/zsh terminal
-    # unpack where relevant and export the path to the softwares, e.g. ~/Documents/
-    echo 'export PATH=~/Documents/software/bin:$PATH' >> ~/.bash_profile # or ~/.zshenv
-    source ~/.bash_profile # or ~/.zshenv
-
-This is already available in the singularity container under
-``/share/``.
+Between this and the pipelines within the singularity container, you 
+should be covered for most of your needs.
 
 Basic requirements
 ------------------
@@ -221,31 +116,22 @@ Python packages
     rpy2>=3.4.2
 
     # optional
-    nxviz>=0.6.3 (pypi)
+    nxviz>=0.6.4 (git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges)    
 
-R packages
-
-.. code:: R
-
-    alakazam_1.0.1
-    tigger_1.0.0
-    airr_1.2.0
-    shazam_1.0.0
-    ggplot2
 
 Acknowledgements
 ----------------
 
-I would like to acknowledge the contributions from Dr. Ondrej Suschanek,
-Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers and Prof. Menna
-Clatworthy, who helped with the initial conception of the project and
-for all discussions.
+I would like to acknowledge the contributions from Dr. Chenqu Suo, Dr. 
+Krysztof Polanksi, Dr. Sarah Teichmann and Prof. Menna Clatworthy, who 
+helped with the initial conception of the project and for all discussions.
 
-I would also like to acknowledge Dr. Jongeun Park, Dr. Cecilia-Dominguez
-Conde, Dr. Hamish King, Dr. Krysztof Polanksi and Dr. Peng He with whom
-I have had very useful discussions. I would also like to thank my wife
-who helped name the package, because she thought the plots looked like a
-dandelion =D.
+I would also like to acknowledge Dr. Ondrej Suschanek,
+Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers, Dr. Jongeun Park, 
+Dr. Cecilia-Dominguez Conde, Dr. Kirsten Stewart, Dr. Hamish King and 
+Dr. Peng He with whom I have had very useful discussions. I would also 
+like to thank my wife who helped name the package, because she thought 
+the plots looked like a dandelion =D.
 
 Support
 -------

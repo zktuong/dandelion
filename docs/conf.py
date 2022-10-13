@@ -13,8 +13,8 @@
 import os
 import sys
 
-with open("README.md", "r") as readme_file:
-    readme = readme_file.read()
+# with open("README.md", "r") as readme_file:
+# readme = readme_file.read()
 
 
 sys.path.insert(0, os.path.abspath(".."))

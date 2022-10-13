@@ -1,8 +1,8 @@
 """more fixtures"""
 import pytest
 import pandas as pd
-import scanpy as sc
-import scipy.sparse
+
+from .fixtures import setup_anndata
 
 
 @pytest.fixture
@@ -571,15 +571,8 @@ def dummy_adata_mouse():
     ]
     obs = pd.DataFrame(index=barcodes)
     obs["sample_id"] = "sample_test"
-
-    n = obs.shape[0]
-
     # just create a random matrix
-    adata = sc.AnnData(X=scipy.sparse.random(n, 100, format="csr"), obs=obs)
-
-    # this is just to populate the neighbors slot
-    sc.pp.neighbors(adata, use_rep="X", n_neighbors=10)
-
+    adata = setup_anndata(obs)
     return adata
 
 

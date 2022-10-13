@@ -20,7 +20,7 @@ def test_callscript():
 def test_container():
     """Test script to run container."""
     os.system(
-        "cd /tests; python /share/dandelion_preprocess.py --meta test.csv;"
+        "cd /tests; python /share/dandelion_preprocess.py --meta test.csv --file_prefix filtered;"
     )
     dat = pd.read_csv(
         "/tests/sample_test_10x/dandelion/filtered_contig_dandelion.tsv",

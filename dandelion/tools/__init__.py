@@ -24,7 +24,7 @@ from ._trajectory import (
     setup_vdj_pseudobulk,
     vdj_pseudobulk,
     pseudotime_transfer,
-    pseudotime_cell,
+    project_pseudotime_to_cell,
     nhood_gex,
     bin_expression,
     chatterjee_corr,

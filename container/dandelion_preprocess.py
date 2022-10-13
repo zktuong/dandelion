@@ -37,11 +37,11 @@ def parse_args():
     parser.add_argument(
         "--file_prefix",
         type=str,
-        default="filtered",
+        default="all",
         help=(
             "Which set of contig files to take for the folder. For a given "
             + "PREFIX, will use PREFIX_contig_annotations.csv and "
-            + 'PREFIX_contig.fasta. Defaults to "filtered".'
+            + 'PREFIX_contig.fasta. Defaults to "all".'
         ),
     )
     parser.add_argument(

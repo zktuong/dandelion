@@ -280,6 +280,7 @@ def barplot(
     normalize: bool = True,
     sort_descending: bool = True,
     title: Optional[str] = None,
+    xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
     min_clone_size: Optional[int] = None,
     clone_key: Optional[str] = None,
@@ -309,6 +310,8 @@ def barplot(
         whether or not to sort the order of the plot. Default is True.
     title : str, Optional
         title of plot.
+    xtick_fontsize : int, Optional
+        size of x tick labels
     xtick_rotation : int, float, Optional
         rotation of x tick labels.
     min_clone_size : int, Optional
@@ -362,10 +365,15 @@ def barplot(
     else:
         ax.set_ylabel("count")
     ax.set_xlabel("")
+    # modify the x ticks accordingly
+    xtick_params = {}
     if xtick_rotation is None:
-        plt.xticks(rotation=90)
+        xtick_params["rotation"] = 90
     else:
-        plt.xticks(rotation=xtick_rotation)
+        xtick_params["rotation"] = xtick_rotation
+    if xtick_fontsize is not None:
+        xtick_params["fontsize"] = xtick_fontsize
+    plt.xticks(**xtick_params)
     return fig, ax
 
 
@@ -377,9 +385,14 @@ def stackedbarplot(
     normalize: bool = False,
     title: Optional[str] = None,
     sort_descending: bool = True,
+    xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
     hide_legend: bool = True,
-    legend_options: Tuple[str, Tuple[float, float], int] = None,
+    legend_options: Tuple[str, Tuple[float, float], int] = (
+        "upper left",
+        (1, 1),
+        1,
+    ),
     labels: Optional[Sequence] = None,
     min_clone_size: Optional[int] = None,
     clone_key: Optional[str] = None,
@@ -404,6 +417,8 @@ def stackedbarplot(
         whether or not to sort the order of the plot. Default is True.
     title : str, Optional
         title of plot.
+    xtick_fontsize : int, Optional
+        size of x tick labels
     xtick_rotation: Optional[Union[int,float]] : int, float, Optional
         rotation of x tick labels.
     hide_legend : bool
@@ -466,6 +481,7 @@ def stackedbarplot(
         labels: Optional[Sequence] = None,
         figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
         title: str = "multiple stacked bar plot",
+        xtick_fontsize: Optional[int] = None,
         xtick_rotation: Optional[Union[int, float]] = None,
         legend_options: Tuple[str, Tuple[float, float], int] = None,
         hide_legend: bool = True,
@@ -550,10 +566,15 @@ def stackedbarplot(
                 )
                 ax.add_artist(l2)
             ax.add_artist(l1)
+        # modify the x ticks accordingly
+        xtick_params = {}
         if xtick_rotation is None:
-            plt.xticks(rotation=90)
+            xtick_params["rotation"] = 90
         else:
-            plt.xticks(rotation=xtick_rotation)
+            xtick_params["rotation"] = xtick_rotation
+        if xtick_fontsize is not None:
+            xtick_params["fontsize"] = xtick_fontsize
+        plt.xticks(**xtick_params)
 
         return fig, ax
 
@@ -569,6 +590,7 @@ def stackedbarplot(
         labels=labels,
         figsize=figsize,
         title=title,
+        xtick_fontsize=xtick_fontsize,
         xtick_rotation=xtick_rotation,
         legend_options=legend_options,
         hide_legend=hide_legend,
@@ -584,9 +606,14 @@ def spectratype(
     figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
     width: Optional[Union[int, float]] = None,
     title: Optional[str] = None,
+    xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
     hide_legend: bool = True,
-    legend_options: Tuple[str, Tuple[float, float], int] = None,
+    legend_options: Tuple[str, Tuple[float, float], int] = (
+        "upper left",
+        (1, 1),
+        1,
+    ),
     labels: Optional[Sequence] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
@@ -609,6 +636,8 @@ def spectratype(
         width of bars.
     title : str, Optional
         title of plot.
+    xtick_fontsize : int, Optional
+        size of x tick labels
     xtick_rotation : int, float, Optional
         rotation of x tick labels.
     hide_legend : bool
@@ -660,6 +689,7 @@ def spectratype(
         figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
         title: str = "multiple stacked bar plot",
         width: Optional[Union[int, float]] = None,
+        xtick_fontsize: Optional[int] = None,
         xtick_rotation: Optional[Union[int, float]] = None,
         legend_options: Tuple[str, Tuple[float, float], int] = None,
         hide_legend: bool = True,
@@ -737,10 +767,15 @@ def spectratype(
                     frameon=False,
                 )
             ax.add_artist(l1)
+        # modify the x ticks accordingly
+        xtick_params = {}
         if xtick_rotation is None:
-            plt.xticks(rotation=0)
+            xtick_params["rotation"] = 90
         else:
-            plt.xticks(rotation=xtick_rotation)
+            xtick_params["rotation"] = xtick_rotation
+        if xtick_fontsize is not None:
+            xtick_params["fontsize"] = xtick_fontsize
+        plt.xticks(**xtick_params)
 
         return fig, ax
 
@@ -750,6 +785,7 @@ def spectratype(
         figsize=figsize,
         title=title,
         width=width,
+        xtick_fontsize=xtick_fontsize,
         xtick_rotation=xtick_rotation,
         legend_options=legend_options,
         hide_legend=hide_legend,
