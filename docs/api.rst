@@ -49,9 +49,10 @@ Tools: `tl`
    find_clones
    generate_network
    transfer
-   vdj_nhood
+   setup_vdj_pseudobulk
+   vdj_pseudobulk
    pseudotime_transfer
-   pseudotime_cell
+   project_pseudotime_to_cell
    nhood_gex
    bin_expression
    chatterjee_corr
