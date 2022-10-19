@@ -292,7 +292,7 @@ def project_pseudotime_to_cell(
 
 
 def nhood_gex(
-    adata: AnnData, pb_adata: AnnData, adata_raw: AnnData, normalize_log: bool
+    adata: AnnData, adata_raw: AnnData, normalize_log: bool
 ) -> AnnData:
     """Function to pseudobulk gene expression (raw count) by cell neighbourhoods.
 
@@ -300,8 +300,6 @@ def nhood_gex(
     ----------
     adata : AnnData
         cell adata
-    pb_adata : AnnData
-        neighbourhood adata
     adata_raw : AnnData
         same cells with raw counts. Not normalised, not log1p, just raw counts.
     normalize_log : bool
@@ -331,10 +329,6 @@ def nhood_gex(
     if normalize_log:
         sc.pp.normalize_per_cell(nhood_adata, counts_per_cell_after=10e4)
         sc.pp.log1p(nhood_adata)
-
-    nhood_adata.uns["pseudobulk_assignments"] = pb_adata.uns[
-        "pseudobulk_assignments"
-    ]
 
     return nhood_adata
 
