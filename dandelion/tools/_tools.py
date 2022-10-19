@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 12:17:50
+# @Last Modified time: 2022-10-19 15:45:54
 """tools module."""
 import math
 import os
@@ -1427,7 +1427,7 @@ def clone_size(
                     zip(
                         metadata_.index,
                         [
-                            str(y)
+                            str(y) if pd.notnull(y) else str(0)
                             for y in [
                                 sorted(
                                     list(
@@ -1464,7 +1464,7 @@ def clone_size(
                     zip(
                         metadata_.index,
                         [
-                            str(y)
+                            str(y) if pd.notnull(y) else str(0)
                             for y in [
                                 sorted(
                                     list(
@@ -1502,7 +1502,7 @@ def clone_size(
                     zip(
                         metadata_.index,
                         [
-                            str(y)
+                            str(y) if pd.notnull(y) else str(0)
                             for y in [
                                 sorted(
                                     list(
@@ -1538,7 +1538,7 @@ def clone_size(
                     zip(
                         metadata_.index,
                         [
-                            str(y)
+                            str(y) if pd.notnull(y) else str(0)
                             for y in [
                                 sorted(
                                     list(
