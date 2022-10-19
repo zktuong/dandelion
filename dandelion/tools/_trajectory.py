@@ -291,7 +291,7 @@ def project_pseudotime_to_cell(
     return cdata
 
 
-def pseudobulk_gex(
+def nhood_gex(
     adata: AnnData, pb_adata: AnnData, adata_raw: AnnData, normalize_log: bool
 ) -> AnnData:
     """Function to pseudobulk gene expression (raw count) by cell neighbourhoods.
@@ -315,7 +315,7 @@ def pseudobulk_gex(
         genes stored in nhood_adata.var\n
         neighbourhood metadata stored in nhood_adata.obs\n
     """
-    sample_dummies = pb_adata.uns["pseudobulk_assignments"]
+    sample_dummies = adata.obsm["nhoods"]
 
     # make pseudobulk matrix
     pseudobulk_X = adata_raw.X.T.dot(sample_dummies)
