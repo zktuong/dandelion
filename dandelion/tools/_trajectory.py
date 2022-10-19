@@ -23,8 +23,11 @@ def setup_vdj_pseudobulk(
         "Single pair",
         "Extra pair",
         "Extra pair-exception",
+        "Orphan VDJ",
         "Orphan VDJ-exception",
     ],
+    productive_vdj: bool = True,
+    productive_vj: bool = True,
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
 
@@ -34,23 +37,40 @@ def setup_vdj_pseudobulk(
         cell adata before constructing anndata.
     mode : Literal['B', 'abT', 'gdT'], optional
         Mode for extract the V/J genes.
-    subsetby : str
+    subsetby : Optional[str], optional
         If provided, only the groups/categories in this column will be used for computing the VDJ feature space.
     groups : Optional[List], optional
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
     allowed_chain_status : Optional[List], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
-        Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
+        Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ", "Orphan VDJ-exception"].
+    productive_vdj: bool, optional
+        If True, cells will only be kept if the main VDJ chain is productive.
+    productive_vj: bool, optional
+        If True, cells will only be kept if the main VJ chain is productive.
+
     Returns
     -------
     AnnData
         filtered cell adata object.
     """
     # keep ony relevant cells (ones with a pair of chains) based on productive column
-    adata = adata[
-        np.array(adata.obs["productive_" + mode + "_VDJ"].str.startswith("T"))
-        & adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
-    ].copy()
+    if productive_vdj:
+        adata = adata[
+            adata.obs["productive_" + mode + "_VDJ"].str.startswith("T")
+        ].copy()
+    else:
+        adata = adata[
+            ~(adata.obs["productive_" + mode + "_VDJ"] == "No_contig")
+        ].copy()
+    if productive_vj:
+        adata = adata[
+            adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
+        ].copy()
+    else:
+        adata = adata[
+            ~(adata.obs["productive_" + mode + "_VJ"] == "No_contig")
+        ].copy()
 
     if allowed_chain_status is not None:
         adata = adata[
@@ -66,16 +86,20 @@ def setup_vdj_pseudobulk(
         v_call = "v_call_"
 
     adata.obs[v_call + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata.obs[v_call + mode + "_VDJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs[v_call + mode + "_VDJ"]
     ]
     adata.obs["j_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata.obs["j_call_" + mode + "_VDJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs["j_call_" + mode + "_VDJ"]
     ]
     adata.obs[v_call + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata.obs[v_call + mode + "_VJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs[v_call + mode + "_VJ"]
     ]
     adata.obs["j_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata.obs["j_call_" + mode + "_VJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs["j_call_" + mode + "_VJ"]
     ]
     # remove any cells if there's unclear mapping
     adata = adata[
@@ -90,7 +114,7 @@ def setup_vdj_pseudobulk(
 def vdj_pseudobulk(
     adata: AnnData,
     pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
-    obs_to_bulk: Optional[str] = None,
+    obs_to_bulk: Optional[Union[str, List[str]]] = None,
     obs_to_take: Optional[Union[str, List[str]]] = None,
     cols: Optional[List[str]] = None,
 ) -> AnnData:
@@ -103,9 +127,11 @@ def vdj_pseudobulk(
         Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
     pbs: Optional[array], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk: Optional[str or List], optional
+    obs_to_bulk: Optional[Union[str, List[str]]], optional
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
+    obs_to_take: Optional[Union[str, List[str]]]
+        Optional obs column(s) to return after pseudobulking.
     cols: : Optional[List], optional
         If provided, use the specified obs columns to extract V(D)J calls
 
