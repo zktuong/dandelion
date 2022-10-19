@@ -229,7 +229,7 @@ def pseudotime_transfer(
     Parameters
     ----------
     adata : AnnData
-        pb_adata for which pseudotime to be transferred to
+        adata for which pseudotime to be transferred to
     pr_res : palantir.presults.PResults
         palantir pseudotime inference output object
     suffix : str, optional
@@ -251,9 +251,9 @@ def project_pseudotime_to_cell(
     Parameters
     ----------
     adata : AnnData
-        cell adata
+        Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
     pb_adata : AnnData
-        neighbourhood adata
+        neighbourhood/pseudobulked adata
     term_states : List[str]
         list of terminal states with branch probabilities to be transferred
     suffix : str, optional
@@ -292,11 +292,14 @@ def project_pseudotime_to_cell(
             .flatten()
             .copy()
         )
+    cdata.uns["pseudobulk_assignments"] = pb_adata.uns[
+        "pseudobulk_assignments"
+    ].copy()
 
     return cdata
 
 
-def nhood_gex(
+def compute_pseudobulk_gex(
     adata: AnnData, adata_raw: AnnData, normalize_log: bool
 ) -> AnnData:
     """Function to pseudobulk gene expression (raw count) by cell neighbourhoods.
@@ -325,7 +328,10 @@ def nhood_gex(
 
     ## Make new anndata object
     nhood_adata = sc.AnnData(
-        pseudobulk_X.T, obs=adata.uns["nhood_adata"].obs, var=adata_raw.var
+        pseudobulk_X.T,
+        obs=adata.uns["nhood_adata"].obs,
+        var=adata_raw.var,
+        uns=adata.uns,
     )
 
     nhood_adata.raw = nhood_adata.copy()
