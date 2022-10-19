@@ -60,7 +60,7 @@ def setup_vdj_pseudobulk(
         ].copy()
     else:
         adata = adata[
-            ~(adata.obs["productive_" + mode + "_VDJ"].str.startswith("N"))
+            ~(adata.obs["productive_" + mode + "_VDJ"] == "No_contig")
         ].copy()
     if productive_vj:
         adata = adata[
@@ -68,7 +68,7 @@ def setup_vdj_pseudobulk(
         ].copy()
     else:
         adata = adata[
-            ~(adata.obs["productive_" + mode + "_VJ"].str.startswith("N"))
+            ~(adata.obs["productive_" + mode + "_VJ"] == "No_contig")
         ].copy()
 
     if allowed_chain_status is not None:
