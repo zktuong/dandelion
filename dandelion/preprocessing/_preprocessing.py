@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-09 17:10:29
+# @Last Modified time: 2022-10-19 15:26:13
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2788,6 +2788,7 @@ def calculate_threshold(
     plot: bool = True,
     plot_group: Optional[str] = None,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4.5, 2.5),
+    save_plot: Optional[str] = None,
     ncpu: int = 1,
     **kwargs,
 ) -> Dandelion:
@@ -2859,6 +2860,8 @@ def calculate_threshold(
         determines the fill color and facets.
     figsize : Tuple[Union[int,float], Union[int,float]]
         size of plot. Default is (4.5, 2.5).
+    save_plot: Optional[str], optional,
+        if specified, plot will be save with this path.
     ncpu : float
         number of cpus to run `distToNearest`. defaults to 1.
     **kwargs
@@ -3086,28 +3089,29 @@ def calculate_threshold(
         else:
             plot_group = plot_group
 
-        print(
-            (
-                ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
-                + theme_bw()
-                + xlab("Grouped Hamming distance")
-                + ylab("Count")
-                + geom_histogram(binwidth=0.01)
-                + geom_vline(
-                    xintercept=tr, linetype="dashed", color="blue", size=0.5
-                )
-                + annotate(
-                    "text",
-                    x=tr + 0.02,
-                    y=10,
-                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
-                    size=8,
-                    color="Blue",
-                )
-                + facet_wrap("~" + str(plot_group), scales="free_y")
-                + theme(legend_position="none")
+        p = (
+            ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
+            + theme_bw()
+            + xlab("Grouped Hamming distance")
+            + ylab("Count")
+            + geom_histogram(binwidth=0.01)
+            + geom_vline(
+                xintercept=tr, linetype="dashed", color="blue", size=0.5
             )
+            + annotate(
+                "text",
+                x=tr + 0.02,
+                y=10,
+                label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                size=8,
+                color="Blue",
+            )
+            + facet_wrap("~" + str(plot_group), scales="free_y")
+            + theme(legend_position="none")
         )
+        if save_plot is not None:
+            save_as_pdf_pages([p], filename=save_plot)
+        print(p)
     else:
         logg.info(
             "Automatic Threshold : "
