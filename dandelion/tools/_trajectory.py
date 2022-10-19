@@ -85,16 +85,20 @@ def setup_vdj_pseudobulk(
         v_call = "v_call_"
 
     adata.obs[v_call + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata.obs[v_call + mode + "_VDJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs[v_call + mode + "_VDJ"]
     ]
     adata.obs["j_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata.obs["j_call_" + mode + "_VDJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs["j_call_" + mode + "_VDJ"]
     ]
     adata.obs[v_call + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata.obs[v_call + mode + "_VJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs[v_call + mode + "_VJ"]
     ]
     adata.obs["j_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata.obs["j_call_" + mode + "_VJ"]
+        x.split("|")[0] if x != "None" else "None"
+        for x in adata.obs["j_call_" + mode + "_VJ"]
     ]
     # remove any cells if there's unclear mapping
     adata = adata[
