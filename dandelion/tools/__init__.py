@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:21:45
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-19 18:00:44
+# @Last Modified time: 2022-10-12 12:32:09
 """init module."""
 from ._tools import (
     find_clones,
@@ -25,7 +25,7 @@ from ._trajectory import (
     vdj_pseudobulk,
     pseudotime_transfer,
     project_pseudotime_to_cell,
-    pseudobulk_gex,
+    nhood_gex,
     bin_expression,
     chatterjee_corr,
 )
@@ -49,7 +49,7 @@ __all__ = [
     "vdj_pseudobulk",
     "pseudotime_transfer",
     "pseudotime_cell",
-    "pseudobulk_gex",
+    "nhood_gex",
     "bin_expression",
     "chatterjee_corr",
 ]
