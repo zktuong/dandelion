@@ -25,6 +25,8 @@ def setup_vdj_pseudobulk(
         "Extra pair-exception",
         "Orphan VDJ-exception",
     ],
+    productive_vdj: bool = True,
+    productive_vj: bool = True,
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
 
@@ -34,23 +36,40 @@ def setup_vdj_pseudobulk(
         cell adata before constructing anndata.
     mode : Literal['B', 'abT', 'gdT'], optional
         Mode for extract the V/J genes.
-    subsetby : str
+    subsetby : Optional[str], optional
         If provided, only the groups/categories in this column will be used for computing the VDJ feature space.
     groups : Optional[List], optional
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
     allowed_chain_status : Optional[List], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
         Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
+    productive_vdj: bool, optional
+        If True, cells will only be kept if the main VDJ chain is productive.
+    productive_vj: bool, optional
+        If True, cells will only be kept if the main VJ chain is productive.
+
     Returns
     -------
     AnnData
         filtered cell adata object.
     """
     # keep ony relevant cells (ones with a pair of chains) based on productive column
-    adata = adata[
-        np.array(adata.obs["productive_" + mode + "_VDJ"].str.startswith("T"))
-        & adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
-    ].copy()
+    if productive_vdj:
+        adata = adata[
+            adata.obs["productive_" + mode + "_VDJ"].str.startswith("T")
+        ].copy()
+    else:
+        adata = adata[
+            ~(adata.obs["productive_" + mode + "_VDJ"].str.startswith("N"))
+        ].copy()
+    if productive_vj:
+        adata = adata[
+            adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
+        ].copy()
+    else:
+        adata = adata[
+            ~(adata.obs["productive_" + mode + "_VJ"].str.startswith("N"))
+        ].copy()
 
     if allowed_chain_status is not None:
         adata = adata[
@@ -90,7 +109,7 @@ def setup_vdj_pseudobulk(
 def vdj_pseudobulk(
     adata: AnnData,
     pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
-    obs_to_bulk: Optional[str] = None,
+    obs_to_bulk: Optional[Union[str, List[str]]] = None,
     obs_to_take: Optional[Union[str, List[str]]] = None,
     cols: Optional[List[str]] = None,
 ) -> AnnData:
@@ -103,9 +122,11 @@ def vdj_pseudobulk(
         Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
     pbs: Optional[array], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk: Optional[str or List], optional
+    obs_to_bulk: Optional[Union[str, List[str]]], optional
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
+    obs_to_take: Optional[Union[str, List[str]]]
+        Optional obs column(s) to return after pseudobulking.
     cols: : Optional[List], optional
         If provided, use the specified obs columns to extract V(D)J calls
 
@@ -270,8 +291,8 @@ def project_pseudotime_to_cell(
     return cdata
 
 
-def nhood_gex(
-    adata: AnnData, adata_raw: AnnData, normalize_log: bool
+def pseudobulk_gex(
+    adata: AnnData, pb_adata: AnnData, adata_raw: AnnData, normalize_log: bool
 ) -> AnnData:
     """Function to pseudobulk gene expression (raw count) by cell neighbourhoods.
 
@@ -279,6 +300,8 @@ def nhood_gex(
     ----------
     adata : AnnData
         cell adata
+    pb_adata : AnnData
+        neighbourhood adata
     adata_raw : AnnData
         same cells with raw counts. Not normalised, not log1p, just raw counts.
     normalize_log : bool
@@ -292,7 +315,7 @@ def nhood_gex(
         genes stored in nhood_adata.var\n
         neighbourhood metadata stored in nhood_adata.obs\n
     """
-    sample_dummies = adata.obsm["nhoods"]
+    sample_dummies = pb_adata.uns["pseudobulk_assignments"]
 
     # make pseudobulk matrix
     pseudobulk_X = adata_raw.X.T.dot(sample_dummies)
@@ -308,6 +331,10 @@ def nhood_gex(
     if normalize_log:
         sc.pp.normalize_per_cell(nhood_adata, counts_per_cell_after=10e4)
         sc.pp.log1p(nhood_adata)
+
+    nhood_adata.uns["pseudobulk_assignments"] = pb_adata.uns[
+        "pseudobulk_assignments"
+    ]
 
     return nhood_adata
 
