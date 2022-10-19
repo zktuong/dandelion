@@ -243,17 +243,17 @@ def project_pseudotime_to_cell(
     nhoods = np.array(pb_adata.uns["pseudobulk_assignments"].todense())
 
     # leave out cells that don't belong to any neighbourhood
-    cdata = adata[np.sum(nhoods, axis=1) > 0].copy()
+    nhoodsum = np.sum(nhoods, axis=1)
+    cdata = adata[nhoodsum > 0].copy()
     print(
-        "number of cells removed", sum(np.sum(nhoods, axis=1) == 0)
+        "number of cells removed due to not belonging to any neighbourhood",
+        sum(nhoodsum == 0),
     )  # print how many cells removed
     # also subset the pseudotbulk_assignments
-    pb_assign_trim = pb_adata.uns["pseudobulk_assignments"][
-        np.sum(nhoods, axis=1) > 0
-    ]
+    pb_assign_trim = pb_adata.uns["pseudobulk_assignments"][nhoodsum > 0]
 
     # for each cell pseudotime_mean is the average of the pseudotime of all pseudobulks the cell is in, weighted by 1/neighbourhood size
-    nhoods_cdata = nhoods[np.sum(nhoods, axis=1) > 0, :]
+    nhoods_cdata = nhoods[nhoodsum > 0, :]
     nhoods_cdata_norm = nhoods_cdata / np.sum(
         nhoods_cdata, axis=0, keepdims=True
     )
