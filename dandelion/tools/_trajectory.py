@@ -247,6 +247,10 @@ def project_pseudotime_to_cell(
     print(
         "number of cells removed", sum(np.sum(nhoods, axis=1) == 0)
     )  # print how many cells removed
+    # also subset the pseudotbulk_assignments
+    pb_assign_trim = pb_adata.uns["pseudobulk_assignments"][
+        np.sum(nhoods, axis=1) > 0
+    ]
 
     # for each cell pseudotime_mean is the average of the pseudotime of all pseudobulks the cell is in, weighted by 1/neighbourhood size
     nhoods_cdata = nhoods[np.sum(nhoods, axis=1) > 0, :]
@@ -266,9 +270,7 @@ def project_pseudotime_to_cell(
             .flatten()
             .copy()
         )
-    cdata.uns["pseudobulk_assignments"] = pb_adata.uns[
-        "pseudobulk_assignments"
-    ].copy()
+    cdata.uns["pseudobulk_assignments"] = pb_assign_trim.copy()
 
     return cdata
 
