@@ -170,7 +170,7 @@ def vdj_pseudobulk(
         # this pandas function creates the exact pseudobulk assignment we want
         # this needs to be different than the default uint8
         # as you can have more than 255 cells in a pseudobulk, it turns out
-        pbs = pd.get_dummies(tobulk, dtype='uint16').values
+        pbs = pd.get_dummies(tobulk, dtype="uint16").values
 
     # if not specified by the user, use the following default dandelion VJ columns
     if cols is None:
@@ -206,7 +206,7 @@ def vdj_pseudobulk(
         # using the logic of milopy's annotate_nhoods()
         for anno_col in obs_to_take:
             anno_dummies = pd.get_dummies(adata.obs[anno_col])
-            #this needs to be turned to a matrix so dimensions get broadcast correctly
+            # this needs to be turned to a matrix so dimensions get broadcast correctly
             anno_count = np.asmatrix(pbs).T.dot(anno_dummies.values)
             anno_frac = np.array(anno_count / anno_count.sum(1))
             anno_frac = pd.DataFrame(
