@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 12:40:40
+# @Last Modified time: 2022-10-20 12:20:30
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -387,7 +387,7 @@ def stackedbarplot(
     sort_descending: bool = True,
     xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
-    hide_legend: bool = True,
+    hide_legend: bool = False,
     legend_options: Tuple[str, Tuple[float, float], int] = (
         "upper left",
         (1, 1),
@@ -484,7 +484,7 @@ def stackedbarplot(
         xtick_fontsize: Optional[int] = None,
         xtick_rotation: Optional[Union[int, float]] = None,
         legend_options: Tuple[str, Tuple[float, float], int] = None,
-        hide_legend: bool = True,
+        hide_legend: bool = False,
         H: Literal["/"] = "/",
         **kwargs,
     ) -> Tuple[Figure, Axes]:
@@ -608,7 +608,7 @@ def spectratype(
     title: Optional[str] = None,
     xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
-    hide_legend: bool = True,
+    hide_legend: bool = False,
     legend_options: Tuple[str, Tuple[float, float], int] = (
         "upper left",
         (1, 1),
@@ -692,7 +692,7 @@ def spectratype(
         xtick_fontsize: Optional[int] = None,
         xtick_rotation: Optional[Union[int, float]] = None,
         legend_options: Tuple[str, Tuple[float, float], int] = None,
-        hide_legend: bool = True,
+        hide_legend: bool = False,
         H: Literal["/"] = "/",
         **kwargs,
     ) -> Tuple[Figure, Axes]:
