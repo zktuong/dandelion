@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 08:58:11
+# @Last Modified time: 2022-10-20 12:15:02
 """core module."""
 import bz2
 import copy
@@ -2178,8 +2178,12 @@ def initialize_metadata(
         ],
         ref_col="chain_status",
     )
-
-    self.metadata = tmp_metadata.copy()
+    # if metadata already exist, just overwrite the default columns?
+    if self.metadata is not None:
+        for col in tmp_metadata:
+            self.metadata[col] = pd.Series(tmp_metadata[col])
+    else:
+        self.metadata = tmp_metadata.copy()
 
 
 def update_metadata(
@@ -2198,7 +2202,7 @@ def update_metadata(
         "average",
     ] = "split and merge",
     collapse_alleles: bool = True,
-    reinitialize: bool = False,
+    reinitialize: bool = True,
     verbose: bool = False,
     by_celltype: bool = False,
 ) -> Dandelion:
