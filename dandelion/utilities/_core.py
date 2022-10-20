@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-20 11:38:14
+# @Last Modified time: 2022-10-20 12:15:02
 """core module."""
 import bz2
 import copy
@@ -2181,7 +2181,7 @@ def initialize_metadata(
     # if metadata already exist, just overwrite the default columns?
     if self.metadata is not None:
         for col in tmp_metadata:
-            self.metadata[col] = pd.Series(tmp_metadata)
+            self.metadata[col] = pd.Series(tmp_metadata[col])
     else:
         self.metadata = tmp_metadata.copy()
 
