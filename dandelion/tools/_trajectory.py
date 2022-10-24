@@ -28,11 +28,11 @@ def setup_vdj_pseudobulk(
     ],
     productive_vdj: bool = True,
     productive_vj: bool = True,
-    check_vdj_mapping: Optional[List[Literal["v_call", "j_call"]]] = [
+    check_vdj_mapping: Optional[List[str]] = [
         "v_call",
         "j_call",
     ],
-    check_vj_mapping: Optional[List[Literal["v_call", "j_call"]]] = [
+    check_vj_mapping: Optional[List[str]] = [
         "v_call",
         "j_call",
     ],
