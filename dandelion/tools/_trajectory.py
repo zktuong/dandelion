@@ -66,17 +66,9 @@ def setup_vdj_pseudobulk(
         adata = adata[
             adata.obs["productive_" + mode + "_VDJ"].str.startswith("T")
         ].copy()
-    else:
-        adata = adata[
-            ~(adata.obs["productive_" + mode + "_VDJ"] == "No_contig")
-        ].copy()
     if productive_vj:
         adata = adata[
             adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
-        ].copy()
-    else:
-        adata = adata[
-            ~(adata.obs["productive_" + mode + "_VJ"] == "No_contig")
         ].copy()
 
     if allowed_chain_status is not None:
@@ -111,27 +103,51 @@ def setup_vdj_pseudobulk(
     # remove any cells if there's unclear mapping
     if check_vdj_mapping is None:
         adata = adata[
-            ~(adata.obs[v_call + mode + "_VDJ_main"].str.contains(","))
-            & ~(adata.obs["j_call_" + mode + "_VDJ_main"].str.contains(","))
+            ~(
+                adata.obs["v_call_" + mode + "_VDJ_main"].str.contains(
+                    ",|None|No_contig"
+                )
+            )
+            & ~(
+                adata.obs["j_call_" + mode + "_VDJ_main"].str.contains(
+                    ",|None|No_contig"
+                )
+            )
         ].copy()
     else:
         if not isinstance(check_vdj_mapping, list):
             check_vdj_mapping = [check_vdj_mapping]
         for col in check_vdj_mapping:
             adata = adata[
-                ~(adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(","))
+                ~(
+                    adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(
+                        ",|None|No_contig"
+                    )
+                )
             ].copy()
     if check_vj_mapping is None:
         adata = adata[
-            ~(adata.obs[v_call + mode + "_VJ_main"].str.contains(","))
-            & ~(adata.obs["j_call_" + mode + "_VJ_main"].str.contains(","))
+            ~(
+                adata.obs[v_call + mode + "_VJ_main"].str.contains(
+                    ",|None|No_contig"
+                )
+            )
+            & ~(
+                adata.obs["j_call_" + mode + "_VJ_main"].str.contains(
+                    ",|None|No_contig"
+                )
+            )
         ].copy()
     else:
         if not isinstance(check_vj_mapping, list):
             check_vj_mapping = [check_vj_mapping]
         for col in check_vj_mapping:
             adata = adata[
-                ~(adata.obs[col + "_" + mode + "_VJ_main"].str.contains(","))
+                ~(
+                    adata.obs[col + "_" + mode + "_VJ_main"].str.contains(
+                        ",|None|No_contig"
+                    )
+                )
             ].copy()
     return adata
 
