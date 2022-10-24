@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:50:37
+# @Last Modified time: 2022-10-24 22:21:57
 """utilities module."""
 import os
 import re
@@ -926,7 +926,7 @@ def format_chain_status(locus_status):
             chain_status.append("Extra pair-exception")
         elif re.search("Extra", ls):
             chain_status.append("Extra pair")
-        elif re.search("ambiguous", ls):
+        elif re.search("ambiguous|None", ls):
             chain_status.append("ambiguous")
         else:
             chain_status.append("Single pair")
