@@ -28,6 +28,8 @@ def setup_vdj_pseudobulk(
     ],
     productive_vdj: bool = True,
     productive_vj: bool = True,
+    check_vdj_mapping: Optional[List[Literal["v_call", "j_call"]]] = None,
+    check_vj_mapping: Optional[List[Literal["v_call", "j_call"]]] = None,
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
 
@@ -48,7 +50,12 @@ def setup_vdj_pseudobulk(
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj: bool, optional
         If True, cells will only be kept if the main VJ chain is productive.
-
+    check_vdj_mapping: Optional[List[str]], optional
+        If specified, only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
+        Otherwise, both VDJ V/J columns will be checked and filtered.
+    check_vj_mapping: Optional[List[str]], optional
+        If specified, only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
+        Otherwise, both VJ V/J columns will be checked and filtered.
     Returns
     -------
     AnnData
@@ -85,7 +92,7 @@ def setup_vdj_pseudobulk(
     else:
         v_call = "v_call_"
 
-    adata.obs[v_call + mode + "_VDJ_main"] = [
+    adata.obs["v_call_" + mode + "_VDJ_main"] = [
         x.split("|")[0] if x != "None" else "None"
         for x in adata.obs[v_call + mode + "_VDJ"]
     ]
@@ -93,7 +100,7 @@ def setup_vdj_pseudobulk(
         x.split("|")[0] if x != "None" else "None"
         for x in adata.obs["j_call_" + mode + "_VDJ"]
     ]
-    adata.obs[v_call + mode + "_VJ_main"] = [
+    adata.obs["v_call_" + mode + "_VJ_main"] = [
         x.split("|")[0] if x != "None" else "None"
         for x in adata.obs[v_call + mode + "_VJ"]
     ]
@@ -102,12 +109,30 @@ def setup_vdj_pseudobulk(
         for x in adata.obs["j_call_" + mode + "_VJ"]
     ]
     # remove any cells if there's unclear mapping
-    adata = adata[
-        ~(adata.obs[v_call + mode + "_VDJ_main"].str.contains(","))
-        & ~(adata.obs["j_call_" + mode + "_VDJ_main"].str.contains(","))
-        & ~(adata.obs[v_call + mode + "_VJ_main"].str.contains(","))
-        & ~(adata.obs["j_call_" + mode + "_VJ_main"].str.contains(","))
-    ]
+    if check_vdj_mapping is None:
+        adata = adata[
+            ~(adata.obs[v_call + mode + "_VDJ_main"].str.contains(","))
+            & ~(adata.obs["j_call_" + mode + "_VDJ_main"].str.contains(","))
+        ].copy()
+    else:
+        if not isinstance(check_vdj_mapping, list):
+            check_vdj_mapping = [check_vdj_mapping]
+        for col in check_vdj_mapping:
+            adata = adata[
+                ~(adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(","))
+            ].copy()
+    if check_vj_mapping is None:
+        adata = adata[
+            ~(adata.obs[v_call + mode + "_VJ_main"].str.contains(","))
+            & ~(adata.obs["j_call_" + mode + "_VJ_main"].str.contains(","))
+        ].copy()
+    else:
+        if not isinstance(check_vj_mapping, list):
+            check_vj_mapping = [check_vj_mapping]
+        for col in check_vj_mapping:
+            adata = adata[
+                ~(adata.obs[col + "_" + mode + "_VJ_main"].str.contains(","))
+            ].copy()
     return adata
 
 
