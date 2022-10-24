@@ -152,7 +152,7 @@ def vdj_pseudobulk(
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
     obs_to_take: Optional[Union[str, List[str]]]
-        Optional obs column(s) to return after pseudobulking.
+        Optional obs column(s) to identify the most common value of for each pseudobulk.
     cols: : Optional[List], optional
         If provided, use the specified obs columns to extract V(D)J calls
 
