@@ -55,7 +55,7 @@ From: continuumio/miniconda3
 
 %runscript
     alias dandelion-preprocess='/share/dandelion_preprocess.py'
-    alias changeo-clonotypes='/share/changeo_clopotypes.py'
+    alias changeo-clonotypes='/share/changeo_clonotypes.py'
     eval ${@}
 
 %test
