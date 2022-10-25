@@ -1,7 +1,12 @@
 #!/opt/conda/envs/sc-dandelion-container/bin/python
+"""changeo clonotypes script"""
 import argparse
 import dandelion as ddl
 import os
+
+from scanpy import logging as logg
+
+sc.settings.verbosity = 3
 
 
 def parse_args():
@@ -52,6 +57,25 @@ def parse_args():
 
 def main():
     """Main changeo-clonotypes."""
+    logg.info("Software versions:\n")
+    ddl.logging.print_header()
+
+    start = logg.info("\nBeginning assigning change-o clonotypes\n")
+
+    logg.info(
+        "command line parameters:\n",
+        deep=(
+            f"\n"
+            f"--------------------------------------------------------------\n"
+            f"    --h5ddl = {args.h5ddl}\n"
+            f"    --manual_threshold = {str(args.manual_threshold)}\n"
+            f"    --plot_file = {args.plot_file}\n"
+            f"    --key_added = {args.key_added}\n"
+            f"    --h5ddl_out = {args.h5ddl_out}\n"
+            f"--------------------------------------------------------------\n"
+        ),
+    )
+
     # parse arguments
     args = parse_args()
     # the actual process is easy. the dependencies quite a bit less so
@@ -63,6 +87,8 @@ def main():
     )
     ddl.tl.define_clones(vdj, key_added=args.key_added)
     vdj.write(args.h5ddl_out)
+
+    logg.info("Assigning Change-o clonotypes finished.\n", time=start)
 
 
 if __name__ == "__main__":
