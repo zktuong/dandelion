@@ -6,7 +6,7 @@ import os
 
 from scanpy import logging as logg
 
-sc.settings.verbosity = 3
+scanpy.settings.verbosity = 3
 
 
 def parse_args():
