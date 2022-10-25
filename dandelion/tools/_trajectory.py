@@ -28,6 +28,14 @@ def setup_vdj_pseudobulk(
     ],
     productive_vdj: bool = True,
     productive_vj: bool = True,
+    check_vdj_mapping: Optional[List[str]] = [
+        "v_call",
+        "j_call",
+    ],
+    check_vj_mapping: Optional[List[str]] = [
+        "v_call",
+        "j_call",
+    ],
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
 
@@ -48,7 +56,12 @@ def setup_vdj_pseudobulk(
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj: bool, optional
         If True, cells will only be kept if the main VJ chain is productive.
-
+    check_vdj_mapping: Optional[List[str]], optional
+        Only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
+        Specifying None will skip this step.
+    check_vj_mapping: Optional[List[str]], optional
+        Only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
+        Specifying None will skip this step.
     Returns
     -------
     AnnData
@@ -59,17 +72,9 @@ def setup_vdj_pseudobulk(
         adata = adata[
             adata.obs["productive_" + mode + "_VDJ"].str.startswith("T")
         ].copy()
-    else:
-        adata = adata[
-            ~(adata.obs["productive_" + mode + "_VDJ"] == "No_contig")
-        ].copy()
     if productive_vj:
         adata = adata[
             adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
-        ].copy()
-    else:
-        adata = adata[
-            ~(adata.obs["productive_" + mode + "_VJ"] == "No_contig")
         ].copy()
 
     if allowed_chain_status is not None:
@@ -85,7 +90,7 @@ def setup_vdj_pseudobulk(
     else:
         v_call = "v_call_"
 
-    adata.obs[v_call + mode + "_VDJ_main"] = [
+    adata.obs["v_call_" + mode + "_VDJ_main"] = [
         x.split("|")[0] if x != "None" else "None"
         for x in adata.obs[v_call + mode + "_VDJ"]
     ]
@@ -93,7 +98,7 @@ def setup_vdj_pseudobulk(
         x.split("|")[0] if x != "None" else "None"
         for x in adata.obs["j_call_" + mode + "_VDJ"]
     ]
-    adata.obs[v_call + mode + "_VJ_main"] = [
+    adata.obs["v_call_" + mode + "_VJ_main"] = [
         x.split("|")[0] if x != "None" else "None"
         for x in adata.obs[v_call + mode + "_VJ"]
     ]
@@ -102,12 +107,28 @@ def setup_vdj_pseudobulk(
         for x in adata.obs["j_call_" + mode + "_VJ"]
     ]
     # remove any cells if there's unclear mapping
-    adata = adata[
-        ~(adata.obs[v_call + mode + "_VDJ_main"].str.contains(","))
-        & ~(adata.obs["j_call_" + mode + "_VDJ_main"].str.contains(","))
-        & ~(adata.obs[v_call + mode + "_VJ_main"].str.contains(","))
-        & ~(adata.obs["j_call_" + mode + "_VJ_main"].str.contains(","))
-    ]
+    if check_vdj_mapping is not None:
+        if not isinstance(check_vdj_mapping, list):
+            check_vdj_mapping = [check_vdj_mapping]
+        for col in check_vdj_mapping:
+            adata = adata[
+                ~(
+                    adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(
+                        ",|None|No_contig"
+                    )
+                )
+            ].copy()
+    if check_vj_mapping is not None:
+        if not isinstance(check_vj_mapping, list):
+            check_vj_mapping = [check_vj_mapping]
+        for col in check_vj_mapping:
+            adata = adata[
+                ~(
+                    adata.obs[col + "_" + mode + "_VJ_main"].str.contains(
+                        ",|None|No_contig"
+                    )
+                )
+            ].copy()
     return adata
 
 
@@ -131,7 +152,7 @@ def vdj_pseudobulk(
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
     obs_to_take: Optional[Union[str, List[str]]]
-        Optional obs column(s) to return after pseudobulking.
+        Optional obs column(s) to identify the most common value of for each pseudobulk.
     cols: : Optional[List], optional
         If provided, use the specified obs columns to extract V(D)J calls
 
