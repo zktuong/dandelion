@@ -1,18 +1,25 @@
 #!/usr/bin/env python
 """test trajectory"""
 import dandelion as ddl
-import milopy.core as milo
-import palantir
 import scanpy as sc
 import numpy as np
 import urllib.request
 import pandas as pd
+import sys
+import pytest
 from unittest.mock import patch
 
 
+@pytest.mark.skipif(
+    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    reason="macos CI stalls.",
+)
 @patch("matplotlib.pyplot.show")
 def test_trajectory(mock_show):
     """test_workflow"""
+    import milopy.core as milo
+    import palantir
+
     file = "demo-pseudobulk.h5ad"
     fname = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + file
     urllib.request.urlretrieve(fname, file)
