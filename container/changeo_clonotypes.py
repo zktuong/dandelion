@@ -62,6 +62,9 @@ def main():
 
     start = logg.info("\nBeginning assigning change-o clonotypes\n")
 
+    # parse arguments
+    args = parse_args()
+
     logg.info(
         "command line parameters:\n",
         deep=(
@@ -76,8 +79,6 @@ def main():
         ),
     )
 
-    # parse arguments
-    args = parse_args()
     # the actual process is easy. the dependencies quite a bit less so
     vdj = ddl.read_h5ddl(args.h5ddl)
     ddl.pp.calculate_threshold(
