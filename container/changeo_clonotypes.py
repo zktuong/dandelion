@@ -54,7 +54,9 @@ def main():
     # the actual process is easy. the dependencies quite a bit less so
     vdj = ddl.read_h5ddl(args.h5ddl)
     ddl.pp.calculate_threshold(
-        vdj, manual_threshold=args.manual_threshold, save_plot=args.plot_file
+        vdj,
+        manual_threshold=float(args.manual_threshold),
+        save_plot=args.plot_file,
     )
     ddl.tl.define_clones(vdj, key_added=args.key_added)
     vdj.write(args.h5ddl_out)
