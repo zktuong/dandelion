@@ -3,7 +3,7 @@
 import argparse
 import dandelion as ddl
 import os
-
+import scanpy
 from scanpy import logging as logg
 
 scanpy.settings.verbosity = 3
