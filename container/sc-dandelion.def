@@ -8,6 +8,7 @@ From: continuumio/miniconda3
     database /share/database
     environment.yml /environment.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
+    changeo_clonotypes.py /share/changeo_clonotypes.py
     tests /tests
 
 %post
@@ -44,6 +45,7 @@ From: continuumio/miniconda3
     /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/human/human_BCR_C.fasta
     /share/ncbi-blast-2.13.0+/bin/makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/mouse/mouse_BCR_C.fasta
     chmod +x /share/dandelion_preprocess.py
+    chmod +x /share/changeo_clonotypes.py
 
 %environment
     export GERMLINE=/share/database/germlines/
@@ -53,6 +55,7 @@ From: continuumio/miniconda3
 
 %runscript
     alias dandelion-preprocess='/share/dandelion_preprocess.py'
+    alias changeo-clonotypes='/share/changeo_clopotypes.py'
     eval ${@}
 
 %test
