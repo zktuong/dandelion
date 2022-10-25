@@ -1,6 +1,8 @@
+#!/opt/conda/envs/sc-dandelion-container/bin/python
 import argparse
 import dandelion as ddl
 import os
+
 
 def parse_args():
     """Parse command line arguments."""
@@ -8,15 +10,11 @@ def parse_args():
     parser.add_argument(
         "--h5ddl",
         required=True,
-        help=(
-            "Dandelion object to call changeo clonotypes on."
-        ),
+        help=("Dandelion object to call changeo clonotypes on."),
     )
     parser.add_argument(
         "--manual_threshold",
-        help=(
-            "Optional manual override of SHazaM threshold."
-        ),
+        help=("Optional manual override of SHazaM threshold."),
     )
     parser.add_argument(
         "--plot_file",
@@ -44,22 +42,23 @@ def parse_args():
     # set up the default names of files if need be. needs the base name of the file
     basename = os.path.splitext(args.h5ddl)[0]
     if args.plot_file is None:
-        args.plot_file = basename+"_shazam.pdf"
+        args.plot_file = basename + "_shazam.pdf"
     if args.h5ddl_out is None:
-        args.h5ddl_out = basename+"_changeo.h5ddl"
+        args.h5ddl_out = basename + "_changeo.h5ddl"
     return args
+
 
 def main():
     # parse arguments
     args = parse_args()
     # the actual process is easy. the dependencies quite a bit less so
     vdj = ddl.read_h5ddl(args.h5ddl)
-    ddl.pp.calculate_threshold(vdj,
-                               manual_threshold=args.manual_threshold,
-                               save_plot=args.plot_file
-                              )
-    ddl.tl.define_clones(vdj, key_added = args.key_added)
+    ddl.pp.calculate_threshold(
+        vdj, manual_threshold=args.manual_threshold, save_plot=args.plot_file
+    )
+    ddl.tl.define_clones(vdj, key_added=args.key_added)
     vdj.write(args.h5ddl_out)
+
 
 if __name__ == "__main__":
     main()
