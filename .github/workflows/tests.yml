@@ -40,7 +40,7 @@ jobs:
       run:
         shell: bash -l {0}
     strategy:
-      max-parallel: 4
+      max-parallel: 10
       matrix:
         config:
           - { python-version: 3.7, os: ubuntu-latest}
