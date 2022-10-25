@@ -45,6 +45,8 @@ def parse_args():
         args.plot_file = basename + "_shazam.pdf"
     if args.h5ddl_out is None:
         args.h5ddl_out = basename + "_changeo.h5ddl"
+    if args.manual_threshold is not None:
+        args.manual_threshold = float(args.manual_threshold)
     return args
 
 
@@ -55,7 +57,7 @@ def main():
     vdj = ddl.read_h5ddl(args.h5ddl)
     ddl.pp.calculate_threshold(
         vdj,
-        manual_threshold=float(args.manual_threshold),
+        manual_threshold=args.manual_threshold,
         save_plot=args.plot_file,
     )
     ddl.tl.define_clones(vdj, key_added=args.key_added)
