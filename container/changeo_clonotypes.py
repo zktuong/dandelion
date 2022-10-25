@@ -87,7 +87,7 @@ def main():
         save_plot=args.plot_file,
     )
     ddl.tl.define_clones(vdj, key_added=args.key_added)
-    vdj.write(args.h5ddl_out)
+    vdj.write_h5ddl(args.h5ddl_out)
 
     logg.info("Assigning Change-o clonotypes finished.\n", time=start)
 
