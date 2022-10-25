@@ -131,12 +131,13 @@ def setup_vdj_pseudobulk(
             ].copy()
     return adata
 
+
 def _get_pbs(pbs, obs_to_bulk, adata):
-    '''
-    Helper function to ensure we have a cells by pseudobulks matrix which we can use for 
-    pseudobulking. Uses the pbs and obs_to_bulk inputs to vdj_pseudobulk() and 
+    """
+    Helper function to ensure we have a cells by pseudobulks matrix which we can use for
+    pseudobulking. Uses the pbs and obs_to_bulk inputs to vdj_pseudobulk() and
     gex_pseudobulk().
-    '''
+    """
     # well, we need some way to pseudobulk
     if pbs is None and obs_to_bulk is None:
         raise ValueError(
@@ -166,11 +167,12 @@ def _get_pbs(pbs, obs_to_bulk, adata):
         pbs = pd.get_dummies(tobulk, dtype="uint16").values
     return pbs
 
+
 def _get_pbs_obs(pbs, obs_to_take, adata):
-    '''
-    Helper function to create the pseudobulk object's obs. Uses the pbs and obs_to_take 
+    """
+    Helper function to create the pseudobulk object's obs. Uses the pbs and obs_to_take
     inputs to vdj_pseudobulk() and gex_pseudobulk().
-    '''
+    """
     # prepare per-pseudobulk calls of specified metadata columns
     pbs_obs = pd.DataFrame(index=np.arange(pbs.shape[1]))
     if obs_to_take is not None:
@@ -185,14 +187,17 @@ def _get_pbs_obs(pbs, obs_to_take, adata):
             anno_count = np.asmatrix(pbs).T.dot(anno_dummies.values)
             anno_frac = np.array(anno_count / anno_count.sum(1))
             anno_frac = pd.DataFrame(
-                anno_frac, index=np.arange(pbs.shape[1]), columns=anno_dummies.columns
+                anno_frac,
+                index=np.arange(pbs.shape[1]),
+                columns=anno_dummies.columns,
             )
             pbs_obs[anno_col] = anno_frac.idxmax(1)
             pbs_obs[anno_col + "_fraction"] = anno_frac.max(1)
     # report the number of cells for each pseudobulk
     # ensure pbs is an array so that it sums into a vector that can go in easily
-    pbs_obs['cell_count'] = np.sum(np.asarray(pbs), axis=0)
+    pbs_obs["cell_count"] = np.sum(np.asarray(pbs), axis=0)
     return pbs_obs
+
 
 def vdj_pseudobulk(
     adata: AnnData,
@@ -256,7 +261,7 @@ def vdj_pseudobulk(
 
     # create obs for the new pseudobulk object
     pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata)
-    
+
     # store our feature space and derived metadata into an AnnData
     pb_adata = sc.AnnData(
         np.array(df), var=pd.DataFrame(index=df.columns), obs=pbs_obs
@@ -386,11 +391,7 @@ def pseudobulk_gex(
     pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata_raw)
 
     ## Make new anndata object
-    pb_adata = sc.AnnData(
-        pbs_X.T,
-        obs=pbs_obs,
-        var=adata_raw.var
-    )
+    pb_adata = sc.AnnData(pbs_X.T, obs=pbs_obs, var=adata_raw.var)
     # store the pseudobulk assignments, as a sparse for storage efficiency
     # transpose as the original matrix is cells x pseudobulks
     pb_adata.obsm["pbs"] = sp.sparse.csr_matrix(pbs.T)
