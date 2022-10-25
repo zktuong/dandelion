@@ -132,38 +132,11 @@ def setup_vdj_pseudobulk(
     return adata
 
 
-def vdj_pseudobulk(
-    adata: AnnData,
-    pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
-    obs_to_bulk: Optional[Union[str, List[str]]] = None,
-    obs_to_take: Optional[Union[str, List[str]]] = None,
-    cols: Optional[List[str]] = None,
-) -> AnnData:
-    """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk`
-    needs to be specified when calling.
-
-    Parameters
-    ----------
-    adata : AnnData
-        Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
-    pbs: Optional[array], optional
-        Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk: Optional[Union[str, List[str]]], optional
-        Optional obs column(s) to group pseudobulks into; if multiple are provided, they
-        will be combined
-    obs_to_take: Optional[Union[str, List[str]]]
-        Optional obs column(s) to identify the most common value of for each pseudobulk.
-    cols: : Optional[List], optional
-        If provided, use the specified obs columns to extract V(D)J calls
-
-    Returns
-    -------
-    AnnData
-        pb_adata, whereby each observation is a pseudobulk:\n
-        VDJ usage frequency stored in pb_adata.X\n
-        VDJ genes stored in pb_adata.var\n
-        pseudobulk metadata stored in pb_adata.obs\n
-        pseudobulk assignment (binary matrix with input cells as rows and pseudobulks as columns) stored in pb_adata.uns['pseudobulk assignments']\n
+def _get_pbs(pbs, obs_to_bulk, adata):
+    """
+    Helper function to ensure we have a cells by pseudobulks matrix which we can use for
+    pseudobulking. Uses the pbs and obs_to_bulk inputs to vdj_pseudobulk() and
+    gex_pseudobulk().
     """
     # well, we need some way to pseudobulk
     if pbs is None and obs_to_bulk is None:
@@ -192,6 +165,75 @@ def vdj_pseudobulk(
         # this needs to be different than the default uint8
         # as you can have more than 255 cells in a pseudobulk, it turns out
         pbs = pd.get_dummies(tobulk, dtype="uint16").values
+    return pbs
+
+
+def _get_pbs_obs(pbs, obs_to_take, adata):
+    """
+    Helper function to create the pseudobulk object's obs. Uses the pbs and obs_to_take
+    inputs to vdj_pseudobulk() and gex_pseudobulk().
+    """
+    # prepare per-pseudobulk calls of specified metadata columns
+    pbs_obs = pd.DataFrame(index=np.arange(pbs.shape[1]))
+    if obs_to_take is not None:
+        # just in case a single is passed as a string
+        if type(obs_to_take) is not list:
+            obs_to_take = [obs_to_take]
+        # now we can iterate over this nicely
+        # using the logic of milopy's annotate_nhoods()
+        for anno_col in obs_to_take:
+            anno_dummies = pd.get_dummies(adata.obs[anno_col])
+            # this needs to be turned to a matrix so dimensions get broadcast correctly
+            anno_count = np.asmatrix(pbs).T.dot(anno_dummies.values)
+            anno_frac = np.array(anno_count / anno_count.sum(1))
+            anno_frac = pd.DataFrame(
+                anno_frac,
+                index=np.arange(pbs.shape[1]),
+                columns=anno_dummies.columns,
+            )
+            pbs_obs[anno_col] = anno_frac.idxmax(1)
+            pbs_obs[anno_col + "_fraction"] = anno_frac.max(1)
+    # report the number of cells for each pseudobulk
+    # ensure pbs is an array so that it sums into a vector that can go in easily
+    pbs_obs["cell_count"] = np.sum(np.asarray(pbs), axis=0)
+    return pbs_obs
+
+
+def vdj_pseudobulk(
+    adata: AnnData,
+    pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
+    obs_to_bulk: Optional[Union[str, List[str]]] = None,
+    obs_to_take: Optional[Union[str, List[str]]] = None,
+    cols: Optional[List[str]] = None,
+) -> AnnData:
+    """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk`
+    needs to be specified when calling.
+
+    Parameters
+    ----------
+    adata : AnnData
+        Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
+    pbs: Optional[array], optional
+        Optional binary matrix with cells as rows and pseudobulk groups as columns
+    obs_to_bulk: Optional[Union[str, List[str]]], optional
+        Optional obs column(s) to group pseudobulks into; if multiple are provided, they
+        will be combined
+    obs_to_take: Optional[Union[str, List[str]]]
+        Optional obs column(s) to identify the most common value of for each pseudobulk.
+    cols: Optional[List], optional
+        If provided, use the specified obs columns to extract V(D)J calls
+
+    Returns
+    -------
+    AnnData
+        pb_adata, whereby each observation is a pseudobulk:\n
+        VDJ usage frequency stored in pb_adata.X\n
+        VDJ genes stored in pb_adata.var\n
+        pseudobulk metadata stored in pb_adata.obs\n
+        pseudobulk assignment (binary matrix with input cells as columns) stored in pb_adata.obsm['pbs']\n
+    """
+    # get our cells by pseudobulks matrix
+    pbs = _get_pbs(pbs, obs_to_bulk, adata)
 
     # if not specified by the user, use the following default dandelion VJ columns
     if cols is None:
@@ -217,31 +259,16 @@ def vdj_pseudobulk(
             df.loc[:, mask].sum(axis=1), axis=0
         )
 
-    # prepare per-pseudobulk calls of specified metadata columns
-    pbs_obs = pd.DataFrame(index=df.index)
-    if obs_to_take is not None:
-        # just in case a single is passed as a string
-        if type(obs_to_take) is not list:
-            obs_to_take = [obs_to_take]
-        # now we can iterate over this nicely
-        # using the logic of milopy's annotate_nhoods()
-        for anno_col in obs_to_take:
-            anno_dummies = pd.get_dummies(adata.obs[anno_col])
-            # this needs to be turned to a matrix so dimensions get broadcast correctly
-            anno_count = np.asmatrix(pbs).T.dot(anno_dummies.values)
-            anno_frac = np.array(anno_count / anno_count.sum(1))
-            anno_frac = pd.DataFrame(
-                anno_frac, index=df.index, columns=anno_dummies.columns
-            )
-            pbs_obs[anno_col] = anno_frac.idxmax(1)
-            pbs_obs[anno_col + "_fraction"] = anno_frac.max(1)
+    # create obs for the new pseudobulk object
+    pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata)
 
     # store our feature space and derived metadata into an AnnData
     pb_adata = sc.AnnData(
         np.array(df), var=pd.DataFrame(index=df.columns), obs=pbs_obs
     )
     # store the pseudobulk assignments, as a sparse for storage efficiency
-    pb_adata.uns["pseudobulk_assignments"] = sp.sparse.csr_matrix(pbs)
+    # transpose as the original matrix is cells x pseudobulks
+    pb_adata.obsm["pbs"] = sp.sparse.csr_matrix(pbs.T)
     return pb_adata
 
 
@@ -289,8 +316,8 @@ def project_pseudotime_to_cell(
         subset of adata whereby cells that don't belong to any neighbourhood are removed
         and projected pseudotime information stored in .obs - `pseudotime+suffix`, and `'prob_'+term_state+suffix` for each terminal state
     """
-    # extract out cell x pseudobulk matrix
-    nhoods = np.array(pb_adata.uns["pseudobulk_assignments"].todense())
+    # extract out cell x pseudobulk matrix. it's stored as pseudobulk x cell so transpose
+    nhoods = np.array(pb_adata.obsm["pbs"].T.todense())
 
     # leave out cells that don't belong to any neighbourhood
     nhoodsum = np.sum(nhoods, axis=1)
@@ -299,8 +326,8 @@ def project_pseudotime_to_cell(
         "number of cells removed due to not belonging to any neighbourhood",
         sum(nhoodsum == 0),
     )  # print how many cells removed
-    # also subset the pseudotbulk_assignments
-    pb_assign_trim = pb_adata.uns["pseudobulk_assignments"][nhoodsum > 0]
+    # also subset the pseudobulk_assignments
+    pb_assign_trim = nhoods[nhoodsum > 0]
 
     # for each cell pseudotime_mean is the average of the pseudotime of all pseudobulks the cell is in, weighted by 1/neighbourhood size
     nhoods_cdata = nhoods[nhoodsum > 0, :]
@@ -325,49 +352,50 @@ def project_pseudotime_to_cell(
     return cdata
 
 
-def compute_pseudobulk_gex(
-    adata: AnnData, adata_raw: AnnData, normalize_log: bool
+def pseudobulk_gex(
+    adata_raw: AnnData,
+    pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
+    obs_to_bulk: Optional[Union[str, List[str]]] = None,
+    obs_to_take: Optional[Union[str, List[str]]] = None,
 ) -> AnnData:
-    """Function to pseudobulk gene expression (raw count) by cell neighbourhoods.
+    """Function to pseudobulk gene expression (raw count).
 
     Parameters
     ----------
-    adata : AnnData
-        cell adata
     adata_raw : AnnData
-        same cells with raw counts. Not normalised, not log1p, just raw counts.
-    normalize_log : bool
-        True or False, pseudobulked expression to be normalised and log transformed
+        Needs to have raw counts in .X
+    pbs: Optional[array], optional
+        Optional binary matrix with cells as rows and pseudobulk groups as columns
+    obs_to_bulk: Optional[Union[str, List[str]]], optional
+        Optional obs column(s) to group pseudobulks into; if multiple are provided, they
+        will be combined
+    obs_to_take: Optional[Union[str, List[str]]]
+        Optional obs column(s) to identify the most common value of for each pseudobulk
 
     Returns
     -------
     AnnData
-        nhood_adata whereby each observation is a cell neighbourhood\n
-        pseudobulked gene expression stored in nhood_adata.X\n
-        genes stored in nhood_adata.var\n
-        neighbourhood metadata stored in nhood_adata.obs\n
+        pb_adata whereby each observation is a cell neighbourhood\n
+        pseudobulked gene expression stored in pb_adata.X\n
+        genes stored in pb_adata.var\n
+        pseudobulk metadata stored in pb_adata.obs\n
+        pseudobulk assignment (binary matrix with input cells as columns) stored in pb_adata.obsm['pbs']\n
     """
-    sample_dummies = adata.obsm["nhoods"]
+    # get our cells by pseudobulks matrix
+    pbs = _get_pbs(pbs, obs_to_bulk, adata_raw)
 
     # make pseudobulk matrix
-    pseudobulk_X = adata_raw.X.T.dot(sample_dummies)
+    pbs_X = adata_raw.X.T.dot(pbs)
+
+    # create obs for the new pseudobulk object
+    pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata_raw)
 
     ## Make new anndata object
-    nhood_adata = sc.AnnData(
-        pseudobulk_X.T,
-        obs=adata.uns["nhood_adata"].obs,
-        var=adata_raw.var,
-        uns=adata.uns,
-    )
-
-    nhood_adata.raw = nhood_adata.copy()
-
-    # normalise and log1p
-    if normalize_log:
-        sc.pp.normalize_per_cell(nhood_adata, counts_per_cell_after=10e4)
-        sc.pp.log1p(nhood_adata)
-
-    return nhood_adata
+    pb_adata = sc.AnnData(pbs_X.T, obs=pbs_obs, var=adata_raw.var)
+    # store the pseudobulk assignments, as a sparse for storage efficiency
+    # transpose as the original matrix is cells x pseudobulks
+    pb_adata.obsm["pbs"] = sp.sparse.csr_matrix(pbs.T)
+    return pb_adata
 
 
 def bin_expression(
