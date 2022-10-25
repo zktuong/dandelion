@@ -53,7 +53,7 @@ Tools: `tl`
    vdj_pseudobulk
    pseudotime_transfer
    project_pseudotime_to_cell
-   compute_pseudobulk_gex
+   pseudobulk_gex
    bin_expression
    chatterjee_corr
 
