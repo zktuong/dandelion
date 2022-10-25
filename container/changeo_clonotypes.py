@@ -51,6 +51,7 @@ def parse_args():
 
 
 def main():
+    """Main changeo-clonotypes."""
     # parse arguments
     args = parse_args()
     # the actual process is easy. the dependencies quite a bit less so
