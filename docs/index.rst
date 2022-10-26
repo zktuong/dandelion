@@ -9,15 +9,18 @@
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Singularity Tutorial:
+   :caption: Quickstart Tutorial:
 
-   notebooks/singularity_preprocessing.ipynb
-   notebooks/gamma_delta.ipynb
+   notebooks/Q1-singularity-preprocessing.ipynb
+   notebooks/Q2-analysis.ipynb
+   notebooks/Q3-singularity-changeo.ipynb
+   notebooks/Q4-pseudobulk.ipynb
+   notebooks/Q5-object-prep.ipynb
 
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Tutorial:
+   :caption: Extended Tutorial:
 
    notebooks/1_dandelion_preprocessing-10x_data.ipynb
    notebooks/2_dandelion_filtering-10x_data.ipynb
