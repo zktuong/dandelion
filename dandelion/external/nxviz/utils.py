@@ -39,7 +39,8 @@ def infer_data_type(data_container: Iterable):
 
     """
     warnings.warn(
-        "`infer_data_type` is deprecated! " "Please use `infer_data_family` instead!"
+        "`infer_data_type` is deprecated! "
+        "Please use `infer_data_family` instead!"
     )
     # Defensive programming checks.
     # 0. Ensure that we are dealing with lists or tuples, and nothing else.
@@ -51,7 +52,9 @@ def infer_data_type(data_container: Iterable):
         len(set(data_container)) > 1
     ), "There should be more than one value in the data container."
     # 2. Don't want to deal with mixed data.
-    assert is_data_homogenous(data_container), "Data are not of a homogenous type!"
+    assert is_data_homogenous(
+        data_container
+    ), "Data are not of a homogenous type!"
 
     # Once we check that the data type of the container is homogenous, we only
     # need to check the first element in the data container for its type.
@@ -224,7 +227,9 @@ from typing import Hashable, Iterable
 
 
 def group_and_sort(
-    node_table: pd.DataFrame, group_by: Hashable = None, sort_by: Hashable = None
+    node_table: pd.DataFrame,
+    group_by: Hashable = None,
+    sort_by: Hashable = None,
 ) -> pd.DataFrame:
     """Group and sort a node table."""
     sort_criteria = []

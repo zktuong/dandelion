@@ -80,9 +80,9 @@ def graph_from_dataframe(
         False).
     """
 
-    assert isinstance(dataframe, pd.DataFrame), "{} is not a pandas DataFrame".format(
-        dataframe
-    )
+    assert isinstance(
+        dataframe, pd.DataFrame
+    ), "{} is not a pandas DataFrame".format(dataframe)
 
     M = MultiGraph()
 
