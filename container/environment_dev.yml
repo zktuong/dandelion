@@ -19,6 +19,5 @@ dependencies:
 - tbb
 - pip:
   - scanpy>=1.7.0
-  - git+https://www.github.com/zktuong/dandelion@master
+  - git+https://www.github.com/zktuong/dandelion.git
   - rpy2==3.4.2
-  - git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
