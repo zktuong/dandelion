@@ -2,9 +2,9 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:21:45
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-25 11:49:13
+# @Last Modified time: 2022-10-27 10:18:56
 """init module."""
-from ._tools import (
+from dandelion.tools._tools import (
     find_clones,
     productive_ratio,
     transfer,
@@ -13,14 +13,14 @@ from ._tools import (
     clone_overlap,
     vj_usage_pca,
 )
-from ._network import (
+from dandelion.tools._network import (
     extract_edge_weights,
     clone_degree,
     clone_centrality,
     generate_network,
 )
-from ._diversity import clone_diversity, clone_rarefaction
-from ._trajectory import (
+from dandelion.tools._diversity import clone_diversity, clone_rarefaction
+from dandelion.tools._trajectory import (
     setup_vdj_pseudobulk,
     vdj_pseudobulk,
     pseudotime_transfer,

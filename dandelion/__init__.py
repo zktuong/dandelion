@@ -2,13 +2,13 @@
 # @Author: kt16
 # @Date:   2020-05-12 18:11:20
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 08:09:19
+# @Last Modified time: 2022-10-27 10:23:04
 """init module."""
-from . import preprocessing as pp
-from . import utilities as utl
-from . import tools as tl
-from . import plotting as pl
-from .utilities import (
+from dandelion import preprocessing as pp
+from dandelion import utilities as utl
+from dandelion import tools as tl
+from dandelion import plotting as pl
+from dandelion.utilities import (
     concat,
     Dandelion,
     from_scirpy,
@@ -21,8 +21,13 @@ from .utilities import (
     to_scirpy,
     update_metadata,
 )
-from .logging import __author__, __email__, __classifiers__, __version__
-from . import logging
+from dandelion.logging import (
+    __author__,
+    __email__,
+    __classifiers__,
+    __version__,
+)
+from dandelion import logging
 
 
 __all__ = [

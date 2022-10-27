@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-19 15:26:13
+# @Last Modified time: 2022-10-27 10:18:32
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -47,7 +47,7 @@ from time import sleep
 from tqdm import tqdm
 from typing import Union, Sequence, Tuple, Optional, List
 
-from .external._preprocessing import (
+from dandelion.preprocessing.external._preprocessing import (
     assigngenes_igblast,
     makedb_igblast,
     parsedb_heavy,
@@ -55,10 +55,10 @@ from .external._preprocessing import (
     tigger_genotype,
     creategermlines,
 )
-from ..utilities._core import *
-from ..utilities._io import *
-from ..utilities._utilities import *
-from ..tools._tools import transfer
+from dandelion.utilities._core import *
+from dandelion.utilities._io import *
+from dandelion.utilities._utilities import *
+from dandelion.tools._tools import transfer
 
 
 def format_fasta(

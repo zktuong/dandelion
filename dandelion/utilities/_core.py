@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-20 12:15:02
+# @Last Modified time: 2022-10-27 10:22:30
 """core module."""
 import bz2
 import copy
@@ -31,8 +31,8 @@ from textwrap import dedent
 from tqdm import tqdm
 from typing import Union, Sequence, Dict, Optional, Tuple
 
-from ..utilities._io import *
-from ..utilities._utilities import *
+from dandelion.utilities._io import *
+from dandelion.utilities._utilities import *
 
 
 class Dandelion:

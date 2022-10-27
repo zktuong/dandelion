@@ -11,7 +11,7 @@ from collections import Counter
 from anndata import AnnData
 from typing import List, Optional, Union
 
-from ..utilities._utilities import bh, Literal
+from dandelion.utilities._utilities import bh, Literal
 
 
 def setup_vdj_pseudobulk(

@@ -26,6 +26,5 @@ dependencies:
   - rpy2>=3.4.2
   - pytest-cov
   - -r requirements.txt
-  - git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges
   - scirpy
   - scrublet

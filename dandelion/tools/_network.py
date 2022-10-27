@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-07 10:27:23
+# @Last Modified time: 2022-10-27 10:19:50
 """network module."""
 import networkx as nx
 import numpy as np
@@ -20,9 +20,9 @@ try:
 except:
     from networkx.utils import random_state
 
-from ..utilities._core import *
-from ..utilities._io import *
-from ..utilities._utilities import *
+from dandelion.utilities._core import *
+from dandelion.utilities._io import *
+from dandelion.utilities._utilities import *
 
 
 def generate_network(
