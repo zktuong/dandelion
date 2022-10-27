@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 23:34:56
+# @Last Modified time: 2022-10-27 10:19:36
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -16,13 +16,17 @@ from scanpy import logging as logg
 from scipy.special import gammaln
 from typing import Union, Dict, Optional
 
-from ..tools._network import clone_centrality, clone_degree, generate_network
-from ..utilities._core import *
-from ..utilities._io import *
-from ..utilities._utilities import *
-from ._chao1 import chao1
-from ._gini import gini_index
-from ._shannon import shannon
+from dandelion.utilities._core import *
+from dandelion.utilities._io import *
+from dandelion.utilities._utilities import *
+from dandelion.tools._chao1 import chao1
+from dandelion.tools._gini import gini_index
+from dandelion.tools._network import (
+    clone_centrality,
+    clone_degree,
+    generate_network,
+)
+from dandelion.tools._shannon import shannon
 
 
 def clone_rarefaction(

@@ -10,6 +10,10 @@ import pytest
 from unittest.mock import patch
 
 
+FILE = "demo-pseudobulk.h5ad"
+FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
+
+
 @pytest.mark.skipif(
     (sys.platform == "darwin") & (sys.version_info.minor < 8),
     reason="macos CI stalls.",
@@ -20,10 +24,8 @@ def test_trajectory(mock_show):
     import milopy.core as milo
     import palantir
 
-    file = "demo-pseudobulk.h5ad"
-    fname = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + file
-    urllib.request.urlretrieve(fname, file)
-    adata = sc.read(file)
+    urllib.request.urlretrieve(FNAME, FILE)
+    adata = sc.read(FILE)
     adata = ddl.tl.setup_vdj_pseudobulk(adata)
     sc.pp.neighbors(adata, use_rep="X_scvi", n_neighbors=50)
     milo.make_nhoods(adata)
@@ -60,4 +62,32 @@ def test_trajectory(mock_show):
     pb_adata = ddl.tl.pseudotime_transfer(pb_adata, pr_res)
     bdata = ddl.tl.project_pseudotime_to_cell(
         adata, pb_adata, terminal_states.values
+    )
+
+
+@pytest.mark.skipif(
+    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    reason="macos CI stalls.",
+)
+def test_trajectory_setup():
+    """test_workflow with differen defaults"""
+    adata = sc.read(FILE)
+    adata = ddl.tl.setup_vdj_pseudobulk(
+        adata,
+        mode=None,
+        extract_cols=[
+            "v_call_VDJ",
+            "d_call_VDJ",
+            "j_call_VDJ",
+            "v_call_VJ",
+            "j_call_VJ",
+        ],
+        productive_cols=["productive_VDJ", "productive_VJ"],
+        check_extract_cols_mapping=[
+            "v_call_VDJ",
+            "d_call_VDJ",
+            "j_call_VDJ",
+            "v_call_VJ",
+            "j_call_VJ",
+        ],
     )

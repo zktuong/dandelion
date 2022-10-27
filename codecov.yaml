@@ -28,3 +28,4 @@ ignore:
   - "*.cfg"
   - "LICENSE"
   - ".git*"
+  - "dandelion/external"

@@ -10,7 +10,7 @@
 
 ## dandelion
 
-Hi there! I have put together a python package for analyzing single cell BCR/V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
+Hi there! I have put together a python package for analyzing single cell BCR/TCR V(D)J data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR analysis. It also includes a couple of functions for visualization. 
 
 Please refer to the [github](https://github.com/zktuong/dandelion) or [documentation](https://sc-dandelion.readthedocs.io/) for more information!
 

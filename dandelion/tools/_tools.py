@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-19 15:45:54
+# @Last Modified time: 2022-10-27 10:20:14
 """tools module."""
 import math
 import os
@@ -27,10 +27,10 @@ from time import sleep
 from tqdm import tqdm
 from typing import Union, Sequence, Optional
 
-from ..utilities._core import *
-from ..utilities._io import *
-from ..utilities._utilities import *
-from ._network import *
+from dandelion.tools._network import *
+from dandelion.utilities._core import *
+from dandelion.utilities._io import *
+from dandelion.utilities._utilities import *
 
 
 def find_clones(

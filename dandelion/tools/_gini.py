@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:32:35
+# @Last Modified time: 2022-10-27 10:19:42
 """gini module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency
@@ -15,7 +15,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 import numpy as np
-from ..utilities._utilities import _validate_counts_vector
+from dandelion.utilities._utilities import _validate_counts_vector
 
 
 def gini_index(data, method="rectangles"):

@@ -11,12 +11,12 @@ from collections import Counter
 from anndata import AnnData
 from typing import List, Optional, Union
 
-from ..utilities._utilities import bh, Literal
+from dandelion.utilities._utilities import bh, Literal
 
 
 def setup_vdj_pseudobulk(
     adata: AnnData,
-    mode: Literal["B", "abT", "gdT"] = "abT",
+    mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
     subsetby: Optional[str] = None,
     groups: Optional[List[str]] = None,
     allowed_chain_status: Optional[List[str]] = [
@@ -28,6 +28,8 @@ def setup_vdj_pseudobulk(
     ],
     productive_vdj: bool = True,
     productive_vj: bool = True,
+    extract_cols: Optional[List[str]] = None,
+    productive_cols: Optional[List[str]] = None,
     check_vdj_mapping: Optional[List[str]] = [
         "v_call",
         "j_call",
@@ -36,6 +38,7 @@ def setup_vdj_pseudobulk(
         "v_call",
         "j_call",
     ],
+    check_extract_cols_mapping: Optional[List[str]] = None,
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
 
@@ -44,7 +47,8 @@ def setup_vdj_pseudobulk(
     adata : AnnData
         cell adata before constructing anndata.
     mode : Literal['B', 'abT', 'gdT'], optional
-        Mode for extract the V/J genes.
+        Optional mode for extractin the V(D)J genes. If set as `None`, it requires the option `extract_cols` to be
+        specified with a list of column names where this will be used to retrieve the main call.
     subsetby : Optional[str], optional
         If provided, only the groups/categories in this column will be used for computing the VDJ feature space.
     groups : Optional[List], optional
@@ -56,11 +60,18 @@ def setup_vdj_pseudobulk(
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj: bool, optional
         If True, cells will only be kept if the main VJ chain is productive.
+    extract_cols : Optional[List[str]], optional
+        Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
+    productive_cols: Optional[List[str]], optional
+        Column names where contig productive status is stored so that this will be used instead of the standard columns.
     check_vdj_mapping: Optional[List[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
         Specifying None will skip this step.
     check_vj_mapping: Optional[List[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
+        Specifying None will skip this step.
+    check_vj_extract_cols_mapping: Optional[List[str]], optional
+        Only columns in the argument will be checked for unclear mapping (containing comma) in columns specified in extract_cols.
         Specifying None will skip this step.
     Returns
     -------
@@ -68,14 +79,19 @@ def setup_vdj_pseudobulk(
         filtered cell adata object.
     """
     # keep ony relevant cells (ones with a pair of chains) based on productive column
-    if productive_vdj:
-        adata = adata[
-            adata.obs["productive_" + mode + "_VDJ"].str.startswith("T")
-        ].copy()
-    if productive_vj:
-        adata = adata[
-            adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
-        ].copy()
+    if mode is not None:
+        if productive_vdj:
+            adata = adata[
+                adata.obs["productive_" + mode + "_VDJ"].str.startswith("T")
+            ].copy()
+        if productive_vj:
+            adata = adata[
+                adata.obs["productive_" + mode + "_VJ"].str.startswith("T")
+            ].copy()
+    else:
+        if productive_cols is not None:
+            for col in productive_cols:
+                adata = adata[adata.obs[col].str.startswith("T")].copy()
 
     if allowed_chain_status is not None:
         adata = adata[
@@ -90,45 +106,65 @@ def setup_vdj_pseudobulk(
     else:
         v_call = "v_call_"
 
-    adata.obs["v_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] if x != "None" else "None"
-        for x in adata.obs[v_call + mode + "_VDJ"]
-    ]
-    adata.obs["j_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] if x != "None" else "None"
-        for x in adata.obs["j_call_" + mode + "_VDJ"]
-    ]
-    adata.obs["v_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] if x != "None" else "None"
-        for x in adata.obs[v_call + mode + "_VJ"]
-    ]
-    adata.obs["j_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] if x != "None" else "None"
-        for x in adata.obs["j_call_" + mode + "_VJ"]
-    ]
+    if mode is not None:
+        adata.obs["v_call_" + mode + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in adata.obs[v_call + mode + "_VDJ"]
+        ]
+        adata.obs["d_call_" + mode + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in adata.obs["d_call_" + mode + "_VDJ"]
+        ]
+        adata.obs["j_call_" + mode + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in adata.obs["j_call_" + mode + "_VDJ"]
+        ]
+        adata.obs["v_call_" + mode + "_VJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in adata.obs[v_call + mode + "_VJ"]
+        ]
+        adata.obs["j_call_" + mode + "_VJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in adata.obs["j_call_" + mode + "_VJ"]
+        ]
+    else:
+        for col in extract_cols:
+            adata.obs[col + "_main"] = [
+                x.split("|")[0] if x != "None" else "None"
+                for x in adata.obs[col]
+            ]
+
     # remove any cells if there's unclear mapping
-    if check_vdj_mapping is not None:
-        if not isinstance(check_vdj_mapping, list):
-            check_vdj_mapping = [check_vdj_mapping]
-        for col in check_vdj_mapping:
-            adata = adata[
-                ~(
-                    adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(
-                        ",|None|No_contig"
+    if mode is not None:
+        if check_vdj_mapping is not None:
+            if not isinstance(check_vdj_mapping, list):
+                check_vdj_mapping = [check_vdj_mapping]
+            for col in check_vdj_mapping:
+                adata = adata[
+                    ~(
+                        adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(
+                            ",|None|No_contig"
+                        )
                     )
-                )
-            ].copy()
-    if check_vj_mapping is not None:
-        if not isinstance(check_vj_mapping, list):
-            check_vj_mapping = [check_vj_mapping]
-        for col in check_vj_mapping:
-            adata = adata[
-                ~(
-                    adata.obs[col + "_" + mode + "_VJ_main"].str.contains(
-                        ",|None|No_contig"
+                ].copy()
+        if check_vj_mapping is not None:
+            if not isinstance(check_vj_mapping, list):
+                check_vj_mapping = [check_vj_mapping]
+            for col in check_vj_mapping:
+                adata = adata[
+                    ~(
+                        adata.obs[col + "_" + mode + "_VJ_main"].str.contains(
+                            ",|None|No_contig"
+                        )
                     )
-                )
-            ].copy()
+                ].copy()
+    else:
+        if check_extract_cols_mapping is not None:
+            for col in check_extract_cols_mapping:
+                adata = adata[
+                    ~(adata.obs[col + "_main"].str.contains(",|None|No_contig"))
+                ].copy()
+
     return adata
 
 

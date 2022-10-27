@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-20 12:20:30
+# @Last Modified time: 2022-10-27 11:01:55
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -14,6 +14,7 @@ from anndata import AnnData
 from itertools import combinations, cycle
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+import networkx as nx
 from plotnine import (
     aes,
     geom_line,
@@ -32,11 +33,12 @@ from time import sleep
 from tqdm import tqdm
 from typing import Union, Sequence, Tuple, Dict, Optional
 
-
-from ..tools._diversity import rarefun
-from ..utilities._core import *
-from ..utilities._io import *
-from ..utilities._utilities import *
+import dandelion.external.nxviz as nxv
+from dandelion.external.nxviz import annotate
+from dandelion.tools._diversity import rarefun
+from dandelion.utilities._core import *
+from dandelion.utilities._io import *
+from dandelion.utilities._utilities import *
 
 
 def clone_rarefaction(
@@ -815,9 +817,9 @@ def clone_overlap(
     **kwargs,
 ):
     """
-    A plot function to visualise clonal overlap as a circos-style plot. Requires nxviz.
+    A plot function to visualise clonal overlap as a circos-style plot.
 
-    Written with nxviz < 0.7.3. Will need to revisit for newer nxviz versions, or change how it's called?
+    Originally written with nxviz < 0.7.3. Ported from https://github.com/zktuong/nxviz/tree/custom_color_mapping_circos_nodes_and_edges
 
     Parameters
     ----------
@@ -857,18 +859,6 @@ def clone_overlap(
     -------
     a `nxviz.CircosPlot`.
     """
-    import networkx as nx
-
-    try:
-        import nxviz as nxv
-    except:
-        raise (
-            ImportError(
-                "Unable to import module `nxviz`. Have you done install nxviz? "
-                "Try pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges"
-            )
-        )
-
     if min_clone_size is None:
         min_size = 2
     else:
@@ -1022,53 +1012,34 @@ def clone_overlap(
             .reset_index(drop=True)
         )
 
-    try:
-        from importlib.metadata import version
-
-        NXVIZVERSION = version("nxviz")
-    except:
-        try:
-            from pkg_resources import get_distribution
-
-            NXVIZVERSION = get_distribution("nxviz").version
-        except:
-            NXVIZVERSION = "0.7.4"  # just for local
-    if NXVIZVERSION < "0.7.4":
-        raise ImportError(
-            "please upgrade nxviz: "
-            "pip install git+https://github.com/zktuong/nxviz.git@custom_color_mapping_circos_nodes_and_edges"
-        )
+    if as_heatmap:
+        hm = nx.to_pandas_adjacency(G)
+        sns.clustermap(hm, **kwargs)
     else:
-        if as_heatmap:
-            hm = nx.to_pandas_adjacency(G)
-            sns.clustermap(hm, **kwargs)
-        else:
-            from nxviz import annotate
-
-            ax = nxv.circos(
+        ax = nxv.circos(
+            G,
+            group_by=colorby,
+            node_color_by=colorby,
+            edge_lw_by=weighted_attr,
+            node_palette=colorby_dict,
+        )  # group_by
+        if node_labels:
+            annotate.circos_group(
                 G,
                 group_by=colorby,
-                node_color_by=colorby,
-                edge_lw_by=weighted_attr,
-                node_palette=colorby_dict,
-            )  # group_by
-            if node_labels:
-                annotate.circos_group(
-                    G,
-                    group_by=colorby,
-                    midpoint=False,
-                    fontdict={"size": node_label_size},
-                )
-            annotate.node_colormapping(
-                G,
-                color_by=colorby,
-                palette=colorby_dict,
-                legend_kwargs=legend_kwargs,
+                midpoint=False,
+                fontdict={"size": node_label_size},
             )
-        if save is not None:
-            plt.savefig(save, bbox_inches="tight", **kwargs)
-        if return_graph:
-            return G
+        annotate.node_colormapping(
+            G,
+            color_by=colorby,
+            palette=colorby_dict,
+            legend_kwargs=legend_kwargs,
+        )
+    if save is not None:
+        plt.savefig(save, bbox_inches="tight", **kwargs)
+    if return_graph:
+        return G
 
 
 def productive_ratio(

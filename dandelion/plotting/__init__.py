@@ -2,9 +2,9 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:21:45
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 21:42:43
+# @Last Modified time: 2022-10-27 10:17:28
 """init module."""
-from ._plotting import (
+from dandelion.plotting._plotting import (
     barplot,
     clone_network,
     clone_overlap,

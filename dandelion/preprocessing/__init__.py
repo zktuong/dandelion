@@ -2,10 +2,10 @@
 # @Author: kt16
 # @Date:   2020-05-12 18:42:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:52:05
+# @Last Modified time: 2022-10-27 10:18:04
 """init module."""
-from . import external
-from ._preprocessing import (
+from dandelion.preprocessing import external
+from dandelion.preprocessing._preprocessing import (
     assign_isotype,
     assign_isotypes,
     calculate_threshold,
@@ -18,7 +18,7 @@ from ._preprocessing import (
     reannotate_genes,
     reassign_alleles,
 )
-from .external._preprocessing import recipe_scanpy_qc
+from dandelion.preprocessing.external._preprocessing import recipe_scanpy_qc
 
 __all__ = [
     "assign_isotype",

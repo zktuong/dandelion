@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-06 08:08:00
+# @Last Modified time: 2022-10-27 10:22:34
 """io module."""
 import bz2
 import gzip
@@ -21,8 +21,8 @@ from os import PathLike
 from scanpy import logging as logg
 from typing import Union, Sequence, Optional, List
 
-from ..utilities._core import *
-from ..utilities._utilities import *
+from dandelion.utilities._core import *
+from dandelion.utilities._utilities import *
 
 
 AIRR = [
