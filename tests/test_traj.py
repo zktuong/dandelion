@@ -65,6 +65,10 @@ def test_trajectory(mock_show):
     )
 
 
+@pytest.mark.skipif(
+    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    reason="macos CI stalls.",
+)
 def test_trajectory_setup():
     """test_workflow with differen defaults"""
     adata = sc.read(FILE)
