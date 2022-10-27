@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-19 15:26:13
+# @Last Modified time: 2022-10-27 10:48:00
 """preprocessing module."""
 import anndata as ad
 import functools
@@ -2496,6 +2496,7 @@ def filter_contigs(
             out_adata = adata_[adata_.obs["filter_contig"].isin(FALSES)].copy()
         else:
             out_adata = adata_.copy()
+        transfer(out_adata, out_dat, overwrite=True)
         logg.info(
             " finished",
             time=start,
