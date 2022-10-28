@@ -72,7 +72,7 @@ Once done, run the following:
 
 .. code:: bash
 
-    .. conda install -c conda-forge graph-tool
+    conda install -c conda-forge graph-tool
     pip install sc-dandelion
 
 
