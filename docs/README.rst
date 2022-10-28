@@ -179,25 +179,31 @@ If you use the pre-processing tools/functions, please cite the relevant manuscri
 References
 ----------
 
-.. [Bashford-Rogers13] Bashford-Rogers *et al.* (2013),
+.. [Bashford-Rogers2013] Bashford-Rogers *et al.* (2013),
    *Network properties derived from deep sequencing of human B-cell receptor repertoires delineate B-cell populations*,
    `Genome Research <https://genome.cshlp.org/content/23/11/1874>`__.
 
-.. [Bashford-Rogers19] Bashford-Rogers *et al.* (2019),
+.. [Bashford-Rogers2019] Bashford-Rogers *et al.* (2019),
    *Analysis of the B cell receptor repertoire in six immune-mediated diseases*,
    `Nature <https://www.nature.com/articles/s41586-019-1595-3>`__.
 
-.. [Gadala-Maria15] Gadala-Maria *et al.* (2015),
+.. [Dann2022] Dann *et al.* (2022),
+   *Differential abundance testing on single-cell data using k-nearest neighbor graphs*,
+   `Nature Biotechnology <https://doi.org/10.1038/s41587-021-01033-z>`__.
+   `GitHub <https://github.com/emdann/milopy>`__.
+
+.. [Gadala-Maria2015] Gadala-Maria *et al.* (2015),
    *Automated analysis of high-throughput B cell sequencing data reveals a high frequency of novel immunoglobulin V gene segment alleles*,
    `Proceedings of the National Academy of Sciency of the United States of America <https://www.pnas.org/content/112/8/E862>`__.
 
-.. [Gupta15] Gupta *et al.* (2015),
+.. [Gupta2015] Gupta *et al.* (2015),
    *Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data*,
    `Bioinformatics <https://academic.oup.com/bioinformatics/article/31/20/3356/195677>`__.
 
-.. [Ma16] Ma *et al.* (2016)
-   *nxviz: Composable and rational network visualizations in matplotlib*,
-   `Github <https://github.com/ericmjl/nxviz>`__.
+.. [Setty2019] Setty *et al.* (2019)
+   *Characterization of cell fate probabilities in single-cell data with Palantir*,
+   `Nature Biotechnology <https://doi.org/10.1038/s41587-019-0068-4>`__.
+   `GitHub <https://github.com/dpeerlab/Palantir>`__.
 
 .. [Sleckman1998] Sleckman *et al.* (1998)
    *Assembly of productive T cell receptor delta variable region genes exhibits allelic inclusion*,
@@ -212,7 +218,7 @@ References
    `Bioinformatics <https://academic.oup.com/bioinformatics/article/36/18/4817/5866543>`__.
    `GitHub <https://github.com/icbi-lab/scirpy>`__.
 
-.. [Wolf18] Wolf *et al.* (2018),
+.. [Wolf2018] Wolf *et al.* (2018),
    *Scanpy: large-scale single-cell gene expression data analysis*,
    `Genome Biology <https://doi.org/10.1186/s13059-017-1382-0>`__.
    `GitHub <https://github.com/theislab/scanpy>`__.
