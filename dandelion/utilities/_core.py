@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-08 14:26:07
+# @Last Modified time: 2022-11-08 15:24:59
 """core module."""
 import bz2
 import copy
@@ -2233,13 +2233,13 @@ def update_metadata(
             `merge`
                 returns the retrieval merged into one columns for each contig,
                 separated by `|` for unique elements.
-            'split and sum'
+            `split and sum`
                 returns the retrieval sumed in the VDJ and VJ columns (separately).
-            'split and average'
+            `split and average`
                 returns the retrieval averaged in the VDJ and VJ columns (separately).
-            'sum'
+            `sum`
                 returns the retrieval sumed into one column for all contigs.
-            'average'
+            `average`
                 returns the retrieval averaged into one column for all contigs.
     collapse_alleles : bool
         Returns the V(D)J genes with allelic calls if False.
