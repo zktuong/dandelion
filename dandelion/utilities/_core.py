@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:22:30
+# @Last Modified time: 2022-11-08 15:24:59
 """core module."""
 import bz2
 import copy
@@ -2219,19 +2219,28 @@ def update_metadata(
         Column name of clone id. None defaults to 'clone_id'.
     retrieve_mode: str
         One of:
-            `split and unique only` returns the retrieval splitted into two columns,
-                i.e. one for VDJ and one for VJ chains, separated by '|' for unique elements.
-            `merge and unique only` returns the retrieval merged into one column,
-                separated by '|' for unique elements.
-            `split and merge` returns the retrieval splitted into two columns,
-                i.e. one for VDJ and one for VJ chains, separated by '|' for every elements.
-            `split` returns the retrieval splitted into separate columns for each contig.
-            `merge` returns the retrieval merged into one columns for each contig,
-                separated by '|' for unique elements.
-            'split and sum' returns the retrieval sumed in the VDJ and VJ columns (separately).
-            'split and average' returns the retrieval averaged in the VDJ and VJ columns (separately).
-            'sum' returns the retrieval sumed into one column for all contigs.
-            'average' returns the retrieval averaged into one column for all contigs.
+            `split and unique only`
+                returns the retrieval splitted into two columns,
+                i.e. one for VDJ and one for VJ chains, separated by `|` for unique elements.
+            `merge and unique only`
+                returns the retrieval merged into one column,
+                separated by `|` for unique elements.
+            `split and merge`
+                returns the retrieval splitted into two columns,
+                i.e. one for VDJ and one for VJ chains, separated by `|` for every elements.
+            `split`
+                returns the retrieval splitted into separate columns for each contig.
+            `merge`
+                returns the retrieval merged into one columns for each contig,
+                separated by `|` for unique elements.
+            `split and sum`
+                returns the retrieval sumed in the VDJ and VJ columns (separately).
+            `split and average`
+                returns the retrieval averaged in the VDJ and VJ columns (separately).
+            `sum`
+                returns the retrieval sumed into one column for all contigs.
+            `average`
+                returns the retrieval averaged into one column for all contigs.
     collapse_alleles : bool
         Returns the V(D)J genes with allelic calls if False.
     reinitialize : bool
@@ -2239,7 +2248,8 @@ def update_metadata(
         Useful when updating older versions of `dandelion` to newer version.
     Returns
     -------
-    `Dandelion` object with `.metadata` slot initialized.
+    Dandelion
+        `Dandelion` object with `.metadata` slot initialized.
     """
 
     if clone_key is None:

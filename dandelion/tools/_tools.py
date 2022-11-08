@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:20:14
+# @Last Modified time: 2022-11-08 14:30:34
 """tools module."""
 import math
 import os
@@ -73,7 +73,8 @@ def find_clones(
 
     Returns
     -------
-    `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+    Dandelion
+        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     start = logg.info("Finding clonotypes")
     pd.set_option("mode.chained_assignment", None)
@@ -706,8 +707,9 @@ def transfer(
         list of column names will overwrite that specific column(s).
 
     Returns
-    ----------
-    `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
+    -------
+    AnnData
+        `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
     """
     start = logg.info("Transferring network")
     # always overwrite with whatever columns are in dandelion's metadata:
@@ -963,7 +965,8 @@ def define_clones(
 
     Returns
     -------
-    `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+    Dandelion
+        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     start = logg.info("Finding clones")
     if ncpu is None:
@@ -1387,7 +1390,8 @@ def clone_size(
 
     Returns
     -------
-    `Dandelion` object with clone size columns annotated in `.metadata` slot.
+    Dandelion
+        `Dandelion` object with clone size columns annotated in `.metadata` slot.
     """
     start = logg.info("Quantifying clone sizes")
 
@@ -1609,7 +1613,8 @@ def clone_overlap(
         whether to print progress
     Returns
     -------
-    a `pandas DataFrame`.
+    Union[AnnData, pd.DataFrame]:
+        Either `AnnData` or a `pandas.DataFrame`.
     """
     start = logg.info("Finding clones")
     if isinstance(self, Dandelion):
@@ -1755,13 +1760,14 @@ def productive_ratio(
     groupby: str,
     groups: Optional[List] = None,
     locus: Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"] = "TRB",
-):
+) -> None:
     """
     Compute the cell-level productive/non-productive contig ratio.
 
     Only the contig with the highest umi count in a cell will be used for this
     tabulation.
 
+    Returns inplace `AnnData` with `.uns['productive_ratio']`.
     Parameters
     ----------
     adata : AnnData
@@ -1774,9 +1780,6 @@ def productive_ratio(
         Optional list of categories to return.
     locus : Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"], optional
         One of the accepted locuses to perform the tabulation
-    Returns
-    -------
-        `AnnData` with `.uns['productive_ratio']`.
     """
     start = logg.info("Tabulating productive ratio")
     vdjx = vdj[(vdj.data.cell_id.isin(adata.obs_names))].copy()
@@ -1853,7 +1856,7 @@ def vj_usage_pca(
     ],
     verbose=False,
     **kwargs,
-):
+) -> AnnData:
     """
     Extract productive V/J gene usage from single cell data and compute PCA.
 

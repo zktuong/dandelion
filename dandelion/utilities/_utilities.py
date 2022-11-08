@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-24 22:21:57
+# @Last Modified time: 2022-11-08 14:28:06
 """utilities module."""
 import os
 import re
@@ -73,6 +73,7 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
 
     Returns
     -------
+    Dict
         dictionary
     """
     if (isinstance(meta, pd.DataFrame)) & (columns is not None):
@@ -99,6 +100,7 @@ def clean_nan_dict(d: Dict) -> Dict:
 
     Returns
     -------
+    Dict
         dictionary with no NAs.
     """
     return {k: v for k, v in d.items() if v is not np.nan}
@@ -115,6 +117,7 @@ def flatten(l: Sequence) -> Sequence:
 
     Returns
     -------
+    Sequence
         a flattened list.
     """
     for el in l:
@@ -149,6 +152,7 @@ def bh(pvalues: np.array) -> np.array:
             array of p-values to correct
     Returns
     -------
+    np.array
         np.array of corrected p-values
     """
     n = int(pvalues.shape[0])

@@ -17,9 +17,9 @@ jobs:
         shell: bash -l {0}
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: '3.7'
       - id: version
@@ -27,7 +27,7 @@ jobs:
         run: |
           pip install setuptools wheel setuptools_scm numpy
           pip install git+https://www.github.com/zktuong/dandelion.git
-          echo "##[set-output name=version;]$(python dandelion/logging/_badge.py)"
+          echo "version=$(python dandelion/logging/_badge.py)" >> $GITHUB_OUTPUT
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.1
         with:

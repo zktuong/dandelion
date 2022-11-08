@@ -7,6 +7,18 @@ on:
   push:
     branches:
       - "master"
+  schedule:
+    # every Sunday at 0:00
+    #        ┌───────────── minute (0 - 59)
+    #        │ ┌───────────── hour (0 - 23)
+    #        │ │ ┌───────────── day of the month (1 - 31)
+    #        │ │ │ ┌───────────── month (1 - 12)
+    #        │ │ │ │ ┌───────────── day of the week (0 - 6)
+    #        │ │ │ │ │                                   
+    #        │ │ │ │ │
+    #        │ │ │ │ │
+    #        * * * * *
+    - cron: '0 0 * * 0'
 
 env:
   cache-version: 'cache-v1'
@@ -27,8 +39,9 @@ jobs:
         run: |
           if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* ]]; then
             echo "::set-output name=keepgoing::true"
+            echo "keepgoing=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=keepgoing::false"
+            echo "keepgoing=false" >> $GITHUB_OUTPUT
           fi
 
   tests:
@@ -61,8 +74,8 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
 
     - name: Install ubuntu system dependencies
       if: matrix.config.os == 'ubuntu-latest'
@@ -76,7 +89,7 @@ jobs:
         brew install cairo pkg-config autoconf automake libtool
 
     - name: Cache conda
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       env:
         # Increase this value to reset cache if etc/example-environment.yml has not changed
         CACHE_NUMBER: 0
@@ -122,25 +135,20 @@ jobs:
       name: Check R version
       run: |
         R --version > VERSION
-        echo "##[set-output name=version;]$(head -1 VERSION | awk '{print $3}')"
-        echo "##[set-output name=mainbiocversion;]$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')"
-        echo "##[set-output name=subbiocversion;]$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')"
-        echo "##[set-output name=biocversion;]$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')"
+        echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
+        echo "mainbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
+        echo "subbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')" >> $GITHUB_OUTPUT
+        echo "biocversion=$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
       shell: bash -l {0}
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
       with:
         r-version: ${{ steps.R.outputs.version}}
-
-    - name: Setup r-lib/remotes
-      run: |
-        install.packages('remotes')
-      shell: Rscript {0}
-
+    
     - name: Cache ubuntu R packages
       if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os == 'ubuntu-latest'"
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: /home/runner/work/_temp/Library
         key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
@@ -148,12 +156,18 @@ jobs:
 
     - name: Cache macOS R packages
       if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os != 'ubuntu-latest'"
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ env.R_LIBS_USER }}
         key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
         restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
 
+    - name: Setup r-lib/remotes
+      run: |
+        install.packages(c('remotes', 'optparse', 'RCurl', 'XML','matrixStats'))
+      shell: Rscript {0}
+
+    
     - name: Install Dandelion
       run: |
         python -m pip install git+https://github.com/emdann/milopy.git palantir
@@ -162,25 +176,18 @@ jobs:
     - name: Install ubuntu R dependencies
       if: matrix.config.os == 'ubuntu-latest'
       run: |
-        install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
-        BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
-        BiocManager::install(c('GenomeInfoDb', 'Rsamtools'))
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
       shell: Rscript {0}
 
     - name: Install macOS R dependencies
       if: matrix.config.os != 'ubuntu-latest'
       run: |
         options(install.packages.compile.from.source = "never")
-        install.packages(c('RCurl','XML'))
         remotes::install_cran("BiocManager")
-        BiocManager::install(version = ${{ steps.R.outputs.biocversion}}, ask = FALSE)
-        BiocManager::install(c('GenomeInfoDb', 'Rsamtools'))
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages('matrixStats')
-        install.packages(c('shazam', 'alakazam', 'tigger', 'airr', 'optparse'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
       shell: Rscript {0}
 
     - name: Test if R dependencies are installed properly
