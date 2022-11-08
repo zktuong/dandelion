@@ -27,7 +27,7 @@ jobs:
         run: |
           pip install setuptools wheel setuptools_scm numpy
           pip install git+https://www.github.com/zktuong/dandelion.git
-          echo "version=$(python dandelion/logging/_badge.py)" >> $GITHUB_STATE
+          echo "version=$(python dandelion/logging/_badge.py)" >> $GITHUB_OUTPUT
       - name: version badge
         uses: RubbaBoy/BYOB@v1.2.1
         with:

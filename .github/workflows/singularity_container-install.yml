@@ -23,9 +23,9 @@ jobs:
       - id: checkfiles
         run: |
           if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* ]] ; then
-            echo "keepgoing=true" >> $GITHUB_STATE
+            echo "keepgoing=true" >> $GITHUB_OUTPUT
           else
-            echo "keepgoing=false" >> $GITHUB_STATE
+            echo "keepgoing=false" >> $GITHUB_OUTPUT
           fi
 
   container:
@@ -71,7 +71,7 @@ jobs:
       - name: Extract repository location
         shell: bash
         run: |
-          echo "location=$(echo "  - git+https://www.github.com/${GITHUB_REPOSITORY}@${GITHUB_REF#refs/heads/}")" >> $GITHUB_STATE
+          echo "location=$(echo "  - git+https://www.github.com/${GITHUB_REPOSITORY}@${GITHUB_REF#refs/heads/}")" >> $GITHUB_OUTPUT
         id: extract_location
 
       - name: Build Container
