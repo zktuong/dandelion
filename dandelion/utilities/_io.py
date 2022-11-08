@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:22:34
+# @Last Modified time: 2022-11-08 14:27:16
 """io module."""
 import bz2
 import gzip
@@ -173,7 +173,8 @@ def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
 
     Returns
     -------
-    `Dandelion` object.
+    Dandelion
+        `Dandelion` object.
     """
     try:
         data = pd.read_hdf(filename, "data")
@@ -266,7 +267,8 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
 
     Returns
     -------
-    `Dandelion` object.
+    Dandelion
+        `Dandelion` object.
     """
     try:
         data = pd.read_hdf(filename, "data")
@@ -359,7 +361,8 @@ def read_10x_airr(file: str) -> Dandelion:
 
     Returns
     -------
-    `Dandelion` object of pandas data frame.
+    Dandelion
+        `Dandelion` object of pandas data frame.
 
     """
     dat = load_data(file)
@@ -413,7 +416,8 @@ def to_scirpy(data: Dandelion, transfer: bool = False, **kwargs) -> AnnData:
 
     Returns
     -------
-    `AnnData` object in the format initialized by `scirpy`.
+    AnnData
+        `AnnData` object in the format initialized by `scirpy`.
 
     """
     try:
@@ -448,7 +452,8 @@ def from_scirpy(adata: AnnData) -> Dandelion:
 
     Returns
     -------
-    `Dandelion` object.
+    Dandelion
+        `Dandelion` object.
 
     """
     try:
@@ -487,6 +492,7 @@ def concat(
 
     Returns
     -------
+    Dandelion
         `Dandelion` object
     """
     arrays = list(arrays)
@@ -570,7 +576,8 @@ def read_10x_vdj(
         whether or not to print which files are read/found. Default is False.
     Returns
     -------
-    `Dandelion` or pandas `DataFrame` object.
+    Union[Dandelion, pd.DataFrame]
+        `Dandelion` or pandas `DataFrame` object.
 
     """
     if filename_prefix is None:
