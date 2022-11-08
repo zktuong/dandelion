@@ -27,8 +27,9 @@ jobs:
         run: |
           if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* ]]; then
             echo "::set-output name=keepgoing::true"
+            echo "keepgoing=true" >> $GITHUB_STATE
           else
-            echo "::set-output name=keepgoing::false"
+            echo "keepgoing=false" >> $GITHUB_STATE
           fi
 
   tests:
@@ -122,10 +123,10 @@ jobs:
       name: Check R version
       run: |
         R --version > VERSION
-        echo "##[set-output name=version;]$(head -1 VERSION | awk '{print $3}')"
-        echo "##[set-output name=mainbiocversion;]$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')"
-        echo "##[set-output name=subbiocversion;]$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')"
-        echo "##[set-output name=biocversion;]$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')"
+        echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_STATE
+        echo "mainbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_STATE
+        echo "subbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')" >> $GITHUB_STATE
+        echo "biocversion=$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_STATE
       shell: bash -l {0}
 
     - name: Set up R
