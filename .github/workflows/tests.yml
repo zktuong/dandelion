@@ -178,7 +178,7 @@ jobs:
       run: |
         remotes::install_cran("BiocManager")
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('alakazam', 'tigger', 'optparse'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
       shell: Rscript {0}
 
     - name: Install macOS R dependencies
@@ -187,7 +187,7 @@ jobs:
         options(install.packages.compile.from.source = "never")
         remotes::install_cran("BiocManager")
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('alakazam', 'tigger', 'optparse'))
+        install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
       shell: Rscript {0}
 
     - name: Test if R dependencies are installed properly
