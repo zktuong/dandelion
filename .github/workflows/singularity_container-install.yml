@@ -3,11 +3,14 @@ on:
   push:
     branches:
       - master
-
   # Do the builds on all pull requests (to test them)
   pull_request: 
     branches:
       - "*"
+  schedule:
+    # every Sunday at 0:00
+    - cron: '0 0 * * 0'
+
 jobs:
   changes:
     name: Checking changed files
