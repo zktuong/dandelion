@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-08 14:27:16
+# @Last Modified time: 2022-11-09 22:36:52
 """io module."""
 import bz2
 import gzip
@@ -11,6 +11,9 @@ import os
 import re
 
 import _pickle as cPickle
+import pickle
+
+pickle.HIGHEST_PROTOCOL = 4
 import networkx as nx
 import numpy as np
 import pandas as pd
