@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:48:00
+# @Last Modified time: 2022-11-17 14:40:00
 
 """preprocessing module."""
 import anndata as ad
@@ -2280,11 +2280,14 @@ def filter_contigs(
         AnnData object to filter. If not provided, will assume to keep all cells in the airr table.
     filter_contig : bool
         If True, V(D)J `DataFrame` object returned will be filtered. Default is True.
-    library_type : bools
+    library_type : bool
         if specified, it will first filter based on the expected type of contigs:
-            ig: IGH, IGK, IGL
-            tr-ab: TRA, TRB
-            tr-gd: TRG, TRD
+            `ig`:
+                IGH, IGK, IGL
+            `tr-ab`:
+                TRA, TRB
+            `tr-gd`:
+                TRG, TRD
         The rationale is that the choice of the library type should mean that the primers used would most likely
         amplify those related sequences and if there's any unexpected contigs, then they shouldn't be analysed.
     filter_rna : bool
@@ -5226,11 +5229,14 @@ def check_contigs(
         Dandelion object.
     productive_only : bool
         whether or not to retain only productive contigs.
-    library_type : bools
+    library_type : bool
         if specified, it will first filter based on the expected type of contigs:
-            ig: IGH, IGK, IGL
-            tr-ab: TRA, TRB
-            tr-gd: TRG, TRD
+            `ig`:
+                IGH, IGK, IGL
+            `tr-ab`:
+                TRA, TRB
+            `tr-gd`:
+                TRG, TRD
     umi_foldchange_cutoff : int
         related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as
         doublets. Default is empirically set at 2-fold.
