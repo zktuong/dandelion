@@ -175,7 +175,7 @@ Please also cite the following pre-print if you use version 0.3.0 onwards:
    `bioRxiv <https://doi.org/10.1101/2022.11.18.517068>`__.
 
 
-*Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik G.H. Lindeboom, Roser Vilarrasa Blasi, Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Zewen Kelvin Tuong, Menna R. Clatworthy, Sarah Teichmann.* ***Single cell antigen receptor analysis reveals lymphocyte developmental origins***. *bioRxiv 2022.11.18.517068; doi: https://doi.org/10.1101/2022.11.18.517068*
+*Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik G.H. Lindeboom, Roser Vilarrasa Blasi, Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Zewen Kelvin Tuong, Menna R. Clatworthy, Sarah Teichmann.* **Single cell antigen receptor analysis reveals lymphocyte developmental origins**. *bioRxiv 2022.11.18.517068; doi: https://doi.org/10.1101/2022.11.18.517068*
 
 
 If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
