@@ -164,6 +164,7 @@ jobs:
     - name: Install ubuntu R dependencies
       if: matrix.config.os == 'ubuntu-latest'
       run: |
+        options(install.packages.compile.from.source = "never")
         remotes::install_cran("BiocManager")
         BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
         install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
