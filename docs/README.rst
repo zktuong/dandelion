@@ -168,6 +168,16 @@ Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.*
 COVID-19**. *Nature Medicine 2021.04.20; doi:
 https://dx.doi.org/10.1038/s41591-021-01329-2*
 
+Please also cite the following pre-print if you use version 0.3.0 onwards:
+
+.. [Suo2022] Suo *et al.* (2022),
+   *Single cell antigen receptor analysis reveals lymphocyte developmental origins*,
+   `bioRxiv <https://doi.org/10.1101/2022.11.18.517068>`__.
+
+
+*Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik G.H. Lindeboom, Roser Vilarrasa Blasi, Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Zewen Kelvin Tuong, Menna R. Clatworthy, Sarah Teichmann.* **Single cell antigen receptor analysis reveals lymphocyte developmental origins**. *bioRxiv 2022.11.18.517068; doi: https://doi.org/10.1101/2022.11.18.517068*
+
+
 If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
 
 .. [changeo]
@@ -217,6 +227,10 @@ References
    *Scirpy: a Scanpy extension for analyzing single-cell T-cell receptor-sequencing data*,
    `Bioinformatics <https://academic.oup.com/bioinformatics/article/36/18/4817/5866543>`__.
    `GitHub <https://github.com/icbi-lab/scirpy>`__.
+
+.. [Suo2022] Suo *et al.* (2022),
+   *Single cell antigen receptor analysis reveals lymphocyte developmental origins*,
+   `bioRxiv <https://doi.org/10.1101/2022.11.18.517068>`__.
 
 .. [Wolf2018] Wolf *et al.* (2018),
    *Scanpy: large-scale single-cell gene expression data analysis*,
