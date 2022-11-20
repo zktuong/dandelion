@@ -135,7 +135,8 @@ jobs:
 
     - name: Setup r-lib/remotes
       run: |
-        install.packages(c('remotes', 'optparse', 'RCurl', 'XML','matrixStats'))
+        options(install.packages.compile.from.source = "never")
+        install.packages(c('remotes', 'optparse', 'RCurl', 'XML','matrixStats', 'stringi'))
       shell: Rscript {0}
 
     
