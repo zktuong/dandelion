@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:20:44
+# @Last Modified time: 2022-11-21 22:15:55
 """core module."""
 import bz2
 import copy
@@ -317,7 +317,7 @@ class Dandelion:
             if isinstance(v, pd.DataFrame):
                 v.index = value
 
-    def copy(self) -> Dandelion:
+    def copy(self) -> "Dandelion":
         """
         Performs a deep copy of all slots in `Dandelion` class.
 
@@ -1848,7 +1848,7 @@ class Query:
 
 def initialize_metadata(
     self, cols: List[str], clonekey: str, collapse_alleles: bool
-) -> Dandelion:
+) -> "Dandelion":
     """Initialize Dandelion metadata."""
     init_dict = {}
     for col in cols:
@@ -2254,7 +2254,7 @@ def update_metadata(
     reinitialize: bool = True,
     verbose: bool = False,
     by_celltype: bool = False,
-) -> Dandelion:
+) -> "Dandelion":
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
