@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-08 14:28:06
+# @Last Modified time: 2022-11-21 21:30:55
 """utilities module."""
 import os
 import re
@@ -14,7 +14,7 @@ import pandas as pd
 from airr import RearrangementSchema
 from collections import defaultdict
 from subprocess import run
-from typing import Sequence, Tuple, Dict, Union, Optional, TypeVar, List
+from typing import Tuple, Dict, Union, Optional, TypeVar, List
 
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
@@ -60,20 +60,20 @@ class Tree(defaultdict):
         self.value = value
 
 
-def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
+def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> dict:
     """
     Generate a dictionary from a dataframe.
 
     Parameters
     ----------
-    meta
+    meta : pd.DataFrame
         pandas dataframe or file path
-    columns
+    columns : Tuple[str, str]
         column names in dataframe
 
     Returns
     -------
-    Dict
+    dict
         dictionary
     """
     if (isinstance(meta, pd.DataFrame)) & (columns is not None):
@@ -89,35 +89,35 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> Dict:
     return sample_dict
 
 
-def clean_nan_dict(d: Dict) -> Dict:
+def clean_nan_dict(d: dict) -> dict:
     """
     Remove nan from dictionary.
 
     Parameters
     ----------
-    d : Dict
+    d : dict
         dictionary
 
     Returns
     -------
-    Dict
+    dict
         dictionary with no NAs.
     """
     return {k: v for k, v in d.items() if v is not np.nan}
 
 
-def flatten(l: Sequence) -> Sequence:
+def flatten(l: list) -> list:
     """
     Flatten a list-in-list-in-list.
 
     Parameters
     ----------
-    l : Sequence
+    l : list
         a list-in-list list
 
-    Returns
-    -------
-    Sequence
+    Yields
+    ------
+    list
         a flattened list.
     """
     for el in l:
@@ -148,8 +148,9 @@ def bh(pvalues: np.array) -> np.array:
 
     Parameters
     ----------
-        pvalues : np.array
-            array of p-values to correct
+    pvalues : np.array
+        array of p-values to correct
+
     Returns
     -------
     np.array
@@ -566,12 +567,19 @@ def load_data(obj: Optional[Union[pd.DataFrame, str]]) -> pd.DataFrame:
 
     Parameters
     ----------
-    obj : DataFrame, str
+    obj : Optional[Union[pd.DataFrame, str]]
         file path to .tsv file or pandas DataFrame object.
 
     Returns
     -------
-    pandas DataFrame object.
+    pd.DataFrame
+
+    Raises
+    ------
+    FileNotFoundError
+        if input is not found.
+    KeyError
+        if `sequence_id` not found in input.
     """
     if obj is not None:
         if os.path.isfile(str(obj)):
