@@ -1,4 +1,4 @@
-name: Weekly Test Singularity Build
+name: Test Singularity Build
 on: 
   # push:
   #   branches:
