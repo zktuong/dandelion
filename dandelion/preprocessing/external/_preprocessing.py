@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:15:18
+# @Last Modified time: 2022-11-21 21:05:08
 """preprocessing module."""
 import os
 import re
@@ -14,7 +14,6 @@ import scanpy as sc
 
 from anndata import AnnData
 from datetime import timedelta
-from os import PathLike
 from scanpy import logging as logg
 from sklearn import mixture
 from subprocess import run
