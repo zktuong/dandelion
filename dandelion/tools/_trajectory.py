@@ -46,33 +46,34 @@ def setup_vdj_pseudobulk(
     ----------
     adata : AnnData
         cell adata before constructing anndata.
-    mode : Literal['B', 'abT', 'gdT'], optional
+    mode : Optional[Literal["B", "abT", "gdT"]], optional
         Optional mode for extractin the V(D)J genes. If set as `None`, it requires the option `extract_cols` to be
         specified with a list of column names where this will be used to retrieve the main call.
     subsetby : Optional[str], optional
         If provided, only the groups/categories in this column will be used for computing the VDJ feature space.
-    groups : Optional[List], optional
+    groups : Optional[List[str]], optional
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
-    allowed_chain_status : Optional[List], optional
+    allowed_chain_status : Optional[List[str]], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
         Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ", "Orphan VDJ-exception"].
-    productive_vdj: bool, optional
+    productive_vdj : bool, optional
         If True, cells will only be kept if the main VDJ chain is productive.
-    productive_vj: bool, optional
+    productive_vj : bool, optional
         If True, cells will only be kept if the main VJ chain is productive.
     extract_cols : Optional[List[str]], optional
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
-    productive_cols: Optional[List[str]], optional
+    productive_cols : Optional[List[str]], optional
         Column names where contig productive status is stored so that this will be used instead of the standard columns.
-    check_vdj_mapping: Optional[List[str]], optional
+    check_vdj_mapping : Optional[List[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
         Specifying None will skip this step.
-    check_vj_mapping: Optional[List[str]], optional
+    check_vj_mapping : Optional[List[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
         Specifying None will skip this step.
-    check_vj_extract_cols_mapping: Optional[List[str]], optional
+    check_extract_cols_mapping : Optional[List[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in columns specified in extract_cols.
         Specifying None will skip this step.
+
     Returns
     -------
     AnnData
@@ -249,14 +250,14 @@ def vdj_pseudobulk(
     ----------
     adata : AnnData
         Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
-    pbs: Optional[array], optional
+    pbs : Optional[Union[np.ndarray, sp.sparse.csr_matrix]], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk: Optional[Union[str, List[str]]], optional
+    obs_to_bulk : Optional[Union[str, List[str]]], optional
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
-    obs_to_take: Optional[Union[str, List[str]]]
+    obs_to_take : Optional[Union[str, List[str]]], optional
         Optional obs column(s) to identify the most common value of for each pseudobulk.
-    cols: Optional[List], optional
+    cols : Optional[List[str]], optional
         If provided, use the specified obs columns to extract V(D)J calls
 
     Returns
@@ -310,7 +311,7 @@ def vdj_pseudobulk(
 
 def pseudotime_transfer(
     adata: AnnData, pr_res: "palantir.presults.PResults", suffix: str = ""
-):
+) -> AnnData:
     """Function to add pseudotime and branch probabilities into adata.obs in place.
 
     Parameters
@@ -321,6 +322,11 @@ def pseudotime_transfer(
         palantir pseudotime inference output object
     suffix : str, optional
         suffix to be added after the added column names, default "" (none)
+
+    Returns
+    -------
+    AnnData
+        transferred `AnnData`.
     """
     adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
 
@@ -400,12 +406,12 @@ def pseudobulk_gex(
     ----------
     adata_raw : AnnData
         Needs to have raw counts in .X
-    pbs: Optional[array], optional
+    pbs : Optional[Union[np.ndarray, sp.sparse.csr_matrix]], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk: Optional[Union[str, List[str]]], optional
+    obs_to_bulk : Optional[Union[str, List[str]]], optional
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
-    obs_to_take: Optional[Union[str, List[str]]]
+    obs_to_take : Optional[Union[str, List[str]]], optional
         Optional obs column(s) to identify the most common value of for each pseudobulk
 
     Returns
@@ -445,7 +451,7 @@ def bin_expression(
         cell adata.
     bin_no : int
         number of bins to be divided along pseudotime.
-    genes : List
+    genes : List[str]
         list of genes for the computation
     pseudotime_col : str
         column in adata.obs where pseudotime is stored
