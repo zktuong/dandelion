@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:54:29
+# @Last Modified time: 2022-11-21 20:52:00
 """network module."""
 import networkx as nx
 import numpy as np
@@ -26,7 +26,7 @@ from dandelion.utilities._utilities import *
 
 
 def generate_network(
-    data: Union[Dandelion, pd.DataFrame, str],
+    vdj_data: Union[Dandelion, pd.DataFrame, str],
     key: Optional[str] = None,
     clone_key: Optional[str] = None,
     min_size: int = 2,
@@ -43,7 +43,7 @@ def generate_network(
 
     Parameters
     ----------
-    data : Union[Dandelion, pd.DataFrame, str]
+    vdj_data : Union[Dandelion, pd.DataFrame, str]
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
         have been determined.
     key : Optional[str], optional
@@ -81,9 +81,9 @@ def generate_network(
     """
     start = logg.info("Generating network")
 
-    if isinstance(data, Dandelion):
-        dat = load_data(data.data)
-        if "ambiguous" in data.data:
+    if isinstance(vdj_data, Dandelion):
+        dat = load_data(vdj_data.data)
+        if "ambiguous" in vdj_data.data:
             dat = dat[dat["ambiguous"] == "F"].copy()
     else:
         dat = load_data(data)
@@ -109,10 +109,10 @@ def generate_network(
 
     if downsample is not None:
         # if downsample >= dat_h.shape[0]:
-        if downsample >= data.metadata.shape[0]:
+        if downsample >= vdj_data.metadata.shape[0]:
             logg.info(
                 "Cannot downsample to {} cells. Using all {} cells.".format(
-                    str(downsample), data.metadata.shape[0]
+                    str(downsample), vdj_data.metadata.shape[0]
                 )
             )
         else:
@@ -197,8 +197,8 @@ def generate_network(
         del dist_mat_list
 
         # generate edge list
-        if isinstance(data, Dandelion):
-            out = data.copy()
+        if isinstance(vdj_data, Dandelion):
+            out = vdj_data.copy()
             if downsample is not None:
                 out = Dandelion(dat_)
         else:  # re-initiate a Dandelion class object
@@ -435,13 +435,13 @@ def generate_network(
             "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
         ),
     )
-    if isinstance(data, Dandelion):
-        if data.germline is not None:
-            germline_ = data.germline
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.germline is not None:
+            germline_ = vdj_data.germline
         else:
             germline_ = None
-        if data.threshold is not None:
-            threshold_ = data.threshold
+        if vdj_data.threshold is not None:
+            threshold_ = vdj_data.threshold
         else:
             threshold_ = None
         if downsample is not None:
@@ -462,24 +462,24 @@ def generate_network(
             return out
         else:
             if (lyt and lyt_) is not None:
-                data.__init__(
-                    data=data.data,
-                    metadata=data.metadata,
+                vdj_data.__init__(
+                    data=vdj_data.data,
+                    metadata=vdj_data.metadata,
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
                     initialize=False,
                 )
             else:
-                data.__init__(
-                    data=data.data,
-                    metadata=data.metadata,
+                vdj_data.__init__(
+                    data=vdj_data.data,
+                    metadata=vdj_data.metadata,
                     layout=None,
                     graph=(g, g_),
                     germline=germline_,
                     initialize=False,
                 )
-            data.threshold = threshold_
+            vdj_data.threshold = threshold_
     else:
         if (lyt and lyt_) is not None:
             out = Dandelion(
@@ -522,14 +522,14 @@ def mst(mat: dict) -> Tree:
 
 
 def clone_degree(
-    data: Dandelion, weight: Optional[str] = None, verbose: bool = True
+    vdj_data: Dandelion, weight: Optional[str] = None, verbose: bool = True
 ) -> Dandelion:
     """
     Calculate node degree in BCR/TCR network.
 
     Parameters
     ----------
-    data : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
     weight : Optional[str], optional
         Atribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
@@ -544,16 +544,16 @@ def clone_degree(
         if input is not Dandelion class.
     """
     start = logg.info("Calculating node degree")
-    if isinstance(data, Dandelion):
-        if data.graph is None:
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.graph is None:
             raise AttributeError(
                 "Graph not found. Plase run tl.generate_network."
             )
         else:
-            G = data.graph[0]
+            G = vdj_data.graph[0]
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
-            data.metadata["clone_degree"] = pd.Series(cd[1])
+            vdj_data.metadata["clone_degree"] = pd.Series(cd[1])
             logg.info(
                 " finished",
                 time=start,
@@ -563,13 +563,13 @@ def clone_degree(
         raise TypeError("Input object must be of {}".format(Dandelion))
 
 
-def clone_centrality(data: Dandelion, verbose: bool = True):
+def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
     """
     Calculate node closeness centrality in BCR/TCR network.
 
     Parameters
     ----------
-    data : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
     verbose : bool, optional
         Whether or not to show logging information.
@@ -582,18 +582,18 @@ def clone_centrality(data: Dandelion, verbose: bool = True):
         if input is not Dandelion class.
     """
     start = logg.info("Calculating node closeness centrality")
-    if isinstance(data, Dandelion):
-        if data.graph is None:
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.graph is None:
             raise AttributeError(
                 "Graph not found. Plase run tl.generate_network."
             )
         else:
-            G = data.graph[0]
+            G = vdj_data.graph[0]
             cc = nx.closeness_centrality(G)
             cc = pd.DataFrame.from_dict(
                 cc, orient="index", columns=["clone_centrality"]
             )
-            data.metadata["clone_centrality"] = pd.Series(
+            vdj_data.metadata["clone_centrality"] = pd.Series(
                 cc["clone_centrality"]
             )
             logg.info(
@@ -1058,13 +1058,15 @@ def _rescale_layout(pos, scale=1):
     return pos
 
 
-def extract_edge_weights(data: Dandelion, expanded_only: bool = False) -> list:
+def extract_edge_weights(
+    vdj_data: Dandelion, expanded_only: bool = False
+) -> list:
     """
     Retrieve edge weights (BCR levenshtein distance) from graph.
 
     Parameters
     ----------
-    data : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
     expanded_only : bool, optional
         whether to retrieve the edge weights from the expanded only graph or entire graph.
@@ -1077,7 +1079,7 @@ def extract_edge_weights(data: Dandelion, expanded_only: bool = False) -> list:
     if expanded_only:
         try:
             edges, weights = zip(
-                *nx.get_edge_attributes(data.graph[1], "weight").items()
+                *nx.get_edge_attributes(vdj_data.graph[1], "weight").items()
             )
         except ValueError as e:
             print(
@@ -1088,7 +1090,7 @@ def extract_edge_weights(data: Dandelion, expanded_only: bool = False) -> list:
     else:
         try:
             edges, weights = zip(
-                *nx.get_edge_attributes(data.graph[0], "weight").items()
+                *nx.get_edge_attributes(vdj_data.graph[0], "weight").items()
             )
         except ValueError as e:
             print(
