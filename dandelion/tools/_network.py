@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 20:52:00
+# @Last Modified time: 2022-11-21 21:05:27
 """network module."""
 import networkx as nx
 import numpy as np
@@ -13,7 +13,7 @@ from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Sequence, Tuple, Optional
+from typing import Union, Tuple, Optional
 
 try:
     from networkx.utils import np_random_state as random_state
