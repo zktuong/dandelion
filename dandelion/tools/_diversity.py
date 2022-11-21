@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:46:24
+# @Last Modified time: 2022-11-21 21:50:41
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -59,10 +59,10 @@ def clone_rarefaction(
     """
     start = logg.info("Constructing rarefaction curve")
 
-    if isinstance(data, AnnData):
-        metadata = data.obs.copy()
-    elif isinstance(data, Dandelion):
-        metadata = data.metadata.copy()
+    if isinstance(vdj_data, AnnData):
+        metadata = vdj_data.obs.copy()
+    elif isinstance(vdj_data, Dandelion):
+        metadata = vdj_data.metadata.copy()
 
     if clone_key is None:
         clonekey = "clone_id"
@@ -127,10 +127,10 @@ def clone_rarefaction(
     else:
         diversitykey = diversity_key
 
-    if isinstance(data, AnnData):
-        if diversitykey not in data.uns:
-            data.uns[diversitykey] = {}
-        data.uns[diversitykey] = {
+    if isinstance(vdj_data, AnnData):
+        if diversitykey not in vdj_data.uns:
+            vdj_data.uns[diversitykey] = {}
+        vdj_data.uns[diversitykey] = {
             "rarefaction_cells_x": pred,
             "rarefaction_clones_y": y,
         }
@@ -139,7 +139,7 @@ def clone_rarefaction(
         time=start,
         deep=("updated `.uns` with rarefaction curves.\n"),
     )
-    if isinstance(data, Dandelion):
+    if isinstance(vdj_data, Dandelion):
         return {"rarefaction_cells_x": pred, "rarefaction_clones_y": y}
 
 
