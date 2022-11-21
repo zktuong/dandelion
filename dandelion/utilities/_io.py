@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-09 22:36:52
+# @Last Modified time: 2022-11-21 21:28:44
 """io module."""
 import bz2
 import gzip
@@ -20,9 +20,8 @@ import pandas as pd
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
-from os import PathLike
 from scanpy import logging as logg
-from typing import Union, Sequence, Optional, List
+from typing import Union, Optional, List
 
 from dandelion.utilities._core import *
 from dandelion.utilities._utilities import *
@@ -141,12 +140,13 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
 
     Parameters
     ----------
-    filename : str
+    filename : str, optional
         path to `.pkl` file. Depending on the extension, it will try to unzip accordingly.
 
     Returns
     -------
-    Dandelion object.
+    Dandelion
+        saved `Dandelion` object in pickle format.
     """
     if isBZIP(filename):
         data = bz2.BZ2File(filename, "rb")
@@ -171,13 +171,18 @@ def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
 
     Parameters
     ----------
-    filename : str
+    filename : str, optional
         path to `.h5` file
 
     Returns
     -------
     Dandelion
         `Dandelion` object.
+
+    Raises
+    ------
+    AttributeError
+        if `data` not found in `.h5` file.
     """
     try:
         data = pd.read_hdf(filename, "data")
@@ -261,17 +266,22 @@ def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
 
 def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     """
-    Read in and returns a `Dandelion` class from .h5 format.
+    Read in and returns a `Dandelion` class from .h5ddl format.
 
     Parameters
     ----------
-    filename : str
-        path to `.h5` file
+    filename : str, optional
+        path to `.h5ddl` file
 
     Returns
     -------
     Dandelion
         `Dandelion` object.
+
+    Raises
+    ------
+    AttributeError
+        if `data` not found in `.h5ddl` file.
     """
     try:
         data = pd.read_hdf(filename, "data")
@@ -365,8 +375,7 @@ def read_10x_airr(file: str) -> Dandelion:
     Returns
     -------
     Dandelion
-        `Dandelion` object of pandas data frame.
-
+        `Dandelion` object from 10x AIRR file.
     """
     dat = load_data(file)
     # get all the v,d,j,c calls
@@ -458,6 +467,10 @@ def from_scirpy(adata: AnnData) -> Dandelion:
     Dandelion
         `Dandelion` object.
 
+    Raises
+    ------
+    ImportError
+        if `scirpy` not installed.
     """
     try:
         import scirpy as ir
@@ -468,35 +481,40 @@ def from_scirpy(adata: AnnData) -> Dandelion:
 
 
 def concat(
-    arrays: Sequence[Union[pd.DataFrame, Dandelion]],
+    arrays: List[Union[pd.DataFrame, Dandelion]],
     check_unique: bool = True,
     sep: str = "-",
-    suffixes: Optional[List] = None,
-    prefixes: Optional[List] = None,
+    suffixes: Optional[List[str]] = None,
+    prefixes: Optional[List[str]] = None,
 ) -> Dandelion:
     """
     Concatenate dataframe and return as `Dandelion` object.
 
+    If both suffixes and prefixes are `None` and check_unique is True, then a sequential number suffix will be appended.
+
     Parameters
     ----------
-    arrays : Sequence
+    arrays : List[Union[pd.DataFrame, Dandelion]]
         List of `Dandelion` class objects or pandas dataframe
-    check_unique : bool
+    check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
-    sep : str
+    sep : str, optional
         the separator to append suffix/prefix.
-    suffixes : Optional, List
+    suffixes : Optional[List[str]], optional
         List of suffixes to append to sequence_id.
-        If both suffixes and prefixes are None and check_unique is True, then a sequential number suffix will be appended.
-    prefixes : Optional, List
+    prefixes : Optional[List[str]], optional
         List of prefixes to append to sequence_id.
-        If both suffixes and prefixes are None and check_unique is True, then a sequential number suffix will be appended.
 
     Returns
     -------
     Dandelion
-        `Dandelion` object
+        concatenated `Dandelion` object
+
+    Raises
+    ------
+    ValueError
+        if both prefixes and suffixes are provided.
     """
     arrays = list(arrays)
 
@@ -552,7 +570,7 @@ def concat(
 
 
 def read_10x_vdj(
-    path: Union[str, PathLike],
+    path: str,
     filename_prefix: Optional[str] = None,
     return_dandelion: bool = True,
     verbose: bool = False,
@@ -568,19 +586,24 @@ def read_10x_vdj(
 
     Parameters
     ----------
-    path : str, PathLike
+    path : str
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
-    filename_prefix : str, Optional
+    filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
-    return_dandelion : bool
+    return_dandelion : bool, optional
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
-        Default is True.
-    verbose : bool
+    verbose : bool, optional
         whether or not to print which files are read/found. Default is False.
+
     Returns
     -------
     Union[Dandelion, pd.DataFrame]
         `Dandelion` or pandas `DataFrame` object.
+
+    Raises
+    ------
+    IOError
+        if contig_annotations.csv and all_contig_annotations.json file(s) not found in the input folder.
 
     """
     if filename_prefix is None:
@@ -848,7 +871,7 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
 
 
 def change_file_location(
-    data: Sequence, filename_prefix: Optional[Union[Sequence, str]] = None
+    data: List[str], filename_prefix: Optional[Union[List[str], str]] = None
 ):
     """
     Move file from tmp folder to dandelion folder.
@@ -857,15 +880,16 @@ def change_file_location(
 
     Parameters
     ----------
-    data : Sequence
+    data : List[str]
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : str, Optional
+    filename_prefix : Optional[Union[List[str], str]], optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
 
-    Returns
-    -------
-    Individual V(D)J data files with v_call_genotyped column containing reassigned heavy chain v calls
+    No Longer Raises
+    ----------------
+    FileNotFoundError
+        if path to input file is not found.
     """
     fileformat = "blast"
     if type(data) is not list:
@@ -927,7 +951,7 @@ def change_file_location(
 
 
 def move_to_tmp(
-    data: Sequence, filename_prefix: Optional[Union[Sequence, str]] = None
+    data: List[str], filename_prefix: Optional[Union[List[str], str]] = None
 ):
     """Move file to tmp."""
     if type(data) is not list:
@@ -953,8 +977,8 @@ def move_to_tmp(
 
 
 def make_all(
-    data: Sequence,
-    filename_prefix: Optional[Union[Sequence, str]] = None,
+    data: List[str],
+    filename_prefix: Optional[Union[List[str], str]] = None,
     loci: Literal["ig", "tr"] = "tr",
 ):
     """Construct db-all tsv file."""
@@ -1015,8 +1039,8 @@ def make_all(
 
 
 def rename_dandelion(
-    data: Sequence,
-    filename_prefix: Optional[Union[Sequence, str]] = None,
+    data: List[str],
+    filename_prefix: Optional[Union[List[str], str]] = None,
     endswith="_igblast_db-pass_genotyped.tsv",
 ):
     """Rename final dandlion file."""
