@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:46:26
+# @Last Modified time: 2022-11-21 18:45:45
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -318,7 +318,7 @@ def clone_networkstats(
     expanded_only: bool = False,
     network_clustersize: bool = False,
     verbose: bool = False,
-) -> Tuple[defaultdict(list), defaultdict(list), defaultdict(list)]:
+) -> Tuple[defaultdict, defaultdict, defaultdict]:
     """Retrieve network stats.
 
     Parameters
@@ -334,7 +334,7 @@ def clone_networkstats(
 
     Returns
     -------
-    Tuple[defaultdict(list), defaultdict(list), defaultdict(list)]
+    Tuple[defaultdict, defaultdict, defaultdict]
         output nodes names, vertex sizes and clustersizes.
 
     Raises
