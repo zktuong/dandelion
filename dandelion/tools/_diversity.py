@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 18:45:45
+# @Last Modified time: 2022-11-21 20:43:29
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -30,7 +30,7 @@ from dandelion.utilities._utilities import *
 
 
 def clone_rarefaction(
-    data: Union[Dandelion, AnnData],
+    vdj_data: Union[Dandelion, AnnData],
     groupby: str,
     clone_key: Optional[str] = None,
     diversity_key: Optional[str] = None,
@@ -41,7 +41,7 @@ def clone_rarefaction(
 
     Parameters
     ----------
-    data : Union[Dandelion, AnnData]
+    vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
@@ -144,7 +144,7 @@ def clone_rarefaction(
 
 
 def clone_diversity(
-    data: Union[Dandelion, AnnData],
+    vdj_data: Union[Dandelion, AnnData],
     groupby: str,
     method: Literal["gini", "chao1", "shannon"] = "gini",
     metric: Literal["clone_network", "clone_degree", "clone_centrality"] = None,
@@ -167,7 +167,7 @@ def clone_diversity(
 
     Parameters
     ----------
-    data : Union[Dandelion, AnnData]
+    vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the gini indices on, for e.g. sample, patient etc.
@@ -314,7 +314,7 @@ def clone_diversity(
 
 
 def clone_networkstats(
-    data: Dandelion,
+    vdj_data: Dandelion,
     expanded_only: bool = False,
     network_clustersize: bool = False,
     verbose: bool = False,
@@ -323,7 +323,7 @@ def clone_networkstats(
 
     Parameters
     ----------
-    data : Dandelion
+    vdj_data : Dandelion
         input object
     expanded_only : bool, optional
         whethr or not to calculate only on expanded clones.
@@ -346,16 +346,16 @@ def clone_networkstats(
     """
     start = logg.info("Calculating vertex size of nodes after contraction")
 
-    if isinstance(data, Dandelion):
-        if data.graph is None:
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.graph is None:
             raise AttributeError(
                 "Graph not found. Please run tl.generate_network."
             )
         else:
             if expanded_only:
-                G = data.graph[1]
+                G = vdj_data.graph[1]
             else:
-                G = data.graph[0]
+                G = vdj_data.graph[0]
             remove_edges = defaultdict(list)
             vertexsizes = defaultdict(list)
             clustersizes = defaultdict(list)
@@ -404,7 +404,7 @@ def clone_networkstats(
 
 
 def diversity_gini(
-    data: Union[Dandelion, AnnData],
+    vdj_data: Union[Dandelion, AnnData],
     groupby: str,
     metric: Optional[str] = None,
     clone_key: Optional[str] = None,
@@ -425,7 +425,7 @@ def diversity_gini(
 
     Parameters
     ----------
-    data : Union[Dandelion, AnnData]
+    vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
@@ -876,7 +876,7 @@ def diversity_gini(
         self.metadata = metadata.copy()
 
     res = gini_indices(
-        data,
+        vdj_data,
         groupby=groupby,
         clone_key=clone_key,
         metric=metric,
@@ -898,8 +898,8 @@ def diversity_gini(
 
     if update_obs_meta:
         res_ = res.copy()
-        transfer_gini_indices(data, res_, groupby)
-        if isinstance(data, Dandelion):
+        transfer_gini_indices(vdj_data, res_, groupby)
+        if isinstance(vdj_data, Dandelion):
             logg.info(
                 " finished",
                 time=start,
@@ -912,7 +912,7 @@ def diversity_gini(
 
 
 def diversity_chao1(
-    data: Union[Dandelion, AnnData],
+    vdj_data: Union[Dandelion, AnnData],
     groupby: str,
     clone_key: Optional[str] = None,
     update_obs_meta: bool = False,
@@ -928,7 +928,7 @@ def diversity_chao1(
 
     Parameters
     ----------
-    data : Union[Dandelion, AnnData]
+    vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Chao1 estimates on, for e.g. sample, patient etc.
@@ -1091,7 +1091,7 @@ def diversity_chao1(
             self.metadata = metadata.copy()
 
     res = chao1_estimates(
-        data,
+        vdj_data,
         groupby=groupby,
         clone_key=clone_key,
         resample=resample,
@@ -1105,21 +1105,21 @@ def diversity_chao1(
     else:
         diversitykey = diversity_key
 
-    if isinstance(data, AnnData):
-        if diversitykey not in data.uns:
-            data.uns[diversitykey] = {}
-        data.uns[diversitykey].update({"chao1": res})
+    if isinstance(vdj_data, AnnData):
+        if diversitykey not in vdj_data.uns:
+            vdj_data.uns[diversitykey] = {}
+        vdj_data.uns[diversitykey].update({"chao1": res})
 
     if update_obs_meta:
         res_ = res.copy()
-        transfer_chao1_estimates(data, res_, groupby)
-        if isinstance(data, Dandelion):
+        transfer_chao1_estimates(vdj_data, res_, groupby)
+        if isinstance(vdj_data, Dandelion):
             logg.info(
                 " finished",
                 time=start,
                 deep=("updated `.metadata` with Chao1 estimates.\n"),
             )
-        elif isinstance(data, AnnData):
+        elif isinstance(vdj_data, AnnData):
             logg.info(
                 " finished",
                 time=start,
@@ -1127,7 +1127,7 @@ def diversity_chao1(
             )
     else:
         res_ = res.copy()
-        if isinstance(data, AnnData):
+        if isinstance(vdj_data, AnnData):
             logg.info(
                 " finished",
                 time=start,
@@ -1139,7 +1139,7 @@ def diversity_chao1(
 
 
 def diversity_shannon(
-    data: Union[Dandelion, AnnData],
+    vdj_data: Union[Dandelion, AnnData],
     groupby: str,
     clone_key: Optional[str] = None,
     update_obs_meta: bool = False,
@@ -1156,7 +1156,7 @@ def diversity_shannon(
 
     Parameters
     ----------
-    data : Union[Dandelion, AnnData]
+    vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
         Column name to calculate the Shannon entropy on, for e.g. sample, patient etc.
@@ -1362,7 +1362,7 @@ def diversity_shannon(
             self.metadata = metadata.copy()
 
     res = shannon_entropy(
-        data,
+        vdj_data,
         groupby=groupby,
         clone_key=clone_key,
         resample=resample,
@@ -1376,15 +1376,15 @@ def diversity_shannon(
     else:
         diversitykey = diversity_key
 
-    if isinstance(data, AnnData):
-        if diversitykey not in data.uns:
-            data.uns[diversitykey] = {}
-        data.uns[diversitykey].update({"shannon": res})
+    if isinstance(vdj_data, AnnData):
+        if diversitykey not in vdj_data.uns:
+            vdj_data.uns[diversitykey] = {}
+        vdj_data.uns[diversitykey].update({"shannon": res})
 
     if update_obs_meta:
         res_ = res.copy()
-        transfer_shannon_entropy(data, res_, groupby)
-        if isinstance(data, Dandelion):
+        transfer_shannon_entropy(vdj_data, res_, groupby)
+        if isinstance(vdj_data, Dandelion):
             if normalize:
                 logg.info(
                     " finished",
@@ -1399,7 +1399,7 @@ def diversity_shannon(
                     time=start,
                     deep=("updated `.metadata` with Shannon entropy.\n"),
                 )
-        elif isinstance(data, AnnData):
+        elif isinstance(vdj_data, AnnData):
             if normalize:
                 logg.info(
                     " finished",
@@ -1416,7 +1416,7 @@ def diversity_shannon(
                 )
     else:
         res_ = res.copy()
-        if isinstance(data, AnnData):
+        if isinstance(vdj_data, AnnData):
             if normalize:
                 logg.info(
                     " finished",

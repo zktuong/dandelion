@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 20:37:33
+# @Last Modified time: 2022-11-21 20:46:43
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -42,7 +42,7 @@ from dandelion.utilities._utilities import *
 
 
 def clone_rarefaction(
-    vdjdata: Union[AnnData, Dandelion],
+    vdj_data: Union[AnnData, Dandelion],
     color: str,
     clone_key: Optional[str] = None,
     palette: Optional[List[str]] = None,
@@ -71,7 +71,7 @@ def clone_rarefaction(
 
     Parameters
     ----------
-    vdjdata : Union[AnnData, Dandelion]
+    vdj_data : Union[AnnData, Dandelion]
         `AnnData` or `Dandelion` object.
     color : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
@@ -91,10 +91,10 @@ def clone_rarefaction(
     ggplot
         rarefaction plot.
     """
-    if isinstance(vdjdata, AnnData):
-        metadata = vdjdata.obs.copy()
-    elif isinstance(vdjdata, Dandelion):
-        metadata = vdjdata.metadata.copy()
+    if isinstance(vdj_data, AnnData):
+        metadata = vdj_data.obs.copy()
+    elif isinstance(vdj_data, Dandelion):
+        metadata = vdj_data.metadata.copy()
     if clone_key is None:
         clonekey = "clone_id"
     else:
@@ -162,9 +162,9 @@ def clone_rarefaction(
 
     options.figure_size = figsize
     if palette is None:
-        if isinstance(vdjdata, AnnData):
+        if isinstance(vdj_data, AnnData):
             try:
-                pal = vdjdata.uns[str(color) + "_colors"]
+                pal = vdj_data.uns[str(color) + "_colors"]
             except:
                 if len(list(set((pred.variable)))) <= 20:
                     pal = palettes.default_20
@@ -273,7 +273,7 @@ def clone_network(
 
 
 def barplot(
-    vdjdata: Union[AnnData, Dandelion],
+    vdj_data: Union[AnnData, Dandelion],
     color: str,
     palette: str = "Set1",
     figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
@@ -291,7 +291,7 @@ def barplot(
 
     Parameters
     ----------
-    vdjdata : Union[AnnData, Dandelion]
+    vdj_data : Union[AnnData, Dandelion]
         `Dandelion` or `AnnData` object.
     color : str
         column name in metadata for plotting in bar plot.
@@ -327,10 +327,10 @@ def barplot(
         bar plot.
 
     """
-    if isinstance(vdjdata, Dandelion):
-        data = vdjdata.metadata.copy()
-    elif isinstance(vdjdata, AnnData):
-        data = vdjdata.obs.copy()
+    if isinstance(vdj_data, Dandelion):
+        data = vdj_data.metadata.copy()
+    elif isinstance(vdj_data, AnnData):
+        data = vdj_data.obs.copy()
 
     if min_clone_size is None:
         min_size = 1
@@ -380,7 +380,7 @@ def barplot(
 
 
 def stackedbarplot(
-    vdjdata: Union[AnnData, Dandelion],
+    vdj_data: Union[AnnData, Dandelion],
     color: str,
     groupby: Optional[str],
     figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
@@ -405,7 +405,7 @@ def stackedbarplot(
 
     Parameters
     ----------
-    vdjdata : Union[AnnData, Dandelion]
+    vdj_data : Union[AnnData, Dandelion]
         `Dandelion` or `AnnData` object.
     color : str
         column name in metadata for plotting in bar plot.
@@ -441,10 +441,10 @@ def stackedbarplot(
     Tuple[Figure, Axes]
         stacked barplot.
     """
-    if isinstance(vdjdata, Dandelion):
-        data = vdjdata.metadata.copy()
-    elif isinstance(vdjdata, AnnData):
-        data = vdjdata.obs.copy()
+    if isinstance(vdj_data, Dandelion):
+        data = vdj_data.metadata.copy()
+    elif isinstance(vdj_data, AnnData):
+        data = vdj_data.obs.copy()
     # quick fix to prevent dropping of nan
     data[groupby] = [str(l) for l in data[groupby]]
 
@@ -619,7 +619,7 @@ def stackedbarplot(
 
 
 def spectratype(
-    vdjdata: Dandelion,
+    vdj_data: Dandelion,
     color: str,
     groupby: str,
     locus: str,
@@ -642,7 +642,7 @@ def spectratype(
 
     Parameters
     ----------
-    vdjdata : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object.
     color : str
         column name in metadata for plotting in bar plot.
@@ -681,9 +681,9 @@ def spectratype(
     ValueError
         if not provided Dandelion object.
     """
-    if isinstance(vdjdata, Dandelion):
-        data = vdjdata.data.copy()
-        if "ambiguous" in vdjdata.data:
+    if isinstance(vdj_data, Dandelion):
+        data = vdj_data.data.copy()
+        if "ambiguous" in vdj_data.data:
             data = data[data["ambiguous"] == "F"].copy()
     else:
         raise ValueError(
@@ -852,7 +852,7 @@ def spectratype(
 
 
 def clone_overlap(
-    vdjdata: AnnData,
+    adata: AnnData,
     groupby: str,
     colorby: str,
     min_clone_size: Optional[int] = None,
@@ -879,7 +879,7 @@ def clone_overlap(
 
     Parameters
     ----------
-    vdjdata : AnnData
+    adata : AnnData
         `AnnData` object.
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
@@ -933,11 +933,11 @@ def clone_overlap(
     else:
         clone_ = clone_key
 
-    if isinstance(vdjdata, AnnData):
-        data = vdjdata.obs.copy()
+    if isinstance(adata, AnnData):
+        data = adata.obs.copy()
         # get rid of problematic rows that appear because of category conversion?
-        if "clone_overlap" in vdjdata.uns:
-            overlap = vdjdata.uns["clone_overlap"].copy()
+        if "clone_overlap" in adata.uns:
+            overlap = adata.uns["clone_overlap"].copy()
         else:
             raise KeyError(
                 "`clone_overlap` not found in `adata.uns`. Did you run `tl.clone_overlap`?"
@@ -1023,32 +1023,31 @@ def clone_overlap(
         weighted_attr = "weight"
 
     if color_mapping is None:
-        if isinstance(vdjdata, AnnData):
-            if str(colorby) + "_colors" in vdjdata.uns:
-                if pd.api.types.is_categorical_dtype(vdjdata.obs[groupby]):
-                    colorby_dict = dict(
-                        zip(
-                            list(vdjdata.obs[str(colorby)].cat.categories),
-                            vdjdata.uns[str(colorby) + "_colors"],
-                        )
-                    )
-                else:
-                    colorby_dict = dict(
-                        zip(
-                            list(vdjdata.obs[str(colorby)].unique()),
-                            vdjdata.uns[str(colorby) + "_colors"],
-                        )
-                    )
-            else:
-                if len(vdjdata.obs[str(colorby)].unique()) <= 20:
-                    pal = cycle(palettes.default_20)
-                elif len(vdjdata.obs[str(colorby)].unique()) <= 28:
-                    pal = cycle(palettes.default_28)
-                else:
-                    pal = cycle(palettes.default_102)
+        if str(colorby) + "_colors" in adata.uns:
+            if pd.api.types.is_categorical_dtype(adata.obs[groupby]):
                 colorby_dict = dict(
-                    zip(list(vdjdata.obs[str(colorby)].unique()), pal)
+                    zip(
+                        list(adata.obs[str(colorby)].cat.categories),
+                        adata.uns[str(colorby) + "_colors"],
+                    )
                 )
+            else:
+                colorby_dict = dict(
+                    zip(
+                        list(adata.obs[str(colorby)].unique()),
+                        adata.uns[str(colorby) + "_colors"],
+                    )
+                )
+        else:
+            if len(adata.obs[str(colorby)].unique()) <= 20:
+                pal = cycle(palettes.default_20)
+            elif len(adata.obs[str(colorby)].unique()) <= 28:
+                pal = cycle(palettes.default_28)
+            else:
+                pal = cycle(palettes.default_102)
+            colorby_dict = dict(
+                zip(list(adata.obs[str(colorby)].unique()), pal)
+            )
     else:
         if type(color_mapping) is dict:
             colorby_dict = color_mapping
