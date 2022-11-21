@@ -1,4 +1,4 @@
-name: Test Singularity Build
+name: Weekly Test Singularity Build
 on: 
   schedule:
     # every Sunday at 0:00
