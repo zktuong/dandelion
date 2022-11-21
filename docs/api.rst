@@ -9,6 +9,7 @@ Preprocessing: `pp`
    assign_isotypes
    calculate_threshold
    create_germlines
+   check_contigs
    filter_contigs
    format_fasta
    format_fastas
