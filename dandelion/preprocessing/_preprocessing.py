@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:15:28
+# @Last Modified time: 2022-11-21 17:20:31
 
 import anndata as ad
 import functools
@@ -1936,7 +1936,7 @@ def create_germlines(
         ]
 
         if isinstance(data, Dandelion):
-            if isinstance(Data.data, pd.DataFrame):
+            if isinstance(data.data, pd.DataFrame):
                 # Check for required columns
                 try:
                     checkFields(required, data.data.columns, schema=schema)
@@ -1948,7 +1948,7 @@ def create_germlines(
 
                 # Check for existence of fields
                 for f in [v_field, d_field, j_field, seq_field]:
-                    if f not in Data.data.columns:
+                    if f not in data.data.columns:
                         raise NameError(
                             "%s field does not exist in input database file."
                             % f
