@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 20:43:29
+# @Last Modified time: 2022-11-21 20:48:31
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -221,7 +221,7 @@ def clone_diversity(
     if method == "gini":
         if update_obs_meta:
             diversity_gini(
-                data,
+                vdj_data,
                 groupby=groupby,
                 metric=metric,
                 clone_key=clone_key,
@@ -239,7 +239,7 @@ def clone_diversity(
             )
         else:
             return diversity_gini(
-                data,
+                vdj_data,
                 groupby=groupby,
                 metric=metric,
                 clone_key=clone_key,
@@ -258,7 +258,7 @@ def clone_diversity(
     if method == "chao1":
         if update_obs_meta:
             diversity_chao1(
-                data,
+                vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
                 update_obs_meta=update_obs_meta,
@@ -271,7 +271,7 @@ def clone_diversity(
             )
         else:
             return diversity_chao1(
-                data,
+                vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
                 update_obs_meta=update_obs_meta,
@@ -285,7 +285,7 @@ def clone_diversity(
     if method == "shannon":
         if update_obs_meta:
             diversity_shannon(
-                data,
+                vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
                 update_obs_meta=update_obs_meta,
@@ -299,7 +299,7 @@ def clone_diversity(
             )
         else:
             return diversity_shannon(
-                data,
+                vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
                 update_obs_meta=update_obs_meta,
