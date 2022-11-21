@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 16:33:26
+# @Last Modified time: 2022-11-21 17:14:05
 
 import anndata as ad
 import functools
@@ -18,7 +18,6 @@ from changeo.IO import getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 from collections import OrderedDict
 from operator import countOf
-from os import PathLike
 from plotnine import (
     ggplot,
     geom_bar,
@@ -91,9 +90,9 @@ def format_fasta(
     high_confidence_filtering : bool, optional
         whether ot not to filter to only `high confidence` contigs.
     outdir : Optional[str], optional
-        path to output location. None defaults to 'dandelion'.
+        path to output location. `None` defaults to 'dandelion'.
     filename_prefix : Optional[str], optional
-        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
 
     Raises
     ------
@@ -352,7 +351,7 @@ def format_fastas(
     outdir : Optional[str], optional
         path to out put location.
     filename_prefix : Optional[Union[List[str], str]], optional
-        list of prefixes of file names preceding '_contig'. None defaults to
+        list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
     """
     if type(fastas) is not list:
@@ -484,11 +483,11 @@ def assign_isotype(
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
     blastdb : Optional[str], optional
-        path to blast database. Defaults to `` environmental variable.
+        path to blast database. Defaults to `BLASTDB` environmental variable.
     allele : bool, optional
         whether or not to return allele calls.
     filename_prefix : Optional[str], optional
-        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     verbose : bool, optional
         whether or not to print the blast command in terminal.
 
@@ -901,11 +900,11 @@ def assign_isotypes(
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
     blastdb : Optional[str], optional
-        path to blast database. Defaults to `` environmental variable.
+        path to blast database. Defaults to `BLASTDB` environmental variable.
     allele : bool, optional
         whether or not to return allele calls.
     filename_prefix : Optional[Union[List, str]], optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
     verbose : bool, optional
         whether or not to print the blast command in terminal.
     """
@@ -965,10 +964,10 @@ def reannotate_genes(
         if provided as a single string, it will first be converted to a list;
         this allows for the function to be run on single/multiple samples.
     igblast_db : Optional[str], optional
-        path to igblast database folder. Defaults to `` environmental
+        path to igblast database folder. Defaults to `IGDATA` environmental
         variable.
     germline : Optional[str], optional
-        path to germline database folder. Defaults to `` environmental
+        path to germline database folder. Defaults to `GERMLINE` environmental
         variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
@@ -977,7 +976,7 @@ def reannotate_genes(
     extended : bool, optional
         whether or not to transfer additional 10X annotions to output file.
     filename_prefix : Optional[Union[List[str], str]], optional
-        list of prefixes of file names preceding '_contig'. None defaults
+        list of prefixes of file names preceding '_contig'. `None` defaults
         to 'filtered'.
     flavour : Literal["strict", "original"], optional
         Either 'dandelion' or 'immcantation'. Determines how igblastnshould
@@ -1161,9 +1160,9 @@ def reassign_alleles(
         name of folder for concatenated data file and genotyped files.
     v_germline : Optional[str], optional
         path to heavy chain v germline fasta. Defaults to IGHV fasta in
-        `` environmental variable.
+        `GERMLINE` environmental variable.
     germline : Optional[str], optional
-        path to germline database folder. None defaults to `$GERMLINE` environmental
+        path to germline database folder. `None` defaults to `GERMLINE` environmental
         variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
@@ -1186,10 +1185,15 @@ def reassign_alleles(
     sample_id_dictionary : Optional[Dict[str, str]], optional
         dictionary for creating a sample_id column in the concatenated file.
     filename_prefix : Optional[Union[List[str], str]], optional
-        list of prefixes of file names preceding '_contig'. None defaults to
+        list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
     verbose : bool, optional
         Whether or not to print the command used in the terminal.
+
+    Raises
+    ------
+    FileNotFoundError
+        if reannotated file is not found.
     """
     fileformat = "blast"
     if type(data) is not list:
@@ -1704,7 +1708,7 @@ def create_germlines(
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr
         file after clones have been determined.
     germline : Optional[str], optional
-        path to germline database folder. None defaults to  environmental variable.
+        path to germline database folder. `None` defaults to  environmental variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
     seq_field : str, optional
@@ -1733,7 +1737,7 @@ def create_germlines(
     AttributeError
         if fileformat is not `airr` or `changeo`.
     KeyError
-        if  is not found in the environmental variables.
+        if `GERMLINE` environmental variable is not set.
     LookupError
         if not standard AIRR table.
     NameError
@@ -4453,6 +4457,11 @@ def run_igblastn(
         minimum D nucleotide match.
     verbose : bool, optional
         whether or not to print the command used in terminal.
+
+    Raises
+    ------
+    KeyError
+        if `IGDATA` environmental variable is not set.
     """
     env = os.environ.copy()
     if igblast_db is None:
@@ -4578,8 +4587,8 @@ def assign_DJ(
         Either 'd' of 'j' gene.
     database : Optional[str], optional
         path to database.
-        Defaults to `` environmental variable if v/d/j_call.
-        Defaults to `` environmental variable if c_call.
+        Defaults to `IGDATA` environmental variable if v/d/j_call.
+        Defaults to `BLASTDB` environmental variable if c_call.
     evalue : float, optional
         This is the statistical significance threshold for reporting matches
         against database sequences. Lower EXPECT thresholds are more stringent
@@ -4597,11 +4606,11 @@ def assign_DJ(
         If None, defaults to `20 64 1`.
     word_size : Optional[int], optional
         Word size for wordfinder algorithm (length of best perfect match).
-        Must be >=4. None defaults to 4.
+        Must be >=4. `None` defaults to 4.
     outfmt : str, optional
         Description
     filename_prefix : Optional[str], optional
-        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     overwrite : bool, optional
         whether or not to overwrite the assignments.
     verbose : bool, optional
@@ -4686,8 +4695,8 @@ def run_blastn(
         path to fasta file.
     database : Optional[str]
         path to database.
-        Defaults to `` environmental variable if v/d/j_call.
-        Defaults to `` environmental variable if c_call.
+        Defaults to `IGDATA` environmental variable if v/d/j_call.
+        Defaults to `BLASTDB` environmental variable if c_call.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
     loci : Literal["ig", "tr"], optional
@@ -4713,7 +4722,7 @@ def run_blastn(
         If None, defaults to `20 64 1`.
     word_size : Optional[int], optional
         Word size for wordfinder algorithm (length of best perfect match).
-        Must be >=4. None defaults to 4.
+        Must be >=4. `None` defaults to 4.
     verbose : bool, optional
         whether or not to print the blast command in terminal.
 
@@ -4725,7 +4734,7 @@ def run_blastn(
     Raises
     ------
     KeyError
-        if $IGDATA environmental variable is not set.
+        if `IGDATA` environmental variable is not set.
     """
     env = os.environ.copy()
     if call != "c":
