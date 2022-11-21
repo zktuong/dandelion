@@ -134,9 +134,3 @@ def test_plot_spectratype(create_testfolder):
         labels="test",
     )
     assert ax is not None
-    f = create_testfolder / "test.h5ad"
-    adata = sc.read_h5ad(f)
-    with pytest.raises(ValueError):
-        ddl.pl.spectratype(
-            adata, color="junction_length", groupby="c_call", locus="IGH"
-        )
