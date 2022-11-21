@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:31:44
+# @Last Modified time: 2022-11-21 17:33:56
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -858,7 +858,7 @@ def clone_overlap(
     min_clone_size: Optional[int] = None,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
-    color_mapping: Optional[Union[Sequence, Dict]] = None,
+    color_mapping: Optional[Union[list, dict]] = None,
     node_labels: bool = True,
     return_graph: bool = False,
     save: Optional[str] = None,
@@ -893,7 +893,7 @@ def clone_overlap(
         index instead.
     clone_key : Optional[str], optional
         column name for clones. None defaults to 'clone_id'.
-    color_mapping : Optional[Union[Sequence, Dict]], optional
+    color_mapping : Optional[Union[list, dict]], optional
         custom color mapping provided as a sequence (correpsonding to order of categories or
         alpha-numeric order ifdtype is not category), or dictionary containing custom {category:color} mapping.
     node_labels : bool, optional
