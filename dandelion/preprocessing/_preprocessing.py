@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:14:05
+# @Last Modified time: 2022-11-21 17:15:28
 
 import anndata as ad
 import functools
@@ -69,7 +69,7 @@ def format_fasta(
     high_confidence_filtering: bool = False,
     outdir: Optional[str] = None,
     filename_prefix: Optional[str] = None,
-) -> None:
+):
     """
     Add prefix to the headers/contig ids in input fasta and annotation file.
 
@@ -328,7 +328,7 @@ def format_fastas(
     high_confidence_filtering: bool = False,
     outdir: Optional[str] = None,
     filename_prefix: Optional[Union[List[str], str]] = None,
-) -> None:
+):
     """
     Add prefix to the headers/contig ids in input fasta and annotation file.
 
@@ -449,7 +449,7 @@ def assign_isotype(
     allele: bool = False,
     filename_prefix: Optional[str] = None,
     verbose: bool = False,
-) -> None:
+):
     """
     Annotate contigs with constant region call using blastn.
 
@@ -500,7 +500,7 @@ def assign_isotype(
 
     def two_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
-    ) -> None:
+    ):
         """Pairwise alignmet for two genes.
 
         Parameters
@@ -525,7 +525,7 @@ def assign_isotype(
 
     def three_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
-    ) -> None:
+    ):
         """Pairwise alignmet for three genes.
 
         Parameters
@@ -560,7 +560,7 @@ def assign_isotype(
 
     def four_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
-    ) -> None:
+    ):
         """Pairwise alignmet for four genes.
 
         Parameters
@@ -874,7 +874,7 @@ def assign_isotypes(
     allele: bool = False,
     filename_prefix: Optional[Union[List, str]] = None,
     verbose: bool = False,
-) -> None:
+):
     """
     Annotate contigs with constant region call using blastn.
 
@@ -953,7 +953,7 @@ def reannotate_genes(
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
     verbose: bool = False,
-) -> None:
+):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr format.
 
@@ -1143,7 +1143,7 @@ def reassign_alleles(
     sample_id_dictionary: Optional[Dict[str, str]] = None,
     filename_prefix: Optional[Union[List[str], str]] = None,
     verbose: bool = False,
-) -> None:
+):
     """
     Correct allele calls based on a personalized genotype using tigger.
 
@@ -3274,7 +3274,7 @@ class FilterContigs:
         filter_extra_vdj_chains: bool,
         filter_extra_vj_chains: bool,
         verbose: bool,
-    ) -> None:
+    ):
         """Init method for FilterContigs.
 
         Parameters
@@ -4086,7 +4086,7 @@ class FilterContigsLite:
         dictionary of `sequence_id`s with adjusted umi value.
     """
 
-    def __init__(self, data: pd.DataFrame, verbose: bool) -> None:
+    def __init__(self, data: pd.DataFrame, verbose: bool):
         """Init method for FilterContigsLite.
 
         Parameters
@@ -4433,7 +4433,7 @@ def run_igblastn(
     evalue: float = 1e-4,
     min_d_match: int = 9,
     verbose: bool = False,
-) -> None:
+):
     """
     Reannotate with IgBLASTn.
 
@@ -4571,7 +4571,7 @@ def assign_DJ(
     filename_prefix: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
-) -> None:
+):
     """
     Annotate contigs with constant region call using blastn.
 
@@ -4846,7 +4846,7 @@ def transfer_assignment(
     eval_threshold: float,
     call: Literal["v", "d", "j", "c"] = "c",
     overwrite: bool = False,
-) -> None:
+):
     """Update gene calls with blastn results.
 
     Parameters
@@ -5577,7 +5577,7 @@ class MarkAmbiguousContigs:
         data: pd.DataFrame,
         umi_foldchange_cutoff: Union[int, float],
         verbose: bool,
-    ) -> None:
+    ):
         """Init method for MarkAmbiguousContigs.
 
         Parameters
@@ -6371,7 +6371,7 @@ def multimapper(filename: str) -> pd.DataFrame:
     return mapped
 
 
-def update_j_multimap(data: List[str], filename_prefix: List[str]) -> None:
+def update_j_multimap(data: List[str], filename_prefix: List[str]):
     """Update j multimapper call.
 
     Parameters

@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:13:34
+# @Last Modified time: 2022-11-21 17:15:18
 """preprocessing module."""
 import os
 import re
@@ -31,7 +31,7 @@ def assigngenes_igblast(
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
     verbose: bool = False,
-) -> None:
+):
     """
     Reannotate with IgBLASTn.
 
@@ -106,7 +106,7 @@ def makedb_igblast(
     org: Literal["human", "mouse"] = "human",
     extended: bool = True,
     verbose: bool = False,
-) -> None:
+):
     """
     Parse IgBLAST output to airr format.
 
@@ -220,7 +220,7 @@ def makedb_igblast(
     run(cmd2, env=env)  # logs are printed to terminal
 
 
-def parsedb_heavy(db_file: str, verbose: bool = False) -> None:
+def parsedb_heavy(db_file: str, verbose: bool = False):
     """
     Parse AIRR table (heavy chain contigs only).
 
@@ -253,7 +253,7 @@ def parsedb_heavy(db_file: str, verbose: bool = False) -> None:
     run(cmd)  # logs are printed to terminal
 
 
-def parsedb_light(db_file: str, verbose: bool = False) -> None:
+def parsedb_light(db_file: str, verbose: bool = False):
     """
     Parse AIRR table (light chain contigs only).
 
@@ -297,7 +297,7 @@ def creategermlines(
     cloned: bool = False,
     mode: Optional[Literal["heavy", "light"]] = None,
     verbose: bool = False,
-) -> None:
+):
     """
     Wrapper for CreateGermlines.py for reconstructing germline sequences.
 
@@ -723,7 +723,7 @@ def tigger_genotype(
     fileformat: Literal["airr", "changeo"] = "airr",
     novel_: Literal["YES", "NO"] = "YES",
     verbose: bool = False,
-) -> None:
+):
     """
     Reassign alleles with TIgGER in R.
 
@@ -836,7 +836,7 @@ def recipe_scanpy_qc(
     max_counts: Optional[int] = None,
     blacklist: Optional[List[str]] = None,
     vdj_pattern: str = "^TR[AB][VDJ]|^IG[HKL][VDJC]",
-) -> None:
+):
     """
     Recipe for running a standard scanpy QC workflow.
 
