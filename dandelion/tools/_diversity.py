@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-13 21:08:53
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 20:48:31
+# @Last Modified time: 2022-11-21 21:46:24
 """diversity module."""
 import numpy as np
 import networkx as nx
@@ -328,7 +328,7 @@ def clone_networkstats(
     expanded_only : bool, optional
         whethr or not to calculate only on expanded clones.
     network_clustersize : bool, optional
-        Description
+        depends on metric.
     verbose : bool, optional
         whether to print progress.
 

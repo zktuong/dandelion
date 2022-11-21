@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 17:20:31
+# @Last Modified time: 2022-11-21 21:43:10
 
 import anndata as ad
 import functools
@@ -2405,7 +2405,7 @@ def filter_contigs(
     save : Optional[str], optional
         Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
     verbose : bool, optional
-        Description
+        whether to print progress.
     **kwargs
         additional kwargs passed to `Dandelion.Dandelion`.
 
@@ -2916,7 +2916,7 @@ def calculate_threshold(
     Parameters
     ----------
     data : Union[Dandelion, pd.DataFrame, str]
-        Description
+        input `Danelion`, AIRR data as pandas DataFrame or path to file.
     mode : Literal["single-cell", "heavy"], optional
         accepts one of "heavy" or "single-cell".
         Refer to https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette.
@@ -4608,7 +4608,7 @@ def assign_DJ(
         Word size for wordfinder algorithm (length of best perfect match).
         Must be >=4. `None` defaults to 4.
     outfmt : str, optional
-        Description
+        specification of output format for blast.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     overwrite : bool, optional

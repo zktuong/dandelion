@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 20:46:43
+# @Last Modified time: 2022-11-21 21:46:15
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -82,7 +82,7 @@ def clone_rarefaction(
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         Size of plot.
     chain_status_include : List[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
-        Description
+        chain statuses to include.
     save : Optional[str], optional
         Save path.
 
@@ -507,11 +507,11 @@ def stackedbarplot(
         xtick_fontsize : Optional[int], optional
             xtick fontsize.
         xtick_rotation : Optional[Union[int, float]], optional
-            Description
+            rotation of xtick labels
         legend_options : Tuple[str, Tuple[float, float], int], optional
-            Description
+            legend options.
         hide_legend : bool, optional
-            Description
+            whether to show legend.
         H : Literal["/"], optional
             is the hatch used for identification of the different dataframes
         **kwargs
