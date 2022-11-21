@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:46:15
+# @Last Modified time: 2022-11-21 21:48:29
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -675,25 +675,14 @@ def spectratype(
     -------
     Tuple[Figure, Axes]
         spectratype plot.
-
-    Raises
-    ------
-    ValueError
-        if not provided Dandelion object.
     """
-    if isinstance(vdj_data, Dandelion):
-        data = vdj_data.data.copy()
-        if "ambiguous" in vdj_data.data:
-            data = data[data["ambiguous"] == "F"].copy()
-    else:
-        raise ValueError(
-            "Please provide a <class 'Dandelion'> class object instead of %s."
-            % type(data)
-        )
+    data = vdj_data.data.copy()
+    if "ambiguous" in vdj_data.data:
+        data = data[data["ambiguous"] == "F"].copy()
 
     if type(locus) is not list:
         locus = [locus]
-    data = data[data["locus"].isin(locus)]
+    data = data[data["locus"].isin(locus)].copy()
     data[groupby] = [str(l) for l in data[groupby]]
     dat_ = pd.DataFrame(
         data.groupby(color)[groupby]
