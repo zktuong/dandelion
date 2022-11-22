@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:43:10
+# @Last Modified time: 2022-11-22 00:12:10
 
 import anndata as ad
 import functools
@@ -881,7 +881,7 @@ def assign_isotypes(
     Parameters
     ----------
     fastas : List[str]
-        list or sequence of paths to fasta files.
+        list of paths to fasta files.
     fileformat : Literal["blast", "changeo", "airr"], optional
         format of V(D)J file/objects.
     org : Literal["human", "mouse"], optional
@@ -979,8 +979,8 @@ def reannotate_genes(
         list of prefixes of file names preceding '_contig'. `None` defaults
         to 'filtered'.
     flavour : Literal["strict", "original"], optional
-        Either 'dandelion' or 'immcantation'. Determines how igblastnshould
-        be run. Running in 'dandelion' flavour will add the additional the
+        Either 'strict' or 'original'. Determines how igblastnshould
+        be run. Running in 'strict' flavour will add the additional the
         evalue and min_d_match options to the run.
     min_j_match : int, optional
         Minimum D gene nucleotide matches. This controls the threshold for

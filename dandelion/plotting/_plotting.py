@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:48:29
+# @Last Modified time: 2022-11-22 00:16:20
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -263,9 +263,9 @@ def clone_network(
     adata : AnnData
         AnnData object.
     basis : str, optional
-        key for embedding. Default is 'vdj'.
+        key for embedding.
     edges : bool, optional
-        whether or not to plot edges. Default is True.
+        whether or not to plot edges.
     **kwargs
         passed `sc.pl.embedding`.
     """
@@ -282,7 +282,7 @@ def barplot(
     title: Optional[str] = None,
     xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
-    min_clone_size: Optional[int] = None,
+    min_clone_size: int = 1,
     clone_key: Optional[str] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
@@ -302,20 +302,20 @@ def barplot(
         or a dictionary mapping hue levels to matplotlib colors.
         See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).
     figsize : Tuple[Union[int, float], Union[int, float]], optional
-        figure size. Default is (8, 3).
+        figure size.
     normalize : bool, optional
         if True, will return as proportion out of 1.
-        Otherwise False will return counts. Default is True.
+        Otherwise False will return counts.
     sort_descending : bool, optional
-        whether or not to sort the order of the plot. Default is True.
+        whether or not to sort the order of the plot.
     title : Optional[str], optional
         title of plot.
     xtick_fontsize : Optional[int], optional
         size of x tick labels
     xtick_rotation : Optional[Union[int, float]], optional
         rotation of x tick labels.
-    min_clone_size : Optional[int], optional
-        minimum clone size to keep. Defaults to 1 if left as None.
+    min_clone_size : int, optional
+        minimum clone size to keep.
     clone_key : Optional[str], optional
         column name for clones. None defaults to 'clone_id'.
     **kwargs
@@ -332,10 +332,7 @@ def barplot(
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
 
-    if min_clone_size is None:
-        min_size = 1
-    else:
-        min_size = int(min_clone_size)
+    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
@@ -396,7 +393,7 @@ def stackedbarplot(
         1,
     ),
     labels: Optional[List[str]] = None,
-    min_clone_size: Optional[int] = None,
+    min_clone_size: int = 1,
     clone_key: Optional[str] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
@@ -412,13 +409,13 @@ def stackedbarplot(
     groupby : Optional[str]
         column name in metadata to split by during plotting.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
-        figure size. Default is (8, 3).
+        figure size.
     normalize : bool, optional
-        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
+        if True, will return as proportion out of 1, otherwise False will return counts.
     title : Optional[str], optional
         title of plot.
     sort_descending : bool, optional
-        whether or not to sort the order of the plot. Default is True.
+        whether or not to sort the order of the plot.
     xtick_fontsize : Optional[int], optional
         size of x tick labels
     xtick_rotation : Optional[Union[int, float]], optional
@@ -429,8 +426,8 @@ def stackedbarplot(
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
     labels : Optional[List[str]], optional
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    min_clone_size : Optional[int], optional
-        minimum clone size to keep. Defaults to 1 if left as None.
+    min_clone_size : int, optional
+        minimum clone size to keep.
     clone_key : Optional[str], optional
         column name for clones. None defaults to 'clone_id'.
     **kwargs
@@ -448,10 +445,7 @@ def stackedbarplot(
     # quick fix to prevent dropping of nan
     data[groupby] = [str(l) for l in data[groupby]]
 
-    if min_clone_size is None:
-        min_size = 1
-    else:
-        min_size = int(min_clone_size)
+    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
@@ -651,7 +645,7 @@ def spectratype(
     locus : str
         either IGH or IGL.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
-        figure size. Default is (5, 3).
+        figure size.
     width : Optional[Union[int, float]], optional
         width of bars.
     title : Optional[str], optional
@@ -844,7 +838,7 @@ def clone_overlap(
     adata: AnnData,
     groupby: str,
     colorby: str,
-    min_clone_size: Optional[int] = None,
+    min_clone_size: int = 2,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
     color_mapping: Optional[Union[list, dict]] = None,
@@ -874,8 +868,8 @@ def clone_overlap(
         column name in obs for collapsing to nodes in circos plot.
     colorby : str
         column name in obs for grouping and color of nodes in circos plot.
-    min_clone_size : Optional[int], optional
-        minimum size of clone for plotting connections. Defaults to 2 if left as None.
+    min_clone_size : int, optional
+        minimum size of clone for plotting connections.
     weighted_overlap : bool, optional
         if True, instead of collapsing to overlap to binary, edge thickness will reflect the number of
         cells found in the overlap. In the future, there will be the option to use something like a jaccard
@@ -888,7 +882,7 @@ def clone_overlap(
     node_labels : bool, optional
         whether to use node objects as labels or not
     return_graph : bool, optional
-        whether or not to return the graph for fine tuning. Default is False.
+        whether or not to return the graph for fine tuning.
     save : Optional[str], optional
         file path for saving plot
     legend_kwargs : dict, optional
@@ -912,10 +906,7 @@ def clone_overlap(
     ValueError
         if input is not `AnnData`.
     """
-    if min_clone_size is None:
-        min_size = 2
-    else:
-        min_size = int(min_clone_size)
+    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"

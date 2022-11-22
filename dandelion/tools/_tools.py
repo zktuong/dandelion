@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:02:39
+# @Last Modified time: 2022-11-22 00:09:46
 """tools module."""
 import math
 import os
@@ -674,7 +674,7 @@ def find_clones(
 
 
 def transfer(
-    vdj_data: AnnData,
+    adata: AnnData,
     dandelion: Dandelion,
     expanded_only: bool = False,
     neighbors_key: Optional[str] = None,
@@ -689,7 +689,7 @@ def transfer(
 
     Parameters
     ----------
-    vdj_data : AnnData
+    adata : AnnData
         `AnnData` object.
     dandelion : Dandelion
         `Dandelion` object.
@@ -713,22 +713,22 @@ def transfer(
     start = logg.info("Transferring network")
     # always overwrite with whatever columns are in dandelion's metadata:
     for x in dandelion.metadata.columns:
-        if x not in vdj_data.obs.columns:
-            vdj_data.obs[x] = pd.Series(dandelion.metadata[x])
+        if x not in adata.obs.columns:
+            adata.obs[x] = pd.Series(dandelion.metadata[x])
         elif overwrite is True:
-            vdj_data.obs[x] = pd.Series(dandelion.metadata[x])
+            adata.obs[x] = pd.Series(dandelion.metadata[x])
         if type_check(dandelion.metadata, x):
-            vdj_data.obs[x].replace(np.nan, "No_contig", inplace=True)
-        if vdj_data.obs[x].dtype == "bool":
-            vdj_data.obs[x] = [str(x) for x in vdj_data.obs[x]]
+            adata.obs[x].replace(np.nan, "No_contig", inplace=True)
+        if adata.obs[x].dtype == "bool":
+            adata.obs[x] = [str(x) for x in adata.obs[x]]
 
     if (overwrite is not None) and (overwrite is not True):
         if not type(overwrite) is list:
             overwrite = [overwrite]
         for ow in overwrite:
-            vdj_data.obs[ow] = pd.Series(dandelion.metadata[ow])
+            adata.obs[ow] = pd.Series(dandelion.metadata[ow])
             if type_check(dandelion.metadata, ow):
-                vdj_data.obs[ow].replace(np.nan, "No_contig", inplace=True)
+                adata.obs[ow].replace(np.nan, "No_contig", inplace=True)
 
     if dandelion.graph is not None:
         if expanded_only:
@@ -740,7 +740,7 @@ def transfer(
             G, dtype=np.float32, weight="weight", nonedge=np.nan
         )
         df_distances = distances.reindex(
-            index=vdj_data.obs_names, columns=vdj_data.obs_names
+            index=adata.obs_names, columns=adata.obs_names
         )
         connectivities = nx.to_pandas_adjacency(
             G, dtype=np.float32, weight="weight", nonedge=np.nan
@@ -750,7 +750,7 @@ def transfer(
             distances[~distances.isnull()]
         )
         df_connectivities = distances.reindex(
-            index=vdj_data.obs_names, columns=vdj_data.obs_names
+            index=adata.obs_names, columns=adata.obs_names
         )
 
         df_connectivities = df_connectivities.values
@@ -764,14 +764,14 @@ def transfer(
         logg.info("Updating anndata slots")
         if neighbors_key is None:
             neighbors_key = "neighbors"
-        if neighbors_key not in vdj_data.uns:
+        if neighbors_key not in adata.uns:
             skip_stash = True
-            vdj_data.uns[neighbors_key] = {}
+            adata.uns[neighbors_key] = {}
 
         rna_neighbors_key = "rna_" + neighbors_key
         vdj_neighbors_key = "vdj_" + neighbors_key
-        if rna_neighbors_key not in vdj_data.uns:
-            vdj_data.uns[rna_neighbors_key] = vdj_data.uns[neighbors_key].copy()
+        if rna_neighbors_key not in adata.uns:
+            adata.uns[rna_neighbors_key] = adata.uns[neighbors_key].copy()
 
         if rna_key is None:
             r_connectivities_key = "rna_connectivities"
@@ -788,30 +788,26 @@ def transfer(
             b_distances_key = vdj_key + "_distances"
 
         # stash_rna_connectivities:
-        if r_connectivities_key not in vdj_data.obsp:
+        if r_connectivities_key not in adata.obsp:
             if "skip_stash" not in locals():
                 try:
-                    vdj_data.obsp[r_connectivities_key] = vdj_data.obsp[
+                    adata.obsp[r_connectivities_key] = adata.obsp[
                         "connectivities"
                     ].copy()
-                    vdj_data.obsp[r_distances_key] = vdj_data.obsp[
-                        "distances"
-                    ].copy()
+                    adata.obsp[r_distances_key] = adata.obsp["distances"].copy()
                 except:
-                    vdj_data.obsp[r_connectivities_key] = vdj_data.uns[
-                        neighbors_key
-                    ]["connectivities"]
-                    vdj_data.obsp[r_distances_key] = vdj_data.uns[
-                        neighbors_key
-                    ]["distances"]
+                    adata.obsp[r_connectivities_key] = adata.uns[neighbors_key][
+                        "connectivities"
+                    ]
+                    adata.obsp[r_distances_key] = adata.uns[neighbors_key][
+                        "distances"
+                    ]
 
         # always overwrite the bcr slots
-        vdj_data.obsp["connectivities"] = df_connectivities_.copy()
-        vdj_data.obsp["distances"] = df_distances.copy()
-        vdj_data.obsp[b_connectivities_key] = vdj_data.obsp[
-            "connectivities"
-        ].copy()
-        vdj_data.obsp[b_distances_key] = vdj_data.obsp["distances"].copy()
+        adata.obsp["connectivities"] = df_connectivities_.copy()
+        adata.obsp["distances"] = df_distances.copy()
+        adata.obsp[b_connectivities_key] = adata.obsp["connectivities"].copy()
+        adata.obsp[b_distances_key] = adata.obsp["distances"].copy()
 
         # create the dictionary that will enable the use of scirpy's plotting.
         if clone_key is None:
@@ -823,13 +819,11 @@ def transfer(
             df_connectivities_[df_connectivities_.nonzero()] = 1
             cell_indices = {
                 str(i): np.array([k])
-                for i, k in zip(
-                    range(0, len(vdj_data.obs_names)), vdj_data.obs_names
-                )
+                for i, k in zip(range(0, len(adata.obs_names)), adata.obs_names)
             }
         else:
             cell_indices = Tree()
-            for x, y in vdj_data.obs[clonekey].iteritems():
+            for x, y in adata.obs[clonekey].iteritems():
                 if y not in [
                     "",
                     "unassigned",
@@ -854,7 +848,7 @@ def transfer(
             np.fill_diagonal(df_connectivities_, 1)
             df_connectivities_ = csr_matrix(df_connectivities_)
 
-        vdj_data.uns[clonekey] = {
+        adata.uns[clonekey] = {
             # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
             # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
             "distances": df_connectivities_,
@@ -864,7 +858,7 @@ def transfer(
             "cell_indices": cell_indices,
         }
 
-    tmp = vdj_data.obs.copy()
+    tmp = adata.obs.copy()
     if dandelion.graph is not None:
         if dandelion.layout is not None:
             if expanded_only:
@@ -879,7 +873,7 @@ def transfer(
                 tmp[x] = coord[x]
 
             X_vdj = np.array(tmp[[0, 1]], dtype=np.float32)
-            vdj_data.obsm["X_vdj"] = X_vdj
+            adata.obsm["X_vdj"] = X_vdj
 
         logg.info(
             " finished",
