@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-08 15:24:59
+# @Last Modified time: 2022-11-21 22:15:55
 """core module."""
 import bz2
 import copy
@@ -29,7 +29,7 @@ from pathlib import Path
 from scanpy import logging as logg
 from textwrap import dedent
 from tqdm import tqdm
-from typing import Union, Sequence, Dict, Optional, Tuple
+from typing import Union, List, Dict, Optional, Tuple
 
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
@@ -41,6 +41,30 @@ class Dandelion:
 
     Main class object storing input/ouput slots for all functions.
 
+    Attributes
+    ----------
+    data : pd.DataFrame
+        AIRR formatted data.
+    germline : dict
+        dictionary of germline gene:sequence records.
+    graph : Tuple[NetworkxGraph, NetworkxGraph]
+        networkx graphs for clonotype networks.
+    layout : pd.DataFrame
+        node positions for computed graph.
+    library_type : str
+        One of "tr-ab", "tr-gd", "ig".
+    metadata : pd.DataFrame
+        AIRR data collapsed per cell.
+    n_contigs : int
+        number of contigs in `.data` slot.
+    n_obs : int
+        number of cells in `.metadata` slot.
+    querier : Query
+        internal `Query` class.
+    threshold : float
+        threshold for `define_clones`.
+    write : None
+        write method.
     """
 
     def __init__(
@@ -54,6 +78,27 @@ class Dandelion:
         library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
         **kwargs,
     ):
+        """Init method for Dandelion.
+
+        Parameters
+        ----------
+        data : Optional[pd.DataFrame], optional
+            AIRR formatted data.
+        metadata : Optional[pd.DataFrame], optional
+            AIRR data collapsed per cell.
+        germline : Optional[Dict], optional
+            dictionary of germline gene:sequence records.
+        layout : Optional[pd.DataFrame], optional
+            node positions for computed graph.
+        graph : Optional[Tuple[NetworkxGraph, NetworkxGraph]], optional
+            networkx graphs for clonotype networks.
+        initialize : bool, optional
+            whether or not to initialize `.metadata` slot.
+        library_type : Optional[Literal["tr-ab", "tr-gd", "ig"]], optional
+            One of "tr-ab", "tr-gd", "ig".
+        **kwargs
+            passed to `dandelion.utilities.update_metadata`.
+        """
         self._data = data
         self._metadata = metadata
         self.layout = layout
@@ -193,7 +238,7 @@ class Dandelion:
         return self.data.index
 
     @data_names.setter
-    def data_names(self, names: Sequence[str]):
+    def data_names(self, names: List[str]):
         """data names setter"""
         names = self._prep_dim_index(names, "data")
         self._set_dim_index(names, "data")
@@ -214,7 +259,7 @@ class Dandelion:
         return self.metadata.index
 
     @metadata_names.setter
-    def metadata_names(self, names: Sequence[str]):
+    def metadata_names(self, names: List[str]):
         """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
@@ -272,18 +317,14 @@ class Dandelion:
             if isinstance(v, pd.DataFrame):
                 v.index = value
 
-    def copy(self):
+    def copy(self) -> "Dandelion":
         """
         Performs a deep copy of all slots in `Dandelion` class.
 
-        Parameters
-        ----------
-        self : Dandelion
-            `Dandelion` object.
-
         Returns
         -------
-        a deep copy of `Dandelion` class.
+        Dandelion
+            a deep copy of `Dandelion` class.
         """
         return copy.deepcopy(self)
 
@@ -299,16 +340,12 @@ class Dandelion:
     ):
         """
         Retrieve additional data columns that are useful.
+
         Parameters
         ----------
-        self : Dandelion
-            `Dandelion` object.
-        option : Literal
+        option : Literal["all", "sequence", "mutations", "cdr3 lengths", "mutations and cdr3 lengths", ], optional
             One of 'all', 'sequence', 'mutations', 'cdr3 lengths',
             'mutations and cdr3 lengths'
-        Returns
-        -------
-        Udpated metadata.
         """
         mutations_type = ["mu_count", "mu_freq"]
         mutationsdef = [
@@ -644,18 +681,19 @@ class Dandelion:
 
         Parameters
         ----------
-        self : Dandelion
-            `Dandelion` object.
-        corrected : dict, str, Optional
+        corrected : Optional[Union[Dict, str]], optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : str, Optional
-            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
-        org : str
+        germline : Optional[str], optional
+            path to germline database folder. Defaults to `` environmental variable.
+        org : Literal["human", "mouse"], optional
             organism of reference folder. Default is 'human'.
 
-        Returns
-        -------
-        updated germline reference diciontary in `.germline` slot.
+        Raises
+        ------
+        KeyError
+            if `GERMLINE` environmental variable is not set.
+        TypeError
+            if incorrect germline provided.
         """
         start = logg.info("Updating germline reference")
         env = os.environ.copy()
@@ -760,7 +798,7 @@ class Dandelion:
 
     def store_germline_reference(
         self,
-        corrected: Optional[Union[Dict, str]] = None,
+        corrected: Optional[Union[Dict[str, str], str]] = None,
         germline: Optional[str] = None,
         org: Literal["human", "mouse"] = "human",
     ):
@@ -769,18 +807,19 @@ class Dandelion:
 
         Parameters
         ----------
-        self : Dandelion
-            `Dandelion` object.
-        corrected : dict, str, Optional
+        corrected : Optional[Union[Dict[str, str], str]], optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : str, Optional
-            path to germline database folder. Defaults to `$GERMLINE` environmental variable.
-        org : str
+        germline : Optional[str], optional
+            path to germline database folder. Defaults to `` environmental variable.
+        org : Literal["human", "mouse"], optional
             organism of reference folder. Default is 'human'.
 
-        Returns
-        -------
-        updated germline reference diciontary in `.germline` slot.
+        Raises
+        ------
+        KeyError
+            if `GERMLINE` environmental variable is not set.
+        TypeError
+            if incorrect germline provided.
         """
         start = logg.info("Updating germline reference")
         env = os.environ.copy()
@@ -889,7 +928,7 @@ class Dandelion:
 
         Parameters
         ----------
-        filename
+        filename : str, optional
             path to `.pkl` file.
         **kwargs
             passed to `_pickle`.
@@ -919,7 +958,7 @@ class Dandelion:
 
         Parameters
         ----------
-        filename
+        filename : str, optional
             path to `.pkl` file.
         **kwargs
             passed to `_pickle`.
@@ -967,17 +1006,22 @@ class Dandelion:
 
         Parameters
         ----------
-        filename
+        filename : str, optional
             path to `.h5` file.
-        complib : str, Optional
+        complib : Literal["zlib", "lzo", "bzip2", "blosc", "blosc:blosclz", "blosc:lz4", "blosc:lz4hc", "blosc:snappy", "blosc:zlib", "blosc:zstd", ], optional
             method for compression for data frames. see
             https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
-        compression : str, Optional
+        compression : Literal["zlib", "lzo", "bzip2", "blosc", "blosc:blosclz", "blosc:lz4", "blosc:lz4hc", "blosc:snappy", "blosc:zlib", "blosc:zstd", ], optional
             same call as complib. Just a convenience option.
-        compression_opts : {0-9}, Optional
+        compression_level : Optional[int], optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
             passed to `pd.DataFrame.to_hdf`.
+
+        Raises
+        ------
+        ValueError
+            if both `complib` and `compression` are specified.
         """
         if compression_level is None:
             compression_level = 9
@@ -1106,21 +1150,26 @@ class Dandelion:
         **kwargs,
     ):
         """
-        Writes a `Dandelion` class to .h5 format.
+        Writes a `Dandelion` class to .h5ddl format.
 
         Parameters
         ----------
-        filename
-            path to `.h5` file.
-        complib : str, Optional
+        filename : str, optional
+            path to `.h5ddl` file.
+        complib : Literal["zlib", "lzo", "bzip2", "blosc", "blosc:blosclz", "blosc:lz4", "blosc:lz4hc", "blosc:snappy", "blosc:zlib", "blosc:zstd", ], optional
             method for compression for data frames. see
             https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
-        compression : str, Optional
+        compression : Literal["zlib", "lzo", "bzip2", "blosc", "blosc:blosclz", "blosc:lz4", "blosc:lz4hc", "blosc:snappy", "blosc:zlib", "blosc:zstd", ], optional
             same call as complib. Just a convenience option.
-        compression_opts : {0-9}, Optional
+        compression_level : Optional[int], optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
             passed to `pd.DataFrame.to_hdf`.
+
+        Raises
+        ------
+        ValueError
+            if both `complib` and `compression` are specified.
         """
         if compression_level is None:
             compression_level = 9
@@ -1798,8 +1847,8 @@ class Query:
 
 
 def initialize_metadata(
-    self, cols: Sequence, clonekey: str, collapse_alleles: bool
-) -> Dandelion:
+    self, cols: List[str], clonekey: str, collapse_alleles: bool
+) -> "Dandelion":
     """Initialize Dandelion metadata."""
     init_dict = {}
     for col in cols:
@@ -2188,7 +2237,7 @@ def initialize_metadata(
 
 def update_metadata(
     self: Dandelion,
-    retrieve: Optional[Union[Sequence, str]] = None,
+    retrieve: Optional[Union[List[str], str]] = None,
     clone_key: Optional[str] = None,
     retrieve_mode: Literal[
         "split and unique only",
@@ -2205,20 +2254,18 @@ def update_metadata(
     reinitialize: bool = True,
     verbose: bool = False,
     by_celltype: bool = False,
-) -> Dandelion:
+) -> "Dandelion":
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
     Parameters
     ----------
-    self : Dandelion
-        `Dandelion` object.
-    retrieve : str, sequence, Optional
-        Column name in `.data` slot to retrieve and update the metadata.
-    clone_key : str, Optional
-        Column name of clone id. None defaults to 'clone_id'.
-    retrieve_mode: str
-        One of:
+    retrieve : Optional[Union[List[str], str]], optional
+        column name in `.data` slot to retrieve and update the metadata.
+    clone_key : Optional[str], optional
+        column name of clone id. None defaults to 'clone_id'.
+    retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ], optional
+        one of:
             `split and unique only`
                 returns the retrieval splitted into two columns,
                 i.e. one for VDJ and one for VJ chains, separated by `|` for unique elements.
@@ -2241,15 +2288,22 @@ def update_metadata(
                 returns the retrieval sumed into one column for all contigs.
             `average`
                 returns the retrieval averaged into one column for all contigs.
-    collapse_alleles : bool
-        Returns the V(D)J genes with allelic calls if False.
-    reinitialize : bool
-        Whether or not to reinitialize the current metadata.
-        Useful when updating older versions of `dandelion` to newer version.
-    Returns
-    -------
-    Dandelion
-        `Dandelion` object with `.metadata` slot initialized.
+    collapse_alleles : bool, optional
+        returns the V(D)J genes with allelic calls if False.
+    reinitialize : bool, optional
+        whether or not to reinitialize the current metadata.
+        useful when updating older versions of `dandelion` to newer version.
+    verbose : bool, optional
+        whether to print progress.
+    by_celltype : bool, optional
+        whether to return the query/update by celltype.
+
+    Raises
+    ------
+    KeyError
+        if columns provided not found in Dandelion.data.
+    ValueError
+        if missing columns in Dandelion.data.
     """
 
     if clone_key is None:

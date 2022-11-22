@@ -2,9 +2,9 @@
 # @Author: Kelvin
 # @Date:   2021-02-06 13:18:58
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:54:08
+# @Last Modified time: 2022-11-21 19:08:06
 """logging module."""
-from typing import Sequence
+from typing import List, Tuple
 
 modules = [
     "dandelion",
@@ -19,8 +19,19 @@ modules = [
 
 
 # borrowed from scanpy's logging module
-def _versions_dependencies(dependencies: Sequence):
-    """Version dependencies."""
+def _versions_dependencies(dependencies: List[str]) -> Tuple[str, str]:
+    """Version dependencies.
+
+    Parameters
+    ----------
+    dependencies : List[str]
+        list of dependencies.
+
+    Yields
+    ------
+    Tuple[str, str]
+        yields dependency name and version.
+    """
     for mod in dependencies:
         mod_name, dist_name = mod if isinstance(mod, tuple) else (mod, mod)
         try:
@@ -30,9 +41,14 @@ def _versions_dependencies(dependencies: Sequence):
             pass
 
 
-def print_versions(dependencies: Sequence = modules):
+def print_versions(dependencies: List[str] = modules):
     """
     Versions that are essential for dandelion's operation.
+
+    Parameters
+    ----------
+    dependencies : List[str], optional
+        list of dependencies.
     """
     print(
         " ".join(
@@ -41,9 +57,14 @@ def print_versions(dependencies: Sequence = modules):
     )
 
 
-def print_header(dependencies: Sequence = modules):
+def print_header(dependencies: List[str] = modules):
     """
     Versions that are essential for dandelion's operation.
+
+    Parameters
+    ----------
+    dependencies : List[str], optional
+        list of dependencies.
     """
     print(
         " ".join(

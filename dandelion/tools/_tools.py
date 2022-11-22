@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-08 14:30:34
+# @Last Modified time: 2022-11-22 00:09:46
 """tools module."""
 import math
 import os
@@ -25,7 +25,7 @@ from scipy.spatial.distance import pdist, squareform
 from subprocess import run
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Sequence, Optional
+from typing import Union, List, Optional
 
 from dandelion.tools._network import *
 from dandelion.utilities._core import *
@@ -34,7 +34,7 @@ from dandelion.utilities._utilities import *
 
 
 def find_clones(
-    self: Union[Dandelion, pd.DataFrame],
+    vdj_data: Union[Dandelion, pd.DataFrame],
     identity: Union[Dict, float] = 0.85,
     key: Optional[str] = None,
     by_alleles: bool = False,
@@ -48,40 +48,43 @@ def find_clones(
 
     Parameters
     ----------
-    self : Dandelion, DataFrame, str
+    vdj_data : Union[Dandelion, pd.DataFrame]
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file
         after clones have been determined.
-    identity : List, Dict, float
-        Junction similarity parameter. Default 0.85. If provided as a dictionary, please use the following
+    identity : Union[Dict, float], optional
+        junction similarity parameter. Default 0.85. If provided as a dictionary, please use the following
         keys:'ig', 'tr-ab', 'tr-gd'.
-    key : str, Optional
-        column name for performing clone clustering. None defaults to 'junction_aa'.
-    locus : str, Optional
-        Mode of data. Accepts one of 'ig', 'tr'. None defaults to 'ig'.
-    by_alleles : bool
-        Whether or not to collapse alleles to genes. None defaults to False.
-    key_added : str, Optional
-        If specified, this will be the column name for clones. None defaults to 'clone_id'
-    recalculate_length : bool
-        Whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is
+    key : Optional[str], optional
+        column name for performing clone clustering. `None` defaults to 'junction_aa'.
+    by_alleles : bool, optional
+        whether or not to collapse alleles to genes. `None` defaults to False.
+    key_added : Optional[str], optional
+        If specified, this will be the column name for clones. `None` defaults to 'clone_id'
+    recalculate_length : bool, optional
+        whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is
         wrong). Default is True
-    productive_only : bool
-        Whether or not to perform clone_clustering only on productive clones.
-    collapse_label: bool
-        Whether or not to return the clone_ids with the full keys for VDJ and VJ groups.
+    collapse_label : bool, optional
+        whether or not to return the clone_ids with the full keys for VDJ and VJ groups.
         Default (False) will expand VDJ and VJ. If True, VJ will be collapsed to a singular number.
+    verbose : bool, optional
+        whether or not to print progress.
 
     Returns
     -------
     Dandelion
         `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+
+    Raises
+    ------
+    ValueError
+        if `key` not found in Dandelion.data.
     """
     start = logg.info("Finding clonotypes")
     pd.set_option("mode.chained_assignment", None)
-    if isinstance(self, Dandelion):
-        dat_ = load_data(self.data)
+    if isinstance(vdj_data, Dandelion):
+        dat_ = load_data(vdj_data.data)
     else:
-        dat_ = load_data(self)
+        dat_ = load_data(vdj_data)
 
     if key_added is None:
         clone_key = "clone_id"
@@ -591,11 +594,12 @@ def find_clones(
 
                 dat_[clone_key].update(pd.Series(dat[clone_key]))
     # dat_[clone_key].replace('', 'unassigned')
-    if os.path.isfile(str(self)):
+    if os.path.isfile(str(vdj_data)):
         write_airr(
             dat_,
             "{}/{}_clone.tsv".format(
-                os.path.dirname(self), os.path.basename(self).split(".tsv")[0]
+                os.path.dirname(vdj_data),
+                os.path.basename(vdj_data).split(".tsv")[0],
             ),
         )
 
@@ -608,56 +612,56 @@ def find_clones(
             "   'metadata', cell-indexed clone table\n"
         ),
     )
-    if isinstance(self, Dandelion):
-        if self.germline is not None:
-            germline_ = self.germline
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.germline is not None:
+            germline_ = vdj_data.germline
         else:
             germline_ = None
-        if self.layout is not None:
-            layout_ = self.layout
+        if vdj_data.layout is not None:
+            layout_ = vdj_data.layout
         else:
             layout_ = None
-        if self.graph is not None:
-            graph_ = self.graph
+        if vdj_data.graph is not None:
+            graph_ = vdj_data.graph
         else:
             graph_ = None
-        if self.threshold is not None:
-            threshold_ = self.threshold
+        if vdj_data.threshold is not None:
+            threshold_ = vdj_data.threshold
         else:
             threshold_ = None
-        if ("clone_id" in self.data.columns) and (key_added is None):
+        if ("clone_id" in vdj_data.data.columns) and (key_added is None):
             # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
-            self.__init__(
+            vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
             )
-            update_metadata(self, reinitialize=True)
-        elif ("clone_id" in self.data.columns) and (key_added is not None):
-            self.__init__(
+            update_metadata(vdj_data, reinitialize=True)
+        elif ("clone_id" in vdj_data.data.columns) and (key_added is not None):
+            vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
             )
             update_metadata(
-                self,
+                vdj_data,
                 reinitialize=True,
                 clone_key="clone_id",
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
             )
         else:
-            self.__init__(
+            vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
                 layout=layout_,
                 graph=graph_,
                 clone_key=clone_key,
             )
-            update_metadata(self, reinitialize=True, clone_key=clone_key)
-        self.threshold = threshold_
+            update_metadata(vdj_data, reinitialize=True, clone_key=clone_key)
+        vdj_data.threshold = threshold_
 
     else:
         out = Dandelion(
@@ -670,7 +674,7 @@ def find_clones(
 
 
 def transfer(
-    self: AnnData,
+    adata: AnnData,
     dandelion: Dandelion,
     expanded_only: bool = False,
     neighbors_key: Optional[str] = None,
@@ -678,58 +682,53 @@ def transfer(
     vdj_key: Optional[str] = None,
     clone_key: Optional[str] = None,
     collapse_nodes: bool = False,
-    overwrite: Optional[Union[bool, Sequence, str]] = None,
-) -> AnnData:
+    overwrite: Optional[Union[bool, List[str], str]] = None,
+):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
     Parameters
     ----------
-    self : AnnData
+    adata : AnnData
         `AnnData` object.
     dandelion : Dandelion
         `Dandelion` object.
-    expanded_only : bool
+    expanded_only : bool, optional
         Whether or not to transfer the embedding with all cells with BCR (False) or only for expanded clones (True).
-    neighbors_key : str, Optional
+    neighbors_key : Optional[str], optional
         key for 'neighbors' slot in `.uns`.
-    rna_key : str, Optional
+    rna_key : Optional[str], optional
         prefix for stashed RNA connectivities and distances.
-    vdj_key : str, Optional
+    vdj_key : Optional[str], optional
         prefix for stashed VDJ connectivities and distances.
-    clone_key : str, Optional
+    clone_key : Optional[str], optional
         column name of clone/clonotype ids. Only used for integration with scirpy.
-    collapse_nodes : bool
+    collapse_nodes : bool, optional
         Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for
         integration with scirpy.
-    overwrite : str, bool, list, Optional
+    overwrite : Optional[Union[bool, List[str], str]], optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
         list of column names will overwrite that specific column(s).
-
-    Returns
-    -------
-    AnnData
-        `AnnData` object with updated `.obs`, `.obsm` and '.obsp' slots with data from `Dandelion` object.
     """
     start = logg.info("Transferring network")
     # always overwrite with whatever columns are in dandelion's metadata:
     for x in dandelion.metadata.columns:
-        if x not in self.obs.columns:
-            self.obs[x] = pd.Series(dandelion.metadata[x])
+        if x not in adata.obs.columns:
+            adata.obs[x] = pd.Series(dandelion.metadata[x])
         elif overwrite is True:
-            self.obs[x] = pd.Series(dandelion.metadata[x])
+            adata.obs[x] = pd.Series(dandelion.metadata[x])
         if type_check(dandelion.metadata, x):
-            self.obs[x].replace(np.nan, "No_contig", inplace=True)
-        if self.obs[x].dtype == "bool":
-            self.obs[x] = [str(x) for x in self.obs[x]]
+            adata.obs[x].replace(np.nan, "No_contig", inplace=True)
+        if adata.obs[x].dtype == "bool":
+            adata.obs[x] = [str(x) for x in adata.obs[x]]
 
     if (overwrite is not None) and (overwrite is not True):
         if not type(overwrite) is list:
             overwrite = [overwrite]
         for ow in overwrite:
-            self.obs[ow] = pd.Series(dandelion.metadata[ow])
+            adata.obs[ow] = pd.Series(dandelion.metadata[ow])
             if type_check(dandelion.metadata, ow):
-                self.obs[ow].replace(np.nan, "No_contig", inplace=True)
+                adata.obs[ow].replace(np.nan, "No_contig", inplace=True)
 
     if dandelion.graph is not None:
         if expanded_only:
@@ -741,7 +740,7 @@ def transfer(
             G, dtype=np.float32, weight="weight", nonedge=np.nan
         )
         df_distances = distances.reindex(
-            index=self.obs_names, columns=self.obs_names
+            index=adata.obs_names, columns=adata.obs_names
         )
         connectivities = nx.to_pandas_adjacency(
             G, dtype=np.float32, weight="weight", nonedge=np.nan
@@ -751,7 +750,7 @@ def transfer(
             distances[~distances.isnull()]
         )
         df_connectivities = distances.reindex(
-            index=self.obs_names, columns=self.obs_names
+            index=adata.obs_names, columns=adata.obs_names
         )
 
         df_connectivities = df_connectivities.values
@@ -765,14 +764,14 @@ def transfer(
         logg.info("Updating anndata slots")
         if neighbors_key is None:
             neighbors_key = "neighbors"
-        if neighbors_key not in self.uns:
+        if neighbors_key not in adata.uns:
             skip_stash = True
-            self.uns[neighbors_key] = {}
+            adata.uns[neighbors_key] = {}
 
         rna_neighbors_key = "rna_" + neighbors_key
         vdj_neighbors_key = "vdj_" + neighbors_key
-        if rna_neighbors_key not in self.uns:
-            self.uns[rna_neighbors_key] = self.uns[neighbors_key].copy()
+        if rna_neighbors_key not in adata.uns:
+            adata.uns[rna_neighbors_key] = adata.uns[neighbors_key].copy()
 
         if rna_key is None:
             r_connectivities_key = "rna_connectivities"
@@ -789,26 +788,26 @@ def transfer(
             b_distances_key = vdj_key + "_distances"
 
         # stash_rna_connectivities:
-        if r_connectivities_key not in self.obsp:
+        if r_connectivities_key not in adata.obsp:
             if "skip_stash" not in locals():
                 try:
-                    self.obsp[r_connectivities_key] = self.obsp[
+                    adata.obsp[r_connectivities_key] = adata.obsp[
                         "connectivities"
                     ].copy()
-                    self.obsp[r_distances_key] = self.obsp["distances"].copy()
+                    adata.obsp[r_distances_key] = adata.obsp["distances"].copy()
                 except:
-                    self.obsp[r_connectivities_key] = self.uns[neighbors_key][
+                    adata.obsp[r_connectivities_key] = adata.uns[neighbors_key][
                         "connectivities"
                     ]
-                    self.obsp[r_distances_key] = self.uns[neighbors_key][
+                    adata.obsp[r_distances_key] = adata.uns[neighbors_key][
                         "distances"
                     ]
 
         # always overwrite the bcr slots
-        self.obsp["connectivities"] = df_connectivities_.copy()
-        self.obsp["distances"] = df_distances.copy()
-        self.obsp[b_connectivities_key] = self.obsp["connectivities"].copy()
-        self.obsp[b_distances_key] = self.obsp["distances"].copy()
+        adata.obsp["connectivities"] = df_connectivities_.copy()
+        adata.obsp["distances"] = df_distances.copy()
+        adata.obsp[b_connectivities_key] = adata.obsp["connectivities"].copy()
+        adata.obsp[b_distances_key] = adata.obsp["distances"].copy()
 
         # create the dictionary that will enable the use of scirpy's plotting.
         if clone_key is None:
@@ -820,11 +819,11 @@ def transfer(
             df_connectivities_[df_connectivities_.nonzero()] = 1
             cell_indices = {
                 str(i): np.array([k])
-                for i, k in zip(range(0, len(self.obs_names)), self.obs_names)
+                for i, k in zip(range(0, len(adata.obs_names)), adata.obs_names)
             }
         else:
             cell_indices = Tree()
-            for x, y in self.obs[clonekey].iteritems():
+            for x, y in adata.obs[clonekey].iteritems():
                 if y not in [
                     "",
                     "unassigned",
@@ -849,7 +848,7 @@ def transfer(
             np.fill_diagonal(df_connectivities_, 1)
             df_connectivities_ = csr_matrix(df_connectivities_)
 
-        self.uns[clonekey] = {
+        adata.uns[clonekey] = {
             # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
             # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
             "distances": df_connectivities_,
@@ -859,7 +858,7 @@ def transfer(
             "cell_indices": cell_indices,
         }
 
-    tmp = self.obs.copy()
+    tmp = adata.obs.copy()
     if dandelion.graph is not None:
         if dandelion.layout is not None:
             if expanded_only:
@@ -874,7 +873,7 @@ def transfer(
                 tmp[x] = coord[x]
 
             X_vdj = np.array(tmp[[0, 1]], dtype=np.float32)
-            self.obsm["X_vdj"] = X_vdj
+            adata.obsm["X_vdj"] = X_vdj
 
         logg.info(
             " finished",
@@ -898,7 +897,7 @@ def transfer(
 
 
 def define_clones(
-    self: Union[Dandelion, pd.DataFrame, str],
+    vdj_data: Union[Dandelion, pd.DataFrame, str],
     dist: Optional[float] = None,
     action: Literal["first", "set"] = "set",
     model: Literal[
@@ -927,18 +926,18 @@ def define_clones(
 
     Parameters
     ----------
-    self : Dandelion, DataFrame, str
+    vdj_data : Union[Dandelion, pd.DataFrame, str]
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after
         clones have been determined.
-    dist : float, Optional
+    dist : Optional[float], optional
         The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class
         `.threshold` slot.
-    action : str
+    action : Literal["first", "set"], optional
         Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'.
         The “first” action will use only the first gene listed. The “set” action will use all gene assignments and
         construct a larger gene grouping composed of any sequences sharing an assignment or linked to another sequence
         by a common assignment (similar to single-linkage).
-    model : str
+    model : Literal["ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "mk_rs5nf", "hs1f_compat", "m1n_compat", ], optional
         Specifies which substitution model to use for calculating distance between sequences. Default is 'ham'.
         The “ham” model is nucleotide Hamming distance and “aa” is amino acid Hamming distance. The “hh_s1f” and
         “hh_s5f” models are human specific single nucleotide and 5-mer content models, respectively, from Yaari et al,
@@ -946,27 +945,34 @@ def define_clones(
         respectively, from Cui et al, 2016. The “m1n_compat” and “hs1f_compat” models are deprecated models provided
         backwards compatibility with the “m1n” and “hs1f” models in Change-O v0.3.3 and SHazaM v0.1.4. Both 5-mer
         models should be considered experimental.
-    norm : str
+    norm : Literal["len", "mut", "none"], optional
         Specifies how to normalize distances. Default is 'len'. 'none' (do not normalize), 'len' (normalize by length),
         or 'mut' (normalize by number of mutations between sequences).
-    doublets : str
+    doublets : Literal["drop", "count"], optional
         Option to control behaviour when dealing with heavy chain 'doublets'. Default is 'drop'. 'drop' will filter out
         the doublets while 'count' will retain only the highest umi count contig.
-    fileformat : str
-        format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    ncpu : int, Optional
-        number of cpus for parallelization. Default is 1, no parallelization.
-    dirs : str, Optional
+    fileformat : Literal["changeo", "airr"], optional
+        Format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
+    ncpu : Optional[int], optional
+        Number of cpus for parallelization. Default is 1, no parallelization.
+    dirs : Optional[str], optional
         If specified, out file will be in this location.
-    outFilePrefix : str, Optional
-        If specified, the out file name will have this prefix. None defaults to 'dandelion_define_clones'
-    verbose : bool
+    outFilePrefix : Optional[int], optional
+        If specified, the out file name will have this prefix. `None` defaults to 'dandelion_define_clones'
+    key_added : Optional[int], optional
+        Column name to add for define_clones.
+    verbose : bool, optional
         Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
 
     Returns
     -------
     Dandelion
         `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+
+    Raises
+    ------
+    ValueError
+        if .threshold not found in `Dandelion`.
     """
     start = logg.info("Finding clones")
     if ncpu is None:
@@ -979,12 +985,12 @@ def define_clones(
     else:
         clone_key = key_added
 
-    if isinstance(self, Dandelion):
-        dat_ = load_data(self.data)
+    if isinstance(vdj_data, Dandelion):
+        dat_ = load_data(vdj_data.data)
     else:
-        dat_ = load_data(self)
-    if os.path.isfile(str(self)):
-        dat_ = load_data(self)
+        dat_ = load_data(vdj_data)
+    if os.path.isfile(str(vdj_data)):
+        dat_ = load_data(vdj_data)
 
     if "ambiguous" in dat_:
         dat = dat_[dat_["ambiguous"] == "F"].copy()
@@ -993,9 +999,9 @@ def define_clones(
     dat_h = dat[dat["locus"] == "IGH"]
     dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]
 
-    if os.path.isfile(str(self)):
-        tmpFolder = "{}/tmp".format(os.path.dirname(self))
-        outFolder = "{}".format(os.path.dirname(self))
+    if os.path.isfile(str(vdj_data)):
+        tmpFolder = "{}/tmp".format(os.path.dirname(vdj_data))
+        outFolder = "{}".format(os.path.dirname(vdj_data))
     else:
         import tempfile
 
@@ -1007,18 +1013,18 @@ def define_clones(
     if not os.path.exists(outFolder):
         os.makedirs(outFolder)
 
-    if os.path.isfile(str(self)):
+    if os.path.isfile(str(vdj_data)):
         h_file1 = "{}/{}_heavy-clone.tsv".format(
-            tmpFolder, os.path.basename(self).split(".tsv")[0]
+            tmpFolder, os.path.basename(vdj_data).split(".tsv")[0]
         )
         h_file2 = "{}/{}_heavy-clone.tsv".format(
-            outFolder, os.path.basename(self).split(".tsv")[0]
+            outFolder, os.path.basename(vdj_data).split(".tsv")[0]
         )
         l_file = "{}/{}_light.tsv".format(
-            tmpFolder, os.path.basename(self).split(".tsv")[0]
+            tmpFolder, os.path.basename(vdj_data).split(".tsv")[0]
         )
         outfile = "{}/{}_clone.tsv".format(
-            outFolder, os.path.basename(self).split(".tsv")[0]
+            outFolder, os.path.basename(vdj_data).split(".tsv")[0]
         )
     else:
         if outFilePrefix is not None:
@@ -1039,9 +1045,9 @@ def define_clones(
         v_field = "v_call"
 
     if dist is None:
-        if isinstance(self, Dandelion):
-            if self.threshold is not None:
-                dist_ = self.threshold
+        if isinstance(vdj_data, Dandelion):
+            if vdj_data.threshold is not None:
+                dist_ = vdj_data.threshold
             else:
                 raise ValueError(
                     "Threshold value in Dandelion object is None. Please run calculate_threshold first"
@@ -1296,26 +1302,26 @@ def define_clones(
     # transfer the new clone_id to the heavy + light file
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
     dat_[str(clone_key)].fillna("", inplace=True)
-    if isinstance(self, Dandelion):
-        if self.germline is not None:
-            germline_ = self.germline
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.germline is not None:
+            germline_ = vdj_data.germline
         else:
             germline_ = None
-        if self.layout is not None:
-            layout_ = self.layout
+        if vdj_data.layout is not None:
+            layout_ = vdj_data.layout
         else:
             layout_ = None
-        if self.graph is not None:
-            graph_ = self.graph
+        if vdj_data.graph is not None:
+            graph_ = vdj_data.graph
         else:
             graph_ = None
-        if self.threshold is not None:
-            threshold_ = self.threshold
+        if vdj_data.threshold is not None:
+            threshold_ = vdj_data.threshold
         else:
             threshold_ = None
 
-        if ("clone_id" in self.data.columns) and (clone_key is not None):
-            self.__init__(
+        if ("clone_id" in vdj_data.data.columns) and (clone_key is not None):
+            vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
                 layout=layout_,
@@ -1324,8 +1330,10 @@ def define_clones(
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
             )
-        elif ("clone_id" not in self.data.columns) and (clone_key is not None):
-            self.__init__(
+        elif ("clone_id" not in vdj_data.data.columns) and (
+            clone_key is not None
+        ):
+            vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
                 layout=layout_,
@@ -1336,7 +1344,7 @@ def define_clones(
                 retrieve_mode="merge and unique only",
             )
         else:
-            self.__init__(
+            vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
                 layout=layout_,
@@ -1344,7 +1352,7 @@ def define_clones(
                 initialize=True,
                 clone_key=clone_key,
             )
-        self.threshold = threshold_
+        vdj_data.threshold = threshold_
     else:
         if ("clone_id" in dat_.columns) and (clone_key is not None):
             out = Dandelion(
@@ -1369,7 +1377,7 @@ def define_clones(
 
 
 def clone_size(
-    self: Dandelion,
+    vdj_data: Dandelion,
     max_size: Optional[int] = None,
     clone_key: Optional[str] = None,
     key_added: Optional[str] = None,
@@ -1379,23 +1387,18 @@ def clone_size(
 
     Parameters
     ----------
-    self : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object
-    max_size : int, Optional
+    max_size : Optional[int], optional
         The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
-    clone_key : str, Optional
+    clone_key : Optional[str], optional
         Column name specifying the clone_id column in metadata.
-    key_added : str, Optional
+    key_added : Optional[str], optional
         column name where clone size is tabulated into.
-
-    Returns
-    -------
-    Dandelion
-        `Dandelion` object with clone size columns annotated in `.metadata` slot.
     """
     start = logg.info("Quantifying clone sizes")
 
-    metadata_ = self.metadata.copy()
+    metadata_ = vdj_data.metadata.copy()
 
     if clone_key is None:
         clonekey = "clone_id"
@@ -1424,7 +1427,7 @@ def clone_size(
 
     if max_size is not None:
         if key_added is None:
-            self.metadata[
+            vdj_data.metadata[
                 str(clonekey) + "_size_max_" + str(max_size)
             ] = pd.Series(
                 dict(
@@ -1455,15 +1458,15 @@ def clone_size(
                     )
                 )
             )
-            self.metadata[
+            vdj_data.metadata[
                 str(clonekey) + "_size_max_" + str(max_size)
-            ] = self.metadata[
+            ] = vdj_data.metadata[
                 str(clonekey) + "_size_max_" + str(max_size)
             ].astype(
                 "category"
             )
         else:
-            self.metadata[key_added] = pd.Series(
+            vdj_data.metadata[key_added] = pd.Series(
                 dict(
                     zip(
                         metadata_.index,
@@ -1492,16 +1495,16 @@ def clone_size(
                     )
                 )
             )
-            self.metadata[
+            vdj_data.metadata[
                 str(clonekey) + "_size_max_" + str(max_size)
-            ] = self.metadata[
+            ] = vdj_data.metadata[
                 str(clonekey) + "_size_max_" + str(max_size)
             ].astype(
                 "category"
             )
     else:
         if key_added is None:
-            self.metadata[str(clonekey) + "_size"] = pd.Series(
+            vdj_data.metadata[str(clonekey) + "_size"] = pd.Series(
                 dict(
                     zip(
                         metadata_.index,
@@ -1531,13 +1534,13 @@ def clone_size(
                 )
             )
             try:
-                self.metadata[str(clonekey) + "_size"] = [
-                    float(x) for x in self.metadata[str(clonekey) + "_size"]
+                vdj_data.metadata[str(clonekey) + "_size"] = [
+                    float(x) for x in vdj_data.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
         else:
-            self.metadata[key_added] = pd.Series(
+            vdj_data.metadata[key_added] = pd.Series(
                 dict(
                     zip(
                         metadata_.index,
@@ -1567,8 +1570,8 @@ def clone_size(
                 )
             )
             try:
-                self.metadata[key_added] = [
-                    float(x) for x in self.metadata[str(clonekey) + "_size"]
+                vdj_data.metadata[key_added] = [
+                    float(x) for x in vdj_data.metadata[str(clonekey) + "_size"]
                 ]
             except:
                 pass
@@ -1583,7 +1586,7 @@ def clone_size(
 
 
 def clone_overlap(
-    self: Union[Dandelion, AnnData],
+    vdj_data: Union[Dandelion, AnnData],
     groupby: str,
     colorby: str,
     min_clone_size: Optional[int] = None,
@@ -1596,31 +1599,37 @@ def clone_overlap(
 
     Parameters
     ----------
-    self : Dandelion, AnnData
+    vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
         column name in obs/metadata for collapsing to nodes in circos plot.
     colorby : str
         column name in obs/metadata for grouping and color of nodes in circos plot.
-    min_clone_size : int, Optional
+    min_clone_size : Optional[int], optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
-    weighted_overlap : bool
+    weighted_overlap : bool, optional
         if True, instead of collapsing to overlap to binary, overlap will be returned as the number of cells.
         In the future, there will be the option to use something like a jaccard index.
-    clone_key : str, Optional
-        column name for clones. None defaults to 'clone_id'.
-    verbose: bool
+    clone_key : Optional[str], optional
+        column name for clones. `None` defaults to 'clone_id'.
+    verbose : bool, optional
         whether to print progress
+
     Returns
     -------
-    Union[AnnData, pd.DataFrame]:
+    Union[AnnData, pd.DataFrame]
         Either `AnnData` or a `pandas.DataFrame`.
+
+    Raises
+    ------
+    ValueError
+        if min_clone_size is 0.
     """
     start = logg.info("Finding clones")
-    if isinstance(self, Dandelion):
-        data = self.metadata.copy()
-    elif isinstance(self, AnnData):
-        data = self.obs.copy()
+    if isinstance(vdj_data, Dandelion):
+        data = vdj_data.metadata.copy()
+    elif isinstance(vdj_data, AnnData):
+        data = vdj_data.obs.copy()
 
     if min_clone_size is None:
         min_size = 2
@@ -1684,8 +1693,8 @@ def clone_overlap(
     overlap.index.name = None
     overlap.columns.name = None
 
-    if isinstance(self, AnnData):
-        self.uns["clone_overlap"] = overlap.copy()
+    if isinstance(vdj_data, AnnData):
+        vdj_data.uns["clone_overlap"] = overlap.copy()
         logg.info(
             " finished",
             time=start,
@@ -1758,9 +1767,9 @@ def productive_ratio(
     adata: AnnData,
     vdj: Dandelion,
     groupby: str,
-    groups: Optional[List] = None,
+    groups: Optional[List[str]] = None,
     locus: Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"] = "TRB",
-) -> None:
+):
     """
     Compute the cell-level productive/non-productive contig ratio.
 
@@ -1768,6 +1777,7 @@ def productive_ratio(
     tabulation.
 
     Returns inplace `AnnData` with `.uns['productive_ratio']`.
+
     Parameters
     ----------
     adata : AnnData
@@ -1776,7 +1786,7 @@ def productive_ratio(
         Dandelion object holding the repertoire data (`.data`).
     groupby : str
         Name of column in `AnnData.obs` to return the row tabulations.
-    groups : Optional[List], optional
+    groups : Optional[List[str]], optional
         Optional list of categories to return.
     locus : Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"], optional
         One of the accepted locuses to perform the tabulation
@@ -1847,8 +1857,8 @@ def vj_usage_pca(
     mode: Literal["B", "abT", "gdT"] = "abT",
     transfer_mapping=None,
     n_comps: int = 30,
-    groups: Optional[List] = None,
-    allowed_chain_status: Optional[List] = [
+    groups: Optional[List[str]] = None,
+    allowed_chain_status: Optional[List[str]] = [
         "Single pair",
         "Extra pair",
         "Extra pair-exception",
@@ -1868,21 +1878,17 @@ def vj_usage_pca(
         Column name in `adata.obs` to groupby as observations for PCA.
     min_size : int, optional
         Minimum cell size numbers to keep for computing the final matrix. Defaults to 20.
-    mode : Literal['B', 'abT', 'gdT'], optional
+    mode : Literal["B", "abT", "gdT"], optional
         Mode for extract the V/J genes.
     transfer_mapping : None, optional
         If provided, the columns will be mapped to the output AnnData from the original AnnData.
     n_comps : int, optional
         Number of principal components to compute. Defaults to 30.
-    groups : Optional[List], optional
+    groups : Optional[List[str]], optional
         If provided, only the following groups/categories will be used for computing the PCA.
-    allowed_chain_status : Optional[List], optional
+    allowed_chain_status : Optional[List[str]], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
         Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
-    recheck_contigs : bool, optional
-        Whether to perform `pp.check_contigs`.
-    productive_only : bool, optional
-        Whether to keep only productive contigs.
     verbose : bool, optional
         Whether to display progress
     **kwargs

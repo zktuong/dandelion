@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-07-03 21:49:03
+# @Last Modified time: 2022-11-21 21:05:08
 """preprocessing module."""
 import os
 import re
@@ -14,19 +14,18 @@ import scanpy as sc
 
 from anndata import AnnData
 from datetime import timedelta
-from os import PathLike
 from scanpy import logging as logg
 from sklearn import mixture
 from subprocess import run
 from time import time
-from typing import Union, Sequence, Optional
+from typing import Union, Optional
 
 
 from ...utilities._utilities import *
 
 
 def assigngenes_igblast(
-    fasta: Union[str, PathLike],
+    fasta: str,
     igblast_db: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
@@ -37,17 +36,21 @@ def assigngenes_igblast(
 
     Parameters
     ----------
-    fasta : PathLike
+    fasta : str
         fasta file for reannotation.
-    igblast_db : PathLike, Optional
+    igblast_db : Optional[str], optional
         path to igblast database.
-    org : str
+    org : Literal["human", "mouse"], optional
         organism for germline sequences.
-    loci : str
+    loci : Literal["ig", "tr"], optional
         `ig` or `tr` mode for running igblastn.
-    verbose : bool
-        whether or not to print the command used in terminal. Default is False.
+    verbose : bool, optional
+        whether or not to print the command used in terminal.
 
+    Raises
+    ------
+    KeyError
+        if $IGDATA environmental variable is not set.
     """
     env = os.environ.copy()
     if igblast_db is None:
@@ -96,9 +99,9 @@ def assigngenes_igblast(
 
 
 def makedb_igblast(
-    fasta: Union[str, PathLike],
-    igblast_output: Optional[Union[str, PathLike]] = None,
-    germline: Optional[Union[str, PathLike]] = None,
+    fasta: str,
+    igblast_output: Optional[str] = None,
+    germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     extended: bool = True,
     verbose: bool = False,
@@ -108,19 +111,23 @@ def makedb_igblast(
 
     Parameters
     ----------
-    fasta : PathLike
+    fasta : str
         fasta file use for reannotation.
-    igblast_output : PathLike, Optional
+    igblast_output : Optional[str], optional
         igblast output file.
-    germline : PathLike, Optional
+    germline : Optional[str], optional
         path to germline database.
-    org : str
+    org : Literal["human", "mouse"], optional
         organism of germline sequences.
-    extended : bool
-        whether or not to parse extended 10x annotations. Default is True.
-    verbose : bool
-        whether or not to print the command used in terminal. Default is False.
+    extended : bool, optional
+        whether or not to parse extended 10x annotations.
+    verbose : bool, optional
+        whether or not to print the command used in terminal.
 
+    Raises
+    ------
+    KeyError
+        if $GERMLINE environmental variable is not set.
     """
     env = os.environ.copy()
     if germline is None:
@@ -212,17 +219,16 @@ def makedb_igblast(
     run(cmd2, env=env)  # logs are printed to terminal
 
 
-def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
+def parsedb_heavy(db_file: str, verbose: bool = False):
     """
     Parse AIRR table (heavy chain contigs only).
 
     Parameters
     ----------
-    db_file : PathLike
+    db_file : str
         path to AIRR table.
-    verbose : bool
+    verbose : bool, optional
         whether or not to print the command used in terminal. Default is False.
-
     """
     outname = os.path.basename(db_file).split(".tsv")[0] + "_heavy"
 
@@ -246,15 +252,15 @@ def parsedb_heavy(db_file: Union[str, PathLike], verbose: bool = False):
     run(cmd)  # logs are printed to terminal
 
 
-def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
+def parsedb_light(db_file: str, verbose: bool = False):
     """
     Parse AIRR table (light chain contigs only).
 
     Parameters
     ----------
-    db_file : PathLike
+    db_file : str
         path to AIRR table.
-    verbose : bool
+    verbose : bool, optional
         whether or not to print the command used in terminal. Default is False.
 
     """
@@ -281,11 +287,11 @@ def parsedb_light(db_file: Union[str, PathLike], verbose: bool = False):
 
 
 def creategermlines(
-    db_file: Union[str, PathLike],
+    db_file: str,
     germtypes: Optional[str] = None,
-    germline: Optional[Union[str, PathLike]] = None,
+    germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
-    genotype_fasta: Optional[Union[str, PathLike]] = None,
+    genotype_fasta: Optional[str] = None,
     v_field: Optional[Literal["v_call", "v_call_genotyped"]] = None,
     cloned: bool = False,
     mode: Optional[Literal["heavy", "light"]] = None,
@@ -296,26 +302,30 @@ def creategermlines(
 
     Parameters
     ----------
-    db_file : PathLike
+    db_file : str
         path to AIRR table.
-    germtypes : str, Optional
+    germtypes : Optional[str], optional
         germline type for reconstuction.
-    germline : PathLike, Optional
+    germline : Optional[str], optional
         location to germline fasta files.
-    org : str
+    org : Literal["human", "mouse"], optional
         organism for germline sequences.
-    genotype_fasta : PathLike, Optional
+    genotype_fasta : Optional[str], optional
         location to corrected v germine fasta file.
-    v_field : str, Optional
+    v_field : Optional[Literal["v_call", "v_call_genotyped"]], optional
         name of column for v segment to perform reconstruction.
-    cloned : bool
+    cloned : bool, optional
         whether or not to run with cloned option.
-    mode : str, Optional
+    mode : Optional[Literal["heavy", "light"]], optional
         whether to run on heavy or light mode. If left as None, heavy and
         light will be run together.
-    verbose : bool
-        whether or not to print the command used in terminal. Default is False.
+    verbose : bool, optional
+        whether or not to print the command used in terminal.
 
+    Raises
+    ------
+    KeyError
+        if $GERMLINE environmental variable is not set.
     """
     env = os.environ.copy()
     if germline is None:
@@ -705,9 +715,9 @@ def creategermlines(
 
 
 def tigger_genotype(
-    data: Union[str, PathLike],
-    v_germline: Optional[Union[str, PathLike]] = None,
-    outdir: Optional[Union[str, PathLike]] = None,
+    data: str,
+    v_germline: Optional[str] = None,
+    outdir: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     fileformat: Literal["airr", "changeo"] = "airr",
     novel_: Literal["YES", "NO"] = "YES",
@@ -718,23 +728,26 @@ def tigger_genotype(
 
     Parameters
     ----------
-    data : PathLike
+    data : str
         vdj tabulated data, in Change-O (TAB) or AIRR (TSV) format.
-    germline : PathLike, Optional
+    v_germline : Optional[str], optional
         fasta file containing IMGT-gapped V segment reference germlines.
-        Defaults to $GERMLINE.
-    outdir : PathLike,  Optional
+    outdir : Optional[str], optional
         output directory. Will be created if it does not exist.
         Defaults to the current working directory.
-    org : str
+    org : Literal["human", "mouse"], optional
         organism for germline sequences.
-    fileformat : str
+    fileformat : Literal["airr", "changeo"], optional
         format for running tigger. Default is 'airr'. Also accepts 'changeo'.
-    novel : str
-        whether or not to run novel allele discovery. Default is 'YES'.
-    verbose : bool
-        whether or not to print the command used in terminal. Default is False.
+    novel_ : Literal["YES", "NO"], optional
+        whether or not to run novel allele discovery.
+    verbose : bool, optional
+        whether or not to print the command used in terminal.
 
+    Raises
+    ------
+    KeyError
+        if `GERMLINE` environmental variable is not set.
     """
     start_time = time()
     env = os.environ.copy()
@@ -811,7 +824,7 @@ def tigger_genotype(
 
 
 def recipe_scanpy_qc(
-    self: AnnData,
+    adata: AnnData,
     layer: Optional[str] = None,
     mito_startswith: str = "MT-",
     max_genes: int = 2500,
@@ -820,9 +833,9 @@ def recipe_scanpy_qc(
     pval_cutoff: float = 0.1,
     min_counts: Optional[int] = None,
     max_counts: Optional[int] = None,
-    blacklist: Optional[Sequence] = None,
+    blacklist: Optional[List[str]] = None,
     vdj_pattern: str = "^TR[AB][VDJ]|^IG[HKL][VDJC]",
-) -> AnnData:
+):
     """
     Recipe for running a standard scanpy QC workflow.
 
@@ -831,41 +844,34 @@ def recipe_scanpy_qc(
     adata : AnnData
         annotated data matrix of shape n_obs × n_vars. Rows correspond to cells
         and columns to genes.
-    layer : str, Optional
-        name of layer to run scrublet on if supplied. Otherwise defaults to
-        adata.X.
-    mito_startswith : str
+    layer : Optional[str], optional
+        name of layer to run scrublet on if supplied.
+    mito_startswith : str, optional
         string pattern used for searching mitochondrial genes.
-    max_genes : int
+    max_genes : int, optional
         maximum number of genes expressed required for a cell to pass filtering
-        Default is 2500.
-    min_genes : int
+    min_genes : int, optional
         minimum number of genes expressed required for a cell to pass filtering
-        Default is 200.
-    mito_cutoff : float
-        maximum percentage mitochondrial content allowed for a cell to pass
-        filtering. Default is 5.
-    pval_cutoff : float
+    mito_cutoff : Optional[int], optional
+        maximum percentage mitochondrial content allowed for a cell to pass filtering.
+    pval_cutoff : float, optional
         maximum Benjamini-Hochberg corrected p value from doublet detection
         protocol allowed for a cell to pass filtering. Default is 0.05.
-    min_counts : int, Optional
+    min_counts : Optional[int], optional
         minimum number of counts required for a cell to pass filtering.
-        Default is None.
-    max_counts : int, Optional
+    max_counts : Optional[int], optional
         maximum number of counts required for a cell to pass filtering.
-        Default is None.
-    blacklist : sequence, Optional
+    blacklist : Optional[List[str]], optional
         if provided, will exclude these genes from highly variable genes list.
-    vdj_pattern : str
-        string pattern for search VDJ genes to exclude from highly variable
-        genes.
+    vdj_pattern : str, optional
+        string pattern for search VDJ genes to exclude from highly variable genes.
 
-    Returns
-    -------
-    `AnnData` of shape n_obs × n_vars where obs now contain filtering
-    information. Rows correspond to cells and columns to genes.
+    Raises
+    ------
+    ImportError
+        if `scrublet` not installed.
     """
-    _adata = self.copy()
+    _adata = adata.copy()
     # run scrublet
     try:
         import scrublet as scr
@@ -1172,4 +1178,4 @@ def recipe_scanpy_qc(
             ],
             axis=1,
         )
-    self.obs = _adata.obs.copy()
+    adata.obs = _adata.obs.copy()

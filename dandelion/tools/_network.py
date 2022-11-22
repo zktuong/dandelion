@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-08-12 18:08:04
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:19:50
+# @Last Modified time: 2022-11-21 21:05:27
 """network module."""
 import networkx as nx
 import numpy as np
@@ -13,7 +13,7 @@ from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Sequence, Tuple, Optional
+from typing import Union, Tuple, Optional
 
 try:
     from networkx.utils import np_random_state as random_state
@@ -26,7 +26,7 @@ from dandelion.utilities._utilities import *
 
 
 def generate_network(
-    self: Union[Dandelion, pd.DataFrame, str],
+    vdj_data: Union[Dandelion, pd.DataFrame, str],
     key: Optional[str] = None,
     clone_key: Optional[str] = None,
     min_size: int = 2,
@@ -43,43 +43,50 @@ def generate_network(
 
     Parameters
     ----------
-    data : Dandelion, DataFrame, str
+    vdj_data : Union[Dandelion, pd.DataFrame, str]
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
         have been determined.
-    key : str, Optional
+    key : Optional[str], optional
         column name for distance calulations. None defaults to 'sequence_alignment_aa'.
-    clone_key: str, Optional
+    clone_key : Optional[str], optional
         column name to build network on.
-    min_size : int
+    min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    downsample : int, Optional
+    downsample : Optional[int], optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be
         randomly sampled to the integer provided. A new Dandelion class will be returned.
-    compute_layout : bool
+    verbose : bool, optional
+        whether or not to print the progress bars.
+    compute_layout : bool, optional
         whether or not to generate the layout. May be time consuming if too many cells.
-    layout_method : Literal
+    layout_method : Literal["sfdp", "mod_fr"], optional
         accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast)
         whereas 'mod_fr' refers to modified Fruchterman-Reingold layout originally implemented in dandelion (python
         implementation; slow).
-    verbose : bool
-        whether or not to print the progress bars.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
 
     Returns
     -------
-    `Dandelion` object with `.edges`, `.layout`, `.graph` initialized.
+    Dandelion
+        `Dandelion` object with `.edges`, `.layout`, `.graph` initialized.
+
+    Raises
+    ------
+    ValueError
+        if any errors with dandelion input.
+
     """
     start = logg.info("Generating network")
 
-    if isinstance(self, Dandelion):
-        dat = load_data(self.data)
-        if "ambiguous" in self.data:
+    if isinstance(vdj_data, Dandelion):
+        dat = load_data(vdj_data.data)
+        if "ambiguous" in vdj_data.data:
             dat = dat[dat["ambiguous"] == "F"].copy()
     else:
-        dat = load_data(self)
+        dat = load_data(data)
 
     if key is None:
         key_ = "sequence_alignment_aa"  # default
@@ -102,10 +109,10 @@ def generate_network(
 
     if downsample is not None:
         # if downsample >= dat_h.shape[0]:
-        if downsample >= self.metadata.shape[0]:
+        if downsample >= vdj_data.metadata.shape[0]:
             logg.info(
                 "Cannot downsample to {} cells. Using all {} cells.".format(
-                    str(downsample), self.metadata.shape[0]
+                    str(downsample), vdj_data.metadata.shape[0]
                 )
             )
         else:
@@ -190,8 +197,8 @@ def generate_network(
         del dist_mat_list
 
         # generate edge list
-        if isinstance(self, Dandelion):
-            out = self.copy()
+        if isinstance(vdj_data, Dandelion):
+            out = vdj_data.copy()
             if downsample is not None:
                 out = Dandelion(dat_)
         else:  # re-initiate a Dandelion class object
@@ -428,13 +435,13 @@ def generate_network(
             "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
         ),
     )
-    if isinstance(self, Dandelion):
-        if self.germline is not None:
-            germline_ = self.germline
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.germline is not None:
+            germline_ = vdj_data.germline
         else:
             germline_ = None
-        if self.threshold is not None:
-            threshold_ = self.threshold
+        if vdj_data.threshold is not None:
+            threshold_ = vdj_data.threshold
         else:
             threshold_ = None
         if downsample is not None:
@@ -455,24 +462,24 @@ def generate_network(
             return out
         else:
             if (lyt and lyt_) is not None:
-                self.__init__(
-                    data=self.data,
-                    metadata=self.metadata,
+                vdj_data.__init__(
+                    data=vdj_data.data,
+                    metadata=vdj_data.metadata,
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
                     initialize=False,
                 )
             else:
-                self.__init__(
-                    data=self.data,
-                    metadata=self.metadata,
+                vdj_data.__init__(
+                    data=vdj_data.data,
+                    metadata=vdj_data.metadata,
                     layout=None,
                     graph=(g, g_),
                     germline=germline_,
                     initialize=False,
                 )
-            self.threshold = threshold_
+            vdj_data.threshold = threshold_
     else:
         if (lyt and lyt_) is not None:
             out = Dandelion(
@@ -502,7 +509,8 @@ def mst(mat: dict) -> Tree:
 
     Returns
     -------
-    Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
+    Tree
+        Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
     for c in mat:
@@ -514,35 +522,38 @@ def mst(mat: dict) -> Tree:
 
 
 def clone_degree(
-    self: Dandelion, weight: Optional[str] = None, verbose: bool = True
+    vdj_data: Dandelion, weight: Optional[str] = None, verbose: bool = True
 ) -> Dandelion:
     """
     Calculate node degree in BCR/TCR network.
 
     Parameters
     ----------
-    self : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    weight : str, Optional
+    weight : Optional[str], optional
         Atribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
-    verbose : bool
+    verbose : bool, optional
         Whether or not to show logging information.
 
-    Returns
-    -------
-    Dandelion object with metadata updated with node degree information.
+    Raises
+    ------
+    AttributeError
+        if graph not found.
+    TypeError
+        if input is not Dandelion class.
     """
     start = logg.info("Calculating node degree")
-    if isinstance(self, Dandelion):
-        if self.graph is None:
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.graph is None:
             raise AttributeError(
                 "Graph not found. Plase run tl.generate_network."
             )
         else:
-            G = self.graph[0]
+            G = vdj_data.graph[0]
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
-            self.metadata["clone_degree"] = pd.Series(cd[1])
+            vdj_data.metadata["clone_degree"] = pd.Series(cd[1])
             logg.info(
                 " finished",
                 time=start,
@@ -552,34 +563,37 @@ def clone_degree(
         raise TypeError("Input object must be of {}".format(Dandelion))
 
 
-def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
+def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
     """
     Calculate node closeness centrality in BCR/TCR network.
 
     Parameters
     ----------
-    self : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    verbose : bool
+    verbose : bool, optional
         Whether or not to show logging information.
 
-    Returns
-    -------
-    Dandelion object with metadata updated with node closeness centrality information.
+    Raises
+    ------
+    AttributeError
+        if graph not found.
+    TypeError
+        if input is not Dandelion class.
     """
     start = logg.info("Calculating node closeness centrality")
-    if isinstance(self, Dandelion):
-        if self.graph is None:
+    if isinstance(vdj_data, Dandelion):
+        if vdj_data.graph is None:
             raise AttributeError(
                 "Graph not found. Plase run tl.generate_network."
             )
         else:
-            G = self.graph[0]
+            G = vdj_data.graph[0]
             cc = nx.closeness_centrality(G)
             cc = pd.DataFrame.from_dict(
                 cc, orient="index", columns=["clone_centrality"]
             )
-            self.metadata["clone_centrality"] = pd.Series(
+            vdj_data.metadata["clone_centrality"] = pd.Series(
                 cc["clone_centrality"]
             )
             logg.info(
@@ -592,7 +606,7 @@ def clone_centrality(self: Dandelion, verbose: bool = True) -> Dandelion:
 
 
 def _generate_layout(
-    vertices: Sequence,
+    vertices: list,
     edges: pd.DataFrame = None,
     min_size: int = 2,
     weight: Optional[str] = None,
@@ -601,7 +615,32 @@ def _generate_layout(
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     **kwargs,
 ) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
-    """Generate layout."""
+    """Generate layout.
+
+    Parameters
+    ----------
+    vertices : list
+        list of vertices
+    edges : pd.DataFrame, optional
+        edge list in a pandas dataframe.
+    min_size : int, optional
+        minimum clone size.
+    weight : Optional[str], optional
+        name of weight column.
+    verbose : bool, optional
+        whether to print progress
+    compute_layout : bool, optional
+        whether or not to compute layout.
+    layout_method : Literal["sfdp", "mod_fr"], optional
+        layout method.
+    **kwargs
+        passed to fruchterman_reingold_layout.
+
+    Returns
+    -------
+    Tuple[nx.Graph, nx.Graph, dict, dict]
+        graphs and layout positions.
+    """
     G = nx.Graph()
     G.add_nodes_from(vertices)
     if edges is not None:
@@ -1020,26 +1059,27 @@ def _rescale_layout(pos, scale=1):
 
 
 def extract_edge_weights(
-    self: Dandelion, expanded_only: bool = False
-) -> Sequence:
+    vdj_data: Dandelion, expanded_only: bool = False
+) -> list:
     """
     Retrieve edge weights (BCR levenshtein distance) from graph.
 
     Parameters
     ----------
-    self : Dandelion
+    vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    expanded_only : bool
+    expanded_only : bool, optional
         whether to retrieve the edge weights from the expanded only graph or entire graph.
 
     Returns
     -------
-    numpy array containing edge weights.
+    list
+        list of edge weights.
     """
     if expanded_only:
         try:
             edges, weights = zip(
-                *nx.get_edge_attributes(self.graph[1], "weight").items()
+                *nx.get_edge_attributes(vdj_data.graph[1], "weight").items()
             )
         except ValueError as e:
             print(
@@ -1050,7 +1090,7 @@ def extract_edge_weights(
     else:
         try:
             edges, weights = zip(
-                *nx.get_edge_attributes(self.graph[0], "weight").items()
+                *nx.get_edge_attributes(vdj_data.graph[0], "weight").items()
             )
         except ValueError as e:
             print(

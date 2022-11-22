@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-18 00:15:00
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 11:01:55
+# @Last Modified time: 2022-11-22 00:16:20
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -31,7 +31,7 @@ from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Sequence, Tuple, Dict, Optional
+from typing import Union, Tuple, Dict, Optional
 
 import dandelion.external.nxviz as nxv
 from dandelion.external.nxviz import annotate
@@ -42,10 +42,10 @@ from dandelion.utilities._utilities import *
 
 
 def clone_rarefaction(
-    self: Union[AnnData, Dandelion],
+    vdj_data: Union[AnnData, Dandelion],
     color: str,
     clone_key: Optional[str] = None,
-    palette: Optional[Sequence] = None,
+    palette: Optional[List[str]] = None,
     figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
     chain_status_include: List[
         Literal[
@@ -71,32 +71,30 @@ def clone_rarefaction(
 
     Parameters
     ----------
-    self : `AnnData`, `Dandelion`
+    vdj_data : Union[AnnData, Dandelion]
         `AnnData` or `Dandelion` object.
     color : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
-    clone_key : str, Optional
+    clone_key : Optional[str], optional
         Column name specifying the clone_id column in metadata/obs.
-    palette : Sequence, Optional
+    palette : Optional[List[str]], optional
         Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
-    figsize :  Tuple[Union[int,float], Union[int,float]]
+    figsize : Tuple[Union[int, float], Union[int, float]], optional
         Size of plot.
-    chain_status_exclude : List
-        Non-exhaustive list of chains to into the analysis. e.g.
-        "Single pair", "Orphan VDJ", "Orphan VDJ-exception",
-        "Orphan VJ", "Orphan VJ-exception", "Extra pair",
-        "Extra pair-exception",
-    save : str, Optional
+    chain_status_include : List[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
+        chain statuses to include.
+    save : Optional[str], optional
         Save path.
 
     Returns
     -------
-    rarefaction curve plot.
+    ggplot
+        rarefaction plot.
     """
-    if isinstance(self, AnnData):
-        metadata = self.obs.copy()
-    elif isinstance(self, Dandelion):
-        metadata = self.metadata.copy()
+    if isinstance(vdj_data, AnnData):
+        metadata = vdj_data.obs.copy()
+    elif isinstance(vdj_data, Dandelion):
+        metadata = vdj_data.metadata.copy()
     if clone_key is None:
         clonekey = "clone_id"
     else:
@@ -164,9 +162,9 @@ def clone_rarefaction(
 
     options.figure_size = figsize
     if palette is None:
-        if isinstance(self, AnnData):
+        if isinstance(vdj_data, AnnData):
             try:
-                pal = self.uns[str(color) + "_colors"]
+                pal = vdj_data.uns[str(color) + "_colors"]
             except:
                 if len(list(set((pred.variable)))) <= 20:
                     pal = palettes.default_20
@@ -264,10 +262,10 @@ def clone_network(
     ----------
     adata : AnnData
         AnnData object.
-    basis : str
-        key for embedding. Default is 'vdj'.
-    edges : bool
-        whether or not to plot edges. Default is True.
+    basis : str, optional
+        key for embedding.
+    edges : bool, optional
+        whether or not to plot edges.
     **kwargs
         passed `sc.pl.embedding`.
     """
@@ -275,7 +273,7 @@ def clone_network(
 
 
 def barplot(
-    self: Union[AnnData, Dandelion],
+    vdj_data: Union[AnnData, Dandelion],
     color: str,
     palette: str = "Set1",
     figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
@@ -284,7 +282,7 @@ def barplot(
     title: Optional[str] = None,
     xtick_fontsize: Optional[int] = None,
     xtick_rotation: Optional[Union[int, float]] = None,
-    min_clone_size: Optional[int] = None,
+    min_clone_size: int = 1,
     clone_key: Optional[str] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
@@ -293,49 +291,48 @@ def barplot(
 
     Parameters
     ----------
-    self : Dandelion, AnnData
+    vdj_data : Union[AnnData, Dandelion]
         `Dandelion` or `AnnData` object.
     color : str
         column name in metadata for plotting in bar plot.
-    palette : str
+    palette : str, optional
         Colors to use for the different levels of the color variable.
         Should be something that can be interpreted by
         [color_palette](https://seaborn.pydata.org/generated/seaborn.color_palette.html#seaborn.color_palette),
         or a dictionary mapping hue levels to matplotlib colors.
         See [seaborn.barplot](https://seaborn.pydata.org/generated/seaborn.barplot.html).
-    figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (8, 3).
-    normalize : bool
+    figsize : Tuple[Union[int, float], Union[int, float]], optional
+        figure size.
+    normalize : bool, optional
         if True, will return as proportion out of 1.
-        Otherwise False will return counts. Default is True.
-    sort_descending : bool
-        whether or not to sort the order of the plot. Default is True.
-    title : str, Optional
+        Otherwise False will return counts.
+    sort_descending : bool, optional
+        whether or not to sort the order of the plot.
+    title : Optional[str], optional
         title of plot.
-    xtick_fontsize : int, Optional
+    xtick_fontsize : Optional[int], optional
         size of x tick labels
-    xtick_rotation : int, float, Optional
+    xtick_rotation : Optional[Union[int, float]], optional
         rotation of x tick labels.
-    min_clone_size : int, Optional
-        minimum clone size to keep. Defaults to 1 if left as None.
-    clone_key : str, Optional
+    min_clone_size : int, optional
+        minimum clone size to keep.
+    clone_key : Optional[str], optional
         column name for clones. None defaults to 'clone_id'.
     **kwargs
         passed to `sns.barplot`.
 
     Returns
     -------
-    a seaborn barplot.
-    """
-    if isinstance(self, Dandelion):
-        data = self.metadata.copy()
-    elif isinstance(self, AnnData):
-        data = self.obs.copy()
+    Tuple[Figure, Axes]
+        bar plot.
 
-    if min_clone_size is None:
-        min_size = 1
-    else:
-        min_size = int(min_clone_size)
+    """
+    if isinstance(vdj_data, Dandelion):
+        data = vdj_data.metadata.copy()
+    elif isinstance(vdj_data, AnnData):
+        data = vdj_data.obs.copy()
+
+    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
@@ -380,7 +377,7 @@ def barplot(
 
 
 def stackedbarplot(
-    self: Union[AnnData, Dandelion],
+    vdj_data: Union[AnnData, Dandelion],
     color: str,
     groupby: Optional[str],
     figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
@@ -395,8 +392,8 @@ def stackedbarplot(
         (1, 1),
         1,
     ),
-    labels: Optional[Sequence] = None,
-    min_clone_size: Optional[int] = None,
+    labels: Optional[List[str]] = None,
+    min_clone_size: int = 1,
     clone_key: Optional[str] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
@@ -405,52 +402,50 @@ def stackedbarplot(
 
     Parameters
     ----------
-    self : Dandelion, AnnData
+    vdj_data : Union[AnnData, Dandelion]
         `Dandelion` or `AnnData` object.
     color : str
         column name in metadata for plotting in bar plot.
-    groupby : str
+    groupby : Optional[str]
         column name in metadata to split by during plotting.
-    figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (8, 3).
-    normalize : bool
-        if True, will return as proportion out of 1, otherwise False will return counts. Default is True.
-    sort_descending : bool
-        whether or not to sort the order of the plot. Default is True.
-    title : str, Optional
+    figsize : Tuple[Union[int, float], Union[int, float]], optional
+        figure size.
+    normalize : bool, optional
+        if True, will return as proportion out of 1, otherwise False will return counts.
+    title : Optional[str], optional
         title of plot.
-    xtick_fontsize : int, Optional
+    sort_descending : bool, optional
+        whether or not to sort the order of the plot.
+    xtick_fontsize : Optional[int], optional
         size of x tick labels
-    xtick_rotation: Optional[Union[int,float]] : int, float, Optional
+    xtick_rotation : Optional[Union[int, float]], optional
         rotation of x tick labels.
-    hide_legend : bool
+    hide_legend : bool, optional
         whether or not to hide the legend.
-    legend_options : Tuple[str, Tuple[float, float], int]
+    legend_options : Tuple[str, Tuple[float, float], int], optional
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : Sequence, Optional
+    labels : Optional[List[str]], optional
         Names of objects will be used for the legend if list of multiple dataframes supplied.
-    min_clone_size : int, Optional
-        minimum clone size to keep. Defaults to 1 if left as None.
-    clone_key : str, Optional
+    min_clone_size : int, optional
+        minimum clone size to keep.
+    clone_key : Optional[str], optional
         column name for clones. None defaults to 'clone_id'.
     **kwargs
         other kwargs passed to `matplotlib.plt`.
 
     Returns
     -------
-    stacked bar plot.
+    Tuple[Figure, Axes]
+        stacked barplot.
     """
-    if isinstance(self, Dandelion):
-        data = self.metadata.copy()
-    elif isinstance(self, AnnData):
-        data = self.obs.copy()
+    if isinstance(vdj_data, Dandelion):
+        data = vdj_data.metadata.copy()
+    elif isinstance(vdj_data, AnnData):
+        data = vdj_data.obs.copy()
     # quick fix to prevent dropping of nan
     data[groupby] = [str(l) for l in data[groupby]]
 
-    if min_clone_size is None:
-        min_size = 1
-    else:
-        min_size = int(min_clone_size)
+    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
@@ -480,7 +475,7 @@ def stackedbarplot(
 
     def _plot_bar_stacked(
         dfall: pd.DataFrame,
-        labels: Optional[Sequence] = None,
+        labels: Optional[List[str]] = None,
         figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
         title: str = "multiple stacked bar plot",
         xtick_fontsize: Optional[int] = None,
@@ -495,14 +490,31 @@ def stackedbarplot(
 
         Parameters
         ----------
-        labels
+        dfall : pd.DataFrame
+            dataframe for plotting.
+        labels : Optional[List[str]], optional
             a list of the dataframe objects. Names of objects will be used for the legend.
-        title
+        figsize : Tuple[Union[int, float], Union[int, float]], optional
+            size of figure.
+        title : str, optional
             string for the title of the plot
-        H
+        xtick_fontsize : Optional[int], optional
+            xtick fontsize.
+        xtick_rotation : Optional[Union[int, float]], optional
+            rotation of xtick labels
+        legend_options : Tuple[str, Tuple[float, float], int], optional
+            legend options.
+        hide_legend : bool, optional
+            whether to show legend.
+        H : Literal["/"], optional
             is the hatch used for identification of the different dataframes
         **kwargs
             other kwargs passed to matplotlib.plt
+
+        Returns
+        -------
+        Tuple[Figure, Axes]
+            stacked barplot.
         """
         if type(dfall) is not list:
             dfall = [dfall]
@@ -601,7 +613,7 @@ def stackedbarplot(
 
 
 def spectratype(
-    self: Union[AnnData, Dandelion],
+    vdj_data: Dandelion,
     color: str,
     groupby: str,
     locus: str,
@@ -616,7 +628,7 @@ def spectratype(
         (1, 1),
         1,
     ),
-    labels: Optional[Sequence] = None,
+    labels: Optional[List[str]] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
     """
@@ -624,30 +636,30 @@ def spectratype(
 
     Parameters
     ----------
-    self : Dandelion, AnnData
-        `Dandelion` or `AnnData` object.
+    vdj_data : Dandelion
+        `Dandelion` object.
     color : str
         column name in metadata for plotting in bar plot.
     groupby : str
         column name in metadata to split by during plotting.
     locus : str
         either IGH or IGL.
-    figsize : Tuple[Union[int,float], Union[int,float]]
-        figure size. Default is (5, 3).
-    width : float, int, Optional
+    figsize : Tuple[Union[int, float], Union[int, float]], optional
+        figure size.
+    width : Optional[Union[int, float]], optional
         width of bars.
-    title : str, Optional
+    title : Optional[str], optional
         title of plot.
-    xtick_fontsize : int, Optional
+    xtick_fontsize : Optional[int], optional
         size of x tick labels
-    xtick_rotation : int, float, Optional
+    xtick_rotation : Optional[Union[int, float]], optional
         rotation of x tick labels.
-    hide_legend : bool
+    hide_legend : bool, optional
         whether or not to hide the legend.
-    legend_options : Tuple[str, Tuple[float, float], int]
+    legend_options : Tuple[str, Tuple[float, float], int], optional
         a tuple holding 3 options for specify legend options:
         1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : Sequence, Optional
+    labels : Optional[List[str]], optional
         Names of objects will be used for the legend if list of
         multiple dataframes supplied.
     **kwargs
@@ -655,21 +667,16 @@ def spectratype(
 
     Returns
     -------
-    spectratype plot
+    Tuple[Figure, Axes]
+        spectratype plot.
     """
-    if isinstance(self, Dandelion):
-        data = self.data.copy()
-        if "ambiguous" in self.data:
-            data = data[data["ambiguous"] == "F"].copy()
-    else:
-        raise ValueError(
-            "Please provide a <class 'Dandelion'> class object instead of %s."
-            % type(self)
-        )
+    data = vdj_data.data.copy()
+    if "ambiguous" in vdj_data.data:
+        data = data[data["ambiguous"] == "F"].copy()
 
     if type(locus) is not list:
         locus = [locus]
-    data = data[data["locus"].isin(locus)]
+    data = data[data["locus"].isin(locus)].copy()
     data[groupby] = [str(l) for l in data[groupby]]
     dat_ = pd.DataFrame(
         data.groupby(color)[groupby]
@@ -687,7 +694,7 @@ def spectratype(
 
     def _plot_spectra_stacked(
         dfall: pd.DataFrame,
-        labels: Optional[Sequence] = None,
+        labels: Optional[List[str]] = None,
         figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
         title: str = "multiple stacked bar plot",
         width: Optional[Union[int, float]] = None,
@@ -698,7 +705,39 @@ def spectratype(
         H: Literal["/"] = "/",
         **kwargs,
     ) -> Tuple[Figure, Axes]:
-        """Stacked spectratype plots."""
+        """Stacked spectratype plots.
+
+        Parameters
+        ----------
+        dfall : pd.DataFrame
+            dataframe for plotting.
+        labels : Optional[List[str]], optional
+            a list of the dataframe objects. Names of objects will be used for the legend.
+        figsize : Tuple[Union[int, float], Union[int, float]], optional
+            size of figure.
+        title : str, optional
+            string for the title of the plot.
+        width : Optional[Union[int, float]], optional
+            width of bars.
+        xtick_fontsize : Optional[int], optional
+            size of x tick labels
+        xtick_rotation : Optional[Union[int, float]], optional
+            rotation of x tick labels.
+        legend_options : Tuple[str, Tuple[float, float], int], optional
+            a tuple holding 3 options for specify legend options:
+            1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
+        hide_legend : bool, optional
+            whether or not to hide the legend.
+        H : Literal["/"], optional
+            not sure.
+        **kwargs
+            other kwargs passed to matplotlib.plt
+
+        Returns
+        -------
+        Tuple[Figure, Axes]
+            spectratype plot.
+        """
         if type(dfall) is not list:
             dfall = [dfall]
         n_df = len(dfall)
@@ -796,13 +835,13 @@ def spectratype(
 
 
 def clone_overlap(
-    self: AnnData,
+    adata: AnnData,
     groupby: str,
     colorby: str,
-    min_clone_size: Optional[int] = None,
+    min_clone_size: int = 2,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
-    color_mapping: Optional[Union[Sequence, Dict]] = None,
+    color_mapping: Optional[Union[list, dict]] = None,
     node_labels: bool = True,
     return_graph: bool = False,
     save: Optional[str] = None,
@@ -815,7 +854,7 @@ def clone_overlap(
     node_label_size: int = 10,
     as_heatmap: bool = False,
     **kwargs,
-):
+) -> nxv.CircosPlot:
     """
     A plot function to visualise clonal overlap as a circos-style plot.
 
@@ -823,57 +862,62 @@ def clone_overlap(
 
     Parameters
     ----------
-    self : AnnData
+    adata : AnnData
         `AnnData` object.
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
     colorby : str
         column name in obs for grouping and color of nodes in circos plot.
-    min_clone_size : int, Optional
-        minimum size of clone for plotting connections. Defaults to 2 if left as None.
-    weighted_overlapt : bool
+    min_clone_size : int, optional
+        minimum size of clone for plotting connections.
+    weighted_overlap : bool, optional
         if True, instead of collapsing to overlap to binary, edge thickness will reflect the number of
         cells found in the overlap. In the future, there will be the option to use something like a jaccard
         index instead.
-    clone_key : str, Optional
+    clone_key : Optional[str], optional
         column name for clones. None defaults to 'clone_id'.
-    color_mapping : Dict, Sequence, Optional
+    color_mapping : Optional[Union[list, dict]], optional
         custom color mapping provided as a sequence (correpsonding to order of categories or
         alpha-numeric order ifdtype is not category), or dictionary containing custom {category:color} mapping.
-    node_labels : bool, Optional
+    node_labels : bool, optional
         whether to use node objects as labels or not
-    return_graph : bool
-        whether or not to return the graph for fine tuning. Default is False.
-    legend_kwargs : dict
-        options for adjusting legend placement
-    node_label_size : int
-        size of labels if node_labels = True
-    as_heatmap: bool
-        whether to return plot as heatmap.
-    save : str
+    return_graph : bool, optional
+        whether or not to return the graph for fine tuning.
+    save : Optional[str], optional
         file path for saving plot
+    legend_kwargs : dict, optional
+        options for adjusting legend placement
+    node_label_size : int, optional
+        size of labels if node_labels = True
+    as_heatmap : bool, optional
+        whether to return plot as heatmap.
     **kwargs
         passed to `matplotlib.pyplot.savefig`.
 
     Returns
     -------
-    a `nxviz.CircosPlot`.
+    nxv.CircosPlot
+        a `nxviz.CircosPlot` object.
+
+    Raises
+    ------
+    KeyError
+        if `clone_overlap` not found in `adata.uns`.
+    ValueError
+        if input is not `AnnData`.
     """
-    if min_clone_size is None:
-        min_size = 2
-    else:
-        min_size = int(min_clone_size)
+    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
     else:
         clone_ = clone_key
 
-    if isinstance(self, AnnData):
-        data = self.obs.copy()
+    if isinstance(adata, AnnData):
+        data = adata.obs.copy()
         # get rid of problematic rows that appear because of category conversion?
-        if "clone_overlap" in self.uns:
-            overlap = self.uns["clone_overlap"].copy()
+        if "clone_overlap" in adata.uns:
+            overlap = adata.uns["clone_overlap"].copy()
         else:
             raise KeyError(
                 "`clone_overlap` not found in `adata.uns`. Did you run `tl.clone_overlap`?"
@@ -959,32 +1003,31 @@ def clone_overlap(
         weighted_attr = "weight"
 
     if color_mapping is None:
-        if isinstance(self, AnnData):
-            if str(colorby) + "_colors" in self.uns:
-                if pd.api.types.is_categorical_dtype(self.obs[groupby]):
-                    colorby_dict = dict(
-                        zip(
-                            list(self.obs[str(colorby)].cat.categories),
-                            self.uns[str(colorby) + "_colors"],
-                        )
-                    )
-                else:
-                    colorby_dict = dict(
-                        zip(
-                            list(self.obs[str(colorby)].unique()),
-                            self.uns[str(colorby) + "_colors"],
-                        )
-                    )
-            else:
-                if len(self.obs[str(colorby)].unique()) <= 20:
-                    pal = cycle(palettes.default_20)
-                elif len(self.obs[str(colorby)].unique()) <= 28:
-                    pal = cycle(palettes.default_28)
-                else:
-                    pal = cycle(palettes.default_102)
+        if str(colorby) + "_colors" in adata.uns:
+            if pd.api.types.is_categorical_dtype(adata.obs[groupby]):
                 colorby_dict = dict(
-                    zip(list(self.obs[str(colorby)].unique()), pal)
+                    zip(
+                        list(adata.obs[str(colorby)].cat.categories),
+                        adata.uns[str(colorby) + "_colors"],
+                    )
                 )
+            else:
+                colorby_dict = dict(
+                    zip(
+                        list(adata.obs[str(colorby)].unique()),
+                        adata.uns[str(colorby) + "_colors"],
+                    )
+                )
+        else:
+            if len(adata.obs[str(colorby)].unique()) <= 20:
+                pal = cycle(palettes.default_20)
+            elif len(adata.obs[str(colorby)].unique()) <= 28:
+                pal = cycle(palettes.default_28)
+            else:
+                pal = cycle(palettes.default_102)
+            colorby_dict = dict(
+                zip(list(adata.obs[str(colorby)].unique()), pal)
+            )
     else:
         if type(color_mapping) is dict:
             colorby_dict = color_mapping
@@ -1063,7 +1106,7 @@ def productive_ratio(
         `tl.productive_ratio`.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         Size of figure.
-    palette : List[str, str], optional
+    palette : List, optional
         List of colours to plot non-productive and productive respectively.
     fontsize : Union[int, float], optional
         Font size of x and y tick labels.
