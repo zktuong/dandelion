@@ -39,6 +39,7 @@ def setup_vdj_pseudobulk(
         "j_call",
     ],
     check_extract_cols_mapping: Optional[List[str]] = None,
+    filter_pattern: Optional[str] = ",|None|No_contig",
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
 
@@ -73,6 +74,8 @@ def setup_vdj_pseudobulk(
     check_extract_cols_mapping : Optional[List[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in columns specified in extract_cols.
         Specifying None will skip this step.
+    filter_pattern : Optional[str], optional
+        pattern to filter from object. If `None`, does not filter.
 
     Returns
     -------
@@ -136,35 +139,36 @@ def setup_vdj_pseudobulk(
             ]
 
     # remove any cells if there's unclear mapping
-    if mode is not None:
-        if check_vdj_mapping is not None:
-            if not isinstance(check_vdj_mapping, list):
-                check_vdj_mapping = [check_vdj_mapping]
-            for col in check_vdj_mapping:
-                adata = adata[
-                    ~(
-                        adata.obs[col + "_" + mode + "_VDJ_main"].str.contains(
-                            ",|None|No_contig"
+    if filter_pattern is not None:
+        if mode is not None:
+            if check_vdj_mapping is not None:
+                if not isinstance(check_vdj_mapping, list):
+                    check_vdj_mapping = [check_vdj_mapping]
+                for col in check_vdj_mapping:
+                    adata = adata[
+                        ~(
+                            adata.obs[
+                                col + "_" + mode + "_VDJ_main"
+                            ].str.contains(filter_pattern)
                         )
-                    )
-                ].copy()
-        if check_vj_mapping is not None:
-            if not isinstance(check_vj_mapping, list):
-                check_vj_mapping = [check_vj_mapping]
-            for col in check_vj_mapping:
-                adata = adata[
-                    ~(
-                        adata.obs[col + "_" + mode + "_VJ_main"].str.contains(
-                            ",|None|No_contig"
+                    ].copy()
+            if check_vj_mapping is not None:
+                if not isinstance(check_vj_mapping, list):
+                    check_vj_mapping = [check_vj_mapping]
+                for col in check_vj_mapping:
+                    adata = adata[
+                        ~(
+                            adata.obs[
+                                col + "_" + mode + "_VJ_main"
+                            ].str.contains(filter_pattern)
                         )
-                    )
-                ].copy()
-    else:
-        if check_extract_cols_mapping is not None:
-            for col in check_extract_cols_mapping:
-                adata = adata[
-                    ~(adata.obs[col + "_main"].str.contains(",|None|No_contig"))
-                ].copy()
+                    ].copy()
+        else:
+            if check_extract_cols_mapping is not None:
+                for col in check_extract_cols_mapping:
+                    adata = adata[
+                        ~(adata.obs[col + "_main"].str.contains(filter_pattern))
+                    ].copy()
 
     return adata
 
