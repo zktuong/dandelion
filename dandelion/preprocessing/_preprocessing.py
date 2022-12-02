@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-22 00:12:10
+# @Last Modified time: 2022-12-02 07:47:32
 
 import anndata as ad
 import functools
@@ -6180,20 +6180,24 @@ def check_productive_vj(
         if max(counts) >= 3:
             set_counts = set(counts)
             set_counts.remove(max_counts)
-            max_id_keys = [
-                k for k, v in vj_contigs.items() if v >= max(set_counts)
-            ]
-            if len(max_id_keys) > 2:
-                for dk in vj_contigs.keys():
-                    ambiguous_contigs.append(dk)
-            else:
-                drop_keys = [
-                    k for k, v in vj_contigs.items() if v < max(set_counts)
+            if len(set_counts) > 0:
+                max_id_keys = [
+                    k for k, v in vj_contigs.items() if v >= max(set_counts)
                 ]
-                for dk in drop_keys:
-                    extra_contigs.append(dk)
-                for kk in max_id_keys:
-                    keep_contigs.append(kk)
+                if len(max_id_keys) > 2:
+                    for dk in vj_contigs.keys():
+                        ambiguous_contigs.append(dk)
+                else:
+                    drop_keys = [
+                        k for k, v in vj_contigs.items() if v < max(set_counts)
+                    ]
+                    for dk in drop_keys:
+                        extra_contigs.append(dk)
+                    for kk in max_id_keys:
+                        keep_contigs.append(kk)
+            else:
+                for k in vj_contigs.keys():
+                    keep_contigs.append(k)
         else:
             for dk in vj_contigs.keys():
                 ambiguous_contigs.append(dk)
@@ -6221,60 +6225,70 @@ def check_update_same_seq(
         updated  AIRR data frame, lists of contigs to keep, their umi counts, their c_calls,
         adjusted umi counts, and list of ambiguous contigs.
     """
+    keep_id = []
+    keep_ccall = []
     umi_adjust = {}
     ambi_cont = []
-    seq_ = list(data.sequence_alignment)
-    seq_2 = [s for s in seq_ if present(s)]
-    if len(set(seq_2)) < len(seq_2):
-        _seq = {
-            k: r for k, r in dict(data.sequence_alignment).items() if present(r)
-        }
-        _count = {
-            k: r for k, r in dict(data.duplicate_count).items() if k in _seq
-        }
-        rep_seq = [
-            seq for seq in set(_seq.values()) if countOf(_seq.values(), seq) > 1
-        ]
-        keep_seqs = [
-            seq
-            for seq in set(_seq.values())
-            if countOf(_seq.values(), seq) == 1
-        ]
-        keep_seqs_ids = [i for i, seq in _seq.items() if seq in keep_seqs]
-        if len(rep_seq) > 0:
-            for rep in rep_seq:
-                dup_keys = [k for k, v in _seq.items() if v == rep]
-                keep_index_vj = dup_keys[0]
-                keep_index_count = int(_count[keep_index_vj])
-                sum_rep_counts = np.sum([_count[k] for k in dup_keys[1:]])
-                umi_adjust.update(
-                    {
-                        keep_index_vj: int(
-                            np.sum(
-                                [
-                                    sum_rep_counts,
-                                    keep_index_count,
-                                ],
-                            )
-                        )
-                    }
-                )
-                for dk in dup_keys[1:]:
-                    ambi_cont.append(dk)
-                keep_seqs_ids.append(keep_index_vj)
-                data.duplicate_count.update({keep_index_vj: keep_index_count})
-            # refresh
-            empty_seqs_ids = [
-                k
-                for k, r in dict(data.sequence_alignment).items()
-                if not present(r)
+    sequencecol = (
+        "sequence_alignment" if "sequence_alignment" in data else "sequence"
+    )
+    if sequencecol in data:
+        seq_ = list(data[sequencecol])
+        seq_2 = [s for s in seq_ if present(s)]
+        if len(set(seq_2)) < len(seq_2):
+            _seq = {
+                k: r for k, r in dict(data[sequencecol]).items() if present(r)
+            }
+            _count = {
+                k: r for k, r in dict(data.duplicate_count).items() if k in _seq
+            }
+            rep_seq = [
+                seq
+                for seq in set(_seq.values())
+                if countOf(_seq.values(), seq) > 1
             ]
-            if len(empty_seqs_ids) > 0:
-                keep_seqs_ids = keep_seqs_ids + empty_seqs_ids
-            data = data.loc[keep_seqs_ids]
-    keep_id = list(data.sequence_id)
-    keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
-    keep_ccall = list(data.c_call)
+            keep_seqs = [
+                seq
+                for seq in set(_seq.values())
+                if countOf(_seq.values(), seq) == 1
+            ]
+            keep_seqs_ids = [i for i, seq in _seq.items() if seq in keep_seqs]
+            if len(rep_seq) > 0:
+                for rep in rep_seq:
+                    dup_keys = [k for k, v in _seq.items() if v == rep]
+                    keep_index_vj = dup_keys[0]
+                    keep_index_count = int(_count[keep_index_vj])
+                    sum_rep_counts = np.sum([_count[k] for k in dup_keys[1:]])
+                    umi_adjust.update(
+                        {
+                            keep_index_vj: int(
+                                np.sum(
+                                    [
+                                        sum_rep_counts,
+                                        keep_index_count,
+                                    ],
+                                )
+                            )
+                        }
+                    )
+                    for dk in dup_keys[1:]:
+                        ambi_cont.append(dk)
+                    keep_seqs_ids.append(keep_index_vj)
+                    data.duplicate_count.update(
+                        {keep_index_vj: keep_index_count}
+                    )
+                # refresh
+                empty_seqs_ids = [
+                    k
+                    for k, r in dict(data[sequencecol]).items()
+                    if not present(r)
+                ]
+                if len(empty_seqs_ids) > 0:
+                    keep_seqs_ids = keep_seqs_ids + empty_seqs_ids
+                data = data.loc[keep_seqs_ids]
+        keep_id = list(data.sequence_id)
+        keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
+        keep_ccall = list(data.c_call)
 
     return (data, keep_id, keep_umi, keep_ccall, umi_adjust, ambi_cont)
 
