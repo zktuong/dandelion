@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 22:15:55
+# @Last Modified time: 2022-12-02 10:13:03
 """core module."""
 import bz2
 import copy
@@ -1888,7 +1888,14 @@ def initialize_metadata(
         querier = Query(dataq)
         self.querier = querier
     else:
-        querier = self.querier
+        if self.metadata is not None:
+            if any(~self.metadata_names.isin(self.data.cell_id)):
+                querier = Query(dataq)
+                self.querier = querier
+            else:
+                querier = self.querier
+        else:
+            querier = self.querier
 
     meta_ = defaultdict(dict)
     for k, v in init_dict.copy().items():
@@ -2229,8 +2236,11 @@ def initialize_metadata(
     )
     # if metadata already exist, just overwrite the default columns?
     if self.metadata is not None:
-        for col in tmp_metadata:
-            self.metadata[col] = pd.Series(tmp_metadata[col])
+        if any(~self.metadata_names.isin(self.data.cell_id)):
+            self.metadata = tmp_metadata.copy()  # reindex and replace.
+        else:
+            for col in tmp_metadata:
+                self.metadata[col] = pd.Series(tmp_metadata[col])
     else:
         self.metadata = tmp_metadata.copy()
 
