@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-02 10:13:03
+# @Last Modified time: 2022-12-02 15:18:18
 """core module."""
 import bz2
 import copy
@@ -1924,95 +1924,50 @@ def initialize_metadata(
     reqcols1 = [
         "locus_VDJ",
     ]
-    if "v_call_genotyped" in self.data:
-        reqcols2 = [
-            "locus_VJ",
-            "productive_VDJ",
-            "productive_VJ",
-            "v_call_genotyped_VDJ",
-            "d_call_VDJ",
-            "j_call_VDJ",
-            "v_call_genotyped_VJ",
-            "j_call_VJ",
-            "c_call_VDJ",
-            "c_call_VJ",
-            "junction_VDJ",
-            "junction_VJ",
-            "junction_aa_VDJ",
-            "junction_aa_VJ",
-            "v_call_genotyped_B_VDJ",
-            "d_call_B_VDJ",
-            "j_call_B_VDJ",
-            "v_call_genotyped_B_VJ",
-            "j_call_B_VJ",
-            "c_call_B_VDJ",
-            "c_call_B_VJ",
-            "productive_B_VDJ",
-            "productive_B_VJ",
-            "v_call_genotyped_abT_VDJ",
-            "d_call_abT_VDJ",
-            "j_call_abT_VDJ",
-            "v_call_genotyped_abT_VJ",
-            "j_call_abT_VJ",
-            "c_call_abT_VDJ",
-            "c_call_abT_VJ",
-            "productive_abT_VDJ",
-            "productive_abT_VJ",
-            "v_call_genotyped_gdT_VDJ",
-            "d_call_gdT_VDJ",
-            "j_call_gdT_VDJ",
-            "v_call_genotyped_gdT_VJ",
-            "j_call_gdT_VJ",
-            "c_call_gdT_VDJ",
-            "c_call_gdT_VJ",
-            "productive_gdT_VDJ",
-            "productive_gdT_VJ",
-        ]
-    else:
-        reqcols2 = [
-            "locus_VJ",
-            "productive_VDJ",
-            "productive_VJ",
-            "v_call_VDJ",
-            "d_call_VDJ",
-            "j_call_VDJ",
-            "v_call_VJ",
-            "j_call_VJ",
-            "c_call_VDJ",
-            "c_call_VJ",
-            "junction_VDJ",
-            "junction_VJ",
-            "junction_aa_VDJ",
-            "junction_aa_VJ",
-            "v_call_B_VDJ",
-            "d_call_B_VDJ",
-            "j_call_B_VDJ",
-            "v_call_B_VJ",
-            "j_call_B_VJ",
-            "c_call_B_VDJ",
-            "c_call_B_VJ",
-            "productive_B_VDJ",
-            "productive_B_VJ",
-            "v_call_abT_VDJ",
-            "d_call_abT_VDJ",
-            "j_call_abT_VDJ",
-            "v_call_abT_VJ",
-            "j_call_abT_VJ",
-            "c_call_abT_VDJ",
-            "c_call_abT_VJ",
-            "productive_abT_VDJ",
-            "productive_abT_VJ",
-            "v_call_gdT_VDJ",
-            "d_call_gdT_VDJ",
-            "j_call_gdT_VDJ",
-            "v_call_gdT_VJ",
-            "j_call_gdT_VJ",
-            "c_call_gdT_VDJ",
-            "c_call_gdT_VJ",
-            "productive_gdT_VDJ",
-            "productive_gdT_VJ",
-        ]
-
+    vcall = "v_call_genotyped" if "v_call_genotyped" in self.data else "v_call"
+    reqcols2 = [
+        "locus_VJ",
+        "productive_VDJ",
+        "productive_VJ",
+        vcall + "_VDJ",
+        "d_call_VDJ",
+        "j_call_VDJ",
+        vcall + "_VJ",
+        "j_call_VJ",
+        "c_call_VDJ",
+        "c_call_VJ",
+        "junction_VDJ",
+        "junction_VJ",
+        "junction_aa_VDJ",
+        "junction_aa_VJ",
+        vcall + "_B_VDJ",
+        "d_call_B_VDJ",
+        "j_call_B_VDJ",
+        vcall + "_B_VJ",
+        "j_call_B_VJ",
+        "c_call_B_VDJ",
+        "c_call_B_VJ",
+        "productive_B_VDJ",
+        "productive_B_VJ",
+        vcall + "_abT_VDJ",
+        "d_call_abT_VDJ",
+        "j_call_abT_VDJ",
+        vcall + "_abT_VJ",
+        "j_call_abT_VJ",
+        "c_call_abT_VDJ",
+        "c_call_abT_VJ",
+        "productive_abT_VDJ",
+        "productive_abT_VJ",
+        vcall + "_gdT_VDJ",
+        "d_call_gdT_VDJ",
+        "j_call_gdT_VDJ",
+        vcall + "_gdT_VJ",
+        "j_call_gdT_VJ",
+        "c_call_gdT_VDJ",
+        "c_call_gdT_VJ",
+        "productive_gdT_VDJ",
+        "productive_gdT_VJ",
+    ]
     reqcols = reqcols1 + reqcols2
     for rc in reqcols:
         if rc not in tmp_metadata:
@@ -2020,6 +1975,39 @@ def initialize_metadata(
     for dc in ["d_call_VJ", "d_call_B_VJ", "d_call_abT_VJ", "d_call_gdT_VJ"]:
         if dc in tmp_metadata:
             tmp_metadata.drop(dc, axis=1, inplace=True)
+
+    for _call in [vcall, "d_call", "j_call", "c_call"]:
+        tmp_metadata[_call + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in tmp_metadata[_call + "_VDJ"]
+        ]
+        if _call != "d_call":
+            tmp_metadata[_call + "_VJ_main"] = [
+                x.split("|")[0] if x != "None" else "None"
+                for x in tmp_metadata[_call + "_VJ"]
+            ]
+
+    for mode in ["B", "abT", "gdT"]:
+        tmp_metadata[vcall + "_" + mode + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in tmp_metadata[vcall + "_" + mode + "_VDJ"]
+        ]
+        tmp_metadata["d_call_" + mode + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in tmp_metadata["d_call_" + mode + "_VDJ"]
+        ]
+        tmp_metadata["j_call_" + mode + "_VDJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in tmp_metadata["j_call_" + mode + "_VDJ"]
+        ]
+        tmp_metadata[vcall + "_" + mode + "_VJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in tmp_metadata[vcall + "_" + mode + "_VJ"]
+        ]
+        tmp_metadata["j_call_" + mode + "_VJ_main"] = [
+            x.split("|")[0] if x != "None" else "None"
+            for x in tmp_metadata["j_call_" + mode + "_VJ"]
+        ]
 
     if "locus_VDJ" in tmp_metadata:
         suffix_vdj = "_VDJ"

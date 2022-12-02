@@ -14,6 +14,13 @@ FILE = "demo-pseudobulk.h5ad"
 FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
 
 
+@pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
+def test_setup(airr_reannotated, dummy_adata):
+    vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
+    bdata = ddl.tl.setup_vdj_pseudobulk(adata, mode="B")
+    cdata = ddl.tl.setup_vdj_pseudobulk(adata, mode=None)
+
+
 @pytest.mark.skipif(
     (sys.platform == "darwin") & (sys.version_info.minor < 8),
     reason="macos CI stalls.",
