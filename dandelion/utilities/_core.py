@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-02 10:00:38
+# @Last Modified time: 2022-12-02 10:08:59
 """core module."""
 import bz2
 import copy
@@ -1888,7 +1888,11 @@ def initialize_metadata(
         querier = Query(dataq)
         self.querier = querier
     else:
-        querier = self.querier
+        if any(~self.metadata_names.isin(self.data.cell_id)):
+            querier = Query(dataq)
+            self.querier = querier
+        else:
+            querier = self.querier
 
     meta_ = defaultdict(dict)
     for k, v in init_dict.copy().items():
