@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-02 10:08:59
+# @Last Modified time: 2022-12-02 10:13:03
 """core module."""
 import bz2
 import copy
@@ -1888,9 +1888,12 @@ def initialize_metadata(
         querier = Query(dataq)
         self.querier = querier
     else:
-        if any(~self.metadata_names.isin(self.data.cell_id)):
-            querier = Query(dataq)
-            self.querier = querier
+        if self.metadata is not None:
+            if any(~self.metadata_names.isin(self.data.cell_id)):
+                querier = Query(dataq)
+                self.querier = querier
+            else:
+                querier = self.querier
         else:
             querier = self.querier
 
