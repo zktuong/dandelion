@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-12 09:22:14
+# @Last Modified time: 2022-12-12 09:52:10
 """core module."""
 import bz2
 import copy
@@ -923,7 +923,7 @@ class Dandelion:
         )
 
     def update_metadata(
-        self: Dandelion,
+        self,
         retrieve: Optional[Union[List[str], str]] = None,
         clone_key: Optional[str] = None,
         retrieve_mode: Literal[
@@ -941,7 +941,7 @@ class Dandelion:
         reinitialize: bool = True,
         verbose: bool = False,
         by_celltype: bool = False,
-    ) -> "Dandelion":
+    ):
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
@@ -2049,8 +2049,8 @@ class Query:
 
 
 def initialize_metadata(
-    self, cols: List[str], clonekey: str, collapse_alleles: bool
-) -> "Dandelion":
+    vdj_data, cols: List[str], clonekey: str, collapse_alleles: bool
+):
     """Initialize Dandelion metadata."""
     init_dict = {}
     for col in cols:
@@ -2080,28 +2080,28 @@ def initialize_metadata(
                 }
             }
         )
-    update_rearrangement_status(self)
+    update_rearrangement_status(vdj_data)
 
-    if "ambiguous" in self.data:
-        dataq = self.data[self.data["ambiguous"] == "F"]
+    if "ambiguous" in vdj_data.data:
+        dataq = vdj_data.data[vdj_data.data["ambiguous"] == "F"]
     else:
-        dataq = self.data
-    if self.querier is None:
+        dataq = vdj_data.data
+    if vdj_data.querier is None:
         querier = Query(dataq)
-        self.querier = querier
+        vdj_data.querier = querier
     else:
-        if self.metadata is not None:
-            if any(~self.metadata_names.isin(self.data.cell_id)):
+        if vdj_data.metadata is not None:
+            if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
                 querier = Query(dataq)
-                self.querier = querier
+                vdj_data.querier = querier
             else:
-                querier = self.querier
+                querier = vdj_data.querier
         else:
-            querier = self.querier
+            querier = vdj_data.querier
 
     meta_ = defaultdict(dict)
     for k, v in init_dict.copy().items():
-        if all_missing(self.data[k]):
+        if all_missing(vdj_data.data[k]):
             init_dict.pop(k)
             continue
         meta_[k] = querier.retrieve(**v)
@@ -2126,7 +2126,9 @@ def initialize_metadata(
     reqcols1 = [
         "locus_VDJ",
     ]
-    vcall = "v_call_genotyped" if "v_call_genotyped" in self.data else "v_call"
+    vcall = (
+        "v_call_genotyped" if "v_call_genotyped" in vdj_data.data else "v_call"
+    )
     reqcols2 = [
         "locus_VJ",
         "productive_VDJ",
@@ -2349,7 +2351,7 @@ def initialize_metadata(
     if collapse_alleles:
         for x in vdj_gene_calls:
 
-            if x in self.data:
+            if x in vdj_data.data:
                 for c in tmp_metadata:
                     if x in c:
                         tmp_metadata[c] = [
@@ -2420,18 +2422,18 @@ def initialize_metadata(
         ref_col="chain_status",
     )
     # if metadata already exist, just overwrite the default columns?
-    if self.metadata is not None:
-        if any(~self.metadata_names.isin(self.data.cell_id)):
-            self.metadata = tmp_metadata.copy()  # reindex and replace.
+    if vdj_data.metadata is not None:
+        if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
+            vdj_data.metadata = tmp_metadata.copy()  # reindex and replace.
         else:
             for col in tmp_metadata:
-                self.metadata[col] = pd.Series(tmp_metadata[col])
+                vdj_data.metadata[col] = pd.Series(tmp_metadata[col])
     else:
-        self.metadata = tmp_metadata.copy()
+        vdj_data.metadata = tmp_metadata.copy()
 
 
 def update_metadata(
-    self: Dandelion,
+    vdj_data: Dandelion,
     retrieve: Optional[Union[List[str], str]] = None,
     clone_key: Optional[str] = None,
     retrieve_mode: Literal[
@@ -2449,12 +2451,14 @@ def update_metadata(
     reinitialize: bool = True,
     verbose: bool = False,
     by_celltype: bool = False,
-) -> "Dandelion":
+):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
     Parameters
     ----------
+    vdj_data : Dandelion
+        input `Dandelion` object.
     retrieve : Optional[Union[List[str], str]], optional
         column name in `.data` slot to retrieve and update the metadata.
     clone_key : Optional[str], optional
@@ -2520,13 +2524,13 @@ def update_metadata(
         "junction_aa",
     ]
 
-    if "duplicate_count" not in self.data:
+    if "duplicate_count" not in vdj_data.data:
         raise ValueError(
             "Unable to initialize metadata due to missing keys. "
             "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
         )
 
-    if not all([c in self.data for c in cols]):
+    if not all([c in vdj_data.data for c in cols]):
         raise ValueError(
             "Unable to initialize metadata due to missing keys. "
             "Please ensure the input data contains all the following columns: {}".format(
@@ -2534,10 +2538,10 @@ def update_metadata(
             )
         )
 
-    if "sample_id" in self.data:
+    if "sample_id" in vdj_data.data:
         cols = ["sample_id"] + cols
 
-    if "v_call_genotyped" in self.data:
+    if "v_call_genotyped" in vdj_data.data:
         cols = list(
             map(lambda x: "v_call_genotyped" if x == "v_call" else x, cols)
         )
@@ -2545,29 +2549,29 @@ def update_metadata(
     for c in ["sequence_id", "cell_id"]:
         cols.remove(c)
 
-    if clonekey in self.data:
-        if not all(pd.isnull(self.data[clonekey])):
+    if clonekey in vdj_data.data:
+        if not all(pd.isnull(vdj_data.data[clonekey])):
             cols = [clonekey] + cols
 
-    metadata_status = self.metadata
+    metadata_status = vdj_data.metadata
     if (metadata_status is None) or reinitialize:
-        initialize_metadata(self, cols, clonekey, collapse_alleles)
+        initialize_metadata(vdj_data, cols, clonekey, collapse_alleles)
 
-    tmp_metadata = self.metadata.copy()
+    tmp_metadata = vdj_data.metadata.copy()
 
     if retrieve is not None:
         ret_dict = {}
         if type(retrieve) is str:
             retrieve = [retrieve]
-        if self.querier is None:
-            querier = Query(self.data)
-            self.querier = querier
+        if vdj_data.querier is None:
+            querier = Query(vdj_data.data)
+            vdj_data.querier = querier
         else:
-            if any([r not in self.querier.data for r in retrieve]):
-                querier = Query(self.data)
-                self.querier = querier
+            if any([r not in vdj_data.querier.data for r in retrieve]):
+                querier = Query(vdj_data.data)
+                vdj_data.querier = querier
             else:
-                querier = self.querier
+                querier = vdj_data.querier
 
         if type(retrieve_mode) is str:
             retrieve_mode = [retrieve_mode]
@@ -2587,7 +2591,7 @@ def update_metadata(
 
         retrieve_ = defaultdict(dict)
         for k, v in ret_dict.items():
-            if k in self.data.columns:
+            if k in vdj_data.data.columns:
                 if by_celltype:
                     retrieve_[k] = querier.retrieve_celltype(**v)
                 else:
@@ -2628,7 +2632,7 @@ def update_metadata(
 
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
-        self.metadata = tmp_metadata.copy()
+        vdj_data.metadata = tmp_metadata.copy()
 
 
 def _normalize_indices(
