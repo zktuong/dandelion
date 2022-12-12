@@ -92,7 +92,7 @@ changeo>=1.0.0
 presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
-rpy2>=3.4.2 # optional
+rpy2>=3.4.2
 ```
 
 ## Acknowledgements
