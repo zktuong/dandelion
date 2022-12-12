@@ -2,8 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-04-03 16:46:13
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-18 14:31:36
-"""metadata module."""
+# @Last Modified time: 2022-12-12 14:46:37
 try:
     from setuptools_scm import get_version
 
