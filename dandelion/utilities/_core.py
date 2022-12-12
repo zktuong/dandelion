@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-12 08:52:53
+# @Last Modified time: 2022-12-12 09:22:14
 """core module."""
 import bz2
 import copy
@@ -921,6 +921,208 @@ class Dandelion:
                 "   'germline', updated germline reference\n"
             ),
         )
+
+    def update_metadata(
+        self: Dandelion,
+        retrieve: Optional[Union[List[str], str]] = None,
+        clone_key: Optional[str] = None,
+        retrieve_mode: Literal[
+            "split and unique only",
+            "merge and unique only",
+            "split and merge",
+            "split and sum",
+            "split and average",
+            "split",
+            "merge",
+            "sum",
+            "average",
+        ] = "split and merge",
+        collapse_alleles: bool = True,
+        reinitialize: bool = True,
+        verbose: bool = False,
+        by_celltype: bool = False,
+    ) -> "Dandelion":
+        """
+        A `Dandelion` initialisation function to update and populate the `.metadata` slot.
+
+        Parameters
+        ----------
+        retrieve : Optional[Union[List[str], str]], optional
+            column name in `.data` slot to retrieve and update the metadata.
+        clone_key : Optional[str], optional
+            column name of clone id. None defaults to 'clone_id'.
+        retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ], optional
+            one of:
+                `split and unique only`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for unique elements.
+                `merge and unique only`
+                    returns the retrieval merged into one column,
+                    separated by `|` for unique elements.
+                `split and merge`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for every elements.
+                `split`
+                    returns the retrieval splitted into separate columns for each contig.
+                `merge`
+                    returns the retrieval merged into one columns for each contig,
+                    separated by `|` for unique elements.
+                `split and sum`
+                    returns the retrieval sumed in the VDJ and VJ columns (separately).
+                `split and average`
+                    returns the retrieval averaged in the VDJ and VJ columns (separately).
+                `sum`
+                    returns the retrieval sumed into one column for all contigs.
+                `average`
+                    returns the retrieval averaged into one column for all contigs.
+        collapse_alleles : bool, optional
+            returns the V(D)J genes with allelic calls if False.
+        reinitialize : bool, optional
+            whether or not to reinitialize the current metadata.
+            useful when updating older versions of `dandelion` to newer version.
+        verbose : bool, optional
+            whether to print progress.
+        by_celltype : bool, optional
+            whether to return the query/update by celltype.
+
+        Raises
+        ------
+        KeyError
+            if columns provided not found in Dandelion.data.
+        ValueError
+            if missing columns in Dandelion.data.
+        """
+
+        if clone_key is None:
+            clonekey = "clone_id"
+        else:
+            clonekey = clone_key
+
+        cols = [
+            "sequence_id",
+            "cell_id",
+            "locus",
+            "productive",
+            "v_call",
+            "d_call",
+            "j_call",
+            "c_call",
+            "duplicate_count",
+            "junction",
+            "junction_aa",
+        ]
+
+        if "duplicate_count" not in self.data:
+            raise ValueError(
+                "Unable to initialize metadata due to missing keys. "
+                "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
+            )
+
+        if not all([c in self.data for c in cols]):
+            raise ValueError(
+                "Unable to initialize metadata due to missing keys. "
+                "Please ensure the input data contains all the following columns: {}".format(
+                    cols
+                )
+            )
+
+        if "sample_id" in self.data:
+            cols = ["sample_id"] + cols
+
+        if "v_call_genotyped" in self.data:
+            cols = list(
+                map(lambda x: "v_call_genotyped" if x == "v_call" else x, cols)
+            )
+
+        for c in ["sequence_id", "cell_id"]:
+            cols.remove(c)
+
+        if clonekey in self.data:
+            if not all(pd.isnull(self.data[clonekey])):
+                cols = [clonekey] + cols
+
+        metadata_status = self.metadata
+        if (metadata_status is None) or reinitialize:
+            initialize_metadata(self, cols, clonekey, collapse_alleles)
+
+        tmp_metadata = self.metadata.copy()
+
+        if retrieve is not None:
+            ret_dict = {}
+            if type(retrieve) is str:
+                retrieve = [retrieve]
+            if self.querier is None:
+                querier = Query(self.data)
+                self.querier = querier
+            else:
+                if any([r not in self.querier.data for r in retrieve]):
+                    querier = Query(self.data)
+                    self.querier = querier
+                else:
+                    querier = self.querier
+
+            if type(retrieve_mode) is str:
+                retrieve_mode = [retrieve_mode]
+                if len(retrieve) > len(retrieve_mode):
+                    retrieve_mode = [x for x in retrieve_mode for i in retrieve]
+            for ret, mode in zip(retrieve, retrieve_mode):
+                ret_dict.update(
+                    {
+                        ret: {
+                            "query": ret,
+                            "retrieve_mode": mode,
+                        }
+                    }
+                )
+
+            vdj_gene_ret = ["v_call", "d_call", "j_call"]
+
+            retrieve_ = defaultdict(dict)
+            for k, v in ret_dict.items():
+                if k in self.data.columns:
+                    if by_celltype:
+                        retrieve_[k] = querier.retrieve_celltype(**v)
+                    else:
+                        retrieve_[k] = querier.retrieve(**v)
+                else:
+                    raise KeyError(
+                        "Cannot retrieve '%s' : Unknown column name." % k
+                    )
+            ret_metadata = pd.concat(retrieve_.values(), axis=1, join="inner")
+            ret_metadata.dropna(axis=1, how="all", inplace=True)
+            for col in ret_metadata:
+                if all_missing(ret_metadata[col]):
+                    ret_metadata.drop(col, axis=1, inplace=True)
+
+            if collapse_alleles:
+                for k in ret_dict.keys():
+                    if k in vdj_gene_ret:
+                        for c in ret_metadata:
+                            if k in c:
+                                ret_metadata[c] = [
+                                    "|".join(
+                                        [
+                                            "|".join(list(set(yy.split(","))))
+                                            for yy in list(
+                                                set(
+                                                    [
+                                                        re.sub(
+                                                            "[*][0-9][0-9]",
+                                                            "",
+                                                            tx,
+                                                        )
+                                                        for tx in t.split("|")
+                                                    ]
+                                                )
+                                            )
+                                        ]
+                                    )
+                                    for t in ret_metadata[c]
+                                ]
+
+            for r in ret_metadata:
+                tmp_metadata[r] = pd.Series(ret_metadata[r])
+            self.metadata = tmp_metadata.copy()
 
     def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
         """
