@@ -22,7 +22,7 @@ def test_setup(airr_reannotated, dummy_adata):
 
 
 @pytest.mark.skipif(
-    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    (sys.platform == "darwin") & (sys.version_info.minor < 9),
     reason="macos CI stalls.",
 )
 @patch("matplotlib.pyplot.show")
@@ -73,7 +73,7 @@ def test_trajectory(mock_show):
 
 
 @pytest.mark.skipif(
-    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    (sys.platform == "darwin") & (sys.version_info.minor < 9),
     reason="macos CI stalls.",
 )
 def test_trajectory_setup():
