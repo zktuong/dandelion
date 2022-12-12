@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:28:44
+# @Last Modified time: 2022-12-12 11:37:52
 """io module."""
 import bz2
 import gzip
@@ -780,8 +780,11 @@ def parse_json(data: list) -> defaultdict:
         else:
             continue
         for k in main_dict1.keys():
-            if data[i][k] is not None:
-                out[key].update({main_dict1[k]: data[i][k]})
+            if k in data[i]:
+                if data[i][k] is not None:
+                    out[key].update({main_dict1[k]: data[i][k]})
+                else:
+                    out[key].update({main_dict1[k]: ""})
             else:
                 out[key].update({main_dict1[k]: ""})
         if data[i]["annotations"] is not None:
@@ -812,24 +815,34 @@ def parse_json(data: list) -> defaultdict:
             if rc not in out[key]:
                 out[key].update({rc: ""})
         for k in main_dict2.keys():
-            if data[i][k] is not None:
-                out[key].update({main_dict2[k]: data[i][k]})
+            if k in data[i]:
+                if data[i][k] is not None:
+                    out[key].update({main_dict2[k]: data[i][k]})
+                else:
+                    out[key].update({main_dict2[k]: np.nan})
             else:
                 out[key].update({main_dict2[k]: np.nan})
         for rk in region_keys:
-            if data[i][rk] is not None:
-                for k in data[i][rk]:
-                    if k == "start":
-                        ka = rk + "_start"
-                    elif k == "stop":
-                        ka = rk + "_end"
-                    elif k == "nt_seq":
-                        ka = rk + ""
-                    elif k == "aa_seq":
-                        ka = rk + "_aa"
-                    else:
-                        continue
-                    out[key].update({ka: data[i][rk][k]})
+            if rk in data[i]:
+                if data[i][rk] is not None:
+                    for k in data[i][rk]:
+                        if k == "start":
+                            ka = rk + "_start"
+                        elif k == "stop":
+                            ka = rk + "_end"
+                        elif k == "nt_seq":
+                            ka = rk + ""
+                        elif k == "aa_seq":
+                            ka = rk + "_aa"
+                        else:
+                            continue
+                        out[key].update({ka: data[i][rk][k]})
+                else:
+                    for k in region_keys:
+                        out[key].update({k + "_start": np.nan})
+                        out[key].update({k + "_end": np.nan})
+                        out[key].update({k + "": ""})
+                        out[key].update({k + "_aa": ""})
             else:
                 for k in region_keys:
                     out[key].update({k + "_start": np.nan})
@@ -843,8 +856,11 @@ def parse_json(data: list) -> defaultdict:
                 else:
                     out[key].update({info_dict[info]: ""})
         for k in main_dict3.keys():
-            if data[i][k] is not None:
-                out[key].update({main_dict3[k]: data[i][k]})
+            if k in data[i]:
+                if data[i][k] is not None:
+                    out[key].update({main_dict3[k]: data[i][k]})
+                else:
+                    out[key].update({main_dict3[k]: ""})
             else:
                 out[key].update({main_dict3[k]: ""})
     return out
