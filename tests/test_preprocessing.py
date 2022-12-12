@@ -95,7 +95,8 @@ def test_reannotategenes(create_testfolder, database_paths, filename, expected):
         filename_prefix=filename,
     )
     assert (
-        len(list((create_testfolder / "dandelion/tmp").iterdir())) == expected
+        len(list((create_testfolder / "dandelion" / "tmp").iterdir()))
+        == expected
     )
 
 
@@ -136,7 +137,8 @@ def test_reassignalleles(
         show_plot=False,
     )
     assert (
-        len(list((create_testfolder / "dandelion/tmp").iterdir())) == expected
+        len(list((create_testfolder / "dandelion" / "tmp").iterdir()))
+        == expected
     )
 
 
@@ -167,7 +169,7 @@ def test_assignsisotypes(create_testfolder, database_paths, filename, expected):
 @pytest.mark.parametrize("filename", ["all", "filtered"])
 def test_checkccall(create_testfolder, processed_files, filename):
     """test_checkccall"""
-    f = create_testfolder / str("dandelion/" + processed_files[filename])
+    f = create_testfolder / "dandelion" / processed_files[filename]
     dat = pd.read_csv(f, sep="\t")
     assert not dat["c_call"].empty
 
@@ -175,7 +177,7 @@ def test_checkccall(create_testfolder, processed_files, filename):
 @pytest.mark.usefixtures("create_testfolder", "processed_files")
 def test_create_germlines_fails(create_testfolder, processed_files):
     """test_create_germlines_fails"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     with pytest.raises(KeyError):
         ddl.pp.create_germlines(f)
 
@@ -185,7 +187,7 @@ def test_create_germlines_fails(create_testfolder, processed_files):
 )
 def test_create_germlines(create_testfolder, processed_files, database_paths):
     """test_create_germlines"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     ddl.pp.create_germlines(f, germline=database_paths["germline"])
     f2 = create_testfolder / str(
         "dandelion/" + processed_files["germline-dmask"]
@@ -197,7 +199,7 @@ def test_create_germlines(create_testfolder, processed_files, database_paths):
 @pytest.mark.usefixtures("create_testfolder", "processed_files")
 def test_update_germlines_fail2(create_testfolder, processed_files):
     """test_update_germlines_fail2"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     with pytest.raises(KeyError):
         vdj.update_germline()
@@ -208,7 +210,7 @@ def test_update_germlines_fail2(create_testfolder, processed_files):
 )
 def test_update_germlines(create_testfolder, processed_files, database_paths):
     """test_update_germlines"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     vdj.update_germline(germline=database_paths["germline"])
     assert len(vdj.germline) > 0
@@ -225,7 +227,7 @@ def test_update_germlines(create_testfolder, processed_files, database_paths):
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_quantify_mut(create_testfolder, processed_files, freq, colname, dtype):
     """test_quantify_mut"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     ddl.pp.quantify_mutations(f, frequency=freq)
     dat = pd.read_csv(f, sep="\t")
     assert not dat[colname].empty
@@ -240,7 +242,7 @@ def test_quantify_mut(create_testfolder, processed_files, freq, colname, dtype):
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_quantify_mut_2(create_testfolder, processed_files, freq, colname):
     """test_quantify_mut_2"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     ddl.pp.quantify_mutations(vdj, frequency=freq)
     assert not vdj.data[colname].empty
@@ -264,7 +266,7 @@ def test_filtercontigs(
     create_testfolder, processed_files, dummy_adata, filename, simple, size
 ):
     """test_filtercontigs"""
-    f = create_testfolder / str("dandelion/" + processed_files[filename])
+    f = create_testfolder / "dandelion" / processed_files[filename]
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata, simple=simple)
     assert dat.shape[0] == 9
@@ -341,7 +343,7 @@ def test_formatfasta2(create_testfolder, prefix, suffix, sep, remove):
 @pytest.mark.usefixtures("create_testfolder", "processed_files")
 def test_update_germlines_fail(create_testfolder, processed_files):
     """test_update_germlines_fail"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     with pytest.raises(KeyError):
         vdj.update_germline()
@@ -354,7 +356,7 @@ def test_update_germlines2(
     create_testfolder, processed_files, database_paths, fasta_10x
 ):
     """test_update_germlines2"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     vdj.update_germline(germline=database_paths["germline"])
     assert len(vdj.germline) > 0
@@ -378,7 +380,7 @@ def test_update_germlines2(
 @pytest.mark.usefixtures("create_testfolder", "processed_files")
 def test_store_germline_reference_fail(create_testfolder, processed_files):
     """test_store_germline_reference_fail"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     with pytest.raises(KeyError):
         vdj.store_germline_reference()
@@ -391,7 +393,7 @@ def test_store_germline_reference2(
     create_testfolder, processed_files, database_paths, fasta_10x
 ):
     """test_store_germline_references2"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
     vdj.store_germline_reference(germline=database_paths["germline"])
     assert len(vdj.germline) > 0

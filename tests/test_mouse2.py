@@ -43,7 +43,7 @@ def test_reannotategenes_original(create_testfolder, database_paths_mouse):
         flavour="original",
         org="mouse",
     )
-    assert len(list((create_testfolder / "dandelion/tmp").iterdir())) == 4
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 4
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
@@ -57,4 +57,4 @@ def test_reannotategenes_other(create_testfolder, database_paths_mouse):
         extended=False,
         org="mouse",
     )
-    assert len(list((create_testfolder / "dandelion/tmp").iterdir())) == 6
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 6

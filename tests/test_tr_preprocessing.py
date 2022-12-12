@@ -78,7 +78,7 @@ def test_reannotategenes(create_testfolder, database_paths, filename, expected):
         filename_prefix=filename,
     )
     assert (
-        len(list((create_testfolder / "dandelion/tmp").iterdir()))
+        len(list((create_testfolder / "dandelion" / "tmp").iterdir()))
         == expected[0]
     )
     assert len(list((create_testfolder / "dandelion").iterdir())) == expected[1]
@@ -92,7 +92,7 @@ def test_checkreannotation(create_testfolder, processed_files_tr, filename):
         create_testfolder / str(filename + "_contig_annotations.csv")
     )
     f2 = pd.read_csv(
-        create_testfolder / str("dandelion/" + processed_files_tr[filename]),
+        create_testfolder / "dandelion" / processed_files_tr[filename],
         sep="\t",
     )
     f1 = f1.replace({"None": None, "": None, "False": False, "True": True})
@@ -113,7 +113,7 @@ def test_filtercontigs(
     create_testfolder, processed_files_tr, dummy_adata_tr, filename, expected
 ):
     """test_filtercontigs"""
-    f = create_testfolder / str("dandelion/" + processed_files_tr[filename])
+    f = create_testfolder / "dandelion" / processed_files_tr[filename]
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_tr)
     assert dat.shape[0] == expected

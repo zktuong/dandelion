@@ -45,7 +45,7 @@ def test_reannotategenes(create_testfolder, database_paths_mouse):
         org="mouse",
         reassign_dj=False,
     )
-    assert len(list((create_testfolder / "dandelion/tmp").iterdir())) == 4
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 4
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
@@ -59,7 +59,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
         novel=True,
         plot=False,
     )
-    assert len(list((create_testfolder / "dandelion/tmp").iterdir())) == 7
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 7
 
 
 @pytest.mark.usefixtures("database_paths_mouse")
@@ -92,7 +92,7 @@ def test_create_germlines(
     create_testfolder, processed_files, database_paths_mouse
 ):
     """test_create_germlines"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     ddl.pp.create_germlines(f, germline=database_paths_mouse["germline"])
     f2 = create_testfolder / str(
         "dandelion/" + processed_files["germline-dmask"]
@@ -106,7 +106,7 @@ def test_create_germlines(
 )
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     """test_filtercontigs"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5"
@@ -143,7 +143,7 @@ def test_filtercontigs_drop_contigs(
     create_testfolder, processed_files, dummy_adata_mouse
 ):
     """test_filtercontigs_drop_contigs"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.filter_contigs(
         dat, dummy_adata_mouse, filter_poorqualitycontig=True
