@@ -32,6 +32,12 @@ def test_formatfasta(create_testfolder):
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
+@pytest.mark.usefixtures("database_paths_mouse")
+def test_updateblastdb(database_paths_mouse):
+    """test update blast"""
+    ddl.utl.makeblastdb(database_paths_mouse["blastdb_fasta"])
+
+
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reannotategenes_original(create_testfolder, database_paths_mouse):
     """test_reannotategenes_original"""
