@@ -73,13 +73,11 @@ def test_query2(airr_generic):
     vdj.update_metadata(retrieve="np2_length", retrieve_mode="sum")
 
     vdj.update_metadata(
-        vdj,
         retrieve="junction_aa",
         retrieve_mode="split and unique only",
         by_celltype=True,
     )
     vdj.update_metadata(
-        vdj,
         retrieve="junction_aa",
         retrieve_mode="merge and unique only",
         by_celltype=True,
@@ -91,7 +89,6 @@ def test_query2(airr_generic):
         retrieve="junction_aa", retrieve_mode="split", by_celltype=True
     )
     vdj.update_metadata(
-        vdj,
         retrieve="np2_length",
         retrieve_mode="split and average",
         by_celltype=True,
