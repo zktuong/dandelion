@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-12 09:52:10
+# @Last Modified time: 2022-12-12 11:19:45
 """core module."""
 import bz2
 import copy
@@ -1156,14 +1156,14 @@ class Dandelion:
 
     def write_airr(self, filename: str = "dandelion_airr.tsv", **kwargs):
         """
-        Writes a `Dandelion` class to .pkl format.
+        Writes a `Dandelion` class to AIRR formatted .tsv format.
 
         Parameters
         ----------
         filename : str, optional
-            path to `.pkl` file.
+            path to `.tsv` file.
         **kwargs
-            passed to `_pickle`.
+            passed to `pandas.DataFrame.to_csv`.
         """
         data = sanitize_data(self.data)
         data.to_csv(filename, sep="\t", index=False, **kwargs)
