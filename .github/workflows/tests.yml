@@ -25,7 +25,7 @@ jobs:
           format: 'json'
       - id: checkfiles
         run: |
-          if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* ]]; then
+          if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* || ${{ steps.files.outputs.added_modified }} == *database* ]]; then
             echo "::set-output name=keepgoing::true"
             echo "keepgoing=true" >> $GITHUB_OUTPUT
           else
