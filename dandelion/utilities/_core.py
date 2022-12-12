@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-02 15:18:18
+# @Last Modified time: 2022-12-12 08:52:53
 """core module."""
 import bz2
 import copy
@@ -1978,35 +1978,30 @@ def initialize_metadata(
 
     for _call in [vcall, "d_call", "j_call", "c_call"]:
         tmp_metadata[_call + "_VDJ_main"] = [
-            x.split("|")[0] if x != "None" else "None"
-            for x in tmp_metadata[_call + "_VDJ"]
+            return_none_call(x) for x in tmp_metadata[_call + "_VDJ"]
         ]
         if _call != "d_call":
             tmp_metadata[_call + "_VJ_main"] = [
-                x.split("|")[0] if x != "None" else "None"
-                for x in tmp_metadata[_call + "_VJ"]
+                return_none_call(x) for x in tmp_metadata[_call + "_VJ"]
             ]
 
     for mode in ["B", "abT", "gdT"]:
         tmp_metadata[vcall + "_" + mode + "_VDJ_main"] = [
-            x.split("|")[0] if x != "None" else "None"
+            return_none_call(x)
             for x in tmp_metadata[vcall + "_" + mode + "_VDJ"]
         ]
         tmp_metadata["d_call_" + mode + "_VDJ_main"] = [
-            x.split("|")[0] if x != "None" else "None"
-            for x in tmp_metadata["d_call_" + mode + "_VDJ"]
+            return_none_call(x) for x in tmp_metadata["d_call_" + mode + "_VDJ"]
         ]
         tmp_metadata["j_call_" + mode + "_VDJ_main"] = [
-            x.split("|")[0] if x != "None" else "None"
-            for x in tmp_metadata["j_call_" + mode + "_VDJ"]
+            return_none_call(x) for x in tmp_metadata["j_call_" + mode + "_VDJ"]
         ]
         tmp_metadata[vcall + "_" + mode + "_VJ_main"] = [
-            x.split("|")[0] if x != "None" else "None"
+            return_none_call(x)
             for x in tmp_metadata[vcall + "_" + mode + "_VJ"]
         ]
         tmp_metadata["j_call_" + mode + "_VJ_main"] = [
-            x.split("|")[0] if x != "None" else "None"
-            for x in tmp_metadata["j_call_" + mode + "_VJ"]
+            return_none_call(x) for x in tmp_metadata["j_call_" + mode + "_VJ"]
         ]
 
     if "locus_VDJ" in tmp_metadata:
@@ -2463,3 +2458,8 @@ def _normalize_indices(
         ax0 = _normalize_index(ax0_, names1)
         axtype = "data"
     return ax0, axtype
+
+
+def return_none_call(call: str) -> str:
+    """Return None if not present."""
+    return call.split("|")[0] if not call in ["None", ""] else "None"
