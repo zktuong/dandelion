@@ -353,6 +353,8 @@ atggctgtcctggcgctcctcctctgcctggtgacctttccaagctgtgtcctgtcc
 atgactatcctggtgcttctcctctgtttgatagcatttccaagctctgtcttgtcc
 >RatNor_1_chr6|IGHV2-8*01|Rattus_norvegicus_BN; Sprague-Dawley|ORF|L-PART1+L-PART2|2162..2207+2067..2077|57 nt|1| | | | |57+0=57| |rev-compl|
 atggctttcctggtgctgttcctctgcctggtgacatttccaagctgtgtcctgtcc
+>RatNor_1_chr6|IGHV2-9*01|Rattus_norvegicus_BN; Sprague-Dawley|P|L-PART1+L-PART2|7972..8018+7878..7887|57 nt|1| | | | |57+0=57| |rev-compl|
+atgttctgtttctgtgaagctcctgtacctggtgtcttttccaagctgtgccatgta
 >AABR03053476|IGHV2S1*01|Rattus_norvegicus_BN/SsNHsdMCW|F|L-PART1+L-PART2|4299..4344+4204..4214|57 nt|1| | | | |57+0=57| |rev-compl|
 atggctgtcctgttgctgttgctctgcttggtgacatctccaagctgtgtcctgtcc
 >AABR03052910|IGHV2S12*01|Rattus_norvegicus_BN/SsNHsdMCW|F|L-PART1+L-PART2|938..983+843..853|57 nt|1| | | | |57+0=57| |rev-compl|
@@ -433,6 +435,8 @@ atgatgggtttaggggtgattctttttcttgttgctcttttgaaaggtgtccagtgt
 atggatttagggctgattcttttacttgttgctcttttaaaaggtatccagtgt
 >RatNor_1_chr6|IGHV5-10*01|Rattus_norvegicus_BN; Sprague-Dawley|P|L-PART1+L-PART2|87733..87781+87622..87632|60 nt|1| | | | |60+0=60| |rev-compl|
 atgttttctgttggcttggtctcagatgctatagatgcctcatcatcattcgatattaat
+>RatNor_1_chr6|IGHV5-11*01|Rattus_norvegicus_BN; Sprague-Dawley|P|L-PART1+L-PART2|110313..110358+110191..110201|57 nt|1| | | | |57+0=57| |rev-compl|
+atggacttcggcatcagcttgattttccttgtcctcatttttaaaagtgttcaatgt
 >RatNor_1_chr6|IGHV5-12*01|Rattus_norvegicus_BN; Sprague-Dawley|P|L-PART1+L-PART2|114855..114902+114744..114754|59 nt|1| | | | |59+0=59| |rev-compl|
 atgttttctggtgcttggtctcagatgttatggatgcctcatcatcattagattttaat
 >RatNor_1_chr6|IGHV5-13*01|Rattus_norvegicus_BN; Sprague-Dawley|P|L-PART1+L-PART2|126856..126901+126723..126733|57 nt|1| | | | |57+0=57| |rev-compl|
