@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-13 09:52:47
+# @Last Modified time: 2022-12-13 09:50:28
 
 import anndata as ad
 import functools
@@ -4458,9 +4458,26 @@ def run_igblastn(
         minimum D nucleotide match.
     verbose : bool, optional
         whether or not to print the command used in terminal.
+
+    Raises
+    ------
+    KeyError
+        if `IGDATA` environmental variable is not set.
     """
     env = os.environ.copy()
-    igdb = env["IGDATA"] if "IGDATA" in env else igblast_db
+    if igblast_db is None:
+        try:
+            igdb = env["IGDATA"]
+        except KeyError:
+            raise KeyError(
+                (
+                    "Environmental variable IGDATA must be set. Otherwise,"
+                    + " please provide path to igblast database"
+                )
+            )
+    else:
+        env["IGDATA"] = igblast_db
+        igdb = env["IGDATA"]
 
     outfolder = Path(fasta).parent.resolve() / "tmp"
     os.makedirs(outfolder, exist_ok=True)
