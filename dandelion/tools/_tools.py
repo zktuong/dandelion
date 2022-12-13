@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2020-05-13 23:22:18
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-22 00:09:46
+# @Last Modified time: 2022-12-13 08:35:08
 """tools module."""
 import math
 import os
@@ -637,7 +637,7 @@ def find_clones(
                 layout=layout_,
                 graph=graph_,
             )
-            update_metadata(vdj_data, reinitialize=True)
+            vdj_data.update_metadata(reinitialize=True)
         elif ("clone_id" in vdj_data.data.columns) and (key_added is not None):
             vdj_data.__init__(
                 data=dat_,
@@ -645,8 +645,7 @@ def find_clones(
                 layout=layout_,
                 graph=graph_,
             )
-            update_metadata(
-                vdj_data,
+            vdj_data.update_metadata(
                 reinitialize=True,
                 clone_key="clone_id",
                 retrieve=clone_key,
@@ -660,7 +659,7 @@ def find_clones(
                 graph=graph_,
                 clone_key=clone_key,
             )
-            update_metadata(vdj_data, reinitialize=True, clone_key=clone_key)
+            vdj_data.update_metadata(reinitialize=True, clone_key=clone_key)
         vdj_data.threshold = threshold_
 
     else:

@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-12 11:19:45
+# @Last Modified time: 2022-12-13 08:36:15
 """core module."""
 import bz2
 import copy
@@ -97,7 +97,7 @@ class Dandelion:
         library_type : Optional[Literal["tr-ab", "tr-gd", "ig"]], optional
             One of "tr-ab", "tr-gd", "ig".
         **kwargs
-            passed to `dandelion.utilities.update_metadata`.
+            passed to `Dandelion.update_metadata`.
         """
         self._data = data
         self._metadata = metadata
@@ -140,7 +140,7 @@ class Dandelion:
             self.n_contigs = self.data.shape[0]
             if metadata is None:
                 if initialize is True:
-                    update_metadata(self, **kwargs)
+                    self.update_metadata(**kwargs)
                 try:
                     self.n_obs = self.metadata.shape[0]
                 except:
@@ -616,53 +616,51 @@ class Dandelion:
 
         if option == "all":
             if len(mutations) > 0:
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="split and average"
                 )
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="average"
                 )
             if len(vdjlengths) > 0:
-                update_metadata(
-                    self, retrieve=vdjlengths, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=vdjlengths, retrieve_mode="split and average"
                 )
             if len(seqinfo) > 0:
-                update_metadata(
-                    self,
+                self.update_metadata(
                     retrieve=seqinfo,
                     retrieve_mode="split and merge",
                 )
         if option == "sequence":
             if len(seqinfo) > 0:
-                update_metadata(
-                    self,
+                self.update_metadata(
                     retrieve=seqinfo,
                     retrieve_mode="split and merge",
                 )
         if option == "mutations":
             if len(mutations) > 0:
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="split and average"
                 )
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="average"
                 )
         if option == "cdr3 lengths":
             if len(vdjlengths) > 0:
-                update_metadata(
-                    self, retrieve=vdjlengths, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=vdjlengths, retrieve_mode="split and average"
                 )
         if option == "mutations and cdr3 lengths":
             if len(mutations) > 0:
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="split and average"
                 )
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="average"
                 )
             if len(vdjlengths) > 0:
-                update_metadata(
-                    self, retrieve=vdjlengths, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=vdjlengths, retrieve_mode="split and average"
                 )
 
     @deprecated(
