@@ -59,10 +59,6 @@ folder and use:
 
     singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess
 
-Please refer to the
-`documentation <https://sc-dandelion.readthedocs.io/en/latest/notebooks/singularity_preprocessing.html>`__
-for more information.
-
 Python package
 ~~~~~~~~~~~~~~
 

@@ -14,8 +14,15 @@ FILE = "demo-pseudobulk.h5ad"
 FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
 
 
+@pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
+def test_setup(airr_reannotated, dummy_adata):
+    vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
+    bdata = ddl.tl.setup_vdj_pseudobulk(adata, mode="B")
+    cdata = ddl.tl.setup_vdj_pseudobulk(adata, mode=None)
+
+
 @pytest.mark.skipif(
-    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    (sys.platform == "darwin") & (sys.version_info.minor < 9),
     reason="macos CI stalls.",
 )
 @patch("matplotlib.pyplot.show")
@@ -66,7 +73,7 @@ def test_trajectory(mock_show):
 
 
 @pytest.mark.skipif(
-    (sys.platform == "darwin") & (sys.version_info.minor < 8),
+    (sys.platform == "darwin") & (sys.version_info.minor < 9),
     reason="macos CI stalls.",
 )
 def test_trajectory_setup():

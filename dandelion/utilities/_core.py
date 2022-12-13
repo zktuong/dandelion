@@ -2,7 +2,7 @@
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-02 10:13:03
+# @Last Modified time: 2022-12-13 08:36:15
 """core module."""
 import bz2
 import copy
@@ -97,7 +97,7 @@ class Dandelion:
         library_type : Optional[Literal["tr-ab", "tr-gd", "ig"]], optional
             One of "tr-ab", "tr-gd", "ig".
         **kwargs
-            passed to `dandelion.utilities.update_metadata`.
+            passed to `Dandelion.update_metadata`.
         """
         self._data = data
         self._metadata = metadata
@@ -140,7 +140,7 @@ class Dandelion:
             self.n_contigs = self.data.shape[0]
             if metadata is None:
                 if initialize is True:
-                    update_metadata(self, **kwargs)
+                    self.update_metadata(**kwargs)
                 try:
                     self.n_obs = self.metadata.shape[0]
                 except:
@@ -616,53 +616,51 @@ class Dandelion:
 
         if option == "all":
             if len(mutations) > 0:
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="split and average"
                 )
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="average"
                 )
             if len(vdjlengths) > 0:
-                update_metadata(
-                    self, retrieve=vdjlengths, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=vdjlengths, retrieve_mode="split and average"
                 )
             if len(seqinfo) > 0:
-                update_metadata(
-                    self,
+                self.update_metadata(
                     retrieve=seqinfo,
                     retrieve_mode="split and merge",
                 )
         if option == "sequence":
             if len(seqinfo) > 0:
-                update_metadata(
-                    self,
+                self.update_metadata(
                     retrieve=seqinfo,
                     retrieve_mode="split and merge",
                 )
         if option == "mutations":
             if len(mutations) > 0:
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="split and average"
                 )
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="average"
                 )
         if option == "cdr3 lengths":
             if len(vdjlengths) > 0:
-                update_metadata(
-                    self, retrieve=vdjlengths, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=vdjlengths, retrieve_mode="split and average"
                 )
         if option == "mutations and cdr3 lengths":
             if len(mutations) > 0:
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="split and average"
                 )
-                update_metadata(
-                    self, retrieve=mutations, retrieve_mode="average"
+                self.update_metadata(
+                    retrieve=mutations, retrieve_mode="average"
                 )
             if len(vdjlengths) > 0:
-                update_metadata(
-                    self, retrieve=vdjlengths, retrieve_mode="split and average"
+                self.update_metadata(
+                    retrieve=vdjlengths, retrieve_mode="split and average"
                 )
 
     @deprecated(
@@ -922,6 +920,208 @@ class Dandelion:
             ),
         )
 
+    def update_metadata(
+        self,
+        retrieve: Optional[Union[List[str], str]] = None,
+        clone_key: Optional[str] = None,
+        retrieve_mode: Literal[
+            "split and unique only",
+            "merge and unique only",
+            "split and merge",
+            "split and sum",
+            "split and average",
+            "split",
+            "merge",
+            "sum",
+            "average",
+        ] = "split and merge",
+        collapse_alleles: bool = True,
+        reinitialize: bool = True,
+        verbose: bool = False,
+        by_celltype: bool = False,
+    ):
+        """
+        A `Dandelion` initialisation function to update and populate the `.metadata` slot.
+
+        Parameters
+        ----------
+        retrieve : Optional[Union[List[str], str]], optional
+            column name in `.data` slot to retrieve and update the metadata.
+        clone_key : Optional[str], optional
+            column name of clone id. None defaults to 'clone_id'.
+        retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ], optional
+            one of:
+                `split and unique only`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for unique elements.
+                `merge and unique only`
+                    returns the retrieval merged into one column,
+                    separated by `|` for unique elements.
+                `split and merge`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for every elements.
+                `split`
+                    returns the retrieval splitted into separate columns for each contig.
+                `merge`
+                    returns the retrieval merged into one columns for each contig,
+                    separated by `|` for unique elements.
+                `split and sum`
+                    returns the retrieval sumed in the VDJ and VJ columns (separately).
+                `split and average`
+                    returns the retrieval averaged in the VDJ and VJ columns (separately).
+                `sum`
+                    returns the retrieval sumed into one column for all contigs.
+                `average`
+                    returns the retrieval averaged into one column for all contigs.
+        collapse_alleles : bool, optional
+            returns the V(D)J genes with allelic calls if False.
+        reinitialize : bool, optional
+            whether or not to reinitialize the current metadata.
+            useful when updating older versions of `dandelion` to newer version.
+        verbose : bool, optional
+            whether to print progress.
+        by_celltype : bool, optional
+            whether to return the query/update by celltype.
+
+        Raises
+        ------
+        KeyError
+            if columns provided not found in Dandelion.data.
+        ValueError
+            if missing columns in Dandelion.data.
+        """
+
+        if clone_key is None:
+            clonekey = "clone_id"
+        else:
+            clonekey = clone_key
+
+        cols = [
+            "sequence_id",
+            "cell_id",
+            "locus",
+            "productive",
+            "v_call",
+            "d_call",
+            "j_call",
+            "c_call",
+            "duplicate_count",
+            "junction",
+            "junction_aa",
+        ]
+
+        if "duplicate_count" not in self.data:
+            raise ValueError(
+                "Unable to initialize metadata due to missing keys. "
+                "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
+            )
+
+        if not all([c in self.data for c in cols]):
+            raise ValueError(
+                "Unable to initialize metadata due to missing keys. "
+                "Please ensure the input data contains all the following columns: {}".format(
+                    cols
+                )
+            )
+
+        if "sample_id" in self.data:
+            cols = ["sample_id"] + cols
+
+        if "v_call_genotyped" in self.data:
+            cols = list(
+                map(lambda x: "v_call_genotyped" if x == "v_call" else x, cols)
+            )
+
+        for c in ["sequence_id", "cell_id"]:
+            cols.remove(c)
+
+        if clonekey in self.data:
+            if not all(pd.isnull(self.data[clonekey])):
+                cols = [clonekey] + cols
+
+        metadata_status = self.metadata
+        if (metadata_status is None) or reinitialize:
+            initialize_metadata(self, cols, clonekey, collapse_alleles)
+
+        tmp_metadata = self.metadata.copy()
+
+        if retrieve is not None:
+            ret_dict = {}
+            if type(retrieve) is str:
+                retrieve = [retrieve]
+            if self.querier is None:
+                querier = Query(self.data)
+                self.querier = querier
+            else:
+                if any([r not in self.querier.data for r in retrieve]):
+                    querier = Query(self.data)
+                    self.querier = querier
+                else:
+                    querier = self.querier
+
+            if type(retrieve_mode) is str:
+                retrieve_mode = [retrieve_mode]
+                if len(retrieve) > len(retrieve_mode):
+                    retrieve_mode = [x for x in retrieve_mode for i in retrieve]
+            for ret, mode in zip(retrieve, retrieve_mode):
+                ret_dict.update(
+                    {
+                        ret: {
+                            "query": ret,
+                            "retrieve_mode": mode,
+                        }
+                    }
+                )
+
+            vdj_gene_ret = ["v_call", "d_call", "j_call"]
+
+            retrieve_ = defaultdict(dict)
+            for k, v in ret_dict.items():
+                if k in self.data.columns:
+                    if by_celltype:
+                        retrieve_[k] = querier.retrieve_celltype(**v)
+                    else:
+                        retrieve_[k] = querier.retrieve(**v)
+                else:
+                    raise KeyError(
+                        "Cannot retrieve '%s' : Unknown column name." % k
+                    )
+            ret_metadata = pd.concat(retrieve_.values(), axis=1, join="inner")
+            ret_metadata.dropna(axis=1, how="all", inplace=True)
+            for col in ret_metadata:
+                if all_missing(ret_metadata[col]):
+                    ret_metadata.drop(col, axis=1, inplace=True)
+
+            if collapse_alleles:
+                for k in ret_dict.keys():
+                    if k in vdj_gene_ret:
+                        for c in ret_metadata:
+                            if k in c:
+                                ret_metadata[c] = [
+                                    "|".join(
+                                        [
+                                            "|".join(list(set(yy.split(","))))
+                                            for yy in list(
+                                                set(
+                                                    [
+                                                        re.sub(
+                                                            "[*][0-9][0-9]",
+                                                            "",
+                                                            tx,
+                                                        )
+                                                        for tx in t.split("|")
+                                                    ]
+                                                )
+                                            )
+                                        ]
+                                    )
+                                    for t in ret_metadata[c]
+                                ]
+
+            for r in ret_metadata:
+                tmp_metadata[r] = pd.Series(ret_metadata[r])
+            self.metadata = tmp_metadata.copy()
+
     def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
         """
         Writes a `Dandelion` class to .pkl format.
@@ -954,14 +1154,14 @@ class Dandelion:
 
     def write_airr(self, filename: str = "dandelion_airr.tsv", **kwargs):
         """
-        Writes a `Dandelion` class to .pkl format.
+        Writes a `Dandelion` class to AIRR formatted .tsv format.
 
         Parameters
         ----------
         filename : str, optional
-            path to `.pkl` file.
+            path to `.tsv` file.
         **kwargs
-            passed to `_pickle`.
+            passed to `pandas.DataFrame.to_csv`.
         """
         data = sanitize_data(self.data)
         data.to_csv(filename, sep="\t", index=False, **kwargs)
@@ -1847,8 +2047,8 @@ class Query:
 
 
 def initialize_metadata(
-    self, cols: List[str], clonekey: str, collapse_alleles: bool
-) -> "Dandelion":
+    vdj_data, cols: List[str], clonekey: str, collapse_alleles: bool
+):
     """Initialize Dandelion metadata."""
     init_dict = {}
     for col in cols:
@@ -1878,28 +2078,28 @@ def initialize_metadata(
                 }
             }
         )
-    update_rearrangement_status(self)
+    update_rearrangement_status(vdj_data)
 
-    if "ambiguous" in self.data:
-        dataq = self.data[self.data["ambiguous"] == "F"]
+    if "ambiguous" in vdj_data.data:
+        dataq = vdj_data.data[vdj_data.data["ambiguous"] == "F"]
     else:
-        dataq = self.data
-    if self.querier is None:
+        dataq = vdj_data.data
+    if vdj_data.querier is None:
         querier = Query(dataq)
-        self.querier = querier
+        vdj_data.querier = querier
     else:
-        if self.metadata is not None:
-            if any(~self.metadata_names.isin(self.data.cell_id)):
+        if vdj_data.metadata is not None:
+            if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
                 querier = Query(dataq)
-                self.querier = querier
+                vdj_data.querier = querier
             else:
-                querier = self.querier
+                querier = vdj_data.querier
         else:
-            querier = self.querier
+            querier = vdj_data.querier
 
     meta_ = defaultdict(dict)
     for k, v in init_dict.copy().items():
-        if all_missing(self.data[k]):
+        if all_missing(vdj_data.data[k]):
             init_dict.pop(k)
             continue
         meta_[k] = querier.retrieve(**v)
@@ -1924,95 +2124,52 @@ def initialize_metadata(
     reqcols1 = [
         "locus_VDJ",
     ]
-    if "v_call_genotyped" in self.data:
-        reqcols2 = [
-            "locus_VJ",
-            "productive_VDJ",
-            "productive_VJ",
-            "v_call_genotyped_VDJ",
-            "d_call_VDJ",
-            "j_call_VDJ",
-            "v_call_genotyped_VJ",
-            "j_call_VJ",
-            "c_call_VDJ",
-            "c_call_VJ",
-            "junction_VDJ",
-            "junction_VJ",
-            "junction_aa_VDJ",
-            "junction_aa_VJ",
-            "v_call_genotyped_B_VDJ",
-            "d_call_B_VDJ",
-            "j_call_B_VDJ",
-            "v_call_genotyped_B_VJ",
-            "j_call_B_VJ",
-            "c_call_B_VDJ",
-            "c_call_B_VJ",
-            "productive_B_VDJ",
-            "productive_B_VJ",
-            "v_call_genotyped_abT_VDJ",
-            "d_call_abT_VDJ",
-            "j_call_abT_VDJ",
-            "v_call_genotyped_abT_VJ",
-            "j_call_abT_VJ",
-            "c_call_abT_VDJ",
-            "c_call_abT_VJ",
-            "productive_abT_VDJ",
-            "productive_abT_VJ",
-            "v_call_genotyped_gdT_VDJ",
-            "d_call_gdT_VDJ",
-            "j_call_gdT_VDJ",
-            "v_call_genotyped_gdT_VJ",
-            "j_call_gdT_VJ",
-            "c_call_gdT_VDJ",
-            "c_call_gdT_VJ",
-            "productive_gdT_VDJ",
-            "productive_gdT_VJ",
-        ]
-    else:
-        reqcols2 = [
-            "locus_VJ",
-            "productive_VDJ",
-            "productive_VJ",
-            "v_call_VDJ",
-            "d_call_VDJ",
-            "j_call_VDJ",
-            "v_call_VJ",
-            "j_call_VJ",
-            "c_call_VDJ",
-            "c_call_VJ",
-            "junction_VDJ",
-            "junction_VJ",
-            "junction_aa_VDJ",
-            "junction_aa_VJ",
-            "v_call_B_VDJ",
-            "d_call_B_VDJ",
-            "j_call_B_VDJ",
-            "v_call_B_VJ",
-            "j_call_B_VJ",
-            "c_call_B_VDJ",
-            "c_call_B_VJ",
-            "productive_B_VDJ",
-            "productive_B_VJ",
-            "v_call_abT_VDJ",
-            "d_call_abT_VDJ",
-            "j_call_abT_VDJ",
-            "v_call_abT_VJ",
-            "j_call_abT_VJ",
-            "c_call_abT_VDJ",
-            "c_call_abT_VJ",
-            "productive_abT_VDJ",
-            "productive_abT_VJ",
-            "v_call_gdT_VDJ",
-            "d_call_gdT_VDJ",
-            "j_call_gdT_VDJ",
-            "v_call_gdT_VJ",
-            "j_call_gdT_VJ",
-            "c_call_gdT_VDJ",
-            "c_call_gdT_VJ",
-            "productive_gdT_VDJ",
-            "productive_gdT_VJ",
-        ]
-
+    vcall = (
+        "v_call_genotyped" if "v_call_genotyped" in vdj_data.data else "v_call"
+    )
+    reqcols2 = [
+        "locus_VJ",
+        "productive_VDJ",
+        "productive_VJ",
+        vcall + "_VDJ",
+        "d_call_VDJ",
+        "j_call_VDJ",
+        vcall + "_VJ",
+        "j_call_VJ",
+        "c_call_VDJ",
+        "c_call_VJ",
+        "junction_VDJ",
+        "junction_VJ",
+        "junction_aa_VDJ",
+        "junction_aa_VJ",
+        vcall + "_B_VDJ",
+        "d_call_B_VDJ",
+        "j_call_B_VDJ",
+        vcall + "_B_VJ",
+        "j_call_B_VJ",
+        "c_call_B_VDJ",
+        "c_call_B_VJ",
+        "productive_B_VDJ",
+        "productive_B_VJ",
+        vcall + "_abT_VDJ",
+        "d_call_abT_VDJ",
+        "j_call_abT_VDJ",
+        vcall + "_abT_VJ",
+        "j_call_abT_VJ",
+        "c_call_abT_VDJ",
+        "c_call_abT_VJ",
+        "productive_abT_VDJ",
+        "productive_abT_VJ",
+        vcall + "_gdT_VDJ",
+        "d_call_gdT_VDJ",
+        "j_call_gdT_VDJ",
+        vcall + "_gdT_VJ",
+        "j_call_gdT_VJ",
+        "c_call_gdT_VDJ",
+        "c_call_gdT_VJ",
+        "productive_gdT_VDJ",
+        "productive_gdT_VJ",
+    ]
     reqcols = reqcols1 + reqcols2
     for rc in reqcols:
         if rc not in tmp_metadata:
@@ -2020,6 +2177,34 @@ def initialize_metadata(
     for dc in ["d_call_VJ", "d_call_B_VJ", "d_call_abT_VJ", "d_call_gdT_VJ"]:
         if dc in tmp_metadata:
             tmp_metadata.drop(dc, axis=1, inplace=True)
+
+    for _call in [vcall, "d_call", "j_call", "c_call"]:
+        tmp_metadata[_call + "_VDJ_main"] = [
+            return_none_call(x) for x in tmp_metadata[_call + "_VDJ"]
+        ]
+        if _call != "d_call":
+            tmp_metadata[_call + "_VJ_main"] = [
+                return_none_call(x) for x in tmp_metadata[_call + "_VJ"]
+            ]
+
+    for mode in ["B", "abT", "gdT"]:
+        tmp_metadata[vcall + "_" + mode + "_VDJ_main"] = [
+            return_none_call(x)
+            for x in tmp_metadata[vcall + "_" + mode + "_VDJ"]
+        ]
+        tmp_metadata["d_call_" + mode + "_VDJ_main"] = [
+            return_none_call(x) for x in tmp_metadata["d_call_" + mode + "_VDJ"]
+        ]
+        tmp_metadata["j_call_" + mode + "_VDJ_main"] = [
+            return_none_call(x) for x in tmp_metadata["j_call_" + mode + "_VDJ"]
+        ]
+        tmp_metadata[vcall + "_" + mode + "_VJ_main"] = [
+            return_none_call(x)
+            for x in tmp_metadata[vcall + "_" + mode + "_VJ"]
+        ]
+        tmp_metadata["j_call_" + mode + "_VJ_main"] = [
+            return_none_call(x) for x in tmp_metadata["j_call_" + mode + "_VJ"]
+        ]
 
     if "locus_VDJ" in tmp_metadata:
         suffix_vdj = "_VDJ"
@@ -2164,7 +2349,7 @@ def initialize_metadata(
     if collapse_alleles:
         for x in vdj_gene_calls:
 
-            if x in self.data:
+            if x in vdj_data.data:
                 for c in tmp_metadata:
                     if x in c:
                         tmp_metadata[c] = [
@@ -2235,18 +2420,18 @@ def initialize_metadata(
         ref_col="chain_status",
     )
     # if metadata already exist, just overwrite the default columns?
-    if self.metadata is not None:
-        if any(~self.metadata_names.isin(self.data.cell_id)):
-            self.metadata = tmp_metadata.copy()  # reindex and replace.
+    if vdj_data.metadata is not None:
+        if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
+            vdj_data.metadata = tmp_metadata.copy()  # reindex and replace.
         else:
             for col in tmp_metadata:
-                self.metadata[col] = pd.Series(tmp_metadata[col])
+                vdj_data.metadata[col] = pd.Series(tmp_metadata[col])
     else:
-        self.metadata = tmp_metadata.copy()
+        vdj_data.metadata = tmp_metadata.copy()
 
 
 def update_metadata(
-    self: Dandelion,
+    vdj_data: Dandelion,
     retrieve: Optional[Union[List[str], str]] = None,
     clone_key: Optional[str] = None,
     retrieve_mode: Literal[
@@ -2264,12 +2449,14 @@ def update_metadata(
     reinitialize: bool = True,
     verbose: bool = False,
     by_celltype: bool = False,
-) -> "Dandelion":
+):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
     Parameters
     ----------
+    vdj_data : Dandelion
+        input `Dandelion` object.
     retrieve : Optional[Union[List[str], str]], optional
         column name in `.data` slot to retrieve and update the metadata.
     clone_key : Optional[str], optional
@@ -2335,13 +2522,13 @@ def update_metadata(
         "junction_aa",
     ]
 
-    if "duplicate_count" not in self.data:
+    if "duplicate_count" not in vdj_data.data:
         raise ValueError(
             "Unable to initialize metadata due to missing keys. "
             "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
         )
 
-    if not all([c in self.data for c in cols]):
+    if not all([c in vdj_data.data for c in cols]):
         raise ValueError(
             "Unable to initialize metadata due to missing keys. "
             "Please ensure the input data contains all the following columns: {}".format(
@@ -2349,10 +2536,10 @@ def update_metadata(
             )
         )
 
-    if "sample_id" in self.data:
+    if "sample_id" in vdj_data.data:
         cols = ["sample_id"] + cols
 
-    if "v_call_genotyped" in self.data:
+    if "v_call_genotyped" in vdj_data.data:
         cols = list(
             map(lambda x: "v_call_genotyped" if x == "v_call" else x, cols)
         )
@@ -2360,29 +2547,29 @@ def update_metadata(
     for c in ["sequence_id", "cell_id"]:
         cols.remove(c)
 
-    if clonekey in self.data:
-        if not all(pd.isnull(self.data[clonekey])):
+    if clonekey in vdj_data.data:
+        if not all(pd.isnull(vdj_data.data[clonekey])):
             cols = [clonekey] + cols
 
-    metadata_status = self.metadata
+    metadata_status = vdj_data.metadata
     if (metadata_status is None) or reinitialize:
-        initialize_metadata(self, cols, clonekey, collapse_alleles)
+        initialize_metadata(vdj_data, cols, clonekey, collapse_alleles)
 
-    tmp_metadata = self.metadata.copy()
+    tmp_metadata = vdj_data.metadata.copy()
 
     if retrieve is not None:
         ret_dict = {}
         if type(retrieve) is str:
             retrieve = [retrieve]
-        if self.querier is None:
-            querier = Query(self.data)
-            self.querier = querier
+        if vdj_data.querier is None:
+            querier = Query(vdj_data.data)
+            vdj_data.querier = querier
         else:
-            if any([r not in self.querier.data for r in retrieve]):
-                querier = Query(self.data)
-                self.querier = querier
+            if any([r not in vdj_data.querier.data for r in retrieve]):
+                querier = Query(vdj_data.data)
+                vdj_data.querier = querier
             else:
-                querier = self.querier
+                querier = vdj_data.querier
 
         if type(retrieve_mode) is str:
             retrieve_mode = [retrieve_mode]
@@ -2402,7 +2589,7 @@ def update_metadata(
 
         retrieve_ = defaultdict(dict)
         for k, v in ret_dict.items():
-            if k in self.data.columns:
+            if k in vdj_data.data.columns:
                 if by_celltype:
                     retrieve_[k] = querier.retrieve_celltype(**v)
                 else:
@@ -2443,7 +2630,7 @@ def update_metadata(
 
         for r in ret_metadata:
             tmp_metadata[r] = pd.Series(ret_metadata[r])
-        self.metadata = tmp_metadata.copy()
+        vdj_data.metadata = tmp_metadata.copy()
 
 
 def _normalize_indices(
@@ -2475,3 +2662,8 @@ def _normalize_indices(
         ax0 = _normalize_index(ax0_, names1)
         axtype = "data"
     return ax0, axtype
+
+
+def return_none_call(call: str) -> str:
+    """Return None if not present."""
+    return call.split("|")[0] if not call in ["None", ""] else "None"

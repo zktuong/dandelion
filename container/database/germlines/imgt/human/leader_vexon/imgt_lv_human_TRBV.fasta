@@ -26,6 +26,13 @@ atgtgtcaccagacttggagccacagctatatgttctggtatcgacaagacctgggacat
 gggctgaggctgatctattactcagcagctgctgatattacagataaaggagaagtcccc
 gatggctatgttgtctccagatccaagacagagaatttccccctcactctggagtcagct
 acccgctcccagacatctgtgtatttctgcgccagcagtgagtc
+>IMGT000021|TRBV10-2*02|Homo_sapiens|F|L-PART1+V-EXON|193671..193719+193826..194120|344 nt|1| | | | |344+0=344| | |
+atgggcaccaggctcttcttctatgtggccctttgtctgctgtgggcaggacacagggat
+gctggaatcacccagagcccaagatacaagatcacagagacaggaaggcaggtgaccttg
+atgtgtcaccagacttggagccacagctatatgttctggtatcgacaagacctgggacat
+gggctgaggctgatctattactcagcagctgctgatattacagataaaggagaagtcccc
+gatggctacgttgtctccagatccaagacagagaatttccccctcactctggagtcagct
+acccgctcccagacatctgtgtatttctgcgccagcagtgagtc
 >U03115|TRBV10-3*01|Homo_sapiens|F|L-PART1+V-EXON|14717..14765+14872..15166|344 nt|1| | | | |344+0=344| | |
 atgggcacaaggttgttcttctatgtggccctttgtctcctgtggacaggacacatggat
 gctggaatcacccagagcccaagacacaaggtcacagagacaggaacaccagtgactctg
@@ -125,6 +132,13 @@ agttgttctcagactttgaaccataacgtcatgtactggtaccagcagaagtcaagtcag
 gccccaaagctgctgttccactactatgacaaagattttaacaatgaagcagacacccct
 gataacttccaatccaggaggccgaacacttctttctgctttcttgacatccgctcacca
 ggcctgggggacacagccatgtacctgtgtgccaccagcagaga
+>IMGT000021|TRBV15*02|Homo_sapiens|F|L-PART1+V-EXON|361660..361708+361834..362128|344 nt|1| | | | |344+0=344| | |
+atgggtcctgggcttctccactggatggccctttgtctccttggaacaggtcatggggat
+gccatggtcatccagaacccaagataccaggttacccagtttggaaagccagtgaccctg
+agttgttctcagactttgaaccataacgtcatgtactggtaccagcagaagtcaagtcag
+gccccaaagctgctgttccactactatgacaaagattttaacaatgaagcagacacccct
+gataacttccaatccaggaggccgaacacttctttctgctttcttgacatccgctcacca
+ggcctgggggacgcagccatgtacctgtgtgccaccagcagaga
 >L26231|TRBV16*01|Homo_sapiens|F|L-PART1+V-EXON|255..303+411..708|347 nt|1| | | | |347+0=347| | |
 atgagcccaatattcacctgcatcacaatcctttgtctgctggctgcaggttctcctggt
 gaagaagtcgcccagactccaaaacatcttgtcagaggggaaggacagaaagcaaaatta

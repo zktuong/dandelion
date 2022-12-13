@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
 # @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-02 07:47:32
+# @Last Modified time: 2022-12-13 09:50:28
 
 import anndata as ad
 import functools
@@ -18,6 +18,7 @@ from changeo.IO import getFormatOperators, readGermlines, checkFields
 from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
 from collections import OrderedDict
 from operator import countOf
+from pathlib import Path
 from plotnine import (
     ggplot,
     geom_bar,
@@ -4478,30 +4479,34 @@ def run_igblastn(
         env["IGDATA"] = igblast_db
         igdb = env["IGDATA"]
 
-    outfolder = os.path.abspath(os.path.dirname(fasta)) + "/tmp"
+    outfolder = Path(fasta).parent.resolve() / "tmp"
+    os.makedirs(outfolder, exist_ok=True)
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
-    if not os.path.exists(outfolder):
-        os.makedirs(outfolder)
 
     loci_type = {"ig": "Ig", "tr": "TCR"}
     outformat = {"blast": "7 std qseq sseq btop", "airr": "19"}
 
+    dbpath = Path(igdb) / "database"
+    imgt_org_loci = "imgt_" + org + "_" + loci + "_"
+    vpath = str(dbpath / (imgt_org_loci + "v"))
+    dpath = str(dbpath / (imgt_org_loci + "d"))
+    jpath = str(dbpath / (imgt_org_loci + "j"))
+    cpath = str(dbpath / (imgt_org_loci + "c"))
+    auxpath = str(Path(igdb) / "optional_file" / (org + "_gl.aux"))
+
     for fileformat in ["blast", "airr"]:
-        outfile = (
-            os.path.basename(fasta).split(".fasta")[0]
-            + informat_dict[fileformat]
-        )
+        outfile = str(Path(fasta).stem + informat_dict[fileformat])
         if loci == "tr":
             cmd = [
                 "igblastn",
                 "-germline_db_V",
-                igdb + "/database/imgt_" + org + "_" + loci + "_v",
+                vpath,
                 "-germline_db_D",
-                igdb + "/database/imgt_" + org + "_" + loci + "_d",
+                dpath,
                 "-germline_db_J",
-                igdb + "/database/imgt_" + org + "_" + loci + "_j",
+                jpath,
                 "-auxiliary_data",
-                igdb + "optional_file/" + org + "_gl.aux",
+                auxpath,
                 "-domain_system",
                 "imgt",
                 "-ig_seqtype",
@@ -4520,18 +4525,20 @@ def run_igblastn(
                 str(min_d_match),
                 "-D_penalty",
                 str(-4),
+                "-c_region_db",
+                cpath,
             ]
         else:
             cmd = [
                 "igblastn",
                 "-germline_db_V",
-                igdb + "/database/imgt_" + org + "_" + loci + "_v",
+                vpath,
                 "-germline_db_D",
-                igdb + "/database/imgt_" + org + "_" + loci + "_d",
+                dpath,
                 "-germline_db_J",
-                igdb + "/database/imgt_" + org + "_" + loci + "_j",
+                jpath,
                 "-auxiliary_data",
-                igdb + "optional_file/" + org + "_gl.aux",
+                auxpath,
                 "-domain_system",
                 "imgt",
                 "-ig_seqtype",
@@ -4548,6 +4555,8 @@ def run_igblastn(
                 str(evalue),
                 "-min_D_match",
                 str(min_d_match),
+                "-c_region_db",
+                cpath,
             ]
 
         logg.info("Running command: %s\n" % (" ".join(cmd)))

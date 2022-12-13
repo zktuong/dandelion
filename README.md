@@ -27,7 +27,7 @@ Illustration of the `Dandelion` class slots
 
 ![](docs/notebooks/img/dandelion_class2.png)
 
-Please refer to the [documentation](https://sc-dandelion.readthedocs.io/) or the notebooks [here](https://nbviewer.jupyter.org/github/zktuong/dandelion/tree/latest/docs/notebooks/):
+Please refer to the [documentation](https://sc-dandelion.readthedocs.io/).
 
 The raw files for the examples can be downloaded from 10X's Single Cell Immune Profiling datasets [website](https://support.10xgenomics.com/single-cell-vdj/datasets).
 
@@ -40,12 +40,17 @@ The raw files for the examples can be downloaded from 10X's Single Cell Immune P
 singularity pull library://kt16/default/sc-dandelion:latest
 singularity shell --writable-tmpfs -B $PWD sc-dandelion_latest.sif
 ```
-This will load up a conda-environment that has all the required dependencies installed.
+This will load up a container that has all the required dependencies installed.
+
 This can be used for the preprocessing steps by navigating to the data folder and use:
 ```bash
 singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess
 ```
-Please refer to the [documentation](https://sc-dandelion.readthedocs.io/en/latest/notebooks/singularity_preprocessing.html) for more information.
+
+If you have multiple samples to process, it is reccomended to specify the `--meta` option with a `.csv` file detailing the samples:
+```bash
+singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess --meta meta.csv
+```
 
 ### Python package
 

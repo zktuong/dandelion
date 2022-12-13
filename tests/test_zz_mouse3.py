@@ -47,7 +47,7 @@ def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
         reassign_dj=True,
         org="mouse",
     )
-    assert len(list((create_testfolder / "dandelion/tmp").iterdir())) == 6
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 6
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
@@ -61,7 +61,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
         novel=True,
         plot=False,
     )
-    assert len(list((create_testfolder / "dandelion/tmp").iterdir())) == 9
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 9
 
 
 @pytest.mark.usefixtures("database_paths_mouse")
@@ -92,7 +92,7 @@ def test_assignsisotypes(
 )
 def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     """test filter contigs"""
-    f = create_testfolder / str("dandelion/" + processed_files["filtered"])
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5"
