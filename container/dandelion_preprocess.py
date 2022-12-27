@@ -35,6 +35,12 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--org",
+        type=str,
+        default="human",
+        help=("organism for running the reannotation. human or mouse."),
+    )
+    parser.add_argument(
         "--file_prefix",
         type=str,
         default="all",
@@ -134,6 +140,7 @@ def main():
             f"--------------------------------------------------------------\n"
             f"    --meta = {args.meta}\n"
             f"    --chain = {args.chain}\n"
+            f"    --org = {args.org}\n"
             f"    --file_prefix = {args.file_prefix}\n"
             f"    --sep = {args.sep}\n"
             f"    --flavour = {args.flavour}\n"
@@ -224,6 +231,7 @@ def main():
     ddl.pp.reannotate_genes(
         samples,
         loci=args.chain,
+        org=args.org,
         filename_prefix=filename_prefixes,
         flavour=args.flavour,
         reassign_dj=args.skip_reassign_dj,
@@ -244,6 +252,7 @@ def main():
                         for i in meta[meta["individual"] == ind].index.values
                     ],
                     combined_folder=ind,
+                    org=args.org,
                     save_plot=True,
                     show_plot=False,
                     filename_prefix=filename_prefixes,
@@ -257,6 +266,7 @@ def main():
             ddl.pp.reassign_alleles(
                 samples,
                 combined_folder="tigger",
+                org=args.org,
                 save_plot=True,
                 show_plot=False,
                 filename_prefix=filename_prefixes,
@@ -270,6 +280,7 @@ def main():
         # also no tricks here
         ddl.pp.assign_isotypes(
             samples,
+            org=args.org,
             save_plot=True,
             show_plot=False,
             filename_prefix=filename_prefixes,
