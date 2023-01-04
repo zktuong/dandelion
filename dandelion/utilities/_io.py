@@ -935,17 +935,6 @@ def change_file_location(
             endswith=informat_dict[fileformat],
             subdir="tmp",
         )
-        if filePath is None:
-            raise FileNotFoundError(
-                "Path to .tsv file for {} is unknown. ".format(data[i])
-                + "Please specify path to reannotated .tsv file or folder containing reannotated .tsv file."
-            )
-        tmp = check_travdv(filePath)
-        _airrfile = filePath.replace("_db-pass.tsv", ".tsv")
-        airr_output = load_data(_airrfile)
-        cols_to_merge = [
-            "junction_aa_length",
-            "fwr1_aa",
             "fwr2_aa",
             "fwr3_aa",
             "fwr4_aa",
