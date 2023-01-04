@@ -935,24 +935,36 @@ def change_file_location(
             endswith=informat_dict[fileformat],
             subdir="tmp",
         )
-            "fwr2_aa",
-            "fwr3_aa",
-            "fwr4_aa",
-            "cdr1_aa",
-            "cdr2_aa",
-            "cdr3_aa",
-            "sequence_alignment_aa",
-            "v_sequence_alignment_aa",
-            "d_sequence_alignment_aa",
-            "j_sequence_alignment_aa",
-        ]
-        for x in cols_to_merge:
-            tmp[x] = pd.Series(airr_output[x])
+        # if filePath is None:
+        #     raise FileNotFoundError(
+        #         "Path to .tsv file for {} is unknown. ".format(data[i])
+        #         + "Please specify path to reannotated .tsv file or folder containing reannotated .tsv file."
+        #     )
+        if filePath is not None:
+            tmp = check_travdv(filePath)
+            _airrfile = filePath.replace("_db-pass.tsv", ".tsv")
+            airr_output = load_data(_airrfile)
+            cols_to_merge = [
+                "junction_aa_length",
+                "fwr1_aa",
+                "fwr2_aa",
+                "fwr3_aa",
+                "fwr4_aa",
+                "cdr1_aa",
+                "cdr2_aa",
+                "cdr3_aa",
+                "sequence_alignment_aa",
+                "v_sequence_alignment_aa",
+                "d_sequence_alignment_aa",
+                "j_sequence_alignment_aa",
+            ]
+            for x in cols_to_merge:
+                tmp[x] = pd.Series(airr_output[x])
 
-        write_airr(tmp, filePath)
+            write_airr(tmp, filePath)
 
-        cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
-        run(cmd)
+            cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
+            run(cmd)
 
 
 def move_to_tmp(
