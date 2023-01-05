@@ -19,13 +19,7 @@ def setup_vdj_pseudobulk(
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
     subsetby: Optional[str] = None,
     groups: Optional[List[str]] = None,
-    allowed_chain_status: Optional[List[str]] = [
-        "Single pair",
-        "Extra pair",
-        "Extra pair-exception",
-        "Orphan VDJ",
-        "Orphan VDJ-exception",
-    ],
+    allowed_chain_status: Optional[List[str]] = None,
     productive_vdj: bool = True,
     productive_vj: bool = True,
     extract_cols: Optional[List[str]] = None,
@@ -56,7 +50,6 @@ def setup_vdj_pseudobulk(
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
     allowed_chain_status : Optional[List[str]], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
-        Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ", "Orphan VDJ-exception"].
     productive_vdj : bool, optional
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj : bool, optional
