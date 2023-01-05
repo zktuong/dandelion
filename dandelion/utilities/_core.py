@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # @Author: Kelvin
 # @Date:   2021-02-11 12:22:40
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-13 08:36:15
+# @Last Modified by:   zktuong
+# @Last Modified time: 2023-01-05 16:02:24
 """core module."""
 import bz2
 import copy
@@ -2178,17 +2178,23 @@ def initialize_metadata(
         if dc in tmp_metadata:
             tmp_metadata.drop(dc, axis=1, inplace=True)
 
+    vcalldict = {
+        vcall: "v_call",
+        "d_call": "d_call",
+        "j_call": "j_call",
+        "c_call": "c_call",
+    }
     for _call in [vcall, "d_call", "j_call", "c_call"]:
-        tmp_metadata[_call + "_VDJ_main"] = [
+        tmp_metadata[vcalldict[_call] + "_VDJ_main"] = [
             return_none_call(x) for x in tmp_metadata[_call + "_VDJ"]
         ]
         if _call != "d_call":
-            tmp_metadata[_call + "_VJ_main"] = [
+            tmp_metadata[vcalldict[_call] + "_VJ_main"] = [
                 return_none_call(x) for x in tmp_metadata[_call + "_VJ"]
             ]
 
     for mode in ["B", "abT", "gdT"]:
-        tmp_metadata[vcall + "_" + mode + "_VDJ_main"] = [
+        tmp_metadata[vcalldict[vcall] + "_" + mode + "_VDJ_main"] = [
             return_none_call(x)
             for x in tmp_metadata[vcall + "_" + mode + "_VDJ"]
         ]
@@ -2198,7 +2204,7 @@ def initialize_metadata(
         tmp_metadata["j_call_" + mode + "_VDJ_main"] = [
             return_none_call(x) for x in tmp_metadata["j_call_" + mode + "_VDJ"]
         ]
-        tmp_metadata[vcall + "_" + mode + "_VJ_main"] = [
+        tmp_metadata[vcalldict[vcall] + "_" + mode + "_VJ_main"] = [
             return_none_call(x)
             for x in tmp_metadata[vcall + "_" + mode + "_VJ"]
         ]
