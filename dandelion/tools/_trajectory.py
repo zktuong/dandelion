@@ -94,21 +94,9 @@ def setup_vdj_pseudobulk(
         if check_vdj_mapping is not None:
             if not isinstance(check_vdj_mapping, list):
                 check_vdj_mapping = [check_vdj_mapping]
-            # check_vdj_mapping = list(
-            #     map(
-            #         lambda x: "v_call_genotyped" if x == "v_call" else x,
-            #         check_vdj_mapping,
-            #     )
-            # )
         if check_vj_mapping is not None:
             if not isinstance(check_vj_mapping, list):
                 check_vj_mapping = [check_vj_mapping]
-            # check_vj_mapping = list(
-            #     map(
-            #         lambda x: "v_call_genotyped" if x == "v_call" else x,
-            #         check_vj_mapping,
-            #     )
-            # )
 
     if allowed_chain_status is not None:
         adata = adata[
