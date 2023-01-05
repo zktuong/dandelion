@@ -290,7 +290,12 @@ def vdj_pseudobulk(
     obs_to_bulk: Optional[Union[str, List[str]]] = None,
     obs_to_take: Optional[Union[str, List[str]]] = None,
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
-    extract_cols: Optional[List[str]] = None,
+    extract_cols: Optional[List[str]] = [
+        "v_call_abT_VDJ_main",
+        "j_call_abT_VDJ_main",
+        "v_call_abT_VJ_main",
+        "j_call_abT_VJ_main",
+    ],
 ) -> AnnData:
     """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk`
     needs to be specified when calling.
@@ -333,7 +338,6 @@ def vdj_pseudobulk(
                 if re.search(
                     "|".join(
                         [
-                            "_call_genotyped_VDJ_main",
                             "_call_VDJ_main",
                             "_call_VJ_main",
                         ]
@@ -346,7 +350,7 @@ def vdj_pseudobulk(
                 i
                 for i in adata.obs
                 if re.search(
-                    "|".join([mode + "_VDJ_main", mode + "_call_VJ_main"]), i
+                    "|".join([mode + "_VDJ_main", mode + "_VJ_main"]), i
                 )
             ]
 
