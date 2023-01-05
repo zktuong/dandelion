@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # @Author: kt16
 # @Date:   2020-05-12 17:56:02
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:05:08
+# @Last Modified by:   zktuong
+# @Last Modified time: 2023-01-05 22:32:13
 """preprocessing module."""
 import os
 import re
@@ -607,7 +607,7 @@ def creategermlines(
                     "            Reconstructing light chain {}".format(
                         germ_type
                     )
-                    + "germline sequences with {}.".format(v_field)
+                    + " germline sequences with {}.".format(v_field)
                 )
             )
             if germline is None:
