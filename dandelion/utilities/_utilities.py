@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:30:55
+# @Last Modified by:   zktuong
+# @Last Modified time: 2023-01-05 18:06:26
 """utilities module."""
 import os
 import re
@@ -779,42 +779,24 @@ def format_locus(
     """Extract locus call value from data."""
     locus_1 = dict(metadata["locus" + suffix_vdj])
     locus_2 = dict(metadata["locus" + suffix_vj])
-    productive_1 = dict(metadata["productive" + suffix_vdj])
-    productive_2 = dict(metadata["productive" + suffix_vj])
     constant_1 = dict(metadata["isotype_status"])
 
     locus_dict = {}
     for i in metadata.index:
-        pro1 = {
-            e: p
-            for e, p in enumerate([pp for pp in productive_1[i].split("|")])
-        }
         loc1 = {
             e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
-        }
-        pro2 = {
-            e: p
-            for e, p in enumerate([pp for pp in productive_2[i].split("|")])
         }
         loc2 = {
             e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
         }
         loc1x, loc2x = [], []
-        if not all([px == "None" for px in pro1.values()]):
-            if all([px_ != "F" for px_ in pro1.values()]):
-                for j in pro1:
-                    if pro1[j] in TRUES:
-                        loc1x.append(loc1[j])
-                loc1xx = loc1x
-                loc1x = [ij[:2] for ij in loc1x]
+        if not all([px == "None" for px in loc1.values()]):
+            loc1xx = list(loc1.values())
+            loc1x = [ij[:2] for ij in loc1.values()]
 
-        if not all([px == "None" for px in pro2.values()]):
-            if all([px_ != "F" for px_ in pro1.values()]):
-                for j in pro2:
-                    if pro2[j] in TRUES:
-                        loc2x.append(loc2[j])
-                loc2xx = loc2x
-                loc2x = [ij[:2] for ij in loc2x]
+        if not all([px == "None" for px in loc2.values()]):
+            loc2xx = list(loc2.values())
+            loc2x = [ij[:2] for ij in loc2.values()]
 
         if len(loc1x) > 0:
             if len(list(set(loc1x))) > 1:
@@ -881,7 +863,8 @@ def format_locus(
                 locus_dict.update({i: "Orphan " + tmp2})
             elif tmp2 == "None":
                 locus_dict.update({i: "Orphan " + tmp1})
-
+        if any(re.search("No_contig", tmp) for tmp in [tmp1, tmp2]):
+            locus_dict.update({i: "No_contig"})
     result = pd.Series(locus_dict)
     return result
 
