@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # @Author: kt16
-# @Date:   2020-05-12 14:01:32
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-12 11:37:52
 """io module."""
 import bz2
 import gzip
 import json
 import os
 import re
+import shutil
 
 import _pickle as cPickle
 import pickle
@@ -20,6 +18,7 @@ import pandas as pd
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
+from pathlib import Path
 from scanpy import logging as logg
 from typing import Union, Optional, List
 
@@ -920,12 +919,6 @@ def change_file_location(
         "blast": "_igblast_db-pass.tsv",
         "airr": "_igblast_gap.tsv",
     }
-    # informat_dict2 = {
-    #     'changeo': '_igblast_db-fail.tsv',
-    #     'blast': '_igblast_db-fail.tsv',
-    #     'airr': '_igblast_gap.tsv'
-    # }
-
     filePath = None
 
     for i in range(0, len(data)):
@@ -935,35 +928,30 @@ def change_file_location(
             endswith=informat_dict[fileformat],
             subdir="tmp",
         )
-        if filePath is None:
-            raise FileNotFoundError(
-                "Path to .tsv file for {} is unknown. ".format(data[i])
-                + "Please specify path to reannotated .tsv file or folder containing reannotated .tsv file."
-            )
-        tmp = check_travdv(filePath)
-        _airrfile = filePath.replace("_db-pass.tsv", ".tsv")
-        airr_output = load_data(_airrfile)
-        cols_to_merge = [
-            "junction_aa_length",
-            "fwr1_aa",
-            "fwr2_aa",
-            "fwr3_aa",
-            "fwr4_aa",
-            "cdr1_aa",
-            "cdr2_aa",
-            "cdr3_aa",
-            "sequence_alignment_aa",
-            "v_sequence_alignment_aa",
-            "d_sequence_alignment_aa",
-            "j_sequence_alignment_aa",
-        ]
-        for x in cols_to_merge:
-            tmp[x] = pd.Series(airr_output[x])
+        if filePath is not None:
+            tmp = check_travdv(filePath)
+            _airrfile = filePath.replace("_db-pass.tsv", ".tsv")
+            airr_output = load_data(_airrfile)
+            cols_to_merge = [
+                "junction_aa_length",
+                "fwr1_aa",
+                "fwr2_aa",
+                "fwr3_aa",
+                "fwr4_aa",
+                "cdr1_aa",
+                "cdr2_aa",
+                "cdr3_aa",
+                "sequence_alignment_aa",
+                "v_sequence_alignment_aa",
+                "d_sequence_alignment_aa",
+                "j_sequence_alignment_aa",
+            ]
+            for x in cols_to_merge:
+                tmp[x] = pd.Series(airr_output[x])
 
-        write_airr(tmp, filePath)
-
-        cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
-        run(cmd)
+            write_airr(tmp, filePath)
+            fp = Path(filePath)
+            shutil.copyfile(fp, fp.parent.parent / fp.name)
 
 
 def move_to_tmp(
@@ -986,10 +974,9 @@ def move_to_tmp(
         filePath2 = check_filepath(
             data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
         )
-        cmd1 = ["mv", "-f", filePath1, filePath1.rsplit("/", 1)[0] + "/tmp"]
-        cmd2 = ["mv", "-f", filePath2, filePath2.rsplit("/", 1)[0] + "/tmp"]
-        run(cmd1)
-        run(cmd2)
+        for fp in [filePath1, filePath2]:
+            fp = Path(fp)
+            shutil.move(fp, fp.parent / "tmp" / fp.name)
 
 
 def make_all(
@@ -1020,6 +1007,16 @@ def make_all(
                 endswith="_igblast_db-pass_genotyped.tsv",
                 subdir="tmp",
             )
+            if filePath1 is None:
+                filePath1 = check_filepath(
+                    data[i],
+                    filename_prefix=filename_prefix[i],
+                    endswith="_igblast_db-pass.tsv",
+                    subdir="tmp",
+                )
+                out_ex = "db-pass.tsv"
+            else:
+                out_ex = "db-pass_genotyped.tsv"
         filePath2 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
@@ -1031,6 +1028,16 @@ def make_all(
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep="\t")
                 df = pd.concat([df1, df2])
+                # for col in df1
+                # if "v_call_genotyped" in df1:
+                #     df["v_call_genotyped"] = df["v_call"]
+                #     df["germline_alignment_d_mask"] = ""
+                #     df["v_call_genotyped"].update(
+                #         pd.Series(df1["v_call_genotyped"])
+                #     )
+                #     df["germline_alignment_d_mask"].update(
+                #         pd.Series(df1["germline_alignment_d_mask"])
+                #     )
                 if loci == "tr":
                     write_airr(
                         df, filePath1.rsplit("db-pass.tsv")[0] + "db-all.tsv"
@@ -1038,8 +1045,7 @@ def make_all(
                 else:
                     write_airr(
                         df,
-                        filePath1.rsplit("db-pass_genotyped.tsv")[0]
-                        + "db-all.tsv",
+                        filePath1.rsplit(out_ex)[0] + "db-all.tsv",
                     )
             else:
                 if loci == "tr":
@@ -1049,8 +1055,7 @@ def make_all(
                 else:
                     write_airr(
                         df1,
-                        filePath1.rsplit("db-pass_genotyped.tsv")[0]
-                        + "db-all.tsv",
+                        filePath1.rsplit(out_ex)[0] + "db-all.tsv",
                     )
 
 
@@ -1058,6 +1063,7 @@ def rename_dandelion(
     data: List[str],
     filename_prefix: Optional[Union[List[str], str]] = None,
     endswith="_igblast_db-pass_genotyped.tsv",
+    subdir: Optional[str] = None,
 ):
     """Rename final dandlion file."""
     if type(data) is not list:
@@ -1069,12 +1075,16 @@ def rename_dandelion(
 
     for i in range(0, len(data)):
         filePath = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], endswith=endswith
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith=endswith,
+            subdir=subdir,
         )  # must be whatever's after contig
-        cmd = [
-            "mv",
-            "-f",
-            filePath,
-            filePath.rsplit(endswith)[0] + "_dandelion.tsv",
-        ]
-        run(cmd)
+        file_path = Path(filePath)
+        if subdir is None:
+            fp = filePath.rsplit(endswith)[0]
+        else:
+            fp = str(
+                file_path.parent.parent / file_path.name.rsplit(endswith)[0]
+            )
+        shutil.move(file_path, Path(fp + "_dandelion.tsv"))

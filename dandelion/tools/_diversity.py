@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2020-08-13 21:08:53
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:50:41
 """diversity module."""
 import numpy as np
 import networkx as nx

@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: kt16
-# @Date:   2020-05-12 18:11:20
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:23:04
 """init module."""
 from dandelion import preprocessing as pp
 from dandelion import utilities as utl

@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-# @Author: Kelvin
-# @Date:   2020-08-12 18:08:04
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:19:42
 """gini module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency

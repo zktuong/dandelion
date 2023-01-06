@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: kt16
-# @Date:   2020-05-12 17:56:02
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-13 09:50:28
 
 import anndata as ad
 import functools
@@ -201,6 +198,7 @@ def format_fasta(
         os.makedirs(out_dir)
 
     # format the barcode and contig_id in the corresponding annotation file too
+    # TODO: update this to use check_filepath
     anno = (
         basedir
         + "/"
@@ -296,6 +294,7 @@ def format_fasta(
             data["contig_id"] = [str(c) for c in data["contig_id"]]
             data["barcode"] = [str(b) for b in data["barcode"]]
 
+    # TODO: update this to use check_filepath
     out_anno = out_dir + os.path.basename(filePath).replace(
         ".fasta", "_annotations.csv"
     )
@@ -714,34 +713,42 @@ def assign_isotype(
     )
     blast_out.drop_duplicates(subset="sequence_id", keep="first", inplace=True)
 
-    _file = "{}/tmp/{}_genotyped.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + format_dict[fileformat],
+    _10xfile = check_filepath(
+        fasta,
+        filename_prefix=filename_prefix,
+        endswith="_annotations.csv",
     )
-    _airrfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + "_igblast",
+    _airrfile = check_filepath(
+        fasta,
+        filename_prefix=filename_prefix,
+        endswith="_igblast.tsv",
+        subdir="tmp",
     )
-    _file2 = "{}/{}_genotyped.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + format_dict[fileformat],
+    _processedfile = check_filepath(
+        fasta,
+        filename_prefix=filename_prefix,
+        endswith="_igblast_db-pass_genotyped.tsv",
+        subdir="tmp",
     )
-
-    logg.info("Loading 10X annotations \n")
-    try:
-        dat_10x = load_data(_file)
-    except FileNotFoundError:
-        # maybe a short cut to skip reassign_alleles?
-        _file = "{}/tmp/{}.tsv".format(
-            os.path.dirname(filePath),
-            os.path.basename(filePath).split(".fasta")[0]
-            + format_dict[fileformat],
+    if _processedfile is None:
+        _processedfile = check_filepath(
+            fasta,
+            filename_prefix=filename_prefix,
+            endswith="_igblast_db-pass.tsv",
+            subdir="tmp",
         )
-        dat_10x = load_data(_file)
-    res_10x = pd.DataFrame(dat_10x["c_call"])
-    res_10x["c_call"] = res_10x["c_call"].fillna(value="None")
+        out_ex = "_igblast_db-pass.tsv"
+    else:
+        out_ex = "_igblast_db-pass_genotyped.tsv"
+    dat = load_data(_processedfile)
+    logg.info("Loading 10X annotations \n")
+    if _10xfile is not None:
+        dat_10x = read_10x_vdj(_10xfile)
+        res_10x = pd.DataFrame(dat_10x.data["c_call"])
+    else:  # pragma: no cover
+        res_10x = pd.DataFrame(dat["c_call"])
+        res_10x["c_call"] = "None"
     logg.info("Preparing new calls \n")
-    dat = load_data(_file)
     for col in [
         "c_call",
         "c_sequence_alignment",
@@ -754,22 +761,20 @@ def assign_isotype(
         dat[col] = pd.Series(blast_out[col])
     res_blast = pd.DataFrame(dat["c_call"])
     res_blast = res_blast.fillna(value="None")
-
     res_10x_sum = pd.DataFrame(
         res_10x["c_call"].value_counts(normalize=True) * 100
     )
+    res_10x_sum["group"] = "10X"
+    res_10x_sum.columns = ["counts", "group"]
+    res_10x_sum.index = res_10x_sum.index.set_names(["c_call"])
+    res_10x_sum.reset_index(drop=False, inplace=True)
     res_blast_sum = pd.DataFrame(
         res_blast["c_call"].value_counts(normalize=True) * 100
     )
-    res_10x_sum["group"] = "10X"
     res_blast_sum["group"] = "blast"
-    res_10x_sum.columns = ["counts", "group"]
     res_blast_sum.columns = ["counts", "group"]
-    res_10x_sum.index = res_10x_sum.index.set_names(["c_call"])
     res_blast_sum.index = res_blast_sum.index.set_names(["c_call"])
-    res_10x_sum.reset_index(drop=False, inplace=True)
     res_blast_sum.reset_index(drop=False, inplace=True)
-
     if (
         correct_c_call
     ):  # TODO: figure out if i need to set up a None correction?
@@ -785,7 +790,7 @@ def assign_isotype(
         res_corrected_sum.index = res_corrected_sum.index.set_names(["c_call"])
         res_corrected_sum.reset_index(drop=False, inplace=True)
         res = pd.concat([res_10x_sum, res_blast_sum, res_corrected_sum])
-    else:
+    else:  # pragma: no cover
         res = pd.concat([res_10x_sum, res_blast_sum])
 
     res = res.reset_index(drop=True)
@@ -797,7 +802,7 @@ def assign_isotype(
     )
 
     logg.info("Finishing up \n")
-    dat["c_call_10x"] = pd.Series(dat_10x["c_call"])
+    dat["c_call_10x"] = pd.Series(res_10x["c_call"])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
     cols_to_merge = [
@@ -821,7 +826,7 @@ def assign_isotype(
     dat["c_call"] = dat["c_call"].fillna(value="")
     dat["c_call"] = [re.sub("[*][0-9][0-9]", "", c) for c in dat["c_call"]]
 
-    write_airr(dat, _file2)
+    write_airr(dat, _processedfile)
     if plot:
         options.figure_size = figsize
         if correct_c_call:
@@ -849,16 +854,16 @@ def assign_isotype(
         if save_plot:
             _file3 = "{}/assign_isotype.pdf".format(os.path.dirname(filePath))
             save_as_pdf_pages([p], filename=_file3)
-            if show_plot:
+            if show_plot:  # pragma: no cover
                 print(p)
-        else:
-            if show_plot:
+        else:  # pragma: no cover
+            if show_plot:  # pragma: no cover
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
-    make_all(fasta, filename_prefix)
-    rename_dandelion(fasta, filename_prefix)
     update_j_multimap(fasta, filename_prefix)
+    make_all(fasta, filename_prefix, loci="ig")
+    rename_dandelion(fasta, filename_prefix, endswith=out_ex, subdir="tmp")
 
 
 def assign_isotypes(
@@ -1122,7 +1127,7 @@ def reannotate_genes(
         if flavour == "strict":
             mask_dj(data, filename_prefix, d_evalue, j_evalue)
         move_to_tmp(data, filename_prefix)
-        make_all(data, filename_prefix)
+        make_all(data, filename_prefix, loci=loci)
         rename_dandelion(data, filename_prefix, endswith="_igblast_db-pass.tsv")
         update_j_multimap(data, filename_prefix)
 
@@ -1293,50 +1298,47 @@ def reassign_alleles(
 
     # make output directory
     outDir = combined_folder.rstrip("/")
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    os.makedirs(outDir, exist_ok=True)
 
     # concatenate
     if len(filepathlist_heavy) > 1:
         logg.info("Concatenating objects")
-        cmd1 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [f for f in filepathlist_heavy]
-            + [">"]
-            + [outDir + "/" + outDir + "_heavy" + informat_dict[fileformat]]
+        fh = open(
+            Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]), "w"
         )
-        cmd2 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [f for f in filepathlist_light]
-            + [">"]
-            + [outDir + "/" + outDir + "_light" + informat_dict[fileformat]]
+        fh.close()
+        with open(
+            Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]), "a"
+        ) as out_file:
+            for filenum, filename in enumerate(filepathlist_heavy):
+                with open(filename, "r") as in_file:
+                    for line_num, line in enumerate(in_file):
+                        if (line_num == 0) and (filenum > 0):
+                            continue
+                        out_file.write(line)
+        fh = open(
+            Path(outDir) / (outDir + "_light" + informat_dict[fileformat]), "w"
         )
+        fh.close()
+        with open(
+            Path(outDir) / (outDir + "_light" + informat_dict[fileformat]), "a"
+        ) as out_file:
+            for filenum, filename in enumerate(filepathlist_light):
+                with open(filename, "r") as in_file:
+                    skip_next_line = False
+                    for line_num, line in enumerate(in_file):
+                        if (line_num == 0) and (filenum > 0):
+                            continue
+                        out_file.write(line)
     else:
-        cmd1 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [filepathlist_heavy[0]]
-            + [">"]
-            + [outDir + "/" + outDir + "_heavy" + informat_dict[fileformat]]
+        shutil.copyfile(
+            Path(filepathlist_heavy[0]),
+            Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]),
         )
-        cmd2 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [filepathlist_light[0]]
-            + [">"]
-            + [outDir + "/" + outDir + "_light" + informat_dict[fileformat]]
+        shutil.copyfile(
+            Path(filepathlist_light[0]),
+            Path(outDir) / (outDir + "_light" + informat_dict[fileformat]),
         )
-
-    logg.info("Running command: %s\n" % (cmd1))
-    logg.info("Running command: %s\n" % (cmd2))
-    os.system(cmd1)
-    os.system(cmd2)
 
     novel_dict = {True: "YES", False: "NO"}
     if novel:
@@ -1345,14 +1347,20 @@ def reassign_alleles(
                 "      Running tigger-genotype with novel allele discovery."
             )
             tigger_genotype(
-                outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
+                str(
+                    Path(outDir)
+                    / (outDir + "_heavy" + informat_dict[fileformat])
+                ),
                 v_germline=v_germline,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[novel],
                 verbose=verbose,
             )
             creategermlines(
-                outDir + "/" + outDir + "_heavy" + fileformat_dict[fileformat],
+                str(
+                    Path(outDir)
+                    / (outDir + "_heavy" + fileformat_dict[fileformat])
+                ),
                 germtypes=germ_types,
                 mode="heavy",
                 genotype_fasta=outDir
@@ -1366,11 +1374,8 @@ def reassign_alleles(
                 cloned=cloned,
             )
             _ = load_data(
-                outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + fileformat_passed_dict[fileformat]
+                Path(outDir)
+                / (outDir + "_heavy" + fileformat_passed_dict[fileformat])
             )
         except:
             try:
@@ -1379,40 +1384,40 @@ def reassign_alleles(
                     "      Attempting to run tigger-genotype without novel allele discovery."
                 )
                 tigger_genotype(
-                    outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + informat_dict[fileformat],
+                    str(
+                        Path(outDir)
+                        / (outDir + "_heavy" + informat_dict[fileformat])
+                    ),
                     v_germline=v_germline,
                     fileformat=fform_dict[fileformat],
                     novel_=novel_dict[False],
                     verbose=verbose,
                 )
                 creategermlines(
-                    outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + fileformat_dict[fileformat],
+                    str(
+                        Path(outDir)
+                        / (outDir + "_heavy" + fileformat_dict[fileformat])
+                    ),
                     germtypes=germ_types,
                     mode="heavy",
-                    genotype_fasta=outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + germline_dict[fileformat],
+                    genotype_fasta=str(
+                        Path(outDir)
+                        / (outDir + "_heavy" + germline_dict[fileformat])
+                    ),
                     germline=germline,
                     v_field=v_field,
                     verbose=verbose,
                     cloned=cloned,
                 )
                 _ = load_data(
-                    outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + fileformat_passed_dict[fileformat]
+                    str(
+                        Path(outDir)
+                        / (
+                            outDir
+                            + "_heavy"
+                            + fileformat_passed_dict[fileformat]
+                        )
+                    )
                 )
             except:
                 logg.info(
@@ -1425,32 +1430,36 @@ def reassign_alleles(
                 "      Running tigger-genotype without novel allele discovery."
             )
             tigger_genotype(
-                outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
+                str(
+                    Path(outDir)
+                    / (outDir + "_heavy" + informat_dict[fileformat])
+                ),
                 v_germline=v_germline,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[False],
                 verbose=verbose,
             )
             creategermlines(
-                outDir + "/" + outDir + "_heavy" + fileformat_dict[fileformat],
+                str(
+                    Path(outDir)
+                    / (outDir + "_heavy" + fileformat_dict[fileformat])
+                ),
                 germtypes=germ_types,
                 mode="heavy",
-                genotype_fasta=outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + germline_dict[fileformat],
+                genotype_fasta=str(
+                    Path(outDir)
+                    / (outDir + "_heavy" + germline_dict[fileformat])
+                ),
                 germline=germline,
                 v_field=v_field,
                 verbose=verbose,
                 cloned=cloned,
             )
             _ = load_data(
-                outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + fileformat_passed_dict[fileformat]
+                str(
+                    Path(outDir)
+                    / (outDir + "_heavy" + fileformat_passed_dict[fileformat])
+                )
             )
         except:
             logg.info(
@@ -1460,7 +1469,7 @@ def reassign_alleles(
 
     if "tigger_failed" in locals():
         creategermlines(
-            outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
+            str(Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat])),
             germtypes=germ_types,
             mode="heavy",
             genotype_fasta=None,
@@ -1470,7 +1479,7 @@ def reassign_alleles(
             cloned=cloned,
         )
         creategermlines(
-            outDir + "/" + outDir + "_light" + informat_dict[fileformat],
+            str(Path(outDir) / (outDir + "_light" + informat_dict[fileformat])),
             germtypes=germ_types,
             mode="light",
             genotype_fasta=None,
@@ -1483,19 +1492,19 @@ def reassign_alleles(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
         )
         heavy = load_data(
-            outDir + "/" + outDir + "_heavy" + germpass_dict[fileformat]
+            Path(outDir) / (outDir + "_heavy" + germpass_dict[fileformat])
         )
         heavy["v_call_genotyped"] = heavy["v_call"]
         logg.info(
             "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
         )
         light = load_data(
-            outDir + "/" + outDir + "_light" + germpass_dict[fileformat]
+            Path(outDir) / (outDir + "_light" + germpass_dict[fileformat])
         )
         light["v_call_genotyped"] = light["v_call"]
     else:
         creategermlines(
-            outDir + "/" + outDir + "_light" + informat_dict[fileformat],
+            str(Path(outDir) / (outDir + "_light" + informat_dict[fileformat])),
             germtypes=germ_types,
             mode="light",
             genotype_fasta=None,
@@ -1505,17 +1514,14 @@ def reassign_alleles(
             cloned=cloned,
         )
         heavy = load_data(
-            outDir
-            + "/"
-            + outDir
-            + "_heavy"
-            + fileformat_passed_dict[fileformat]
+            Path(outDir)
+            / (outDir + "_heavy" + fileformat_passed_dict[fileformat])
         )
         logg.info(
             "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
         )
         light = load_data(
-            outDir + "/" + outDir + "_light" + germpass_dict[fileformat]
+            Path(outDir) / (outDir + "_light" + germpass_dict[fileformat])
         )
         light["v_call_genotyped"] = light["v_call"]
 
@@ -1536,13 +1542,10 @@ def reassign_alleles(
     if plot:
         if "tigger_failed" not in locals():
             logg.info("Returning summary plot")
-            inferred_genotype = (
-                outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + inferred_fileformat_dict[fileformat]
+            inferred_genotype = Path(outDir) / (
+                outDir + "_heavy" + inferred_fileformat_dict[fileformat]
             )
+
             inf_geno = pd.read_csv(inferred_genotype, sep="\t", dtype="object")
 
             s2 = set(inf_geno["gene"])
@@ -1656,7 +1659,9 @@ def reassign_alleles(
                     + theme(legend_title=element_blank())
                 )
                 if save_plot:
-                    savefile = outDir + "/" + outDir + "_reassign_alleles.pdf"
+                    savefile = str(
+                        Path(outDir) / (outDir + "_reassign_alleles.pdf")
+                    )
                     save_as_pdf_pages([p], filename=savefile)
                     if show_plot:
                         print(p)
@@ -6421,6 +6426,12 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             endswith="_igblast_db-pass.tsv",
             subdir="tmp",
         )
+        filePath1g = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            endswith="_igblast_db-pass_genotyped.tsv",
+            subdir="tmp",
+        )
         filePath2 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
@@ -6454,6 +6465,12 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                     dbpass["j_call_" + col] = ""
                     dbpass["j_call_" + col].update(jmulti[col])
                 write_airr(dbpass, filePath1)
+            if filePath1g is not None:
+                dbpassg = load_data(filePath1g)
+                for col in jmm_transfer_cols:
+                    dbpassg["j_call_" + col] = ""
+                    dbpassg["j_call_" + col].update(jmulti[col])
+                write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:

@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2022-06-18 11:41:31
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-06-28 21:40:40
 """conftest module."""
 from .fixtures.fixtures import (
     airr_10x,

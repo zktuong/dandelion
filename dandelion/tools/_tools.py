@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2020-05-13 23:22:18
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-13 08:35:08
 """tools module."""
 import math
 import os

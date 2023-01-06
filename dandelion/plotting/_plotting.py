@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2020-05-18 00:15:00
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-22 00:16:20
 """plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
