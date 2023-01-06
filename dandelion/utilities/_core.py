@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2021-02-11 12:22:40
-# @Last Modified by:   zktuong
-# @Last Modified time: 2023-01-05 16:02:24
 """core module."""
 import bz2
 import copy

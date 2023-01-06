@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2020-08-12 18:08:04
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:05:27
 """network module."""
 import networkx as nx
 import numpy as np

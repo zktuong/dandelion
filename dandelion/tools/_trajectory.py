@@ -1,5 +1,4 @@
 """Trajectory functions."""
-# Created on Mon Sep 19 21:30:44 2022
 # @author: chenqu, kp9, kelvin
 import re
 import numpy as np

@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: kt16
-# @Date:   2020-05-12 14:01:32
-# @Last Modified by:   zktuong
-# @Last Modified time: 2023-01-06 08:40:13
 """io module."""
 import bz2
 import gzip

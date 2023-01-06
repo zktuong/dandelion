@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # @Author: Kelvin
-# @Date:   2020-05-13 23:21:45
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:18:56
 """init module."""
 from dandelion.tools._tools import (
     find_clones,
