@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   zktuong
-# @Last Modified time: 2023-01-06 07:43:59
+# @Last Modified time: 2023-01-06 07:46:46
 """io module."""
 import bz2
 import gzip
@@ -953,9 +953,10 @@ def change_file_location(
                 tmp[x] = pd.Series(airr_output[x])
 
             write_airr(tmp, filePath)
-
-            cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
-            run(cmd)
+            fP = Path(filePath)
+            shutil.copyfile(fp, fp.parent.parent / fp.name)
+            # cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
+            # run(cmd)
 
 
 def move_to_tmp(
