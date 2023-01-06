@@ -2,7 +2,7 @@
 # @Author: kt16
 # @Date:   2020-05-12 14:01:32
 # @Last Modified by:   zktuong
-# @Last Modified time: 2023-01-06 00:29:39
+# @Last Modified time: 2023-01-06 07:43:59
 """io module."""
 import bz2
 import gzip
@@ -980,7 +980,7 @@ def move_to_tmp(
         )
         for fp in [filePath1, filePath2]:
             fp = Path(fp)
-            shutil.move(fp, fp.parent / "tmp")
+            shutil.move(fp, fp.parent / "tmp" / fp.name)
 
 
 def make_all(
