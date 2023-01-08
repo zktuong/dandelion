@@ -1303,33 +1303,69 @@ def reassign_alleles(
     # concatenate
     if len(filepathlist_heavy) > 1:
         logg.info("Concatenating objects")
-        fh = open(
-            Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]), "w"
-        )
-        fh.close()
-        with open(
-            Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]), "a"
-        ) as out_file:
-            for filenum, filename in enumerate(filepathlist_heavy):
-                with open(filename, "r") as in_file:
-                    for line_num, line in enumerate(in_file):
-                        if (line_num == 0) and (filenum > 0):
-                            continue
-                        out_file.write(line)
-        fh = open(
-            Path(outDir) / (outDir + "_light" + informat_dict[fileformat]), "w"
-        )
-        fh.close()
-        with open(
-            Path(outDir) / (outDir + "_light" + informat_dict[fileformat]), "a"
-        ) as out_file:
-            for filenum, filename in enumerate(filepathlist_light):
-                with open(filename, "r") as in_file:
-                    skip_next_line = False
-                    for line_num, line in enumerate(in_file):
-                        if (line_num == 0) and (filenum > 0):
-                            continue
-                        out_file.write(line)
+        try:
+            cmd1 = " ".join(
+                [
+                    'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
+                ]
+                + [f for f in filepathlist_heavy]
+                + [">"]
+                + [
+                    str(
+                        Path(outDir)
+                        / (outDir + "_heavy" + informat_dict[fileformat])
+                    )
+                ]
+            )
+            cmd2 = " ".join(
+                [
+                    'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
+                ]
+                + [f for f in filepathlist_light]
+                + [">"]
+                + [
+                    str(
+                        Path(outDir)
+                        / (outDir + "_light" + informat_dict[fileformat])
+                    )
+                ]
+            )
+            logg.info("Running command: %s\n" % (cmd1))
+            os.system(cmd1)
+            logg.info("Running command: %s\n" % (cmd2))
+            os.system(cmd2)
+        except:  # pragma: no cover
+            fh = open(
+                Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]),
+                "w",
+            )
+            fh.close()
+            with open(
+                Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat]),
+                "a",
+            ) as out_file:
+                for filenum, filename in enumerate(filepathlist_heavy):
+                    with open(filename, "r") as in_file:
+                        for line_num, line in enumerate(in_file):
+                            if (line_num == 0) and (filenum > 0):
+                                continue
+                            out_file.write(line)
+            fh = open(
+                Path(outDir) / (outDir + "_light" + informat_dict[fileformat]),
+                "w",
+            )
+            fh.close()
+            with open(
+                Path(outDir) / (outDir + "_light" + informat_dict[fileformat]),
+                "a",
+            ) as out_file:
+                for filenum, filename in enumerate(filepathlist_light):
+                    with open(filename, "r") as in_file:
+                        skip_next_line = False
+                        for line_num, line in enumerate(in_file):
+                            if (line_num == 0) and (filenum > 0):
+                                continue
+                            out_file.write(line)
     else:
         shutil.copyfile(
             Path(filepathlist_heavy[0]),
