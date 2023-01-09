@@ -861,9 +861,9 @@ def assign_isotype(
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
-    update_j_multimap(fasta, filename_prefix)
     make_all(fasta, filename_prefix, loci="ig")
     rename_dandelion(fasta, filename_prefix, endswith=out_ex, subdir="tmp")
+    update_j_multimap(fasta, filename_prefix)
 
 
 def assign_isotypes(
@@ -6392,8 +6392,8 @@ def multimapper(filename: str) -> pd.DataFrame:
         Mapped multimapper dataframe.
     """
     df = pd.read_csv(filename, delimiter="\t")
-    df_new = df.loc[
-        df["j_support"] < 1e-3, :
+    df_new = df[
+        df["j_support"] < 1e-3
     ]  # maybe not needing to filter if j_support has already been filtered
     mapped = pd.DataFrame(
         index=set(df_new["sequence_id"]),
@@ -6493,8 +6493,10 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             "sequence_end_multimappers",
             "support_multimappers",
         ]
-        if filePath0 is not None:
+        if (filePath0 is not None) and (filePath3 is not None):
+            check_multimapper(filePath0, filePath3)
             jmulti = multimapper(filePath0)
+        if filePath0 is not None:
             if filePath1 is not None:
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
@@ -6563,3 +6565,46 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                     dandy["j_call_" + col] = ""
                     dandy["j_call_" + col].update(jmulti[col])
                 write_airr(dandy, filePath4)
+
+
+def check_multimapper(
+    filename1: str,
+    filename2: str,
+) -> pd.DataFrame:
+    """Select the left more segment as the final call
+
+    Parameters
+    ----------
+    filename1 : str
+        path to multimapper file.
+    filename2 : str
+        path to reference file containing all information.
+
+    Returns
+    -------
+    pd.DataFrame
+        Mapped multimapper dataframe.
+    """
+    df = pd.read_csv(filename1, sep="\t")
+    df_new = df[
+        df["j_support"] < 1e-3
+    ]  # maybe not needing to filter if j_support has already been filtered
+
+    df_ref = load_data(filename2)
+    mapped = list(set(df_new["sequence_id"]))
+    keep = []
+    for j in tqdm(mapped):
+        tmp = df_new[df_new["sequence_id"] == j][
+            ["j_sequence_start", "j_sequence_end", "j_support", "j_call"]
+        ]
+        if j in df_ref.index:
+            vend, jstart = df_ref.loc[j, ["v_sequence_end", "j_sequence_start"]]
+            vend_ = 0 if not present(vend) else vend
+            jstart_ = 1000 if not present(jstart) else jstart
+            for i in tmp.index:
+                callstart = tmp.loc[i, "j_sequence_start"]
+                callend = tmp.loc[i, "j_sequence_end"]
+                if (callstart >= vend_) and (callend <= jstart_):
+                    keep.append(i)
+    keepdf = df_new.loc[keep]
+    keepdf.to_csv(filename1, sep="\t", index=False)
