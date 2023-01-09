@@ -6493,6 +6493,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             "sequence_end_multimappers",
             "support_multimappers",
         ]
+        check_multimapper(filePath0, filePath3)
         if filePath0 is not None:
             jmulti = multimapper(filePath0)
             if filePath1 is not None:
@@ -6563,3 +6564,53 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                     dandy["j_call_" + col] = ""
                     dandy["j_call_" + col].update(jmulti[col])
                 write_airr(dandy, filePath4)
+
+
+def check_multimapper(
+    filename1: str,
+    filename2: str,
+) -> pd.DataFrame:
+    """Select the left more segment as the final call
+    Parameters
+    ----------
+    filename1 : str
+        path to multimapper file.
+    filename2 : str
+        path to reference file containing all information.
+    Returns
+    -------
+    pd.DataFrame
+        Mapped multimapper dataframe.
+    """
+    if filename1 is not None:
+        if filename2 is not None:
+            df = pd.read_csv(filename1, sep="\t")
+            df_new = df[
+                df["j_support"] < 1e-3
+            ]  # maybe not needing to filter if j_support has already been filtered
+
+            df_ref = load_data(filename2)
+            mapped = list(set(df_new["sequence_id"]))
+            keep = []
+            for j in tqdm(mapped):
+                tmp = df_new[df_new["sequence_id"] == j][
+                    [
+                        "j_sequence_start",
+                        "j_sequence_end",
+                        "j_support",
+                        "j_call",
+                    ]
+                ]
+                if j in df_ref.index:
+                    vend, jstart = df_ref.loc[
+                        j, ["v_sequence_end", "j_sequence_start"]
+                    ]
+                    vend_ = 0 if not present(vend) else vend
+                    jstart_ = 1000 if not present(jstart) else jstart
+                    for i in tmp.index:
+                        callstart = tmp.loc[i, "j_sequence_start"]
+                        callend = tmp.loc[i, "j_sequence_end"]
+                        if (callstart >= vend_) and (callend <= jstart_):
+                            keep.append(i)
+            keepdf = df_new.loc[keep]
+            keepdf.to_csv(filename1, sep="\t", index=False)
