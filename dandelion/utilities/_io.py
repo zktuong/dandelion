@@ -1025,19 +1025,12 @@ def make_all(
         )
         if filePath1 is not None:
             df1 = pd.read_csv(filePath1, sep="\t")
+            df1 = check_complete(df1)
+            write_airr(df1, filePath1)
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep="\t")
+                df2 = check_complete(df2)
                 df = pd.concat([df1, df2])
-                # for col in df1
-                # if "v_call_genotyped" in df1:
-                #     df["v_call_genotyped"] = df["v_call"]
-                #     df["germline_alignment_d_mask"] = ""
-                #     df["v_call_genotyped"].update(
-                #         pd.Series(df1["v_call_genotyped"])
-                #     )
-                #     df["germline_alignment_d_mask"].update(
-                #         pd.Series(df1["germline_alignment_d_mask"])
-                #     )
                 if loci == "tr":
                     write_airr(
                         df, filePath1.rsplit("db-pass.tsv")[0] + "db-all.tsv"
@@ -1047,6 +1040,7 @@ def make_all(
                         df,
                         filePath1.rsplit(out_ex)[0] + "db-all.tsv",
                     )
+                write_airr(df2, filePath2)
             else:
                 if loci == "tr":
                     write_airr(
@@ -1088,3 +1082,24 @@ def rename_dandelion(
                 file_path.parent.parent / file_path.name.rsplit(endswith)[0]
             )
         shutil.move(file_path, Path(fp + "_dandelion.tsv"))
+
+
+def check_complete(df: pd.DataFrame) -> pd.DataFrame:
+    """check if contig contains cdr3.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        airr dataframe.
+
+    Returns
+    -------
+    pd.DataFrame
+        completed airr dataframe
+    """
+    for i in df.index:
+        junc = df.loc[i, "junction"]
+        if not present(junc):
+            df.at[i, "productive"] = "F"
+            df.at[i, "complete_vdj"] = "F"
+    return df
