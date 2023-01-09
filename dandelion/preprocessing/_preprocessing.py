@@ -861,9 +861,9 @@ def assign_isotype(
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
-    update_j_multimap(fasta, filename_prefix)
     make_all(fasta, filename_prefix, loci="ig")
     rename_dandelion(fasta, filename_prefix, endswith=out_ex, subdir="tmp")
+    update_j_multimap(fasta, filename_prefix)
 
 
 def assign_isotypes(
