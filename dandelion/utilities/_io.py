@@ -1097,6 +1097,8 @@ def check_complete(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         completed airr dataframe
     """
+    if "complete_vdj" not in df:
+        df["complete_vdj"] = ""
     for i in df.index:
         junc = df.loc[i, "junction"]
         if not present(junc):
