@@ -1666,8 +1666,9 @@ class Query:
                         {
                             query
                             + "_B_VDJ": "|".join(
-                                str(x) if present(x) else "None"
+                                str(x)
                                 for x in list(dict.fromkeys(b_vdj))
+                                if present(x)
                             )
                         }
                     )
@@ -1676,8 +1677,9 @@ class Query:
                         {
                             query
                             + "_B_VJ": "|".join(
-                                str(x) if present(x) else "None"
+                                str(x)
                                 for x in list(dict.fromkeys(b_vj))
+                                if present(x)
                             )
                         }
                     )
@@ -1687,8 +1689,9 @@ class Query:
                         {
                             query
                             + "_abT_VDJ": "|".join(
-                                str(x) if present(x) else "None"
+                                str(x)
                                 for x in list(dict.fromkeys(abt_vdj))
+                                if present(x)
                             )
                         }
                     )
@@ -1697,8 +1700,9 @@ class Query:
                         {
                             query
                             + "_abT_VJ": "|".join(
-                                str(x) if present(x) else "None"
+                                str(x)
                                 for x in list(dict.fromkeys(abt_vj))
+                                if present(x)
                             )
                         }
                     )
@@ -1708,8 +1712,9 @@ class Query:
                         {
                             query
                             + "_gdT_VDJ": "|".join(
-                                str(x) if present(x) else "None"
+                                str(x)
                                 for x in list(dict.fromkeys(gdt_vdj))
+                                if present(x)
                             )
                         }
                     )
@@ -1718,8 +1723,9 @@ class Query:
                         {
                             query
                             + "_gdT_VJ": "|".join(
-                                str(x) if present(x) else "None"
+                                str(x)
                                 for x in list(dict.fromkeys(gdt_vj))
+                                if present(x)
                             )
                         }
                     )
