@@ -9,18 +9,18 @@
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Quickstart Tutorial:
+   :caption: Tutorial:
 
    notebooks/Q1-singularity-preprocessing.ipynb
-   notebooks/Q2-analysis.ipynb
-   notebooks/Q3-singularity-changeo.ipynb
-   notebooks/Q4-pseudobulk.ipynb
-   notebooks/Q5-object-prep.ipynb
+   notebooks/Q2-object-prep.ipynb
+   notebooks/Q3-analysis.ipynb
+   notebooks/Q4-singularity-changeo.ipynb
+   notebooks/Q5-pseudobulk.ipynb
 
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Extended Tutorial:
+   :caption: Advanced Guide:
 
    notebooks/1_dandelion_preprocessing-10x_data.ipynb
    notebooks/2_dandelion_filtering-10x_data.ipynb
