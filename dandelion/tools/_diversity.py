@@ -104,11 +104,7 @@ def clone_rarefaction(
             n = np.append(n, tot[i])
         rarecurve[res_.index[i]] = [
             rarefun(
-                np.array(
-                    res_.iloc[
-                        i,
-                    ]
-                ),
+                np.array(res_.iloc[i,]),
                 z,
             )
             for z in n
