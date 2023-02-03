@@ -2005,12 +2005,8 @@ def create_germlines(
                 # Define Receptor iterator
                 receptor_iter = (
                     (
-                        data.data.loc[
-                            x,
-                        ].sequence_id,
-                        data.data.loc[
-                            x,
-                        ],
+                        data.data.loc[x,].sequence_id,
+                        data.data.loc[x,],
                     )
                     for x in data.data.index
                 )
@@ -2042,12 +2038,8 @@ def create_germlines(
             # Define Receptor iterator
             receptor_iter = (
                 (
-                    data.loc[
-                        x,
-                    ].sequence_id,
-                    data.loc[
-                        x,
-                    ],
+                    data.loc[x,].sequence_id,
+                    data.loc[x,],
                 )
                 for x in data.index
             )
@@ -2741,7 +2733,6 @@ def quantify_mutations(
     if region_definition is None:
         reg_d = NULL
     else:
-
         reg_d = base.get(region_definition)
 
     if mutation_definition is None:
@@ -3392,7 +3383,6 @@ class FilterContigs:
                 h_locus_p = list(data1["locus"])
                 if len(h_p) > 1:
                     if "sequence_alignment" in data1:
-
                         (
                             data1,
                             h_p,
@@ -3423,7 +3413,6 @@ class FilterContigs:
                         sum_umi = sum(h_umi_p)
                         if "IGHD" in h_ccall_p:
                             if all(x in ["IGHM", "IGHD"] for x in h_ccall_p):
-
                                 h_ccall_p_igm_count = dict(
                                     data1[data1["c_call"] == "IGHM"][
                                         "duplicate_count"

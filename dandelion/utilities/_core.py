@@ -2351,7 +2351,6 @@ def initialize_metadata(
     vdj_gene_calls = ["v_call", "d_call", "j_call"]
     if collapse_alleles:
         for x in vdj_gene_calls:
-
             if x in vdj_data.data:
                 for c in tmp_metadata:
                     if x in c:
