@@ -1229,17 +1229,16 @@ def ensure_columns_transferred(
                 add_col = call + col
                 if add_col not in db_pass:
                     db_pass[add_col] = ""
+        db_pass = sanitize_data(db_pass)
+        db_pass.to_csv(passfile, sep="\t", index=False)
     if db_fail is not None:
         for call in ["d", "j"]:
             for col in addcols:
                 add_col = call + col
                 if add_col not in db_fail:
                     db_fail[add_col] = ""
-    # fill in blanks
-    db_pass = sanitize_data(db_pass)
-    db_pass.to_csv(passfile, sep="\t", index=False)
-    db_fail = sanitize_data(db_fail)
-    db_fail.to_csv(failfile, sep="\t", index=False)
+        db_fail = sanitize_data(db_fail)
+        db_fail.to_csv(failfile, sep="\t", index=False)
 
 
 def reassign_alleles(
