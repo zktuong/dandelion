@@ -1214,6 +1214,7 @@ def ensure_columns_transferred(
         "_score_blastn",
         "_sequence_alignment_blastn",
         "_germline_alignment_blastn",
+        "_source",
     ]
     if os.path.isfile(passfile):
         db_pass = load_data(passfile)
