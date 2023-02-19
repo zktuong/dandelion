@@ -1109,7 +1109,7 @@ def reannotate_genes(
                     verbose=verbose,
                 )
                 assign_DJ(
-                    filePath,
+                    fasta=filePath,
                     org=org,
                     loci=loci,
                     call="d",
@@ -1121,6 +1121,10 @@ def reannotate_genes(
                     overwrite=overwrite,
                     verbose=verbose,
                 )
+                ensure_columns_transferred(
+                    fasta=filePath,
+                    filename_prefix=filename_prefix,
+                )
 
     if loci == "tr":
         change_file_location(data, filename_prefix)
@@ -1130,6 +1134,112 @@ def reannotate_genes(
         make_all(data, filename_prefix, loci=loci)
         rename_dandelion(data, filename_prefix, endswith="_igblast_db-pass.tsv")
         update_j_multimap(data, filename_prefix)
+
+
+def return_pass_fail_filepaths(
+    fasta: str,
+    filename_prefix: Optional[str] = None,
+) -> Tuple[str, str, str]:
+    """Return necessary file paths for internal use only.
+
+    Parameters
+    ----------
+    fasta : str
+        path to fasta file.
+    filename_prefix : Optional[str], optional
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+
+    Returns
+    -------
+    Tuple[str, str, str]
+        file paths for downstream functions.
+
+    Raises
+    ------
+    FileNotFoundError
+        if path to fasta file is unknown.
+    """
+    file_path = check_filepath(
+        fasta, filename_prefix=filename_prefix, endswith=".fasta"
+    )
+    if file_path is None:
+        raise FileNotFoundError(
+            (
+                "Path to fasta file is unknown. Please specify "
+                + "path to fasta file or folder containing fasta file."
+            )
+        )
+    # read the original object
+    pass_path = "{}/tmp/{}.tsv".format(
+        os.path.dirname(file_path),
+        os.path.basename(file_path).split(".fasta")[0] + "_igblast_db-pass",
+    )
+    fail_path = "{}/tmp/{}.tsv".format(
+        os.path.dirname(file_path),
+        os.path.basename(file_path).split(".fasta")[0] + "_igblast_db-fail",
+    )
+    return file_path, pass_path, fail_path
+
+
+def ensure_columns_transferred(
+    fasta: str,
+    filename_prefix: Optional[str] = None,
+):
+    """Ensure the additional columns are successfully populated.
+
+    Parameters
+    ----------
+    fasta : str
+        path to fasta file.
+    filename_prefix : Optional[str], optional
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+    """
+    filePath, passfile, failfile = return_pass_fail_filepaths(
+        fasta, filename_prefix=filename_prefix
+    )
+    addcols = [
+        "_support_igblastn",
+        "_score_igblastn",
+        "_call_igblastn",
+        "_call_blastn",
+        "_identity_blastn",
+        "_alignment_length_blastn",
+        "_number_of_mismatches_blastn",
+        "_number_of_gap_openings_blastn",
+        "_sequence_start_blastn",
+        "_sequence_end_blastn",
+        "_germline_start_blastn",
+        "_germline_end_blastn",
+        "_support_blastn",
+        "_score_blastn",
+        "_sequence_alignment_blastn",
+        "_germline_alignment_blastn",
+        "_source",
+    ]
+    if os.path.isfile(passfile):
+        db_pass = load_data(passfile)
+    else:
+        db_pass = None
+    if os.path.isfile(failfile):
+        db_fail = load_data(failfile)
+    else:
+        db_fail = None
+    if db_pass is not None:
+        for call in ["d", "j"]:
+            for col in addcols:
+                add_col = call + col
+                if add_col not in db_pass:
+                    db_pass[add_col] = ""
+        db_pass = sanitize_data(db_pass)
+        db_pass.to_csv(passfile, sep="\t", index=False)
+    if db_fail is not None:
+        for call in ["d", "j"]:
+            for col in addcols:
+                add_col = call + col
+                if add_col not in db_fail:
+                    db_fail[add_col] = ""
+        db_fail = sanitize_data(db_fail)
+        db_fail.to_csv(failfile, sep="\t", index=False)
 
 
 def reassign_alleles(
@@ -4654,23 +4764,11 @@ def assign_DJ(
         whether or not to overwrite the assignments.
     verbose : bool, optional
         whether or not to print the blast command in terminal.
-
-    Raises
-    ------
-    FileNotFoundError
-        if path to fasta file is unknown.
     """
     # main function from here
-    filePath = check_filepath(
-        fasta, filename_prefix=filename_prefix, endswith=".fasta"
+    filePath, passfile, failfile = return_pass_fail_filepaths(
+        fasta, filename_prefix=filename_prefix
     )
-    if filePath is None:
-        raise FileNotFoundError(
-            (
-                "Path to fasta file is unknown. Please specify "
-                + "path to fasta file or folder containing fasta file."
-            )
-        )
 
     # run blast
     blast_out = run_blastn(
@@ -4685,16 +4783,6 @@ def assign_DJ(
         dust=dust,
         word_size=word_size,
         verbose=verbose,
-    )
-
-    # read the original object
-    passfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + "_igblast_db-pass",
-    )
-    failfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + "_igblast_db-fail",
     )
 
     transfer_assignment(
@@ -4947,7 +5035,7 @@ def transfer_assignment(
             db_pass[call + "_call_igblastn"] = pd.Series(db_pass_call)
             db_pass[call + "_call_igblastn"].fillna(value="", inplace=True)
             for col in blast_result:
-                if col != "sequence_id":
+                if col not in ["sequence_id", "cell_id"]:
                     db_pass[col + "_blastn"] = pd.Series(blast_result[col])
                     if col in [
                         call + "_call",
@@ -5184,7 +5272,7 @@ def transfer_assignment(
             db_fail[call + "_call_igblastn"] = pd.Series(db_fail_call)
             db_fail[call + "_call_igblastn"].fillna(value="", inplace=True)
             for col in blast_result:
-                if col != "sequence_id":
+                if col not in ["sequence_id", "cell_id"]:
                     db_fail[col + "_blastn"] = pd.Series(blast_result[col])
                     if col in [
                         call + "_call",
