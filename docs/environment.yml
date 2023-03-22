@@ -28,7 +28,7 @@ dependencies:
   - readthedocs-sphinx-ext
   - recommonmark
   - setuptools>=45
-  - palantir
+  - palantir==1.0.1
   - wheel
   - setuptools_scm[toml]>=6.0
   - numpy==1.23.5

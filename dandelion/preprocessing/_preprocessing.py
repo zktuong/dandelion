@@ -1497,6 +1497,7 @@ def reassign_alleles(
                     Path(outDir)
                     / (outDir + "_heavy" + informat_dict[fileformat])
                 ),
+                org=org,
                 v_germline=v_germline,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[novel],
@@ -1507,6 +1508,7 @@ def reassign_alleles(
                     Path(outDir)
                     / (outDir + "_heavy" + fileformat_dict[fileformat])
                 ),
+                org=org,
                 germtypes=germ_types,
                 mode="heavy",
                 genotype_fasta=outDir
@@ -1534,6 +1536,7 @@ def reassign_alleles(
                         Path(outDir)
                         / (outDir + "_heavy" + informat_dict[fileformat])
                     ),
+                    org=org,
                     v_germline=v_germline,
                     fileformat=fform_dict[fileformat],
                     novel_=novel_dict[False],
@@ -1544,6 +1547,7 @@ def reassign_alleles(
                         Path(outDir)
                         / (outDir + "_heavy" + fileformat_dict[fileformat])
                     ),
+                    org=org,
                     germtypes=germ_types,
                     mode="heavy",
                     genotype_fasta=str(
@@ -1580,6 +1584,7 @@ def reassign_alleles(
                     Path(outDir)
                     / (outDir + "_heavy" + informat_dict[fileformat])
                 ),
+                org=org,
                 v_germline=v_germline,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[False],
@@ -1590,6 +1595,7 @@ def reassign_alleles(
                     Path(outDir)
                     / (outDir + "_heavy" + fileformat_dict[fileformat])
                 ),
+                org=org,
                 germtypes=germ_types,
                 mode="heavy",
                 genotype_fasta=str(
@@ -1616,6 +1622,7 @@ def reassign_alleles(
     if "tigger_failed" in locals():
         creategermlines(
             str(Path(outDir) / (outDir + "_heavy" + informat_dict[fileformat])),
+            org=org,
             germtypes=germ_types,
             mode="heavy",
             genotype_fasta=None,
@@ -1626,6 +1633,7 @@ def reassign_alleles(
         )
         creategermlines(
             str(Path(outDir) / (outDir + "_light" + informat_dict[fileformat])),
+            org=org,
             germtypes=germ_types,
             mode="light",
             genotype_fasta=None,
@@ -1651,6 +1659,7 @@ def reassign_alleles(
     else:
         creategermlines(
             str(Path(outDir) / (outDir + "_light" + informat_dict[fileformat])),
+            org=org,
             germtypes=germ_types,
             mode="light",
             genotype_fasta=None,
@@ -1849,7 +1858,6 @@ def create_germlines(
     j_field: str = "j_call",
     germ_types: Literal["full", "dmask", "vonly", "regions"] = "dmask",
     fileformat: Literal["changeo", "airr"] = "airr",
-    initialize_metadata: bool = False,
 ) -> Dandelion:
     """
     Run CreateGermlines.py to reconstruct the germline V(D)J sequence.
@@ -1876,8 +1884,6 @@ def create_germlines(
         or germline for V segment only.
     fileformat : Literal["changeo", "airr"], optional
         format of V(D)J file/objects.
-    initialize_metadata : bool, optional
-        Whether to reinitialise the Dandelion `.metadata` slot.
 
     Returns
     -------
