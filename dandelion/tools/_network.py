@@ -835,7 +835,10 @@ def _fruchterman_reingold_layout(
         # Sparse matrix
         if len(G) < 500:  # sparse solver for large graphs
             raise ValueError
-        A = nx.to_scipy_sparse_matrix(G, weight=weight, dtype="f")
+        if int(nx.__version__[0]) > 2:
+            A = nx.to_scipy_sparse_array(G, weight=weight, dtype="f")
+        else:
+            A = nx.to_scipy_sparse_matrix(G, weight=weight, dtype="f")
         if k is None and fixed is not None:
             # We must adjust k by domain size for layouts not near 1x1
             nnodes, _ = A.shape
