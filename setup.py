@@ -26,6 +26,7 @@ setup(
         "docs": [
             "airr",
             "pyyaml",
+            "yamlordereddictloader",
             "nbsphinx",
             "sphinx-autodoc-typehints",
             "sphinx_rtd_theme",
