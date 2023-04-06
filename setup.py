@@ -24,7 +24,6 @@ setup(
     install_requires=requirements,
     extras_require={
         "docs": [
-            "yaml",
             "airr",
             "nbsphinx",
             "sphinx-autodoc-typehints",
