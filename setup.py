@@ -25,6 +25,7 @@ setup(
     extras_require={
         "docs": [
             "airr",
+            "pyyaml",
             "nbsphinx",
             "sphinx-autodoc-typehints",
             "sphinx_rtd_theme",
