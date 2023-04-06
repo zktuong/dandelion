@@ -43,3 +43,12 @@ addopts = "--cov --cov-report term-missing"
 testpaths = [
     "tests",
 ]
+
+[project.optional-dependencies]
+docs = [
+    "nbsphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx_rtd_theme",
+    "readthedocs-sphinx-ext",
+    "recommonmark",
+]
