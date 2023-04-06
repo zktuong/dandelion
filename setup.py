@@ -25,7 +25,7 @@ setup(
     extras_require={
         "docs": [
             "airr",
-            "biopython"
+            "biopython",
             "pyyaml",
             "yamlordereddictloader",
             "nbsphinx",
