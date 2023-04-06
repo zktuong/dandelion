@@ -1,1 +1,1 @@
-recursive-include bin tigger-genotype.R
+include bin/tigger-genotype.R
