@@ -15,7 +15,7 @@ setup(
     },
     author="zktuong",
     author_email="kt16@sanger.ac.uk",
-    description="sc-BCR analysis tool",
+    description="sc-TCR/BCR-seq analysis tool",
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/zktuong/dandelion/",
@@ -25,6 +25,7 @@ setup(
     extras_require={
         "docs": [
             "airr",
+            "biopython"
             "pyyaml",
             "yamlordereddictloader",
             "nbsphinx",
