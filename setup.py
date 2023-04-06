@@ -26,6 +26,8 @@ setup(
         "docs": [
             "airr",
             "biopython",
+            "changeo",
+            "presto",
             "pyyaml",
             "yamlordereddictloader",
             "nbsphinx",
