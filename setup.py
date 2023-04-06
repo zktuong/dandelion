@@ -22,6 +22,17 @@ setup(
     packages=find_packages(),
     setup_requires=["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"],
     install_requires=requirements,
+    extras_require={
+        "docs": [
+            "yaml",
+            "airr",
+            "nbsphinx",
+            "sphinx-autodoc-typehints",
+            "sphinx_rtd_theme",
+            "readthedocs-sphinx-ext",
+            "recommonmark",
+        ]
+    },
     package_data={"dandelion": ["bin/tigger-genotype.R"]},
     data_files=[("bin", ["bin/tigger-genotype.R"])],
     include_package_data=True,
