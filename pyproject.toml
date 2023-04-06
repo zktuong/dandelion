@@ -67,6 +67,7 @@ classifiers=[
     ]
 dependencies = [
     "setuptools_scm[toml]>=6.0",
+    "airr",
     "numpy>=1.18.4",
     "pandas>=1.0.3,<1.5.0",
     "changeo>=1.0.0",
