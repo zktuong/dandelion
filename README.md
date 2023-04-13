@@ -11,13 +11,14 @@
 Hi there! I have put together a python package for analyzing single cell BCR/TCR data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR/TCR analysis. It also includes a couple of functions for visualization. 
 
 ## Citation
-`dandelion` is now included in the the following manuscript published in [***Nature Medicine***](https://www.nature.com/articles/s41591-021-01329-2):
+`dandelion` is now published at [***Nature Biotechnology***](https://www.nature.com/articles/s41587-023-01734-7)!
+Please also cite the following if you use version 0.3.0 onwards:
+
+Suo, C., Polanski, K., Dann, E. et al. Dandelion uses the single-cell adaptive immune receptor repertoire to explore lymphocyte developmental origins. Nat Biotechnol (2023). https://doi.org/10.1038/s41587-023-01734-7
+
+`dandelion` was originally published at [***Nature Medicine***](https://www.nature.com/articles/s41591-021-01329-2):
 
 *Emily Stephenson, Gary Reynolds, Rachel A Botting, Fernando J Calero-Nieto, Michael Morgan, Zewen Kelvin Tuong, Karsten Bach, Waradon Sungnak, Kaylee B Worlock, Masahiro Yoshida, Natsuhiko Kumasaka, Katarzyna Kania, Justin Engelbert, Bayanne Olabi, Jarmila Stremenova Spegarova, Nicola K Wilson, Nicole Mende, Laura Jardine, Louis CS Gardner, Issac Goh, Dave Horsfall, Jim McGrath, Simone Webb, Michael W Mather, Rik GH Lindeboom, Emma Dann, Ni Huang, Krzysztof Polanski, Elena Prigmore, Florian Gothe, Jonathan Scott, Rebecca P Payne, Kenneth F Baker, Aidan T Hanrath, Ina CD Schim van der Loeff, Andrew S Barr, Amada Sanchez-Gonzalez, Laura Bergamaschi, Federica Mescia, Josephine L Barnes, Eliz Kilich, Angus de Wilton, Anita Saigal, Aarash Saleh, Sam M Janes, Claire M Smith, Nusayhah Gopee, Caroline Wilson, Paul Coupland, Jonathan M Coxhead, Vladimir Y Kiselev, Stijn van Dongen, Jaume Bacardit, Hamish W King, Anthony J Rostron, A John Simpson, Sophie Hambleton, Elisa Laurenti, Paul A Lyons, Kerstin B Meyer, Marko Z Nikolic, Christopher JA Duncan, Ken Smith, Sarah A Teichmann, Menna R Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.* ***Single-cell multi-omics analysis of the immune response in COVID-19***. *Nature Medicine 2021.04.20; doi: https://dx.doi.org/10.1038/s41591-021-01329-2*
-
-Please also cite the following pre-print if you use version 0.3.0 onwards:
-
-*Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik G.H. Lindeboom, Roser Vilarrasa Blasi, Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Zewen Kelvin Tuong, Menna R. Clatworthy, Sarah Teichmann.* ***Single cell antigen receptor analysis reveals lymphocyte developmental origins***. *bioRxiv 2022.11.18.517068; doi: https://doi.org/10.1101/2022.11.18.517068*
 
 ## Overview
 
