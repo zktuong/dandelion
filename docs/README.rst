@@ -137,7 +137,20 @@ post in the issue tracker and I will get back to you.
 Citation
 --------
 
-``dandelion`` is now included in the the following manuscript:
+Please also cite the following paper if you use version 0.3.0 onwards:
+
+.. [Suo2023] Suo *et al.* (2023),
+   *Dandelion uses the single-cell adaptive immune receptor repertoire to explore lymphocyte developmental origins*,
+   `Nature Biotechnology <https://www.nature.com/articles/s41587-023-01734-7>`__.
+
+*Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik GH Lindeboom, Roser Vilarrasa-Blasi,
+Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Lisa M Dratva, 
+Zewen Kelvin Tuong, Menna R Clatworthy, Sarah A Teichmann.*
+**Dandelion uses single cell adaptive immune receptor repertoire to explore
+lymphocyte developmental origins**. Nature Biotechnology 2023.04.13; doi:
+https://doi.org/10.1038/s41587-023-01734-7*
+
+``dandelion`` was originally published in:
 
 .. [Stephenson2021] Stephenson *et al.* (2021),
    *Single-cell multi-omics analysis of the immune response in COVID-19*,
@@ -163,15 +176,6 @@ Clatworthy, John C Marioni, Berthold Gottgens, Muzlifah Haniffa.*
 **Single-cell multi-omics analysis of the immune response in
 COVID-19**. *Nature Medicine 2021.04.20; doi:
 https://dx.doi.org/10.1038/s41591-021-01329-2*
-
-Please also cite the following pre-print if you use version 0.3.0 onwards:
-
-.. [Suo2022] Suo *et al.* (2022),
-   *Single cell antigen receptor analysis reveals lymphocyte developmental origins*,
-   `bioRxiv <https://doi.org/10.1101/2022.11.18.517068>`__.
-
-
-*Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik G.H. Lindeboom, Roser Vilarrasa Blasi, Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Zewen Kelvin Tuong, Menna R. Clatworthy, Sarah Teichmann.* **Single cell antigen receptor analysis reveals lymphocyte developmental origins**. *bioRxiv 2022.11.18.517068; doi: https://doi.org/10.1101/2022.11.18.517068*
 
 
 If you use the pre-processing tools/functions, please cite the relevant manuscripts from the immcantation suite, including:
@@ -228,6 +232,10 @@ References
    *Single cell antigen receptor analysis reveals lymphocyte developmental origins*,
    `bioRxiv <https://doi.org/10.1101/2022.11.18.517068>`__.
 
+.. [Suo2023] Suo *et al.* (2023),
+   *Dandelion uses the single-cell adaptive immune receptor repertoire to explore lymphocyte developmental origins*,
+   `Nature Biotechnology <https://www.nature.com/articles/s41587-023-01734-7>`__.
+   
 .. [Wolf2018] Wolf *et al.* (2018),
    *Scanpy: large-scale single-cell gene expression data analysis*,
    `Genome Biology <https://doi.org/10.1186/s13059-017-1382-0>`__.
