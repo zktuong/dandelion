@@ -6479,7 +6479,7 @@ def multimapper(filename: str) -> pd.DataFrame:
         df["j_support"] < 1e-3, :
     ]  # maybe not needing to filter if j_support has already been filtered
     mapped = pd.DataFrame(
-        index=set(df_new["sequence_id"]),
+        index=list(set(df_new["sequence_id"])),
         columns=[
             "multimappers",
             "multiplicity",
