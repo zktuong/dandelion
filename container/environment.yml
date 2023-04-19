@@ -20,4 +20,4 @@ dependencies:
 - pip:
   - scanpy>=1.7.0
   - sc-dandelion>=0.1.0
-  - rpy2==3.4.2
+  - rpy2>=3.4.2

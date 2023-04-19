@@ -20,4 +20,4 @@ dependencies:
 - pip:
   - scanpy>=1.7.0
   - git+https://www.github.com/zktuong/dandelion.git
-  - rpy2==3.4.2
+  - rpy2>=3.4.2
