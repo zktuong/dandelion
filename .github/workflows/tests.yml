@@ -20,13 +20,12 @@ jobs:
       keepgoing: ${{ steps.checkfiles.outputs.keepgoing }}
     steps:
       - id: files
-        uses: jitterbit/get-changed-files@b17fbb00bdc0c0f63fcf166580804b4d2cdc2a42
+        uses: jitterbit/get-changed-files@v1
         with:
           format: 'json'
       - id: checkfiles
         run: |
           if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* || ${{ steps.files.outputs.added_modified }} == *database* ]]; then
-            echo "::set-output name=keepgoing::true"
             echo "keepgoing=true" >> $GITHUB_OUTPUT
           else
             echo "keepgoing=false" >> $GITHUB_OUTPUT
