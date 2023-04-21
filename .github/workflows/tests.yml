@@ -24,11 +24,18 @@ jobs:
         uses: tj-actions/changed-files@v35
         with:
           files: |
-            *.yml*
-            *.py*
-            *test*
-            *requirements*
-            *database*
+            **/*.{yml,py}
+            container/database
+            container/tests
+            container/*.{yml,py}
+            tests
+
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+          echo ${{ steps.changed-files.outputs.any_changed }}
       - name: Get if changed files need to continue
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
