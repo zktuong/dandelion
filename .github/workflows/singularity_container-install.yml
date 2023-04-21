@@ -21,11 +21,12 @@ jobs:
         uses: tj-actions/changed-files@v35
         with:
           files: |
-            *.yml
-            *.py
-            *test*
-            *requirements*
-            *database*
+            **/*.{yml,py}
+            container/database
+            container/tests
+            container/*.{yml,py}
+            tests
+            
       
       - name: List all changed files
         run: |
