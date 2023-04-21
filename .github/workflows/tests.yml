@@ -31,7 +31,12 @@ jobs:
             container/tests
             container/*.{yml,py}
             tests
-
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+          echo ${{ steps.changed-files.outputs.any_changed }}
   tests:
     needs:
       - changes
