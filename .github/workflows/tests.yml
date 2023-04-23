@@ -9,29 +9,34 @@ on:
       - "master"
 
 env:
-  cache-version: 'cache-v1'
+  cache-version: "cache-v1"
 
 jobs:
   changes:
     name: Checking changed files
     runs-on: ubuntu-latest
     outputs:
-      changed_file: ${{ steps.files.outputs.added_modified }}
-      keepgoing: ${{ steps.checkfiles.outputs.keepgoing }}
+      keepgoing: ${{ steps.changed-files.outputs.any_changed }}
     steps:
-      - id: files
-        uses: jitterbit/get-changed-files@b17fbb00bdc0c0f63fcf166580804b4d2cdc2a42
+      - uses: actions/checkout@v3
         with:
-          format: 'json'
-      - id: checkfiles
+          fetch-depth: 0
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: |
+            **/*.{yml,py}
+            container/database
+            container/tests
+            container/*.{yml,py}
+            tests
+      - name: List all changed files
         run: |
-          if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* || ${{ steps.files.outputs.added_modified }} == *database* ]]; then
-            echo "::set-output name=keepgoing::true"
-            echo "keepgoing=true" >> $GITHUB_OUTPUT
-          else
-            echo "keepgoing=false" >> $GITHUB_OUTPUT
-          fi
-
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+          echo ${{ steps.changed-files.outputs.any_changed }}
   tests:
     needs:
       - changes
@@ -44,14 +49,14 @@ jobs:
       max-parallel: 10
       matrix:
         config:
-          - { python-version: 3.7, os: ubuntu-latest}
-          - { python-version: 3.8, os: ubuntu-latest}
-          - { python-version: 3.9, os: ubuntu-latest}
-          - { python-version: "3.10", os: ubuntu-latest}
-          - { python-version: 3.7, os: macos-latest}
-          - { python-version: 3.8, os: macos-latest}
-          - { python-version: 3.9, os: macos-latest}
-          - { python-version: "3.10", os: macos-latest}
+          - { python-version: 3.7, os: ubuntu-latest }
+          - { python-version: 3.8, os: ubuntu-latest }
+          - { python-version: 3.9, os: ubuntu-latest }
+          - { python-version: "3.10", os: ubuntu-latest }
+          - { python-version: 3.7, os: macos-latest }
+          - { python-version: 3.8, os: macos-latest }
+          - { python-version: 3.9, os: macos-latest }
+          - { python-version: "3.10", os: macos-latest }
           # disabled until it's fixed.
     runs-on: ${{ matrix.config.os }}
     env:
@@ -62,147 +67,145 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
 
-    - name: Install ubuntu system dependencies
-      if: matrix.config.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get install libcurl4-openssl-dev
-        sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev libhdf5-serial-dev libcurl4-gnutls-dev
+      - name: Install ubuntu system dependencies
+        if: matrix.config.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install libcurl4-openssl-dev
+          sudo apt-get update -y && sudo apt-get install -y zlib1g-dev libglpk-dev libgmp3-dev libxml2-dev libicu-dev libhdf5-serial-dev libcurl4-gnutls-dev
 
-    - name: Install macOS system dependencies
-      if: matrix.config.os == 'macos-latest'
-      run: |
-        brew install cairo pkg-config autoconf automake libtool
+      - name: Install macOS system dependencies
+        if: matrix.config.os == 'macos-latest'
+        run: |
+          brew install cairo pkg-config autoconf automake libtool
 
-    - name: Cache conda
-      uses: actions/cache@v3
-      env:
-        # Increase this value to reset cache if etc/example-environment.yml has not changed
-        CACHE_NUMBER: 0
-      with:
-        path: ~/conda_pkgs_dir
-        key:
-          ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-          hashFiles('environment.yml') }}
+      - name: Cache conda
+        uses: actions/cache@v3
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('environment.yml') }}
 
-    - name: Setup Miniconda
-      uses: conda-incubator/setup-miniconda@v2.1.1
-      with:
-        auto-activate-base: true
-        auto-update-conda : true
-        activate-environment: dandelion
-        channels: conda-forge, bioconda, anaconda, defaults
-        channel-priority: true
-        python-version: ${{ matrix.config.python-version }}
-        environment-file: environment.yml
-        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          auto-activate-base: true
+          auto-update-conda: true
+          activate-environment: dandelion
+          channels: conda-forge, bioconda, anaconda, defaults
+          channel-priority: true
+          python-version: ${{ matrix.config.python-version }}
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
-    - name: Display Python version
-      run: |
-        python --version
-        which python
+      - name: Display Python version
+        run: |
+          python --version
+          which python
 
-    - name: Setup blast and igblast
-      # just in case this happens again in the future
-      # conda install -c bioconda igblast blast ncbi-vdb=2.11.0
-      # https://github.com/bioconda/bioconda-recipes/issues/33479
-      run: |
-        conda install -c bioconda "igblast>=1.17.0" blast
+      - name: Setup blast and igblast
+        # just in case this happens again in the future
+        # conda install -c bioconda igblast blast ncbi-vdb=2.11.0
+        # https://github.com/bioconda/bioconda-recipes/issues/33479
+        run: |
+          conda install -c bioconda "igblast>=1.17.0" blast
 
-    - name: Test if blast works
-      run: |
-        blastn -h
+      - name: Test if blast works
+        run: |
+          blastn -h
 
-    - name: Test if igblast works
-      run: |
-        igblastn -h
+      - name: Test if igblast works
+        run: |
+          igblastn -h
 
-    - id: R
-      name: Check R version
-      run: |
-        R --version > VERSION
-        echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
-        echo "mainbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
-        echo "subbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')" >> $GITHUB_OUTPUT
-        echo "biocversion=$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
-      shell: bash -l {0}
+      - id: R
+        name: Check R version
+        run: |
+          R --version > VERSION
+          echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
+          echo "mainbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "subbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')" >> $GITHUB_OUTPUT
+          echo "biocversion=$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
+        shell: bash -l {0}
 
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v2
-      with:
-        r-version: ${{ steps.R.outputs.version}}
-    
-    - name: Cache ubuntu R packages
-      if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os == 'ubuntu-latest'"
-      uses: actions/cache@v3
-      with:
-        path: /home/runner/work/_temp/Library
-        key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
-        restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ steps.R.outputs.version}}
 
-    - name: Cache macOS R packages
-      if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os != 'ubuntu-latest'"
-      uses: actions/cache@v3
-      with:
-        path: ${{ env.R_LIBS_USER }}
-        key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
-        restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
+      - name: Cache ubuntu R packages
+        if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os == 'ubuntu-latest'"
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/work/_temp/Library
+          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
 
-    - name: Setup r-lib/remotes
-      run: |
-        options(install.packages.compile.from.source = "never")
-        install.packages(c('remotes', 'optparse', 'RCurl', 'XML','matrixStats', 'stringi'))
-      shell: Rscript {0}
+      - name: Cache macOS R packages
+        if: "!contains(github.event.head_commit.message, '/nocache') && matrix.config.os != 'ubuntu-latest'"
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
 
-    
-    - name: Install Dandelion
-      run: |
-        python -m pip install .
-        python -m pip install palantir==1.0.1
-        python -m pip install git+https://github.com/emdann/milopy.git
+      - name: Setup r-lib/remotes
+        run: |
+          options(install.packages.compile.from.source = "never")
+          install.packages(c('remotes', 'optparse', 'RCurl', 'XML','matrixStats', 'stringi'))
+        shell: Rscript {0}
 
-    - name: Install ubuntu R dependencies
-      if: matrix.config.os == 'ubuntu-latest'
-      run: |
-        options(install.packages.compile.from.source = "never")
-        remotes::install_cran("BiocManager")
-        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
-      shell: Rscript {0}
+      - name: Install Dandelion
+        run: |
+          python -m pip install .
+          python -m pip install palantir==1.0.1
+          python -m pip install git+https://github.com/emdann/milopy.git
 
-    - name: Install macOS R dependencies
-      if: matrix.config.os != 'ubuntu-latest'
-      run: |
-        options(install.packages.compile.from.source = "never")
-        remotes::install_cran("BiocManager")
-        BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
-        install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
-      shell: Rscript {0}
+      - name: Install ubuntu R dependencies
+        if: matrix.config.os == 'ubuntu-latest'
+        run: |
+          options(install.packages.compile.from.source = "never")
+          remotes::install_cran("BiocManager")
+          BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
+          install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
+        shell: Rscript {0}
 
-    - name: Test if R dependencies are installed properly
-      run: |
-        Rscript tests/r_dependencies.R
-      shell: bash -l {0}
+      - name: Install macOS R dependencies
+        if: matrix.config.os != 'ubuntu-latest'
+        run: |
+          options(install.packages.compile.from.source = "never")
+          remotes::install_cran("BiocManager")
+          BiocManager::install(c('Biostrings', 'GenomicAlignments', 'IRanges'))
+          install.packages(c('shazam', 'alakazam', 'tigger', 'optparse'))
+        shell: Rscript {0}
 
-    - name: Test with pytest
-      run: |
-        python -m pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+      - name: Test if R dependencies are installed properly
+        run: |
+          Rscript tests/r_dependencies.R
+        shell: bash -l {0}
 
-    - name: Show coverage
-      run: |
-        coverage report
+      - name: Test with pytest
+        run: |
+          python -m pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        directory: ./coverage/reports/
-        env_vars: ${{ format('OS={0},PYTHON={1}', matrix.config.os, matrix.config.python-version) }}
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        path_to_write_report: ./coverage/codecov_report.txt
-        verbose: true
+      - name: Show coverage
+        run: |
+          coverage report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          directory: ./coverage/reports/
+          env_vars: ${{ format('OS={0},PYTHON={1}', matrix.config.os, matrix.config.python-version) }}
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          path_to_write_report: ./coverage/codecov_report.txt
+          verbose: true

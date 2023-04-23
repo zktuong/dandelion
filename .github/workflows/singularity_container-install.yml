@@ -1,10 +1,10 @@
 name: Test Singularity Build
-on: 
+on:
   # push:
   #   branches:
   #     - master
   # Do the builds on all pull requests (to test them)
-  pull_request: 
+  pull_request:
     branches:
       - "*"
 
@@ -13,21 +13,27 @@ jobs:
     name: Checking changed files
     runs-on: ubuntu-latest
     outputs:
-      changed_file: ${{ steps.files.outputs.added_modified }}
-      keepgoing: ${{ steps.checkfiles.outputs.keepgoing }}
+      keepgoing: ${{ steps.changed-files.outputs.any_changed }}
     steps:
-      - id: files
-        uses: jitterbit/get-changed-files@b17fbb00bdc0c0f63fcf166580804b4d2cdc2a42
+      - uses: actions/checkout@v3
         with:
-          format: 'json'
-      - id: checkfiles
+          fetch-depth: 0
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: |
+            **/*.{yml,py}
+            container/database
+            container/tests
+            container/*.{yml,py}
+            tests
+      - name: List all changed files
         run: |
-          if [[ ${{ steps.files.outputs.added_modified }} == *.yml* || ${{ steps.files.outputs.added_modified }} == *.py* || ${{ steps.files.outputs.added_modified }} == *test* || ${{ steps.files.outputs.added_modified }} == *requirements* || ${{ steps.files.outputs.added_modified }} == *database* ]] ; then
-            echo "keepgoing=true" >> $GITHUB_OUTPUT
-          else
-            echo "keepgoing=false" >> $GITHUB_OUTPUT
-          fi
-
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+          echo ${{ steps.changed-files.outputs.any_changed }}
   container:
     needs:
       - changes
@@ -64,7 +70,7 @@ jobs:
           cd singularity-ce-${SINGULARITY_VERSION} && \
           ./mconfig -p /usr/local && \
           make -C builddir && \
-          sudo make -C builddir install          
+          sudo make -C builddir install
       - name: Check out code for the container build
         uses: actions/checkout@v2
 
