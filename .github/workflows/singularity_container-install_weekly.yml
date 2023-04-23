@@ -1,8 +1,8 @@
 name: Weekly Test Singularity Build
-on: 
+on:
   schedule:
     # every Sunday at 0:00
-    - cron: '0 0 * * 0'
+    - cron: "0 0 * * 0"
 
 jobs:
   container:
@@ -38,7 +38,7 @@ jobs:
           cd singularity-ce-${SINGULARITY_VERSION} && \
           ./mconfig -p /usr/local && \
           make -C builddir && \
-          sudo make -C builddir install          
+          sudo make -C builddir install
       - name: Check out code for the container build
         uses: actions/checkout@v2
 
