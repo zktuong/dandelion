@@ -346,7 +346,11 @@ def barplot(
     fig, ax = plt.subplots(figsize=figsize)
 
     # plot
-    sns.barplot(x="index", y=color, data=res, palette=palette, **kwargs)
+    try:
+        sns.barplot(x="index", y=color, data=res, palette=palette, **kwargs)
+    except ValueError:
+        yname = "proportion" if normalize else "count"
+        sns.barplot(x=color, y=yname, data=res, palette=palette, **kwargs)
     # change some parts
     if title is None:
         ax.set_title(color.replace("_", " ") + " usage")
