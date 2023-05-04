@@ -1593,7 +1593,7 @@ class Query:
                     cols.update({query + "_VJ": np.nan})
             elif retrieve_mode == "merge":
                 cols.update(
-                    {query: "|".join(x for x in set(vdj + vj) if present(x))}
+                    {query: "|".join(x for x in (vdj + vj) if present(x))}
                 )
             elif retrieve_mode == "split":
                 if len(vdj) > 0:
@@ -1947,7 +1947,7 @@ class Query:
                     {
                         query: "|".join(
                             x
-                            for x in set(
+                            for x in (
                                 b_vdj
                                 + abt_vdj
                                 + gdt_vdj
