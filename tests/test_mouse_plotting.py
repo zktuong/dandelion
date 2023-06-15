@@ -43,9 +43,7 @@ def test_clone_overlap(
             dummy_adata_mouse,
             groupby="sample_idx",
         )
-    ddl.tl.clone_overlap(
-        dummy_adata_mouse, groupby="sample_idx", colorby="sample_idx"
-    )
+    ddl.tl.clone_overlap(dummy_adata_mouse, groupby="sample_idx")
     assert "clone_overlap" in dummy_adata_mouse.uns
     ddl.pl.clone_overlap(
         dummy_adata_mouse,
