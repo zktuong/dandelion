@@ -1604,7 +1604,7 @@ def clone_overlap(
         In the future, there will be the option to use something like a jaccard index.
     clone_key : Optional[str], optional
         column name for clones. `None` defaults to 'clone_id'.
-    
+
     Returns
     -------
     pd.DataFrame
