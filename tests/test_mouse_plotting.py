@@ -42,27 +42,21 @@ def test_clone_overlap(
         ddl.pl.clone_overlap(
             dummy_adata_mouse,
             groupby="sample_idx",
-            colorby="sample_idx",
         )
-    ddl.tl.clone_overlap(
-        dummy_adata_mouse, groupby="sample_idx", colorby="sample_idx"
-    )
+    ddl.tl.clone_overlap(dummy_adata_mouse, groupby="sample_idx")
     assert "clone_overlap" in dummy_adata_mouse.uns
     ddl.pl.clone_overlap(
         dummy_adata_mouse,
         groupby="sample_idx",
-        colorby="sample_idx",
     )
     with pytest.raises(ValueError):
         ddl.pl.clone_overlap(
             vdj,
             groupby="sample_idx",
-            colorby="sample_idx",
         )
     G = ddl.pl.clone_overlap(
         dummy_adata_mouse,
         groupby="sample_idx",
-        colorby="sample_idx",
         weighted_overlap=False,
         save="test.png",
         return_graph=True,
@@ -72,6 +66,5 @@ def test_clone_overlap(
     ddl.pl.clone_overlap(
         dummy_adata_mouse,
         groupby="sample_idx",
-        colorby="sample_idx",
         as_heatmap=True,
     )

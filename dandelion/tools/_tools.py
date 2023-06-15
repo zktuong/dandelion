@@ -1584,12 +1584,10 @@ def clone_size(
 def clone_overlap(
     vdj_data: Union[Dandelion, AnnData],
     groupby: str,
-    colorby: str,
     min_clone_size: Optional[int] = None,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
-    verbose: bool = True,
-) -> Union[AnnData, pd.DataFrame]:
+) -> pd.DataFrame:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
 
@@ -1598,9 +1596,7 @@ def clone_overlap(
     vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
-        column name in obs/metadata for collapsing to nodes in circos plot.
-    colorby : str
-        column name in obs/metadata for grouping and color of nodes in circos plot.
+        column name in obs/metadata for collapsing to columns in the clone_id x groupby data frame.
     min_clone_size : Optional[int], optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     weighted_overlap : bool, optional
@@ -1608,13 +1604,11 @@ def clone_overlap(
         In the future, there will be the option to use something like a jaccard index.
     clone_key : Optional[str], optional
         column name for clones. `None` defaults to 'clone_id'.
-    verbose : bool, optional
-        whether to print progress
 
     Returns
     -------
-    Union[AnnData, pd.DataFrame]
-        Either `AnnData` or a `pandas.DataFrame`.
+    pd.DataFrame
+        clone_id x groupby overlap :class:`pandas.core.frame.DataFrame'.
 
     Raises
     ------

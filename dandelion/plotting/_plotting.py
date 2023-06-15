@@ -834,8 +834,7 @@ def spectratype(
 def clone_overlap(
     adata: AnnData,
     groupby: str,
-    colorby: str,
-    min_clone_size: int = 2,
+    colorby: Optional[str] = None,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
     color_mapping: Optional[Union[list, dict]] = None,
@@ -863,10 +862,8 @@ def clone_overlap(
         `AnnData` object.
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
-    colorby : str
-        column name in obs for grouping and color of nodes in circos plot.
-    min_clone_size : int, optional
-        minimum size of clone for plotting connections.
+    colorby : Optional[str], optional
+        column name in obs for grouping and color of nodes in plot. Must be a same or subcategory of the `groupby` categories e.g. `groupby="group_tissue", colorby="tissue"`.
     weighted_overlap : bool, optional
         if True, instead of collapsing to overlap to binary, edge thickness will reflect the number of
         cells found in the overlap. In the future, there will be the option to use something like a jaccard
@@ -903,7 +900,6 @@ def clone_overlap(
     ValueError
         if input is not `AnnData`.
     """
-    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
@@ -983,6 +979,7 @@ def clone_overlap(
                     )
                 ]
 
+    colorby = groupby if colorby is None else colorby
     # create graph
     G = nx.Graph()
     # add in the nodes
