@@ -864,7 +864,7 @@ def clone_overlap(
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
     colorby : str
-        column name in obs for grouping and color of nodes in circos plot.
+        column name in obs for grouping and color of nodes in plot. Must be a subcategory of the `groupby` categories e.g. `groupby="group_tissue", colorby="tissue"`.
     min_clone_size : int, optional
         minimum size of clone for plotting connections.
     weighted_overlap : bool, optional
