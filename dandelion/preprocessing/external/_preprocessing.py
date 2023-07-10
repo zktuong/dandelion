@@ -26,7 +26,6 @@ def assigngenes_igblast(
     igblast_db: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
-    verbose: bool = False,
 ):
     """
     Reannotate with IgBLASTn.
@@ -41,8 +40,6 @@ def assigngenes_igblast(
         organism for germline sequences.
     loci : Literal["ig", "tr"], optional
         `ig` or `tr` mode for running igblastn.
-    verbose : bool, optional
-        whether or not to print the command used in terminal.
 
     Raises
     ------
@@ -101,7 +98,6 @@ def makedb_igblast(
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     extended: bool = True,
-    verbose: bool = False,
 ):
     """
     Parse IgBLAST output to airr format.
@@ -118,8 +114,6 @@ def makedb_igblast(
         organism of germline sequences.
     extended : bool, optional
         whether or not to parse extended 10x annotations.
-    verbose : bool, optional
-        whether or not to print the command used in terminal.
 
     Raises
     ------
@@ -216,7 +210,7 @@ def makedb_igblast(
     run(cmd2, env=env)  # logs are printed to terminal
 
 
-def parsedb_heavy(db_file: str, verbose: bool = False):
+def parsedb_heavy(db_file: str):
     """
     Parse AIRR table (heavy chain contigs only).
 
@@ -224,8 +218,6 @@ def parsedb_heavy(db_file: str, verbose: bool = False):
     ----------
     db_file : str
         path to AIRR table.
-    verbose : bool, optional
-        whether or not to print the command used in terminal. Default is False.
     """
     outname = os.path.basename(db_file).split(".tsv")[0] + "_heavy"
 
@@ -249,7 +241,7 @@ def parsedb_heavy(db_file: str, verbose: bool = False):
     run(cmd)  # logs are printed to terminal
 
 
-def parsedb_light(db_file: str, verbose: bool = False):
+def parsedb_light(db_file: str):
     """
     Parse AIRR table (light chain contigs only).
 
@@ -257,8 +249,6 @@ def parsedb_light(db_file: str, verbose: bool = False):
     ----------
     db_file : str
         path to AIRR table.
-    verbose : bool, optional
-        whether or not to print the command used in terminal. Default is False.
 
     """
     outname = os.path.basename(db_file).split(".tsv")[0] + "_light"
@@ -292,7 +282,6 @@ def creategermlines(
     v_field: Optional[Literal["v_call", "v_call_genotyped"]] = None,
     cloned: bool = False,
     mode: Optional[Literal["heavy", "light"]] = None,
-    verbose: bool = False,
 ):
     """
     Wrapper for CreateGermlines.py for reconstructing germline sequences.
@@ -718,7 +707,6 @@ def tigger_genotype(
     org: Literal["human", "mouse"] = "human",
     fileformat: Literal["airr", "changeo"] = "airr",
     novel_: Literal["YES", "NO"] = "YES",
-    verbose: bool = False,
 ):
     """
     Reassign alleles with TIgGER in R.
@@ -738,8 +726,6 @@ def tigger_genotype(
         format for running tigger. Default is 'airr'. Also accepts 'changeo'.
     novel_ : Literal["YES", "NO"], optional
         whether or not to run novel allele discovery.
-    verbose : bool, optional
-        whether or not to print the command used in terminal.
 
     Raises
     ------

@@ -1072,7 +1072,6 @@ def reannotate_genes(
                 igblast_db=igblast_db,
                 org=org,
                 loci=loci,
-                verbose=verbose,
             )
         elif flavour == "strict":
             run_igblastn(
@@ -1089,7 +1088,6 @@ def reannotate_genes(
             org=org,
             germline=germline,
             extended=extended,
-            verbose=verbose,
         )
         # block this for now, until I figure out if it's
         # worth it
@@ -1258,7 +1256,6 @@ def reassign_alleles(
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3),
     sample_id_dictionary: Optional[Dict[str, str]] = None,
     filename_prefix: Optional[Union[List[str], str]] = None,
-    verbose: bool = False,
 ):
     """
     Correct allele calls based on a personalized genotype using tigger.
@@ -1303,8 +1300,6 @@ def reassign_alleles(
     filename_prefix : Optional[Union[List[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
-    verbose : bool, optional
-        Whether or not to print the command used in the terminal.
 
     Raises
     ------
@@ -1501,7 +1496,6 @@ def reassign_alleles(
                 v_germline=v_germline,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[novel],
-                verbose=verbose,
             )
             creategermlines(
                 str(
@@ -1518,7 +1512,6 @@ def reassign_alleles(
                 + germline_dict[fileformat],
                 germline=germline,
                 v_field=v_field,
-                verbose=verbose,
                 cloned=cloned,
             )
             _ = load_data(
@@ -1540,7 +1533,6 @@ def reassign_alleles(
                     v_germline=v_germline,
                     fileformat=fform_dict[fileformat],
                     novel_=novel_dict[False],
-                    verbose=verbose,
                 )
                 creategermlines(
                     str(
@@ -1556,7 +1548,6 @@ def reassign_alleles(
                     ),
                     germline=germline,
                     v_field=v_field,
-                    verbose=verbose,
                     cloned=cloned,
                 )
                 _ = load_data(
@@ -1588,7 +1579,6 @@ def reassign_alleles(
                 v_germline=v_germline,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[False],
-                verbose=verbose,
             )
             creategermlines(
                 str(
@@ -1604,7 +1594,6 @@ def reassign_alleles(
                 ),
                 germline=germline,
                 v_field=v_field,
-                verbose=verbose,
                 cloned=cloned,
             )
             _ = load_data(
@@ -1628,7 +1617,6 @@ def reassign_alleles(
             genotype_fasta=None,
             germline=germline,
             v_field="v_call",
-            verbose=verbose,
             cloned=cloned,
         )
         creategermlines(
@@ -1639,7 +1627,6 @@ def reassign_alleles(
             genotype_fasta=None,
             germline=germline,
             v_field="v_call",
-            verbose=verbose,
             cloned=cloned,
         )
         logg.info(
@@ -1665,7 +1652,6 @@ def reassign_alleles(
             genotype_fasta=None,
             germline=germline,
             v_field="v_call",
-            verbose=verbose,
             cloned=cloned,
         )
         heavy = load_data(

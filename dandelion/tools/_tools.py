@@ -910,10 +910,9 @@ def define_clones(
     doublets: Literal["drop", "count"] = "drop",
     fileformat: Literal["changeo", "airr"] = "airr",
     ncpu: Optional[int] = None,
-    dirs: Optional[str] = None,
     outFilePrefix: Optional[int] = None,
     key_added: Optional[int] = None,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ) -> Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
@@ -951,14 +950,12 @@ def define_clones(
         Format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     ncpu : Optional[int], optional
         Number of cpus for parallelization. Default is 1, no parallelization.
-    dirs : Optional[str], optional
-        If specified, out file will be in this location.
     outFilePrefix : Optional[int], optional
         If specified, the out file name will have this prefix. `None` defaults to 'dandelion_define_clones'
     key_added : Optional[int], optional
         Column name to add for define_clones.
-    verbose : bool, optional
-        Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
+    additional_args : List[str], optional
+        Additional arguments to pass to `DefineClones.py`.
 
     Returns
     -------
@@ -1074,6 +1071,7 @@ def define_clones(
         "--vf",
         v_field,
     ]
+    cmd = cmd + additional_args
 
     def clusterLinkage(cell_series, group_series):
         """
