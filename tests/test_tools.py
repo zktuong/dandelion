@@ -26,8 +26,8 @@ def test_setup(
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5"
     f2 = create_testfolder / "test2.h5"
-    vdj.write_h5(f)
-    vdj2.write_h5(f2)
+    vdj.write_h5ddl(f)
+    vdj2.write_h5ddl(f2)
     assert len(list(create_testfolder.iterdir())) == 2
     vdj3 = ddl.read_h5ddl(f)
     assert vdj3.metadata is not None
@@ -56,7 +56,7 @@ def test_find_clones(create_testfolder):
 def test_clone_size(create_testfolder):
     """test clone_size"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     ddl.tl.clone_size(vdj)
     assert not vdj.metadata.clone_id_size.empty
     ddl.tl.clone_size(vdj, max_size=3)
@@ -71,8 +71,8 @@ def test_generate_network(create_testfolder, resample, expected):
     """test generate network"""
     f = create_testfolder / "test.h5"
     f2 = create_testfolder / "test2.h5"
-    vdj = ddl.read_h5(f)
-    vdj2 = ddl.read_h5(f2)
+    vdj = ddl.read_h5ddl(f)
+    vdj2 = ddl.read_h5ddl(f2)
     if resample is not None:
         vdj = ddl.tl.generate_network(
             vdj, downsample=resample, layout_method="mod_fr"
@@ -96,7 +96,7 @@ def test_generate_network(create_testfolder, resample, expected):
 def test_find_clones_key(create_testfolder):
     """test different clone key"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     ddl.tl.find_clones(vdj, key_added="test_clone")
     assert not vdj.metadata.test_clone.empty
     assert vdj.data.test_clone.dtype == "object"
@@ -109,7 +109,7 @@ def test_find_clones_key(create_testfolder):
 def test_transfer(create_testfolder, dummy_adata2):
     """test transfer"""
     f = create_testfolder / "test2.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     vdj, adata = ddl.pp.filter_contigs(vdj, dummy_adata2)
     ddl.tl.transfer(dummy_adata2, vdj)
     assert "clone_id" in dummy_adata2.obs
@@ -124,7 +124,7 @@ def test_transfer(create_testfolder, dummy_adata2):
 def test_diversity_gini(create_testfolder):
     """test gini"""
     f = create_testfolder / "test2.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     ddl.tl.clone_diversity(vdj, groupby="sample_id")
     assert not vdj.metadata.clone_network_vertex_size_gini.empty
     assert not vdj.metadata.clone_network_cluster_size_gini.empty
@@ -145,7 +145,7 @@ def test_diversity_gini(create_testfolder):
 def test_diversity_gini2(create_testfolder):
     """test gini 2"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     ddl.tl.clone_diversity(vdj, groupby="sample_id")
     tmp = ddl.tl.clone_diversity(
         vdj, groupby="sample_id", update_obs_meta=False
@@ -158,7 +158,7 @@ def test_diversity_gini2(create_testfolder):
 def test_diversity_chao(create_testfolder, resample):
     """test chao"""
     f = create_testfolder / "test2.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     if resample:
         ddl.tl.clone_diversity(
             vdj,
@@ -214,7 +214,7 @@ def test_diversity_anndata(create_testfolder, method, diversitykey):
 def test_diversity_shannon(create_testfolder, resample, normalize):
     """test shannon"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     if resample:
         ddl.tl.clone_diversity(
             vdj,
@@ -256,7 +256,7 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")
     ddl.tl.transfer(adata, vdj)
     f = create_testfolder / "test.h5"
-    vdj.write_h5(f)
+    vdj.write_h5ddl(f)
     f2 = create_testfolder / "test.h5ad"
     adata.write_h5ad(f2)
 
@@ -294,7 +294,7 @@ def test_diversity_rarefaction2(create_testfolder):
 def test_diversity_rarefaction3(create_testfolder):
     """test rarefaction3"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
     ddl.update_metadata(
@@ -315,7 +315,7 @@ def test_diversity_rarefaction3(create_testfolder):
 def test_diversity_gini3(create_testfolder, metric):
     """test gini more"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
     ddl.update_metadata(
@@ -348,7 +348,7 @@ def test_diversity_gini3(create_testfolder, metric):
 def test_diversity2a(create_testfolder):
     """test div"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
     ddl.update_metadata(
@@ -367,7 +367,7 @@ def test_diversity2a(create_testfolder):
 def test_diversity2b(create_testfolder):
     """test div2"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
     ddl.update_metadata(
@@ -386,7 +386,7 @@ def test_diversity2b(create_testfolder):
 def test_diversity2c(create_testfolder):
     """test div3"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
     ddl.update_metadata(
@@ -404,7 +404,7 @@ def test_diversity2c(create_testfolder):
 def test_extract_edge_weights(create_testfolder):
     """test edge weights"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     x = ddl.tl.extract_edge_weights(vdj)
     assert x is None
     x = ddl.tl.extract_edge_weights(vdj, expanded_only=True)

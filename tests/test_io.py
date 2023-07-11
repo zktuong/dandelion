@@ -43,7 +43,7 @@ def test_write_annotated(create_testfolder, airr_reannotated):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-def test_readwrite_h5(create_testfolder):
+def test_readwrite_h5ddl(create_testfolder):
     """test_readwrite_h5"""
     out_file1 = str(create_testfolder) + "/test_airr_reannotated.tsv"
     out_file2 = str(create_testfolder) + "/test_airr_reannotated.h5"
@@ -51,23 +51,23 @@ def test_readwrite_h5(create_testfolder):
     assert not vdj.data.np1_length.empty
     assert not vdj.data.np2_length.empty
     assert not vdj.data.junction_length.empty
-    vdj.write_h5(out_file2)
-    vdj2 = ddl.read_h5(out_file2)
+    vdj.write_h5ddl(out_file2)
+    vdj2 = ddl.read_h5ddl(out_file2)
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
-    vdj.write_h5(out_file2, complib="blosc:lz4")
-    vdj2 = ddl.read_h5(out_file2)
+    vdj.write_h5ddl(out_file2, complib="blosc:lz4")
+    vdj2 = ddl.read_h5ddl(out_file2)
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
-    vdj.write_h5(out_file2, compression="blosc:lz4")
-    vdj2 = ddl.read_h5(out_file2)
+    vdj.write_h5ddl(out_file2, compression="blosc:lz4")
+    vdj2 = ddl.read_h5ddl(out_file2)
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
     with pytest.raises(ValueError):
-        vdj.write_h5(out_file2, complib="blosc:lz4", compression="blosc:lz4")
+        vdj.write_h5ddl(out_file2, complib="blosc:lz4", compression="blosc:lz4")
 
 
 @pytest.mark.usefixtures("create_testfolder")

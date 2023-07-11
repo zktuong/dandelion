@@ -92,7 +92,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5"
     f2 = create_testfolder / "test.h5ad"
-    vdj.write_h5(f1)
+    vdj.write_h5ddl(f1)
     adata.write_h5ad(f2)
     assert dat.shape[0] == 1278
     assert vdj.data.shape[0] == 948
@@ -105,7 +105,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
 def test_generate_network_sfdp(create_testfolder):
     """test generate network sfdp"""
     f = create_testfolder / "test.h5"
-    vdj = ddl.read_h5(f)
+    vdj = ddl.read_h5ddl(f)
     with pytest.raises(ValueError):
         ddl.tl.generate_network(vdj, compute_layout=False)
     ddl.tl.find_clones(vdj)
