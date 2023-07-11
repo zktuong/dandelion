@@ -433,7 +433,7 @@ def assign_isotype(
     blastdb: Optional[str] = None,
     allele: bool = False,
     filename_prefix: Optional[str] = None,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
@@ -473,9 +473,8 @@ def assign_isotype(
         whether or not to return allele calls.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
-    verbose : bool, optional
-        whether or not to print the blast command in terminal.
-
+    additional_args : List[str], optional
+        additional arguments to pass to `blastn`.
     Raises
     ------
     FileNotFoundError
@@ -671,7 +670,7 @@ def assign_isotype(
     }
 
     filePath = check_filepath(
-        fasta, filename_prefix=filename_prefix, endswith=".fasta"
+        fasta, filename_prefix=filename_prefix, ends_with=".fasta"
     )
     if filePath is None:
         raise FileNotFoundError(
@@ -694,33 +693,33 @@ def assign_isotype(
             + "qstart qend sstart send evalue bitscore qseq sseq"
         ),
         dust="no",
-        verbose=verbose,
+        additional_args=additional_args,
     )
     blast_out.drop_duplicates(subset="sequence_id", keep="first", inplace=True)
 
     _10xfile = check_filepath(
         fasta,
         filename_prefix=filename_prefix,
-        endswith="_annotations.csv",
+        ends_with="_annotations.csv",
     )
     _airrfile = check_filepath(
         fasta,
         filename_prefix=filename_prefix,
-        endswith="_igblast.tsv",
-        subdir="tmp",
+        ends_with="_igblast.tsv",
+        sub_dir="tmp",
     )
     _processedfile = check_filepath(
         fasta,
         filename_prefix=filename_prefix,
-        endswith="_igblast_db-pass_genotyped.tsv",
-        subdir="tmp",
+        ends_with="_igblast_db-pass_genotyped.tsv",
+        sub_dir="tmp",
     )
     if _processedfile is None:
         _processedfile = check_filepath(
             fasta,
             filename_prefix=filename_prefix,
-            endswith="_igblast_db-pass.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-pass.tsv",
+            sub_dir="tmp",
         )
         out_ex = "_igblast_db-pass.tsv"
     else:
@@ -837,7 +836,7 @@ def assign_isotype(
                 + theme(legend_title=element_blank())
             )
         if save_plot:
-            _file3 = "{}/assign_isotype.pdf".format(os.path.dirname(filePath))
+            _file3 = filePath.parent / "assign_isotype.pdf"
             save_as_pdf_pages([p], filename=_file3)
             if show_plot:  # pragma: no cover
                 print(p)
@@ -847,7 +846,7 @@ def assign_isotype(
     # move and rename
     move_to_tmp(fasta, filename_prefix)
     make_all(fasta, filename_prefix, loci="ig")
-    rename_dandelion(fasta, filename_prefix, endswith=out_ex, subdir="tmp")
+    rename_dandelion(fasta, filename_prefix, ends_with=out_ex, sub_dir="tmp")
     update_j_multimap(fasta, filename_prefix)
 
 
@@ -943,13 +942,12 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
-    verbose: bool = False,
     additional_args: Dict[str, List[str]] = {
         "assigngenes": [],
         "makedb": [],
         "igblastn": [],
-        "blastn_d": [],
         "blastn_j": [],
+        "blastn_d": [],
     },
 ):
     """
@@ -1018,8 +1016,11 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
-    verbose : bool, optional
-        Whether or not to print log commands.
+    additional_args : Dict[str, List[str]], optional
+        additional arguments to pass to `AssignGenes.py`, `MakeDb.py`, `igblastn` and `blastn`.
+        This accepts a dictionary with keys as the name of the sub-function (`assigngenes`, `makedb`,
+        `igblastn`, `blastn_j` and `blastn_d`) and the records as lists of arguments to pass to the
+        relevant scripts/tools.
 
     Raises
     ------
@@ -1040,7 +1041,7 @@ def reannotate_genes(
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
         filePath = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
+            data[i], filename_prefix=filename_prefix[i], ends_with=".fasta"
         )
         if filePath is None:
             if filename_prefix[i] is not None:
@@ -1056,7 +1057,7 @@ def reannotate_genes(
                     + "Please specify path to fasta file or folder containing fasta file."
                 )
 
-        logg.info("Processing {} \n".format(filePath))
+        logg.info(f"Processing {str(filePath)} \n")
 
         if flavour == "original":
             assigngenes_igblast(
@@ -1124,7 +1125,7 @@ def reannotate_genes(
             mask_dj(data, filename_prefix, d_evalue, j_evalue)
         move_to_tmp(data, filename_prefix)
         make_all(data, filename_prefix, loci=loci)
-        rename_dandelion(data, filename_prefix, endswith="_igblast_db-pass.tsv")
+        rename_dandelion(data, filename_prefix, ends_with="_igblast_db-pass.tsv")
         update_j_multimap(data, filename_prefix)
 
 
@@ -1152,7 +1153,7 @@ def return_pass_fail_filepaths(
         if path to fasta file is unknown.
     """
     file_path = check_filepath(
-        fasta, filename_prefix=filename_prefix, endswith=".fasta"
+        fasta, filename_prefix=filename_prefix, ends_with=".fasta"
     )
     if file_path is None:
         raise FileNotFoundError(
@@ -1289,8 +1290,8 @@ def reassign_alleles(
         'filtered'.
     additional_args : Dict[str, List[str]], optional
         additional arguments to pass to `tigger-genotype.R` and `CreateGermlines.py`.
-        This accepts a dictionary with keys as the name of the sub-function (tiggger or creategermlines)
-        and the records as lists of arguments to pass to the scripts.
+        This accepts a dictionary with keys as the name of the sub-function (`tigger` or `creategermlines`)
+        and the records as lists of arguments to pass to the relevant scripts/tools.
 
     Raises
     ------
@@ -1360,8 +1361,8 @@ def reassign_alleles(
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith=informat_dict[fileformat],
-            subdir="tmp",
+            ends_with=informat_dict[fileformat],
+            sub_dir="tmp",
         )
         if filePath is None:
             raise FileNotFoundError(
@@ -1394,7 +1395,7 @@ def reassign_alleles(
 
     # make output directory
     out_dir = Path(combined_folder)
-    out_dir.mkdirs(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     # concatenate
     if len(filepathlist_heavy) > 1:
         logg.info("Concatenating objects")
@@ -2113,13 +2114,7 @@ def filter_contigs(
             )
 
         if os.path.isfile(str(data)):
-            write_airr(
-                _dat,
-                "{}/{}_filtered.tsv".format(
-                    os.path.dirname(data),
-                    os.path.basename(data).split(".tsv")[0],
-                ),
-            )
+            write_airr(_dat, data.parent / (data.stem + "_filtered.tsv"))
         else:
             if save is not None:
                 if save.endswith(".tsv"):
@@ -4015,12 +4010,12 @@ def run_igblastn(
     min_d_match : int, optional
         minimum D nucleotide match.
     additional_args: List[str], optional
-        additional arguments to pass to igblastn.
+        additional arguments to pass to `igblastn`.
     """
     env, igdb = set_igblast_env(igblast_db)
 
     outfolder = Path(fasta).parent.resolve() / "tmp"
-    outfolder.mkdirs(parents=True, exist_ok=True)
+    outfolder.mkdir(parents=True, exist_ok=True)
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
     loci_type = {"ig": "Ig", "tr": "TCR"}
@@ -4163,7 +4158,7 @@ def assign_DJ(
     overwrite : bool, optional
         whether or not to overwrite the assignments.
     additional_args: List[str], optional
-        additional arguments to pass to blastn.
+        additional arguments to pass to `blastn`.
     """
     # main function from here
     file_path, pass_file, fail_file = return_pass_fail_filepaths(
@@ -4248,7 +4243,7 @@ def run_blastn(
         Word size for wordfinder algorithm (length of best perfect match).
         Must be >=4. `None` defaults to 4.
     additional_args: List[str], optional
-        additional arguments to pass to blastn.
+        additional arguments to pass to `blastn`.
 
     Returns
     -------
@@ -5000,13 +4995,7 @@ def check_contigs(
             "No contigs passed filtering. Are you sure that the cell barcodes are matching?"
         )
     if os.path.isfile(str(data)):
-        write_airr(
-            dat,
-            "{}/{}_checked.tsv".format(
-                os.path.dirname(data),
-                os.path.basename(data).split(".tsv")[0],
-            ),
-        )
+        write_airr(dat, data.parent / (data.stem + "_checked.tsv"))
     else:
         if save is not None:
             if save.endswith(".tsv"):
@@ -5893,37 +5882,37 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
         filePath0 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_j_blast.tsv",
-            subdir="tmp",
+            ends_with="_j_blast.tsv",
+            sub_dir="tmp",
         )
         filePath1 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-pass.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-pass.tsv",
+            sub_dir="tmp",
         )
         filePath1g = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-pass_genotyped.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-pass_genotyped.tsv",
+            sub_dir="tmp",
         )
         filePath2 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-all.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-all.tsv",
+            sub_dir="tmp",
         )
         filePath3 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-fail.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-fail.tsv",
+            sub_dir="tmp",
         )
         filePath4 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_dandelion.tsv",
+            ends_with="_dandelion.tsv",
         )
 
         jmm_transfer_cols = [

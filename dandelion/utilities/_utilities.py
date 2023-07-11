@@ -670,7 +670,7 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-pass.tsv",
+            ends_with="_igblast_db-pass.tsv",
         )
         if filePath is not None:
             dat = load_data(filePath)

@@ -987,11 +987,7 @@ class Dandelion:
         ValueError
             if missing columns in Dandelion.data.
         """
-
-        if clone_key is None:
-            clonekey = "clone_id"
-        else:
-            clonekey = clone_key
+        clonekey = "clone_id" if clone_key is None else clone_key
 
         cols = [
             "sequence_id",
@@ -2504,11 +2500,7 @@ def update_metadata(
     ValueError
         if missing columns in Dandelion.data.
     """
-
-    if clone_key is None:
-        clonekey = "clone_id"
-    else:
-        clonekey = clone_key
+    clonekey = "clone_id" if clone_key is None else clone_key
 
     cols = [
         "sequence_id",
