@@ -10,6 +10,7 @@ import pandas as pd
 
 from airr import RearrangementSchema
 from collections import defaultdict
+from pathlib import Path
 from subprocess import run
 from typing import Tuple, Dict, Union, Optional, TypeVar, List
 
@@ -202,49 +203,73 @@ def isBZIP(filename: str) -> bool:
 
 
 def check_filepath(
-    s,
+    file_or_folder_path: Union[str, Path],
     filename_prefix: Optional[str] = None,
-    endswith: Optional[str] = None,
-    subdir: Optional[str] = None,
-):
-    """Check filepath."""
+    ends_with: Optional[str] = None,
+    sub_dir: Optional[str] = None,
+    within_dandelion: bool = True,
+) -> Union[Path, None]:
+    """
+    Checks whether file path exists.
+
+    Parameters
+    ----------
+    file_or_folder_path : Union[str, Path]
+        either a string or Path object pointing to a file or folder.
+    filename_prefix : Optional[str], optional
+        the prefix of the filename.
+    ends_with : Optional[str], optional
+        the suffix of the filename. Can be flexible i.e. not just the extension.
+    sub_dir : Optional[str], optional
+        the subdirectory to look for the file if specified
+    within_dandelion : bool, optional
+        whether to look for the file within a 'dandelion' sub folder.
+
+    Returns
+    -------
+    Union[Path, None]
+        Path object if file is found, else None.
+    """
     if filename_prefix is None:
         filename_pre = "filtered"
     else:
         filename_pre = filename_prefix
 
-    if endswith is None:
-        ends_with = ""
+    ends_with = "" if ends_with is None else ends_with
+    input_path = (
+        Path(file_or_folder_path).expanduser()
+        if str(file_or_folder_path)[0] == "~"
+        else Path(file_or_folder_path)
+    )
+    if input_path.is_file() and str(input_path).endswith(ends_with):
+        return input_path
+    elif input_path.is_dir():
+        if within_dandelion:
+            for child in input_path.iterdir():
+                if child.name[0] != ".":
+                    if child.is_dir() and child.name == "dandelion":
+                        out_dir = child
+                        if sub_dir is not None:
+                            out_dir = out_dir / sub_dir
+                        for file in out_dir.iterdir():
+                            if file.name[0] != ".":
+                                if file.is_file() and str(file).endswith(
+                                    ends_with
+                                ):
+                                    if file.name.startswith(
+                                        filename_pre + "_contig"
+                                    ):
+                                        return file
+        else:
+            if sub_dir is not None:
+                input_path = input_path / sub_dir
+            for file in input_path.iterdir():
+                if file.name[0] != ".":
+                    if file.is_file() and str(file).endswith(ends_with):
+                        if file.name.startswith(filename_pre + "_contig"):
+                            return file
     else:
-        ends_with = endswith
-
-    filePath = None
-    if os.path.isfile(str(s)) and str(s).endswith(ends_with):
-        filePath = s
-    elif os.path.isdir(str(s)):
-        files = os.listdir(s)
-        for file in files:
-            out_ = s.rstrip("/") + "/"
-            if os.path.isdir(out_ + os.path.basename(file)):
-                if file == "dandelion":
-                    if subdir is None:
-                        out_ = out_ + os.path.basename(file) + "/"
-                    else:
-                        out_ = (
-                            out_ + os.path.basename(file) + "/" + subdir + "/"
-                        )
-                    for x in os.listdir(out_):
-                        if x.endswith(ends_with):
-                            if (
-                                str(x).split(ends_with)[0]
-                                == filename_pre + "_contig"
-                            ):
-                                filePath = out_ + x
-                            else:
-                                continue
-            else:
-                continue
-    return filePath
+        return None
 
 
 def check_fastapath(fasta, filename_prefix: Optional[str] = None):
@@ -663,16 +688,16 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
             write_airr(dat, filePath)
 
 
-def write_airr(data, save):
+def write_airr(data: pd.DataFrame, filename: str):
     """Save as airr formatted file."""
     data = sanitize_data(data)
-    data.to_csv(save, sep="\t", index=False)
+    data.to_csv(filename, sep="\t", index=False)
 
 
-def write_blastn(data, save):
+def write_blastn(data: pd.DataFrame, filename: str):
     """Write blast output."""
     data = sanitize_blastn(data)
-    data.to_csv(save, sep="\t", index=False)
+    data.to_csv(filename, sep="\t", index=False)
 
 
 ## from skbio==0.5.6
@@ -947,3 +972,77 @@ def update_rearrangement_status(self):
         else:
             contig_status.append("unknown")
     self.data["rearrangement_status"] = contig_status
+
+
+def set_germline_env(
+    germline: Optional[str] = None,
+    org: Literal["human", "mouse"] = "human",
+) -> Tuple[Dict, Path]:
+    """
+    Set the germline variable
+
+    Parameters
+    ----------
+    germline : Optional[str], optional
+        path to germline database. None defaults to environmental variable $GERMLINE.
+    org : Literal["human", "mouse"], optional
+        organism for germline sequences.
+
+    Returns
+    -------
+    Tuple[Dict, Path]
+        environment dictionary and path to germline database.
+
+    Raises
+    ------
+    KeyError
+        if $GERMLINE environmental variable is not set.
+    """
+    env = os.environ.copy()
+    if germline is None:
+        try:
+            gml = Path(env["GERMLINE"])
+        except KeyError:
+            raise KeyError(
+                (
+                    "Environmental variable $GERMLINE is missing. "
+                    "Please 'export GERMLINE=/path/to/database/germlines/'"
+                )
+            )
+        _gml = gml / "imgt" / org / "vdj"
+    return env, _gml
+
+
+def set_igblast_env(igblast_db: Optional[str] = None) -> Tuple[Dict, Path]:
+    """
+    Set the germline variable
+
+    Parameters
+    ----------
+    igblast_db : Optional[str], optional
+        path to igblast database. None defaults to environmental variable $IGDATA.
+
+    Returns
+    -------
+    Tuple[Dict, Path]
+        environment dictionary and path to igblast database.
+
+    Raises
+    ------
+    KeyError
+        if $IGDATA environmental variable is not set.
+    """
+    env = os.environ.copy()
+    if igblast_db is None:
+        try:
+            igdb = Path(env["IGDATA"])
+        except KeyError:
+            raise KeyError(
+                (
+                    "Environmental variable $IGDATA is missing. "
+                    "Please 'export IGDATA=/path/to/database/igblast/'"
+                )
+            )
+    else:
+        igdb = env["IGDATA"] = Path(igblast_db)
+    return env, igdb

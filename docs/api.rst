@@ -89,6 +89,7 @@ Utilities: `utl`
    concat
    to_scirpy
    from_scirpy
+   write_fasta
    
 
 Dandelion

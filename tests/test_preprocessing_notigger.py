@@ -19,12 +19,7 @@ except KeyError:
 def test_write_fasta(create_testfolder, fasta_10x):
     """test_write_fasta"""
     fastafilename = str(create_testfolder / "all_contig.fasta")
-    fh = open(fastafilename, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x:
-        out = ">" + line + "\n" + fasta_10x[line] + "\n"
-        ddl.utl.Write_output(out, fastafilename)
+    ddl.utl.write_fasta(fasta_10x, fastafilename)
 
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x")

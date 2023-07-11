@@ -148,12 +148,7 @@ def test_read10xvdj_cr6(
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
     os.remove(json_file)
-    fh = open(fasta_file, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x_cr6:
-        out = ">" + line + "\n" + fasta_10x_cr6[line] + "\n"
-        ddl.utl.Write_output(out, fasta_file)
+    ddl.utl.write_fasta(fasta_10x_cr6, fasta_file)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
@@ -172,12 +167,7 @@ def test_read10xvdj(create_testfolder, annotation_10x, fasta_10x):
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
-    fh = open(fasta_file, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x:
-        out = ">" + line + "\n" + fasta_10x[line] + "\n"
-        ddl.utl.Write_output(out, fasta_file)
+    ddl.utl.write_fasta(fasta_10x, fasta_file)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
@@ -208,12 +198,7 @@ def test_read10xvdj_cr6_folder(
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
     os.remove(json_file)
-    fh = open(fasta_file, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x_cr6:
-        out = ">" + line + "\n" + fasta_10x_cr6[line] + "\n"
-        ddl.utl.Write_output(out, fasta_file)
+    ddl.utl.write_fasta(fasta_10x_cr6, fasta_file)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
@@ -232,12 +217,7 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
-    fh = open(fasta_file, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x:
-        out = ">" + line + "\n" + fasta_10x[line] + "\n"
-        ddl.utl.Write_output(out, fasta_file)
+    ddl.utl.write_fasta(fasta_10x, fasta_file)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
@@ -258,12 +238,7 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     assert vdj.metadata.shape[0] == 5
     adata = ddl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 5
-    fh = open(fasta_file, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x:
-        out = ">" + line + "\n" + fasta_10x[line] + "\n"
-        ddl.utl.Write_output(out, fasta_file)
+    ddl.utl.write_fasta(fasta_10x, fasta_file)
     vdj = ddl.read_10x_vdj(str(create_testfolder))
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5

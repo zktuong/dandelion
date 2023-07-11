@@ -25,12 +25,7 @@ def test_loadtravdv2(airr_travdv):
 def test_write_fasta_tr(create_testfolder, fasta_10x_travdv):
     """testwrite_fasta_tr"""
     out_fasta = str(create_testfolder) + "/filtered_contig.fasta"
-    fh = open(out_fasta, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x_travdv:
-        out = ">" + line + "\n" + fasta_10x_travdv[line] + "\n"
-        ddl.utl.Write_output(out, out_fasta)
+    ddl.utl.write_fasta(fasta_10x_travdv, out_fasta)
     assert len(list(create_testfolder.iterdir())) == 1
 
 

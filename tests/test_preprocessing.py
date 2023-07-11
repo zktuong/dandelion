@@ -22,12 +22,7 @@ except KeyError:
 def test_write_fasta(create_testfolder, fasta_10x, filename, expected):
     """test_write_fasta"""
     out_fasta = str(create_testfolder) + "/" + filename + "_contig.fasta"
-    fh = open(out_fasta, "w")
-    fh.close()
-    out = ""
-    for line in fasta_10x:
-        out = ">" + line + "\n" + fasta_10x[line] + "\n"
-        ddl.utl.Write_output(out, out_fasta)
+    ddl.utl.write_fasta(fasta_10x, out_fasta)
     assert len(list(create_testfolder.iterdir())) == expected
 
 
