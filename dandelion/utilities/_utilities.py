@@ -668,7 +668,7 @@ def write_blastn(data: pd.DataFrame, filename: str):
 
 
 ## from skbio==0.5.6
-def _validate_counts_vector(counts, suppress_cast=False):
+def _validate_counts_vector(counts):
     """Validate and convert input to an acceptable counts vector type.
     Note: may not always return a copy of `counts`!
     """
@@ -1035,7 +1035,7 @@ def set_blast_env(blast_db: Optional[str] = None) -> Tuple[Dict, Path]:
             raise KeyError(
                 (
                     "Environmental variable $BLASTDB is missing. "
-                    "Please 'export BLASTDB=/path/to/database/igblast/'"
+                    "Please 'export BLASTDB=/path/to/database/blast/'"
                 )
             )
     else:
