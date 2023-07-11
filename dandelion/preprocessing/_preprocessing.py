@@ -1125,7 +1125,9 @@ def reannotate_genes(
             mask_dj(data, filename_prefix, d_evalue, j_evalue)
         move_to_tmp(data, filename_prefix)
         make_all(data, filename_prefix, loci=loci)
-        rename_dandelion(data, filename_prefix, ends_with="_igblast_db-pass.tsv")
+        rename_dandelion(
+            data, filename_prefix, ends_with="_igblast_db-pass.tsv"
+        )
         update_j_multimap(data, filename_prefix)
 
 
