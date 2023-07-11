@@ -25,6 +25,7 @@ def assigngenes_igblast(
     igblast_db: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
+    additional_args: List[str] = [],
 ):
     """
     Reannotate with IgBLASTn.
@@ -39,6 +40,8 @@ def assigngenes_igblast(
         organism for germline sequences.
     loci : Literal["ig", "tr"], optional
         `ig` or `tr` mode for running igblastn.
+    additional_args : List[str], optional
+        Additional arguments to pass to `AssignGenes.py`.
     """
     env, igdb = set_igblast_env(igblast_db=igblast_db)
     fasta_path = Path(fasta)
@@ -65,7 +68,7 @@ def assigngenes_igblast(
             "-o",
             str(outfolder / outfile),
         ]
-
+        cmd = cmd + additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
