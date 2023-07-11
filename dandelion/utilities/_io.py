@@ -628,10 +628,7 @@ def read_10x_vdj(
         if contig_annotations.csv and all_contig_annotations.json file(s) not found in the input folder.
 
     """
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = "filtered" if filename_prefix is None else filename_prefix
 
     if os.path.isdir(str(path)):
         files = os.listdir(path)

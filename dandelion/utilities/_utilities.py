@@ -230,10 +230,7 @@ def check_filepath(
     Union[Path, None]
         Path object if file is found, else None.
     """
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = "filtered" if filename_prefix is None else filename_prefix
 
     ends_with = "" if ends_with is None else ends_with
     input_path = (
@@ -274,10 +271,7 @@ def check_filepath(
 
 def check_fastapath(fasta, filename_prefix: Optional[str] = None):
     """Check fastapath."""
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = "filtered" if filename_prefix is None else filename_prefix
 
     filePath = None
     if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
