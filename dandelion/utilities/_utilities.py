@@ -208,7 +208,7 @@ def check_filepath(
     ends_with: Optional[str] = None,
     sub_dir: Optional[str] = None,
     within_dandelion: bool = True,
-) -> Union[Path, None]:
+) -> Path:
     """
     Checks whether file path exists.
 

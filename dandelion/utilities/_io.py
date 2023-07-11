@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-# @Author: kt16
-"""io module."""
 import bz2
 import gzip
+import h5py
 import json
 import os
 import re
@@ -18,6 +17,7 @@ import pandas as pd
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
+from io import TextIOWrapper
 from pathlib import Path
 from scanpy import logging as logg
 from typing import Union, Optional, List
@@ -104,7 +104,7 @@ CELLRANGER = [
 ]
 
 
-def fasta_iterator(fh: str):
+def fasta_iterator(fh: TextIOWrapper):
     """Read in a fasta file as an iterator."""
     while True:
         line = fh.readline()
@@ -125,7 +125,9 @@ def fasta_iterator(fh: str):
             return
 
 
-def write_fasta(fasta_dict: Dict[str, str], out_fasta: str, overwrite=True):
+def write_fasta(
+    fasta_dict: Dict[str, str], out_fasta: Union[str, Path], overwrite=True
+):
     """
     Generic fasta writer using fasta_iterator
 
@@ -147,7 +149,7 @@ def write_fasta(fasta_dict: Dict[str, str], out_fasta: str, overwrite=True):
         write_output(out, out_fasta)
 
 
-def write_output(out: str, file: str):
+def write_output(out: str, file: Union[str, Path]):
     """General line writer."""
     fh = open(file, "a")
     fh.write(out)
@@ -434,7 +436,7 @@ def read_10x_airr(file: str) -> Dandelion:
 
 def to_scirpy(data: Dandelion, transfer: bool = False, **kwargs) -> AnnData:
     """
-    Convert a `Dandelion` object to scirpy's format.
+    Convert a `Dandelion` object to `scirpy`'s format.
 
     Parameters
     ----------
@@ -596,7 +598,7 @@ def read_10x_vdj(
     verbose: bool = False,
 ) -> Union[Dandelion, pd.DataFrame]:
     """
-    A parser to read .csv and .json files directly from folder containing 10x cellranger-outouts.
+    A parser to read .csv and .json files directly from folder containing 10x cellranger outputs.
 
     This function parses the 10x output files into an AIRR compatible format.
 
@@ -1080,7 +1082,7 @@ def rename_dandelion(
     ends_with="_igblast_db-pass_genotyped.tsv",
     sub_dir: Optional[str] = None,
 ):
-    """Rename final dandlion file."""
+    """Rename final dandelion file."""
     if type(data) is not list:
         data = [data]
     if type(filename_prefix) is not list:

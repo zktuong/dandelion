@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# @Author: kt16
-
 import anndata as ad
 import functools
 import numpy as np
@@ -62,7 +60,7 @@ def format_fasta(
     sep: Optional[str] = None,
     remove_trailing_hyphen_number: bool = True,
     high_confidence_filtering: bool = False,
-    out_dir: Optional[str] = None,
+    out_dir: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[str] = None,
 ):
     """
@@ -77,11 +75,10 @@ def format_fasta(
     suffix : Optional[str], optional
         suffix to append to the headers/contig ids.
     sep : Optional[str], optional
-        separator after prefix or before suffix to append to the headers/contig
-        ids.
+        separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
-        ell/contig barcodes.
+        cell/contig barcodes.
     high_confidence_filtering : bool, optional
         whether ot not to filter to only `high confidence` contigs.
     out_dir : Optional[str], optional
@@ -94,10 +91,7 @@ def format_fasta(
     FileNotFoundError
         if path to fasta file is unknown.
     """
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = "filtered" if filename_prefix is None else filename_prefix
 
     file_path = check_filepath(
         fasta,
@@ -112,7 +106,6 @@ def format_fasta(
             + "specify path to fasta file or folder containing fasta file. "
             + "Starting folder should only contain 1 fasta file."
         )
-
     fh = open(file_path, "r")
     seqs = {}
     if sep is None:
@@ -178,14 +171,8 @@ def format_fasta(
                 newheader = str(header)
             seqs[newheader] = sequence
     fh.close()
-    if file_path.is_file() or file_path.is_dir():
-        base_dir = file_path.parent
-    else:
-        base_dir = Path.cwd()
-    if out_dir is None:
-        out_dir = base_dir / "dandelion"
-    else:
-        out_dir = Path(out_dir)
+    base_dir = file_path.parent if file_path.is_file() else Path.cwd()
+    out_dir = base_dir / "dandelion" if out_dir is None else Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     # format the barcode and contig_id in the corresponding annotation file too
     anno = check_filepath(
@@ -339,25 +326,24 @@ def format_fastas(
         list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
     """
-    if type(fastas) is not list:
-        fastas = [fastas]
-    if type(filename_prefix) is not list:
+    fastas = [fastas] if not isinstance(fastas, list) else fastas
+    if not isinstance(filename_prefix, list):
         filename_prefix = [filename_prefix]
         if len(filename_prefix) == 1:
             if len(fastas) > 1:
                 filename_prefix = filename_prefix * len(fastas)
     if prefix is not None:
-        if type(prefix) is not list:
+        if not isinstance(prefix, list):
             prefix = [prefix]
         prefix_dict = dict(zip(fastas, prefix))
     if suffix is not None:
-        if type(suffix) is not list:
+        if not isinstance(suffix, list):
             suffix = [suffix]
         suffix_dict = dict(zip(fastas, suffix))
 
     for i in tqdm(
         range(0, len(fastas)),
-        desc="Formating fasta(s) ",
+        desc="Formatting fasta(s) ",
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
         if prefix is None and suffix is None:
@@ -421,7 +407,6 @@ def format_fastas(
 
 def assign_isotype(
     fasta: str,
-    fileformat: Literal["blast", "changeo", "airr"] = "blast",
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e-4,
     correct_c_call: bool = True,
@@ -431,7 +416,6 @@ def assign_isotype(
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
     blastdb: Optional[str] = None,
-    allele: bool = False,
     filename_prefix: Optional[str] = None,
     additional_args: List[str] = [],
 ):
@@ -442,8 +426,6 @@ def assign_isotype(
     ----------
     fasta : str
         path to fasta file.
-    fileformat : Literal["blast", "changeo", "airr"], optional
-        format of V(D)J file/objects.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
     evalue : float, optional
@@ -468,9 +450,7 @@ def assign_isotype(
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
     blastdb : Optional[str], optional
-        path to blast database. Defaults to `BLASTDB` environmental variable.
-    allele : bool, optional
-        whether or not to return allele calls.
+        path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     additional_args : List[str], optional
@@ -485,7 +465,7 @@ def assign_isotype(
     def two_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
     ):
-        """Pairwise alignmet for two genes.
+        """Pairwise alignment for two genes.
 
         Parameters
         ----------
@@ -510,7 +490,7 @@ def assign_isotype(
     def three_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
     ):
-        """Pairwise alignmet for three genes.
+        """Pairwise alignment for three genes.
 
         Parameters
         ----------
@@ -545,7 +525,7 @@ def assign_isotype(
     def four_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
     ):
-        """Pairwise alignmet for four genes.
+        """Pairwise alignment for four genes.
 
         Parameters
         ----------
@@ -601,7 +581,7 @@ def assign_isotype(
         data: pd.DataFrame,
         primers_dict: Optional[Dict[str, Dict[str, str]]] = None,
     ) -> pd.DataFrame:
-        """Pairiwise alignment for c genes.
+        """Pairwise alignment for c genes.
 
         Parameters
         ----------
@@ -613,7 +593,7 @@ def assign_isotype(
         Returns
         -------
         pd.DataFrame
-            Output dataframe with c_call adjusted.
+            Output data frame with c_call adjusted.
         """
         dat = data.copy()
         if primers_dict is None:
@@ -631,14 +611,11 @@ def assign_isotype(
                 "IGLC7": {
                     "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
                     "TGTCTCATAA",
-                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
-                    "GTGTCTCGTAA",
+                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCGTAA",
                 },
                 "IGLC3": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
-                    "TGTCTCATAA",
-                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
-                    "GTGTCTCATAA",
+                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
+                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCATAA",
                 },
                 "IGLC6": {
                     "IGLC": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA",
@@ -663,12 +640,6 @@ def assign_isotype(
         return dat
 
     # main function from here
-    format_dict = {
-        "changeo": "_igblast_db-pass",
-        "blast": "_igblast_db-pass",
-        "airr": "_igblast_gap",
-    }
-
     filePath = check_filepath(
         fasta, filename_prefix=filename_prefix, ends_with=".fasta"
     )
@@ -863,7 +834,7 @@ def assign_isotypes(
     blastdb: Optional[str] = None,
     allele: bool = False,
     filename_prefix: Optional[Union[List, str]] = None,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
@@ -895,8 +866,8 @@ def assign_isotypes(
         whether or not to return allele calls.
     filename_prefix : Optional[Union[List, str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
-    verbose : bool, optional
-        whether or not to print the blast command in terminal.
+    additional_args : List[str], optional
+        additional arguments to pass to `blastn`.
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -921,7 +892,7 @@ def assign_isotypes(
             blastdb=blastdb,
             allele=allele,
             filename_prefix=filename_prefix[i],
-            verbose=verbose,
+            additional_args=additional_args,
         )
 
 
@@ -970,12 +941,12 @@ def reannotate_genes(
     loci : Literal["ig", "tr"], optional
         mode for igblastn. 'ig' for BCRs, 'tr' for TCRs.
     extended : bool, optional
-        whether or not to transfer additional 10X annotions to output file.
+        whether or not to transfer additional 10X annotations to output file.
     filename_prefix : Optional[Union[List[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults
         to 'filtered'.
     flavour : Literal["strict", "original"], optional
-        Either 'strict' or 'original'. Determines how igblastnshould
+        Either 'strict' or 'original'. Determines how igblastn should
         be run. Running in 'strict' flavour will add the additional the
         evalue and min_d_match options to the run.
     min_j_match : int, optional
@@ -1187,7 +1158,7 @@ def ensure_columns_transferred(
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     """
-    filePath, passfile, failfile = return_pass_fail_filepaths(
+    _, passfile, failfile = return_pass_fail_filepaths(
         fasta, filename_prefix=filename_prefix
     )
     addcols = [
@@ -1209,14 +1180,8 @@ def ensure_columns_transferred(
         "_germline_alignment_blastn",
         "_source",
     ]
-    if os.path.isfile(passfile):
-        db_pass = load_data(passfile)
-    else:
-        db_pass = None
-    if os.path.isfile(failfile):
-        db_fail = load_data(failfile)
-    else:
-        db_fail = None
+    db_pass = load_data(passfile) if passfile.is_file() else None
+    db_fail = load_data(failfile) if failfile.is_file() else None
     if db_pass is not None:
         for call in ["d", "j"]:
             for col in addcols:
@@ -1257,7 +1222,7 @@ def reassign_alleles(
     Correct allele calls based on a personalized genotype using tigger.
 
     It uses a subject-specific genotype to correct correct preliminary allele
-    assignments of a set ofsequences derived from a single subject.
+    assignments of a set of sequences derived from a single subject.
 
     Parameters
     ----------
