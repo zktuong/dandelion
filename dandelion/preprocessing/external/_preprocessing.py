@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# @Author: kt16
-"""preprocessing module."""
 import os
 import re
 import scipy.stats
@@ -16,7 +14,7 @@ from scanpy import logging as logg
 from sklearn import mixture
 from subprocess import run
 from time import time
-from typing import Union, Optional
+from typing import Optional
 
 
 from ...utilities._utilities import *
@@ -50,7 +48,7 @@ def assigngenes_igblast(
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
     for fileformat in ["blast", "airr"]:
-        outfile = (fasta_path.stem + informat_dict[fileformat])
+        outfile = fasta_path.stem + informat_dict[fileformat]
         cmd = [
             "AssignGenes.py",
             "igblast",
@@ -65,7 +63,7 @@ def assigngenes_igblast(
             "--format",
             fileformat,
             "-o",
-            str(outfolder / outfile)",
+            str(outfolder / outfile),
         ]
 
         logg.info("Running command: %s\n" % (" ".join(cmd)))
@@ -99,16 +97,18 @@ def makedb_igblast(
         Additional arguments to pass to `MakeDb.py`.
     """
     env, _gml = set_germline_env(germline=germline, org=org)
-    
+
     if igblast_output is None:
         fasta_path = Path(fasta)
         indir = fasta_path / "tmp"
-        infile = (fasta_path.stem +"_igblast.fmt7")
+        infile = fasta_path.stem + "_igblast.fmt7"
         igbo = indir / infile
     else:
         igbo = Path(igblast_output)
 
-    cellranger_annotation = fasta_path.parent / (fasta_path.stem +"_annotations.csv")
+    cellranger_annotation = fasta_path.parent / (
+        fasta_path.stem + "_annotations.csv"
+    )
 
     if extended:
         cmd1 = [
@@ -260,7 +260,7 @@ def creategermlines(
         Additional arguments to pass to `CreateGermlines.py`.
     """
     env, _gml = set_germline_env(germline=germline, org=org)
-    
+
     if germline is None:
         if mode == "heavy":
             if genotyped_fasta is None:
@@ -310,7 +310,7 @@ def creategermlines(
     cmd = [
         "CreateGermlines.py",
         "-d",
-        str(airr_file), # just in case it's a Path object
+        str(airr_file),  # just in case it's a Path object
         "-r",
     ]
     cmd = cmd + gml_ref + additional_args
@@ -372,7 +372,7 @@ def tigger_genotype(
     if outdir is not None:
         out_dir = Path(outdir)
     else:
-        current_path = Path(str(airr_file)) # just in case it's a Path object
+        current_path = Path(str(airr_file))  # just in case it's a Path object
         out_dir = current_path.parent
 
     cmd = [
@@ -504,14 +504,16 @@ def recipe_scanpy_qc(
         try:
             import scrublet as scr
         except ImportError:
-            raise ImportError("Please install scrublet with pip install scrublet.")
+            raise ImportError(
+                "Please install scrublet with pip install scrublet."
+            )
         if layer is None:
             scrub = scr.Scrublet(_adata.X)
         else:
             scrub = scr.Scrublet(_adata.layers[layer])
         doublet_scores, _ = scrub.scrub_doublets(verbose=False)
         _adata.obs["scrublet_score"] = doublet_scores
-        # overcluster prep. 
+        # overcluster prep.
         sc.pp.normalize_total(_adata, target_sum=1e4)
         sc.pp.log1p(_adata)
         sc.pp.highly_variable_genes(
@@ -562,7 +564,7 @@ def recipe_scanpy_qc(
         _adata.obs["is_doublet"] = (
             _adata.obs["scrublet_score_bh_pval"] < pval_cutoff
         )
-    else: 
+    else:
         _adata.obs["is_doublet"] = False
     if mito_cutoff is not None:
         if min_counts is None and max_counts is None:
