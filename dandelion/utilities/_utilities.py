@@ -253,8 +253,12 @@ def check_filepath(
                             out_dir = out_dir / sub_dir
                         for file in out_dir.iterdir():
                             if file.name[0] != ".":
-                                if file.is_file() and str(file).endswith(ends_with):
-                                    if file.name.startswith(filename_pre + "_contig"):
+                                if file.is_file() and str(file).endswith(
+                                    ends_with
+                                ):
+                                    if file.name.startswith(
+                                        filename_pre + "_contig"
+                                    ):
                                         return file
         else:
             if sub_dir is not None:
@@ -376,7 +380,9 @@ def all_missing2(x):
 def return_mix_dtype(data):
     """Utility function to return mixed dtypes columns."""
     check = [
-        c for c in data.columns if pd.api.types.infer_dtype(data[c]).startswith("mixed")
+        c
+        for c in data.columns
+        if pd.api.types.infer_dtype(data[c]).startswith("mixed")
     ]
     return check
 
@@ -392,13 +398,18 @@ def sanitize_data(data, ignore="clone_id"):
                 "boolean",
                 "integer",
             ]:
-                data[d].replace([None, np.nan, pd.NA, "nan", ""], "", inplace=True)
+                data[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""], "", inplace=True
+                )
                 if RearrangementSchema.properties[d]["type"] == "integer":
                     data[d] = [
-                        int(x) if present(x) else "" for x in pd.to_numeric(data[d])
+                        int(x) if present(x) else ""
+                        for x in pd.to_numeric(data[d])
                     ]
             else:
-                data[d].replace([None, pd.NA, np.nan, "nan", ""], np.nan, inplace=True)
+                data[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""], np.nan, inplace=True
+                )
         else:
             if d != ignore:
                 try:
@@ -411,17 +422,22 @@ def sanitize_data(data, ignore="clone_id"):
                     )
         if re.search("mu_freq", d):
             data[d] = [
-                float(x) if present(x) else np.nan for x in pd.to_numeric(data[d])
+                float(x) if present(x) else np.nan
+                for x in pd.to_numeric(data[d])
             ]
         if re.search("mu_count", d):
-            data[d] = [int(x) if present(x) else "" for x in pd.to_numeric(data[d])]
+            data[d] = [
+                int(x) if present(x) else "" for x in pd.to_numeric(data[d])
+            ]
     try:
         data = check_travdv(data)
     except:
         pass
 
     if (
-        pd.Series(["cell_id", "duplicate_count", "productive"]).isin(data.columns).all()
+        pd.Series(["cell_id", "duplicate_count", "productive"])
+        .isin(data.columns)
+        .all()
     ):  # sort so that the productive contig with the largest umi is first
         data.sort_values(
             by=["cell_id", "productive", "duplicate_count"],
@@ -445,13 +461,18 @@ def sanitize_blastn(data):
                 "boolean",
                 "integer",
             ]:
-                data[d].replace([None, np.nan, pd.NA, "nan", ""], "", inplace=True)
+                data[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""], "", inplace=True
+                )
                 if RearrangementSchema.properties[d]["type"] == "integer":
                     data[d] = [
-                        int(x) if present(x) else "" for x in pd.to_numeric(data[d])
+                        int(x) if present(x) else ""
+                        for x in pd.to_numeric(data[d])
                     ]
             else:
-                data[d].replace([None, pd.NA, np.nan, "nan", ""], np.nan, inplace=True)
+                data[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""], np.nan, inplace=True
+                )
         else:
             try:
                 data[d] = pd.to_numeric(data[d])
@@ -473,17 +494,23 @@ def sanitize_data_for_saving(data):
                 "string",
                 "boolean",
             ]:
-                tmp[d].replace([None, np.nan, pd.NA, "nan", ""], "", inplace=True)
+                tmp[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""], "", inplace=True
+                )
             if RearrangementSchema.properties[d]["type"] in [
                 "integer",
                 "number",
             ]:
-                tmp[d].replace([None, np.nan, pd.NA, "nan", ""], np.nan, inplace=True)
+                tmp[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""], np.nan, inplace=True
+                )
         else:
             try:
                 tmp[d] = pd.to_numeric(tmp[d])
             except:
-                tmp[d].replace([None, pd.NA, np.nan, "nan", ""], "", inplace=True)
+                tmp[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""], "", inplace=True
+                )
     return tmp
 
 
@@ -506,7 +533,9 @@ def validate_airr(data):
     ]
     str_columns = list(tmp.dtypes[tmp.dtypes == "object"].index)
     columns = [
-        c for c in list(set(int_columns + str_columns + bool_columns)) if c in tmp
+        c
+        for c in list(set(int_columns + str_columns + bool_columns))
+        if c in tmp
     ]
     if len(columns) > 0:
         for c in columns:
@@ -590,13 +619,17 @@ def load_data(obj: Optional[Union[pd.DataFrame, str]]) -> pd.DataFrame:
         if "sequence_id" in obj_.columns:
             obj_.set_index("sequence_id", drop=False, inplace=True)
             if "cell_id" not in obj_.columns:
-                obj_["cell_id"] = [c.split("_contig")[0] for c in obj_["sequence_id"]]
+                obj_["cell_id"] = [
+                    c.split("_contig")[0] for c in obj_["sequence_id"]
+                ]
         else:
             raise KeyError("'sequence_id' not found in columns of input")
 
         if "umi_count" in obj_.columns:
             if "duplicate_count" not in obj_.columns:
-                obj_.rename(columns={"umi_count": "duplicate_count"}, inplace=True)
+                obj_.rename(
+                    columns={"umi_count": "duplicate_count"}, inplace=True
+                )
 
         return obj_
 
@@ -746,7 +779,8 @@ def format_call(
         call_4 = call_3 = call_2
     call_1 = {x: y if "|" not in y else "Multi" for x, y in call_1.items()}
     call_3 = {
-        x: "Single" if y not in call_dict else call_dict[y] for x, y in call_1.items()
+        x: "Single" if y not in call_dict else call_dict[y]
+        for x, y in call_1.items()
     }
     return (
         list(call_1.values()),
@@ -766,8 +800,12 @@ def format_locus(
 
     locus_dict = {}
     for i in metadata.index:
-        loc1 = {e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])}
-        loc2 = {e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])}
+        loc1 = {
+            e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
+        }
+        loc2 = {
+            e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
+        }
         loc1x, loc2x = [], []
         if not all([px == "None" for px in loc1.values()]):
             loc1xx = list(loc1.values())
@@ -809,9 +847,9 @@ def format_locus(
                 else:
                     tmp2 = "None"
 
-                if (tmp1 not in ["None", "Extra VDJ", "Extra VDJ-exception"]) and (
-                    tmp2 not in ["None", "Extra VJ", "Extra VJ-exception"]
-                ):
+                if (
+                    tmp1 not in ["None", "Extra VDJ", "Extra VDJ-exception"]
+                ) and (tmp2 not in ["None", "Extra VJ", "Extra VJ-exception"]):
                     if list(set(loc1x)) != list(set(loc2x)):
                         tmp1 = "ambiguous"
                         tmp2 = "ambiguous"
@@ -914,7 +952,9 @@ def update_rearrangement_status(self):
     else:
         vcall = "v_call"
     contig_status = []
-    for v, j, c in zip(self.data[vcall], self.data["j_call"], self.data["c_call"]):
+    for v, j, c in zip(
+        self.data[vcall], self.data["j_call"], self.data["c_call"]
+    ):
         if present(v):
             if present(j):
                 if present(c):
