@@ -43,7 +43,7 @@ def parse_args():
             + "input object name with _changeo.h5ddl appended."
         ),
     )
-    args = parser.parse_args()
+    args, additional_args = parser.parse_known_args()
     # set up the default names of files if need be. needs the base name of the file
     basename = os.path.splitext(args.h5ddl)[0]
     if args.plot_file is None:
@@ -52,7 +52,7 @@ def parse_args():
         args.h5ddl_out = basename + "_changeo.h5ddl"
     if args.manual_threshold is not None:
         args.manual_threshold = float(args.manual_threshold)
-    return args
+    return args, additional_args
 
 
 def main():
@@ -63,20 +63,28 @@ def main():
     start = logg.info("\nBeginning assigning change-o clonotypes\n")
 
     # parse arguments
-    args = parse_args()
+    args, additional_args = parse_args()
+
+    loginfo = (
+        f"\n"
+        f"--------------------------------------------------------------\n"
+        f"    --h5ddl = {args.h5ddl}\n"
+        f"    --manual_threshold = {str(args.manual_threshold)}\n"
+        f"    --plot_file = {args.plot_file}\n"
+        f"    --key_added = {args.key_added}\n"
+        f"    --h5ddl_out = {args.h5ddl_out}\n"
+    )
+    if len(additional_args) > 0:
+        additional_argsx = " ".join(additional_args)
+        loginfo += f"    additional arguments:\n"
+        loginfo += f"    {additional_argsx}\n"
+    loginfo += (
+        f"--------------------------------------------------------------\n"
+    )
 
     logg.info(
         "command line parameters:\n",
-        deep=(
-            f"\n"
-            f"--------------------------------------------------------------\n"
-            f"    --h5ddl = {args.h5ddl}\n"
-            f"    --manual_threshold = {str(args.manual_threshold)}\n"
-            f"    --plot_file = {args.plot_file}\n"
-            f"    --key_added = {args.key_added}\n"
-            f"    --h5ddl_out = {args.h5ddl_out}\n"
-            f"--------------------------------------------------------------\n"
-        ),
+        deep=loginfo,
     )
 
     # the actual process is easy. the dependencies quite a bit less so
@@ -86,7 +94,9 @@ def main():
         manual_threshold=args.manual_threshold,
         save_plot=args.plot_file,
     )
-    ddl.tl.define_clones(vdj, key_added=args.key_added)
+    ddl.tl.define_clones(
+        vdj, key_added=args.key_added, additional_args=additional_args
+    )
     vdj.write_h5ddl(args.h5ddl_out)
 
     logg.info("Assigning Change-o clonotypes finished.\n", time=start)
