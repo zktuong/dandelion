@@ -1812,7 +1812,6 @@ def create_germlines(
         Dandelion object with `.germlines` slot populated.
     """
     start = logg.info("Reconstructing germline sequences")
-    env, gml, _ = set_germline_env(germline=germline, org=org)
     if not isinstance(data, Dandelion):
         tmpfile = (
             Path(vdj_data)
@@ -1856,6 +1855,11 @@ def create_germlines(
     )
     if save is not None:
         shutil.move(germpass_outfile, save)
+    logg.info(
+            " finished",
+            time=start,
+            deep=("Returning Dandelion object: \n"),
+        )
     return out_vdj
 
 
