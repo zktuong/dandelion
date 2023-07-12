@@ -98,7 +98,7 @@ def makedb_igblast(
     additional_args: List[str], optional
         Additional arguments to pass to `MakeDb.py`.
     """
-    env, _gml, fasta = set_germline_env(
+    env, gml, fasta = set_germline_env(
         germline=germline, org=org, input_file=fasta
     )
     if igblast_output is None:
@@ -118,7 +118,7 @@ def makedb_igblast(
         "-s",
         str(fasta),
         "-r",
-        str(_gml),
+        str(gml),
         "--10x",
         str(cellranger_annotation),
     ]
@@ -217,7 +217,7 @@ def creategermlines(
     additional_args : List[str], optional
         Additional arguments to pass to `CreateGermlines.py`.
     """
-    env, _gml, airr_file = set_germline_env(
+    env, gml, airr_file = set_germline_env(
         germline=germline, org=org, input_file=airr_file
     )
 
@@ -225,43 +225,43 @@ def creategermlines(
         if mode == "heavy":
             if genotyped_fasta is None:
                 gml_ref = [
-                    str(_gml / ("imgt_" + org + "_IGHV.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGHD.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGHJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHV.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHD.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHJ.fasta")),
                 ]
             else:
                 gml_ref = [
                     genotyped_fasta,
-                    str(_gml / ("imgt_" + org + "_IGHD.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGHJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHD.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHJ.fasta")),
                 ]
         elif mode == "light":
             gml_ref = [
-                str(_gml / ("imgt_" + org + "_IGKV.fasta")),
-                str(_gml / ("imgt_" + org + "_IGKJ.fasta")),
-                str(_gml / ("imgt_" + org + "_IGLV.fasta")),
-                str(_gml / ("imgt_" + org + "_IGLJ.fasta")),
+                str(gml / ("imgt_" + org + "_IGKV.fasta")),
+                str(gml / ("imgt_" + org + "_IGKJ.fasta")),
+                str(gml / ("imgt_" + org + "_IGLV.fasta")),
+                str(gml / ("imgt_" + org + "_IGLJ.fasta")),
             ]
         elif mode is None:
             if genotyped_fasta is None:
                 gml_ref = [
-                    str(_gml / ("imgt_" + org + "_IGHV.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGHD.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGHJ.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGKV.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGKJ.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGLV.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGLJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHV.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHD.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGKV.fasta")),
+                    str(gml / ("imgt_" + org + "_IGKJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGLV.fasta")),
+                    str(gml / ("imgt_" + org + "_IGLJ.fasta")),
                 ]
             else:
                 gml_ref = [
                     genotyped_fasta,
-                    str(_gml / ("imgt_" + org + "_IGHD.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGHJ.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGKV.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGKJ.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGLV.fasta")),
-                    str(_gml / ("imgt_" + org + "_IGLJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHD.fasta")),
+                    str(gml / ("imgt_" + org + "_IGHJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGKV.fasta")),
+                    str(gml / ("imgt_" + org + "_IGKJ.fasta")),
+                    str(gml / ("imgt_" + org + "_IGLV.fasta")),
+                    str(gml / ("imgt_" + org + "_IGLJ.fasta")),
                 ]
     else:
         if not isinstance(germline, list):

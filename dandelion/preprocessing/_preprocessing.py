@@ -2931,9 +2931,7 @@ class FilterContigs:
                                                 if v < max_igm_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                                 if len(h_ccall_p_igd_count) > 1:
@@ -2953,9 +2951,7 @@ class FilterContigs:
                                                 if v < max_igd_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                             else:
@@ -3024,9 +3020,7 @@ class FilterContigs:
                                                 if v < max_trb_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                                 if len(h_locus_p_trd_count) > 1:
@@ -3046,9 +3040,7 @@ class FilterContigs:
                                                 if v < max_trd_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                             else:
@@ -3726,9 +3718,9 @@ class FilterContigsLite:
                     ],
                 )
                 h_np = list(data2["sequence_id"])
-                h_umi_np = [
-                    int(x) for x in pd.to_numeric(data2["duplicate_count"])
-                ]
+                # h_umi_np = [
+                #     int(x) for x in pd.to_numeric(data2["duplicate_count"])
+                # ]
             if len(self.Cell[cell]["VJ"]["P"]) > 0:
                 data3 = pd.DataFrame(
                     [
@@ -3798,9 +3790,9 @@ class FilterContigsLite:
                     ],
                 )
                 l_np = list(data4["sequence_id"])
-                l_umi_np = [
-                    int(x) for x in pd.to_numeric(data4["duplicate_count"])
-                ]
+                # l_umi_np = [
+                #     int(x) for x in pd.to_numeric(data4["duplicate_count"])
+                # ]
 
             if "h_p" not in locals():
                 h_p = []
@@ -3979,9 +3971,8 @@ def run_igblastn(
     additional_args: List[str], optional
         additional arguments to pass to `igblastn`.
     """
-    env, igdb = set_igblast_env(igblast_db)
-
-    outfolder = Path(fasta).parent.resolve() / "tmp"
+    env, igdb, fasta = set_igblast_env(igblast_db=igblast_db, input_file=fasta)
+    outfolder = fasta.parent / "tmp"
     outfolder.mkdir(parents=True, exist_ok=True)
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
@@ -3997,7 +3988,7 @@ def run_igblastn(
     auxpath = igdb / "optional_file" / (org + "_gl.aux")
 
     for fileformat in ["blast", "airr"]:
-        outfile = str(Path(fasta).stem + informat_dict[fileformat])
+        outfile = str(fasta.stem + informat_dict[fileformat])
         if loci == "tr":
             cmd = [
                 "igblastn",
@@ -4226,7 +4217,9 @@ def run_blastn(
             bdb = bdb / org / (org + "_BCR_C.fasta")
         else:
             if not bdb.stem.endswith("_" + loci + "_" + call):
-                bdb = (bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call))
+                bdb = (
+                    bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
+                )
     cmd = [
         "blastn",
         "-db",
