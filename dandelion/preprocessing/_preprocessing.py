@@ -1888,7 +1888,7 @@ def filter_contigs(
     filter_missing: bool = True,
     productive_only: bool = True,
     simple: bool = False,
-    save: Optional[str] = None,
+    save: Optional[Union[str, Path]] = None,
     verbose: bool = True,
     **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
@@ -1947,8 +1947,8 @@ def filter_contigs(
         whether or not to retain only productive contigs.
     simple : bool, optional
         simple filtering mode where only checks for potential gene assignment mismatches.
-    save : Optional[str], optional
-        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
+    save : Optional[Union[str, Path]], optional
+        Only used if a pandas dataframe or dandelion object is provided. Specifying path will save the formatted vdj table.
     verbose : bool, optional
         whether to print progress.
     **kwargs
@@ -2099,8 +2099,8 @@ def filter_contigs(
             write_airr(_dat, data.parent / (data.stem + "_filtered.tsv"))
         else:
             if save is not None:
-                if save.endswith(".tsv"):
-                    write_airr(_dat, str(save))
+                if str(save).endswith(".tsv"):
+                    write_airr(_dat, save)
                 else:
                     raise ValueError(
                         "{} not suitable. Please provide a file name that ends with .tsv".format(
