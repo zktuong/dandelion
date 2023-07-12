@@ -170,10 +170,10 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     Dandelion
         saved `Dandelion` object in pickle format.
     """
-    if isBZIP(filename):
+    if isBZIP(str(filename)):
         data = bz2.BZ2File(filename, "rb")
         data = cPickle.load(data)
-    elif isGZIP(filename):
+    elif isGZIP(str(filename)):
         data = gzip.open(filename, "rb")
         data = cPickle.load(data)
     else:
