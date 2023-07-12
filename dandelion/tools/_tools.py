@@ -350,17 +350,17 @@ def find_clones(
                     if not by_alleles:
                         if "v_call_genotyped" in dat_vj_c.columns:
                             Vvj = [
-                                re.sub("[*][0-9][0-9]", "", v)
-                                for str(v) in dat_vj_c["v_call_genotyped"]
+                                re.sub("[*][0-9][0-9]", "", str(v))
+                                for v in dat_vj_c["v_call_genotyped"]
                             ]
                         else:
                             Vvj = [
-                                re.sub("[*][0-9][0-9]", "", v)
-                                for str(v) in dat_vj_c["v_call"]
+                                re.sub("[*][0-9][0-9]", "", str(v))
+                                for v in dat_vj_c["v_call"]
                             ]
                         Jvj = [
-                            re.sub("[*][0-9][0-9]", "", j)
-                            for str(j) in dat_vj_c["j_call"]
+                            re.sub("[*][0-9][0-9]", "", str(j))
+                            for j in dat_vj_c["j_call"]
                         ]
                     else:
                         if "v_call_genotyped" in dat_vj_c.columns:
