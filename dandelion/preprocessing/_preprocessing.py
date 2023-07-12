@@ -1812,7 +1812,7 @@ def create_germlines(
         Dandelion object with `.germlines` slot populated.
     """
     start = logg.info("Reconstructing germline sequences")
-    env, gml = set_germline_env(germline=germline, org=org)
+    env, gml, _ = set_germline_env(germline=germline, org=org)
     if not isinstance(data, Dandelion):
         tmpfile = (
             Path(vdj_data)
