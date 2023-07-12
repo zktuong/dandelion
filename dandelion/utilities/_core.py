@@ -984,25 +984,27 @@ class Dandelion:
                 tmp_metadata[r] = pd.Series(ret_metadata[r])
             self.metadata = tmp_metadata.copy()
 
-    def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
+    def write_pkl(
+        self, filename: Union[str, Path] = "dandelion_data.pkl.pbz2", **kwargs
+    ):
         """
         Writes a `Dandelion` class to .pkl format.
 
         Parameters
         ----------
-        filename : str, optional
+        filename : Union[str, Path], optional
             path to `.pkl` file.
         **kwargs
             passed to `_pickle`.
         """
-        if isBZIP(filename):
+        if isBZIP(str(filename)):
             try:
                 with bz2.BZ2File(filename, "wb") as f:
                     cPickle.dump(self, f, **kwargs)
             except:
                 with bz2.BZ2File(filename, "wb") as f:
                     cPickle.dump(self, f, protocol=4, **kwargs)
-        elif isGZIP(filename):
+        elif isGZIP(str(filename)):
             try:
                 with gzip.open(filename, "wb") as f:
                     cPickle.dump(self, f, **kwargs)
