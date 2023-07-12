@@ -43,8 +43,7 @@ def assigngenes_igblast(
     additional_args : List[str], optional
         Additional arguments to pass to `AssignGenes.py`.
     """
-    env, igdb = set_igblast_env(igblast_db=igblast_db)
-    fasta = Path(fasta)
+    env, igdb, fasta = set_igblast_env(igblast_db=igblast_db, input_file=fasta)
     outfolder = fasta / "tmp"
     outfolder.mkdir(parents=True, exist_ok=True)
 
@@ -99,8 +98,9 @@ def makedb_igblast(
     additional_args: List[str], optional
         Additional arguments to pass to `MakeDb.py`.
     """
-    env, _gml = set_germline_env(germline=germline, org=org)
-    fasta = Path(fasta)
+    env, _gml, fasta = set_germline_env(
+        germline=germline, org=org, input_file=fasta
+    )
     if igblast_output is None:
         indir = fasta / "tmp"
         infile = fasta.stem + "_igblast.fmt7"
@@ -217,7 +217,9 @@ def creategermlines(
     additional_args : List[str], optional
         Additional arguments to pass to `CreateGermlines.py`.
     """
-    env, _gml = set_germline_env(germline=germline, org=org)
+    env, _gml, airr_file = set_germline_env(
+        germline=germline, org=org, input_file=airr_file
+    )
 
     if germline is None:
         if mode == "heavy":
@@ -306,33 +308,20 @@ def tigger_genotype(
         whether or not to run novel allele discovery.
     additional_args : List[str], optional
         Additional arguments to pass to `tigger-genotype.R`.
-    Raises
-    ------
-    KeyError
-        if `$GERMLINE` environmental variable is not set.
     """
     start_time = time()
-    env = os.environ.copy()
-    if v_germline is None:
-        try:
-            gml = Path(env["GERMLINE"])
-        except:
-            raise KeyError(
-                (
-                    "Environmental variable $GERMLINE is missing. "
-                    "Please 'export GERMLINE=/path/to/database/germlines/'"
-                )
-            )
-        v_gml = gml / "imgt" / org / "vdj" / ("imgt_" + org + "_IGHV.fasta")
-    else:
-        v_gml = v_germline
 
+    env, gml, airr_file = set_germline_env(
+        germline=germline, org=org, input_file=airr_file
+    )
+    if v_germline is None:
+        v_gml = gml / ("imgt_" + org + "_IGHV.fasta")
+    else:
+        v_gml = Path(v_germline)
     if outdir is not None:
         out_dir = Path(outdir)
     else:
-        current_path = Path(airr_file)
-        out_dir = current_path.parent
-
+        out_dir = airr_file.parent
     cmd = [
         "tigger-genotype.R",
         "-d",
@@ -340,7 +329,7 @@ def tigger_genotype(
         "-r",
         str(v_gml),
         "-n",
-        current_path.stem,
+        airr_file.stem,
         "-N",
         novel_,
         "-o",
