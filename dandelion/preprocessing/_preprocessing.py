@@ -1812,7 +1812,7 @@ def create_germlines(
         Dandelion object with `.germlines` slot populated.
     """
     start = logg.info("Reconstructing germline sequences")
-    if not isinstance(data, Dandelion):
+    if not isinstance(vdj_data, Dandelion):
         tmpfile = (
             Path(vdj_data)
             if os.path.isfile(vdj_data)
@@ -1849,17 +1849,28 @@ def create_germlines(
             )
     # return as Dandelion object
     germpass_outfile = tmpfile.parent / (tmpfile.stem + "_germ-pass.tsv")
-    out_vdj = Dandelion(germpass_outfile)
-    out_vdj.store_germline_reference(
-        corrected=genotyped_fasta, germline=germline, org=org
-    )
+    if isinstance(vdj_data, Dandelion):
+        vdj_data.__init__(
+            data=germpass_outfile,
+            metadata=vdj_data.metadata,
+            germline=vdj_data.germline,
+            layout=vdj_data.layout,
+            graph=vdj_data.graph,
+            initialize=True,
+        )
+        out_vdj = vdj_data.copy()
+    else:
+        out_vdj = Dandelion(germpass_outfile)
+        out_vdj.store_germline_reference(
+            corrected=genotyped_fasta, germline=germline, org=org
+        )
     if save is not None:
         shutil.move(germpass_outfile, save)
     logg.info(
-            " finished",
-            time=start,
-            deep=("Returning Dandelion object: \n"),
-        )
+        " finished",
+        time=start,
+        deep=("Returning Dandelion object: \n"),
+    )
     return out_vdj
 
 
