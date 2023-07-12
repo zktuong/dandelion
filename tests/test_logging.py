@@ -2,12 +2,13 @@
 """test logging"""
 import dandelion as ddl
 from subprocess import run
+from pathlib import Path
 
 
 def test_badge():
     """test_badge"""
     p = run(
-        ["python", "dandelion/logging/_badge.py"],
+        ["python", str(Path("dandelion") / "logging" / "_badge.py")],
         capture_output=True,
         encoding="utf8",
     )

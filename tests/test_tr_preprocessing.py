@@ -8,7 +8,7 @@ import dandelion as ddl
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_tr1")
 def test_write_fasta_tr1(create_testfolder, fasta_10x_tr1):
     """test_write_fasta_tr1"""
-    out_fasta = str(create_testfolder) + "/filtered_contig.fasta"
+    out_fasta = create_testfolder / "filtered_contig.fasta"
     ddl.utl.write_fasta(fasta_10x_tr1, out_fasta)
     assert len(list(create_testfolder.iterdir())) == 1
 
@@ -16,7 +16,7 @@ def test_write_fasta_tr1(create_testfolder, fasta_10x_tr1):
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_tr2")
 def test_write_fasta_tr2(create_testfolder, fasta_10x_tr2):
     """test_write_fasta_tr2"""
-    out_fasta = str(create_testfolder) + "/all_contig.fasta"
+    out_fasta = create_testfolder / "all_contig.fasta"
     ddl.utl.write_fasta(fasta_10x_tr2, out_fasta)
     assert len(list(create_testfolder.iterdir())) == 2
 
@@ -24,7 +24,7 @@ def test_write_fasta_tr2(create_testfolder, fasta_10x_tr2):
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x_tr1")
 def test_write_annotation_tr1(create_testfolder, annotation_10x_tr1):
     """test_write_annotation_tr1"""
-    out_file = str(create_testfolder) + "/filtered_contig_annotations.csv"
+    out_file = create_testfolder / "filtered_contig_annotations.csv"
     annotation_10x_tr1.to_csv(out_file, index=False)
     assert len(list(create_testfolder.iterdir())) == 3
 
@@ -32,7 +32,7 @@ def test_write_annotation_tr1(create_testfolder, annotation_10x_tr1):
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x_tr2")
 def test_write_annotation_tr2(create_testfolder, annotation_10x_tr2):
     """test_write_annotation_tr2"""
-    out_file = str(create_testfolder) + "/all_contig_annotations.csv"
+    out_file = create_testfolder / "all_contig_annotations.csv"
     annotation_10x_tr2.to_csv(out_file, index=False)
     assert len(list(create_testfolder.iterdir())) == 4
 
@@ -48,7 +48,7 @@ def test_write_annotation_tr2(create_testfolder, annotation_10x_tr2):
 )
 def test_formatfasta(create_testfolder, filename, expected):
     """test_formatfasta"""
-    ddl.pp.format_fastas(str(create_testfolder), filename_prefix=filename)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix=filename)
     assert len(list((create_testfolder / "dandelion").iterdir())) == expected
 
 
@@ -60,7 +60,7 @@ def test_formatfasta(create_testfolder, filename, expected):
 def test_reannotategenes(create_testfolder, database_paths, filename, expected):
     """test_reannotategenes"""
     ddl.pp.reannotate_genes(
-        str(create_testfolder),
+        create_testfolder,
         igblast_db=database_paths["igblast_db"],
         germline=database_paths["germline"],
         loci="tr",
@@ -78,9 +78,7 @@ def test_reannotategenes(create_testfolder, database_paths, filename, expected):
 @pytest.mark.parametrize("filename", ["filtered", "all"])
 def test_checkreannotation(create_testfolder, processed_files_tr, filename):
     """test_checkreannotation"""
-    f1 = pd.read_csv(
-        create_testfolder / str(filename + "_contig_annotations.csv")
-    )
+    f1 = pd.read_csv(create_testfolder / (filename + "_contig_annotations.csv"))
     f2 = pd.read_csv(
         create_testfolder / "dandelion" / processed_files_tr[filename],
         sep="\t",

@@ -10,7 +10,7 @@ from pathlib import Path
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_mouse")
 def test_write_fasta(create_testfolder, fasta_10x_mouse):
     """test_write_fasta"""
-    out_fasta = str(create_testfolder) + "/filtered_contig.fasta"
+    out_fasta = create_testfolder / "filtered_contig.fasta"
     ddl.utl.write_fasta(fasta_10x_mouse, out_fasta)
     assert len(list(create_testfolder.iterdir())) == 1
 
@@ -18,7 +18,7 @@ def test_write_fasta(create_testfolder, fasta_10x_mouse):
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x_mouse")
 def test_write_annotation(create_testfolder, annotation_10x_mouse):
     """test_write_annotation"""
-    out_file = str(create_testfolder) + "/filtered_contig_annotations.csv"
+    out_file = create_testfolder / "filtered_contig_annotations.csv"
     annotation_10x_mouse.to_csv(out_file, index=False)
     assert len(list(create_testfolder.iterdir())) == 2
 
@@ -26,7 +26,7 @@ def test_write_annotation(create_testfolder, annotation_10x_mouse):
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
     """test_formatfasta"""
-    ddl.pp.format_fastas(str(create_testfolder))
+    ddl.pp.format_fastas(create_testfolder)
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
@@ -34,7 +34,7 @@ def test_formatfasta(create_testfolder):
 def test_reannotategenes(create_testfolder, database_paths_mouse):
     """test_reannotategenes"""
     ddl.pp.reannotate_genes(
-        str(create_testfolder),
+        create_testfolder,
         igblast_db=database_paths_mouse["igblast_db"],
         germline=database_paths_mouse["germline"],
         org="mouse",
@@ -47,7 +47,7 @@ def test_reannotategenes(create_testfolder, database_paths_mouse):
 def test_reassignalleles(create_testfolder, database_paths_mouse):
     """test_reassignalleles"""
     ddl.pp.reassign_alleles(
-        str(create_testfolder),
+        create_testfolder,
         combined_folder="test_mouse",
         germline=database_paths_mouse["germline"],
         org="mouse",
@@ -72,7 +72,7 @@ def test_assignsisotypes(
 ):
     """test_assignsisotypes"""
     ddl.pp.assign_isotypes(
-        str(create_testfolder),
+        create_testfolder,
         blastdb=database_paths_mouse["blastdb_fasta"],
         correction_dict=balbc_ighg_primers,
         plot=False,

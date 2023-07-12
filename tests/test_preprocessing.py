@@ -184,9 +184,7 @@ def test_create_germlines(create_testfolder, processed_files, database_paths):
     """test_create_germlines"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
     ddl.pp.create_germlines(f, germline=database_paths["germline"])
-    f2 = create_testfolder / str(
-        "dandelion/" + processed_files["germline-dmask"]
-    )
+    f2 = create_testfolder / "dandelion" / processed_files["germline-dmask"]
     dat = pd.read_csv(f2, sep="\t")
     assert not dat["germline_alignment_d_mask"].empty
 
@@ -275,12 +273,12 @@ def test_assign_isotypes_fails(create_testfolder, database_paths):
     """test_assign_isotypes_fails"""
     with pytest.raises(FileNotFoundError):
         ddl.pp.assign_isotypes(
-            str(create_testfolder), filename_prefix="filtered", plot=False
+            create_testfolder, filename_prefix="filtered", plot=False
         )
-    ddl.pp.format_fastas(str(create_testfolder), filename_prefix="filtered")
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     with pytest.raises(KeyError):
         ddl.pp.assign_isotypes(
-            str(create_testfolder), filename_prefix="filtered", plot=False
+            create_testfolder, filename_prefix="filtered", plot=False
         )
 
 
@@ -301,7 +299,7 @@ def test_assign_isotypes_fails(create_testfolder, database_paths):
 def test_formatfasta2(create_testfolder, prefix, suffix, sep, remove):
     """test_formatfasta2"""
     ddl.pp.format_fastas(
-        str(create_testfolder),
+        create_testfolder,
         filename_prefix="filtered",
         prefix=prefix,
         suffix=suffix,
@@ -355,13 +353,13 @@ def test_store_germlines2(
     vdj = ddl.Dandelion(f)
     vdj.store_germline_reference(germline=database_paths["germline"])
     assert len(vdj.germline) > 0
-    out_file = str(create_testfolder) + "/test_airr_reannotated.h5"
+    out_file = create_testfolder / "test_airr_reannotated.h5"
     vdj.write_h5ddl(out_file)
     tmp = ddl.read_h5ddl(out_file)
     assert len(tmp.germline) > 0
     vdj.store_germline_reference(
         germline=database_paths["germline"],
-        corrected=str(create_testfolder) + "/filtered_contig.fasta",
+        corrected=create_testfolder / "filtered_contig.fasta",
     )
     assert len(vdj.germline) > 0
     vdj.store_germline_reference(
@@ -394,13 +392,13 @@ def test_store_germline_reference2(
     vdj = ddl.Dandelion(f)
     vdj.store_germline_reference(germline=database_paths["germline"])
     assert len(vdj.germline) > 0
-    out_file = str(create_testfolder) + "/test_airr_reannotated.h5"
+    out_file = create_testfolder / "test_airr_reannotated.h5"
     vdj.write_h5ddl(out_file)
     tmp = ddl.read_h5ddl(out_file)
     assert len(tmp.germline) > 0
     vdj.store_germline_reference(
         germline=database_paths["germline"],
-        corrected=str(create_testfolder) + "/filtered_contig.fasta",
+        corrected=create_testfolder / "filtered_contig.fasta",
     )
     assert len(vdj.germline) > 0
     vdj.store_germline_reference(

@@ -10,7 +10,7 @@ import pandas as pd
 @pytest.mark.usefixtures("create_testfolder", "airr_10x")
 def test_write_airr(create_testfolder, airr_10x):
     """test_write_airr"""
-    out_file = str(create_testfolder) + "/test_airr_rearrangements.tsv"
+    out_file = create_testfolder / "test_airr_rearrangements.tsv"
     airr_10x.to_csv(out_file, sep="\t", index=False)
     assert len(list(create_testfolder.iterdir())) == 1
 
@@ -18,8 +18,8 @@ def test_write_airr(create_testfolder, airr_10x):
 @pytest.mark.usefixtures("create_testfolder")
 def test_loaddata(create_testfolder):
     """test_loaddata"""
-    file1 = str(create_testfolder) + "/test_airr_rearrangements.tsv"
-    file2 = str(create_testfolder) + "/test_airr_rearrangements2.tsv"
+    file1 = create_testfolder / "test_airr_rearrangements.tsv"
+    file2 = create_testfolder / "test_airr_rearrangements2.tsv"
     dat = ddl.utl.load_data(file1)
     assert isinstance(dat, pd.DataFrame)
     with pytest.raises(FileNotFoundError):
@@ -35,7 +35,7 @@ def test_loaddata(create_testfolder):
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated")
 def test_write_annotated(create_testfolder, airr_reannotated):
     """test_write_annotated"""
-    out_file = str(create_testfolder) + "/test_airr_reannotated.tsv"
+    out_file = create_testfolder / "test_airr_reannotated.tsv"
     airr_reannotated.to_csv(out_file, sep="\t", index=False)
     assert not airr_reannotated.np1_length.empty
     assert not airr_reannotated.np2_length.empty
@@ -45,8 +45,8 @@ def test_write_annotated(create_testfolder, airr_reannotated):
 @pytest.mark.usefixtures("create_testfolder")
 def test_readwrite_h5ddl(create_testfolder):
     """test_readwrite_h5"""
-    out_file1 = str(create_testfolder) + "/test_airr_reannotated.tsv"
-    out_file2 = str(create_testfolder) + "/test_airr_reannotated.h5"
+    out_file1 = create_testfolder / "test_airr_reannotated.tsv"
+    out_file2 = create_testfolder / "test_airr_reannotated.h5"
     vdj = ddl.Dandelion(out_file1)
     assert not vdj.data.np1_length.empty
     assert not vdj.data.np2_length.empty
@@ -73,10 +73,10 @@ def test_readwrite_h5ddl(create_testfolder):
 @pytest.mark.usefixtures("create_testfolder")
 def test_readwrite_pkl(create_testfolder):
     """test_readwrite_pkl"""
-    out_file1 = str(create_testfolder) + "/test_airr_reannotated.tsv"
-    out_file2 = str(create_testfolder) + "/test_airr_reannotated.pkl"
-    out_file3 = str(create_testfolder) + "/test_airr_reannotated.pkl.gz"
-    out_file4 = str(create_testfolder) + "/test_airr_reannotated.pkl.pbz2"
+    out_file1 = create_testfolder / "test_airr_reannotated.tsv"
+    out_file2 = create_testfolder / "test_airr_reannotated.pkl"
+    out_file3 = create_testfolder / "test_airr_reannotated.pkl.gz"
+    out_file4 = create_testfolder / "test_airr_reannotated.pkl.pbz2"
     vdj = ddl.Dandelion(out_file1)
     assert not vdj.data.np1_length.empty
     assert not vdj.data.np2_length.empty
@@ -101,8 +101,8 @@ def test_readwrite_pkl(create_testfolder):
 @pytest.mark.usefixtures("create_testfolder")
 def test_readwrite10xairr(create_testfolder):
     """test_readwrite10xairr"""
-    airr_file = str(create_testfolder) + "/test_airr_rearrangements.tsv"
-    airr_file2 = str(create_testfolder) + "/test_airr_rearrangements2.tsv"
+    airr_file = create_testfolder / "test_airr_rearrangements.tsv"
+    airr_file2 = create_testfolder / "test_airr_rearrangements2.tsv"
     vdj = ddl.read_10x_airr(airr_file)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
@@ -116,7 +116,7 @@ def test_readwrite10xairr(create_testfolder):
 @pytest.mark.usefixtures("create_testfolder", "json_10x_cr6")
 def test_read10xvdj_json(create_testfolder, json_10x_cr6):
     """test_read10xvdj_json"""
-    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
+    json_file = create_testfolder / "test_all_contig_annotations.json"
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(json_file)
@@ -132,11 +132,9 @@ def test_read10xvdj_cr6(
     create_testfolder, json_10x_cr6, annotation_10x_cr6, fasta_10x_cr6
 ):
     """test_read10xvdj_cr6"""
-    fasta_file = str(create_testfolder) + "/test_filtered_contig.fasta"
-    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
-    annot_file = (
-        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
-    )
+    fasta_file = create_testfolder / "test_filtered_contig.fasta"
+    json_file = create_testfolder / "test_all_contig_annotations.json"
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x_cr6.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 26
@@ -159,10 +157,8 @@ def test_read10xvdj_cr6(
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
 def test_read10xvdj(create_testfolder, annotation_10x, fasta_10x):
     """test_read10xvdj"""
-    fasta_file = str(create_testfolder) + "/test_filtered_contig.fasta"
-    annot_file = (
-        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
-    )
+    fasta_file = create_testfolder / "test_filtered_contig.fasta"
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(annot_file)
     assert vdj.data.shape[0] == 9
@@ -182,24 +178,22 @@ def test_read10xvdj_cr6_folder(
     create_testfolder, json_10x_cr6, annotation_10x_cr6, fasta_10x_cr6
 ):
     """test_read10xvdj_cr6_folder"""
-    fasta_file = str(create_testfolder) + "/test_filtered_contig.fasta"
-    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
-    annot_file = (
-        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
-    )
+    fasta_file = create_testfolder / "test_filtered_contig.fasta"
+    json_file = create_testfolder / "test_all_contig_annotations.json"
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x_cr6.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
-    vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix="test_all")
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
     os.remove(json_file)
     ddl.utl.write_fasta(fasta_10x_cr6, fasta_file)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
@@ -209,16 +203,14 @@ def test_read10xvdj_cr6_folder(
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
 def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
     """test_read10xvdj_folder"""
-    fasta_file = str(create_testfolder) + "/test_filtered_contig.fasta"
-    annot_file = (
-        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
-    )
+    fasta_file = create_testfolder / "test_filtered_contig.fasta"
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     ddl.utl.write_fasta(fasta_10x, fasta_file)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     assert not vdj.data.sequence.empty
@@ -228,18 +220,16 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
 def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     """test_to_scirpy"""
-    fasta_file = str(create_testfolder) + "/test_filtered_contig.fasta"
-    annot_file = (
-        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
-    )
+    fasta_file = create_testfolder / "test_filtered_contig.fasta"
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     adata = ddl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 5
     ddl.utl.write_fasta(fasta_10x, fasta_file)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     assert not vdj.data.sequence.empty
@@ -255,12 +245,12 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
 )
 def test_tofro_scirpy_cr6(create_testfolder, annotation_10x_cr6, json_10x_cr6):
     """test_tofro_scirpy_cr6"""
-    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
-    annot_file = str(create_testfolder) + "/test_all_contig_annotations.csv"
+    json_file = create_testfolder / "test_all_contig_annotations.json"
+    annot_file = create_testfolder / "test_all_contig_annotations.csv"
     annotation_10x_cr6.to_csv(annot_file, index=False)
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
-    vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix="test_all")
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     adata = ddl.to_scirpy(vdj)
@@ -274,12 +264,12 @@ def test_tofro_scirpy_cr6_transfer(
     create_testfolder, annotation_10x_cr6, json_10x_cr6
 ):
     """test_tofro_scirpy_cr6_transfer"""
-    json_file = str(create_testfolder) + "/test_all_contig_annotations.json"
-    annot_file = str(create_testfolder) + "/test_all_contig_annotations.csv"
+    json_file = create_testfolder / "test_all_contig_annotations.json"
+    annot_file = create_testfolder / "test_all_contig_annotations.csv"
     annotation_10x_cr6.to_csv(annot_file, index=False)
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
-    vdj = ddl.read_10x_vdj(str(create_testfolder), filename_prefix="test_all")
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     adata = ddl.to_scirpy(vdj, transfer=True)
