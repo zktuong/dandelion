@@ -1103,14 +1103,14 @@ def reannotate_genes(
 
 
 def return_pass_fail_filepaths(
-    fasta: str,
+    fasta: Union[str, Path],
     filename_prefix: Optional[str] = None,
 ) -> Tuple[str, str, str]:
     """Return necessary file paths for internal use only.
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
@@ -3947,8 +3947,8 @@ class FilterContigsLite:
 
 
 def run_igblastn(
-    fasta: str,
-    igblast_db: Optional[str] = None,
+    fasta: Union[str, Path],
+    igblast_db: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
     evalue: float = 1e-4,
@@ -3960,9 +3960,9 @@ def run_igblastn(
 
     Parameters
     ----------
-    fasta : str
-        fasta file for reannotation.
-    igblast_db : Optional[str], optional
+    fasta : Union[str, Path]
+        path to fasta file for reannotation.
+    igblast_db : Optional[Union[str, Path]], optional
         path to igblast database.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
@@ -3990,11 +3990,11 @@ def run_igblastn(
 
     dbpath = igdb / "database"
     imgt_org_loci = "imgt_" + org + "_" + loci + "_"
-    vpath = str(dbpath / (imgt_org_loci + "v"))
-    dpath = str(dbpath / (imgt_org_loci + "d"))
-    jpath = str(dbpath / (imgt_org_loci + "j"))
-    cpath = str(dbpath / (imgt_org_loci + "c"))
-    auxpath = str(igdb / "optional_file" / (org + "_gl.aux"))
+    vpath = dbpath / (imgt_org_loci + "v")
+    dpath = dbpath / (imgt_org_loci + "d")
+    jpath = dbpath / (imgt_org_loci + "j")
+    cpath = dbpath / (imgt_org_loci + "c")
+    auxpath = igdb / "optional_file" / (org + "_gl.aux")
 
     for fileformat in ["blast", "airr"]:
         outfile = str(Path(fasta).stem + informat_dict[fileformat])
@@ -4002,13 +4002,13 @@ def run_igblastn(
             cmd = [
                 "igblastn",
                 "-germline_db_V",
-                vpath,
+                str(vpath),
                 "-germline_db_D",
-                dpath,
+                str(dpath),
                 "-germline_db_J",
-                jpath,
+                str(jpath),
                 "-auxiliary_data",
-                auxpath,
+                str(auxpath),
                 "-domain_system",
                 "imgt",
                 "-ig_seqtype",
@@ -4018,7 +4018,7 @@ def run_igblastn(
                 "-outfmt",
                 outformat[fileformat],
                 "-query",
-                fasta,
+                str(fasta),
                 "-out",
                 str(outfolder / outfile),
                 "-evalue",
@@ -4028,19 +4028,19 @@ def run_igblastn(
                 "-D_penalty",
                 str(-4),
                 "-c_region_db",
-                cpath,
+                str(cpath),
             ]
         else:
             cmd = [
                 "igblastn",
                 "-germline_db_V",
-                vpath,
+                str(vpath),
                 "-germline_db_D",
-                dpath,
+                str(dpath),
                 "-germline_db_J",
-                jpath,
+                str(jpath),
                 "-auxiliary_data",
-                auxpath,
+                str(auxpath),
                 "-domain_system",
                 "imgt",
                 "-ig_seqtype",
@@ -4050,7 +4050,7 @@ def run_igblastn(
                 "-outfmt",
                 outformat[fileformat],
                 "-query",
-                fasta,
+                str(fasta),
                 "-out",
                 str(outfolder / outfile),
                 "-evalue",
@@ -4058,7 +4058,7 @@ def run_igblastn(
                 "-min_D_match",
                 str(min_d_match),
                 "-c_region_db",
-                cpath,
+                str(cpath),
             ]
         cmd = cmd + additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
@@ -4066,7 +4066,7 @@ def run_igblastn(
 
 
 def assign_DJ(
-    fasta: str,
+    fasta: Union[str, Path],
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "tr",
     call: Literal["d", "j"] = "j",
@@ -4088,7 +4088,7 @@ def assign_DJ(
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
