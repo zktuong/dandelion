@@ -4218,18 +4218,15 @@ def run_blastn(
         reannotated information after blastn.
     """
     if call != "c":
-        env, bdb = set_igblast_env(database)
-        if database is None:
-            bdb = bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
-        else:
-            if not bdb.stem.endswith("_" + loci + "_" + call):
-                bdb = (
-                    bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
-                )
+        env, bdb, fasta = set_igblast_env(igblast_db=database, input_file=fasta)
+        bdb = bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
     else:
-        env, bdb = set_blast_env(database)
+        env, bdb, fasta = set_blast_env(blast_db=database, input_file=fasta)
         if database is None:
             bdb = bdb / org / (org + "_BCR_C.fasta")
+        else:
+            if not bdb.stem.endswith("_" + loci + "_" + call):
+                bdb = (bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call))
     cmd = [
         "blastn",
         "-db",
