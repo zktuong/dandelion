@@ -281,13 +281,13 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     return res
 
 
-def read_10x_airr(file: str) -> Dandelion:
+def read_10x_airr(file: Union[str, Path]) -> Dandelion:
     """
     Read the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
     Parameters
     ----------
-    file : str
+    file : Union[str, Path]
         path to `airr_rearrangement.tsv`
 
     Returns
@@ -488,10 +488,9 @@ def concat(
 
 
 def read_10x_vdj(
-    path: str,
+    path: Union[str, Path],
     filename_prefix: Optional[str] = None,
     return_dandelion: bool = True,
-    verbose: bool = False,
 ) -> Union[Dandelion, pd.DataFrame]:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger outputs.
@@ -504,14 +503,12 @@ def read_10x_vdj(
 
     Parameters
     ----------
-    path : str
+    path : Union[str, Path]
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     return_dandelion : bool, optional
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
-    verbose : bool, optional
-        whether or not to print which files are read/found. Default is False.
 
     Returns
     -------
@@ -525,8 +522,8 @@ def read_10x_vdj(
 
     """
     filename_pre = "filtered" if filename_prefix is None else filename_prefix
-
-    if os.path.isdir(str(path)):
+    path = Path(path)
+    if path.is_dir():
         files = os.listdir(path)
         filelist = []
         for fx in files:
@@ -539,9 +536,9 @@ def read_10x_vdj(
         csv_idx = [i for i, j in enumerate(filelist) if j.endswith(".csv")]
         json_idx = [i for i, j in enumerate(filelist) if j.endswith(".json")]
         if len(csv_idx) == 1:
-            file = str(path) + "/" + str(filelist[csv_idx[0]])
+            file = path / str(filelist[csv_idx[0]])
             logg.info("Reading {}".format(str(file)))
-            raw = pd.read_csv(str(file))
+            raw = pd.read_csv(file)
             raw.set_index("contig_id", drop=False, inplace=True)
             fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
             json_file = re.sub(
