@@ -971,9 +971,10 @@ def update_rearrangement_status(self):
 def set_germline_env(
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
-) -> Tuple[Dict, Path]:
+    input_file: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict, Path, Path]:
     """
-    Set the germline database and environment variables.
+    Set the paths to germline database and environment variables and relevant input files.
 
     Parameters
     ----------
@@ -981,7 +982,8 @@ def set_germline_env(
         path to germline database. None defaults to environmental variable $GERMLINE.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
-
+    input_file : Optional[Union[str, Path]], optional
+        path to input file.
     Returns
     -------
     Tuple[Dict, Path]
@@ -1003,18 +1005,27 @@ def set_germline_env(
                     "Please 'export GERMLINE=/path/to/database/germlines/'"
                 )
             )
-        _gml = gml / "imgt" / org / "vdj"
-    return env, _gml
+        gml = gml / "imgt" / org / "vdj"
+    else:
+        gml = env["GERMLINE"] = Path(germline)
+    if input_file is not None:
+        input_file = Path(input_file)
+    return env, gml, input_file
 
 
-def set_igblast_env(igblast_db: Optional[str] = None) -> Tuple[Dict, Path]:
+def set_igblast_env(
+    igblast_db: Optional[Union[str, Path]] = None,
+    input_file: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict, Path, Path]:
     """
-    Set the igblast database and environment variables.
+    Set the igblast database and environment variables and relevant input files.
 
     Parameters
     ----------
     igblast_db : Optional[str], optional
         path to igblast database. None defaults to environmental variable $IGDATA.
+    input_file : Optional[Union[str, Path]], optional
+        path to input file.
 
     Returns
     -------
@@ -1039,18 +1050,24 @@ def set_igblast_env(igblast_db: Optional[str] = None) -> Tuple[Dict, Path]:
             )
     else:
         igdb = env["IGDATA"] = Path(igblast_db)
-    return env, igdb
+    if input_file is not None:
+        input_file = Path(input_file)
+    return env, igdb, input_file
 
 
-def set_blast_env(blast_db: Optional[str] = None) -> Tuple[Dict, Path]:
+def set_blast_env(
+    blast_db: Optional[str] = None,
+    input_file: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict, Path, Path]:
     """
-    Set the blast database and environment variables.
+    Set the blast database and environment variables and relevant input files.
 
     Parameters
     ----------
     blast_db : Optional[str], optional
         path to blast database. None defaults to environmental variable $BLASTDB.
-
+    input_file : Optional[Union[str, Path]], optional
+        path to input file.
     Returns
     -------
     Tuple[Dict, Path]
@@ -1074,4 +1091,6 @@ def set_blast_env(blast_db: Optional[str] = None) -> Tuple[Dict, Path]:
             )
     else:
         bdb = env["BLASTDB"] = Path(blast_db)
-    return env, bdb
+    if input_file is not None:
+        input_file = Path(input_file)
+    return env, bdb, input_file
