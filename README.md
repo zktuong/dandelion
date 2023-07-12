@@ -60,11 +60,21 @@ singularity run -B $PWD sc-dandelion_latest.sif dandelion-preprocess --meta meta
 Start off by creating a conda environment containing scanpy, following [official scanpy instructions](https://scanpy.readthedocs.io/en/stable/installation.html). Once done, run the following:
 
 ```bash
-conda install -c conda-forge graph-tool
 pip install sc-dandelion
 ```
-
 Between this and the pipelines within the singularity container, you should be covered for most of your needs.
+
+### Optional dependencies
+
+#### graph-tool
+You may need to follow [official graph-tool instructions](https://git.skewed.de/count0/graph-tool/-/wikis/installation-instructions). Particularly so if you are using Apple silicon.
+
+#### immcantation packages
+Some of the functions are wrappers for functions in the R packages by [immcantation](https://immcantation.readthedocs.io/en/latest/index.html). You can install them separately if necessary.
+
+```R
+install.packages(c("shazam", "alakazam", "tigger", "optparse"))
+```
 
 ## Basic requirements
 Python packages
@@ -81,11 +91,7 @@ pytables>=3.6.1 (conda-forge)
 seaborn>=0.10.1 (conda-forge)
 leidenalg>=0.8.0 (conda-forge)
 plotnine>=0.6.0 (conda-forge)
-graph-tool>=2.3.5 (conda-forge) # optional
-
-# Other executables (through conda)
-blast>=2.10.1 (bioconda)
-igblast>=1.15.0 (bioconda)
+graph-tool>=2.3.5 (conda-forge) # optional - follow instructions on their website
 
 # pip
 anndata>=0.7.1
@@ -96,7 +102,12 @@ presto>=0.6.0
 polyleven>=0.5
 networkx>=2.4
 rpy2>=3.4.2
+
+# Other executables (e.g. obtained through conda; manually if on Apple silicon)
+blast>=2.10.1 (bioconda)
+igblast>=1.15.0 (bioconda)
 ```
+
 
 ## Acknowledgements
 I would like to acknowledge the contributions from Dr. Chenqu Suo, Dr. Krysztof Polanksi, Dr. Sarah Teichmann and Prof. Menna Clatworthy, who helped with the initial conception of the project and for all discussions.
