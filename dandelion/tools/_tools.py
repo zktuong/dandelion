@@ -98,7 +98,7 @@ def find_clones(
     locus_dict2 = {"ig": ["IGK", "IGL"], "tr-ab": ["TRA"], "tr-gd": ["TRG"]}
     locus_log1_dict = {"ig": "IGH", "tr-ab": "TRB", "tr-gd": "TRD"}
     locus_log2_dict = {"ig": "IGL/IGL", "tr-ab": "TRA", "tr-gd": "TRG"}
-    DEFAULTIDENTITY = {"ig": 0.85, "tr-ab": 1, "tr-gd": 1}
+    defaultidentity = {"ig": 0.85, "tr-ab": 1, "tr-gd": 1}
     if key is None:
         key_ = "junction_aa"  # default
     else:
@@ -132,13 +132,13 @@ def find_clones(
             locus_2 = locus_dict2[locusx]
             if isinstance(identity, dict):
                 if locusx not in identity:
-                    identity.update({locusx: DEFAULTIDENTITY[locusx]})
+                    identity.update({locusx: defaultidentity[locusx]})
                     warnings.warn(
                         UserWarning(
                             "Identity value for {} chains ".format(locusx)
                             + "not specified in provided dictionary. "
                             + "Defaulting to {} for {} chains.".format(
-                                DEFAULTIDENTITY[locusx], locusx
+                                defaultidentity[locusx], locusx
                             )
                         )
                     )
