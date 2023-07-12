@@ -24,7 +24,9 @@ test_mouse/test_mouse_heavy_igblast_db-pass.tsv
 test_mouse/test_mouse_heavy_igblast_db-pass_germ-pass.tsv
 test_mouse/test_mouse_light_igblast_db-pass.tsv
 test_mouse/test_mouse_light_igblast_db-pass_germ-pass.tsv
-container/database/blast/human/human_BCR_C.fasta.nin
-container/database/blast/mouse/mouse_BCR_C.fasta.nin
+container/database/
+container/database/blast/
+container/database/blast/human/
+container/database/blast/mouse/
 .hypothesis/
 .vscode/
