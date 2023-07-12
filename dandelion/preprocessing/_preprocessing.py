@@ -406,7 +406,7 @@ def format_fastas(
 
 
 def assign_isotype(
-    fasta: str,
+    fasta: Union[str, Path],
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e-4,
     correct_c_call: bool = True,
@@ -415,7 +415,7 @@ def assign_isotype(
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
-    blastdb: Optional[str] = None,
+    blastdb: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[str] = None,
     additional_args: List[str] = [],
 ):
@@ -424,7 +424,7 @@ def assign_isotype(
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
@@ -449,7 +449,7 @@ def assign_isotype(
         whether or not to show plot.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
-    blastdb : Optional[str], optional
+    blastdb : Optional[Union[str, Path]], optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
@@ -822,17 +822,16 @@ def assign_isotype(
 
 
 def assign_isotypes(
-    fastas: List[str],
-    fileformat: Literal["blast", "changeo", "airr"] = "blast",
+    fastas: List[Union[str, Path]],
     org: Literal["human", "mouse"] = "human",
+    evalue: float = 1e-4,
     correct_c_call: bool = True,
     correction_dict: Optional[Dict[str, Dict[str, str]]] = None,
     plot: bool = True,
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
-    blastdb: Optional[str] = None,
-    allele: bool = False,
+    blastdb: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[Union[List, str]] = None,
     additional_args: List[str] = [],
 ):
@@ -841,12 +840,16 @@ def assign_isotypes(
 
     Parameters
     ----------
-    fastas : List[str]
+    fastas : List[Union[str, Path]]
         list of paths to fasta files.
-    fileformat : Literal["blast", "changeo", "airr"], optional
-        format of V(D)J file/objects.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
+    evalue : float, optional
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
     correct_c_call : bool, optional
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
     correction_dict : Optional[Dict[str, Dict[str, str]]], optional
@@ -860,10 +863,8 @@ def assign_isotypes(
         whether or not to show plots.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
-    blastdb : Optional[str], optional
+    blastdb : Optional[Union[str, Path]], optional
         path to blast database. Defaults to `BLASTDB` environmental variable.
-    allele : bool, optional
-        whether or not to return allele calls.
     filename_prefix : Optional[Union[List, str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
     additional_args : List[str], optional
@@ -881,8 +882,8 @@ def assign_isotypes(
     for i in range(0, len(fastas)):
         assign_isotype(
             fastas[i],
-            fileformat=fileformat,
             org=org,
+            evalue=evalue,
             correct_c_call=correct_c_call,
             correction_dict=correction_dict,
             plot=plot,
@@ -890,7 +891,6 @@ def assign_isotypes(
             show_plot=show_plot,
             figsize=figsize,
             blastdb=blastdb,
-            allele=allele,
             filename_prefix=filename_prefix[i],
             additional_args=additional_args,
         )
