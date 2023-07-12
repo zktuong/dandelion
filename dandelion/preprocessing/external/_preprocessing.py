@@ -21,8 +21,8 @@ from ...utilities._utilities import *
 
 
 def assigngenes_igblast(
-    fasta: str,
-    igblast_db: Optional[str] = None,
+    fasta: Union[str, Path],
+    igblast_db: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
     additional_args: List[str] = [],
@@ -32,9 +32,9 @@ def assigngenes_igblast(
 
     Parameters
     ----------
-    fasta : str
-        fasta file for reannotation.
-    igblast_db : Optional[str], optional
+    fasta : Union[str, Path]
+        path to fasta file for reannotation.
+    igblast_db : Optional[Union[str, Path]], optional
         path to igblast database.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
@@ -44,21 +44,21 @@ def assigngenes_igblast(
         Additional arguments to pass to `AssignGenes.py`.
     """
     env, igdb = set_igblast_env(igblast_db=igblast_db)
-    fasta_path = Path(fasta)
-    outfolder = fasta_path / "tmp"
+    fasta = Path(fasta)
+    outfolder = fasta / "tmp"
     outfolder.mkdir(parents=True, exist_ok=True)
 
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
     for fileformat in ["blast", "airr"]:
-        outfile = fasta_path.stem + informat_dict[fileformat]
+        outfile = fasta.stem + informat_dict[fileformat]
         cmd = [
             "AssignGenes.py",
             "igblast",
             "-s",
-            fasta,
+            str(fasta),
             "-b",
-            igdb,
+            str(igdb),
             "--organism",
             org,
             "--loci",
@@ -74,8 +74,8 @@ def assigngenes_igblast(
 
 
 def makedb_igblast(
-    fasta: str,
-    igblast_output: Optional[str] = None,
+    fasta: Union[str, Path],
+    igblast_output: Optional[Union[str, Path]] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     extended: bool = True,
@@ -86,10 +86,10 @@ def makedb_igblast(
 
     Parameters
     ----------
-    fasta : str
-        fasta file use for reannotation.
-    igblast_output : Optional[str], optional
-        igblast output file.
+    fasta : Union[str, Path]
+        path to fasta file used for reannotation.
+    igblast_output : Optional[Union[str, Path]], optional
+        path to igblast output file.
     germline : Optional[str], optional
         path to germline database.
     org : Literal["human", "mouse"], optional
@@ -100,88 +100,43 @@ def makedb_igblast(
         Additional arguments to pass to `MakeDb.py`.
     """
     env, _gml = set_germline_env(germline=germline, org=org)
-
+    fasta = Path(fasta)
     if igblast_output is None:
-        fasta_path = Path(fasta)
-        indir = fasta_path / "tmp"
-        infile = fasta_path.stem + "_igblast.fmt7"
+        indir = fasta / "tmp"
+        infile = fasta.stem + "_igblast.fmt7"
         igbo = indir / infile
     else:
         igbo = Path(igblast_output)
 
-    cellranger_annotation = fasta_path.parent / (
-        fasta_path.stem + "_annotations.csv"
-    )
+    cellranger_annotation = fasta.parent / (fasta.stem + "_annotations.csv")
 
+    cmd_base = [
+        "MakeDb.py",
+        "igblast",
+        "-i",
+        str(igbo),
+        "-s",
+        str(fasta),
+        "-r",
+        str(_gml),
+        "--10x",
+        str(cellranger_annotation),
+    ]
     if extended:
-        cmd1 = [
-            "MakeDb.py",
-            "igblast",
-            "-i",
-            str(igbo),
-            "-s",
-            fasta,
-            "-r",
-            str(_gml),
-            "--10x",
-            str(cellranger_annotation),
-            "--extended",
-        ]
-        cmd2 = [
-            "MakeDb.py",
-            "igblast",
-            "-i",
-            str(igbo),
-            "-s",
-            fasta,
-            "-r",
-            str(_gml),
-            "--10x",
-            str(cellranger_annotation),
-            "--extended",
-            "--failed",
-        ]
-    else:
-        cmd1 = [
-            "MakeDb.py",
-            "igblast",
-            "-i",
-            str(igbo),
-            "-s",
-            fasta,
-            "-r",
-            str(_gml),
-            "--10x",
-            str(cellranger_annotation),
-        ]
-        cmd2 = [
-            "MakeDb.py",
-            "igblast",
-            "-i",
-            str(igbo),
-            "-s",
-            fasta,
-            "-r",
-            str(_gml),
-            "--10x",
-            str(cellranger_annotation),
-            "--failed",
-        ]
-    cmd1 = cmd1 + additional_args
-    cmd2 = cmd2 + additional_args
-    logg.info("Running command: %s\n" % (" ".join(cmd1)))
-    run(cmd1, env=env)  # logs are printed to terminal
-    logg.info("Running command: %s\n" % (" ".join(cmd2)))
-    run(cmd2, env=env)  # logs are printed to terminal
+        cmd_base = cmd_base + ["--extended"]
+    for add_cmd in [[], ["--failed"]]:
+        cmd = cmd_base + add_cmd + additional_args
+        logg.info("Running command: %s\n" % (" ".join(cmd)))
+        run(cmd, env=env)  # logs are printed to terminal
 
 
-def parsedb_heavy(airr_file: str):
+def parsedb_heavy(airr_file: Union[str, Path]):
     """
     Parse AIRR tsv file (heavy chain contigs only).
 
     Parameters
     ----------
-    airr_file : str
+    airr_file : Union[str, Path]
         path to AIRR tsv file.
     """
     outname = Path(airr_file).stem + "_heavy"
@@ -189,7 +144,7 @@ def parsedb_heavy(airr_file: str):
         "ParseDb.py",
         "select",
         "-d",
-        airr_file,
+        str(airr_file),
         "-f",
         "locus",
         "-u",
@@ -205,13 +160,13 @@ def parsedb_heavy(airr_file: str):
     run(cmd)  # logs are printed to terminal
 
 
-def parsedb_light(airr_file: str):
+def parsedb_light(airr_file: Union[str, Path]):
     """
     Parse AIRR tsv file (light chain contigs only).
 
     Parameters
     ----------
-    airr_file : str
+    airr_file : Union[str, Path]
         path to AIRR tsv file.
     """
     outname = Path(airr_file).stem + "_light"
@@ -219,7 +174,7 @@ def parsedb_light(airr_file: str):
         "ParseDb.py",
         "select",
         "-d",
-        airr_file,
+        str(airr_file),
         "-f",
         "locus",
         "-u",
@@ -236,7 +191,7 @@ def parsedb_light(airr_file: str):
 
 
 def creategermlines(
-    airr_file: str,
+    airr_file: Union[str, Path],
     germline: Optional[List[str]] = None,
     org: Literal["human", "mouse"] = "human",
     genotyped_fasta: Optional[str] = None,
@@ -248,14 +203,14 @@ def creategermlines(
 
     Parameters
     ----------
-    airr_file : str
+    airr_file : Union[str, Path]
         path to AIRR tsv file.
     germline : Optional[List[str]], optional
         location to germline fasta files as a list.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
     genotyped_fasta : Optional[str], optional
-        location to corrected v genotyped fasta file.
+        location to V genotyped fasta file.
     mode : Optional[Literal["heavy", "light"]], optional
         whether to run on heavy or light mode. If left as None, heavy and
         light will be run together.
@@ -313,7 +268,7 @@ def creategermlines(
     cmd = [
         "CreateGermlines.py",
         "-d",
-        str(airr_file),  # just in case it's a Path object
+        str(airr_file),
         "-r",
     ]
     cmd = cmd + gml_ref + additional_args
@@ -323,9 +278,9 @@ def creategermlines(
 
 
 def tigger_genotype(
-    airr_file: str,
-    v_germline: Optional[str] = None,
-    outdir: Optional[str] = None,
+    airr_file: Union[str, Path],
+    v_germline: Optional[Union[str, Path]] = None,
+    outdir: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     fileformat: Literal["airr", "changeo"] = "airr",
     novel_: Literal["YES", "NO"] = "YES",
@@ -336,11 +291,11 @@ def tigger_genotype(
 
     Parameters
     ----------
-    airr_file : str
+    airr_file : Union[str, Path]
         path to AIRR tsv file.
-    v_germline : Optional[str], optional
+    v_germline : Optional[Union[str, Path]], optional
         fasta file containing IMGT-gapped V segment reference germlines.
-    outdir : Optional[str], optional
+    outdir : Optional[Union[str, Path]], optional
         output directory. Will be created if it does not exist.
         Defaults to the current working directory.
     org : Literal["human", "mouse"], optional
@@ -375,7 +330,7 @@ def tigger_genotype(
     if outdir is not None:
         out_dir = Path(outdir)
     else:
-        current_path = Path(str(airr_file))  # just in case it's a Path object
+        current_path = Path(airr_file)
         out_dir = current_path.parent
 
     cmd = [
