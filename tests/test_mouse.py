@@ -4,8 +4,6 @@ import pandas as pd
 import dandelion as ddl
 import pytest
 
-from pathlib import Path
-
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_mouse")
 def test_write_fasta(create_testfolder, fasta_10x_mouse):
@@ -61,7 +59,6 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
 def test_updateblastdb(database_paths_mouse):
     """test_updateblastdb"""
     ddl.utl.makeblastdb(database_paths_mouse["blastdb_fasta"])
-    # assert len(list(Path(database_paths_mouse["blastdb"]).iterdir())) == 10
 
 
 @pytest.mark.usefixtures(

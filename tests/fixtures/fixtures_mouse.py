@@ -2,17 +2,23 @@
 import pytest
 import pandas as pd
 
+from pathlib import Path
 from .fixtures import setup_anndata
+
+DATABASE_PATH = Path("container") / "database"
 
 
 @pytest.fixture
 def database_paths_mouse():
     """Database paths for tests."""
     db = {
-        "igblast_db": "container/database/igblast/",
-        "germline": "container/database/germlines/imgt/mouse/vdj/",
-        "blastdb": "container/database/blast/mouse/",
-        "blastdb_fasta": "container/database/blast/mouse/mouse_BCR_C.fasta",
+        "igblast_db": DATABASE_PATH / "igblast",
+        "germline": DATABASE_PATH / "germlines" / "imgt" / "mouse" / "vdj",
+        "blastdb": DATABASE_PATH / "blast" / "mouse",
+        "blastdb_fasta": DATABASE_PATH
+        / "blast"
+        / "mouse"
+        / "mouse_BCR_C.fasta",
     }
     return db
 

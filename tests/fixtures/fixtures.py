@@ -4,6 +4,9 @@ import pytest
 import scipy.sparse
 
 from anndata import AnnData
+from pathlib import Path
+
+DATABASE_PATH = Path("container") / "database"
 
 
 def setup_anndata(obs: pd.DataFrame) -> AnnData:
@@ -43,10 +46,13 @@ def create_testfolder(tmp_path_factory):
 def database_paths():
     """Database paths for tests."""
     db = {
-        "igblast_db": "container/database/igblast/",
-        "germline": "container/database/germlines/imgt/human/vdj/",
-        "blastdb": "container/database/blast/human/",
-        "blastdb_fasta": "container/database/blast/human/human_BCR_C.fasta",
+        "igblast_db": DATABASE_PATH / "igblast",
+        "germline": DATABASE_PATH / "germlines" / "imgt" / "human" / "vdj",
+        "blastdb": DATABASE_PATH / "blast" / "human",
+        "blastdb_fasta": DATABASE_PATH
+        / "blast"
+        / "human"
+        / "human_BCR_C.fasta",
     }
     return db
 
