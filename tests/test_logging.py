@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 """test logging"""
 import dandelion as ddl
-from subprocess import Popen
+from subprocess import run
 from pathlib import Path
 
 
 def test_badge():
     """test_badge"""
-    p = Popen(
+    p = run(
         " ".join(["python", str(Path("dandelion") / "logging" / "_badge.py")]),
         capture_output=True,
         encoding="utf8",
-        shell=True,
     )
     assert p.returncode == 0
     # assert p.stderr == "" # because palantir tries to import some fonts and it complains.
