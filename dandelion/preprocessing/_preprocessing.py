@@ -4067,6 +4067,8 @@ def run_igblastn(
                 str(cpath),
             ]
         cmd = cmd + additional_args
+        print((" ".join(cmd)))
+        print(cmd)
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
