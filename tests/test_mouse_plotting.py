@@ -56,7 +56,7 @@ def test_clone_overlap(
         dummy_adata_mouse,
         groupby="sample_idx",
         weighted_overlap=False,
-        save="test.png",
+        save=create_testfolder / "test.png",
         return_graph=True,
     )
     assert G is not None
