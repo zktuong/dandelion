@@ -19,8 +19,7 @@ from itertools import combinations
 from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform
-from subprocess import run
-from time import sleep
+from subprocess import Popen
 from tqdm import tqdm
 from typing import Union, List, Optional
 
@@ -1247,7 +1246,7 @@ def define_clones(
         return (heavy_df, light_df)
 
     logg.info("Running command: %s\n" % (" ".join(cmd)))
-    run(cmd)
+    Popen(" ".join(cmd), shell=True)
 
     h_df, l_df = _lightCluster(
         h_file2, l_file, outfile, doublets=doublets, fileformat=fileformat

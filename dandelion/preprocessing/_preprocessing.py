@@ -34,7 +34,7 @@ from plotnine import (
     save_as_pdf_pages,
 )
 from scanpy import logging as logg
-from subprocess import run
+from subprocess import Popen
 from time import sleep
 from tqdm import tqdm
 from typing import Union, List, Tuple, Optional
@@ -3992,7 +3992,7 @@ def run_igblastn(
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
     loci_type = {"ig": "Ig", "tr": "TCR"}
-    outformat = {"blast": '"7 std qseq sseq btop"', "airr": "19"}
+    outformat = {"blast": "'7 std qseq sseq btop'", "airr": "19"}
 
     dbpath = igdb / "database"
     imgt_org_loci = "imgt_" + org + "_" + loci + "_"
@@ -4067,16 +4067,10 @@ def run_igblastn(
                 str(cpath),
             ]
         cmd = cmd + additional_args
-        print((" ".join(cmd)))
-        print(
-            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        )
-        print(cmd)
-        print(
-            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        )
         logg.info("Running command: %s\n" % (" ".join(cmd)))
-        run(cmd, env=env)  # logs are printed to terminal
+        Popen(
+            " ".join(cmd), env=env, shell=True
+        )  # logs are printed to terminal
 
 
 def assign_DJ(
@@ -4264,7 +4258,7 @@ def run_blastn(
     blast_out = fasta.parent / "tmp" / (fasta.stem + "_" + call + "_blast.tsv")
     logg.info("Running command: %s\n" % (" ".join(cmd)))
     with open(blast_out, "w") as out:
-        run(cmd, stdout=out, env=env)
+        Popen(" ".join(cmd), stdout=out, env=env, shell=True)
     try:
         dat = pd.read_csv(blast_out, sep="\t", header=None)
         dat.columns = [

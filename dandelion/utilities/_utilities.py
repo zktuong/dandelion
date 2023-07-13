@@ -11,7 +11,7 @@ import pandas as pd
 from airr import RearrangementSchema
 from collections import defaultdict
 from pathlib import Path
-from subprocess import run
+from subprocess import Popen
 from typing import Tuple, Dict, Union, Optional, TypeVar, List
 
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
@@ -137,7 +137,7 @@ def makeblastdb(ref: str):
         constant region fasta file
     """
     cmd = ["makeblastdb", "-dbtype", "nucl", "-parse_seqids", "-in", ref]
-    run(cmd)
+    Popen(" ".join(cmd), shell=True)
 
 
 def bh(pvalues: np.array) -> np.array:

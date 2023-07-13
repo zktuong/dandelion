@@ -3,17 +3,18 @@
 import os
 import pandas as pd
 import dandelion as ddl
-import pytest
+
 from unittest.mock import patch
-from subprocess import run
+from subprocess import Popen
 
 
 def test_callscript():
     """Test script to run preprocessing."""
-    p = run(
-        ["python", "/share/dandelion_preprocess.py", "-h"],
+    p = Popen(
+        " ".join(["python", "/share/dandelion_preprocess.py", "-h"]),
         capture_output=True,
         encoding="utf8",
+        shell=True,
     )
     assert p.returncode == 0
     assert p.stdout != ""

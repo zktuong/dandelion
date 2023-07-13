@@ -12,7 +12,7 @@ from datetime import timedelta
 from pathlib import Path
 from scanpy import logging as logg
 from sklearn import mixture
-from subprocess import run
+from subprocess import Popen
 from time import time
 from typing import Optional
 
@@ -69,7 +69,9 @@ def assigngenes_igblast(
         ]
         cmd = cmd + additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
-        run(cmd, env=env)  # logs are printed to terminal
+        Popen(
+            " ".join(cmd), env=env, shell=True
+        )  # logs are printed to terminal
 
 
 def makedb_igblast(
@@ -127,7 +129,9 @@ def makedb_igblast(
     for add_cmd in [[], ["--failed"]]:
         cmd = cmd_base + add_cmd + additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
-        run(cmd, env=env)  # logs are printed to terminal
+        Popen(
+            " ".join(cmd), env=env, shell=True
+        )  # logs are printed to terminal
 
 
 def parsedb_heavy(airr_file: Union[str, Path]):
@@ -157,7 +161,7 @@ def parsedb_heavy(airr_file: Union[str, Path]):
     ]
 
     logg.info("Running command: %s\n" % (" ".join(cmd)))
-    run(cmd)  # logs are printed to terminal
+    Popen(" ".join(cmd), shell=True)  # logs are printed to terminal
 
 
 def parsedb_light(airr_file: Union[str, Path]):
@@ -187,7 +191,7 @@ def parsedb_light(airr_file: Union[str, Path]):
     ]
 
     logg.info("Running command: %s\n" % (" ".join(cmd)))
-    run(cmd)  # logs are printed to terminal
+    Popen(" ".join(cmd), shell=True)  # logs are printed to terminal
 
 
 def creategermlines(
@@ -276,7 +280,7 @@ def creategermlines(
     cmd = cmd + gml_ref + additional_args
 
     logg.info("Running command: %s\n" % (" ".join(cmd)))
-    run(cmd, env=env)  # logs are printed to terminal
+    Popen(" ".join(cmd), env=env, shell=True)  # logs are printed to terminal
 
 
 def tigger_genotype(
@@ -341,8 +345,9 @@ def tigger_genotype(
 
     print("      Reassigning alleles")
     logg.info("Running command: %s\n" % (" ".join(cmd)))
-    run(cmd, env=env)  # logs are printed to terminal
-    elapsed_time_secs = time() - start_time
+    Popen(
+        " ".join(cmd), env=env, shell=True
+    )  # logs are printed to terminal    elapsed_time_secs = time() - start_time
     msg = (
         "tigger-genotype execution took: %s"
         % timedelta(seconds=round(elapsed_time_secs))
