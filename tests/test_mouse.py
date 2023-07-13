@@ -38,7 +38,7 @@ def test_reannotategenes(create_testfolder, database_paths_mouse):
         org="mouse",
         reassign_dj=False,
     )
-    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 4
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 2
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
@@ -52,7 +52,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
         novel=True,
         plot=False,
     )
-    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 7
+    assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 5
 
 
 @pytest.mark.usefixtures("database_paths_mouse")
