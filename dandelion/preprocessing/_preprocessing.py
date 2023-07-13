@@ -660,8 +660,7 @@ def assign_isotype(
         max_hsps=1,
         evalue=evalue,
         outfmt=(
-            "6 qseqid sseqid pident length mismatch gapopen "
-            + "qstart qend sstart send evalue bitscore qseq sseq"
+            "'6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qseq sseq'"
         ),
         dust="no",
         additional_args=additional_args,
@@ -1816,7 +1815,7 @@ def create_germlines(
         tmpfile = (
             Path(vdj_data)
             if os.path.isfile(vdj_data)
-            else Path(tempfile.TemporaryDirectory()) / "tmp.tsv"
+            else Path(tempfile.TemporaryDirectory().name) / "tmp.tsv"
         )
         if isinstance(vdj_data, pd.DataFrame):
             write_airr(data=vdj_data.germline, save=tmpfile)
@@ -1828,10 +1827,10 @@ def create_germlines(
             additional_args=additional_args,
         )
     else:
-        tmpfile = Path(tempfile.TemporaryDirectory()) / "tmp.tsv"
+        tmpfile = Path(tempfile.TemporaryDirectory().name) / "tmp.tsv"
         vdj_data.write_airr(filename=tmpfile)
         if len(vdj_data.germline) > 0:
-            tmpgmlfile = Path(tempfile.TemporaryDirectory()) / "germ.fasta"
+            tmpgmlfile = Path(tempfile.TemporaryDirectory().name) / "germ.fasta"
             write_fasta(fasta_dict=vdj_data.germline, out_fasta=tmpgmlfile)
             creategermlines(
                 airr_file=tmpfile,
@@ -4084,8 +4083,7 @@ def assign_DJ(
     dust: Optional[Union[Literal["yes", "no"], str]] = None,
     word_size: Optional[int] = None,
     outfmt: str = (
-        "6 qseqid sseqid pident length mismatch gapopen "
-        + "qstart qend sstart send evalue bitscore qseq sseq"
+        "'6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qseq sseq'"
     ),
     filename_prefix: Optional[str] = None,
     overwrite: bool = False,
@@ -4173,8 +4171,7 @@ def run_blastn(
     max_hsps: int = 10,
     evalue: float = 1e-4,
     outfmt: str = (
-        "6 qseqid sseqid pident length mismatch gapopen "
-        + "qstart qend sstart send evalue bitscore qseq sseq"
+        "'6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qseq sseq'"
     ),
     dust: Optional[Union[Literal["yes", "no"], str]] = None,
     word_size: Optional[int] = None,
