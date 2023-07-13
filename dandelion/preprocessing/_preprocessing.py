@@ -1816,7 +1816,7 @@ def create_germlines(
         tmpfile = (
             Path(vdj_data)
             if os.path.isfile(vdj_data)
-            else Path(tempfile.TemporaryDirectory() / "tmp.tsv")
+            else Path(tempfile.TemporaryDirectory()) / "tmp.tsv"
         )
         if isinstance(vdj_data, pd.DataFrame):
             write_airr(data=vdj_data.germline, save=tmpfile)
@@ -1828,10 +1828,10 @@ def create_germlines(
             additional_args=additional_args,
         )
     else:
-        tmpfile = Path(tempfile.TemporaryDirectory() / "tmp.tsv")
+        tmpfile = Path(tempfile.TemporaryDirectory()) / "tmp.tsv"
         vdj_data.write_airr(filename=tmpfile)
         if len(vdj_data.germline) > 0:
-            tmpgmlfile = Path(tempfile.TemporaryDirectory() / "germ.fasta")
+            tmpgmlfile = Path(tempfile.TemporaryDirectory()) / "germ.fasta"
             write_fasta(fasta_dict=vdj_data.germline, out_fasta=tmpgmlfile)
             creategermlines(
                 airr_file=tmpfile,
@@ -3992,7 +3992,7 @@ def run_igblastn(
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
     loci_type = {"ig": "Ig", "tr": "TCR"}
-    outformat = {"blast": "7 std qseq sseq btop", "airr": "19"}
+    outformat = {"blast": '"7 std qseq sseq btop"', "airr": "19"}
 
     dbpath = igdb / "database"
     imgt_org_loci = "imgt_" + org + "_" + loci + "_"
@@ -4068,7 +4068,13 @@ def run_igblastn(
             ]
         cmd = cmd + additional_args
         print((" ".join(cmd)))
+        print(
+            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        )
         print(cmd)
+        print(
+            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+        )
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
