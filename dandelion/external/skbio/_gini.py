@@ -61,7 +61,7 @@ def gini_index(data, method="rectangles"):
        E, Salvemini, T). Rome: Libreria Eredi Virgilio Veschi (1955).
     """
     # Suppress cast to int because this method supports ints and floats.
-    data = _validate_counts_vector(data, suppress_cast=True)
+    data = _validate_counts_vector(data)
     lorenz_points = _lorenz_curve(data)
     B = _lorenz_curve_integrator(lorenz_points, method)
     return 1 - 2 * B
