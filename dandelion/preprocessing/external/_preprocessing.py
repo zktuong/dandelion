@@ -44,7 +44,7 @@ def assigngenes_igblast(
         Additional arguments to pass to `AssignGenes.py`.
     """
     env, igdb, fasta = set_igblast_env(igblast_db=igblast_db, input_file=fasta)
-    outfolder = fasta / "tmp"
+    outfolder = fasta.parent / "tmp"
     outfolder.mkdir(parents=True, exist_ok=True)
 
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
@@ -102,7 +102,7 @@ def makedb_igblast(
         germline=germline, org=org, input_file=fasta
     )
     if igblast_output is None:
-        indir = fasta / "tmp"
+        indir = fasta.parent / "tmp"
         infile = fasta.stem + "_igblast.fmt7"
         igbo = indir / infile
     else:
@@ -110,7 +110,7 @@ def makedb_igblast(
 
     cellranger_annotation = fasta.parent / (fasta.stem + "_annotations.csv")
 
-    cmd_base = [
+    cmd = [
         "MakeDb.py",
         "igblast",
         "-i",
@@ -123,9 +123,9 @@ def makedb_igblast(
         str(cellranger_annotation),
     ]
     if extended:
-        cmd_base = cmd_base + ["--extended"]
+        cmd = cmd + ["--extended"]
     for add_cmd in [[], ["--failed"]]:
-        cmd = cmd_base + add_cmd + additional_args
+        cmd = cmd + add_cmd + additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
