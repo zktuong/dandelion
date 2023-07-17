@@ -197,8 +197,9 @@ jobs:
       - name: Show coverage
         run: |
           coverage report
-
+  
       - name: Upload coverage to Codecov
+        if: ${{ github.actor != 'dependabot[bot]' }}
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
