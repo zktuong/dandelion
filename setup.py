@@ -34,7 +34,7 @@ setup(
             "nbsphinx<=0.9.1",
             "sphinx-autodoc-typehints<=1.23.3",
             "sphinx_rtd_theme<=1.2.2",
-            "readthedocs-sphinx-ext<=2.2.0",
+            "readthedocs-sphinx-ext<=2.2.2",
             "recommonmark<=0.7.1",
         ]
     },
