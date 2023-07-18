@@ -30,6 +30,7 @@ setup(
             "presto",
             "pyyaml",
             "yamlordereddictloader",
+            "sphinx<7",  # see issue at https://github.com/readthedocs/readthedocs.org/issues/10279
             "nbsphinx<=0.9.1",
             "sphinx-autodoc-typehints<=1.23.0",
             "sphinx_rtd_theme<=1.2.0",
