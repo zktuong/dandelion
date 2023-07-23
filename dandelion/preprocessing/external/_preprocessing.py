@@ -310,7 +310,7 @@ def tigger_genotype(
         Additional arguments to pass to `tigger-genotype.R`.
     """
     env, gml, airr_file = set_germline_env(
-        germline=germline, org=org, input_file=airr_file
+        germline=v_germline, org=org, input_file=airr_file
     )
     if v_germline is None:
         v_gml = gml / ("imgt_" + org + "_IGHV.fasta")
@@ -339,15 +339,7 @@ def tigger_genotype(
 
     print("      Reassigning alleles")
     logg.info("Running command: %s\n" % (" ".join(cmd)))
-    run(
-        cmd, env=env
-    )  # logs are printed to terminal    elapsed_time_secs = time() - start_time
-    msg = (
-        "tigger-genotype execution took: %s"
-        % timedelta(seconds=round(elapsed_time_secs))
-        + " secs (Wall clock time)\n"
-    )
-    logg.info(msg)
+    run(cmd, env=env)  # logs are printed to terminal
 
 
 def recipe_scanpy_qc(

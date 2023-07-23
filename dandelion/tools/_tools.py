@@ -812,7 +812,7 @@ def transfer(
             }
         else:
             cell_indices = Tree()
-            for x, y in adata.obs[clonekey].iteritems():
+            for x, y in adata.obs[clonekey].items():
                 if y not in [
                     "",
                     "unassigned",
