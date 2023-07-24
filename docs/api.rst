@@ -100,7 +100,6 @@ Dandelion
    :toctree: modules
 
    copy
-   update_germline
    store_germline_reference
    update_metadata
    write
