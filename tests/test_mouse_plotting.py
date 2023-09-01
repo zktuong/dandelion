@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import dandelion as ddl
+import pandas as pd
 import pytest
 
 
@@ -60,8 +61,25 @@ def test_clone_overlap(
     )
     assert G is not None
 
+    G = ddl.pl.clone_overlap(
+        dummy_adata_mouse,
+        groupby="sample_idx",
+        weighted_overlap=True,
+        scale_edge_lambda=lambda x: x * 10,
+        return_graph=True,
+    )
+    assert G is not None
+
     ddl.pl.clone_overlap(
         dummy_adata_mouse,
         groupby="sample_idx",
         as_heatmap=True,
     )
+
+    out = ddl.pl.clone_overlap(
+        dummy_adata_mouse,
+        groupby="sample_idx",
+        as_heatmap=True,
+        return_heatmap_data=True,
+    )
+    assert isinstance(out, pd.DataFrame)

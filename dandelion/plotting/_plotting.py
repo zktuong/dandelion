@@ -26,7 +26,7 @@ from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Tuple, Dict, Optional
+from typing import Union, Tuple, Dict, Optional, List, Callable
 
 import dandelion.external.nxviz as nxv
 from dandelion.external.nxviz import annotate
@@ -847,6 +847,8 @@ def clone_overlap(
     },
     node_label_size: int = 10,
     as_heatmap: bool = False,
+    return_heatmap_data: bool = False,
+    scale_edge_lambda: Optional[Callable] = None,
     **kwargs,
 ) -> nxv.CircosPlot:
     """
@@ -883,6 +885,10 @@ def clone_overlap(
         size of labels if node_labels = True
     as_heatmap : bool, optional
         whether to return plot as heatmap.
+    return_heatmap_data : bool, optional
+        whether to return heatmap data as a pandas dataframe.
+    scale_edge_lambda : Optional[Callable], optional
+        a lambda function to scale the edge thickness. If None, will not scale.
     **kwargs
         passed to `matplotlib.pyplot.savefig`.
 
@@ -953,7 +959,12 @@ def clone_overlap(
                     overlap.loc[k_clone, list(pair)].sum()
                 )
         for combix in tmp_edge_weight_dict:
-            tmp_edge_weight_dict[combix] = sum(tmp_edge_weight_dict[combix])
+            if scale_edge_lambda is not None:
+                tmp_edge_weight_dict[combix] = scale_edge_lambda(
+                    sum(tmp_edge_weight_dict[combix])
+                )
+            else:
+                tmp_edge_weight_dict[combix] = sum(tmp_edge_weight_dict[combix])
         for x in overlap.index:
             if overlap.loc[x].sum() > 1:
                 edges[x] = [
@@ -1050,6 +1061,8 @@ def clone_overlap(
     if as_heatmap:
         hm = nx.to_pandas_adjacency(G)
         sns.clustermap(hm, **kwargs)
+        if return_heatmap_data:
+            return hm
     else:
         ax = nxv.circos(
             G,
