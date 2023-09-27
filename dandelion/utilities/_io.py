@@ -489,7 +489,7 @@ def read_10x_vdj(
     path: str,
     filename_prefix: Optional[str] = None,
     return_dandelion: bool = True,
-    verbose: bool = False,
+    remove_malformed: bool = True,
 ) -> Union[Dandelion, pd.DataFrame]:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
@@ -508,8 +508,8 @@ def read_10x_vdj(
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     return_dandelion : bool, optional
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
-    verbose : bool, optional
-        whether or not to print which files are read/found. Default is False.
+    remove_malformed : bool, optional
+        whether or not to remove malformed contigs.
 
     Returns
     -------
@@ -644,7 +644,8 @@ def read_10x_vdj(
         raise IOError("{} not found.".format(path))
     res = pd.DataFrame.from_dict(out, orient="index")
     # quick check if locus is malformed
-    res = res[~res["locus"].str.contains("[|]")]
+    if remove_malformed:
+        res = res[~res["locus"].str.contains("[|]")]
     if return_dandelion:
         return Dandelion(res)
     else:
