@@ -5843,7 +5843,7 @@ def choose_segments(
     return chosen
 
 
-def multimapper(filename: str) -> pd.DataFrame:
+def multimapper2(filename: str) -> pd.DataFrame:
     """Select the left more segment as the final call
 
     Parameters
@@ -5860,7 +5860,8 @@ def multimapper(filename: str) -> pd.DataFrame:
     df_new = df.loc[
         df["j_support"] < 1e-3, :
     ]  # maybe not needing to filter if j_support has already been filtered
-    mapped = pd.DataFrame(
+
+    tmp = pd.DataFrame(
         index=list(set(df_new["sequence_id"])),
         columns=[
             "multimappers",
@@ -5871,30 +5872,36 @@ def multimapper(filename: str) -> pd.DataFrame:
         ],
     )
 
-    for j in tqdm(mapped.index):
-        tmp = df_new.loc[
-            df_new["sequence_id"] == j,
-            ["j_sequence_start", "j_sequence_end", "j_support", "j_call"],
-        ]
-
-        starts = tmp["j_sequence_start"]
-        ends = tmp["j_sequence_end"]
-        scores = -tmp["j_support"]
+    # Define a function to apply to each group
+    def process_group(group):
+        starts = group["j_sequence_start"]
+        ends = group["j_sequence_end"]
+        scores = -group["j_support"]
         chosen_ind = choose_segments(starts, ends, scores)
-        tmp = tmp.iloc[chosen_ind, :]
-        tmp = tmp.sort_values(by=["j_sequence_start"], ascending=True)
+        group = group.iloc[chosen_ind, :]
+        group = group.sort_values(by=["j_sequence_start"], ascending=True)
 
-        mapped.at[j, "multimappers"] = ";".join(tmp["j_call"])
-        mapped.at[j, "multiplicity"] = tmp.shape[0]
-        mapped.at[j, "sequence_start_multimappers"] = ";".join(
-            tmp["j_sequence_start"].astype(str)
+        return pd.Series(
+            {
+                "multimappers": ";".join(group["j_call"]),
+                "multiplicity": group.shape[0],
+                "sequence_start_multimappers": ";".join(
+                    group["j_sequence_start"].astype(str)
+                ),
+                "sequence_end_multimappers": ";".join(
+                    group["j_sequence_end"].astype(str)
+                ),
+                "support_multimappers": ";".join(
+                    group["j_support"].astype(str)
+                ),
+            }
         )
-        mapped.at[j, "sequence_end_multimappers"] = ";".join(
-            tmp["j_sequence_end"].astype(str)
-        )
-        mapped.at[j, "support_multimappers"] = ";".join(
-            tmp["j_support"].astype(str)
-        )
+
+    # Group by "sequence_id" and apply the processing function, then reset the index
+    mapped = df_new.groupby("sequence_id").apply(process_group).reset_index()
+    # Set the index explicitly
+    mapped.set_index("sequence_id", drop=True, inplace=True)
+    mapped = mapped.reindex(tmp.index)
 
     return mapped
 
