@@ -5843,7 +5843,7 @@ def choose_segments(
     return chosen
 
 
-def multimapper2(filename: str) -> pd.DataFrame:
+def multimapper(filename: str) -> pd.DataFrame:
     """Select the left more segment as the final call
 
     Parameters
@@ -5873,7 +5873,20 @@ def multimapper2(filename: str) -> pd.DataFrame:
     )
 
     # Define a function to apply to each group
-    def process_group(group):
+    def process_group(group: pd.DataFrame) -> pd.Series:
+        """
+        Create a dictionary for the multimappers results.
+
+        Parameters
+        ----------
+        group : pd.DataFrame
+            input dataframe for a given sequence_id.
+
+        Returns
+        -------
+        pd.Series
+            A pandas series with the multimappers results.
+        """
         starts = group["j_sequence_start"]
         ends = group["j_sequence_end"]
         scores = -group["j_support"]
