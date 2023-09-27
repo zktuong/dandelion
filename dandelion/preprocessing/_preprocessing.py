@@ -5871,10 +5871,9 @@ def multimapper(filename: str) -> pd.DataFrame:
         ],
     )
 
-    for j in range(mapped.shape[0]):
-        id = mapped.index[j]
+    for j in tqdm(mapped.index):
         tmp = df_new.loc[
-            df_new["sequence_id"] == id,
+            df_new["sequence_id"] == j,
             ["j_sequence_start", "j_sequence_end", "j_support", "j_call"],
         ]
 
@@ -5885,15 +5884,15 @@ def multimapper(filename: str) -> pd.DataFrame:
         tmp = tmp.iloc[chosen_ind, :]
         tmp = tmp.sort_values(by=["j_sequence_start"], ascending=True)
 
-        mapped["multimappers"][j] = ";".join(tmp["j_call"])
-        mapped["multiplicity"][j] = tmp.shape[0]
-        mapped["sequence_start_multimappers"][j] = ";".join(
+        mapped.at[j, "multimappers"] = ";".join(tmp["j_call"])
+        mapped.at[j, "multiplicity"] = tmp.shape[0]
+        mapped.at[j, "sequence_start_multimappers"] = ";".join(
             tmp["j_sequence_start"].astype(str)
         )
-        mapped["sequence_end_multimappers"][j] = ";".join(
+        mapped.at[j, "sequence_end_multimappers"] = ";".join(
             tmp["j_sequence_end"].astype(str)
         )
-        mapped["support_multimappers"][j] = ";".join(
+        mapped.at[j, "support_multimappers"] = ";".join(
             tmp["j_support"].astype(str)
         )
 
