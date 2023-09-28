@@ -274,7 +274,7 @@ def main():
                 # remove if cleaning output - the important information is
                 # ported to sample folders already
                 if args.clean_output:
-                    shutil.rmtree(Path(ind))
+                    os.system("rm -r " + ind)
         else:
             # run on the whole thing at once
             ddl.pp.reassign_alleles(
@@ -288,7 +288,7 @@ def main():
             # remove if cleaning output - the important information is ported
             # to sample folders already
             if args.clean_output:
-                shutil.rmtree(Path("tigger"))
+                os.system("rm -r tigger")
 
         # STEP FOUR - ddl.pp.assign_isotypes()
         # also no tricks here
