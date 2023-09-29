@@ -1,8 +1,10 @@
 #!/opt/conda/envs/sc-dandelion-container/bin/python
 import argparse
+import os
+import shutil
+
 import dandelion as ddl
 import numpy as np
-import os
 import pandas as pd
 import scanpy as sc
 
@@ -328,7 +330,7 @@ def main():
     if args.clean_output:
         for sample in samples:
             tmp_path = Path(sample) / "dandelion" / "tmp"
-            tmp_path.unlink()
+            shutil.rmtree(tmp_path)
     logg.info("Pre-processing finished.\n", time=start)
 
 
