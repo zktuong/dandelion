@@ -231,7 +231,7 @@ def generate_network(
         cluster_dist = {}
         for c_ in tqdm(
             tmp_clusterdist2,
-            desc="Calculating overlap... ",
+            desc="Sorting into clusters... ",
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
