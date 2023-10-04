@@ -735,7 +735,6 @@ def _generate_layout(
         else:
             pass
     if compute_layout:
-        logg.info("generating network layout")
         if layout_method == "mod_fr":
             if not expanded_only:
                 if verbose:
