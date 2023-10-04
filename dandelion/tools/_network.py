@@ -222,7 +222,7 @@ def generate_network(
                     if c != "None":
                         tmp_clusterdist[c][i].value = 1
             else:
-                cx = out.metadata.loc[i, str(clonekey)].copy()
+                cx = out.metadata.at[i, str(clonekey)]
                 if cx != "None":
                     tmp_clusterdist[cx][i].value = 1
         tmp_clusterdist2 = {}
