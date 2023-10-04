@@ -29,6 +29,7 @@ def generate_network(
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
+    expanded_only: bool = True,
     **kwargs,
 ) -> Dandelion:
     """
@@ -59,6 +60,8 @@ def generate_network(
         accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast)
         whereas 'mod_fr' refers to modified Fruchterman-Reingold layout originally implemented in dandelion (python
         implementation; slow).
+    expanded_only : bool, optional
+        whether or not to only compute layout on expanded clonotypes.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -437,6 +440,7 @@ def generate_network(
         verbose=verbose,
         compute_layout=compute_layout,
         layout_method=layout_method,
+        expanded_only=expanded_only,
         **kwargs,
     )
 
@@ -626,9 +630,9 @@ def _generate_layout(
     edges: pd.DataFrame = None,
     min_size: int = 2,
     weight: Optional[str] = None,
-    verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
+    expanded_only: bool = False,
     **kwargs,
 ) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
     """Generate layout.
@@ -643,12 +647,12 @@ def _generate_layout(
         minimum clone size.
     weight : Optional[str], optional
         name of weight column.
-    verbose : bool, optional
-        whether to print progress
     compute_layout : bool, optional
         whether or not to compute layout.
     layout_method : Literal["sfdp", "mod_fr"], optional
         layout method.
+    expanded_only : bool, optional
+        whether or not to only compute layout on expanded clones.
     **kwargs
         passed to fruchterman_reingold_layout.
 
@@ -668,7 +672,6 @@ def _generate_layout(
                 )
             ]
         )
-    degree = G.degree()
     G_ = G.copy()
     if min_size == 2:
         if edges is not None:
@@ -686,7 +689,10 @@ def _generate_layout(
     if compute_layout:
         logg.info("generating network layout")
         if layout_method == "mod_fr":
-            pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
+            if not expanded_only:
+                pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
+            else:
+                pos = None
             pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
         elif layout_method == "sfdp":
             try:
@@ -698,17 +704,29 @@ def _generate_layout(
                 )
                 nographtool = True
             if "nographtool" in locals():
-                pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
+                if not expanded_only:
+                    pos = _fruchterman_reingold_layout(
+                        G, weight=weight, **kwargs
+                    )
+                else:
+                    pos = None
                 pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
             else:
-                gtg = nx2gt(G)
                 gtg_ = nx2gt(G_)
-                posx = sfdp_layout(gtg, **kwargs)
                 posx_ = sfdp_layout(gtg_, **kwargs)
-                pos = dict(zip(list(gtg.vertex_properties["id"]), list(posx)))
                 pos_ = dict(
                     zip(list(gtg_.vertex_properties["id"]), list(posx_))
                 )
+                if pos is not None:
+                    gtg = nx2gt(G)
+                    posx = sfdp_layout(gtg, **kwargs)
+                    pos = dict(
+                        zip(list(gtg.vertex_properties["id"]), list(posx))
+                    )
+                else:
+                    G = G_.copy()
+                    pos = pos_.copy()
+
         return (G, G_, pos, pos_)
     else:
         return (G, G_, None, None)
