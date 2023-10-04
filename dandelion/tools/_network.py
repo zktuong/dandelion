@@ -786,8 +786,8 @@ def _generate_layout(
                     zip(list(gtg_.vertex_properties["id"]), list(posx_))
                 )
                 if pos is None:
-                    G = G_.copy()
-                    pos = pos_.copy()
+                    G = G_
+                    pos = pos_
 
         return (G, G_, pos, pos_)
     else:
