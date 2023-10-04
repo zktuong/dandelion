@@ -784,9 +784,9 @@ def _generate_layout(
                 pos_ = dict(
                     zip(list(gtg_.vertex_properties["id"]), list(posx_))
                 )
-                if pos is None:
-                    G = G_
-                    pos = pos_
+        if pos is None:
+            G = G_
+            pos = pos_
 
         return (G, G_, pos, pos_)
     else:
