@@ -142,7 +142,7 @@ def generate_network(
     dmat = Tree()
     for t in tqdm(
         membership,
-        desc="Calculating distances... ",
+        desc="Calculating distances ",
         disable=not verbose,
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
@@ -167,7 +167,7 @@ def generate_network(
     if len(dmat) > 0:
         for x in tqdm(
             dmat,
-            desc="Aggregating distances... ",
+            desc="Aggregating distances ",
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
@@ -231,7 +231,7 @@ def generate_network(
         cluster_dist = {}
         for c_ in tqdm(
             tmp_clusterdist2,
-            desc="Sorting into clusters... ",
+            desc="Sorting into clusters ",
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
@@ -335,28 +335,30 @@ def generate_network(
 
         # free up memory
         del tmp_clone_tree2
+
+        # this chunk doesn't scale well?
         # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully
         # link them up if they were identical but clipped off during the mst step
 
-        # create a data frame to recall the actual distance quickly
-        tmp_totaldiststack = tmp_totaldist.stack().reset_index()
+        # # create a data frame to recall the actual distance quickly
+        # tmp_totaldiststack = tmp_totaldist.stack().reset_index()
 
-        # free up memory
-        del tmp_totaldist
-        tmp_totaldiststack.columns = ["source", "target", "weight"]
-        tmp_totaldiststack.index = [
-            str(s) + "|" + str(t)
-            for s, t in zip(
-                tmp_totaldiststack["source"], tmp_totaldiststack["target"]
-            )
-        ]
-        tmp_totaldiststack["keep"] = [
-            False if len(list(set(i.split("|")))) == 1 else True
-            for i in tmp_totaldiststack.index
-        ]
-        tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop(
-            "keep", axis=1
-        )
+        # # free up memory
+        # del tmp_totaldist
+        # tmp_totaldiststack.columns = ["source", "target", "weight"]
+        # tmp_totaldiststack.index = [
+        #     str(s) + "|" + str(t)
+        #     for s, t in zip(
+        #         tmp_totaldiststack["source"], tmp_totaldiststack["target"]
+        #     )
+        # ]
+        # tmp_totaldiststack["keep"] = [
+        #     False if len(list(set(i.split("|")))) == 1 else True
+        #     for i in tmp_totaldiststack.index
+        # ]
+        # tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop(
+        #     "keep", axis=1
+        # )
 
         tmp_edge_list = Tree()
         for c in tqdm(
@@ -374,7 +376,11 @@ def generate_network(
                         tmp_edge_list[c]["source"], tmp_edge_list[c]["target"]
                     )
                 ]
-                tmp_edge_list[c]["weight"].update(tmp_totaldiststack["weight"])
+                for i, row in tmp_edge_list[c].iterrows():
+                    tmp_edge_list[c].at[i, "weight"] = tmp_totaldist.loc[
+                        row["source"], row["target"]
+                    ]
+                # tmp_edge_list[c]["weight"].update(tmp_totaldiststack["weight"])
                 # keep only edges when there is 100% identity, to minimise crowding
                 tmp_edge_list[c] = tmp_edge_list[c][
                     tmp_edge_list[c]["weight"] == 0
@@ -401,14 +407,19 @@ def generate_network(
             ]
 
             edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-            edge_list_final["weight"].update(tmp_totaldiststack["weight"])
+            # edge_list_final["weight"].update(tmp_totaldiststack["weight"])
+            for i, row in edge_list_final.iterrows():
+                edge_list_final.at[i, "weight"] = tmp_totaldist.loc[
+                    row["source"], row["target"]
+                ]
             # return the edge list
             edge_list_final.reset_index(drop=True, inplace=True)
         except:
             edge_list_final = None
 
         # free up memory
-        del tmp_totaldiststack
+        # del tmp_totaldiststack
+        del tmp_totaldist
         del tmp_edge_list
 
         vertice_list = list(out.metadata.index)
