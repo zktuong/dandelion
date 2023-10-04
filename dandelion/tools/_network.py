@@ -167,7 +167,7 @@ def generate_network(
     if len(dmat) > 0:
         for x in tqdm(
             dmat,
-            desc="Summing duplicate edges... ",
+            desc="Aggregating distances... ",
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
@@ -222,14 +222,19 @@ def generate_network(
                     if c != "None":
                         tmp_clusterdist[c][i].value = 1
             else:
-                cx = out.metadata.at[i, str(clonekey)]
+                cx = out.metadata.loc[i, str(clonekey)]
                 if cx != "None":
                     tmp_clusterdist[cx][i].value = 1
         tmp_clusterdist2 = {}
         for x in tmp_clusterdist:
             tmp_clusterdist2[x] = list(tmp_clusterdist[x])
         cluster_dist = {}
-        for c_ in tmp_clusterdist2:
+        for c_ in tqdm(
+            tmp_clusterdist2,
+            desc="Calculating overlap... ",
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
             if c_ in list(flatten(overlap)):
                 for ol in overlap:
                     if c_ in ol:
@@ -263,8 +268,8 @@ def generate_network(
             edge_list[c] = nx.to_pandas_edgelist(mst_tree[c])
             if edge_list[c].shape[0] > 0:
                 edge_list[c]["weight"] = edge_list[c]["weight"] - 1
-                edge_list[c]["weight"][
-                    edge_list[c]["weight"] < 0
+                edge_list[c].loc[
+                    edge_list[c]["weight"] < 0, "weight"
                 ] = 0  # just in case
 
         clone_ref = dict(out.metadata[clonekey])
