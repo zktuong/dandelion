@@ -165,20 +165,25 @@ def generate_network(
                     d_mat_tmp, index=tmp.index, columns=tmp.index
                 )
     if len(dmat) > 0:
-        for x in dmat:
+        for x in tqdm(
+            dmat,
+            desc="Summing duplicate edges... ",
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
             dmat[x] = pd.concat(dmat[x])
             dmat[x] = dmat[x].droplevel(level=0)
+            # give the index a name
+            dmat[x].index.name = "indices"
+            # convert all nan to zero
+            dmat[x] = dmat[x].fillna(0)
             if any(dmat[x].index.duplicated()):
-                tmp_dmat = dmat[x].copy()
-                dup_indices = tmp_dmat.index[tmp_dmat.index.duplicated()]
-                tmp_dmatx = tmp_dmat.drop(dup_indices)
-                for di in list(set(dup_indices)):
-                    _tmpdmat = tmp_dmat.loc[di]
-                    _tmpdmat = _tmpdmat.apply(lambda r: sum_col(r), axis=0)
-                    tmp_dmatx = pd.concat(
-                        [tmp_dmatx, pd.DataFrame(_tmpdmat, columns=[di]).T]
-                    )
-                dmat[x] = tmp_dmatx.copy()
+                tmp_dmat = dmat[x]
+                dup_indices = dmat[x].index[dmat[x].index.duplicated()]
+                tmp_dmatx1 = tmp_dmat.drop(dup_indices)
+                tmp_dmatx2 = tmp_dmat.loc[dup_indices]
+                tmp_dmatx2 = tmp_dmatx2.groupby("indices").apply(sum, axis=0)
+                dmat[x] = pd.concat([tmp_dmatx1, tmp_dmatx2])
             dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
             dmat[x] = dmat[x].values
 
