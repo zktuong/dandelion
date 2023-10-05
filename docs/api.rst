@@ -102,6 +102,7 @@ Dandelion
    copy
    store_germline_reference
    update_metadata
+   update_plus
    write
    write_h5ddl
    write_pkl

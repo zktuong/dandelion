@@ -859,14 +859,6 @@ def format_locus(
     return result
 
 
-def sum_col(vals):
-    """Sum columns if not NaN."""
-    if all(pd.isnull(vals)):
-        return np.nan
-    else:
-        return sum(vals)
-
-
 def lib_type(lib: str):
     """Dictionary of acceptable loci for library type."""
     librarydict = {
