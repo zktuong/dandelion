@@ -986,6 +986,13 @@ class Dandelion:
 
             for r in ret_metadata:
                 tmp_metadata[r] = pd.Series(ret_metadata[r])
+
+            for dcol in [
+                "d_sequence_alignment_aa_VJ",
+                "d_sequence_alignment_VJ",
+            ]:
+                if dcol in tmp_metadata:
+                    tmp_metadata.drop(dcol, axis=1, inplace=True)
             self.metadata = tmp_metadata.copy()
 
     def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
