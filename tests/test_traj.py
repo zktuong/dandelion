@@ -62,6 +62,7 @@ def test_trajectory(mock_show):
     )
     dm_res = palantir.utils.run_diffusion_maps(pca_projections, n_components=5)
     ms_data = palantir.utils.determine_multiscale_space(dm_res)
+    ms_data.index = ms_data.index.astype(str)
     pr_res = palantir.core.run_palantir(
         ms_data,
         pb_adata.obs_names[rootcell],
