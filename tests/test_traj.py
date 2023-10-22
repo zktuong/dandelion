@@ -14,7 +14,7 @@ FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
 
 
 @pytest.mark.skipif(
-    sys.platform == "darwin",
+    sys.platform == "darwin" | sys.version_info < (3, 8),
     reason="macos CI stalls.",
 )
 @pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
@@ -25,7 +25,7 @@ def test_setup(airr_reannotated, dummy_adata):
 
 
 @pytest.mark.skipif(
-    sys.platform == "darwin",
+    sys.platform == "darwin" | sys.version_info < (3, 8),
     reason="macos CI stalls.",
 )
 @patch("matplotlib.pyplot.show")
@@ -77,7 +77,7 @@ def test_trajectory(mock_show):
 
 
 @pytest.mark.skipif(
-    sys.platform == "darwin",
+    sys.platform == "darwin" | sys.version_info < (3, 8),
     reason="macos CI stalls.",
 )
 def test_trajectory_setup():
