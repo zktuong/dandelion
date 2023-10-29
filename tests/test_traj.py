@@ -17,10 +17,11 @@ FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
     sys.platform == "darwin",
     reason="macos CI stalls.",
 )
-@ pytest.mark.skipif(
+@pytest.mark.skipif(
     sys.version_info < (3, 8),
     reason="palantir requires python 3.8+",
-) @ pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
+)
+@pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
 def test_setup(airr_reannotated, dummy_adata):
     vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
     bdata = ddl.tl.setup_vdj_pseudobulk(adata, mode="B")
@@ -31,10 +32,11 @@ def test_setup(airr_reannotated, dummy_adata):
     sys.platform == "darwin",
     reason="macos CI stalls.",
 )
-@ pytest.mark.skipif(
+@pytest.mark.skipif(
     sys.version_info < (3, 8),
     reason="palantir requires python 3.8+",
-) @ patch("matplotlib.pyplot.show")
+)
+@patch("matplotlib.pyplot.show")
 def test_trajectory(mock_show):
     """test_workflow"""
     import milopy.core as milo
