@@ -791,6 +791,21 @@ def format_locus(
         if len(loc1x) > 0:
             if len(list(set(loc1x))) > 1:
                 tmp1 = "ambiguous"
+                if len(loc2x) > 0:
+                    if len(list(set(loc2x))) > 1:
+                        tmp2 = "ambiguous"
+                    else:
+                        if len(loc2x) > 1:
+                            if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
+                                len(list(set(loc2xx))) == 2
+                            ):
+                                tmp2 = "Extra VJ-exception"
+                            else:
+                                tmp2 = "Extra VJ"
+                        else:
+                            tmp2 = loc2xx[0]
+                else:
+                    tmp2 = "None"
             else:
                 if len(loc1x) > 1:
                     if constant_1[i] == "IgM/IgD":
