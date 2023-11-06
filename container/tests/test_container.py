@@ -1,9 +1,8 @@
 #!/opt/conda/envs/sc-dandelion-container/bin/python
-"""dandelion container test script"""
 import os
 import pandas as pd
 import dandelion as ddl
-import pytest
+
 from unittest.mock import patch
 from subprocess import run
 

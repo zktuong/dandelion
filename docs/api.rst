@@ -81,7 +81,7 @@ Utilities: `utl`
    
    load_data
    makeblastdb   
-   read_h5
+   read_h5ddl
    read_pkl
    read_10x_airr
    read_10x_vdj
@@ -89,6 +89,7 @@ Utilities: `utl`
    concat
    to_scirpy
    from_scirpy
+   write_fasta
    
 
 Dandelion
@@ -99,11 +100,10 @@ Dandelion
    :toctree: modules
 
    copy
-   update_germline
    store_germline_reference
    update_metadata
+   update_plus
    write
-   write_h5
    write_h5ddl
    write_pkl
    write_airr

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""test trajectory"""
 import dandelion as ddl
 import scanpy as sc
 import numpy as np
@@ -14,6 +13,14 @@ FILE = "demo-pseudobulk.h5ad"
 FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="macos CI stalls.",
+)
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="palantir requires python 3.8+",
+)
 @pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
 def test_setup(airr_reannotated, dummy_adata):
     vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
@@ -22,8 +29,12 @@ def test_setup(airr_reannotated, dummy_adata):
 
 
 @pytest.mark.skipif(
-    (sys.platform == "darwin") & (sys.version_info.minor < 9),
+    sys.platform == "darwin",
     reason="macos CI stalls.",
+)
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="palantir requires python 3.8+",
 )
 @patch("matplotlib.pyplot.show")
 def test_trajectory(mock_show):
@@ -59,6 +70,7 @@ def test_trajectory(mock_show):
     )
     dm_res = palantir.utils.run_diffusion_maps(pca_projections, n_components=5)
     ms_data = palantir.utils.determine_multiscale_space(dm_res)
+    ms_data.index = ms_data.index.astype(str)
     pr_res = palantir.core.run_palantir(
         ms_data,
         pb_adata.obs_names[rootcell],
@@ -73,8 +85,12 @@ def test_trajectory(mock_show):
 
 
 @pytest.mark.skipif(
-    (sys.platform == "darwin") & (sys.version_info.minor < 9),
+    sys.platform == "darwin",
     reason="macos CI stalls.",
+)
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="palantir requires python 3.8+",
 )
 def test_trajectory_setup():
     """test_workflow with differen defaults"""

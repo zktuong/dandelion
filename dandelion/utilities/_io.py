@@ -1,14 +1,10 @@
 #!/usr/bin/env python
-# @Author: kt16
-# @Date:   2020-05-12 14:01:32
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-12 11:37:52
-"""io module."""
 import bz2
 import gzip
 import json
 import os
 import re
+import shutil
 
 import _pickle as cPickle
 import pickle
@@ -20,6 +16,7 @@ import pandas as pd
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
+from pathlib import Path
 from scanpy import logging as logg
 from typing import Union, Optional, List
 
@@ -126,12 +123,35 @@ def fasta_iterator(fh: str):
             return
 
 
-def Write_output(out: str, file: str):
+def write_fasta(
+    fasta_dict: Dict[str, str], out_fasta: Union[str, Path], overwrite=True
+):
+    """
+    Generic fasta writer using fasta_iterator
+
+    Parameters
+    ----------
+    fasta_dict : Dict[str, str]
+        dictionary containing fasta headers and sequences as keys and records respectively.
+    out_fasta : str
+        path to write fasta file to.
+    overwrite : bool, optional
+        whether or not to overwrite the output file (out_fasta).
+    """
+    if overwrite:
+        fh = open(out_fasta, "w")
+        fh.close()
+    out = ""
+    for l in fasta_dict:
+        out = ">" + l + "\n" + fasta_dict[l] + "\n"
+        write_output(out, out_fasta)
+
+
+def write_output(out: str, file: Union[str, Path]):
     """General line writer."""
     fh = open(file, "a")
     fh.write(out)
     fh.close()
-    return ()
 
 
 def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
@@ -148,120 +168,16 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     Dandelion
         saved `Dandelion` object in pickle format.
     """
-    if isBZIP(filename):
+    if isBZIP(str(filename)):
         data = bz2.BZ2File(filename, "rb")
         data = cPickle.load(data)
-    elif isGZIP(filename):
+    elif isGZIP(str(filename)):
         data = gzip.open(filename, "rb")
         data = cPickle.load(data)
     else:
         with open(filename, "rb") as f:
             data = cPickle.load(f)
     return data
-
-
-@deprecated(
-    deprecated_in="0.2.2",
-    removed_in="0.4.0",
-    details="read_h5ddl will be the recommended way to read.",
-)
-def read_h5(filename: str = "dandelion_data.h5") -> Dandelion:
-    """
-    Read in and returns a `Dandelion` class from .h5 format.
-
-    Parameters
-    ----------
-    filename : str, optional
-        path to `.h5` file
-
-    Returns
-    -------
-    Dandelion
-        `Dandelion` object.
-
-    Raises
-    ------
-    AttributeError
-        if `data` not found in `.h5` file.
-    """
-    try:
-        data = pd.read_hdf(filename, "data")
-        # data = sanitize_data(data)
-
-        # if check_mix_dtype(data):
-        #     for x in return_mix_dtype(data):
-        #        data[x].replace('', pd.NA, inplace=True)
-        #     data = sanitize_data(data)
-    except:
-        raise AttributeError(
-            "{} does not contain attribute `data`".format(filename)
-        )
-    try:
-        metadata = pd.read_hdf(filename, "metadata")
-    except:
-        pass
-
-    try:
-        g_0 = pd.read_hdf(filename, "graph/graph_0")
-        g_1 = pd.read_hdf(filename, "graph/graph_1")
-        g_0 = g_0 + 1
-        g_0 = g_0.fillna(0)
-        g_1 = g_1 + 1
-        g_1 = g_1.fillna(0)
-        graph0 = nx.from_pandas_adjacency(g_0)
-        graph1 = nx.from_pandas_adjacency(g_1)
-        for u, v, d in graph0.edges(data=True):
-            d["weight"] = d["weight"] - 1
-        for u, v, d in graph1.edges(data=True):
-            d["weight"] = d["weight"] - 1
-        graph = (graph0, graph1)
-    except:
-        pass
-
-    with h5py.File(filename, "r") as hf:
-        try:
-            layout0 = {}
-            for k in hf["layout/layout_0"].attrs.keys():
-                layout0.update({k: np.array(hf["layout/layout_0"].attrs[k])})
-            layout1 = {}
-            for k in hf["layout/layout_1"].attrs.keys():
-                layout1.update({k: np.array(hf["layout/layout_1"].attrs[k])})
-            layout = (layout0, layout1)
-        except:
-            pass
-
-        germline = {}
-        try:
-            for g in hf["germline"].attrs:
-                germline.update({g: hf["germline"].attrs[g]})
-        except:
-            pass
-
-        try:
-            threshold = float(np.array(hf["threshold"]))
-        except:
-            threshold = None
-
-    constructor = {}
-    constructor["data"] = data
-    if "metadata" in locals():
-        constructor["metadata"] = metadata
-    if "germline" in locals():
-        constructor["germline"] = germline
-    if "layout" in locals():
-        constructor["layout"] = layout
-    if "graph" in locals():
-        constructor["graph"] = graph
-    try:
-        res = Dandelion(**constructor)
-    except:
-        res = Dandelion(**constructor, initialize=False)
-
-    if "threshold" in locals():
-        res.threshold = threshold
-    else:
-        pass
-    return res
 
 
 def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
@@ -455,7 +371,7 @@ def to_scirpy(data: Dandelion, transfer: bool = False, **kwargs) -> AnnData:
 
 def from_scirpy(adata: AnnData) -> Dandelion:
     """
-    Read a `scirpy` initialized `AnnData` oject and returns a `Dandelion` object.
+    Read a `scirpy` initialized `AnnData` object and returns a `Dandelion` object.
 
     Parameters
     ----------
@@ -488,14 +404,14 @@ def concat(
     prefixes: Optional[List[str]] = None,
 ) -> Dandelion:
     """
-    Concatenate dataframe and return as `Dandelion` object.
+    Concatenate data frames and return as `Dandelion` object.
 
     If both suffixes and prefixes are `None` and check_unique is True, then a sequential number suffix will be appended.
 
     Parameters
     ----------
     arrays : List[Union[pd.DataFrame, Dandelion]]
-        List of `Dandelion` class objects or pandas dataframe
+        List of `Dandelion` class objects or pandas data frames
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
@@ -573,10 +489,10 @@ def read_10x_vdj(
     path: str,
     filename_prefix: Optional[str] = None,
     return_dandelion: bool = True,
-    verbose: bool = False,
+    remove_malformed: bool = True,
 ) -> Union[Dandelion, pd.DataFrame]:
     """
-    A parser to read .csv and .json files directly from folder containing 10x cellranger-outouts.
+    A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
 
     This function parses the 10x output files into an AIRR compatible format.
 
@@ -592,8 +508,8 @@ def read_10x_vdj(
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
     return_dandelion : bool, optional
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
-    verbose : bool, optional
-        whether or not to print which files are read/found. Default is False.
+    remove_malformed : bool, optional
+        whether or not to remove malformed contigs.
 
     Returns
     -------
@@ -728,7 +644,8 @@ def read_10x_vdj(
         raise IOError("{} not found.".format(path))
     res = pd.DataFrame.from_dict(out, orient="index")
     # quick check if locus is malformed
-    res = res[~res["locus"].str.contains("[|]")]
+    if remove_malformed:
+        res = res[~res["locus"].str.contains("[|]")]
     if return_dandelion:
         return Dandelion(res)
     else:
@@ -887,7 +804,8 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
 
 
 def change_file_location(
-    data: List[str], filename_prefix: Optional[Union[List[str], str]] = None
+    data: List[Union[str, Path]],
+    filename_prefix: Optional[Union[List[str], str]] = None,
 ):
     """
     Move file from tmp folder to dandelion folder.
@@ -896,7 +814,7 @@ def change_file_location(
 
     Parameters
     ----------
-    data : List[str]
+    data : List[Union[str, Path]]
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
     filename_prefix : Optional[Union[List[str], str]], optional
@@ -920,50 +838,39 @@ def change_file_location(
         "blast": "_igblast_db-pass.tsv",
         "airr": "_igblast_gap.tsv",
     }
-    # informat_dict2 = {
-    #     'changeo': '_igblast_db-fail.tsv',
-    #     'blast': '_igblast_db-fail.tsv',
-    #     'airr': '_igblast_gap.tsv'
-    # }
-
     filePath = None
 
     for i in range(0, len(data)):
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith=informat_dict[fileformat],
-            subdir="tmp",
+            ends_with=informat_dict[fileformat],
+            sub_dir="tmp",
         )
-        if filePath is None:
-            raise FileNotFoundError(
-                "Path to .tsv file for {} is unknown. ".format(data[i])
-                + "Please specify path to reannotated .tsv file or folder containing reannotated .tsv file."
-            )
-        tmp = check_travdv(filePath)
-        _airrfile = filePath.replace("_db-pass.tsv", ".tsv")
-        airr_output = load_data(_airrfile)
-        cols_to_merge = [
-            "junction_aa_length",
-            "fwr1_aa",
-            "fwr2_aa",
-            "fwr3_aa",
-            "fwr4_aa",
-            "cdr1_aa",
-            "cdr2_aa",
-            "cdr3_aa",
-            "sequence_alignment_aa",
-            "v_sequence_alignment_aa",
-            "d_sequence_alignment_aa",
-            "j_sequence_alignment_aa",
-        ]
-        for x in cols_to_merge:
-            tmp[x] = pd.Series(airr_output[x])
+        if filePath is not None:
+            tmp = check_travdv(filePath)
+            _airrfile = str(filePath).replace("_db-pass.tsv", ".tsv")
+            airr_output = load_data(_airrfile)
+            cols_to_merge = [
+                "junction_aa_length",
+                "fwr1_aa",
+                "fwr2_aa",
+                "fwr3_aa",
+                "fwr4_aa",
+                "cdr1_aa",
+                "cdr2_aa",
+                "cdr3_aa",
+                "sequence_alignment_aa",
+                "v_sequence_alignment_aa",
+                "d_sequence_alignment_aa",
+                "j_sequence_alignment_aa",
+            ]
+            for x in cols_to_merge:
+                tmp[x] = pd.Series(airr_output[x])
 
-        write_airr(tmp, filePath)
-
-        cmd = ["rsync", "-azvh", filePath, filePath.rsplit("/", 2)[0]]
-        run(cmd)
+            write_airr(tmp, filePath)
+            fp = Path(filePath)
+            shutil.copyfile(fp, fp.parent.parent / fp.name)
 
 
 def move_to_tmp(
@@ -981,15 +888,14 @@ def move_to_tmp(
         filePath1 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_annotations.csv",
+            ends_with="_annotations.csv",
         )
         filePath2 = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
+            data[i], filename_prefix=filename_prefix[i], ends_with=".fasta"
         )
-        cmd1 = ["mv", "-f", filePath1, filePath1.rsplit("/", 1)[0] + "/tmp"]
-        cmd2 = ["mv", "-f", filePath2, filePath2.rsplit("/", 1)[0] + "/tmp"]
-        run(cmd1)
-        run(cmd2)
+        for fp in [filePath1, filePath2]:
+            fp = Path(fp)
+            shutil.move(fp, fp.parent / "tmp" / fp.name)
 
 
 def make_all(
@@ -1010,54 +916,79 @@ def make_all(
             filePath1 = check_filepath(
                 data[i],
                 filename_prefix=filename_prefix[i],
-                endswith="_igblast_db-pass.tsv",
-                subdir="tmp",
+                ends_with="_igblast_db-pass.tsv",
+                sub_dir="tmp",
             )
         else:
             filePath1 = check_filepath(
                 data[i],
                 filename_prefix=filename_prefix[i],
-                endswith="_igblast_db-pass_genotyped.tsv",
-                subdir="tmp",
+                ends_with="_igblast_db-pass_genotyped.tsv",
+                sub_dir="tmp",
             )
+            if filePath1 is None:
+                filePath1 = check_filepath(
+                    data[i],
+                    filename_prefix=filename_prefix[i],
+                    ends_with="_igblast_db-pass.tsv",
+                    sub_dir="tmp",
+                )
+                out_ex = "db-pass.tsv"
+            else:
+                out_ex = "db-pass_genotyped.tsv"
         filePath2 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-fail.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-fail.tsv",
+            sub_dir="tmp",
         )
         if filePath1 is not None:
             df1 = pd.read_csv(filePath1, sep="\t")
+            df1 = check_complete(df1)
+            write_airr(df1, filePath1)
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep="\t")
+                df2 = check_complete(df2)
                 df = pd.concat([df1, df2])
                 if loci == "tr":
                     write_airr(
-                        df, filePath1.rsplit("db-pass.tsv")[0] + "db-all.tsv"
+                        df,
+                        filePath1.parent
+                        / (
+                            filePath1.name.rsplit("db-pass.tsv")[0]
+                            + "db-all.tsv"
+                        ),
                     )
                 else:
                     write_airr(
                         df,
-                        filePath1.rsplit("db-pass_genotyped.tsv")[0]
-                        + "db-all.tsv",
+                        filePath1.parent
+                        / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
                     )
+                write_airr(df2, filePath2)
             else:
                 if loci == "tr":
                     write_airr(
-                        df1, filePath1.rsplit("db-pass.tsv")[0] + "db-all.tsv"
+                        df1,
+                        filePath1.parent
+                        / (
+                            filePath1.name.rsplit("db-pass.tsv")[0]
+                            + "db-all.tsv"
+                        ),
                     )
                 else:
                     write_airr(
                         df1,
-                        filePath1.rsplit("db-pass_genotyped.tsv")[0]
-                        + "db-all.tsv",
+                        filePath1.parent
+                        / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
                     )
 
 
 def rename_dandelion(
     data: List[str],
     filename_prefix: Optional[Union[List[str], str]] = None,
-    endswith="_igblast_db-pass_genotyped.tsv",
+    ends_with="_igblast_db-pass_genotyped.tsv",
+    sub_dir: Optional[str] = None,
 ):
     """Rename final dandlion file."""
     if type(data) is not list:
@@ -1069,12 +1000,36 @@ def rename_dandelion(
 
     for i in range(0, len(data)):
         filePath = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], endswith=endswith
+            data[i],
+            filename_prefix=filename_prefix[i],
+            ends_with=ends_with,
+            sub_dir=sub_dir,
         )  # must be whatever's after contig
-        cmd = [
-            "mv",
-            "-f",
-            filePath,
-            filePath.rsplit(endswith)[0] + "_dandelion.tsv",
-        ]
-        run(cmd)
+        if sub_dir is None:
+            fp = filePath.parent / filePath.name.rsplit(ends_with)[0]
+        else:
+            fp = filePath.parent.parent / filePath.name.rsplit(ends_with)[0]
+        shutil.move(filePath, Path(str(fp) + "_dandelion.tsv"))
+
+
+def check_complete(df: pd.DataFrame) -> pd.DataFrame:
+    """check if contig contains cdr3.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        airr data frame.
+
+    Returns
+    -------
+    pd.DataFrame
+        completed airr data frame
+    """
+    if "complete_vdj" not in df:
+        df["complete_vdj"] = ""
+    for i in df.index:
+        junc = df.loc[i, "junction"]
+        if not present(junc):
+            df.at[i, "productive"] = "F"
+            df.at[i, "complete_vdj"] = "F"
+    return df

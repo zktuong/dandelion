@@ -1,12 +1,14 @@
 #!/opt/conda/envs/sc-dandelion-container/bin/python
-"""dandelion preprocess script"""
 import argparse
+import os
+import shutil
+
 import dandelion as ddl
 import numpy as np
-import os
 import pandas as pd
 import scanpy as sc
 
+from pathlib import Path
 from scanpy import logging as logg
 
 sc.settings.verbosity = 3
@@ -33,6 +35,12 @@ def parse_args():
             "Whether the data is TR or IG, as the preprocessing pipelines "
             + 'differ. Defaults to "IG".'
         ),
+    )
+    parser.add_argument(
+        "--org",
+        type=str,
+        default="human",
+        help=("organism for running the reannotation. human or mouse."),
     )
     parser.add_argument(
         "--file_prefix",
@@ -85,6 +93,13 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--skip_correct_c",
+        action="store_false",
+        help=(
+            "If passed, skips correcting c calls at assign_isotypes stage. Only if Chain == IG."
+        ),
+    )
+    parser.add_argument(
         "--keep_trailing_hyphen_number",
         action="store_false",
         help=(
@@ -115,7 +130,7 @@ def main():
     ddl.logging.print_header()
     # sponge up command line arguments to begin with
     args = parse_args()
-    start = logg.info("\nBeginning preprocessing\n")
+    start = logg.info("\nBegin preprocessing\n")
 
     if args.keep_trailing_hyphen_number:
         keep_trailing_hyphen_number_log = False
@@ -127,13 +142,18 @@ def main():
     else:
         skip_reassign_dj_log = True
 
+    if args.skip_correct_c:
+        skip_correct_c_log = False
+    else:
+        skip_correct_c_log = True
+
     logg.info(
         "command line parameters:\n",
         deep=(
-            f"\n"
             f"--------------------------------------------------------------\n"
             f"    --meta = {args.meta}\n"
             f"    --chain = {args.chain}\n"
+            f"    --org = {args.org}\n"
             f"    --file_prefix = {args.file_prefix}\n"
             f"    --sep = {args.sep}\n"
             f"    --flavour = {args.flavour}\n"
@@ -141,8 +161,9 @@ def main():
             f"    --filter_to_high_confidence = {args.filter_to_high_confidence}\n"
             f"    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n"
             f"    --skip_reassign_dj = {skip_reassign_dj_log}\n"
+            f"    --skip_correct_c = {skip_correct_c_log}\n"
             f"    --clean_output = {args.clean_output}\n"
-            f"--------------------------------------------------------------\n"
+            f": --------------------------------------------------------------\n"
         ),
     )
 
@@ -224,6 +245,7 @@ def main():
     ddl.pp.reannotate_genes(
         samples,
         loci=args.chain,
+        org=args.org,
         filename_prefix=filename_prefixes,
         flavour=args.flavour,
         reassign_dj=args.skip_reassign_dj,
@@ -244,6 +266,7 @@ def main():
                         for i in meta[meta["individual"] == ind].index.values
                     ],
                     combined_folder=ind,
+                    org=args.org,
                     save_plot=True,
                     show_plot=False,
                     filename_prefix=filename_prefixes,
@@ -257,6 +280,7 @@ def main():
             ddl.pp.reassign_alleles(
                 samples,
                 combined_folder="tigger",
+                org=args.org,
                 save_plot=True,
                 show_plot=False,
                 filename_prefix=filename_prefixes,
@@ -268,26 +292,36 @@ def main():
 
         # STEP FOUR - ddl.pp.assign_isotypes()
         # also no tricks here
+        if args.org == "mouse":
+            correction_dict = {
+                "IGHG2": {
+                    "IGHG2A": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGATACAACTGGC",
+                    "IGHG2B": "GCCAAAACAACACCCCCATCAGTCTATCCACTGGCCCCTGGGTGTGGAGATACAACTGGT",
+                    "IGHG2C": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGGTACAACTGGC",
+                }
+            }
+        else:
+            correction_dict = None  # TODO: next time maybe can provide a fasta file with the sequences to correct to
         ddl.pp.assign_isotypes(
             samples,
+            org=args.org,
             save_plot=True,
             show_plot=False,
             filename_prefix=filename_prefixes,
+            correct_c_call=args.skip_correct_c,
+            correction_dict=correction_dict,
         )
         # STEP FIVE - ddl.pp.quantify_mutations()
         # this adds the mu_count and mu_freq columns into the table
         for s in samples:
-            ddl.pp.quantify_mutations(
-                s
-                + "/dandelion/"
-                + str(args.file_prefix)
-                + "_contig_dandelion.tsv"
+            samp_path = (
+                Path(s)
+                / "dandelion"
+                / (str(args.file_prefix) + "_contig_dandelion.tsv")
             )
+            ddl.pp.quantify_mutations(samp_path)
             ddl.pp.quantify_mutations(
-                s
-                + "/dandelion/"
-                + str(args.file_prefix)
-                + "_contig_dandelion.tsv",
+                samp_path,
                 frequency=True,
             )
 
@@ -295,7 +329,8 @@ def main():
     # need be
     if args.clean_output:
         for sample in samples:
-            os.system("rm -rf " + sample + "/dandelion/tmp")
+            tmp_path = Path(sample) / "dandelion" / "tmp"
+            shutil.rmtree(tmp_path)
     logg.info("Pre-processing finished.\n", time=start)
 
 

@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# @Author: Kelvin
-# @Date:   2020-05-18 00:15:00
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-22 00:16:20
-"""plotting module."""
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 
 from anndata import AnnData
-from itertools import combinations, cycle
+from itertools import product, cycle
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import networkx as nx
@@ -31,7 +26,7 @@ from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Tuple, Dict, Optional
+from typing import Union, Tuple, Dict, Optional, List, Callable
 
 import dandelion.external.nxviz as nxv
 from dandelion.external.nxviz import annotate
@@ -141,11 +136,7 @@ def clone_rarefaction(
             n = np.append(n, tot[i])
         rarecurve[res_.index[i]] = [
             rarefun(
-                np.array(
-                    res_.iloc[
-                        i,
-                    ]
-                ),
+                np.array(res_.iloc[i,]),
                 z,
             )
             for z in n
@@ -353,7 +344,11 @@ def barplot(
     fig, ax = plt.subplots(figsize=figsize)
 
     # plot
-    sns.barplot(x="index", y=color, data=res, palette=palette, **kwargs)
+    try:
+        sns.barplot(x="index", y=color, data=res, palette=palette, **kwargs)
+    except ValueError:
+        yname = "proportion" if normalize else "count"
+        sns.barplot(x=color, y=yname, data=res, palette=palette, **kwargs)
     # change some parts
     if title is None:
         ax.set_title(color.replace("_", " ") + " usage")
@@ -398,7 +393,7 @@ def stackedbarplot(
     **kwargs,
 ) -> Tuple[Figure, Axes]:
     """
-    A stackedbarplot function to plot usage of V/J genes in the data split by groups.
+    A stacked bar plot function to plot usage of V/J genes in the data split by groups.
 
     Parameters
     ----------
@@ -425,7 +420,7 @@ def stackedbarplot(
     legend_options : Tuple[str, Tuple[float, float], int], optional
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
     labels : Optional[List[str]], optional
-        Names of objects will be used for the legend if list of multiple dataframes supplied.
+        Names of objects will be used for the legend if list of multiple data frames supplied.
     min_clone_size : int, optional
         minimum clone size to keep.
     clone_key : Optional[str], optional
@@ -486,14 +481,14 @@ def stackedbarplot(
         **kwargs,
     ) -> Tuple[Figure, Axes]:
         """
-        Given a list of dataframes, with identical columns and index, create a clustered stacked bar plot.
+        Given a list of data frames, with identical columns and index, create a clustered stacked bar plot.
 
         Parameters
         ----------
         dfall : pd.DataFrame
-            dataframe for plotting.
+            data frame for plotting.
         labels : Optional[List[str]], optional
-            a list of the dataframe objects. Names of objects will be used for the legend.
+            a list of the data frame objects. Names of objects will be used for the legend.
         figsize : Tuple[Union[int, float], Union[int, float]], optional
             size of figure.
         title : str, optional
@@ -507,7 +502,7 @@ def stackedbarplot(
         hide_legend : bool, optional
             whether to show legend.
         H : Literal["/"], optional
-            is the hatch used for identification of the different dataframes
+            is the hatch used for identification of the different data frames
         **kwargs
             other kwargs passed to matplotlib.plt
 
@@ -661,7 +656,7 @@ def spectratype(
         1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
     labels : Optional[List[str]], optional
         Names of objects will be used for the legend if list of
-        multiple dataframes supplied.
+        multiple data frames supplied.
     **kwargs
         other kwargs passed to matplotlib.pyplot.plot
 
@@ -710,9 +705,9 @@ def spectratype(
         Parameters
         ----------
         dfall : pd.DataFrame
-            dataframe for plotting.
+            data frame for plotting.
         labels : Optional[List[str]], optional
-            a list of the dataframe objects. Names of objects will be used for the legend.
+            a list of the data frame objects. Names of objects will be used for the legend.
         figsize : Tuple[Union[int, float], Union[int, float]], optional
             size of figure.
         title : str, optional
@@ -837,8 +832,7 @@ def spectratype(
 def clone_overlap(
     adata: AnnData,
     groupby: str,
-    colorby: str,
-    min_clone_size: int = 2,
+    colorby: Optional[str] = None,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
     color_mapping: Optional[Union[list, dict]] = None,
@@ -853,6 +847,8 @@ def clone_overlap(
     },
     node_label_size: int = 10,
     as_heatmap: bool = False,
+    return_heatmap_data: bool = False,
+    scale_edge_lambda: Optional[Callable] = None,
     **kwargs,
 ) -> nxv.CircosPlot:
     """
@@ -866,10 +862,8 @@ def clone_overlap(
         `AnnData` object.
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
-    colorby : str
-        column name in obs for grouping and color of nodes in circos plot.
-    min_clone_size : int, optional
-        minimum size of clone for plotting connections.
+    colorby : Optional[str], optional
+        column name in obs for grouping and color of nodes in plot. Must be a same or subcategory of the `groupby` categories e.g. `groupby="group_tissue", colorby="tissue"`.
     weighted_overlap : bool, optional
         if True, instead of collapsing to overlap to binary, edge thickness will reflect the number of
         cells found in the overlap. In the future, there will be the option to use something like a jaccard
@@ -891,6 +885,10 @@ def clone_overlap(
         size of labels if node_labels = True
     as_heatmap : bool, optional
         whether to return plot as heatmap.
+    return_heatmap_data : bool, optional
+        whether to return heatmap data as a pandas dataframe.
+    scale_edge_lambda : Optional[Callable], optional
+        a lambda function to scale the edge thickness. If None, will not scale.
     **kwargs
         passed to `matplotlib.pyplot.savefig`.
 
@@ -906,7 +904,6 @@ def clone_overlap(
     ValueError
         if input is not `AnnData`.
     """
-    min_size = min_clone_size
 
     if clone_key is None:
         clone_ = "clone_id"
@@ -932,14 +929,14 @@ def clone_overlap(
                 edges[x] = [
                     y + ({str(clone_): x},)
                     for y in list(
-                        combinations(
+                        product(
                             [
                                 i
                                 for i in overlap.loc[x][
                                     overlap.loc[x] > 0
                                 ].index
                             ],
-                            2,
+                            repeat=2,
                         )
                     )
                 ]
@@ -947,8 +944,9 @@ def clone_overlap(
         tmp_overlap = overlap.astype(bool).sum(axis=1)
         combis = {
             x: list(
-                combinations(
-                    [i for i in overlap.loc[x][overlap.loc[x] > 0].index], 2
+                product(
+                    [i for i in overlap.loc[x][overlap.loc[x] > 0].index],
+                    repeat=2,
                 )
             )
             for x in tmp_overlap.index
@@ -962,7 +960,12 @@ def clone_overlap(
                     overlap.loc[k_clone, list(pair)].sum()
                 )
         for combix in tmp_edge_weight_dict:
-            tmp_edge_weight_dict[combix] = sum(tmp_edge_weight_dict[combix])
+            if scale_edge_lambda is not None:
+                tmp_edge_weight_dict[combix] = scale_edge_lambda(
+                    sum(tmp_edge_weight_dict[combix])
+                )
+            else:
+                tmp_edge_weight_dict[combix] = sum(tmp_edge_weight_dict[combix])
         for x in overlap.index:
             if overlap.loc[x].sum() > 1:
                 edges[x] = [
@@ -970,22 +973,25 @@ def clone_overlap(
                     + (
                         {
                             str(clone_): x,
-                            "weight": tmp_edge_weight_dict[y],
+                            "weight": tmp_edge_weight_dict[y]
+                            if not isinstance(tmp_edge_weight_dict[y], list)
+                            else 0,
                         },
                     )
                     for y in list(
-                        combinations(
+                        product(
                             [
                                 i
                                 for i in overlap.loc[x][
                                     overlap.loc[x] > 0
                                 ].index
                             ],
-                            2,
+                            repeat=2,
                         )
                     )
                 ]
 
+    colorby = groupby if colorby is None else colorby
     # create graph
     G = nx.Graph()
     # add in the nodes
@@ -1058,7 +1064,11 @@ def clone_overlap(
     if as_heatmap:
         hm = nx.to_pandas_adjacency(G)
         sns.clustermap(hm, **kwargs)
+        if return_heatmap_data:
+            return hm
     else:
+        # remove self loops
+        G.remove_edges_from(nx.selfloop_edges(G))
         ax = nxv.circos(
             G,
             group_by=colorby,

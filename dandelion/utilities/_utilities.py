@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# @Author: kt16
-# @Date:   2020-05-12 14:01:32
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-11-21 21:30:55
-"""utilities module."""
 import os
 import re
 import warnings
@@ -13,8 +8,9 @@ import pandas as pd
 
 from airr import RearrangementSchema
 from collections import defaultdict
+from pathlib import Path
 from subprocess import run
-from typing import Tuple, Dict, Union, Optional, TypeVar, List
+from typing import Tuple, Union, Optional, TypeVar, List, Dict
 
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
@@ -29,7 +25,7 @@ try:
 except ImportError:
     from collections import Iterable
 
-
+# for compatibility with python==3.7
 try:
     from typing import Literal
 except ImportError:
@@ -67,9 +63,9 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> dict:
     Parameters
     ----------
     meta : pd.DataFrame
-        pandas dataframe or file path
+        pandas data frame or file path
     columns : Tuple[str, str]
-        column names in dataframe
+        column names in data frame
 
     Returns
     -------
@@ -127,7 +123,7 @@ def flatten(l: list) -> list:
             yield el
 
 
-def makeblastdb(ref: str):
+def makeblastdb(ref: Union[str, Path]):
     """
     Run makeblastdb on constant region fasta file.
 
@@ -135,10 +131,10 @@ def makeblastdb(ref: str):
 
     Parameters
     ----------
-    ref : str
-        constant region fasta file
+    ref : Union[str, Path]
+        constant region fasta file.
     """
-    cmd = ["makeblastdb", "-dbtype", "nucl", "-parse_seqids", "-in", ref]
+    cmd = ["makeblastdb", "-dbtype", "nucl", "-parse_seqids", "-in", str(ref)]
     run(cmd)
 
 
@@ -205,71 +201,70 @@ def isBZIP(filename: str) -> bool:
 
 
 def check_filepath(
-    s,
+    file_or_folder_path: Union[str, Path],
     filename_prefix: Optional[str] = None,
-    endswith: Optional[str] = None,
-    subdir: Optional[str] = None,
-):
-    """Check filepath."""
-    if filename_prefix is None:
-        filename_pre = "filtered"
+    ends_with: Optional[str] = None,
+    sub_dir: Optional[str] = None,
+    within_dandelion: bool = True,
+) -> Path:
+    """
+    Checks whether file path exists.
+
+    Parameters
+    ----------
+    file_or_folder_path : Union[str, Path]
+        either a string or Path object pointing to a file or folder.
+    filename_prefix : Optional[str], optional
+        the prefix of the filename.
+    ends_with : Optional[str], optional
+        the suffix of the filename. Can be flexible i.e. not just the extension.
+    sub_dir : Optional[str], optional
+        the subdirectory to look for the file if specified
+    within_dandelion : bool, optional
+        whether to look for the file within a 'dandelion' sub folder.
+
+    Returns
+    -------
+    Union[Path, None]
+        Path object if file is found, else None.
+    """
+    filename_pre = "filtered" if filename_prefix is None else filename_prefix
+
+    ends_with = "" if ends_with is None else ends_with
+    input_path = (
+        Path(file_or_folder_path).expanduser()
+        if str(file_or_folder_path)[0] == "~"
+        else Path(file_or_folder_path)
+    )
+    if input_path.is_file() and str(input_path).endswith(ends_with):
+        return input_path
+    elif input_path.is_dir():
+        if within_dandelion:
+            for child in input_path.iterdir():
+                if child.name[0] != ".":
+                    if child.is_dir() and child.name == "dandelion":
+                        out_dir = child
+                        if sub_dir is not None:
+                            out_dir = out_dir / sub_dir
+                        for file in out_dir.iterdir():
+                            if file.name[0] != ".":
+                                if file.is_file() and str(file).endswith(
+                                    ends_with
+                                ):
+                                    if file.name.startswith(
+                                        filename_pre + "_contig"
+                                    ):
+                                        return file
+        else:
+            if sub_dir is not None:
+                input_path = input_path / sub_dir
+            for file in input_path.iterdir():
+                if file.name[0] != ".":
+                    if file.is_file() and str(file).endswith(ends_with):
+                        if file.name.startswith(filename_pre + "_contig"):
+                            return file
     else:
-        filename_pre = filename_prefix
-
-    if endswith is None:
-        ends_with = ""
-    else:
-        ends_with = endswith
-
-    filePath = None
-    if os.path.isfile(str(s)) and str(s).endswith(ends_with):
-        filePath = s
-    elif os.path.isdir(str(s)):
-        files = os.listdir(s)
-        for file in files:
-            out_ = s.rstrip("/") + "/"
-            if os.path.isdir(out_ + os.path.basename(file)):
-                if file == "dandelion":
-                    if subdir is None:
-                        out_ = out_ + os.path.basename(file) + "/"
-                    else:
-                        out_ = (
-                            out_ + os.path.basename(file) + "/" + subdir + "/"
-                        )
-                    for x in os.listdir(out_):
-                        if x.endswith(ends_with):
-                            if (
-                                str(x).split(ends_with)[0]
-                                == filename_pre + "_contig"
-                            ):
-                                filePath = out_ + x
-                            else:
-                                continue
-            else:
-                continue
-    return filePath
-
-
-def check_fastapath(fasta, filename_prefix: Optional[str] = None):
-    """Check fastapath."""
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
-
-    filePath = None
-    if os.path.isfile(str(fasta)) and str(fasta).endswith(".fasta"):
-        filePath = fasta
-    elif os.path.isdir(str(fasta)):
-        files = os.listdir(fasta)
-        for file in files:
-            out_ = fasta.rstrip("/") + "/"
-            if str(file).endswith(".fasta"):
-                if str(file).split(".fasta")[0] == filename_pre + "_contig":
-                    filePath = out_ + os.path.basename(file)
-                else:
-                    continue
-    return filePath
+        return None
 
 
 def cmp(a, b):
@@ -561,13 +556,13 @@ def check_travdv(data):
     return data
 
 
-def load_data(obj: Optional[Union[pd.DataFrame, str]]) -> pd.DataFrame:
+def load_data(obj: Optional[Union[pd.DataFrame, str, Path]]) -> pd.DataFrame:
     """
     Read in or copy dataframe object and set sequence_id as index without dropping.
 
     Parameters
     ----------
-    obj : Optional[Union[pd.DataFrame, str]]
+    obj : Optional[Union[pd.DataFrame, str, Path]]
         file path to .tsv file or pandas DataFrame object.
 
     Returns
@@ -648,27 +643,22 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-pass.tsv",
+            ends_with="_igblast_db-pass.tsv",
         )
-        if filePath is None:
-            raise FileNotFoundError(
-                "Path to .tsv file for {} is unknown. ".format(data[i])
-                + "Please specify path to reannotated .tsv file or folder containing reannotated .tsv file."
-            )
+        if filePath is not None:
+            dat = load_data(filePath)
+            if "d_support_blastn" in dat:
+                dat["d_call"] = [
+                    "" if s > d_evalue_threshold else c
+                    for c, s in zip(dat["d_call"], dat["d_support_blastn"])
+                ]
+            if "j_support_blastn" in dat:
+                dat["j_call"] = [
+                    "" if s > j_evalue_threshold else c
+                    for c, s in zip(dat["j_call"], dat["j_support_blastn"])
+                ]
 
-        dat = load_data(filePath)
-        if "d_support_blastn" in dat:
-            dat["d_call"] = [
-                "" if s > d_evalue_threshold else c
-                for c, s in zip(dat["d_call"], dat["d_support_blastn"])
-            ]
-        if "j_support_blastn" in dat:
-            dat["j_call"] = [
-                "" if s > j_evalue_threshold else c
-                for c, s in zip(dat["j_call"], dat["j_support_blastn"])
-            ]
-
-        write_airr(dat, filePath)
+            write_airr(dat, filePath)
 
 
 def write_airr(data, save):
@@ -779,46 +769,43 @@ def format_locus(
     """Extract locus call value from data."""
     locus_1 = dict(metadata["locus" + suffix_vdj])
     locus_2 = dict(metadata["locus" + suffix_vj])
-    productive_1 = dict(metadata["productive" + suffix_vdj])
-    productive_2 = dict(metadata["productive" + suffix_vj])
     constant_1 = dict(metadata["isotype_status"])
 
     locus_dict = {}
     for i in metadata.index:
-        pro1 = {
-            e: p
-            for e, p in enumerate([pp for pp in productive_1[i].split("|")])
-        }
         loc1 = {
             e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
-        }
-        pro2 = {
-            e: p
-            for e, p in enumerate([pp for pp in productive_2[i].split("|")])
         }
         loc2 = {
             e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
         }
         loc1x, loc2x = [], []
-        if not all([px == "None" for px in pro1.values()]):
-            if all([px_ != "F" for px_ in pro1.values()]):
-                for j in pro1:
-                    if pro1[j] in TRUES:
-                        loc1x.append(loc1[j])
-                loc1xx = loc1x
-                loc1x = [ij[:2] for ij in loc1x]
+        if not all([px == "None" for px in loc1.values()]):
+            loc1xx = list(loc1.values())
+            loc1x = [ij[:2] for ij in loc1.values()]
 
-        if not all([px == "None" for px in pro2.values()]):
-            if all([px_ != "F" for px_ in pro1.values()]):
-                for j in pro2:
-                    if pro2[j] in TRUES:
-                        loc2x.append(loc2[j])
-                loc2xx = loc2x
-                loc2x = [ij[:2] for ij in loc2x]
+        if not all([px == "None" for px in loc2.values()]):
+            loc2xx = list(loc2.values())
+            loc2x = [ij[:2] for ij in loc2.values()]
 
         if len(loc1x) > 0:
             if len(list(set(loc1x))) > 1:
                 tmp1 = "ambiguous"
+                if len(loc2x) > 0:
+                    if len(list(set(loc2x))) > 1:
+                        tmp2 = "ambiguous"
+                    else:
+                        if len(loc2x) > 1:
+                            if (all(x in ["TRA", "TRG"] for x in loc2xx)) and (
+                                len(list(set(loc2xx))) == 2
+                            ):
+                                tmp2 = "Extra VJ-exception"
+                            else:
+                                tmp2 = "Extra VJ"
+                        else:
+                            tmp2 = loc2xx[0]
+                else:
+                    tmp2 = "None"
             else:
                 if len(loc1x) > 1:
                     if constant_1[i] == "IgM/IgD":
@@ -881,17 +868,10 @@ def format_locus(
                 locus_dict.update({i: "Orphan " + tmp2})
             elif tmp2 == "None":
                 locus_dict.update({i: "Orphan " + tmp1})
-
+        if any(re.search("No_contig", tmp) for tmp in [tmp1, tmp2]):
+            locus_dict.update({i: "No_contig"})
     result = pd.Series(locus_dict)
     return result
-
-
-def sum_col(vals):
-    """Sum columns if not NaN."""
-    if all(pd.isnull(vals)):
-        return np.nan
-    else:
-        return sum(vals)
 
 
 def lib_type(lib: str):
@@ -972,3 +952,131 @@ def update_rearrangement_status(self):
         else:
             contig_status.append("unknown")
     self.data["rearrangement_status"] = contig_status
+
+
+def set_germline_env(
+    germline: Optional[str] = None,
+    org: Literal["human", "mouse"] = "human",
+    input_file: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict, Path, Path]:
+    """
+    Set the paths to germline database and environment variables and relevant input files.
+
+    Parameters
+    ----------
+    germline : Optional[str], optional
+        path to germline database. None defaults to environmental variable $GERMLINE.
+    org : Literal["human", "mouse"], optional
+        organism for germline sequences.
+    input_file : Optional[Union[str, Path]], optional
+        path to input file.
+    Returns
+    -------
+    Tuple[Dict, Path]
+        environment dictionary and path to germline database.
+
+    Raises
+    ------
+    KeyError
+        if $GERMLINE environmental variable is not set.
+    """
+    env = os.environ.copy()
+    if germline is None:
+        try:
+            gml = Path(env["GERMLINE"])
+        except KeyError:
+            raise KeyError(
+                (
+                    "Environmental variable $GERMLINE is missing. "
+                    "Please 'export GERMLINE=/path/to/database/germlines/'"
+                )
+            )
+        gml = gml / "imgt" / org / "vdj"
+    else:
+        gml = env["GERMLINE"] = Path(germline)
+    if input_file is not None:
+        input_file = Path(input_file)
+    return env, gml, input_file
+
+
+def set_igblast_env(
+    igblast_db: Optional[Union[str, Path]] = None,
+    input_file: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict, Path, Path]:
+    """
+    Set the igblast database and environment variables and relevant input files.
+
+    Parameters
+    ----------
+    igblast_db : Optional[str], optional
+        path to igblast database. None defaults to environmental variable $IGDATA.
+    input_file : Optional[Union[str, Path]], optional
+        path to input file.
+
+    Returns
+    -------
+    Tuple[Dict, Path]
+        environment dictionary and path to igblast database.
+
+    Raises
+    ------
+    KeyError
+        if $IGDATA environmental variable is not set.
+    """
+    env = os.environ.copy()
+    if igblast_db is None:
+        try:
+            igdb = Path(env["IGDATA"])
+        except KeyError:
+            raise KeyError(
+                (
+                    "Environmental variable $IGDATA is missing. "
+                    "Please 'export IGDATA=/path/to/database/igblast/'"
+                )
+            )
+    else:
+        igdb = env["IGDATA"] = Path(igblast_db)
+    if input_file is not None:
+        input_file = Path(input_file)
+    return env, igdb, input_file
+
+
+def set_blast_env(
+    blast_db: Optional[str] = None,
+    input_file: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict, Path, Path]:
+    """
+    Set the blast database and environment variables and relevant input files.
+
+    Parameters
+    ----------
+    blast_db : Optional[str], optional
+        path to blast database. None defaults to environmental variable $BLASTDB.
+    input_file : Optional[Union[str, Path]], optional
+        path to input file.
+    Returns
+    -------
+    Tuple[Dict, Path]
+        environment dictionary and path to igblast database.
+
+    Raises
+    ------
+    KeyError
+        if $BLASTDB environmental variable is not set.
+    """
+    env = os.environ.copy()
+    if blast_db is None:
+        try:
+            bdb = Path(env["BLASTDB"])
+        except KeyError:
+            raise KeyError(
+                (
+                    "Environmental variable $BLASTDB is missing. "
+                    "Please 'export BLASTDB=/path/to/database/blast/'"
+                )
+            )
+    else:
+        bdb = env["BLASTDB"] = Path(blast_db)
+    if input_file is not None:
+        input_file = Path(input_file)
+    return env, bdb, input_file

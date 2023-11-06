@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""test clone overlap plotting"""
 import dandelion as ddl
 from itertools import cycle
 import pytest
@@ -12,11 +11,9 @@ def test_productive_ratio(
     create_testfolder, annotation_10x_mouse, dummy_adata_mouse
 ):
     """test_productive_ratio"""
-    annot_file = (
-        str(create_testfolder) + "/test_filtered_contig_annotations.csv"
-    )
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x_mouse.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     vdj.data["ambiguous"] = "F"
     group = cycle(["A", "B", "C", "D", "E", "F", "G", "H", "I"])
     groups = [next(group) for i in dummy_adata_mouse.obs_names]
@@ -39,7 +36,7 @@ def test_productive_ratio(
 @pytest.mark.usefixtures("create_testfolder", "dummy_adata_mouse")
 def test_vj_usage_pca(create_testfolder, dummy_adata_mouse):
     """Test vj usage pca."""
-    vdj = ddl.read_10x_vdj(str(create_testfolder))
+    vdj = ddl.read_10x_vdj(create_testfolder)
     _, adata = ddl.pp.check_contigs(vdj, dummy_adata_mouse)
     group = cycle(["A", "B", "C", "D", "E", "F", "G", "H", "I"])
     groups = [next(group) for i in adata.obs_names]

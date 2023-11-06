@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# @Author: Kelvin
-# @Date:   2020-05-13 23:21:45
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-10-27 10:18:56
-"""init module."""
 from dandelion.tools._tools import (
     find_clones,
     productive_ratio,
@@ -48,7 +43,7 @@ __all__ = [
     "setup_vdj_pseudobulk",
     "vdj_pseudobulk",
     "pseudotime_transfer",
-    "pseudotime_cell",
+    "project_pseudotime_to_cell",
     "pseudobulk_gex",
     "bin_expression",
     "chatterjee_corr",

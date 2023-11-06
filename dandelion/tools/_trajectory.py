@@ -1,5 +1,4 @@
-"""Trajectory functions."""
-# Created on Mon Sep 19 21:30:44 2022
+#!/usr/bin/env python
 # @author: chenqu, kp9, kelvin
 import re
 import numpy as np
@@ -56,7 +55,6 @@ def setup_vdj_pseudobulk(
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
     allowed_chain_status : Optional[List[str]], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
-        Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ", "Orphan VDJ-exception"].
     productive_vdj : bool, optional
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj : bool, optional
@@ -101,21 +99,9 @@ def setup_vdj_pseudobulk(
         if check_vdj_mapping is not None:
             if not isinstance(check_vdj_mapping, list):
                 check_vdj_mapping = [check_vdj_mapping]
-            check_vdj_mapping = list(
-                map(
-                    lambda x: "v_call_genotyped" if x == "v_call" else x,
-                    check_vdj_mapping,
-                )
-            )
         if check_vj_mapping is not None:
             if not isinstance(check_vj_mapping, list):
                 check_vj_mapping = [check_vj_mapping]
-            check_vj_mapping = list(
-                map(
-                    lambda x: "v_call_genotyped" if x == "v_call" else x,
-                    check_vj_mapping,
-                )
-            )
 
     if allowed_chain_status is not None:
         adata = adata[
@@ -309,7 +295,12 @@ def vdj_pseudobulk(
     obs_to_bulk: Optional[Union[str, List[str]]] = None,
     obs_to_take: Optional[Union[str, List[str]]] = None,
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
-    extract_cols: Optional[List[str]] = None,
+    extract_cols: Optional[List[str]] = [
+        "v_call_abT_VDJ_main",
+        "j_call_abT_VDJ_main",
+        "v_call_abT_VJ_main",
+        "j_call_abT_VJ_main",
+    ],
 ) -> AnnData:
     """Function for making pseudobulk vdj feature space. One of `pbs` or `obs_to_bulk`
     needs to be specified when calling.
@@ -326,7 +317,7 @@ def vdj_pseudobulk(
     obs_to_take : Optional[Union[str, List[str]]], optional
         Optional obs column(s) to identify the most common value of for each pseudobulk.
     mode : Optional[Literal["B", "abT", "gdT"]], optional
-        Optional mode for extractin the V(D)J genes. If set as `None`, it will use e.g. `v_call_VDJ` instead of `v_call_abT_VDJ`.
+        Optional mode for extracting the V(D)J genes. If set as `None`, it will use e.g. `v_call_VDJ` instead of `v_call_abT_VDJ`.
         If `extract_cols` is provided, then this argument is ignored.
     extract_cols : Optional[List[str]], optional
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
@@ -352,7 +343,6 @@ def vdj_pseudobulk(
                 if re.search(
                     "|".join(
                         [
-                            "_call_genotyped_VDJ_main",
                             "_call_VDJ_main",
                             "_call_VJ_main",
                         ]
@@ -365,7 +355,7 @@ def vdj_pseudobulk(
                 i
                 for i in adata.obs
                 if re.search(
-                    "|".join([mode + "_VDJ_main", mode + "_call_VJ_main"]), i
+                    "|".join([mode + "_VDJ_main", mode + "_VJ_main"]), i
                 )
             ]
 
@@ -552,7 +542,7 @@ def bin_expression(
     Returns
     -------
     pd.DataFrame
-        a dataframe with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
+        a data frame with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
     """
     # define bins
     bins = np.linspace(0, 1, bin_no + 1)
@@ -584,12 +574,12 @@ def chatterjee_corr(
     genes : List[str]
         List of genes selected to compute the correlation
     pseudotime_col : str
-        olumn in adata.obs where pseudotime is stored
+        column in adata.obs where pseudotime is stored
 
     Returns
     -------
     pd.DataFrame
-        a dataframe with genes as rows, with cor_res (correlation statistics),
+        a data frame with genes as rows, with cor_res (correlation statistics),
         pval (p-value),  adj_pval (p-value adjusted by BH method) as columns.
     """
     # get gene expression
@@ -608,7 +598,7 @@ def chatterjee_corr(
 
     pval = 1 - sp.stats.norm.cdf(stat, loc=0, scale=np.sqrt(2 / 5 / x.shape[0]))
 
-    # put results into dataframe cor_res
+    # put results into data frame cor_res
     cor_res = pd.DataFrame({"cor_stat": stat, "pval": pval})
     cor_res.index = genes
 

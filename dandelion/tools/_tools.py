@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-# @Author: Kelvin
-# @Date:   2020-05-13 23:22:18
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-13 08:35:08
-"""tools module."""
 import math
 import os
 import re
@@ -18,7 +13,7 @@ from anndata import AnnData
 from changeo.Gene import getGene
 from collections import defaultdict, Counter
 from distance import hamming
-from itertools import combinations
+from itertools import product
 from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform
@@ -164,24 +159,24 @@ def find_clones(
                 if not by_alleles:
                     if "v_call_genotyped" in dat_vdj.columns:
                         V = [
-                            re.sub("[*][0-9][0-9]", "", v)
+                            re.sub("[*][0-9][0-9]", "", str(v))
                             for v in dat_vdj["v_call_genotyped"]
                         ]
                     else:
                         V = [
-                            re.sub("[*][0-9][0-9]", "", v)
+                            re.sub("[*][0-9][0-9]", "", str(v))
                             for v in dat_vdj["v_call"]
                         ]
                     J = [
-                        re.sub("[*][0-9][0-9]", "", j)
+                        re.sub("[*][0-9][0-9]", "", str(j))
                         for j in dat_vdj["j_call"]
                     ]
                 else:
                     if "v_call_genotyped" in dat_vdj.columns:
-                        V = [v for v in dat_vdj["v_call_genotyped"]]
+                        V = [str(v) for v in dat_vdj["v_call_genotyped"]]
                     else:
-                        V = [v for v in dat_vdj["v_call"]]
-                    J = [j for j in dat_vdj["j_call"]]
+                        V = [str(v) for v in dat_vdj["v_call"]]
+                    J = [str(j) for j in dat_vdj["j_call"]]
 
                 # collapse the alleles to just genes
                 V = [",".join(list(set(v.split(",")))) for v in V]
@@ -353,24 +348,24 @@ def find_clones(
                     if not by_alleles:
                         if "v_call_genotyped" in dat_vj_c.columns:
                             Vvj = [
-                                re.sub("[*][0-9][0-9]", "", v)
+                                re.sub("[*][0-9][0-9]", "", str(v))
                                 for v in dat_vj_c["v_call_genotyped"]
                             ]
                         else:
                             Vvj = [
-                                re.sub("[*][0-9][0-9]", "", v)
+                                re.sub("[*][0-9][0-9]", "", str(v))
                                 for v in dat_vj_c["v_call"]
                             ]
                         Jvj = [
-                            re.sub("[*][0-9][0-9]", "", j)
+                            re.sub("[*][0-9][0-9]", "", str(j))
                             for j in dat_vj_c["j_call"]
                         ]
                     else:
                         if "v_call_genotyped" in dat_vj_c.columns:
-                            Vvj = [v for v in dat_vj_c["v_call_genotyped"]]
+                            Vvj = [str(v) for v in dat_vj_c["v_call_genotyped"]]
                         else:
-                            Vvj = [v for v in dat_vj_c["v_call"]]
-                        Jvj = [j for j in dat_vj_c["j_call"]]
+                            Vvj = [str(v) for v in dat_vj_c["v_call"]]
+                        Jvj = [str(j) for j in dat_vj_c["j_call"]]
                     # collapse the alleles to just genes
                     Vvj = [",".join(list(set(v.split(",")))) for v in Vvj]
                     Jvj = [",".join(list(set(j.split(",")))) for j in Jvj]
@@ -595,13 +590,8 @@ def find_clones(
                 dat_[clone_key].update(pd.Series(dat[clone_key]))
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
-        write_airr(
-            dat_,
-            "{}/{}_clone.tsv".format(
-                os.path.dirname(vdj_data),
-                os.path.basename(vdj_data).split(".tsv")[0],
-            ),
-        )
+        data_path = Path(vdj_data)
+        write_airr(dat_, data_path.parent / (data_path.stem + "_clone.tsv"))
 
     logg.info(
         " finished",
@@ -822,7 +812,7 @@ def transfer(
             }
         else:
             cell_indices = Tree()
-            for x, y in adata.obs[clonekey].iteritems():
+            for x, y in adata.obs[clonekey].items():
                 if y not in [
                     "",
                     "unassigned",
@@ -913,10 +903,10 @@ def define_clones(
     doublets: Literal["drop", "count"] = "drop",
     fileformat: Literal["changeo", "airr"] = "airr",
     ncpu: Optional[int] = None,
-    dirs: Optional[str] = None,
     outFilePrefix: Optional[int] = None,
     key_added: Optional[int] = None,
-    verbose: bool = False,
+    out_dir: Optional[Union[str, Path]] = None,
+    additional_args: List[str] = [],
 ) -> Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
@@ -954,14 +944,14 @@ def define_clones(
         Format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
     ncpu : Optional[int], optional
         Number of cpus for parallelization. Default is 1, no parallelization.
-    dirs : Optional[str], optional
-        If specified, out file will be in this location.
     outFilePrefix : Optional[int], optional
         If specified, the out file name will have this prefix. `None` defaults to 'dandelion_define_clones'
     key_added : Optional[int], optional
         Column name to add for define_clones.
-    verbose : bool, optional
-        Whether or not to print the command used in terminal to call DefineClones.py. Default is False.
+    out_dir : Optional[Union[str, Path]], optional
+        If specified, the files will be written to this directory.
+    additional_args : List[str], optional
+        Additional arguments to pass to `DefineClones.py`.
 
     Returns
     -------
@@ -988,9 +978,6 @@ def define_clones(
         dat_ = load_data(vdj_data.data)
     else:
         dat_ = load_data(vdj_data)
-    if os.path.isfile(str(vdj_data)):
-        dat_ = load_data(vdj_data)
-
     if "ambiguous" in dat_:
         dat = dat_[dat_["ambiguous"] == "F"].copy()
     else:
@@ -999,50 +986,42 @@ def define_clones(
     dat_l = dat[dat["locus"].isin(["IGK", "IGL"])]
 
     if os.path.isfile(str(vdj_data)):
-        tmpFolder = "{}/tmp".format(os.path.dirname(vdj_data))
-        outFolder = "{}".format(os.path.dirname(vdj_data))
+        vdj_path = Path(vdj_data)
+        tmpFolder = vdj_path.parent / "tmp"
+        outFolder = vdj_path.parent
+    elif out_dir is not None:
+        vdj_path = Path(out_dir)
+        tmpFolder = vdj_path / "tmp"
+        outFolder = vdj_path
     else:
         import tempfile
 
-        tmpFolder = "{}/tmp".format(tempfile.TemporaryDirectory().name)
-        outFolder = "{}".format(tempfile.TemporaryDirectory().name)
+        outFolder = Path(tempfile.TemporaryDirectory().name)
+        tmpFolder = outFolder / "tmp"
 
-    if not os.path.exists(tmpFolder):
-        os.makedirs(tmpFolder)
-    if not os.path.exists(outFolder):
-        os.makedirs(outFolder)
+    for _ in [outFolder, tmpFolder]:
+        _.mkdir(parents=True, exist_ok=True)
 
-    if os.path.isfile(str(vdj_data)):
-        h_file1 = "{}/{}_heavy-clone.tsv".format(
-            tmpFolder, os.path.basename(vdj_data).split(".tsv")[0]
-        )
-        h_file2 = "{}/{}_heavy-clone.tsv".format(
-            outFolder, os.path.basename(vdj_data).split(".tsv")[0]
-        )
-        l_file = "{}/{}_light.tsv".format(
-            tmpFolder, os.path.basename(vdj_data).split(".tsv")[0]
-        )
-        outfile = "{}/{}_clone.tsv".format(
-            outFolder, os.path.basename(vdj_data).split(".tsv")[0]
-        )
+    if "vdj_path" in locals():
+        h_file1 = tmpFolder / (vdj_path.stem + "_heavy-clone.tsv")
+        h_file2 = outFolder / (vdj_path.stem + "_heavy-clone.tsv")
+        l_file = tmpFolder / (vdj_path.stem + "_light.tsv")
+        outfile = outFolder / (vdj_path.stem + "_clone.tsv")
     else:
-        if outFilePrefix is not None:
-            out_FilePrefix = outFilePrefix
-        else:
-            out_FilePrefix = "dandelion_define_clones"
-        h_file1 = "{}/{}_heavy-clone.tsv".format(tmpFolder, out_FilePrefix)
-        h_file2 = "{}/{}_heavy-clone.tsv".format(outFolder, out_FilePrefix)
-        l_file = "{}/{}_light.tsv".format(tmpFolder, out_FilePrefix)
-        outfile = "{}/{}_clone.tsv".format(outFolder, out_FilePrefix)
-
+        out_FilePrefix = (
+            "dandelion_define_clones"
+            if outFilePrefix is None
+            else outFilePrefix
+        )
+        h_file1 = tmpFolder / (out_FilePrefix + "_heavy-clone.tsv")
+        h_file2 = outFolder / (out_FilePrefix + "_heavy-clone.tsv")
+        l_file = tmpFolder / (out_FilePrefix + "_light.tsv")
+        outfile = outFolder / (out_FilePrefix + "_clone.tsv")
     write_airr(dat_h, h_file1)
     write_airr(dat_l, l_file)
-
-    if "v_call_genotyped" in dat.columns:
-        v_field = "v_call_genotyped"
-    else:
-        v_field = "v_call"
-
+    v_field = (
+        "v_call_genotyped" if "v_call_genotyped" in dat.columns else "v_call"
+    )
     if dist is None:
         if isinstance(vdj_data, Dandelion):
             if vdj_data.threshold is not None:
@@ -1061,9 +1040,9 @@ def define_clones(
     cmd = [
         "DefineClones.py",
         "-d",
-        h_file1,
+        str(h_file1),
         "-o",
-        h_file2,
+        str(h_file2),
         "--act",
         action,
         "--model",
@@ -1077,6 +1056,7 @@ def define_clones(
         "--vf",
         v_field,
     ]
+    cmd = cmd + additional_args
 
     def clusterLinkage(cell_series, group_series):
         """
@@ -1133,6 +1113,7 @@ def define_clones(
 
         return assign_dict
 
+    # TODO: might need to remove this function to drop requirement to maintain this as a dependency internally
     def _lightCluster(heavy_file, light_file, out_file, doublets, fileformat):
         """
         Split heavy chain clones based on light chains.
@@ -1302,24 +1283,13 @@ def define_clones(
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
     dat_[str(clone_key)].fillna("", inplace=True)
     if isinstance(vdj_data, Dandelion):
-        if vdj_data.germline is not None:
-            germline_ = vdj_data.germline
-        else:
-            germline_ = None
-        if vdj_data.layout is not None:
-            layout_ = vdj_data.layout
-        else:
-            layout_ = None
-        if vdj_data.graph is not None:
-            graph_ = vdj_data.graph
-        else:
-            graph_ = None
-        if vdj_data.threshold is not None:
-            threshold_ = vdj_data.threshold
-        else:
-            threshold_ = None
-
-        if ("clone_id" in vdj_data.data.columns) and (clone_key is not None):
+        germline_ = vdj_data.germline if vdj_data.germline is not None else None
+        layout_ = vdj_data.layout if vdj_data.layout is not None else None
+        graph_ = vdj_data.graph if vdj_data.graph is not None else None
+        threshold_ = (
+            vdj_data.threshold if vdj_data.threshold is not None else None
+        )
+        if ("clone_id" in vdj_data.data) and (clone_key is not None):
             vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
@@ -1329,9 +1299,7 @@ def define_clones(
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
             )
-        elif ("clone_id" not in vdj_data.data.columns) and (
-            clone_key is not None
-        ):
+        elif ("clone_id" not in vdj_data.data) and (clone_key is not None):
             vdj_data.__init__(
                 data=dat_,
                 germline=germline_,
@@ -1587,12 +1555,10 @@ def clone_size(
 def clone_overlap(
     vdj_data: Union[Dandelion, AnnData],
     groupby: str,
-    colorby: str,
     min_clone_size: Optional[int] = None,
     weighted_overlap: bool = False,
     clone_key: Optional[str] = None,
-    verbose: bool = True,
-) -> Union[AnnData, pd.DataFrame]:
+) -> pd.DataFrame:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
 
@@ -1601,9 +1567,7 @@ def clone_overlap(
     vdj_data : Union[Dandelion, AnnData]
         `Dandelion` or `AnnData` object.
     groupby : str
-        column name in obs/metadata for collapsing to nodes in circos plot.
-    colorby : str
-        column name in obs/metadata for grouping and color of nodes in circos plot.
+        column name in obs/metadata for collapsing to columns in the clone_id x groupby data frame.
     min_clone_size : Optional[int], optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     weighted_overlap : bool, optional
@@ -1611,13 +1575,11 @@ def clone_overlap(
         In the future, there will be the option to use something like a jaccard index.
     clone_key : Optional[str], optional
         column name for clones. `None` defaults to 'clone_id'.
-    verbose : bool, optional
-        whether to print progress
 
     Returns
     -------
-    Union[AnnData, pd.DataFrame]
-        Either `AnnData` or a `pandas.DataFrame`.
+    pd.DataFrame
+        clone_id x groupby overlap :class:`pandas.core.frame.DataFrame'.
 
     Raises
     ------
@@ -1713,19 +1675,19 @@ def clustering(distance_dict, threshold, sequences_dict):
         (i1, i2): distance_dict[(i1, i2)] <= threshold
         if (i1, i2) in distance_dict
         else False
-        for i1, i2 in combinations(i_unique, 2)
+        for i1, i2 in product(i_unique, repeat=2)
     }
     i_pair_d.update(
         {
             (i2, i1): distance_dict[(i2, i1)] <= threshold
             if (i2, i1) in distance_dict
             else False
-            for i1, i2 in combinations(i_unique, 2)
+            for i1, i2 in product(i_unique, repeat=2)
         }
     )
     # so which indices should not be part of a clone?
     canbetogether = defaultdict(list)
-    for ii1, ii2 in combinations(i_unique, 2):
+    for ii1, ii2 in product(i_unique, repeat=2):
         if i_pair_d[(ii1, ii2)] or i_pair_d[(ii2, ii1)]:
             if (ii1, ii2) in distance_dict:
                 canbetogether[ii1].append((ii1, ii2))

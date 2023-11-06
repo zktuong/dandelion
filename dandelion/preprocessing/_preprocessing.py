@@ -1,22 +1,14 @@
 #!/usr/bin/env python
-# @Author: kt16
-# @Date:   2020-05-12 17:56:02
-# @Last Modified by:   Kelvin
-# @Last Modified time: 2022-12-13 09:50:28
-
 import anndata as ad
 import functools
 import numpy as np
 import os
 import pandas as pd
 import re
+import tempfile
 
 from anndata import AnnData
 from Bio import Align
-from changeo.Gene import buildGermline
-from changeo.IO import getFormatOperators, readGermlines, checkFields
-from changeo.Receptor import AIRRSchema, ChangeoSchema, Receptor, ReceptorData
-from collections import OrderedDict
 from operator import countOf
 from pathlib import Path
 from plotnine import (
@@ -62,13 +54,13 @@ from dandelion.tools._tools import transfer
 
 
 def format_fasta(
-    fasta: str,
+    fasta: Union[str, Path],
     prefix: Optional[str] = None,
     suffix: Optional[str] = None,
     sep: Optional[str] = None,
     remove_trailing_hyphen_number: bool = True,
     high_confidence_filtering: bool = False,
-    outdir: Optional[str] = None,
+    out_dir: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[str] = None,
 ):
     """
@@ -76,21 +68,20 @@ def format_fasta(
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
     prefix : Optional[str], optional
         prefix to append to the headers/contig ids.
     suffix : Optional[str], optional
         suffix to append to the headers/contig ids.
     sep : Optional[str], optional
-        separator after prefix or before suffix to append to the headers/contig
-        ids.
+        separator after prefix or before suffix to append to the headers/contig ids.
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
-        ell/contig barcodes.
+        cell/contig barcodes.
     high_confidence_filtering : bool, optional
         whether ot not to filter to only `high confidence` contigs.
-    outdir : Optional[str], optional
+    out_dir : Optional[str], optional
         path to output location. `None` defaults to 'dandelion'.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
@@ -100,29 +91,27 @@ def format_fasta(
     FileNotFoundError
         if path to fasta file is unknown.
     """
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = "filtered" if filename_prefix is None else filename_prefix
 
-    filePath = None
-    filePath = check_fastapath(fasta, filename_prefix=filename_pre)
+    file_path = check_filepath(
+        fasta,
+        filename_prefix=filename_pre,
+        ends_with=".fasta",
+        within_dandelion=False,
+    )
 
-    if filePath is None:
+    if file_path is None:
         raise FileNotFoundError(
             "Path to fasta file is unknown. Please "
             + "specify path to fasta file or folder containing fasta file. "
             + "Starting folder should only contain 1 fasta file."
         )
-
-    fh = open(filePath, "r")
+    fh = open(file_path, "r")
     seqs = {}
-
     if sep is None:
         separator = "_"
     else:
         separator = str(sep)
-
     for header, sequence in fasta_iterator(fh):
         if prefix is None and suffix is None:
             seqs[header] = sequence
@@ -181,33 +170,18 @@ def format_fasta(
             else:
                 newheader = str(header)
             seqs[newheader] = sequence
-
     fh.close()
-
-    if os.path.isfile(filePath):
-        basedir = os.path.dirname(filePath)
-    elif os.path.isdir(filePath):
-        basedir = os.path.dirname(filePath)
-    else:
-        basedir = os.getcwd()
-
-    if outdir is None:
-        out_dir = basedir.rstrip("/") + "/" + "dandelion/"
-    else:
-        if not outdir.endswith("/"):
-            out_dir = outdir + "/"
-
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-
+    base_dir = file_path.parent if file_path.is_file() else Path.cwd()
+    out_dir = base_dir / "dandelion" if out_dir is None else Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     # format the barcode and contig_id in the corresponding annotation file too
-    anno = (
-        basedir
-        + "/"
-        + os.path.basename(filePath).replace(".fasta", "_annotations.csv")
+    anno = check_filepath(
+        fasta,
+        filename_prefix=filename_pre,
+        ends_with="_annotations.csv",
+        within_dandelion=False,
     )
     data = pd.read_csv(anno, dtype="object")
-
     if prefix is not None:
         if suffix is not None:
             if remove_trailing_hyphen_number:
@@ -295,15 +269,16 @@ def format_fasta(
         else:
             data["contig_id"] = [str(c) for c in data["contig_id"]]
             data["barcode"] = [str(b) for b in data["barcode"]]
-
-    out_anno = out_dir + os.path.basename(filePath).replace(
-        ".fasta", "_annotations.csv"
+    anno = check_filepath(
+        fasta,
+        filename_prefix=filename_pre,
+        ends_with="_annotations.csv",
+        within_dandelion=False,
     )
-    out_fasta = out_dir + os.path.basename(filePath)
+    out_anno = out_dir / (file_path.stem + "_annotations.csv")
+    out_fasta = out_dir / file_path.name
     fh1 = open(out_fasta, "w")
     fh1.close()
-    out = ""
-
     if high_confidence_filtering:
         hiconf_contigs = [
             x
@@ -311,23 +286,19 @@ def format_fasta(
             if y in TRUES
         ]
         seqs = {hiconf: seqs[hiconf] for hiconf in hiconf_contigs}
-
         data = data[data["contig_id"].isin(hiconf_contigs)]
-
-    for l in seqs:
-        out = ">" + l + "\n" + seqs[l] + "\n"
-        Write_output(out, out_fasta)
+    write_fasta(fasta_dict=seqs, out_fasta=out_fasta)
     data.to_csv(out_anno, index=False)
 
 
 def format_fastas(
-    fastas: List[str],
+    fastas: List[Union[str, Path]],
     prefix: Optional[List[str]] = None,
     suffix: Optional[List[str]] = None,
     sep: Optional[str] = None,
     remove_trailing_hyphen_number: bool = True,
     high_confidence_filtering: bool = False,
-    outdir: Optional[str] = None,
+    out_dir: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[Union[List[str], str]] = None,
 ):
     """
@@ -335,7 +306,7 @@ def format_fastas(
 
     Parameters
     ----------
-    fastas : List[str]
+    fastas : List[Union[str, Path]]
         list of paths to fasta files.
     prefix : Optional[List[str]], optional
         list of prefixes to append to headers/contig ids in each fasta file.
@@ -349,31 +320,30 @@ def format_fastas(
         cell/contig barcodes.
     high_confidence_filtering : bool, optional
         whether ot not to filter to only `high confidence` contigs.
-    outdir : Optional[str], optional
+    out_dir : Optional[Union[str, Path]], optional
         path to out put location.
     filename_prefix : Optional[Union[List[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
     """
-    if type(fastas) is not list:
-        fastas = [fastas]
-    if type(filename_prefix) is not list:
+    fastas = [fastas] if not isinstance(fastas, list) else fastas
+    if not isinstance(filename_prefix, list):
         filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for f in fastas]
-
+        if len(filename_prefix) == 1:
+            if len(fastas) > 1:
+                filename_prefix = filename_prefix * len(fastas)
     if prefix is not None:
-        if type(prefix) is not list:
+        if not isinstance(prefix, list):
             prefix = [prefix]
         prefix_dict = dict(zip(fastas, prefix))
     if suffix is not None:
-        if type(suffix) is not list:
+        if not isinstance(suffix, list):
             suffix = [suffix]
         suffix_dict = dict(zip(fastas, suffix))
 
     for i in tqdm(
         range(0, len(fastas)),
-        desc="Formating fasta(s) ",
+        desc="Formatting fasta(s) ",
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
         if prefix is None and suffix is None:
@@ -384,7 +354,7 @@ def format_fastas(
                 sep=None,
                 remove_trailing_hyphen_number=remove_trailing_hyphen_number,
                 high_confidence_filtering=high_confidence_filtering,
-                outdir=outdir,
+                out_dir=out_dir,
                 filename_prefix=filename_prefix[i],
             )
         elif prefix is not None:
@@ -396,7 +366,7 @@ def format_fastas(
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
                     high_confidence_filtering=high_confidence_filtering,
-                    outdir=outdir,
+                    out_dir=out_dir,
                     filename_prefix=filename_prefix[i],
                 )
             else:
@@ -407,7 +377,7 @@ def format_fastas(
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
                     high_confidence_filtering=high_confidence_filtering,
-                    outdir=outdir,
+                    out_dir=out_dir,
                     filename_prefix=filename_prefix[i],
                 )
         else:
@@ -419,7 +389,7 @@ def format_fastas(
                     sep=sep,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
                     high_confidence_filtering=high_confidence_filtering,
-                    outdir=outdir,
+                    out_dir=out_dir,
                     filename_prefix=filename_prefix[i],
                 )
             else:
@@ -430,14 +400,13 @@ def format_fastas(
                     sep=None,
                     remove_trailing_hyphen_number=remove_trailing_hyphen_number,
                     high_confidence_filtering=high_confidence_filtering,
-                    outdir=outdir,
+                    out_dir=out_dir,
                     filename_prefix=filename_prefix[i],
                 )
 
 
 def assign_isotype(
-    fasta: str,
-    fileformat: Literal["blast", "changeo", "airr"] = "blast",
+    fasta: Union[str, Path],
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e-4,
     correct_c_call: bool = True,
@@ -446,20 +415,17 @@ def assign_isotype(
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
-    blastdb: Optional[str] = None,
-    allele: bool = False,
+    blastdb: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[str] = None,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
-    fileformat : Literal["blast", "changeo", "airr"], optional
-        format of V(D)J file/objects.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
     evalue : float, optional
@@ -483,15 +449,12 @@ def assign_isotype(
         whether or not to show plot.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
-    blastdb : Optional[str], optional
-        path to blast database. Defaults to `BLASTDB` environmental variable.
-    allele : bool, optional
-        whether or not to return allele calls.
+    blastdb : Optional[Union[str, Path]], optional
+        path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
-    verbose : bool, optional
-        whether or not to print the blast command in terminal.
-
+    additional_args : List[str], optional
+        additional arguments to pass to `blastn`.
     Raises
     ------
     FileNotFoundError
@@ -502,7 +465,7 @@ def assign_isotype(
     def two_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
     ):
-        """Pairwise alignmet for two genes.
+        """Pairwise alignment for two genes.
 
         Parameters
         ----------
@@ -527,7 +490,7 @@ def assign_isotype(
     def three_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
     ):
-        """Pairwise alignmet for three genes.
+        """Pairwise alignment for three genes.
 
         Parameters
         ----------
@@ -562,7 +525,7 @@ def assign_isotype(
     def four_gene_correction(
         self: pd.DataFrame, i: str, dictionary: Dict[str, str]
     ):
-        """Pairwise alignmet for four genes.
+        """Pairwise alignment for four genes.
 
         Parameters
         ----------
@@ -618,7 +581,7 @@ def assign_isotype(
         data: pd.DataFrame,
         primers_dict: Optional[Dict[str, Dict[str, str]]] = None,
     ) -> pd.DataFrame:
-        """Pairiwise alignment for c genes.
+        """Pairwise alignment for c genes.
 
         Parameters
         ----------
@@ -630,7 +593,7 @@ def assign_isotype(
         Returns
         -------
         pd.DataFrame
-            Output dataframe with c_call adjusted.
+            Output data frame with c_call adjusted.
         """
         dat = data.copy()
         if primers_dict is None:
@@ -680,14 +643,14 @@ def assign_isotype(
         return dat
 
     # main function from here
-    format_dict = {
-        "changeo": "_igblast_db-pass",
-        "blast": "_igblast_db-pass",
-        "airr": "_igblast_gap",
-    }
+    # format_dict = {
+    #     "changeo": "_igblast_db-pass",
+    #     "blast": "_igblast_db-pass",
+    #     "airr": "_igblast_gap",
+    # }
 
     filePath = check_filepath(
-        fasta, filename_prefix=filename_prefix, endswith=".fasta"
+        fasta, filename_prefix=filename_prefix, ends_with=".fasta"
     )
     if filePath is None:
         raise FileNotFoundError(
@@ -710,38 +673,46 @@ def assign_isotype(
             + "qstart qend sstart send evalue bitscore qseq sseq"
         ),
         dust="no",
-        verbose=verbose,
+        additional_args=additional_args,
     )
     blast_out.drop_duplicates(subset="sequence_id", keep="first", inplace=True)
 
-    _file = "{}/tmp/{}_genotyped.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + format_dict[fileformat],
+    _10xfile = check_filepath(
+        fasta,
+        filename_prefix=filename_prefix,
+        ends_with="_annotations.csv",
     )
-    _airrfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + "_igblast",
+    _airrfile = check_filepath(
+        fasta,
+        filename_prefix=filename_prefix,
+        ends_with="_igblast.tsv",
+        sub_dir="tmp",
     )
-    _file2 = "{}/{}_genotyped.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + format_dict[fileformat],
+    _processedfile = check_filepath(
+        fasta,
+        filename_prefix=filename_prefix,
+        ends_with="_igblast_db-pass_genotyped.tsv",
+        sub_dir="tmp",
     )
-
-    logg.info("Loading 10X annotations \n")
-    try:
-        dat_10x = load_data(_file)
-    except FileNotFoundError:
-        # maybe a short cut to skip reassign_alleles?
-        _file = "{}/tmp/{}.tsv".format(
-            os.path.dirname(filePath),
-            os.path.basename(filePath).split(".fasta")[0]
-            + format_dict[fileformat],
+    if _processedfile is None:
+        _processedfile = check_filepath(
+            fasta,
+            filename_prefix=filename_prefix,
+            ends_with="_igblast_db-pass.tsv",
+            sub_dir="tmp",
         )
-        dat_10x = load_data(_file)
-    res_10x = pd.DataFrame(dat_10x["c_call"])
-    res_10x["c_call"] = res_10x["c_call"].fillna(value="None")
+        out_ex = "_igblast_db-pass.tsv"
+    else:
+        out_ex = "_igblast_db-pass_genotyped.tsv"
+    dat = load_data(_processedfile)
+    logg.info("Loading 10X annotations \n")
+    if _10xfile is not None:
+        dat_10x = read_10x_vdj(_10xfile)
+        res_10x = pd.DataFrame(dat_10x.data["c_call"])
+    else:  # pragma: no cover
+        res_10x = pd.DataFrame(dat["c_call"])
+        res_10x["c_call"] = "None"
     logg.info("Preparing new calls \n")
-    dat = load_data(_file)
     for col in [
         "c_call",
         "c_sequence_alignment",
@@ -754,22 +725,20 @@ def assign_isotype(
         dat[col] = pd.Series(blast_out[col])
     res_blast = pd.DataFrame(dat["c_call"])
     res_blast = res_blast.fillna(value="None")
-
     res_10x_sum = pd.DataFrame(
         res_10x["c_call"].value_counts(normalize=True) * 100
     )
+    res_10x_sum["group"] = "10X"
+    res_10x_sum.columns = ["counts", "group"]
+    res_10x_sum.index = res_10x_sum.index.set_names(["c_call"])
+    res_10x_sum.reset_index(drop=False, inplace=True)
     res_blast_sum = pd.DataFrame(
         res_blast["c_call"].value_counts(normalize=True) * 100
     )
-    res_10x_sum["group"] = "10X"
     res_blast_sum["group"] = "blast"
-    res_10x_sum.columns = ["counts", "group"]
     res_blast_sum.columns = ["counts", "group"]
-    res_10x_sum.index = res_10x_sum.index.set_names(["c_call"])
     res_blast_sum.index = res_blast_sum.index.set_names(["c_call"])
-    res_10x_sum.reset_index(drop=False, inplace=True)
     res_blast_sum.reset_index(drop=False, inplace=True)
-
     if (
         correct_c_call
     ):  # TODO: figure out if i need to set up a None correction?
@@ -785,7 +754,7 @@ def assign_isotype(
         res_corrected_sum.index = res_corrected_sum.index.set_names(["c_call"])
         res_corrected_sum.reset_index(drop=False, inplace=True)
         res = pd.concat([res_10x_sum, res_blast_sum, res_corrected_sum])
-    else:
+    else:  # pragma: no cover
         res = pd.concat([res_10x_sum, res_blast_sum])
 
     res = res.reset_index(drop=True)
@@ -797,7 +766,7 @@ def assign_isotype(
     )
 
     logg.info("Finishing up \n")
-    dat["c_call_10x"] = pd.Series(dat_10x["c_call"])
+    dat["c_call_10x"] = pd.Series(res_10x["c_call"])
     # some minor adjustment to the final output table
     airr_output = load_data(_airrfile)
     cols_to_merge = [
@@ -821,7 +790,7 @@ def assign_isotype(
     dat["c_call"] = dat["c_call"].fillna(value="")
     dat["c_call"] = [re.sub("[*][0-9][0-9]", "", c) for c in dat["c_call"]]
 
-    write_airr(dat, _file2)
+    write_airr(dat, _processedfile)
     if plot:
         options.figure_size = figsize
         if correct_c_call:
@@ -847,34 +816,33 @@ def assign_isotype(
                 + theme(legend_title=element_blank())
             )
         if save_plot:
-            _file3 = "{}/assign_isotype.pdf".format(os.path.dirname(filePath))
-            save_as_pdf_pages([p], filename=_file3)
-            if show_plot:
+            _file3 = filePath.parent / "assign_isotype.pdf"
+            save_as_pdf_pages([p], filename=_file3, verbose=False)
+            if show_plot:  # pragma: no cover
                 print(p)
-        else:
-            if show_plot:
+        else:  # pragma: no cover
+            if show_plot:  # pragma: no cover
                 print(p)
     # move and rename
     move_to_tmp(fasta, filename_prefix)
-    make_all(fasta, filename_prefix)
-    rename_dandelion(fasta, filename_prefix)
+    make_all(fasta, filename_prefix, loci="ig")
+    rename_dandelion(fasta, filename_prefix, ends_with=out_ex, sub_dir="tmp")
     update_j_multimap(fasta, filename_prefix)
 
 
 def assign_isotypes(
-    fastas: List[str],
-    fileformat: Literal["blast", "changeo", "airr"] = "blast",
+    fastas: List[Union[str, Path]],
     org: Literal["human", "mouse"] = "human",
+    evalue: float = 1e4,
     correct_c_call: bool = True,
     correction_dict: Optional[Dict[str, Dict[str, str]]] = None,
     plot: bool = True,
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
-    blastdb: Optional[str] = None,
-    allele: bool = False,
+    blastdb: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[Union[List, str]] = None,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
@@ -883,10 +851,14 @@ def assign_isotypes(
     ----------
     fastas : List[str]
         list of paths to fasta files.
-    fileformat : Literal["blast", "changeo", "airr"], optional
-        format of V(D)J file/objects.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
+    evalue : float, optional
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
     correct_c_call : bool, optional
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
     correction_dict : Optional[Dict[str, Dict[str, str]]], optional
@@ -900,14 +872,12 @@ def assign_isotypes(
         whether or not to show plots.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
-    blastdb : Optional[str], optional
-        path to blast database. Defaults to `BLASTDB` environmental variable.
-    allele : bool, optional
-        whether or not to return allele calls.
+    blastdb : Optional[Union[str, Path]], optional
+        path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : Optional[Union[List, str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
-    verbose : bool, optional
-        whether or not to print the blast command in terminal.
+    additional_args : List[str], optional
+        additional arguments to pass to `blastn`.
     """
     if type(fastas) is not list:
         fastas = [fastas]
@@ -921,8 +891,8 @@ def assign_isotypes(
     for i in range(0, len(fastas)):
         assign_isotype(
             fastas[i],
-            fileformat=fileformat,
             org=org,
+            evalue=evalue,
             correct_c_call=correct_c_call,
             correction_dict=correction_dict,
             plot=plot,
@@ -930,9 +900,8 @@ def assign_isotypes(
             show_plot=show_plot,
             figsize=figsize,
             blastdb=blastdb,
-            allele=allele,
             filename_prefix=filename_prefix[i],
-            verbose=verbose,
+            additional_args=additional_args,
         )
 
 
@@ -953,7 +922,13 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
-    verbose: bool = False,
+    additional_args: Dict[str, List[str]] = {
+        "assigngenes": [],
+        "makedb": [],
+        "igblastn": [],
+        "blastn_j": [],
+        "blastn_d": [],
+    },
 ):
     """
     Reannotate cellranger fasta files with igblastn and parses to airr format.
@@ -975,12 +950,12 @@ def reannotate_genes(
     loci : Literal["ig", "tr"], optional
         mode for igblastn. 'ig' for BCRs, 'tr' for TCRs.
     extended : bool, optional
-        whether or not to transfer additional 10X annotions to output file.
+        whether or not to transfer additional 10X annotations to output file.
     filename_prefix : Optional[Union[List[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults
         to 'filtered'.
     flavour : Literal["strict", "original"], optional
-        Either 'strict' or 'original'. Determines how igblastnshould
+        Either 'strict' or 'original'. Determines how igblastn should
         be run. Running in 'strict' flavour will add the additional the
         evalue and min_d_match options to the run.
     min_j_match : int, optional
@@ -1021,8 +996,11 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
-    verbose : bool, optional
-        Whether or not to print log commands.
+    additional_args : Dict[str, List[str]], optional
+        additional arguments to pass to `AssignGenes.py`, `MakeDb.py`, `igblastn` and `blastn`.
+        This accepts a dictionary with keys as the name of the sub-function (`assigngenes`, `makedb`,
+        `igblastn`, `blastn_j` and `blastn_d`) and the records as lists of arguments to pass to the
+        relevant scripts/tools.
 
     Raises
     ------
@@ -1043,7 +1021,7 @@ def reannotate_genes(
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
         filePath = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], endswith=".fasta"
+            data[i], filename_prefix=filename_prefix[i], ends_with=".fasta"
         )
         if filePath is None:
             if filename_prefix[i] is not None:
@@ -1059,7 +1037,7 @@ def reannotate_genes(
                     + "Please specify path to fasta file or folder containing fasta file."
                 )
 
-        logg.info("Processing {} \n".format(filePath))
+        logg.info(f"Processing {str(filePath)} \n")
 
         if flavour == "original":
             assigngenes_igblast(
@@ -1067,7 +1045,7 @@ def reannotate_genes(
                 igblast_db=igblast_db,
                 org=org,
                 loci=loci,
-                verbose=verbose,
+                additional_args=additional_args["assigngenes"],
             )
         elif flavour == "strict":
             run_igblastn(
@@ -1077,14 +1055,14 @@ def reannotate_genes(
                 loci=loci,
                 evalue=v_evalue,
                 min_d_match=min_d_match,
-                verbose=verbose,
+                additional_args=additional_args["igblastn"],
             )
         makedb_igblast(
             filePath,
             org=org,
             germline=germline,
             extended=extended,
-            verbose=verbose,
+            additional_args=additional_args["makedb"],
         )
         # block this for now, until I figure out if it's
         # worth it
@@ -1101,10 +1079,10 @@ def reannotate_genes(
                     dust=dust,
                     word_size=min_j_match,
                     overwrite=overwrite,
-                    verbose=verbose,
+                    additional_args=additional_args["blastn_j"],
                 )
                 assign_DJ(
-                    filePath,
+                    fasta=filePath,
                     org=org,
                     loci=loci,
                     call="d",
@@ -1114,7 +1092,11 @@ def reannotate_genes(
                     dust=dust,
                     word_size=min_d_match,
                     overwrite=overwrite,
-                    verbose=verbose,
+                    additional_args=additional_args["blastn_d"],
+                )
+                ensure_columns_transferred(
+                    fasta=filePath,
+                    filename_prefix=filename_prefix,
                 )
 
     if loci == "tr":
@@ -1122,9 +1104,115 @@ def reannotate_genes(
         if flavour == "strict":
             mask_dj(data, filename_prefix, d_evalue, j_evalue)
         move_to_tmp(data, filename_prefix)
-        make_all(data, filename_prefix)
-        rename_dandelion(data, filename_prefix, endswith="_igblast_db-pass.tsv")
+        make_all(data, filename_prefix, loci=loci)
+        rename_dandelion(
+            data, filename_prefix, ends_with="_igblast_db-pass.tsv"
+        )
         update_j_multimap(data, filename_prefix)
+
+
+def return_pass_fail_filepaths(
+    fasta: Union[str, Path],
+    filename_prefix: Optional[str] = None,
+) -> Tuple[Path, Path, Path]:
+    """Return necessary file paths for internal use only.
+
+    Parameters
+    ----------
+    fasta : Union[str, Path]
+        path to fasta file.
+    filename_prefix : Optional[str], optional
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+
+    Returns
+    -------
+    Tuple[Path, Path, Path]
+        file paths for downstream functions.
+
+    Raises
+    ------
+    FileNotFoundError
+        if path to fasta file is unknown.
+    """
+    file_path = check_filepath(
+        fasta, filename_prefix=filename_prefix, ends_with=".fasta"
+    )
+    if file_path is None:
+        raise FileNotFoundError(
+            (
+                "Path to fasta file is unknown. Please specify "
+                + "path to fasta file or folder containing fasta file."
+            )
+        )
+    # read the original object
+    pass_path = (
+        file_path.parent / "tmp" / (file_path.stem + "_igblast_db-pass.tsv")
+    )
+    fail_path = (
+        file_path.parent / "tmp" / (file_path.stem + "_igblast_db-fail.tsv")
+    )
+    return file_path, pass_path, fail_path
+
+
+def ensure_columns_transferred(
+    fasta: str,
+    filename_prefix: Optional[str] = None,
+):
+    """Ensure the additional columns are successfully populated.
+
+    Parameters
+    ----------
+    fasta : str
+        path to fasta file.
+    filename_prefix : Optional[str], optional
+        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+    """
+    filePath, passfile, failfile = return_pass_fail_filepaths(
+        fasta, filename_prefix=filename_prefix
+    )
+    addcols = [
+        "_support_igblastn",
+        "_score_igblastn",
+        "_call_igblastn",
+        "_call_blastn",
+        "_identity_blastn",
+        "_alignment_length_blastn",
+        "_number_of_mismatches_blastn",
+        "_number_of_gap_openings_blastn",
+        "_sequence_start_blastn",
+        "_sequence_end_blastn",
+        "_germline_start_blastn",
+        "_germline_end_blastn",
+        "_support_blastn",
+        "_score_blastn",
+        "_sequence_alignment_blastn",
+        "_germline_alignment_blastn",
+        "_source",
+    ]
+    if passfile.is_file():
+        db_pass = load_data(passfile)
+    else:
+        db_pass = None
+    if failfile.is_file():
+        db_fail = load_data(failfile)
+    else:
+        db_fail = None
+    if db_pass is not None:
+        for call in ["d", "j"]:
+            for col in addcols:
+                add_col = call + col
+                if add_col not in db_pass:
+                    db_pass[add_col] = ""
+        db_pass = sanitize_data(db_pass)
+        db_pass.to_csv(passfile, sep="\t", index=False)
+    if db_fail is not None:
+        for call in ["d", "j"]:
+            for col in addcols:
+                add_col = call + col
+                if add_col not in db_fail:
+                    db_fail[add_col] = ""
+        db_fail = sanitize_data(db_fail)
+        db_fail.to_csv(failfile, sep="\t", index=False)
 
 
 def reassign_alleles(
@@ -1133,23 +1221,23 @@ def reassign_alleles(
     v_germline: Optional[str] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
-    v_field: Literal["v_call", "v_call_genotyped"] = "v_call_genotyped",
-    germ_types: Literal["full", "dmask", "vonly", "regions"] = "dmask",
     novel: bool = True,
-    cloned: bool = False,
     plot: bool = True,
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3),
     sample_id_dictionary: Optional[Dict[str, str]] = None,
     filename_prefix: Optional[Union[List[str], str]] = None,
-    verbose: bool = False,
+    additional_args: Dict[str, List[str]] = {
+        "tigger": [],
+        "creategermlines": [],
+    },
 ):
     """
     Correct allele calls based on a personalized genotype using tigger.
 
     It uses a subject-specific genotype to correct correct preliminary allele
-    assignments of a set ofsequences derived from a single subject.
+    assignments of a set of sequences derived from a single subject.
 
     Parameters
     ----------
@@ -1161,20 +1249,14 @@ def reassign_alleles(
         name of folder for concatenated data file and genotyped files.
     v_germline : Optional[str], optional
         path to heavy chain v germline fasta. Defaults to IGHV fasta in
-        `GERMLINE` environmental variable.
+        `$GERMLINE` environmental variable.
     germline : Optional[str], optional
         path to germline database folder. `None` defaults to `GERMLINE` environmental
         variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
-    v_field : Literal["v_call", "v_call_genotyped"], optional
-        name of column containing the germline V segment call.
-    germ_types : Literal["full", "dmask", "vonly", "regions"], optional
-        Specify type of germline for reconstruction.
     novel : bool, optional
         whether or not to run novel allele discovery during tigger-genotyping.
-    cloned : bool, optional
-        whether or not to run CreateGermlines.py with `--cloned`.
     plot : bool, optional
         whether or not to plot reassignment summary metrics.
     save_plot : bool, optional
@@ -1188,8 +1270,10 @@ def reassign_alleles(
     filename_prefix : Optional[Union[List[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
-    verbose : bool, optional
-        Whether or not to print the command used in the terminal.
+    additional_args : Dict[str, List[str]], optional
+        additional arguments to pass to `tigger-genotype.R` and `CreateGermlines.py`.
+        This accepts a dictionary with keys as the name of the sub-function (`tigger` or `creategermlines`)
+        and the records as lists of arguments to pass to the relevant scripts/tools.
 
     Raises
     ------
@@ -1213,16 +1297,6 @@ def reassign_alleles(
         "changeo": "_igblast_db-pass_germ-pass.tsv",
         "blast": "_igblast_db-pass_germ-pass.tsv",
         "airr": "_igblast_gap_germ-pass.tsv",
-    }
-    heavy_dict = {
-        "changeo": "_igblast_db-pass_heavy_parse-select.tsv",
-        "blast": "_igblast_db-pass_heavy_parse-select.tsv",
-        "airr": "_igblast_gap_heavy_parse-select.tsv",
-    }
-    light_dict = {
-        "changeo": "_igblast_db-pass_light_parse-select.tsv",
-        "blast": "_igblast_db-pass_light_parse-select.tsv",
-        "airr": "_igblast_gap_light_parse-select.tsv",
     }
     fileformat_dict = {
         "changeo": "_igblast_db-pass_genotyped.tsv",
@@ -1259,8 +1333,8 @@ def reassign_alleles(
         filePath = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith=informat_dict[fileformat],
-            subdir="tmp",
+            ends_with=informat_dict[fileformat],
+            sub_dir="tmp",
         )
         if filePath is None:
             raise FileNotFoundError(
@@ -1269,11 +1343,11 @@ def reassign_alleles(
                 + "containing reannotated .tsv file."
             )
 
-        filePath_heavy = filePath.replace(
-            informat_dict[fileformat], heavy_dict[fileformat]
+        filePath_heavy = filePath.parent / (
+            filePath.stem + "_heavy_parse-select.tsv"
         )
-        filePath_light = filePath.replace(
-            informat_dict[fileformat], light_dict[fileformat]
+        filePath_light = filePath.parent / (
+            filePath.stem + "_light_parse-select.tsv"
         )
 
         if sample_id_dictionary is not None:
@@ -1292,51 +1366,81 @@ def reassign_alleles(
         filepathlist_light.append(filePath_light)
 
     # make output directory
-    outDir = combined_folder.rstrip("/")
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
-
+    out_dir = Path(combined_folder)
+    out_dir.mkdir(parents=True, exist_ok=True)
     # concatenate
     if len(filepathlist_heavy) > 1:
         logg.info("Concatenating objects")
-        cmd1 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [f for f in filepathlist_heavy]
-            + [">"]
-            + [outDir + "/" + outDir + "_heavy" + informat_dict[fileformat]]
-        )
-        cmd2 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [f for f in filepathlist_light]
-            + [">"]
-            + [outDir + "/" + outDir + "_light" + informat_dict[fileformat]]
-        )
+        try:
+            cmd1 = " ".join(
+                [
+                    'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
+                ]
+                + [f for f in filepathlist_heavy]
+                + [">"]
+                + [
+                    str(
+                        out_dir
+                        / (out_dir.stem + "_heavy" + informat_dict[fileformat])
+                    )
+                ]
+            )
+            cmd2 = " ".join(
+                [
+                    'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
+                ]
+                + [f for f in filepathlist_light]
+                + [">"]
+                + [
+                    str(
+                        out_dir
+                        / (out_dir.stem + "_light" + informat_dict[fileformat])
+                    )
+                ]
+            )
+            os.system(cmd1)
+            os.system(cmd2)
+        except:  # pragma: no cover
+            fh = open(
+                out_dir / (out_dir.stem + "_heavy" + informat_dict[fileformat]),
+                "w",
+            )
+            fh.close()
+            with open(
+                out_dir / (out_dir.stem + "_heavy" + informat_dict[fileformat]),
+                "a",
+            ) as out_file:
+                for filenum, filename in enumerate(filepathlist_heavy):
+                    with open(filename, "r") as in_file:
+                        for line_num, line in enumerate(in_file):
+                            if (line_num == 0) and (filenum > 0):
+                                continue
+                            out_file.write(line)
+            fh = open(
+                out_dir / (out_dir.stem + "_light" + informat_dict[fileformat]),
+                "w",
+            )
+            fh.close()
+            with open(
+                out_dir / (out_dir.stem + "_light" + informat_dict[fileformat]),
+                "a",
+            ) as out_file:
+                for filenum, filename in enumerate(filepathlist_light):
+                    with open(filename, "r") as in_file:
+                        skip_next_line = False
+                        for line_num, line in enumerate(in_file):
+                            if (line_num == 0) and (filenum > 0):
+                                continue
+                            out_file.write(line)
     else:
-        cmd1 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [filepathlist_heavy[0]]
-            + [">"]
-            + [outDir + "/" + outDir + "_heavy" + informat_dict[fileformat]]
+        shutil.copyfile(
+            Path(filepathlist_heavy[0]),
+            out_dir / (out_dir.stem + "_heavy" + informat_dict[fileformat]),
         )
-        cmd2 = " ".join(
-            [
-                'awk "FNR==1 && NR!=1 { while (/^sequence_id/) getline; } 1 {print}"'
-            ]
-            + [filepathlist_light[0]]
-            + [">"]
-            + [outDir + "/" + outDir + "_light" + informat_dict[fileformat]]
+        shutil.copyfile(
+            Path(filepathlist_light[0]),
+            out_dir / (out_dir.stem + "_light" + informat_dict[fileformat]),
         )
-
-    logg.info("Running command: %s\n" % (cmd1))
-    logg.info("Running command: %s\n" % (cmd2))
-    os.system(cmd1)
-    os.system(cmd2)
 
     novel_dict = {True: "YES", False: "NO"}
     if novel:
@@ -1345,32 +1449,34 @@ def reassign_alleles(
                 "      Running tigger-genotype with novel allele discovery."
             )
             tigger_genotype(
-                outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
+                airr_file=str(
+                    out_dir
+                    / (out_dir.stem + "_heavy" + informat_dict[fileformat])
+                ),
                 v_germline=v_germline,
+                org=org,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[novel],
-                verbose=verbose,
+                additional_args=additional_args["tigger"],
             )
             creategermlines(
-                outDir + "/" + outDir + "_heavy" + fileformat_dict[fileformat],
-                germtypes=germ_types,
-                mode="heavy",
-                genotype_fasta=outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + germline_dict[fileformat],
+                airr_file=str(
+                    out_dir
+                    / (out_dir.stem + "_heavy" + fileformat_dict[fileformat])
+                ),
                 germline=germline,
-                v_field=v_field,
-                verbose=verbose,
-                cloned=cloned,
+                org=org,
+                genotyped_fasta=str(
+                    out_dir
+                    / (out_dir.stem + "_heavy" + germline_dict[fileformat])
+                ),
+                mode="heavy",
+                additional_args=["--vf", "v_call_genotyped"]
+                + additional_args["creategermlines"],
             )
             _ = load_data(
-                outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + fileformat_passed_dict[fileformat]
+                out_dir
+                / (out_dir.stem + "_heavy" + fileformat_passed_dict[fileformat])
             )
         except:
             try:
@@ -1379,40 +1485,42 @@ def reassign_alleles(
                     "      Attempting to run tigger-genotype without novel allele discovery."
                 )
                 tigger_genotype(
-                    outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + informat_dict[fileformat],
+                    airr_file=str(
+                        out_dir
+                        / (out_dir.stem + "_heavy" + informat_dict[fileformat])
+                    ),
                     v_germline=v_germline,
+                    org=org,
                     fileformat=fform_dict[fileformat],
                     novel_=novel_dict[False],
-                    verbose=verbose,
+                    additional_args=additional_args["tigger"],
                 )
                 creategermlines(
-                    outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + fileformat_dict[fileformat],
-                    germtypes=germ_types,
-                    mode="heavy",
-                    genotype_fasta=outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + germline_dict[fileformat],
+                    airr_file=str(
+                        out_dir
+                        / (
+                            out_dir.stem
+                            + "_heavy"
+                            + fileformat_dict[fileformat]
+                        )
+                    ),
                     germline=germline,
-                    v_field=v_field,
-                    verbose=verbose,
-                    cloned=cloned,
+                    org=org,
+                    genotyped_fasta=str(
+                        out_dir
+                        / (out_dir.stem + "_heavy" + germline_dict[fileformat])
+                    ),
+                    mode="heavy",
+                    additional_args=["--vf", "v_call_genotyped"]
+                    + additional_args["creategermlines"],
                 )
                 _ = load_data(
-                    outDir
-                    + "/"
-                    + outDir
-                    + "_heavy"
-                    + fileformat_passed_dict[fileformat]
+                    out_dir
+                    / (
+                        out_dir.stem
+                        + "_heavy"
+                        + fileformat_passed_dict[fileformat]
+                    )
                 )
             except:
                 logg.info(
@@ -1425,32 +1533,40 @@ def reassign_alleles(
                 "      Running tigger-genotype without novel allele discovery."
             )
             tigger_genotype(
-                outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
+                airr_file=str(
+                    out_dir
+                    / (out_dir.stem + "_heavy" + informat_dict[fileformat])
+                ),
                 v_germline=v_germline,
+                org=org,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[False],
-                verbose=verbose,
+                additional_args=additional_args["tigger"],
             )
             creategermlines(
-                outDir + "/" + outDir + "_heavy" + fileformat_dict[fileformat],
-                germtypes=germ_types,
-                mode="heavy",
-                genotype_fasta=outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + germline_dict[fileformat],
+                airr_file=str(
+                    out_dir
+                    / (out_dir.stem + "_heavy" + fileformat_dict[fileformat])
+                ),
                 germline=germline,
-                v_field=v_field,
-                verbose=verbose,
-                cloned=cloned,
+                org=org,
+                genotyped_fasta=str(
+                    out_dir
+                    / (out_dir.stem + "_heavy" + germline_dict[fileformat])
+                ),
+                mode="heavy",
+                additional_args=["--vf", "v_call_genotyped"]
+                + additional_args["creategermlines"],
             )
             _ = load_data(
-                outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + fileformat_passed_dict[fileformat]
+                str(
+                    out_dir
+                    / (
+                        out_dir.stem
+                        + "_heavy"
+                        + fileformat_passed_dict[fileformat]
+                    )
+                )
             )
         except:
             logg.info(
@@ -1460,64 +1576,47 @@ def reassign_alleles(
 
     if "tigger_failed" in locals():
         creategermlines(
-            outDir + "/" + outDir + "_heavy" + informat_dict[fileformat],
-            germtypes=germ_types,
+            airr_file=str(
+                out_dir / (out_dir.stem + "_heavy" + informat_dict[fileformat])
+            ),
+            germline=germline,
+            org=org,
+            genotyped_fasta=None,
             mode="heavy",
-            genotype_fasta=None,
-            germline=germline,
-            v_field="v_call",
-            verbose=verbose,
-            cloned=cloned,
+            additional_args=["--vf", "v_call"]
+            + additional_args["creategermlines"],
         )
-        creategermlines(
-            outDir + "/" + outDir + "_light" + informat_dict[fileformat],
-            germtypes=germ_types,
-            mode="light",
-            genotype_fasta=None,
-            germline=germline,
-            v_field="v_call",
-            verbose=verbose,
-            cloned=cloned,
-        )
+    creategermlines(
+        airr_file=str(
+            out_dir / (out_dir.stem + "_light" + informat_dict[fileformat])
+        ),
+        germline=germline,
+        org=org,
+        genotyped_fasta=None,
+        mode="light",
+        additional_args=["--vf", "v_call"] + additional_args["creategermlines"],
+    )
+    if "tigger_failed" in locals():
         logg.info(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
         )
         heavy = load_data(
-            outDir + "/" + outDir + "_heavy" + germpass_dict[fileformat]
+            out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat])
         )
         heavy["v_call_genotyped"] = heavy["v_call"]
-        logg.info(
-            "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
-        )
-        light = load_data(
-            outDir + "/" + outDir + "_light" + germpass_dict[fileformat]
-        )
-        light["v_call_genotyped"] = light["v_call"]
     else:
-        creategermlines(
-            outDir + "/" + outDir + "_light" + informat_dict[fileformat],
-            germtypes=germ_types,
-            mode="light",
-            genotype_fasta=None,
-            germline=germline,
-            v_field="v_call",
-            verbose=verbose,
-            cloned=cloned,
-        )
         heavy = load_data(
-            outDir
-            + "/"
-            + outDir
-            + "_heavy"
-            + fileformat_passed_dict[fileformat]
+            out_dir
+            / (out_dir.stem + "_heavy" + fileformat_passed_dict[fileformat])
         )
-        logg.info(
-            "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
-        )
-        light = load_data(
-            outDir + "/" + outDir + "_light" + germpass_dict[fileformat]
-        )
-        light["v_call_genotyped"] = light["v_call"]
+
+    logg.info(
+        "      For convenience, entries for light chain `v_call` are copied to `v_call_genotyped`."
+    )
+    light = load_data(
+        out_dir / (out_dir.stem + "_light" + germpass_dict[fileformat])
+    )
+    light["v_call_genotyped"] = light["v_call"]
 
     sampledict = {}
     heavy["sample_id"], light["sample_id"] = None, None
@@ -1536,15 +1635,10 @@ def reassign_alleles(
     if plot:
         if "tigger_failed" not in locals():
             logg.info("Returning summary plot")
-            inferred_genotype = (
-                outDir
-                + "/"
-                + outDir
-                + "_heavy"
-                + inferred_fileformat_dict[fileformat]
+            inferred_genotype = out_dir / (
+                out_dir.stem + "_heavy" + inferred_fileformat_dict[fileformat]
             )
             inf_geno = pd.read_csv(inferred_genotype, sep="\t", dtype="object")
-
             s2 = set(inf_geno["gene"])
             results = []
             try:
@@ -1656,8 +1750,10 @@ def reassign_alleles(
                     + theme(legend_title=element_blank())
                 )
                 if save_plot:
-                    savefile = outDir + "/" + outDir + "_reassign_alleles.pdf"
-                    save_as_pdf_pages([p], filename=savefile)
+                    savefile = str(
+                        out_dir / (out_dir.stem + "_reassign_alleles.pdf")
+                    )
+                    save_as_pdf_pages([p], filename=savefile, verbose=False)
                     if show_plot:
                         print(p)
                 else:
@@ -1685,649 +1781,106 @@ def reassign_alleles(
         else:
             out_file = dat_[dat_["sample_id"] == s]
         outfilepath = filePath_dict[s]
-        write_airr(out_file, outfilepath.replace(".tsv", "_genotyped.tsv"))
+        write_airr(
+            out_file, outfilepath.parent / (outfilepath.stem + "_genotyped.tsv")
+        )
 
 
 def create_germlines(
-    data: Union[Dandelion, pd.DataFrame, str],
+    vdj_data: Union[Dandelion, pd.DataFrame, str],
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
-    seq_field: str = "sequence_alignment",
-    v_field: str = "v_call",
-    d_field: str = "d_call",
-    j_field: str = "j_call",
-    germ_types: Literal["full", "dmask", "vonly", "regions"] = "dmask",
-    fileformat: Literal["changeo", "airr"] = "airr",
-    initialize_metadata: bool = False,
+    genotyped_fasta: Optional[str] = None,
+    additional_args: List[str] = [],
+    save: Optional[str] = None,
 ) -> Dandelion:
     """
     Run CreateGermlines.py to reconstruct the germline V(D)J sequence.
 
     Parameters
     ----------
-    data : Union[Dandelion, pd.DataFrame, str]
+    vdj_data : Union[Dandelion, pd.DataFrame, str]
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr
         file after clones have been determined.
     germline : Optional[str], optional
         path to germline database folder. `None` defaults to  environmental variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
-    seq_field : str, optional
-        name of column containing the aligned sequence.
-    v_field : str, optional
-        name of column containing the germline V segment call.
-    d_field : str, optional
-        name of column containing the germline d segment call.
-    j_field : str, optional
-        name of column containing the germline j segment call.
-    germ_types : Literal["full", "dmask", "vonly", "regions"], optional
-        Specify type(s) of germlines to include full germline, germline with D segment masked,
-        or germline for V segment only.
-    fileformat : Literal["changeo", "airr"], optional
-        format of V(D)J file/objects.
-    initialize_metadata : bool, optional
-        Whether to reinitialise the Dandelion `.metadata` slot.
+    genotyped_fasta : Optional[str], optional
+        location to corrected v genotyped fasta file.
+    additional_args : List[str], optional
+        additional arguments to pass to `CreateGermlines.py.`
+    save : Optional[str], optional
+        if provided, saves to specified file path.
 
     Returns
     -------
     Dandelion
         Dandelion object with `.germlines` slot populated.
-
-    Raises
-    ------
-    AttributeError
-        if fileformat is not `airr` or `changeo`.
-    KeyError
-        if `GERMLINE` environmental variable is not set.
-    LookupError
-        if not standard AIRR table.
-    NameError
-        if not standard AIRR table.
-    ValueError
-        if not standard AIRR table.
     """
     start = logg.info("Reconstructing germline sequences")
-    env = os.environ.copy()
-
-    if not isinstance(data, Dandelion):
-        if germline is None:
-            try:
-                gml = env["GERMLINE"]
-            except:
-                raise KeyError(
-                    "Environmental variable GERMLINE must be set. "
-                    + "Otherwise, please provide path to folder containing germline fasta files."
-                )
-            gml = gml + "imgt/" + org + "/vdj/"
-        else:
-            if os.path.isdir(germline):
-                env["GERMLINE"] = germline
-                gml = germline
-            elif type(germline) is list:
-                gml = germline
-            elif type(germline) is dict:
-                gml = germline
-    else:
-        if len(data.germline) == 0:
-            if germline is None:
-                try:
-                    gml = env["GERMLINE"]
-                except:
-                    raise KeyError(
-                        "Environmental variable GERMLINE must be set. "
-                        + "Otherwise, please provide path to folder containing germline fasta files."
-                    )
-                gml = gml + "imgt/" + org + "/vdj/"
-            else:
-                if os.path.isdir(germline):
-                    env["GERMLINE"] = germline
-                    gml = germline
-                elif type(germline) is list:
-                    gml = germline
-                elif type(germline) is dict:
-                    gml = germline
-
-    def _parseChangeO(record: Dict[str, str]) -> Receptor:
-        """
-        Parse a dictionary to a Receptor object.
-
-        Parameters
-        ----------
-        record : Dict[str, str]
-            dict with fields and values in the Change-O format
-
-        Returns
-        -------
-        Receptor
-            parsed Receptor object.
-        """
-        # Parse fields
-        result = {}
-        for k, v in record.items():
-            k = ChangeoSchema.toReceptor(k)
-            result[k] = v
-
-        return Receptor(result)
-
-    def _parseAIRR(record: Dict[str, str]) -> Receptor:
-        """
-        Parse a dictionary of AIRR records to a Receptor object.
-
-        Parameters
-        ----------
-        record : Dict[str, str]
-            dict with fields and values in the AIRR format.
-
-        Returns
-        -------
-        Receptor
-            parsed Receptor object.
-        """
-        # Parse fields
-        result = {}
-        for k, v in record.items():
-            # Rename fields
-            k = AIRRSchema.toReceptor(k)
-            # Convert start positions to 0-based
-            # if k in ReceptorData.start_fields and v is not None and v != '':
-            #     v = str(int(v) + 1)
-            # Assign new field
-            result[k] = v
-
-        for end, (start, length) in ReceptorData.end_fields.items():
-            if end in result and result[end] is not None:
-                try:
-                    result[length] = int(result[end]) - int(result[start]) + 1
-                except:
-                    pass
-
-        return Receptor(result)
-
-    def _create_germlines_object(
-        data: Union[Dandelion, pd.DataFrame],
-        references: str,
-        seq_field: str = "sequence_alignment",
-        v_field: str = "v_call",
-        d_field: str = "d_call",
-        j_field: str = "j_call",
-        germ_types: Literal["full", "dmask", "vonly", "regions"] = "dmask",
-        fileformat: Literal["airr", "changeo"] = "airr",
-    ) -> pd.DataFrame:
-        """
-        Store germline sequences in AIRR table.
-
-        Parameters
-        ----------
-        data : Union[Dandelion, pd.DataFrame]
-            input Dandelion of pandas DataFrame object.
-        references : str
-            folders and/or files containing germline repertoire data in FASTA format.
-        seq_field : str, optional
-            field in which to look for sequence.
-        v_field : str, optional
-            name of column containing the germline V segment call.
-        d_field : str, optional
-            name of column containing the germline d segment call.
-        j_field : str, optional
-            name of column containing the germline j segment call.
-        germ_types : Literal["full", "dmask", "vonly", "regions"], optional
-            Specify type(s) of germlines to include full germline, germline with D segment masked,
-            or germline for V segment only.
-        fileformat : Literal["airr", "changeo"], optional
-            format of V(D)J file/objects.
-
-        Returns
-        -------
-        pd.DataFrame
-            If input is a pandas dataframe, this will be returned, otherwise it will modify the
-            Dandelion object in place.
-
-        Raises
-        ------
-        AttributeError
-            if fileformat is not `airr` or `changeo`.
-        LookupError
-            if not standard AIRR table.
-        NameError
-            if not standard AIRR table.
-        ValueError
-            if not standard AIRR table.
-        """
-        # Define format operators
-        try:
-            reader, writer, schema = getFormatOperators(fileformat)
-        except:
-            raise ValueError("Invalid format %s" % fileformat)
-
-        # Define output germline fields
-        germline_fields = OrderedDict()
-        seq_type = seq_field.split("_")[-1]
-        if "full" in germ_types:
-            germline_fields["full"] = "germline_" + seq_type
-        if "dmask" in germ_types:
-            germline_fields["dmask"] = "germline_" + seq_type + "_d_mask"
-        if "vonly" in germ_types:
-            germline_fields["vonly"] = "germline_" + seq_type + "_v_region"
-        if "regions" in germ_types:
-            germline_fields["regions"] = "germline_regions"
-
-        if type(references) is dict:
-            reference_dict = references
-        else:
-            if type(references) is not list:
-                ref = [references]
-            else:
-                ref = references
-            reference_dict = readGermlines(ref)
-        # Check for IMGT-gaps in germlines
-        if all("..." not in x for x in reference_dict.values()):
-            warnings.warn(
-                UserWarning(
-                    "Germline reference sequences do not appear to contain IMGT-numbering spacers."
-                    + " Results may be incorrect."
-                )
-            )
-
-        required = [
-            "v_germ_start_imgt",
-            "d_germ_start",
-            "j_germ_start",
-            "np1_length",
-            "np2_length",
-        ]
-
-        if isinstance(data, Dandelion):
-            if isinstance(data.data, pd.DataFrame):
-                # Check for required columns
-                try:
-                    checkFields(required, data.data.columns, schema=schema)
-                except LookupError as e:
-                    print(e)
-
-                # Count input
-                # total_count = len(self.data)
-
-                # Check for existence of fields
-                for f in [v_field, d_field, j_field, seq_field]:
-                    if f not in data.data.columns:
-                        raise NameError(
-                            "%s field does not exist in input database file."
-                            % f
-                        )
-                # Translate to Receptor attribute names
-                v_field_ = schema.toReceptor(v_field)
-                d_field_ = schema.toReceptor(d_field)
-                j_field_ = schema.toReceptor(j_field)
-                seq_field_ = schema.toReceptor(seq_field)
-                # clone_field = schema.toReceptor(clone_field)
-
-                # Define Receptor iterator
-                receptor_iter = (
-                    (
-                        data.data.loc[
-                            x,
-                        ].sequence_id,
-                        data.data.loc[
-                            x,
-                        ],
-                    )
-                    for x in data.data.index
-                )
-
-            else:
-                raise LookupError(
-                    "Please initialise the Dandelion object with a dataframe in data slot."
-                )
-        elif isinstance(data, pd.DataFrame):
-            try:
-                checkFields(required, data.columns, schema=schema)
-            except LookupError as e:
-                print(e)
-
-            # Count input
-            # total_count = len(self)
-            # Check for existence of fields
-            for f in [v_field, d_field, j_field, seq_field]:
-                if f not in data.columns:
-                    raise NameError(
-                        "%s field does not exist in input database file." % f
-                    )
-            # Translate to Receptor attribute names
-            v_field_ = schema.toReceptor(v_field)
-            d_field_ = schema.toReceptor(d_field)
-            j_field_ = schema.toReceptor(j_field)
-            seq_field_ = schema.toReceptor(seq_field)
-            # clone_field = schema.toReceptor(clone_field)
-            # Define Receptor iterator
-            receptor_iter = (
-                (
-                    data.loc[
-                        x,
-                    ].sequence_id,
-                    data.loc[
-                        x,
-                    ],
-                )
-                for x in data.index
-            )
-
-        out = {}
-        # Iterate over rows
-        for key, records in tqdm(
-            receptor_iter,
-            desc="   Building {} germline sequences".format(germ_types),
-        ):
-            # Define iteration variables
-            # Build germline for records
-            if fileformat == "airr":
-                germ_log, glines, genes = buildGermline(
-                    _parseAIRR(dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_,
-                )
-            elif fileformat == "changeo":
-                germ_log, glines, genes = buildGermline(
-                    _parseChangeO(dict(records)),
-                    reference_dict,
-                    seq_field=seq_field_,
-                    v_field=v_field_,
-                    d_field=d_field_,
-                    j_field=j_field_,
-                )
-            else:
-                raise AttributeError(
-                    "%s is not acceptable file format." % fileformat
-                )
-
-            if glines is not None:
-                # Add glines to Receptor record
-                annotations = {}
-                if "full" in germ_types:
-                    annotations[germline_fields["full"]] = glines["full"]
-                if "dmask" in germ_types:
-                    annotations[germline_fields["dmask"]] = glines["dmask"]
-                if "vonly" in germ_types:
-                    annotations[germline_fields["vonly"]] = glines["vonly"]
-                if "regions" in germ_types:
-                    annotations[germline_fields["regions"]] = glines["regions"]
-                out.update({key: annotations})
-        germline_df = pd.DataFrame.from_dict(out, orient="index")
-
-        if isinstance(data, Dandelion):
-            # datx = load_data(self.data)
-            for x in germline_df.columns:
-                data.data[x] = pd.Series(germline_df[x])
-
-        elif isinstance(data, pd.DataFrame):
-            datx = load_data(data)
-            for x in germline_df.columns:
-                datx[x] = pd.Series(germline_df[x])
-            try:
-                output = Dandelion(
-                    data=datx, germline=reference_dict, initialize=True
-                )
-            except:
-                output = Dandelion(
-                    data=datx, germline=reference_dict, initialize=False
-                )
-            return output
-        sleep(0.5)
-        logg.info(
-            " finished",
-            time=start,
-            deep=(
-                "Updated Dandelion object: \n"
-                "   'data', updated germline alignment in contig-indexed clone table\n"
-                "   'germline', updated germline reference\n"
-            ),
+    if not isinstance(vdj_data, Dandelion):
+        tmpfile = (
+            Path(vdj_data)
+            if os.path.isfile(vdj_data)
+            else Path(tempfile.TemporaryDirectory().name) / "tmp.tsv"
         )
-
-    def _create_germlines_file(
-        file: str,
-        references: str,
-        seq_field: str = "sequence_alignment",
-        v_field: str = "v_call",
-        d_field: str = "d_call",
-        j_field: str = "j_call",
-        germ_types: Literal["full", "dmask", "vonly", "regions"] = "dmask",
-        fileformat: Literal["airr", "changeo"] = "airr",
-    ) -> Dandelion:
-        """
-        Write germline sequences to tab-delimited database file.
-
-        Parameters
-        ----------
-        file : str
-            airr/changeo tsv file
-        references : str
-            folders and/or files containing germline repertoire data in FASTA format.
-        seq_field : str, optional
-            field in which to look for sequence.
-        v_field : str, optional
-            field in which to look for V call.
-        d_field : str, optional
-            field in which to look for D call.
-        j_field : str, optional
-            field in which to look for J call.
-        germ_types : Literal["full", "dmask", "vonly", "regions"], optional
-            list of germline sequence types to be output from the set of 'full', 'dmask', 'vonly', 'regions'
-        fileformat : Literal["airr", "changeo"], optional
-            format of V(D)J file/objects.
-
-        Returns
-        -------
-        Dandelion
-            Dandelion object with germline information stored.
-
-        Raises
-        ------
-        NameError
-            if not standard AIRR table.
-        ValueError
-            if not standard AIRR table.
-        """
-        # Define format operators
-        try:
-            reader, writer, schema = getFormatOperators(fileformat)
-        except:
-            raise ValueError("Invalid format %s" % fileformat)
-
-        # Define output germline fields
-        germline_fields = OrderedDict()
-        seq_type = seq_field.split("_")[-1]
-        if "full" in germ_types:
-            germline_fields["full"] = "germline_" + seq_type
-        if "dmask" in germ_types:
-            germline_fields["dmask"] = "germline_" + seq_type + "_d_mask"
-        if "vonly" in germ_types:
-            germline_fields["vonly"] = "germline_" + seq_type + "_v_region"
-        if "regions" in germ_types:
-            germline_fields["regions"] = "germline_regions"
-
-        if type(references) is dict:
-            reference_dict = references
-        else:
-            if type(references) is not list:
-                ref = [references]
-            else:
-                ref = references
-            reference_dict = readGermlines(ref)
-        # Check for IMGT-gaps in germlines
-        if all("..." not in x for x in reference_dict.values()):
-            warnings.warn(
-                UserWarning(
-                    "Germline reference sequences do not appear to contain IMGT-numbering spacers. "
-                    + "Results may be incorrect."
-                )
-            )
-
-        required = [
-            "v_germ_start_imgt",
-            "d_germ_start",
-            "j_germ_start",
-            "np1_length",
-            "np2_length",
-        ]
-
-        # Get repertoire and open Db reader
-        db_handle = open(file, "rt")
-        db_iter = reader(db_handle)
-        # Check for required columns
-        try:
-            checkFields(required, db_iter.fields, schema=schema)
-        except LookupError as e:
-            print(e)
-        # Count input
-        # total_count = countDbFile(file)
-        # Check for existence of fields
-        for f in [v_field, d_field, j_field, seq_field]:
-            if f not in db_iter.fields:
-                raise NameError(
-                    "%s field does not exist in input database file." % f
-                )
-        # Translate to Receptor attribute names
-        v_field_ = schema.toReceptor(v_field)
-        d_field_ = schema.toReceptor(d_field)
-        j_field_ = schema.toReceptor(j_field)
-        seq_field_ = schema.toReceptor(seq_field)
-        # clone_field = schema.toReceptor(clone_field)
-        # Define Receptor iterator
-        receptor_iter = ((x.sequence_id, [x]) for x in db_iter)
-
-        out = {}
-        # Iterate over rows
-        for key, records in tqdm(
-            receptor_iter,
-            desc="   Building {} germline sequences".format(germ_types),
-        ):
-            # Define iteration variables
-            # Build germline for records
-            # if not isinstance(self.data, pd.DataFrame):
-            records = list(records)
-            germ_log, glines, genes = buildGermline(
-                records[0],
-                reference_dict,
-                seq_field=seq_field_,
-                v_field=v_field_,
-                d_field=d_field_,
-                j_field=j_field_,
-            )
-            if glines is not None:
-                # Add glines to Receptor record
-                annotations = {}
-                if "full" in germ_types:
-                    annotations[germline_fields["full"]] = glines["full"]
-                if "dmask" in germ_types:
-                    annotations[germline_fields["dmask"]] = glines["dmask"]
-                if "vonly" in germ_types:
-                    annotations[germline_fields["vonly"]] = glines["vonly"]
-                if "regions" in germ_types:
-                    annotations[germline_fields["regions"]] = glines["regions"]
-                out.update({key: annotations})
-        germline_df = pd.DataFrame.from_dict(out, orient="index")
-
-        try:
-            out = Dandelion(data=file, germline=reference_dict, initialize=True)
-        except:
-            out = Dandelion(
-                data=file, germline=reference_dict, initialize=False
-            )
-        for x in germline_df.columns:
-            out.data[x] = pd.Series(germline_df[x])
-
-        if os.path.isfile(str(file)):
-            out.write_airr(
-                "{}/{}_germline_{}.tsv".format(
-                    os.path.dirname(file),
-                    os.path.basename(file).split(".tsv")[0],
-                    germ_types,
-                )
-            )
-        return out
-
-    if (type(germline) is dict) or (type(germline) is list):
-        if isinstance(data, Dandelion):
-            _create_germlines_object(
-                data,
-                germline,
-                seq_field,
-                v_field,
-                d_field,
-                j_field,
-                germ_types,
-                fileformat,
-            )
-        elif isinstance(data, pd.DataFrame):
-            return _create_germlines_object(
-                data,
-                germline,
-                seq_field,
-                v_field,
-                d_field,
-                j_field,
-                germ_types,
-                fileformat,
-            )
-        else:
-            return _create_germlines_file(
-                data,
-                germline,
-                seq_field,
-                v_field,
-                d_field,
-                j_field,
-                germ_types,
-                fileformat,
-            )
+        if isinstance(vdj_data, pd.DataFrame):
+            write_airr(data=vdj_data.germline, save=tmpfile)
+        creategermlines(
+            airr_file=tmpfile,
+            germline=germline,
+            org=org,
+            genotyped_fasta=genotyped_fasta,
+            additional_args=additional_args,
+        )
     else:
-        if isinstance(data, Dandelion):
-            if len(data.germline) != 0:
-                _create_germlines_object(
-                    data,
-                    data.germline,
-                    seq_field,
-                    v_field,
-                    d_field,
-                    j_field,
-                    germ_types,
-                    fileformat,
-                )
-            else:
-                _create_germlines_object(
-                    data,
-                    gml,
-                    seq_field,
-                    v_field,
-                    d_field,
-                    j_field,
-                    germ_types,
-                    fileformat,
-                )
-        elif isinstance(data, pd.DataFrame):
-            return _create_germlines_object(
-                data,
-                gml,
-                seq_field,
-                v_field,
-                d_field,
-                j_field,
-                germ_types,
-                fileformat,
+        tmppath = Path(tempfile.TemporaryDirectory().name)
+        tmppath.mkdir(parents=True, exist_ok=True)
+        tmpfile = tmppath / "tmp.tsv"
+        vdj_data.write_airr(filename=tmpfile)
+        if len(vdj_data.germline) > 0:
+            tmpgmlfile = tmppath / "germ.fasta"
+            write_fasta(fasta_dict=vdj_data.germline, out_fasta=tmpgmlfile)
+            creategermlines(
+                airr_file=tmpfile,
+                germline=tmpgmlfile,
+                org=org,
+                additional_args=additional_args,
             )
         else:
-            return _create_germlines_file(
-                data,
-                gml,
-                seq_field,
-                v_field,
-                d_field,
-                j_field,
-                germ_types,
-                fileformat,
+            creategermlines(
+                airr_file=tmpfile,
+                germline=germline,
+                org=org,
+                genotyped_fasta=genotyped_fasta,
+                additional_args=additional_args,
             )
+    # return as Dandelion object
+    germpass_outfile = tmpfile.parent / (tmpfile.stem + "_germ-pass.tsv")
+    if isinstance(vdj_data, Dandelion):
+        vdj_data.__init__(
+            data=germpass_outfile,
+            metadata=vdj_data.metadata,
+            germline=vdj_data.germline,
+            layout=vdj_data.layout,
+            graph=vdj_data.graph,
+            initialize=True,
+        )
+        out_vdj = vdj_data.copy()
+    else:
+        out_vdj = Dandelion(germpass_outfile)
+        out_vdj.store_germline_reference(
+            corrected=genotyped_fasta, germline=germline, org=org
+        )
+    if save is not None:
+        shutil.move(germpass_outfile, save)
+    logg.info(
+        " finished",
+        time=start,
+        deep=("Returning Dandelion object: \n"),
+    )
+    return out_vdj
 
 
 def filter_contigs(
@@ -2344,7 +1897,7 @@ def filter_contigs(
     filter_missing: bool = True,
     productive_only: bool = True,
     simple: bool = False,
-    save: Optional[str] = None,
+    save: Optional[Union[str, Path]] = None,
     verbose: bool = True,
     **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
@@ -2403,8 +1956,8 @@ def filter_contigs(
         whether or not to retain only productive contigs.
     simple : bool, optional
         simple filtering mode where only checks for potential gene assignment mismatches.
-    save : Optional[str], optional
-        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table.
+    save : Optional[Union[str, Path]], optional
+        Only used if a pandas data frame or dandelion object is provided. Specifying will save the formatted vdj table.
     verbose : bool, optional
         whether to print progress.
     **kwargs
@@ -2552,17 +2105,15 @@ def filter_contigs(
             )
 
         if os.path.isfile(str(data)):
+            data_path = Path(data)
             write_airr(
                 _dat,
-                "{}/{}_filtered.tsv".format(
-                    os.path.dirname(data),
-                    os.path.basename(data).split(".tsv")[0],
-                ),
+                data_path.parent / (data_path.stem + "_filtered.tsv"),
             )
         else:
             if save is not None:
-                if save.endswith(".tsv"):
-                    write_airr(_dat, str(save))
+                if str(save).endswith(".tsv"):
+                    write_airr(_dat, save)
                 else:
                     raise ValueError(
                         "{} not suitable. Please provide a file name that ends with .tsv".format(
@@ -2700,7 +2251,6 @@ def quantify_mutations(
     if region_definition is None:
         reg_d = NULL
     else:
-
         reg_d = base.get(region_definition)
 
     if mutation_definition is None:
@@ -2734,7 +2284,7 @@ def quantify_mutations(
             ):
                 pd_df = rpy2.robjects.conversion.rpy2py(results)
         else:
-            # pd_df = pandas2ri.rpy2py_dataframe(results)
+            # pd_df = pandas2ri.rpy2py_data frame(results)
             pd_df = results.copy()
     else:
         dat_h = dat_[dat_["locus"] == "IGH"]
@@ -3184,7 +2734,7 @@ def calculate_threshold(
             "Automatic thresholding failed. Please visually inspect the resulting distribution fits"
             + " and choose a threshold value manually."
         )
-    # dist_ham = pandas2ri.rpy2py_dataframe(dist_ham)
+    # dist_ham = pandas2ri.rpy2py_data frame(dist_ham)
 
     if manual_threshold is None:
         tr = threshold
@@ -3219,7 +2769,7 @@ def calculate_threshold(
             + theme(legend_position="none")
         )
         if save_plot is not None:
-            save_as_pdf_pages([p], filename=save_plot)
+            save_as_pdf_pages([p], filename=save_plot, verbose=False)
         print(p)
     else:
         logg.info(
@@ -3281,7 +2831,7 @@ class FilterContigs:
         Parameters
         ----------
         data : pd.DataFrame
-            AIRR dataframe in Dandelion.data.
+            AIRR data frame in Dandelion.data.
         keep_highest_umi : bool
             whether or not to keep highest UMI contig.
         umi_foldchange_cutoff : Union[int, float]
@@ -3351,7 +2901,6 @@ class FilterContigs:
                 h_locus_p = list(data1["locus"])
                 if len(h_p) > 1:
                     if "sequence_alignment" in data1:
-
                         (
                             data1,
                             h_p,
@@ -3382,7 +2931,6 @@ class FilterContigs:
                         sum_umi = sum(h_umi_p)
                         if "IGHD" in h_ccall_p:
                             if all(x in ["IGHM", "IGHD"] for x in h_ccall_p):
-
                                 h_ccall_p_igm_count = dict(
                                     data1[data1["c_call"] == "IGHM"][
                                         "duplicate_count"
@@ -3411,9 +2959,7 @@ class FilterContigs:
                                                 if v < max_igm_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                                 if len(h_ccall_p_igd_count) > 1:
@@ -3433,9 +2979,7 @@ class FilterContigs:
                                                 if v < max_igd_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                             else:
@@ -3504,9 +3048,7 @@ class FilterContigs:
                                                 if v < max_trb_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                                 if len(h_locus_p_trd_count) > 1:
@@ -3526,9 +3068,7 @@ class FilterContigs:
                                                 if v < max_trd_count
                                             ]
                                             for dk in drop_keys:
-                                                self.drop_contig.append(
-                                                    drop_keys
-                                                )
+                                                self.drop_contig.append(dk)
                                         else:
                                             self.h_doublet.append(cell)
                             else:
@@ -4093,7 +3633,7 @@ class FilterContigsLite:
         Parameters
         ----------
         data : pd.DataFrame
-            AIRR dataframe in Dandelion.data.
+            AIRR data frame in Dandelion.data.
         verbose : bool
             whether or not to print progress.
         """
@@ -4427,22 +3967,22 @@ class FilterContigsLite:
 
 
 def run_igblastn(
-    fasta: str,
-    igblast_db: Optional[str] = None,
+    fasta: Union[str, Path],
+    igblast_db: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
     evalue: float = 1e-4,
     min_d_match: int = 9,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ):
     """
     Reannotate with IgBLASTn.
 
     Parameters
     ----------
-    fasta : str
-        fasta file for reannotation.
-    igblast_db : Optional[str], optional
+    fasta : Union[str, Path]
+        path to fasta file for reannotation.
+    igblast_db : Optional[Union[str, Path]], optional
         path to igblast database.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
@@ -4456,57 +3996,38 @@ def run_igblastn(
         sequence and the targets.
     min_d_match : int, optional
         minimum D nucleotide match.
-    verbose : bool, optional
-        whether or not to print the command used in terminal.
-
-    Raises
-    ------
-    KeyError
-        if `IGDATA` environmental variable is not set.
+    additional_args: List[str], optional
+        additional arguments to pass to `igblastn`.
     """
-    env = os.environ.copy()
-    if igblast_db is None:
-        try:
-            igdb = env["IGDATA"]
-        except KeyError:
-            raise KeyError(
-                (
-                    "Environmental variable IGDATA must be set. Otherwise,"
-                    + " please provide path to igblast database"
-                )
-            )
-    else:
-        env["IGDATA"] = igblast_db
-        igdb = env["IGDATA"]
-
-    outfolder = Path(fasta).parent.resolve() / "tmp"
-    os.makedirs(outfolder, exist_ok=True)
+    env, igdb, fasta = set_igblast_env(igblast_db=igblast_db, input_file=fasta)
+    outfolder = fasta.parent / "tmp"
+    outfolder.mkdir(parents=True, exist_ok=True)
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
 
     loci_type = {"ig": "Ig", "tr": "TCR"}
     outformat = {"blast": "7 std qseq sseq btop", "airr": "19"}
 
-    dbpath = Path(igdb) / "database"
+    dbpath = igdb / "database"
     imgt_org_loci = "imgt_" + org + "_" + loci + "_"
-    vpath = str(dbpath / (imgt_org_loci + "v"))
-    dpath = str(dbpath / (imgt_org_loci + "d"))
-    jpath = str(dbpath / (imgt_org_loci + "j"))
-    cpath = str(dbpath / (imgt_org_loci + "c"))
-    auxpath = str(Path(igdb) / "optional_file" / (org + "_gl.aux"))
+    vpath = dbpath / (imgt_org_loci + "v")
+    dpath = dbpath / (imgt_org_loci + "d")
+    jpath = dbpath / (imgt_org_loci + "j")
+    cpath = dbpath / (imgt_org_loci + "c")
+    auxpath = igdb / "optional_file" / (org + "_gl.aux")
 
     for fileformat in ["blast", "airr"]:
-        outfile = str(Path(fasta).stem + informat_dict[fileformat])
+        outfile = str(fasta.stem + informat_dict[fileformat])
         if loci == "tr":
             cmd = [
                 "igblastn",
                 "-germline_db_V",
-                vpath,
+                str(vpath),
                 "-germline_db_D",
-                dpath,
+                str(dpath),
                 "-germline_db_J",
-                jpath,
+                str(jpath),
                 "-auxiliary_data",
-                auxpath,
+                str(auxpath),
                 "-domain_system",
                 "imgt",
                 "-ig_seqtype",
@@ -4516,9 +4037,9 @@ def run_igblastn(
                 "-outfmt",
                 outformat[fileformat],
                 "-query",
-                fasta,
+                str(fasta),
                 "-out",
-                "{}/{}".format(outfolder, outfile),
+                str(outfolder / outfile),
                 "-evalue",
                 str(evalue),
                 "-min_D_match",
@@ -4526,19 +4047,19 @@ def run_igblastn(
                 "-D_penalty",
                 str(-4),
                 "-c_region_db",
-                cpath,
+                str(cpath),
             ]
         else:
             cmd = [
                 "igblastn",
                 "-germline_db_V",
-                vpath,
+                str(vpath),
                 "-germline_db_D",
-                dpath,
+                str(dpath),
                 "-germline_db_J",
-                jpath,
+                str(jpath),
                 "-auxiliary_data",
-                auxpath,
+                str(auxpath),
                 "-domain_system",
                 "imgt",
                 "-ig_seqtype",
@@ -4548,23 +4069,23 @@ def run_igblastn(
                 "-outfmt",
                 outformat[fileformat],
                 "-query",
-                fasta,
+                str(fasta),
                 "-out",
-                "{}/{}".format(outfolder, outfile),
+                str(outfolder / outfile),
                 "-evalue",
                 str(evalue),
                 "-min_D_match",
                 str(min_d_match),
                 "-c_region_db",
-                cpath,
+                str(cpath),
             ]
-
+        cmd = cmd + additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
 
 def assign_DJ(
-    fasta: str,
+    fasta: Union[str, Path],
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "tr",
     call: Literal["d", "j"] = "j",
@@ -4579,14 +4100,14 @@ def assign_DJ(
     ),
     filename_prefix: Optional[str] = None,
     overwrite: bool = False,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
@@ -4622,29 +4143,17 @@ def assign_DJ(
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     overwrite : bool, optional
         whether or not to overwrite the assignments.
-    verbose : bool, optional
-        whether or not to print the blast command in terminal.
-
-    Raises
-    ------
-    FileNotFoundError
-        if path to fasta file is unknown.
+    additional_args: List[str], optional
+        additional arguments to pass to `blastn`.
     """
     # main function from here
-    filePath = check_filepath(
-        fasta, filename_prefix=filename_prefix, endswith=".fasta"
+    file_path, passfile, failfile = return_pass_fail_filepaths(
+        fasta, filename_prefix=filename_prefix
     )
-    if filePath is None:
-        raise FileNotFoundError(
-            (
-                "Path to fasta file is unknown. Please specify "
-                + "path to fasta file or folder containing fasta file."
-            )
-        )
 
     # run blast
     blast_out = run_blastn(
-        fasta=filePath,
+        fasta=file_path,
         database=database,
         org=org,
         loci=loci,
@@ -4654,17 +4163,7 @@ def assign_DJ(
         outfmt=outfmt,
         dust=dust,
         word_size=word_size,
-        verbose=verbose,
-    )
-
-    # read the original object
-    passfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + "_igblast_db-pass",
-    )
-    failfile = "{}/tmp/{}.tsv".format(
-        os.path.dirname(filePath),
-        os.path.basename(filePath).split(".fasta")[0] + "_igblast_db-fail",
+        additional_args=additional_args,
     )
 
     transfer_assignment(
@@ -4680,7 +4179,7 @@ def assign_DJ(
 
 
 def run_blastn(
-    fasta: str,
+    fasta: Union[str, Path],
     database: Optional[str],
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
@@ -4693,14 +4192,14 @@ def run_blastn(
     ),
     dust: Optional[Union[Literal["yes", "no"], str]] = None,
     word_size: Optional[int] = None,
-    verbose: bool = False,
+    additional_args: List[str] = [],
 ) -> pd.DataFrame:
     """
     Annotate contigs using blastn.
 
     Parameters
     ----------
-    fasta : str
+    fasta : Union[str, Path]
         path to fasta file.
     database : Optional[str]
         path to database.
@@ -4732,57 +4231,72 @@ def run_blastn(
     word_size : Optional[int], optional
         Word size for wordfinder algorithm (length of best perfect match).
         Must be >=4. `None` defaults to 4.
-    verbose : bool, optional
-        whether or not to print the blast command in terminal.
+    additional_args: List[str], optional
+        additional arguments to pass to `blastn`.
+
+    Returns
+    -------
+    pd.DataFrame
+        reannotated information after blastn.Annotate contigs using blastn.
+
+    Parameters
+    ----------
+    fasta : Union[str, Path]
+        path to fasta file.
+    database : Optional[str]
+        path to database.
+        Defaults to `IGDATA` environmental variable if v/d/j_call.
+        Defaults to `BLASTDB` environmental variable if c_call.
+    org : Literal["human", "mouse"], optional
+        organism of reference folder.
+    loci : Literal["ig", "tr"], optional
+        locus. 'ig' or 'tr',
+    call : Literal["v", "d", "j", "c"], optional
+        Either 'v', 'd', 'j' or 'c' gene.
+    max_hsps : int, optional
+        Maximum number of HSPs (alignments) to keep for any single query-subject pair.
+        The HSPs shown will be the best as judged by expect value. This number should
+        be an integer that is one or greater. Setting it to one will show only the best
+        HSP for every query-subject pair. Only affects the output file in the tmp folder.
+    evalue : float, optional
+        This is the statistical significance threshold for reporting matches
+        against database sequences. Lower EXPECT thresholds are more stringent
+        and report only high similarity matches. Choose higher EXPECT value
+        (for example 1 or more) if you expect a low identity between your query
+        sequence and the targets.
+    outfmt : str, optional
+        blastn output format.
+    dust : Optional[Union[Literal["yes", "no"], str]], optional
+        dustmasker options. Filter query sequence with DUST
+        Format: 'yes', or 'no' to disable. Accepts str.
+        If None, defaults to `20 64 1`.
+    word_size : Optional[int], optional
+        Word size for wordfinder algorithm (length of best perfect match).
+        Must be >=4. `None` defaults to 4.
+    additional_args: List[str], optional
+        additional arguments to pass to `blastn`.
 
     Returns
     -------
     pd.DataFrame
         reannotated information after blastn.
-
-    Raises
-    ------
-    KeyError
-        if `IGDATA` environmental variable is not set.
     """
-    env = os.environ.copy()
     if call != "c":
-        if database is None:
-            try:
-                bdb = env["IGDATA"]
-            except KeyError:
-                raise KeyError(
-                    (
-                        "Environmental variable IGDATA must be set. "
-                        + "Otherwise, please provide path to igblast database."
-                    )
-                )
-            bdb = bdb + "database/imgt_" + org + "_" + loci + "_" + call
-        else:
-            env["IGDATA"] = database
-            bdb = database
-            if not bdb.endswith("_" + loci + "_" + call):
-                bdb = bdb + "database/imgt_" + org + "_" + loci + "_" + call
+        env, bdb, fasta = set_igblast_env(igblast_db=database, input_file=fasta)
+        bdb = bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
     else:
+        env, bdb, fasta = set_blast_env(blast_db=database, input_file=fasta)
         if database is None:
-            try:
-                bdb = env["BLASTDB"]
-            except KeyError:
-                raise KeyError(
-                    (
-                        "Environmental variable BLASTDB must be set. "
-                        + "Otherwise, please provide path to blast database"
-                    )
-                )
-            bdb = bdb + org + "/" + org + "_BCR_C.fasta"
+            bdb = bdb / org / (org + "_BCR_C.fasta")
         else:
-            env["BLASTDB"] = database
-            bdb = database
-
+            if not bdb.stem.endswith("_" + loci + "_" + call):
+                bdb = (
+                    bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
+                )
     cmd = [
         "blastn",
         "-db",
-        bdb,
+        str(bdb),
         "-evalue",
         str(evalue),
         "-max_hsps",
@@ -4790,19 +4304,14 @@ def run_blastn(
         "-outfmt",
         outfmt,
         "-query",
-        fasta,
+        str(fasta),
     ]
-
     if dust is not None:
         cmd = cmd + ["-dust", str(dust)]
     if word_size is not None:
         cmd = cmd + ["-word_size", str(word_size)]
-
-    blast_out = "{}/tmp/{}.tsv".format(
-        os.path.dirname(fasta),
-        os.path.basename(fasta).split(".fasta")[0] + "_" + call + "_blast",
-    )
-
+    cmd = cmd + additional_args
+    blast_out = fasta.parent / "tmp" / (fasta.stem + "_" + call + "_blast.tsv")
     logg.info("Running command: %s\n" % (" ".join(cmd)))
     with open(blast_out, "w") as out:
         run(cmd, stdout=out, env=env)
@@ -4843,7 +4352,7 @@ def run_blastn(
                 call + "_germline_alignment",
             ]
         )
-    write_blastn(dat, blast_out)
+    write_blastn(data=dat, save=blast_out)
     dat = load_data(dat)
     return dat
 
@@ -4917,7 +4426,7 @@ def transfer_assignment(
             db_pass[call + "_call_igblastn"] = pd.Series(db_pass_call)
             db_pass[call + "_call_igblastn"].fillna(value="", inplace=True)
             for col in blast_result:
-                if col != "sequence_id":
+                if col not in ["sequence_id", "cell_id"]:
                     db_pass[col + "_blastn"] = pd.Series(blast_result[col])
                     if col in [
                         call + "_call",
@@ -5154,7 +4663,7 @@ def transfer_assignment(
             db_fail[call + "_call_igblastn"] = pd.Series(db_fail_call)
             db_fail[call + "_call_igblastn"].fillna(value="", inplace=True)
             for col in blast_result:
-                if col != "sequence_id":
+                if col not in ["sequence_id", "cell_id"]:
                     db_fail[col + "_blastn"] = pd.Series(blast_result[col])
                     if col in [
                         call + "_call",
@@ -5438,7 +4947,7 @@ def check_contigs(
     filter_missing : bool, optional
         cells in V(D)J data not found in `AnnData` object will removed from the dandelion object.
     save : Optional[str], optional
-        Only used if a pandas dataframe or dandelion object is provided. Specifying will save the formatted vdj table
+        Only used if a pandas data frame or dandelion object is provided. Specifying will save the formatted vdj table
         with a `_checked.tsv` suffix extension.
     verbose : bool, optional
         whether to print progress when marking contigs.
@@ -5519,12 +5028,9 @@ def check_contigs(
             "No contigs passed filtering. Are you sure that the cell barcodes are matching?"
         )
     if os.path.isfile(str(data)):
+        data_path = Path(data)
         write_airr(
-            dat,
-            "{}/{}_checked.tsv".format(
-                os.path.dirname(data),
-                os.path.basename(data).split(".tsv")[0],
-            ),
+            dat, data_path.parent / "{}_checked.tsv".format(data_path.stem)
         )
     else:
         if save is not None:
@@ -5592,7 +5098,7 @@ class MarkAmbiguousContigs:
         Parameters
         ----------
         data : pd.DataFrame
-            AIRR dataframe in Dandelion.data.
+            AIRR data frame in Dandelion.data.
         umi_foldchange_cutoff : Union[int, float]
             fold-change cut off for decision.
         verbose : bool
@@ -6226,7 +5732,7 @@ def check_update_same_seq(
     Parameters
     ----------
     data : pd.DataFrame
-        AIRR dataframe in Dandelion.data.
+        AIRR data frame in Dandelion.data.
 
     Returns
     -------
@@ -6348,14 +5854,15 @@ def multimapper(filename: str) -> pd.DataFrame:
     Returns
     -------
     pd.DataFrame
-        Mapped multimapper dataframe.
+        Mapped multimapper data frame.
     """
     df = pd.read_csv(filename, delimiter="\t")
     df_new = df.loc[
         df["j_support"] < 1e-3, :
     ]  # maybe not needing to filter if j_support has already been filtered
-    mapped = pd.DataFrame(
-        index=set(df_new["sequence_id"]),
+
+    tmp = pd.DataFrame(
+        index=list(set(df_new["sequence_id"])),
         columns=[
             "multimappers",
             "multiplicity",
@@ -6365,31 +5872,49 @@ def multimapper(filename: str) -> pd.DataFrame:
         ],
     )
 
-    for j in range(mapped.shape[0]):
-        id = mapped.index[j]
-        tmp = df_new.loc[
-            df_new["sequence_id"] == id,
-            ["j_sequence_start", "j_sequence_end", "j_support", "j_call"],
-        ]
+    # Define a function to apply to each group
+    def process_group(group: pd.DataFrame) -> pd.Series:
+        """
+        Create a dictionary for the multimappers results.
 
-        starts = tmp["j_sequence_start"]
-        ends = tmp["j_sequence_end"]
-        scores = -tmp["j_support"]
+        Parameters
+        ----------
+        group : pd.DataFrame
+            input dataframe for a given sequence_id.
+
+        Returns
+        -------
+        pd.Series
+            A pandas series with the multimappers results.
+        """
+        starts = group["j_sequence_start"]
+        ends = group["j_sequence_end"]
+        scores = -group["j_support"]
         chosen_ind = choose_segments(starts, ends, scores)
-        tmp = tmp.iloc[chosen_ind, :]
-        tmp = tmp.sort_values(by=["j_sequence_start"], ascending=True)
+        group = group.iloc[chosen_ind, :]
+        group = group.sort_values(by=["j_sequence_start"], ascending=True)
 
-        mapped["multimappers"][j] = ";".join(tmp["j_call"])
-        mapped["multiplicity"][j] = tmp.shape[0]
-        mapped["sequence_start_multimappers"][j] = ";".join(
-            tmp["j_sequence_start"].astype(str)
+        return pd.Series(
+            {
+                "multimappers": ";".join(group["j_call"]),
+                "multiplicity": group.shape[0],
+                "sequence_start_multimappers": ";".join(
+                    group["j_sequence_start"].astype(str)
+                ),
+                "sequence_end_multimappers": ";".join(
+                    group["j_sequence_end"].astype(str)
+                ),
+                "support_multimappers": ";".join(
+                    group["j_support"].astype(str)
+                ),
+            }
         )
-        mapped["sequence_end_multimappers"][j] = ";".join(
-            tmp["j_sequence_end"].astype(str)
-        )
-        mapped["support_multimappers"][j] = ";".join(
-            tmp["j_support"].astype(str)
-        )
+
+    # Group by "sequence_id" and apply the processing function, then reset the index
+    mapped = df_new.groupby("sequence_id").apply(process_group).reset_index()
+    # Set the index explicitly
+    mapped.set_index("sequence_id", drop=True, inplace=True)
+    mapped = mapped.reindex(tmp.index)
 
     return mapped
 
@@ -6412,31 +5937,37 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
         filePath0 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_j_blast.tsv",
-            subdir="tmp",
+            ends_with="_j_blast.tsv",
+            sub_dir="tmp",
         )
         filePath1 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-pass.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-pass.tsv",
+            sub_dir="tmp",
+        )
+        filePath1g = check_filepath(
+            data[i],
+            filename_prefix=filename_prefix[i],
+            ends_with="_igblast_db-pass_genotyped.tsv",
+            sub_dir="tmp",
         )
         filePath2 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-all.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-all.tsv",
+            sub_dir="tmp",
         )
         filePath3 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_igblast_db-fail.tsv",
-            subdir="tmp",
+            ends_with="_igblast_db-fail.tsv",
+            sub_dir="tmp",
         )
         filePath4 = check_filepath(
             data[i],
             filename_prefix=filename_prefix[i],
-            endswith="_dandelion.tsv",
+            ends_with="_dandelion.tsv",
         )
 
         jmm_transfer_cols = [
@@ -6446,6 +5977,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             "sequence_end_multimappers",
             "support_multimappers",
         ]
+        check_multimapper(filePath0, filePath2)
         if filePath0 is not None:
             jmulti = multimapper(filePath0)
             if filePath1 is not None:
@@ -6454,6 +5986,12 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                     dbpass["j_call_" + col] = ""
                     dbpass["j_call_" + col].update(jmulti[col])
                 write_airr(dbpass, filePath1)
+            if filePath1g is not None:
+                dbpassg = load_data(filePath1g)
+                for col in jmm_transfer_cols:
+                    dbpassg["j_call_" + col] = ""
+                    dbpassg["j_call_" + col].update(jmulti[col])
+                write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:
@@ -6510,3 +6048,48 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                     dandy["j_call_" + col] = ""
                     dandy["j_call_" + col].update(jmulti[col])
                 write_airr(dandy, filePath4)
+
+
+def check_multimapper(
+    filename1: str,
+    filename2: str,
+) -> pd.DataFrame:
+    """Select the left more segment as the final call
+    Parameters
+    ----------
+    filename1 : str
+        path to multimapper file.
+    filename2 : str
+        path to reference file containing all information.
+    Returns
+    -------
+    pd.DataFrame
+        Mapped multimapper data frame.
+    """
+    if filename1 is not None:
+        if filename2 is not None:
+            df = pd.read_csv(filename1, sep="\t")
+            df_new = df[
+                df["j_support"] < 1e-3
+            ]  # maybe not needing to filter if j_support has already been filtered
+            df_ref = load_data(filename2)
+            mapped = list(set(df_new["sequence_id"]))
+            keep = []
+            for j in mapped:
+                tmp = df_new[df_new["sequence_id"] == j][
+                    [
+                        "j_sequence_start",
+                        "j_sequence_end",
+                        "j_support",
+                        "j_call",
+                    ]
+                ]
+                if j in df_ref.index:
+                    vend = df_ref.loc[j, "v_sequence_end"]
+                    vend_ = 0 if not present(vend) else vend
+                    for i in tmp.index:
+                        callstart = tmp.loc[i, "j_sequence_start"]
+                        if callstart >= vend_:
+                            keep.append(i)
+            keepdf = df_new.loc[keep]
+            keepdf.to_csv(filename1, sep="\t", index=False)
