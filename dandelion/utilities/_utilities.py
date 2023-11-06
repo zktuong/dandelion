@@ -21,6 +21,11 @@ TRUES = ["T", "True", "true", "TRUE", True]
 FALSES = ["F", "False", "false", "FALSE", False]
 HEAVYLONG = ["IGH", "TRB", "TRD"]
 LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
+VCALL = "v_call"
+JCALL = "j_call"
+VCALLG = "v_call_genotyped"
+JCALLG = "j_call_genotyped"
+STRIPALLELENUM = "[*][0-9][0-9]"
 
 # for compatibility with python>=3.10
 try:
