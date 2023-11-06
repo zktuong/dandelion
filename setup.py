@@ -32,7 +32,7 @@ setup(
             "yamlordereddictloader",
             "sphinx<7",  # see issue at https://github.com/readthedocs/readthedocs.org/issues/10279
             "nbsphinx<=0.9.2",
-            "sphinx-autodoc-typehints<=1.24.0",
+            "sphinx-autodoc-typehints<=1.24.1",
             "sphinx_rtd_theme<=1.2.2",
             "readthedocs-sphinx-ext<=2.2.3",
             "recommonmark<=0.7.1",
