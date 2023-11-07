@@ -1099,3 +1099,8 @@ def sum_col(vals):
         return np.nan
     else:
         return sum(vals)
+
+
+def check_same_celltype(clone_def1, clone_def2):
+    """Check if the first key is the same."""
+    return clone_def1.split("_", 1)[0] == clone_def2.split("_", 1)[0]

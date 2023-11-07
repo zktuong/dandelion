@@ -34,7 +34,6 @@ def find_clones(
     by_alleles: bool = False,
     key_added: Optional[str] = None,
     recalculate_length: bool = True,
-    collapse_label: bool = False,
     verbose: bool = True,
 ) -> Dandelion:
     """
@@ -57,9 +56,6 @@ def find_clones(
     recalculate_length : bool, optional
         whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is
         wrong). Default is True
-    collapse_label : bool, optional
-        whether or not to return the clone_ids with the full keys for VDJ and VJ groups.
-        Default (False) will expand VDJ and VJ. If True, VJ will be collapsed to a singular number.
     verbose : bool, optional
         whether or not to print progress.
 
@@ -99,7 +95,7 @@ def find_clones(
 
     locuses = ["ig", "tr-ab", "tr-gd"]
 
-    # quick test first
+    # quick check
     for locus in locuses:
         locus_1 = locus_dict1[locus]
         locus_2 = locus_dict2[locus]
@@ -107,13 +103,8 @@ def find_clones(
         dat_vj = dat[dat["locus"].isin(locus_2)].copy()
         dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
 
-        if dat_vj.shape[0] > 0:
-            dump = dat_vj[~(dat_vj["cell_id"].isin(dat_vdj["cell_id"]))].copy()
-            if dump.shape[0] > 0:
-                dat = dat[~(dat["cell_id"].isin(dump["cell_id"]))].copy()
-        dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
-        # if (dat_vdj.shape[0] == 0) and (dat_vj.shape[0] == 0):
-        if dat_vdj.shape[0] == 0:
+        chain_check = check_chains(dat_vdj=dat_vdj, dat_vj=dat_vj)
+        if all(~chain_check["All VDJ"]) and all(~chain_check["All VJ"]):
             locuses.remove(locus)
 
     if len(locuses) > 0:
@@ -138,95 +129,58 @@ def find_clones(
 
             dat_vj = dat[dat["locus"].isin(locus_2)].copy()
             dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
-
-            # if dat_vj.shape[0] > 0:
-            #     dump = dat_vj[
-            #         ~(dat_vj["cell_id"].isin(dat_vdj["cell_id"]))
-            #     ].copy()
-            #     if dump.shape[0] > 0:
-            #         dat = dat[~(dat["cell_id"].isin(dump["cell_id"]))].copy()
-            # dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
-            # if dat_vj.shape[0] > 0:
-            #     orphan_vj = dat_vj[
-            #         ~(dat_vj["cell_id"].isin(dat_vdj["cell_id"]))
-            #     ].copy()
+            chain_check = check_chains(dat_vdj=dat_vdj, dat_vj=dat_vj)
             if dat_vdj.shape[0] > 0:
-                vj_len_grp, seq_grp = group_sequences(
+                vj_len_grp_vdj, seq_grp_vdj = group_sequences(
                     dat_vdj,
                     junction_key=key_,
                     recalculate_length=recalculate_length,
                     by_alleles=by_alleles,
                     locus=locusx,
                 )
-                cid = group_pairwise_hamming_distance(
-                    clonotype_vj_len_group=vj_len_grp,
-                    clonotype_sequence_group=seq_grp,
+                cid_vdj = group_pairwise_hamming_distance(
+                    clonotype_vj_len_group=vj_len_grp_vdj,
+                    clonotype_sequence_group=seq_grp_vdj,
                     identity=identity_,
                     locus=locus_log[locusx],
                     chain="VDJ",
                     verbose=verbose,
                 )
-                clone_dict = rename_clonotype_ids(
-                    clonotype_groups=cid,
-                    cell_type=locus_log[locusx] + "_",
+                clone_dict_vdj = rename_clonotype_ids(
+                    clonotype_groups=cid_vdj,
+                    cell_type=locus_log[locusx] + "_VDJ_",
                 )
                 # add it to the original dataframes
-                dat_vdj[clone_key] = pd.Series(clone_dict)
+                dat_vdj[clone_key] = pd.Series(clone_dict_vdj)
                 dat[clone_key].update(pd.Series(dat_vdj[clone_key]))
-                dat_vj_c = dat[dat["locus"].isin(locus_2)].copy()
-                if dat_vj_c.shape[0] != 0:
-                    vj_len_lightgrp, seq_lightgrp = group_sequences(
-                        dat_vj,
-                        junction_key=key_,
-                        recalculate_length=recalculate_length,
-                        by_alleles=by_alleles,
-                        locus=locusx,
-                    )
-                    cid_light = group_pairwise_hamming_distance(
-                        clonotype_vj_len_group=vj_len_lightgrp,
-                        clonotype_sequence_group=seq_lightgrp,
-                        identity=identity_,
-                        locus=locus_log[locusx],
-                        chain="VJ",
-                        verbose=not verbose,
-                    )
-                    clone_dict_light = rename_clonotype_ids(
-                        clonotype_groups=cid_light,
-                        cell_type="",
-                    )
-                    refine_clone_assignment(
-                        dat=dat,
-                        clone_key=clone_key,
-                        clone_dict_light=clone_dict_light,
-                        collapse_label=collapse_label,
-                        verbose=verbose,
-                    )
+            if dat_vj.shape[0] > 0:
+                vj_len_grp_vj, seq_grp_vj = group_sequences(
+                    dat_vj,
+                    junction_key=key_,
+                    recalculate_length=recalculate_length,
+                    by_alleles=by_alleles,
+                    locus=locusx,
+                )
+                cid_vj = group_pairwise_hamming_distance(
+                    clonotype_vj_len_group=vj_len_grp_vj,
+                    clonotype_sequence_group=seq_grp_vj,
+                    identity=identity_,
+                    locus=locus_log[locusx],
+                    chain="VJ",
+                    verbose=verbose,
+                )
+                clone_dict_vj = rename_clonotype_ids(
+                    clonotype_groups=cid_vj,
+                    cell_type=locus_log[locusx] + "_VJ_",
+                )
+                refine_clone_assignment(
+                    dat=dat,
+                    clone_key=clone_key,
+                    clone_dict_vj=clone_dict_vj,
+                    verbose=verbose,
+                )
                 dat_[clone_key].update(pd.Series(dat[clone_key]))
-            # if orphan_vj.shape[0] > 0:
-            #     vj_len_grp, seq_grp = group_sequences(
-            #         orphan_vj,
-            #         junction_key=key_,
-            #         recalculate_length=recalculate_length,
-            #         by_alleles=by_alleles,
-            #         locus=locusx,
-            #     )
-            #     cid = group_pairwise_hamming_distance(
-            #         clonotype_vj_len_group=vj_len_grp,
-            #         clonotype_sequence_group=seq_grp,
-            #         identity=identity_,
-            #         locus=locus_log[locusx],
-            #         chain="orphan VJ",
-            #         verbose=verbose,
-            #     )
-            #     clone_dict = rename_clonotype_ids(
-            #         clonotype_groups=cid,
-            #         cell_type=locus_log[locusx],
-            #         prefix="_Orphan_VJ_",
-            #     )
-            #     # add it to the original dataframes
-            #     orphan_vj[clone_key] = pd.Series(clone_dict)
-            #     dat[clone_key].update(pd.Series(orphan_vj[clone_key]))
-            #     dat_[clone_key].update(pd.Series(dat[clone_key]))
+
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
         data_path = Path(vdj_data)
@@ -1900,8 +1854,7 @@ def rename_clonotype_ids(
 def refine_clone_assignment(
     dat: pd.DataFrame,
     clone_key: str,
-    clone_dict_light: dict,
-    collapse_label: bool,
+    clone_dict_vj: dict,
     verbose: bool = True,
 ):
     """
@@ -1913,33 +1866,11 @@ def refine_clone_assignment(
         The input data frame containing the full VDJ/VJ data.
     clone_key : str
         The name of the column in the input data that contains the clone IDs.
-    clone_dict_light : dict
-        A dictionary that maps sequence IDs to clone IDs.
-    collapse_label : bool
-        Whether to collapse clone labels.
+    clone_dict_vj : dict
+        A dictionary for the VJ chains for us to map sequence IDs to clone IDs.
     verbose : bool, optional
         Whether to print progress messages.
     """
-
-    lclones = list(clone_dict_light.values())
-    renamed_clone_dict_light = {}
-    if collapse_label:
-        # Will just update the main dat directly
-        if len(list(set(lclones))) > 1:
-            lclones_dict = dict(
-                zip(
-                    sorted(list(set(lclones))),
-                    [str(x) for x in range(1, len(list(set(lclones))) + 1)],
-                )
-            )
-        else:
-            lclones_dict = dict(zip(sorted(list(set(lclones))), str(1)))
-        for key, value in clone_dict_light.items():
-            renamed_clone_dict_light[key] = lclones_dict[value]
-    else:
-        for key, value in clone_dict_light.items():
-            renamed_clone_dict_light[key] = value
-
     cellclonetree = Tree()
     seqcellclonetree = Tree()
     for c, s, z in zip(dat["cell_id"], dat["sequence_id"], dat[clone_key]):
@@ -1958,24 +1889,66 @@ def refine_clone_assignment(
         disable=not verbose,
     ):
         suffix = [
-            renamed_clone_dict_light[x]
-            for x in seqcellclonetree[c]
-            if x in renamed_clone_dict_light
+            clone_dict_vj[x] for x in seqcellclonetree[c] if x in clone_dict_vj
         ]
         fintree[c] = []
-        if len(suffix) > 1:
+        if len(suffix) > 0:
             for cl in cellclonetree[c]:
                 if present(cl):
                     for s in suffix:
-                        fintree[c].append(cl + "_" + s)
+                        if check_same_celltype(cl, s):
+                            fintree[c].append(
+                                cl + "_" + "".join(s.split("_", 1)[1])
+                            )
+                        else:
+                            fintree[c].append(cl + "|" + s)
         else:
             for cl in cellclonetree[c]:
                 if present(cl):
-                    if len(suffix) > 0:
-                        fintree[c].append(cl + "_" + "".join(suffix))
-                    else:
-                        fintree[c].append(cl)
-                    #     if cl.count("_") == 3:
-                    #         cl = cl + "_Orphan_VDJ"
+                    fintree[c].append(cl)
         fintree[c] = "|".join(fintree[c])
     dat[clone_key] = [fintree[x] for x in dat["cell_id"]]
+
+
+def check_chains(dat_vdj: pd.DataFrame, dat_vj: pd.DataFrame) -> pd.DataFrame:
+    """
+    Generate a summary table of whether the chain is orphan or not.
+
+    Parameters
+    ----------
+    dat_vdj : pd.DataFrame
+        Input dataframe containing VDJ chains of a particular locus.
+    dat_vj : pd.DataFrame
+        Input dataframe containing VJ chains of a particular locus.
+
+    Returns
+    -------
+    pd.DataFrame
+        Output dataframe containing chain status.
+    """
+
+    vj_check = pd.crosstab(dat_vj.cell_id, dat_vj.locus).apply(sum, axis=1)
+    vj_check[vj_check > 1] = 1
+    vdj_check = pd.crosstab(dat_vdj.cell_id, dat_vdj.locus).apply(sum, axis=1)
+    vdj_check[vdj_check > 1] = 1
+    chain_check = pd.concat([vdj_check, vj_check], axis=1)
+    chain_check.columns = ["VDJ", "VJ"]
+    chain_check["Orphan VDJ"] = pd.notnull(chain_check["VDJ"]) & (
+        pd.isnull(chain_check["VJ"])
+    )
+    chain_check["Orphan VJ"] = pd.notnull(chain_check["VJ"]) & (
+        pd.isnull(chain_check["VDJ"])
+    )
+    chain_check["All VDJ"] = pd.notnull(chain_check["VDJ"])
+    chain_check["All VJ"] = pd.notnull(chain_check["VJ"])
+    chain_check["VDJ"] = (
+        (~chain_check["Orphan VDJ"])
+        & (~chain_check["Orphan VJ"])
+        & (pd.notnull(chain_check["VDJ"]))
+    )
+    chain_check["VJ"] = (
+        (~chain_check["Orphan VDJ"])
+        & (~chain_check["Orphan VJ"])
+        & (pd.notnull(chain_check["VJ"]))
+    )
+    return chain_check
