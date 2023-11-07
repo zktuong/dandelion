@@ -112,6 +112,7 @@ def find_clones(
             if dump.shape[0] > 0:
                 dat = dat[~(dat["cell_id"].isin(dump["cell_id"]))].copy()
         dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
+        # if (dat_vdj.shape[0] == 0) and (dat_vj.shape[0] == 0):
         if dat_vdj.shape[0] == 0:
             locuses.remove(locus)
 
@@ -138,13 +139,17 @@ def find_clones(
             dat_vj = dat[dat["locus"].isin(locus_2)].copy()
             dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
 
-            if dat_vj.shape[0] > 0:
-                dump = dat_vj[
-                    ~(dat_vj["cell_id"].isin(dat_vdj["cell_id"]))
-                ].copy()
-                if dump.shape[0] > 0:
-                    dat = dat[~(dat["cell_id"].isin(dump["cell_id"]))].copy()
-            dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
+            # if dat_vj.shape[0] > 0:
+            #     dump = dat_vj[
+            #         ~(dat_vj["cell_id"].isin(dat_vdj["cell_id"]))
+            #     ].copy()
+            #     if dump.shape[0] > 0:
+            #         dat = dat[~(dat["cell_id"].isin(dump["cell_id"]))].copy()
+            # dat_vdj = dat[dat["locus"].isin(locus_1)].copy()
+            # if dat_vj.shape[0] > 0:
+            #     orphan_vj = dat_vj[
+            #         ~(dat_vj["cell_id"].isin(dat_vdj["cell_id"]))
+            #     ].copy()
             if dat_vdj.shape[0] > 0:
                 vj_len_grp, seq_grp = group_sequences(
                     dat_vdj,
@@ -157,7 +162,7 @@ def find_clones(
                     clonotype_vj_len_group=vj_len_grp,
                     clonotype_sequence_group=seq_grp,
                     identity=identity_,
-                    locus=locusx,
+                    locus=locus_log[locusx],
                     chain="VDJ",
                     verbose=verbose,
                 )
@@ -181,9 +186,9 @@ def find_clones(
                         clonotype_vj_len_group=vj_len_lightgrp,
                         clonotype_sequence_group=seq_lightgrp,
                         identity=identity_,
-                        locus=locusx,
+                        locus=locus_log[locusx],
                         chain="VJ",
-                        verbose=verbose,
+                        verbose=not verbose,
                     )
                     clone_dict_light = rename_clonotype_ids(
                         clonotype_groups=cid_light,
@@ -197,32 +202,31 @@ def find_clones(
                         verbose=verbose,
                     )
                 dat_[clone_key].update(pd.Series(dat[clone_key]))
-            elif dat_vj.shape[0] > 0:
-                vj_len_grp, seq_grp = group_sequences(
-                    dat_vj,
-                    junction_key=key_,
-                    recalculate_length=recalculate_length,
-                    by_alleles=by_alleles,
-                    locus=locusx,
-                )
-                cid = group_pairwise_hamming_distance(
-                    clonotype_vj_len_group=vj_len_grp,
-                    clonotype_sequence_group=seq_grp,
-                    identity=identity_,
-                    locus=locusx,
-                    chain="VJ",
-                    verbose=verbose,
-                )
-                clone_dict = rename_clonotype_ids(
-                    clonotype_groups=cid,
-                    cell_type=locus_log[locusx] + "_",
-                )
-                for k, v in clone_dict:
-                    clone_dict[k] = v + "_orphan_VJ"
-                # add it to the original dataframes
-                dat_vj[clone_key] = pd.Series(clone_dict)
-                dat[clone_key].update(pd.Series(dat_vj[clone_key]))
-                dat_[clone_key].update(pd.Series(dat[clone_key]))
+            # if orphan_vj.shape[0] > 0:
+            #     vj_len_grp, seq_grp = group_sequences(
+            #         orphan_vj,
+            #         junction_key=key_,
+            #         recalculate_length=recalculate_length,
+            #         by_alleles=by_alleles,
+            #         locus=locusx,
+            #     )
+            #     cid = group_pairwise_hamming_distance(
+            #         clonotype_vj_len_group=vj_len_grp,
+            #         clonotype_sequence_group=seq_grp,
+            #         identity=identity_,
+            #         locus=locus_log[locusx],
+            #         chain="orphan VJ",
+            #         verbose=verbose,
+            #     )
+            #     clone_dict = rename_clonotype_ids(
+            #         clonotype_groups=cid,
+            #         cell_type=locus_log[locusx],
+            #         prefix="_Orphan_VJ_",
+            #     )
+            #     # add it to the original dataframes
+            #     orphan_vj[clone_key] = pd.Series(clone_dict)
+            #     dat[clone_key].update(pd.Series(orphan_vj[clone_key]))
+            #     dat_[clone_key].update(pd.Series(dat[clone_key]))
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
         data_path = Path(vdj_data)
@@ -1818,7 +1822,7 @@ def group_pairwise_hamming_distance(
                 reverse=True,
             )
             for x in range(0, len(clones_tmp)):
-                clones[g][l][x + 1] = clones_tmp
+                clones[g][l][x + 1] = clones_tmp[x]
     # now to retrieve the contig ids that are grouped together
     cid = Tree()
     for g in clones:
@@ -1833,7 +1837,12 @@ def group_pairwise_hamming_distance(
     return cid
 
 
-def rename_clonotype_ids(clonotype_groups: Tree, cell_type: str = ""):
+def rename_clonotype_ids(
+    clonotype_groups: Tree,
+    cell_type: str = "",
+    suffix: str = "",
+    prefix: str = "",
+):
     """
     Renames clonotype IDs to numerical barcode system.
 
@@ -1843,7 +1852,10 @@ def rename_clonotype_ids(clonotype_groups: Tree, cell_type: str = ""):
         A nested dictionary that containing clonotype groups of contigs.
     cell_type : str, optional
         Cell type name to append to front, if necessary.
-
+    suffix : str, optional
+        Suffix to append to the end of the clonotype ID.
+    prefix : str, optional
+        Prefix to append to the beginning of the clonotype ID.
     Returns
     -------
     clone_dict : dict
@@ -1873,11 +1885,13 @@ def rename_clonotype_ids(clonotype_groups: Tree, cell_type: str = ""):
                         break
                     clone_dict[v] = (
                         cell_type
+                        + prefix
                         + str(first_key_dict[g])
                         + "_"
                         + str(second_key_dict[l])
                         + "_"
                         + str(third_key_dict[key])
+                        + suffix
                     )
 
     return clone_dict
@@ -1961,7 +1975,7 @@ def refine_clone_assignment(
                         fintree[c].append(cl + "_" + "".join(suffix))
                     else:
                         fintree[c].append(cl)
-                else:
-                    fintree[c].append("_Orphan_VDJ")
+                    #     if cl.count("_") == 3:
+                    #         cl = cl + "_Orphan_VDJ"
         fintree[c] = "|".join(fintree[c])
     dat[clone_key] = [fintree[x] for x in dat["cell_id"]]
