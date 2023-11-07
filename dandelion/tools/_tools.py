@@ -1908,6 +1908,10 @@ def refine_clone_assignment(
                     fintree[c].append(cl)
         fintree[c] = "|".join(fintree[c])
     dat[clone_key] = [fintree[x] for x in dat["cell_id"]]
+    for i, r in dat.iterrows():  # is this going to be slow...?
+        if not present(r["clone_id"]):
+            if i in clone_dict_vj:
+                dat.at[i, "clone_id"] = clone_dict_vj[i]
 
 
 def check_chains(dat_vdj: pd.DataFrame, dat_vj: pd.DataFrame) -> pd.DataFrame:
