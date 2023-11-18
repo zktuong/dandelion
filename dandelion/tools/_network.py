@@ -214,7 +214,7 @@ def generate_network(
                     tmp_dmatx1 = tmp_dmat.drop(dup_indices)
                     tmp_dmatx2 = tmp_dmat.loc[dup_indices]
                     tmp_dmatx2 = tmp_dmatx2.groupby("indices").apply(
-                        sum, axis=0
+                        np.sum, axis=0
                     )
                     dmat[x] = pd.concat([tmp_dmatx1, tmp_dmatx2])
                 dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)

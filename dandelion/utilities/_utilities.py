@@ -12,6 +12,9 @@ from pathlib import Path
 from subprocess import run
 from typing import Tuple, Union, Optional, TypeVar, List, Dict
 
+# help silence the dtype warning?
+warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
+
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
 TRUES = ["T", "True", "true", "TRUE", True]
@@ -510,9 +513,9 @@ def validate_airr(data):
         for c in list(set(int_columns + str_columns + bool_columns))
         if c in tmp
     ]
-    if len(columns) > 0:
-        for c in columns:
-            tmp[c].fillna("", inplace=True)
+    # if len(columns) > 0:
+    # for c in columns:
+    # tmp[c].fillna("", inplace=True)
     for _, row in tmp.iterrows():
         contig = Contig(row).contig
         for required in [
@@ -626,10 +629,16 @@ class Contig:
         if mapper is not None:
             mapper.update({k: k for k in contig.keys() if k not in mapper})
             self._contig = ContigDict(
-                {mapper[key]: vals for (key, vals) in contig.items()}
+                {
+                    mapper[key]: vals if ~np.isnan(vals) else ""
+                    for (key, vals) in contig.items()
+                }
             )
         else:
             self._contig = ContigDict(contig)
+        for key, value in self._contig.items():
+            if isinstance(value, float) and np.isnan(value):
+                self._contig[key] = ""
 
     @property
     def contig(self):
