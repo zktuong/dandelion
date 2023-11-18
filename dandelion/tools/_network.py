@@ -126,7 +126,6 @@ def generate_network(
             )
 
         # calculate distance
-
         if downsample is not None:
             # if downsample >= dat_h.shape[0]:
             if downsample >= vdj_data.metadata.shape[0]:
@@ -293,9 +292,9 @@ def generate_network(
                     if s1 > 1 and s2 > 1:
                         cluster_dist[c_] = dist_mat_
 
-            # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for
+            # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
             # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist)
+            mst_tree = mst(cluster_dist, verbose=verbose)
 
             edge_list = Tree()
             for c in tqdm(
@@ -461,8 +460,11 @@ def generate_network(
             # del tmp_totaldiststack
             del tmp_totaldist
             del tmp_edge_list
+            # remove vertices if the out.metadata.clone_id == "None"
+            vertice_list = list(
+                out.metadata[out.metadata[clonekey] != "None"].index
+            )
 
-            vertice_list = list(out.metadata.index)
         else:
             edge_list_final = None
             vertice_list = list(df.index)
@@ -555,7 +557,7 @@ def generate_network(
         return out
 
 
-def mst(mat: dict) -> Tree:
+def mst(mat: dict, verbose: bool) -> Tree:
     """
     Construct minimum spanning tree based on supplied matrix in dictionary.
 
@@ -563,6 +565,8 @@ def mst(mat: dict) -> Tree:
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
+    verbose : bool
+        Whether or not to show logging information.
 
     Returns
     -------
@@ -570,7 +574,12 @@ def mst(mat: dict) -> Tree:
         Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
-    for c in mat:
+    for c in tqdm(
+        mat,
+        desc="Calculating minimum spanning tree ",
+        disable=not verbose,
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         tmp = mat[c] + 1
         tmp[np.isnan(tmp)] = 0
         G = nx.from_pandas_adjacency(tmp)
