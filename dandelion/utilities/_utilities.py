@@ -629,10 +629,7 @@ class Contig:
         if mapper is not None:
             mapper.update({k: k for k in contig.keys() if k not in mapper})
             self._contig = ContigDict(
-                {
-                    mapper[key]: vals if ~np.isnan(vals) else ""
-                    for (key, vals) in contig.items()
-                }
+                {mapper[key]: vals for (key, vals) in contig.items()}
             )
         else:
             self._contig = ContigDict(contig)
