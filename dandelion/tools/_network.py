@@ -434,28 +434,20 @@ def generate_network(
             # try to catch situations where there's no edge (only singletons)
             try:
                 edge_listx = pd.concat([edge_list[x] for x in edge_list])
-                edge_listx.index = [
-                    str(s) + "|" + str(t)
-                    for s, t in zip(edge_listx["source"], edge_listx["target"])
-                ]
-
+                set_edge_list_index(edge_listx)
                 tmp_edge_listx = pd.concat(
                     [tmp_edge_list[x] for x in tmp_edge_list]
                 )
                 tmp_edge_listx.drop("index", axis=1, inplace=True)
-                tmp_edge_listx.index = [
-                    str(s) + "|" + str(t)
-                    for s, t in zip(
-                        tmp_edge_listx["source"], tmp_edge_listx["target"]
-                    )
-                ]
+                set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
+                tmp_totaldist_edge_list = adjacency_to_edge_list(tmp_totaldist)
+                set_edge_list_index(tmp_totaldist_edge_list)
                 # edge_list_final["weight"].update(tmp_totaldiststack["weight"])
-                for i, row in edge_list_final.iterrows():
-                    edge_list_final.at[i, "weight"] = tmp_totaldist.loc[
-                        row["source"], row["target"]
-                    ]
+                edge_list_final["weight"].update(
+                    tmp_totaldist_edge_list["weight"]
+                )
                 # return the edge list
                 edge_list_final.reset_index(drop=True, inplace=True)
             except:
@@ -622,23 +614,56 @@ def create_networkx_graph(
     nodes = list(adjacency.index)
     G.add_nodes_from(nodes)
     # convert adjacency matrix to edge list
-    adjacency = (
-        adjacency.rename_axis("Source")
-        .reset_index()
-        .melt("Source", value_name="Weight", var_name="Target")
-        .query("Source != Target")
-        .reset_index(drop=True)
-    )
+    edge_list = adjacency_to_edge_list(adjacency)
     # Split the edges into chunks (adjust chunk size as needed)
     edge_chunks = [
         edges.tolist()
         for edges in np.array_split(
-            adjacency.values, len(adjacency) // chunk_size + 1
+            edge_list.values, len(edge_list) // chunk_size + 1
         )
     ]
     for chunk in edge_chunks:
         add_edges_chunk(G=G, chunk=chunk)
     return G
+
+
+def set_edge_list_index(edge_list: pd.DataFrame):
+    """
+    Set the index of the edge list in-place.
+
+    Parameters
+    ----------
+    edge_list : pd.DataFrame
+        Edge list.
+    """
+    edge_list.index = [
+        str(s) + "|" + str(t)
+        for s, t in zip(edge_list["source"], edge_list["target"])
+    ]
+
+
+def adjacency_to_edge_list(adjacency: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert adjacency matrix to edge list that excludes self-loops.
+
+    Parameters
+    ----------
+    adjacency : pd.DataFrame
+        Adjacency matrix.
+
+    Returns
+    -------
+    pd.DataFrame
+        Edge list.
+    """
+    edge_list = (
+        adjacency.rename_axis("source")
+        .reset_index()
+        .melt("source", value_name="weight", var_name="target")
+        .query("source != target")
+        .reset_index(drop=True)
+    )
+    return edge_list
 
 
 def add_edges_chunk(G: nx.Graph, chunk: int = 1000):
