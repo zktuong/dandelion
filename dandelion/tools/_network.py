@@ -401,6 +401,10 @@ def generate_network(
             #     "keep", axis=1
             # )
 
+            # convert tmp_totaldist to edge list and rename the index
+            tmp_totaldist_edge_list = adjacency_to_edge_list(tmp_totaldist)
+            set_edge_list_index(tmp_totaldist_edge_list)
+
             tmp_edge_list = Tree()
             for c in tqdm(
                 tmp_clone_tree3,
@@ -413,17 +417,15 @@ def generate_network(
                         tmp_clone_tree3[c], chunk_size=chunk_size
                     )
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-                    tmp_edge_list[c].index = [
-                        str(s) + "|" + str(t)
-                        for s, t in zip(
-                            tmp_edge_list[c]["source"],
-                            tmp_edge_list[c]["target"],
-                        )
-                    ]
-                    for i, row in tmp_edge_list[c].iterrows():
-                        tmp_edge_list[c].at[i, "weight"] = tmp_totaldist.loc[
-                            row["source"], row["target"]
-                        ]
+                    set_edge_list_index(tmp_edge_list[c])
+
+                    tmp_edge_list[c]["weight"].update(
+                        tmp_totaldist_edge_list["weight"]
+                    )
+                    # for i, row in tmp_edge_list[c].iterrows():
+                    #     tmp_edge_list[c].at[i, "weight"] = tmp_totaldist.loc[
+                    #         row["source"], row["target"]
+                    #     ]
                     # tmp_edge_list[c]["weight"].update(tmp_totaldiststack["weight"])
                     # keep only edges when there is 100% identity, to minimise crowding
                     tmp_edge_list[c] = tmp_edge_list[c][
@@ -442,8 +444,6 @@ def generate_network(
                 set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                tmp_totaldist_edge_list = adjacency_to_edge_list(tmp_totaldist)
-                set_edge_list_index(tmp_totaldist_edge_list)
                 # edge_list_final["weight"].update(tmp_totaldiststack["weight"])
                 edge_list_final["weight"].update(
                     tmp_totaldist_edge_list["weight"]
