@@ -409,7 +409,9 @@ def generate_network(
                 bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             ):
                 if len(tmp_clone_tree3[c]) > 1:
-                    G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
+                    G = create_networkx_graph(
+                        tmp_clone_tree3[c], chunk_size=chunk_size
+                    )
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                     tmp_edge_list[c].index = [
                         str(s) + "|" + str(t)
@@ -592,27 +594,51 @@ def mst(
         tmp = mat[c] + 1
         tmp[np.isnan(tmp)] = 0
         # Create a graph object
-        G = nx.Graph()
-        # add nodes
-        nodes = list(tmp.index)
-        G.add_nodes_from(nodes)
-        # convert adjacency matrix to edge list
-        tmp = (
-            tmp.rename_axis("Source")
-            .reset_index()
-            .melt("Source", value_name="Weight", var_name="Target")
-            .query("Source != Target")
-            .reset_index(drop=True)
-        )
-        # Split the edges into chunks (adjust chunk size as needed)
-        edge_chunks = [
-            edges.tolist()
-            for edges in np.array_split(tmp.values, len(tmp) // chunk_size + 1)
-        ]
-        for chunk in edge_chunks:
-            add_edges_chunk(G=G, chunk=chunk)
+        G = create_networkx_graph(tmp, chunk_size=chunk_size)
         mst_tree[c] = nx.minimum_spanning_tree(G)
     return mst_tree
+
+
+def create_networkx_graph(
+    adjacency: pd.DataFrame, chunk_size: int = 1000
+) -> nx.Graph:
+    """
+    Create a networkx graph from an adjacency matrix in chunks.
+
+    Parameters
+    ----------
+    adjacency : pd.DataFrame
+        Adjacency matrix.
+    chunk_size : int, optional
+        Chunk size for processing, by default 1000
+
+    Returns
+    -------
+    nx.Graph
+        NetworkX graph.
+    """
+    G = nx.Graph()
+    # add nodes
+    nodes = list(adjacency.index)
+    G.add_nodes_from(nodes)
+    # convert adjacency matrix to edge list
+    adjacency = (
+        adjacency.rename_axis("Source")
+        .reset_index()
+        .melt("Source", value_name="Weight", var_name="Target")
+        .query("Source != Target")
+        .reset_index(drop=True)
+    )
+    # Split the edges into chunks (adjust chunk size as needed)
+    edge_chunks = [
+        edges.tolist()
+        for edges in np.array_split(
+            adjacency.values, len(adjacency) // chunk_size + 1
+        )
+    ]
+    for chunk in edge_chunks:
+        add_edges_chunk(G=G, chunk=chunk)
+    return G
 
 
 def add_edges_chunk(G: nx.Graph, chunk: int = 1000):
