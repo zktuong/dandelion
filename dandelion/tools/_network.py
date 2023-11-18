@@ -30,6 +30,7 @@ def generate_network(
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
+    chunk_size: int = 1000,
     **kwargs,
 ) -> Dandelion:
     """
@@ -64,6 +65,8 @@ def generate_network(
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
         whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
+    chunk_size : int, optional
+        chunk size for adding edges to graphs for minimum spanning tree step.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -294,7 +297,7 @@ def generate_network(
 
             # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
             # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist, verbose=verbose)
+            mst_tree = mst(cluster_dist, chunk_size=chunk_size, verbose=verbose)
 
             edge_list = Tree()
             for c in tqdm(
@@ -557,7 +560,11 @@ def generate_network(
         return out
 
 
-def mst(mat: dict, verbose: bool) -> Tree:
+def mst(
+    mat: dict,
+    chunk_size: int = 1000,
+    verbose: bool = True,
+) -> Tree:
     """
     Construct minimum spanning tree based on supplied matrix in dictionary.
 
@@ -565,7 +572,9 @@ def mst(mat: dict, verbose: bool) -> Tree:
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
-    verbose : bool
+    chunk_size : int, optional
+        Chunk size for processing.
+    verbose : bool, optional
         Whether or not to show logging information.
 
     Returns
@@ -582,9 +591,42 @@ def mst(mat: dict, verbose: bool) -> Tree:
     ):
         tmp = mat[c] + 1
         tmp[np.isnan(tmp)] = 0
-        G = nx.from_pandas_adjacency(tmp)
+        # Create a graph object
+        G = nx.Graph()
+        # add nodes
+        nodes = list(tmp.index)
+        G.add_nodes_from(nodes)
+        # convert adjacency matrix to edge list
+        tmp = (
+            tmp.rename_axis("Source")
+            .reset_index()
+            .melt("Source", value_name="Weight", var_name="Target")
+            .query("Source != Target")
+            .reset_index(drop=True)
+        )
+        # Split the edges into chunks (adjust chunk size as needed)
+        edge_chunks = [
+            edges.tolist()
+            for edges in np.array_split(tmp.values, len(tmp) // chunk_size + 1)
+        ]
+        for chunk in edge_chunks:
+            add_edges_chunk(G=G, chunk=chunk)
         mst_tree[c] = nx.minimum_spanning_tree(G)
     return mst_tree
+
+
+def add_edges_chunk(G: nx.Graph, chunk: int = 1000):
+    """
+    Add edges to graph in chunks.
+
+    Parameters
+    ----------
+    G : nx.Graph
+        NetworkX graph.
+    chunk : int, optional
+        Chunk size for processing.
+    """
+    G.add_weighted_edges_from(ebunch_to_add=chunk)
 
 
 def clone_degree(
