@@ -5,6 +5,7 @@ import gzip
 import h5py
 import os
 import re
+import sys
 import warnings
 
 import _pickle as cPickle
@@ -1127,7 +1128,7 @@ class Dandelion:
         if self.metadata is not None:
             metadata = self.metadata.copy()
             for col in metadata.columns:
-                if sys.version[2] == "8":
+                if sys.version_info < (3, 9),:
                     weird = (
                         metadata[[col]].applymap(type)
                         != metadata[[col]].iloc[0].apply(type)
