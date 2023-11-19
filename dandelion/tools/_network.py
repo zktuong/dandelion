@@ -414,7 +414,9 @@ def generate_network(
             ):
                 if len(tmp_clone_tree3[c]) > 1:
                     G = create_networkx_graph(
-                        tmp_clone_tree3[c], chunk_size=chunk_size
+                        tmp_clone_tree3[c],
+                        drop_zero=False,
+                        chunk_size=chunk_size,
                     )
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                     set_edge_list_index(tmp_edge_list[c])
@@ -586,13 +588,13 @@ def mst(
         tmp = mat[c] + 1
         tmp[np.isnan(tmp)] = 0
         # Create a graph object
-        G = create_networkx_graph(tmp, chunk_size=chunk_size)
+        G = create_networkx_graph(tmp, drop_zero=True, chunk_size=chunk_size)
         mst_tree[c] = nx.minimum_spanning_tree(G)
     return mst_tree
 
 
 def create_networkx_graph(
-    adjacency: pd.DataFrame, chunk_size: int = 1000
+    adjacency: pd.DataFrame, drop_zero: bool = False, chunk_size: int = 1000
 ) -> nx.Graph:
     """
     Create a networkx graph from an adjacency matrix in chunks.
@@ -601,6 +603,8 @@ def create_networkx_graph(
     ----------
     adjacency : pd.DataFrame
         Adjacency matrix.
+    drop_zero : bool, optional
+        Whether or not to drop edges with zero weight, by default False.
     chunk_size : int, optional
         Chunk size for processing, by default 1000
 
@@ -614,7 +618,7 @@ def create_networkx_graph(
     nodes = list(adjacency.index)
     G.add_nodes_from(nodes)
     # convert adjacency matrix to edge list
-    edge_list = adjacency_to_edge_list(adjacency)
+    edge_list = adjacency_to_edge_list(adjacency, drop_zero=drop_zero)
     # Split the edges into chunks (adjust chunk size as needed)
     edge_chunks = [
         edges.tolist()
@@ -642,7 +646,9 @@ def set_edge_list_index(edge_list: pd.DataFrame):
     ]
 
 
-def adjacency_to_edge_list(adjacency: pd.DataFrame) -> pd.DataFrame:
+def adjacency_to_edge_list(
+    adjacency: pd.DataFrame, drop_zero: bool = False
+) -> pd.DataFrame:
     """
     Convert adjacency matrix to edge list that excludes self-loops.
 
@@ -650,6 +656,8 @@ def adjacency_to_edge_list(adjacency: pd.DataFrame) -> pd.DataFrame:
     ----------
     adjacency : pd.DataFrame
         Adjacency matrix.
+    drop_zero : bool, optional
+        Whether or not to drop edges with zero weight, by default False.
 
     Returns
     -------
@@ -663,6 +671,9 @@ def adjacency_to_edge_list(adjacency: pd.DataFrame) -> pd.DataFrame:
         .query("source != target")
         .reset_index(drop=True)
     )
+    if drop_zero:
+        edge_list = edge_list[edge_list["weight"] != 0]
+
     return edge_list
 
 
