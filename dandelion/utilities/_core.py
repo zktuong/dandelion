@@ -1128,20 +1128,24 @@ class Dandelion:
         if self.metadata is not None:
             metadata = self.metadata.copy()
             for col in metadata.columns:
-                if sys.version_info < (3, 9),:
+                if sys.version_info < (3, 9):
                     weird = (
                         metadata[[col]].applymap(type)
                         != metadata[[col]].iloc[0].apply(type)
                     ).any(axis=1)
+                    if len(metadata[weird]) > 0:
+                        metadata[col] = metadata[col].where(
+                            pd.notnull(metadata[col]), ""
+                        )
                 else:
                     weird = (
                         metadata[[col]].map(type)
                         != metadata[[col]].iloc[0].apply(type)
                     ).any(axis=1)
-                if len(metadata[weird]) > 0:
-                    metadata[col] = metadata[col].where(
-                        pd.notnull(metadata[col]), ""
-                    )
+                    if len(metadata[weird]) > 0:
+                        metadata[col] = metadata[col].where(
+                            pd.notnull(metadata[col]), ""
+                        )
             metadata.to_hdf(
                 filename,
                 "metadata",
