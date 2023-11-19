@@ -415,7 +415,7 @@ def generate_network(
                 if len(tmp_clone_tree3[c]) > 1:
                     G = create_networkx_graph(
                         tmp_clone_tree3[c],
-                        drop_zero=False,
+                        drop_zero=True,
                         chunk_size=chunk_size,
                     )
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
