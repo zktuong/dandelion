@@ -1127,10 +1127,16 @@ class Dandelion:
         if self.metadata is not None:
             metadata = self.metadata.copy()
             for col in metadata.columns:
-                weird = (
-                    metadata[[col]].map(type)
-                    != metadata[[col]].iloc[0].apply(type)
-                ).any(axis=1)
+                if sys.version[2] == "8":
+                    weird = (
+                        metadata[[col]].applymap(type)
+                        != metadata[[col]].iloc[0].apply(type)
+                    ).any(axis=1)
+                else:
+                    weird = (
+                        metadata[[col]].map(type)
+                        != metadata[[col]].iloc[0].apply(type)
+                    ).any(axis=1)
                 if len(metadata[weird]) > 0:
                     metadata[col] = metadata[col].where(
                         pd.notnull(metadata[col]), ""
