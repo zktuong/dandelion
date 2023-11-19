@@ -1128,7 +1128,7 @@ class Dandelion:
             metadata = self.metadata.copy()
             for col in metadata.columns:
                 weird = (
-                    metadata[[col]].applymap(type)
+                    metadata[[col]].map(type)
                     != metadata[[col]].iloc[0].apply(type)
                 ).any(axis=1)
                 if len(metadata[weird]) > 0:
