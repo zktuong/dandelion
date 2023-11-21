@@ -30,7 +30,6 @@ def generate_network(
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
-    chunk_size: int = 1000,
     **kwargs,
 ) -> Dandelion:
     """
@@ -65,8 +64,6 @@ def generate_network(
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
         whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
-    chunk_size : int, optional
-        chunk size for adding edges to graphs for minimum spanning tree step.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -297,7 +294,7 @@ def generate_network(
 
             # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
             # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist, chunk_size=chunk_size, verbose=verbose)
+            mst_tree = mst(cluster_dist, verbose=verbose)
 
             edge_list = Tree()
             for c in tqdm(
@@ -402,8 +399,9 @@ def generate_network(
             # )
 
             # convert tmp_totaldist to edge list and rename the index
-            tmp_totaldist_edge_list = adjacency_to_edge_list(tmp_totaldist)
-            set_edge_list_index(tmp_totaldist_edge_list)
+            tmp_totaldist_edge_list = adjacency_to_edge_list(
+                tmp_totaldist, rename_index=True
+            )
 
             tmp_edge_list = Tree()
             for c in tqdm(
@@ -416,7 +414,6 @@ def generate_network(
                     G = create_networkx_graph(
                         tmp_clone_tree3[c],
                         drop_zero=True,
-                        chunk_size=chunk_size,
                     )
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                     set_edge_list_index(tmp_edge_list[c])
@@ -558,7 +555,6 @@ def generate_network(
 
 def mst(
     mat: dict,
-    chunk_size: int = 1000,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -568,8 +564,6 @@ def mst(
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
-    chunk_size : int, optional
-        Chunk size for processing.
     verbose : bool, optional
         Whether or not to show logging information.
 
@@ -588,13 +582,13 @@ def mst(
         tmp = mat[c] + 1
         tmp[np.isnan(tmp)] = 0
         # Create a graph object
-        G = create_networkx_graph(tmp, drop_zero=True, chunk_size=chunk_size)
+        G = create_networkx_graph(tmp, drop_zero=True)
         mst_tree[c] = nx.minimum_spanning_tree(G)
     return mst_tree
 
 
 def create_networkx_graph(
-    adjacency: pd.DataFrame, drop_zero: bool = False, chunk_size: int = 1000
+    adjacency: pd.DataFrame, drop_zero: bool = True
 ) -> nx.Graph:
     """
     Create a networkx graph from an adjacency matrix in chunks.
@@ -604,9 +598,7 @@ def create_networkx_graph(
     adjacency : pd.DataFrame
         Adjacency matrix.
     drop_zero : bool, optional
-        Whether or not to drop edges with zero weight, by default False.
-    chunk_size : int, optional
-        Chunk size for processing, by default 1000
+        Whether or not to drop edges with zero weight, by default True.
 
     Returns
     -------
@@ -619,15 +611,7 @@ def create_networkx_graph(
     G.add_nodes_from(nodes)
     # convert adjacency matrix to edge list
     edge_list = adjacency_to_edge_list(adjacency, drop_zero=drop_zero)
-    # Split the edges into chunks (adjust chunk size as needed)
-    edge_chunks = [
-        edges.tolist()
-        for edges in np.array_split(
-            edge_list.values, len(edge_list) // chunk_size + 1
-        )
-    ]
-    for chunk in edge_chunks:
-        add_edges_chunk(G=G, chunk=chunk)
+    G.add_weighted_edges_from(ebunch_to_add=edge_list.values)
     return G
 
 
@@ -647,7 +631,7 @@ def set_edge_list_index(edge_list: pd.DataFrame):
 
 
 def adjacency_to_edge_list(
-    adjacency: pd.DataFrame, drop_zero: bool = False
+    adjacency: pd.DataFrame, drop_zero: bool = False, rename_index: bool = False
 ) -> pd.DataFrame:
     """
     Convert adjacency matrix to edge list that excludes self-loops.
@@ -658,6 +642,8 @@ def adjacency_to_edge_list(
         Adjacency matrix.
     drop_zero : bool, optional
         Whether or not to drop edges with zero weight, by default False.
+    rename_index : bool, optional
+        Whether or not to rename the index, by default False.
 
     Returns
     -------
@@ -671,24 +657,12 @@ def adjacency_to_edge_list(
         .query("source != target")
         .reset_index(drop=True)
     )
+    if rename_index:
+        set_edge_list_index(edge_list)
     if drop_zero:
         edge_list = edge_list[edge_list["weight"] != 0]
 
     return edge_list
-
-
-def add_edges_chunk(G: nx.Graph, chunk: int = 1000):
-    """
-    Add edges to graph in chunks.
-
-    Parameters
-    ----------
-    G : nx.Graph
-        NetworkX graph.
-    chunk : int, optional
-        Chunk size for processing.
-    """
-    G.add_weighted_edges_from(ebunch_to_add=chunk)
 
 
 def clone_degree(
