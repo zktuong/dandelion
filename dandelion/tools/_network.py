@@ -383,7 +383,7 @@ def generate_network(
                 tmp_totaldist, rename_index=True
             )
             mask = tmp_totaldiststack.apply(
-                lambda x: len(set(x["index"].split("|"))) > 1, axis=1
+                lambda x: len(set(x.name.split("|"))) > 1, axis=1
             )
             tmp_totaldiststack = tmp_totaldiststack[mask].reset_index(drop=True)
 
