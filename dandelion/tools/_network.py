@@ -378,31 +378,24 @@ def generate_network(
             # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully
             # link them up if they were identical but clipped off during the mst step
 
-            # # create a data frame to recall the actual distance quickly
-            # tmp_totaldiststack = tmp_totaldist.stack().reset_index()
+            # create a data frame to recall the actual distance quickly
+            tmp_totaldiststack = adjacency_to_edge_list(
+                tmp_totaldist, rename_index=True
+            )
+            mask = tmp_totaldiststack.apply(
+                lambda x: len(set(x["index"].split("|"))) > 1, axis=1
+            )
+            tmp_totaldiststack = tmp_totaldiststack[mask].reset_index(drop=True)
 
-            # # free up memory
-            # del tmp_totaldist
-            # tmp_totaldiststack.columns = ["source", "target", "weight"]
-            # tmp_totaldiststack.index = [
-            #     str(s) + "|" + str(t)
-            #     for s, t in zip(
-            #         tmp_totaldiststack["source"], tmp_totaldiststack["target"]
-            #     )
-            # ]
             # tmp_totaldiststack["keep"] = [
             #     False if len(list(set(i.split("|")))) == 1 else True
             #     for i in tmp_totaldiststack.index
             # ]
-            # tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop(
-            #     "keep", axis=1
-            # )
+            # tmp_totaldiststack = tmp_totaldiststack[
+            #     tmp_totaldiststack.keep
+            # ].drop("keep", axis=1)
 
             # convert tmp_totaldist to edge list and rename the index
-            tmp_totaldist_edge_list = adjacency_to_edge_list(
-                tmp_totaldist, rename_index=True
-            )
-
             tmp_edge_list = Tree()
             for c in tqdm(
                 tmp_clone_tree3,
@@ -419,7 +412,7 @@ def generate_network(
                     set_edge_list_index(tmp_edge_list[c])
 
                     tmp_edge_list[c]["weight"].update(
-                        tmp_totaldist_edge_list["weight"]
+                        tmp_totaldiststack["weight"]
                     )
                     # for i, row in tmp_edge_list[c].iterrows():
                     #     tmp_edge_list[c].at[i, "weight"] = tmp_totaldist.loc[
@@ -443,10 +436,7 @@ def generate_network(
                 set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                # edge_list_final["weight"].update(tmp_totaldiststack["weight"])
-                edge_list_final["weight"].update(
-                    tmp_totaldist_edge_list["weight"]
-                )
+                edge_list_final["weight"].update(tmp_totaldiststack["weight"])
                 # return the edge list
                 edge_list_final.reset_index(drop=True, inplace=True)
             except:
@@ -651,9 +641,9 @@ def adjacency_to_edge_list(
         Edge list.
     """
     edge_list = (
-        adjacency.rename_axis("source")
+        adjacency.stack()
         .reset_index()
-        .melt("source", value_name="weight", var_name="target")
+        .rename(columns={"level_0": "target", "level_1": "source", 0: "weight"})
         .query("source != target")
         .reset_index(drop=True)
     )
