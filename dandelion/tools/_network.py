@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+import multiprocessing
+
 import networkx as nx
 import numpy as np
 import pandas as pd
 
+from joblib import Parallel, delayed
 from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
@@ -30,6 +33,7 @@ def generate_network(
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
+    num_cores: int = 1,
     **kwargs,
 ) -> Dandelion:
     """
@@ -64,6 +68,8 @@ def generate_network(
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
         whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
+    num_cores : int, optional
+        if more than 1, parallelise the minimum spanning tree calculation step.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -303,7 +309,7 @@ def generate_network(
 
             # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
             # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist, verbose=verbose)
+            mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
 
             edge_list = Tree()
             for c in tqdm(
@@ -550,6 +556,7 @@ def generate_network(
 
 def mst(
     mat: dict,
+    num_cores: Optional[int] = None,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -559,6 +566,8 @@ def mst(
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
+    num_cores: int, optional
+        Number of cores to run this step. Parallelise using joblib if more than 1.
     verbose : bool, optional
         Whether or not to show logging information.
 
@@ -568,18 +577,87 @@ def mst(
         Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
-    for c in tqdm(
-        mat,
-        desc="Calculating minimum spanning tree ",
-        disable=not verbose,
-        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-    ):
-        tmp = mat[c] + 1
-        tmp[np.isnan(tmp)] = 0
-        # Create a graph object
-        G = create_networkx_graph(tmp, drop_zero=True)
-        mst_tree[c] = nx.minimum_spanning_tree(G)
+
+    if num_cores == 1:
+        for c in tqdm(
+            mat,
+            desc="Calculating minimum spanning tree ",
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
+            _, mst_tree[c] = process_mst_per_clonotype(mat=mat, c=c)
+    else:
+        results = Parallel(n_jobs=num_cores, timeout=TIMEOUT)(
+            delayed(process_mst_per_clonotype)(mat, c)
+            for c in tqdm(
+                mat,
+                desc=f"Calculating minimum spanning tree, parallelized across {num_cores} cores ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            )
+        )
+        for result in results:
+            mst_tree[result[0]] = result[1]
     return mst_tree
+
+
+def process_mst_per_clonotype(
+    mat: Dict[str, pd.DataFrame], c: str
+) -> Tuple[str, nx.Graph]:
+    """
+    Function to calculate minimum spanning tree.
+
+    Parameters
+    ----------
+    mat : Dict[str, pd.DataFrame]
+        Dictionary holding distance matrices.
+    c : str
+        Name of clonotype.
+
+    Returns
+    -------
+    Tuple[str, nx.Graph]
+        Graph holding minimum spanning tree.
+    """
+    tmp = mat[c] + 1
+    tmp[np.isnan(tmp)] = 0
+    G = create_networkx_graph(tmp, drop_zero=True)
+    return c, nx.minimum_spanning_tree(G)
+
+
+def link_edges_per_clonotype(
+    clone_tree: Tree, c: str, full_edge_list: pd.DataFrame
+) -> Tuple[str, pd.DataFrame]:
+    """
+    Link edges after constructing the clonotype tree.
+
+    Parameters
+    ----------
+    clone_tree : Tree
+        Clonotype tree.
+    c : str
+        Name of clonotype.
+    full_edge_list: pd.DataFrame
+        Edge list containing all the weights.
+
+    Returns
+    -------
+    Tuple[str, pd.DataFrame]
+        Edge list after linking.
+    """
+    G = create_networkx_graph(
+        clone_tree[c],
+        drop_zero=True,
+    )
+    edge_list = nx.to_pandas_edgelist(G)
+    set_edge_list_index(edge_list)
+
+    edge_list["weight"].update(tmp_totaldiststack["weight"])
+    # keep only edges when there is 100% identity, to minimise crowding
+    edge_list = edge_list[edge_list["weight"] == 0]
+    edge_list.reset_index(inplace=True)
+
+    return c, edge_list
 
 
 def create_networkx_graph(

@@ -21,7 +21,7 @@ TRUES = ["T", "True", "true", "TRUE", True]
 FALSES = ["F", "False", "false", "FALSE", False]
 HEAVYLONG = ["IGH", "TRB", "TRD"]
 LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
-
+TIMEOUT = 99999
 # for compatibility with python>=3.10
 try:
     from collections.abc import Iterable
