@@ -587,7 +587,7 @@ def mst(
         ):
             _, mst_tree[c] = process_mst_per_clonotype(mat=mat, c=c)
     else:
-        results = Parallel(n_jobs=num_cores, timeout=TIMEOUT)(
+        results = Parallel(n_jobs=num_cores)(
             delayed(process_mst_per_clonotype)(mat, c)
             for c in tqdm(
                 mat,
