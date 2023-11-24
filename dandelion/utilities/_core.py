@@ -5,6 +5,7 @@ import gzip
 import h5py
 import os
 import re
+import sys
 import warnings
 
 import _pickle as cPickle
@@ -902,7 +903,7 @@ class Dandelion:
             cols.remove(c)
 
         if clonekey in self.data:
-            if not all(pd.isnull(self.data[clonekey])):
+            if not all_missing2(self.data[clonekey]):
                 cols = [clonekey] + cols
 
         metadata_status = self.metadata
@@ -1127,10 +1128,16 @@ class Dandelion:
         if self.metadata is not None:
             metadata = self.metadata.copy()
             for col in metadata.columns:
-                weird = (
-                    metadata[[col]].applymap(type)
-                    != metadata[[col]].iloc[0].apply(type)
-                ).any(axis=1)
+                if sys.version_info < (3, 9):
+                    weird = (
+                        metadata[[col]].applymap(type)
+                        != metadata[[col]].iloc[0].apply(type)
+                    ).any(axis=1)
+                else:
+                    weird = (
+                        metadata[[col]].map(type)
+                        != metadata[[col]].iloc[0].apply(type)
+                    ).any(axis=1)
                 if len(metadata[weird]) > 0:
                     metadata[col] = metadata[col].where(
                         pd.notnull(metadata[col]), ""
@@ -1941,7 +1948,6 @@ def initialize_metadata(
 
     if clonekey in init_dict:
         tmp_metadata[str(clonekey)].replace("", "None", inplace=True)
-
         clones = tmp_metadata[str(clonekey)].str.split("|", expand=False)
         tmpclones = []
         for i in clones:
@@ -2172,7 +2178,6 @@ def update_metadata(
     ] = "split and merge",
     collapse_alleles: bool = True,
     reinitialize: bool = True,
-    verbose: bool = False,
     by_celltype: bool = False,
 ):
     """
@@ -2215,8 +2220,6 @@ def update_metadata(
     reinitialize : bool, optional
         whether or not to reinitialize the current metadata.
         useful when updating older versions of `dandelion` to newer version.
-    verbose : bool, optional
-        whether to print progress.
     by_celltype : bool, optional
         whether to return the query/update by celltype.
 
@@ -2273,7 +2276,7 @@ def update_metadata(
         cols.remove(c)
 
     if clonekey in vdj_data.data:
-        if not all(pd.isnull(vdj_data.data[clonekey])):
+        if not all_missing2(vdj_data.data[clonekey]):
             cols = [clonekey] + cols
 
     metadata_status = vdj_data.metadata

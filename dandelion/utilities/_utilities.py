@@ -12,6 +12,9 @@ from pathlib import Path
 from subprocess import run
 from typing import Tuple, Union, Optional, TypeVar, List, Dict
 
+# help silence the dtype warning?
+warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
+
 NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
 TRUES = ["T", "True", "true", "TRUE", True]
@@ -510,9 +513,9 @@ def validate_airr(data):
         for c in list(set(int_columns + str_columns + bool_columns))
         if c in tmp
     ]
-    if len(columns) > 0:
-        for c in columns:
-            tmp[c].fillna("", inplace=True)
+    # if len(columns) > 0:
+    # for c in columns:
+    # tmp[c].fillna("", inplace=True)
     for _, row in tmp.iterrows():
         contig = Contig(row).contig
         for required in [
@@ -630,6 +633,9 @@ class Contig:
             )
         else:
             self._contig = ContigDict(contig)
+        for key, value in self._contig.items():
+            if isinstance(value, float) and np.isnan(value):
+                self._contig[key] = ""
 
     @property
     def contig(self):
@@ -1080,3 +1086,11 @@ def set_blast_env(
     if input_file is not None:
         input_file = Path(input_file)
     return env, bdb, input_file
+
+
+def sum_col(vals):
+    """Sum columns if not NaN."""
+    if all(pd.isnull(vals)):
+        return np.nan
+    else:
+        return sum(vals)

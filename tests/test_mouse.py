@@ -118,7 +118,7 @@ def test_generate_network(create_testfolder):
     with pytest.raises(ValueError):
         ddl.tl.generate_network(vdj, compute_layout=False)
     ddl.tl.find_clones(vdj)
-    ddl.tl.generate_network(vdj, layout_method="mod_fr")
+    ddl.tl.generate_network(vdj, layout_method="mod_fr", num_cores=2)
     # assert vdj.n_obs == 448
     assert vdj.layout is not None
     assert vdj.graph is not None

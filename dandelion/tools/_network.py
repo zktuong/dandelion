@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+import multiprocessing
+
 import networkx as nx
 import numpy as np
 import pandas as pd
 
+from joblib import Parallel, delayed
 from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
@@ -30,6 +33,7 @@ def generate_network(
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
+    num_cores: int = 1,
     **kwargs,
 ) -> Dandelion:
     """
@@ -64,6 +68,8 @@ def generate_network(
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
         whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
+    num_cores : int, optional
+        if more than 1, parallelise the minimum spanning tree calculation step.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -126,7 +132,6 @@ def generate_network(
             )
 
         # calculate distance
-
         if downsample is not None:
             # if downsample >= dat_h.shape[0]:
             if downsample >= vdj_data.metadata.shape[0]:
@@ -204,17 +209,26 @@ def generate_network(
                 dmat[x] = dmat[x].droplevel(level=0)
                 # give the index a name
                 dmat[x].index.name = "indices"
-                # convert all nan to zero
-                dmat[x] = dmat[x].fillna(0)
                 if any(dmat[x].index.duplicated()):
                     tmp_dmat = dmat[x]
                     dup_indices = dmat[x].index[dmat[x].index.duplicated()]
                     tmp_dmatx1 = tmp_dmat.drop(dup_indices)
                     tmp_dmatx2 = tmp_dmat.loc[dup_indices]
-                    tmp_dmatx2 = tmp_dmatx2.groupby("indices").apply(
-                        sum, axis=0
-                    )
+                    tmp_dmatx2 = tmp_dmatx2.groupby("indices").apply(sum_col)
                     dmat[x] = pd.concat([tmp_dmatx1, tmp_dmatx2])
+
+                # if any(dmat[x].index.duplicated()):
+                #     tmp_dmat = dmat[x].copy()
+                #     dup_indices = tmp_dmat.index[tmp_dmat.index.duplicated()]
+                #     tmp_dmatx = tmp_dmat.drop(dup_indices)
+                #     for di in list(set(dup_indices)):
+                #         _tmpdmat = tmp_dmat.loc[di]
+                #         _tmpdmat = _tmpdmat.apply(lambda r: sum_col(r), axis=0)
+                #         tmp_dmatx = pd.concat(
+                #             [tmp_dmatx, pd.DataFrame(_tmpdmat, columns=[di]).T]
+                #         )
+                #     dmat[x] = tmp_dmatx.copy()
+
                 dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
                 dmat[x] = dmat[x].values
 
@@ -293,9 +307,9 @@ def generate_network(
                     if s1 > 1 and s2 > 1:
                         cluster_dist[c_] = dist_mat_
 
-            # to improve the visulisation and plotting efficiency, i will build a minimum spanning tree for
+            # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
             # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist)
+            mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
 
             edge_list = Tree()
             for c in tqdm(
@@ -359,7 +373,12 @@ def generate_network(
                     tmp_.fillna(0, inplace=True)
                     tmp_clone_tree3[x] = tmp_
 
-            for x in tmp_clone_tree3_overlap:  # repeat for the overlap clones
+            for x in tqdm(
+                tmp_clone_tree3_overlap,
+                desc="Adjust overlap ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            ):  # repeat for the overlap clones
                 tmp_ = pd.DataFrame(
                     index=tmp_clone_tree3_overlap[x],
                     columns=tmp_clone_tree3_overlap[x],
@@ -379,26 +398,20 @@ def generate_network(
             # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully
             # link them up if they were identical but clipped off during the mst step
 
-            # # create a data frame to recall the actual distance quickly
-            # tmp_totaldiststack = tmp_totaldist.stack().reset_index()
+            # create a data frame to recall the actual distance quickly
+            tmp_totaldiststack = adjacency_to_edge_list(
+                tmp_totaldist, rename_index=True
+            )
 
-            # # free up memory
-            # del tmp_totaldist
-            # tmp_totaldiststack.columns = ["source", "target", "weight"]
-            # tmp_totaldiststack.index = [
-            #     str(s) + "|" + str(t)
-            #     for s, t in zip(
-            #         tmp_totaldiststack["source"], tmp_totaldiststack["target"]
-            #     )
-            # ]
-            # tmp_totaldiststack["keep"] = [
-            #     False if len(list(set(i.split("|")))) == 1 else True
-            #     for i in tmp_totaldiststack.index
-            # ]
-            # tmp_totaldiststack = tmp_totaldiststack[tmp_totaldiststack.keep].drop(
-            #     "keep", axis=1
-            # )
+            tmp_totaldiststack["keep"] = [
+                False if len(list(set(i.split("|")))) == 1 else True
+                for i in tmp_totaldiststack.index
+            ]
+            tmp_totaldiststack = tmp_totaldiststack[
+                tmp_totaldiststack.keep
+            ].drop("keep", axis=1)
 
+            # convert tmp_totaldist to edge list and rename the index
             tmp_edge_list = Tree()
             for c in tqdm(
                 tmp_clone_tree3,
@@ -407,20 +420,16 @@ def generate_network(
                 bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             ):
                 if len(tmp_clone_tree3[c]) > 1:
-                    G = nx.from_pandas_adjacency(tmp_clone_tree3[c])
+                    G = create_networkx_graph(
+                        tmp_clone_tree3[c],
+                        drop_zero=True,
+                    )
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-                    tmp_edge_list[c].index = [
-                        str(s) + "|" + str(t)
-                        for s, t in zip(
-                            tmp_edge_list[c]["source"],
-                            tmp_edge_list[c]["target"],
-                        )
-                    ]
-                    for i, row in tmp_edge_list[c].iterrows():
-                        tmp_edge_list[c].at[i, "weight"] = tmp_totaldist.loc[
-                            row["source"], row["target"]
-                        ]
-                    # tmp_edge_list[c]["weight"].update(tmp_totaldiststack["weight"])
+                    set_edge_list_index(tmp_edge_list[c])
+
+                    tmp_edge_list[c]["weight"].update(
+                        tmp_totaldiststack["weight"]
+                    )
                     # keep only edges when there is 100% identity, to minimise crowding
                     tmp_edge_list[c] = tmp_edge_list[c][
                         tmp_edge_list[c]["weight"] == 0
@@ -430,28 +439,15 @@ def generate_network(
             # try to catch situations where there's no edge (only singletons)
             try:
                 edge_listx = pd.concat([edge_list[x] for x in edge_list])
-                edge_listx.index = [
-                    str(s) + "|" + str(t)
-                    for s, t in zip(edge_listx["source"], edge_listx["target"])
-                ]
-
+                set_edge_list_index(edge_listx)
                 tmp_edge_listx = pd.concat(
                     [tmp_edge_list[x] for x in tmp_edge_list]
                 )
                 tmp_edge_listx.drop("index", axis=1, inplace=True)
-                tmp_edge_listx.index = [
-                    str(s) + "|" + str(t)
-                    for s, t in zip(
-                        tmp_edge_listx["source"], tmp_edge_listx["target"]
-                    )
-                ]
+                set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                # edge_list_final["weight"].update(tmp_totaldiststack["weight"])
-                for i, row in edge_list_final.iterrows():
-                    edge_list_final.at[i, "weight"] = tmp_totaldist.loc[
-                        row["source"], row["target"]
-                    ]
+                edge_list_final["weight"].update(tmp_totaldiststack["weight"])
                 # return the edge list
                 edge_list_final.reset_index(drop=True, inplace=True)
             except:
@@ -461,8 +457,11 @@ def generate_network(
             # del tmp_totaldiststack
             del tmp_totaldist
             del tmp_edge_list
+            # remove vertices if the out.metadata.clone_id == "None"
+            vertice_list = list(
+                out.metadata[out.metadata[clonekey] != "None"].index
+            )
 
-            vertice_list = list(out.metadata.index)
         else:
             edge_list_final = None
             vertice_list = list(df.index)
@@ -555,7 +554,11 @@ def generate_network(
         return out
 
 
-def mst(mat: dict) -> Tree:
+def mst(
+    mat: dict,
+    num_cores: Optional[int] = None,
+    verbose: bool = True,
+) -> Tree:
     """
     Construct minimum spanning tree based on supplied matrix in dictionary.
 
@@ -563,6 +566,10 @@ def mst(mat: dict) -> Tree:
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
+    num_cores: int, optional
+        Number of cores to run this step. Parallelise using joblib if more than 1.
+    verbose : bool, optional
+        Whether or not to show logging information.
 
     Returns
     -------
@@ -570,12 +577,159 @@ def mst(mat: dict) -> Tree:
         Dandelion `Tree` object holding DataFrames of constructed minimum spanning trees.
     """
     mst_tree = Tree()
-    for c in mat:
-        tmp = mat[c] + 1
-        tmp[np.isnan(tmp)] = 0
-        G = nx.from_pandas_adjacency(tmp)
-        mst_tree[c] = nx.minimum_spanning_tree(G)
+
+    if num_cores == 1:
+        for c in tqdm(
+            mat,
+            desc="Calculating minimum spanning tree ",
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
+            _, mst_tree[c] = process_mst_per_clonotype(mat=mat, c=c)
+    else:
+        results = Parallel(n_jobs=num_cores)(
+            delayed(process_mst_per_clonotype)(mat, c)
+            for c in tqdm(
+                mat,
+                desc=f"Calculating minimum spanning tree, parallelized across {num_cores} cores ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            )
+        )
+        for result in results:
+            mst_tree[result[0]] = result[1]
     return mst_tree
+
+
+def process_mst_per_clonotype(
+    mat: Dict[str, pd.DataFrame], c: str
+) -> Tuple[str, nx.Graph]:
+    """
+    Function to calculate minimum spanning tree.
+
+    Parameters
+    ----------
+    mat : Dict[str, pd.DataFrame]
+        Dictionary holding distance matrices.
+    c : str
+        Name of clonotype.
+
+    Returns
+    -------
+    Tuple[str, nx.Graph]
+        Graph holding minimum spanning tree.
+    """
+    tmp = mat[c] + 1
+    tmp[np.isnan(tmp)] = 0
+    G = create_networkx_graph(tmp, drop_zero=True)
+    return c, nx.minimum_spanning_tree(G)
+
+
+def link_edges_per_clonotype(
+    clone_tree: Tree, c: str, full_edge_list: pd.DataFrame
+) -> Tuple[str, pd.DataFrame]:
+    """
+    Link edges after constructing the clonotype tree.
+
+    Parameters
+    ----------
+    clone_tree : Tree
+        Clonotype tree.
+    c : str
+        Name of clonotype.
+    full_edge_list: pd.DataFrame
+        Edge list containing all the weights.
+
+    Returns
+    -------
+    Tuple[str, pd.DataFrame]
+        Edge list after linking.
+    """
+    G = create_networkx_graph(
+        clone_tree[c],
+        drop_zero=True,
+    )
+    edge_list = nx.to_pandas_edgelist(G)
+    set_edge_list_index(edge_list)
+
+    edge_list["weight"].update(tmp_totaldiststack["weight"])
+    # keep only edges when there is 100% identity, to minimise crowding
+    edge_list = edge_list[edge_list["weight"] == 0]
+    edge_list.reset_index(inplace=True)
+
+    return c, edge_list
+
+
+def create_networkx_graph(
+    adjacency: pd.DataFrame, drop_zero: bool = True
+) -> nx.Graph:
+    """
+    Create a networkx graph from an adjacency matrix in chunks.
+
+    Parameters
+    ----------
+    adjacency : pd.DataFrame
+        Adjacency matrix.
+    drop_zero : bool, optional
+        Whether or not to drop edges with zero weight, by default True.
+
+    Returns
+    -------
+    nx.Graph
+        NetworkX graph.
+    """
+    G = nx.Graph()
+    # add nodes
+    nodes = list(adjacency.index)
+    G.add_nodes_from(nodes)
+    # convert adjacency matrix to edge list
+    edge_list = adjacency_to_edge_list(adjacency, drop_zero=drop_zero)
+    G.add_weighted_edges_from(ebunch_to_add=edge_list.values)
+    return G
+
+
+def set_edge_list_index(edge_list: pd.DataFrame):
+    """
+    Set the index of the edge list in-place.
+
+    Parameters
+    ----------
+    edge_list : pd.DataFrame
+        Edge list.
+    """
+    edge_list.index = [
+        str(s) + "|" + str(t)
+        for s, t in zip(edge_list["source"], edge_list["target"])
+    ]
+
+
+def adjacency_to_edge_list(
+    adjacency: pd.DataFrame, drop_zero: bool = False, rename_index: bool = False
+) -> pd.DataFrame:
+    """
+    Convert adjacency matrix to edge list that excludes self-loops.
+
+    Parameters
+    ----------
+    adjacency : pd.DataFrame
+        Adjacency matrix.
+    drop_zero : bool, optional
+        Whether or not to drop edges with zero weight, by default False.
+    rename_index : bool, optional
+        Whether or not to rename the index, by default False.
+
+    Returns
+    -------
+    pd.DataFrame
+        Edge list.
+    """
+    edge_list = adjacency.stack().reset_index()
+    edge_list.columns = ["source", "target", "weight"]
+    if rename_index:
+        set_edge_list_index(edge_list)
+    if drop_zero:
+        edge_list = edge_list[edge_list["weight"] != 0]
+    return edge_list
 
 
 def clone_degree(

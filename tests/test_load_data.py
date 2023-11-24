@@ -157,7 +157,7 @@ def test_slice_data_with_graph(airr_generic):
     ]
     assert vdj2.data.shape[0] == 30
     assert vdj2.metadata.shape[0] == 12
-    assert len(vdj2.layout[0]) == 12
+    assert len(vdj2.layout[0]) == 5
     assert len(vdj2.layout[1]) == 4
-    assert len(vdj2.graph[0]) == 12
+    assert len(vdj2.graph[0]) == 5
     assert len(vdj2.graph[1]) == 4
