@@ -391,18 +391,14 @@ def generate_network(
             tmp_totaldiststack = adjacency_to_edge_list(
                 tmp_totaldist, rename_index=True
             )
-            mask = tmp_totaldiststack.apply(
-                lambda x: len(set(x.name.split("|"))) > 1, axis=1
-            )
-            tmp_totaldiststack = tmp_totaldiststack[mask].reset_index(drop=True)
 
-            # tmp_totaldiststack["keep"] = [
-            #     False if len(list(set(i.split("|")))) == 1 else True
-            #     for i in tmp_totaldiststack.index
-            # ]
-            # tmp_totaldiststack = tmp_totaldiststack[
-            #     tmp_totaldiststack.keep
-            # ].drop("keep", axis=1)
+            tmp_totaldiststack["keep"] = [
+                False if len(list(set(i.split("|")))) == 1 else True
+                for i in tmp_totaldiststack.index
+            ]
+            tmp_totaldiststack = tmp_totaldiststack[
+                tmp_totaldiststack.keep
+            ].drop("keep", axis=1)
 
             # convert tmp_totaldist to edge list and rename the index
             tmp_edge_list = Tree()
@@ -423,11 +419,6 @@ def generate_network(
                     tmp_edge_list[c]["weight"].update(
                         tmp_totaldiststack["weight"]
                     )
-                    # for i, row in tmp_edge_list[c].iterrows():
-                    #     tmp_edge_list[c].at[i, "weight"] = tmp_totaldist.loc[
-                    #         row["source"], row["target"]
-                    #     ]
-                    # tmp_edge_list[c]["weight"].update(tmp_totaldiststack["weight"])
                     # keep only edges when there is 100% identity, to minimise crowding
                     tmp_edge_list[c] = tmp_edge_list[c][
                         tmp_edge_list[c]["weight"] == 0
@@ -649,18 +640,12 @@ def adjacency_to_edge_list(
     pd.DataFrame
         Edge list.
     """
-    edge_list = (
-        adjacency.stack()
-        .reset_index()
-        .rename(columns={"level_0": "source", "level_1": "target", 0: "weight"})
-        .query("source != target")
-        .reset_index(drop=True)
-    )
+    edge_list = adjacency.stack().reset_index()
+    edge_list.columns = ["source", "target", "weight"]
     if rename_index:
         set_edge_list_index(edge_list)
     if drop_zero:
         edge_list = edge_list[edge_list["weight"] != 0]
-
     return edge_list
 
 
