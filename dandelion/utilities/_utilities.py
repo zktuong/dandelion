@@ -1086,3 +1086,11 @@ def set_blast_env(
     if input_file is not None:
         input_file = Path(input_file)
     return env, bdb, input_file
+
+
+def sum_col(vals):
+    """Sum columns if not NaN."""
+    if all(pd.isnull(vals)):
+        return np.nan
+    else:
+        return sum(vals)
