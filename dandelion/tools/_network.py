@@ -367,7 +367,12 @@ def generate_network(
                     tmp_.fillna(0, inplace=True)
                     tmp_clone_tree3[x] = tmp_
 
-            for x in tmp_clone_tree3_overlap:  # repeat for the overlap clones
+            for x in tqdm(
+                tmp_clone_tree3_overlap,
+                desc="Adjust overlap ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            ):  # repeat for the overlap clones
                 tmp_ = pd.DataFrame(
                     index=tmp_clone_tree3_overlap[x],
                     columns=tmp_clone_tree3_overlap[x],
