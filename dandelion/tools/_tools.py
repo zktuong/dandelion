@@ -191,8 +191,8 @@ def find_clones(
         time=start,
         deep=(
             "Updated Dandelion object: \n"
-            "   'data', contig-indexed clone table\n"
-            "   'metadata', cell-indexed clone table\n"
+            "   'data', contig-indexed AIRR table\n"
+            "   'metadata', cell-indexed observations table\n"
         ),
     )
     if isinstance(vdj_data, Dandelion):
@@ -925,8 +925,8 @@ def define_clones(
         time=start,
         deep=(
             "Updated Dandelion object: \n"
-            "   'data', contig-indexed clone table\n"
-            "   'metadata', cell-indexed clone table\n"
+            "   'data', contig-indexed AIRR table\n"
+            "   'metadata', cell-indexed observations table\n"
         ),
     )
 

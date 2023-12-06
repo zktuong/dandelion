@@ -2390,8 +2390,8 @@ def quantify_mutations(
             time=start,
             deep=(
                 "Updated Dandelion object: \n"
-                "   'data', contig-indexed clone table\n"
-                "   'metadata', cell-indexed clone table\n"
+                "   'data', contig-indexed AIRR table\n"
+                "   'metadata', cell-indexed observations table\n"
             ),
         )
     else:

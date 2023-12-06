@@ -1128,7 +1128,7 @@ class Dandelion:
         if self.metadata is not None:
             metadata = self.metadata.copy()
             for col in metadata.columns:
-                if sys.version_info < (3, 9):
+                if pd.__version__ < "2.1.0":
                     weird = (
                         metadata[[col]].applymap(type)
                         != metadata[[col]].iloc[0].apply(type)
