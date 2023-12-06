@@ -324,13 +324,8 @@ def transfer(
         df_distances = distances.reindex(
             index=adata.obs_names, columns=adata.obs_names
         )
-        connectivities = nx.to_pandas_adjacency(
-            G, dtype=np.float32, weight="weight", nonedge=np.nan
-        )
         # convert to connectivity
-        distances[~distances.isnull()] = 1 / np.exp(
-            distances[~distances.isnull()]
-        )
+        distances = distances.apply(lambda x: np.maximum(1e-45, 1 / np.exp(x)))
         df_connectivities = distances.reindex(
             index=adata.obs_names, columns=adata.obs_names
         )
