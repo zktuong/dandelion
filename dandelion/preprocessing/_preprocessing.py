@@ -5308,12 +5308,8 @@ class MarkAmbiguousContigs:
                                 ) = check_productive_vdj(
                                     vdj_ccall_p_count, umi_foldchange_cutoff
                                 )
-                            else:
-                                vdj_p, extra_vdj, ambiguous_vdj = [], [], []
-                    else:
-                        vdj_p, extra_vdj, ambiguous_vdj = [], [], []
-                else:
-                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
+                if "ambiguous_vdj" not in locals():
+                    ambiguous_vdj = []
 
                 if len(ambiguous_vdj) > 0:
                     for a in ambiguous_vdj:
@@ -5387,11 +5383,8 @@ class MarkAmbiguousContigs:
                         vj_p, extra_vj, ambiguous_vj = check_productive_vj(
                             vj_ccall_p_count
                         )
-                    else:
-                        vj_p, extra_vj, ambiguous_vj = [], [], []
-                else:
-                    vj_p, extra_vj, ambiguous_vj = [], [], []
-
+                if "ambiguous_vj" not in locals():
+                    ambiguous_vj = []
                 if len(ambiguous_vj) > 0:
                     for a in ambiguous_vj:
                         self.ambiguous_contigs.append(a)
