@@ -281,12 +281,12 @@ def test_tofro_scirpy_cr6_transfer(
 def test_librarytype(airr_generic):
     """test library type"""
     tmp = ddl.Dandelion(airr_generic)
-    assert tmp.data.shape[0] == 105
-    assert tmp.metadata.shape[0] == 40
+    assert tmp.data.shape[0] == 114
+    assert tmp.metadata.shape[0] == 45
 
     tmp = ddl.Dandelion(airr_generic, library_type="ig")
-    assert tmp.data.shape[0] == 59
-    assert tmp.metadata.shape[0] == 20
+    assert tmp.data.shape[0] == 68
+    assert tmp.metadata.shape[0] == 25
 
     tmp = ddl.Dandelion(airr_generic, library_type="tr-ab")
     assert tmp.data.shape[0] == 29

@@ -4895,6 +4895,7 @@ def check_contigs(
     library_type: Optional[Literal["ig", "tr-ab", "tr-gd"]] = None,
     umi_foldchange_cutoff: int = 2,
     filter_missing: bool = True,
+    filter_extra: bool = False,
     save: Optional[str] = None,
     verbose: bool = True,
     **kwargs,
@@ -4946,6 +4947,8 @@ def check_contigs(
         doublets.
     filter_missing : bool, optional
         cells in V(D)J data not found in `AnnData` object will removed from the dandelion object.
+    filter_extra : bool, optional
+        whether or not to remove contigs that are marked as extra.
     save : Optional[str], optional
         Only used if a pandas data frame or dandelion object is provided. Specifying will save the formatted vdj table
         with a `_checked.tsv` suffix extension.
@@ -5011,6 +5014,7 @@ def check_contigs(
     contig_status = MarkAmbiguousContigs(dat, umi_foldchange_cutoff, verbose)
 
     ambigous = contig_status.ambiguous_contigs.copy()
+    extra = contig_status.extra_contigs.copy()
     umi_adjustment = contig_status.umi_adjustment.copy()
     if len(umi_adjustment) > 0:
         dat["duplicate_count"].update(umi_adjustment)
@@ -5019,6 +5023,11 @@ def check_contigs(
     ambiguous_ = {x: "T" for x in ambigous}
     ambi.update(ambiguous_)
     dat["ambiguous"] = pd.Series(ambi)
+
+    extr = {c: "F" for c in dat_.sequence_id}
+    extra_ = {x: "T" for x in extra}
+    extr.update(extra_)
+    dat["extra"] = pd.Series(extr)
 
     if filter_missing:
         dat = dat[dat["cell_id"].isin(adata_.obs_names)].copy()
@@ -5045,9 +5054,13 @@ def check_contigs(
 
     if productive_only:
         dat_["duplicate_count"].update(dat["duplicate_count"])
-        dat_["ambiguous"] = dat["ambiguous"]
-        dat_["ambiguous"].fillna("T", inplace=True)
+        for column in ["ambiguous", "extra"]:
+            dat_[column] = dat[column]
+            dat_[column].fillna("T", inplace=True)
         dat = dat_.copy()
+
+    if filter_extra:
+        dat = dat[dat["extra"] == "F"].copy()
 
     logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=dat, **kwargs)
@@ -5106,6 +5119,7 @@ class MarkAmbiguousContigs:
         """
         self.Cell = Tree()
         self.ambiguous_contigs = []
+        self.extra_contigs = []
         self.umi_adjustment = {}
         if "v_call_genotyped" in data.columns:
             v_dict = dict(zip(data["sequence_id"], data["v_call_genotyped"]))
@@ -5603,6 +5617,7 @@ class MarkAmbiguousContigs:
                                 self.ambiguous_contigs.append(evdj)
                     else:
                         self.ambiguous_contigs.append(evdj)
+                    self.extra_contigs.append(evdj)
 
             if len(extra_vj) > 0:
                 for evj in extra_vj:
@@ -5630,6 +5645,7 @@ class MarkAmbiguousContigs:
                                         self.ambiguous_contigs.append(evj)
                             elif not_same_call(v, j, "TRG"):
                                 self.ambiguous_contigs.append(evj)
+                    self.extra_contigs.append(evj)
 
 
 def check_productive_vdj(
