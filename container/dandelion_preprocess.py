@@ -78,6 +78,11 @@ def parse_args():
         help=("If passed, skips formatting of contig headers."),
     )
     parser.add_argument(
+        "--skip_tigger",
+        action="store_true",
+        help=("If passed, skips TIgGER reassign alleles step."),
+    )
+    parser.add_argument(
         "--filter_to_high_confidence",
         action="store_true",
         help=(
@@ -158,6 +163,7 @@ def main():
             f"    --sep = {args.sep}\n"
             f"    --flavour = {args.flavour}\n"
             f"    --skip_format_header = {args.skip_format_header}\n"
+            f"    --skip_tigger = {args.skip_tigger}\n"
             f"    --filter_to_high_confidence = {args.filter_to_high_confidence}\n"
             f"    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n"
             f"    --skip_reassign_dj = {skip_reassign_dj_log}\n"
@@ -252,43 +258,46 @@ def main():
     )
 
     # IG requires further preprocessing, TR is done now
-    if args.chain == "ig":
-        # STEP THREE - ddl.pp.reassign_alleles()
-        # do we have individual information
-        if "individual" in meta.columns:
-            # run the function for each individual separately
-            for ind in np.unique(meta["individual"]):
-                # yes, this screwy thing is needed so the function ingests it
-                # correctly, sorry
+    if not args.skip_tigger:
+        if args.chain == "ig":
+            # STEP THREE - ddl.pp.reassign_alleles()
+            # do we have individual information
+            if "individual" in meta.columns:
+                # run the function for each individual separately
+                for ind in np.unique(meta["individual"]):
+                    # yes, this screwy thing is needed so the function ingests it
+                    # correctly, sorry
+                    ddl.pp.reassign_alleles(
+                        [
+                            str(i)
+                            for i in meta[
+                                meta["individual"] == ind
+                            ].index.values
+                        ],
+                        combined_folder=ind,
+                        org=args.org,
+                        save_plot=True,
+                        show_plot=False,
+                        filename_prefix=filename_prefixes,
+                    )
+                    # remove if cleaning output - the important information is
+                    # ported to sample folders already
+                    if args.clean_output:
+                        os.system("rm -r " + ind)
+            else:
+                # run on the whole thing at once
                 ddl.pp.reassign_alleles(
-                    [
-                        str(i)
-                        for i in meta[meta["individual"] == ind].index.values
-                    ],
-                    combined_folder=ind,
+                    samples,
+                    combined_folder="tigger",
                     org=args.org,
                     save_plot=True,
                     show_plot=False,
                     filename_prefix=filename_prefixes,
                 )
-                # remove if cleaning output - the important information is
-                # ported to sample folders already
+                # remove if cleaning output - the important information is ported
+                # to sample folders already
                 if args.clean_output:
-                    os.system("rm -r " + ind)
-        else:
-            # run on the whole thing at once
-            ddl.pp.reassign_alleles(
-                samples,
-                combined_folder="tigger",
-                org=args.org,
-                save_plot=True,
-                show_plot=False,
-                filename_prefix=filename_prefixes,
-            )
-            # remove if cleaning output - the important information is ported
-            # to sample folders already
-            if args.clean_output:
-                os.system("rm -r tigger")
+                    os.system("rm -r tigger")
 
         # STEP FOUR - ddl.pp.assign_isotypes()
         # also no tricks here
