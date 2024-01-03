@@ -12,13 +12,9 @@ From: mambaorg/micromamba
 
 %post
     # initialise micromamba properly
-    micromamba shell init -s bash -p ~/micromamba
     micromamba shell reinit
-    # activate the default install environment
-    micromamba env create sc-dandelion-container
-    micromamba activate sc-dandelion-container
     # install dependencies
-    micromamba install --yes --name sc-dandelion-container --file /environment_test.yml
+    micromamba install --yes --name base --file /environment_test.yml
     # Download reference databases and setup IGDATA directory
     python /share/prepare_database.py --outdir /share/database
     
