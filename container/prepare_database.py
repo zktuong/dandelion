@@ -26,6 +26,11 @@ def parse_args():
         default=None,
         help="Igblast directory if not downloaded through conda/mamba. Defaults to None.",
     )
+    parser.add_argument(
+        "--makeblastdb_bin",
+        default=None,
+        help="Path to makeblastdb. Defaults to None.",
+    )
     args = parser.parse_args()
     return args
 
@@ -286,6 +291,9 @@ def main():
     args = parse_args()
     out_dir = Path(args.outdir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    makeblastdb_bin = (
+        "" if args.makeblastdb_bin is None else args.makeblastdb_bin
+    )
     species_dict = {
         "human": "Homo+sapiens",
         "mouse": "Mus",
@@ -577,7 +585,7 @@ def main():
                 igblastdb_out.mkdir(parents=True, exist_ok=True)
                 for fastafile in (igblast_out / folder).iterdir():
                     cmd = [
-                        "makeblastdb",
+                        str(Path(makeblastdb_bin) / "makeblastdb"),
                         "-parse_seqids",
                         "-dbtype",
                         dbtype,
@@ -605,7 +613,7 @@ def main():
         logging.info(f"Converting to blast database for {species}")
         fastafile = blast_out / species / f"{species}_BCR_C.fasta"
         cmd = [
-            "makeblastdb",
+            str(Path(makeblastdb_bin) / "makeblastdb"),
             "-parse_seqids",
             "-dbtype",
             "nucl",
