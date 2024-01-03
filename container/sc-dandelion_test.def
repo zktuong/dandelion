@@ -11,15 +11,11 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    export PATH=/opt/conda/bin:$PATH
-    mkdir -p /opt/conda/bin
-
+    # initialise micromamba properly
     micromamba shell init -s bash -p ~/micromamba
-    source /root/.bashrc
-
+    /usr/bin/micromamba activate
+    # install dependencies
     micromamba install --yes --name base --file /environment_test.yml    
-
-    # set up database
     # Download reference databases and setup IGDATA directory
     python /share/prepare_database.py --outdir /share/database
     
