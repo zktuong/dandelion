@@ -41,34 +41,19 @@ jobs:
     if: needs.changes.outputs.keepgoing == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y \
-            build-essential \
-            libssl-dev \
-            uuid-dev \
-            libgpgme11-dev \
-            squashfs-tools \
-            libseccomp-dev \
-            pkg-config
       - name: Check out code for the container build
         uses: actions/checkout@v3
-      - name: Setup Apptainer
-        uses: eWaterCycle/setup-apptainer@v2
-        with:
-          apptainer-version: 1.1.2
+      - name: Setup Singularity
+        uses: singularityhub/install-singularity@main
       - name: Extract repository location
         shell: bash
         run: |
           echo "location=$(echo "      - git+https://www.github.com/${GITHUB_REPOSITORY}@${GITHUB_REF#refs/heads/}")" >> $GITHUB_OUTPUT
         id: extract_location
-
       - name: Build Container
         run: |
-          ls container
           cd container
           echo '${{ steps.extract_location.outputs.location }}' >> environment_test.yml
-          cat environment_test.yml
           sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
       - name: Test Container
         run: |
