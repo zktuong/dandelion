@@ -15,7 +15,7 @@ From: mambaorg/micromamba
     mkdir -p /opt/conda/bin
 
     micromamba shell init -s bash -p ~/micromamba
-    source ~/.bashrc
+    source /root/.bashrc
 
     micromamba install --yes --name base --file /environment_test.yml    
 
