@@ -563,6 +563,7 @@ def main():
             ):
                 # convert to igblast database
                 dbtype = "prot" if folder == "vdj_aa" else "nucl"
+                file_path = germline_out / species / folder
                 (igblast_out / folder).mkdir(parents=True, exist_ok=True)
                 for file in file_path.iterdir():
                     seqs = {}
