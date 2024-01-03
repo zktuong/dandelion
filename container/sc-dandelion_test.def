@@ -10,7 +10,7 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    micromamba env create -f environment_test.yml
+    micromamba install --yes --name sc-dandelion-container --file environment_test.yml
     micromamba activate sc-dandelion-container
     # set up database
     # Download reference databases and setup IGDATA directory
