@@ -11,15 +11,23 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    micromamba install --yes --name base --file ./environment_test.yml
+    export PATH=/opt/conda/bin:$PATH
+    mkdir -p /opt/conda/bin
+
+    micromamba shell init -s bash -p ~/micromamba
+    source ~/.bashrc
+
+    micromamba install --yes --name base --file /environment_test.yml    
+
     # set up database
     # Download reference databases and setup IGDATA directory
     python /share/prepare_database.py --outdir /share/database
+    
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
-    echo "micromamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
+    # echo "micromamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
     chmod +x /share/dandelion_preprocess.py
     chmod +x /share/changeo_clonotypes.py
 
