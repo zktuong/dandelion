@@ -10,7 +10,8 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    micromamba env update --name sc-dandelion-container -f environment_test.yml
+    micromamba env create -f environment_test.yml
+    micromamba activate sc-dandelion-container
     # set up database
     # Download reference databases and setup IGDATA directory
     python /share/dandelion_preprocess.py --outdir /share/database
@@ -18,7 +19,7 @@ From: mambaorg/micromamba
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
-    echo "conda activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
+    echo "micromamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
     chmod +x /share/dandelion_preprocess.py
     chmod +x /share/changeo_clonotypes.py
 
@@ -26,7 +27,6 @@ From: mambaorg/micromamba
     export GERMLINE=/share/database/germlines/
     export IGDATA=/share/database/igblast/
     export BLASTDB=/share/database/blast/
-    export PATH=/share/ncbi-blast-2.13.0+/bin:/share/ncbi-igblast-1.19.0/bin:$PATH
 
 %runscript
     alias dandelion-preprocess='/share/dandelion_preprocess.py'
@@ -36,5 +36,5 @@ From: mambaorg/micromamba
 %test
     ls /share
     which blastn
-    conda list
+    micromamba list
     pytest -p no:cacheprovider /tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
