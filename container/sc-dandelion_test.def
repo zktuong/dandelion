@@ -11,10 +11,8 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    # initialise micromamba properly
-    micromamba shell reinit
     # install dependencies
-    micromamba install --yes --name base --file /environment_test.yml
+    micromamba create --name base --file environment_test.yml
     # Download reference databases and setup IGDATA directory
     python /share/prepare_database.py --outdir /share/database
     
