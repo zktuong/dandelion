@@ -591,6 +591,8 @@ def main():
                         "-parse_seqids",
                         "-dbtype",
                         dbtype,
+                        "-input_type",
+                        "fasta",
                         "-in",
                         str(fastafile),
                         "-out",
@@ -619,10 +621,10 @@ def main():
             "-parse_seqids",
             "-dbtype",
             "nucl",
+            "-input_type",
+            "fasta",
             "-in",
             str(fastafile),
-            "-out",
-            str(blast_out / fastafile.stem),
         ]
         res = subprocess.run(cmd, stdout=subprocess.PIPE)
         logging.info(res.stdout.decode("utf-8"))
