@@ -11,12 +11,10 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    micromamba create -n sc-dandelion-container
-    micromamba install --yes --name sc-dandelion-container --file environment_test.yml
-    micromamba activate sc-dandelion-container
+    micromamba install --yes --name base --file environment_test.yml
     # set up database
     # Download reference databases and setup IGDATA directory
-    python /share/dandelion_preprocess.py --outdir /share/database
+    python /share/prepare_database.py --outdir /share/database
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
