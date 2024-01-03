@@ -10,8 +10,8 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    micromamba install --yes --name sc-dandelion-container --file environment_test.yml
-    micromamba activate sc-dandelion-container
+    micromamba install --yes --name base --file environment_test.yml
+    # micromamba activate sc-dandelion-container
     # set up database
     # Download reference databases and setup IGDATA directory
     python /share/dandelion_preprocess.py --outdir /share/database
@@ -19,7 +19,7 @@ From: mambaorg/micromamba
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
-    echo "micromamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
+    # echo "micromamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
     chmod +x /share/dandelion_preprocess.py
     chmod +x /share/changeo_clonotypes.py
 
