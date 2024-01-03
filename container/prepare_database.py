@@ -553,16 +553,11 @@ def main():
                 concurrent.futures.wait(futures)
         for species, query in species_dict.items():
             logging.info(f"Converting to igblast database for {species}")
-            for folder in tqdm(
-                [
-                    "vdj",
-                    "vdj_aa",
-                    "constant",
-                ],
-                desc=f"Converting to igblast database for {species}",
-            ):
-                # convert to igblast database
-                dbtype = "prot" if folder == "vdj_aa" else "nucl"
+            for folder in [
+                "vdj",
+                "vdj_aa",
+                "constant",
+            ]:
                 file_path = germline_out / species / folder
                 (igblast_out / folder).mkdir(parents=True, exist_ok=True)
                 for file in file_path.iterdir():
@@ -585,21 +580,28 @@ def main():
                         fh.close()
                         write_fasta(seqs, out_filename)
                 igblastdb_out.mkdir(parents=True, exist_ok=True)
-                for fastafile in (igblast_out / folder).iterdir():
-                    cmd = [
-                        str(makeblastdb),
-                        "-parse_seqids",
-                        "-dbtype",
-                        dbtype,
-                        "-input_type",
-                        "fasta",
-                        "-in",
-                        str(fastafile),
-                        "-out",
-                        str(igblastdb_out / folder / fastafile.stem),
-                    ]
-                    res = subprocess.run(cmd, stdout=subprocess.PIPE)
-                    logging.info(res.stdout.decode("utf-8"))
+        for folder in [
+            "vdj",
+            "vdj_aa",
+            "constant",
+        ]:
+            # convert to igblast database
+            dbtype = "prot" if folder == "vdj_aa" else "nucl"
+            for fastafile in (igblast_out / folder).iterdir():
+                cmd = [
+                    str(makeblastdb),
+                    "-parse_seqids",
+                    "-dbtype",
+                    dbtype,
+                    "-input_type",
+                    "fasta",
+                    "-in",
+                    str(fastafile),
+                    "-out",
+                    str(igblastdb_out / folder / fastafile.stem),
+                ]
+                res = subprocess.run(cmd, stdout=subprocess.PIPE)
+                logging.info(res.stdout.decode("utf-8"))
     # copying igblast internal data to igblast folder
     copy_db_from_igblast(
         out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
