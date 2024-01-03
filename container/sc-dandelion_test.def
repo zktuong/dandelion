@@ -14,7 +14,6 @@ From: ubuntu:latest
     # Setup and install dependencies
     . /share/setup_mamba.sh
     # Download and setup reference databases
-    # /opt/conda/envs/sc-dandelion-container/bin/python /share/prepare_database.py --outdir /share/database
     python /share/prepare_database.py --outdir /share/database
 
 %environment

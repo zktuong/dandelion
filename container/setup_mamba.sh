@@ -14,4 +14,4 @@ echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
 echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
 chmod +x /share/dandelion_preprocess.py
 chmod +x /share/changeo_clonotypes.py
-. /opt/conda/envs/sc-dandelion-container/bin/activate sc-dandelion-container
+conda activate sc-dandelion-container
