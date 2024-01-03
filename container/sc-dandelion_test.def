@@ -13,9 +13,9 @@ From: ubuntu:latest
 %post
     # Setup and install dependencies
     . /share/setup_mamba.sh
-    conda activate sc-dandelion-container
     # Download and setup reference databases
-    /opt/conda/envs/sc-dandelion-container/bin/python /share/prepare_database.py --outdir /share/database
+    # /opt/conda/envs/sc-dandelion-container/bin/python /share/prepare_database.py --outdir /share/database
+    python /share/prepare_database.py --outdir /share/database
 
 %environment
     export GERMLINE=/share/database/germlines/
