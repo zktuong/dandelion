@@ -13,7 +13,7 @@ From: mambaorg/micromamba
 %post
     # initialise micromamba properly
     micromamba shell init -s bash -p ~/micromamba
-    /usr/bin/micromamba activate
+    micromamba shell reinit --shell bash
     # install dependencies
     micromamba install --yes --name base --file /environment_test.yml    
     # Download reference databases and setup IGDATA directory
