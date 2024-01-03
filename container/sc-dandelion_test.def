@@ -11,7 +11,7 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    micromamba install --yes --name base --file environment_test.yml
+    micromamba install --yes --name base --file ./environment_test.yml
     # set up database
     # Download reference databases and setup IGDATA directory
     python /share/prepare_database.py --outdir /share/database
