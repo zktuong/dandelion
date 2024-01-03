@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+  - bioconda
+  - anaconda
+  - defaults
+always_yes: true
+channel_priority: flexible
+auto_activate_base: true

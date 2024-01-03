@@ -7,13 +7,13 @@ From: mambaorg/micromamba
     dandelion_preprocess.py /share/dandelion_preprocess.py
     changeo_clonotypes.py /share/changeo_clonotypes.py
     prepare_database.py /share/prepare_database.py
+    ./.mambarc /root/.mambarc
     tests /tests
 
 %post
-    . /opt/conda/etc/profile.d/conda.sh
     micromamba create -n sc-dandelion-container
-    micromamba activate sc-dandelion-container
     micromamba install --yes --name sc-dandelion-container --file environment_test.yml
+    micromamba activate sc-dandelion-container
     # set up database
     # Download reference databases and setup IGDATA directory
     python /share/dandelion_preprocess.py --outdir /share/database
