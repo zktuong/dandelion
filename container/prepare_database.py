@@ -292,7 +292,7 @@ def main():
     out_dir = Path(args.outdir)
     out_dir.mkdir(parents=True, exist_ok=True)
     if args.makeblastdb_bin is None:
-        makeblastdb = Path(sys.executable).parent.parent / "makeblastdb"
+        makeblastdb = Path(sys.executable).parent / "makeblastdb"
     else:
         makeblastdb = Path(args.makeblastdb_bin)
     species_dict = {
