@@ -579,13 +579,13 @@ def main():
                             )
                         fh.close()
                         write_fasta(seqs, out_filename)
-                igblastdb_out.mkdir(parents=True, exist_ok=True)
+        # convert to igblast database
+        igblastdb_out.mkdir(parents=True, exist_ok=True)
         for folder in [
             "vdj",
             "vdj_aa",
             "constant",
         ]:
-            # convert to igblast database
             dbtype = "prot" if folder == "vdj_aa" else "nucl"
             for fastafile in (igblast_out / folder).iterdir():
                 cmd = [
@@ -598,7 +598,7 @@ def main():
                     "-in",
                     str(fastafile),
                     "-out",
-                    str(igblastdb_out / folder / fastafile.stem),
+                    str(igblastdb_out / fastafile.stem),
                 ]
                 res = subprocess.run(cmd, stdout=subprocess.PIPE)
                 logging.info(res.stdout.decode("utf-8"))
