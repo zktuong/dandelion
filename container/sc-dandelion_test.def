@@ -7,20 +7,24 @@ From: mambaorg/micromamba
     dandelion_preprocess.py /share/dandelion_preprocess.py
     changeo_clonotypes.py /share/changeo_clonotypes.py
     prepare_database.py /share/prepare_database.py
-    ./.mambarc /root/.mambarc
     tests /tests
 
 %post
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3-$(uname)-$(uname -m).sh
+    source "${HOME}/conda/etc/profile.d/conda.sh"
+    source "${HOME}/conda/etc/profile.d/mamba.sh"
     # install dependencies
-    micromamba create --name base --file environment_test.yml
+    mamba create --name sc-dandelion-container --file environment_test.yml
     # Download reference databases and setup IGDATA directory
+    mamba activate sc-dandelion-container
     python /share/prepare_database.py --outdir /share/database
     
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
-    # echo "micromamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
+    echo "mamba activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
     chmod +x /share/dandelion_preprocess.py
     chmod +x /share/changeo_clonotypes.py
 
