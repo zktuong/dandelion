@@ -13,7 +13,7 @@ From: mambaorg/micromamba
 %post
     # initialise micromamba properly
     micromamba shell init -s bash -p ~/micromamba
-    micromamba shell reinit --shell
+    micromamba shell reinit
     # activate the default install environment
     micromamba env create sc-dandelion-container
     micromamba activate sc-dandelion-container
