@@ -2,23 +2,23 @@ Bootstrap: docker
 
 From: mambaorg/micromamba
 
-%files
-    database /share/database
+%files    
     environment_test.yml /environment_test.yml
     dandelion_preprocess.py /share/dandelion_preprocess.py
     changeo_clonotypes.py /share/changeo_clonotypes.py
+    prepare_database.py /share/prepare_database.py
     tests /tests
 
 %post
-    micromama env update --name sc-dandelion-container -f environment_test.yml
+    micromamba env update --name sc-dandelion-container -f environment_test.yml
+    # set up database
+    # Download reference databases and setup IGDATA directory
+    python /share/dandelion_preprocess.py --outdir /share/database
     # fix pathing
     echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
     echo "conda activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
-    # update the database just in case
-    makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/human/human_BCR_C.fasta
-    makeblastdb -dbtype nucl -parse_seqids -in /share/database/blast/mouse/mouse_BCR_C.fasta
     chmod +x /share/dandelion_preprocess.py
     chmod +x /share/changeo_clonotypes.py
 
