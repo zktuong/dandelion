@@ -569,8 +569,9 @@ def main():
                         / folder
                         / f"imgt_{igblast_out_dict[folder]}{species}_{chain}_{segment}.fasta"
                     )
-                    fh = open(out_filename, "w")
-                    fh.close()
+                    if not out_filename.is_file():
+                        fh = open(out_filename, "w")
+                        fh.close()
                     if file.stat().st_size != 0:
                         fh = open(file, "r")
                         for header, sequence in fasta_iterator(fh):
