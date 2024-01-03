@@ -60,7 +60,7 @@ jobs:
       - name: Extract repository location
         shell: bash
         run: |
-          echo "location=$(echo "  - git+https://www.github.com/${GITHUB_REPOSITORY}@${GITHUB_REF#refs/heads/}")" >> $GITHUB_OUTPUT
+          echo "location=$(echo "    - git+https://www.github.com/${GITHUB_REPOSITORY}@${GITHUB_REF#refs/heads/}")" >> $GITHUB_OUTPUT
         id: extract_location
 
       - name: Build Container

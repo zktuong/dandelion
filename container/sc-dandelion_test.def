@@ -10,7 +10,7 @@ From: mambaorg/micromamba
     tests /tests
 
 %post
-    eval "$(micromamba shell hook --shell bash)"
+    . /opt/conda/etc/profile.d/conda.sh
     micromamba create -n sc-dandelion-container
     micromamba activate sc-dandelion-container
     micromamba install --yes --name sc-dandelion-container --file environment_test.yml
