@@ -189,45 +189,55 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                     if gene == "J":
                         if header not in j_seqs:
                             j_seqs[header] = sequence
-                if species == "human":
-                    if len(v_seqs) > 0:
-                        write_fasta(
-                            v_seqs,
-                            new_file_path / f"ogrdb_{species}_{locus}V.fasta",
-                        )
-                    if len(d_seqs) > 0:
-                        write_fasta(
-                            d_seqs,
-                            new_file_path / f"ogrdb_{species}_{locus}D.fasta",
-                        )
-                    if len(j_seqs) > 0:
-                        write_fasta(
-                            j_seqs,
-                            new_file_path / f"ogrdb_{species}_{locus}J.fasta",
-                        )
-                else:
-                    _, subgroups = return_ogrdb_info(species)
-                    set_id = file.stem
-                    strain = re.sub("\\/| ", "", subgroups[set_id]).lower()
-                    strain = "all" if strain == "" else strain
-                    if len(v_seqs) > 0:
-                        write_fasta(
-                            v_seqs,
-                            new_file_path
-                            / f"ogrdb_{species}_{strain}_{locus}V.fasta",
-                        )
-                    if len(d_seqs) > 0:
-                        write_fasta(
-                            d_seqs,
-                            new_file_path
-                            / f"ogrdb_{species}_{strain}_{locus}D.fasta",
-                        )
-                    if len(j_seqs) > 0:
-                        write_fasta(
-                            j_seqs,
-                            new_file_path
-                            / f"ogrdb_{species}_{strain}_{locus}J.fasta",
-                        )
+                if len(v_seqs) > 0:
+                    write_fasta(
+                        v_seqs,
+                        new_file_path / f"ogrdb_{species}_{locus}V.fasta",
+                    )
+                if len(d_seqs) > 0:
+                    write_fasta(
+                        d_seqs,
+                        new_file_path / f"ogrdb_{species}_{locus}D.fasta",
+                    )
+                if len(j_seqs) > 0:
+                    write_fasta(
+                        j_seqs,
+                        new_file_path / f"ogrdb_{species}_{locus}J.fasta",
+                    )
+                # uncomment this if want to do it for strain?
+                # if species == "human":
+                #     if len(v_seqs) > 0:
+                #         write_fasta(
+                #             v_seqs, new_file_path / f"ogrdb_{species}_{locus}V.fasta"
+                #         )
+                #     if len(d_seqs) > 0:
+                #         write_fasta(
+                #             d_seqs, new_file_path / f"ogrdb_{species}_{locus}D.fasta"
+                #         )
+                #     if len(j_seqs) > 0:
+                #         write_fasta(
+                #             j_seqs, new_file_path / f"ogrdb_{species}_{locus}J.fasta"
+                #         )
+                # else:
+                #     _, subgroups = return_ogrdb_info(species)
+                #     set_id = file.stem
+                #     strain = re.sub("\\/| ", "", subgroups[set_id]).lower()
+                #     strain = "all" if strain == "" else strain
+                #     if len(v_seqs) > 0:
+                #         write_fasta(
+                #             v_seqs,
+                #             new_file_path / f"ogrdb_{species}_{strain}_{locus}V.fasta",
+                #         )
+                #     if len(d_seqs) > 0:
+                #         write_fasta(
+                #             d_seqs,
+                #             new_file_path / f"ogrdb_{species}_{strain}_{locus}D.fasta",
+                #         )
+                #     if len(j_seqs) > 0:
+                #         write_fasta(
+                #             j_seqs,
+                #             new_file_path / f"ogrdb_{species}_{strain}_{locus}J.fasta",
+                #         )
                 fh.close()
             file.unlink()
 
@@ -306,27 +316,25 @@ def main():
                             )
                     fh.close()
             write_fasta(seqs, out_file)
-        # convert to igblast database
-        igblastdb_out.mkdir(parents=True, exist_ok=True)
-        for fastafile in [
-            f
-            for f in sorted(igblast_out.iterdir())
-            if f.stem.startswith("ogrdb")
-        ]:
-            cmd = [
-                str(makeblastdb),
-                "-parse_seqids",
-                "-dbtype",
-                "nucl",
-                "-input_type",
-                "fasta",
-                "-in",
-                str(fastafile),
-                "-out",
-                str(igblastdb_out / fastafile.stem),
-            ]
-            res = subprocess.run(cmd, stdout=subprocess.PIPE)
-            logging.info(res.stdout.decode("utf-8"))
+    # convert to igblast database
+    igblastdb_out.mkdir(parents=True, exist_ok=True)
+    for fastafile in [
+        f for f in sorted(igblast_out.iterdir()) if f.stem.startswith("ogrdb")
+    ]:
+        cmd = [
+            str(makeblastdb),
+            "-parse_seqids",
+            "-dbtype",
+            "nucl",
+            "-input_type",
+            "fasta",
+            "-in",
+            str(fastafile),
+            "-out",
+            str(igblastdb_out / fastafile.stem),
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE)
+        logging.info(res.stdout.decode("utf-8"))
 
     # Log the end time
     end_time = datetime.now()
