@@ -37,6 +37,15 @@ def parse_args():
 
 
 def query_ogrdb_set_info(species: str):
+    """
+    Query the ogrdb API for germline set info.
+
+    Parameters
+    ----------
+    species : str
+        Name of species.
+
+    """
     url = f"https://ogrdb.airr-community.org/api/germline/sets/{species.capitalize()}"
     headers = {"accept": "application/json"}
     # Create a request object with the URL and headers
@@ -55,6 +64,14 @@ def query_ogrdb_set_info(species: str):
 
 
 def download_ogrdb_set_fasta(set_id: str):
+    """
+    Download the fasta file for a given set id.
+
+    Parameters
+    ----------
+    set_id : str
+        OGRDB germline set id.
+    """
     url = f"https://ogrdb.airr-community.org/api/germline/set/{set_id}/published/gapped"
     headers = {"accept": "application/json"}
     # Create a request object with the URL and headers
