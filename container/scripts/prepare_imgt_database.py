@@ -9,8 +9,9 @@ import sys
 
 from datetime import datetime
 from pathlib import Path
-from tqdm import tqdm
 from urllib.request import urlopen
+
+from container.scripts.utils import Tree, fasta_iterator, write_fasta
 
 
 def parse_args():
@@ -58,96 +59,16 @@ def copy_db_from_igblast(
         )
 
 
-def fasta_iterator(fh: str | Path) -> tuple[str, str]:
-    """
-    Read in a fasta file as an iterator.
-
-    Parameters
-    ----------
-    fh : str | Path
-        Path to fasta file.
-
-    Returns
-    -------
-    tuple[str, str]
-        Fasta header and sequence.
-
-    Yields
-    ------
-    Iterator[tuple[str, str]]
-        Fasta header and sequence.
-    """
-    while True:
-        line = fh.readline()
-        if line.startswith(">"):
-            break
-    while True:
-        header = line[1:-1].rstrip()
-        sequence = fh.readline().rstrip()
-        while True:
-            line = fh.readline()
-            if not line:
-                break
-            if line.startswith(">"):
-                break
-            sequence += line.rstrip()
-        yield (header, sequence)
-        if not line:
-            return
-
-
-def write_fasta(
-    fasta_dict: dict[str, str], out_fasta: str | Path, overwrite=False
-):
-    """
-    Generic fasta writer using fasta_iterator
-
-    Parameters
-    ----------
-    fasta_dict : dict[str, str]
-        Dictionary containing fasta headers and sequences as keys and records respectively.
-    out_fasta : str | Path
-        Path to write fasta file to.
-    overwrite : bool, optional
-        Whether or not to overwrite the output file (out_fasta), by default False.
-    """
-    if overwrite:
-        fh = open(out_fasta, "w")
-        fh.close()
-    out = ""
-    for l in fasta_dict:
-        out = ">" + l + "\n" + fasta_dict[l] + "\n"
-        write_output(out, out_fasta)
-
-
-def write_output(out: str, file: str | Path):
-    """
-    General line writer.
-
-    Parameters
-    ----------
-    out : str
-        String to write to file.
-    file : str | Path
-        Path to file to write to.
-    """
-    fh = open(file, "a")
-    fh.write(out)
-    fh.close()
-
-
 def download_germline_and_process(
     species: str,
     query: str,
     chain: str,
     file_path: str | Path,
     source: str,
-    out_dict: dict[str, str],
     query_type: str,
     add_prefix: str,
     add_suffix: str,
     url_suffix: str,
-    add_v: bool = False,
 ):
     """
     Download sequence from imgt and write to fasta file.
@@ -164,8 +85,6 @@ def download_germline_and_process(
         Path to write fasta file to.
     source : str
         Source url.
-    out_dict : dict[str, str]
-        Dictionary of species and their corresponding substitutions.
     query_type : str
         Query type to specify in url.
     add_prefix : str
@@ -174,13 +93,15 @@ def download_germline_and_process(
         Suffix to add in file name, before `.fasta`.
     url_suffix : str
         Suffix to add in url.
-    add_v : bool, optional
-        Whether to add V after chain, by default False
     """
-    if add_v:
-        url = f"{source}/GENElect?query={query_type}+{chain}V&species={query}{url_suffix}"
-    else:
-        url = f"{source}/GENElect?query={query_type}+{chain}&species={query}{url_suffix}"
+    imgt_out_dict = {
+        "human": ["Homo sapiens", "Homo_sapiens"],
+        "mouse": ["Mus musculus", "Mus_musculus"],
+        "rat": ["Rattus norvegicus", "Rattus_norvegicus"],
+        "rabbit": ["Oryctolagus cuniculus", "Oryctolagus_cuniculus"],
+        "rhesus_monkey": ["Macaca mulatta", "Macaca_mulatta"],
+    }
+    url = f"{source}/GENElect?query={query_type}+{chain}&species={query}{url_suffix}"
     file_name = (
         f"{str(file_path)}/imgt_{add_prefix}{species}_{chain}{add_suffix}.fasta"
     )
@@ -211,7 +132,9 @@ def download_germline_and_process(
     for i, line in enumerate(content_lines):
         if line.startswith(">"):
             # Example substitution: Homo sapiens to Homo_sapiens
-            line = re.sub(out_dict[species][0], out_dict[species][1], line)
+            line = re.sub(
+                imgt_out_dict[species][0], imgt_out_dict[species][1], line
+            )
             # Add more substitutions as needed
             content_lines[i] = line
 
@@ -302,15 +225,6 @@ def main():
         "rabbit": "Oryctolagus+cuniculus",
         "rhesus_monkey": "Macaca+mulatta",
     }
-
-    out_dict = {
-        "human": ["Homo sapiens", "Homo_sapiens"],
-        "mouse": ["Mus musculus", "Mus_musculus"],
-        "rat": ["Rattus norvegicus", "Rattus_norvegicus"],
-        "rabbit": ["Oryctolagus cuniculus", "Oryctolagus_cuniculus"],
-        "rhesus_monkey": ["Macaca mulatta", "Macaca_mulatta"],
-    }
-
     igblast_out_dict = {
         "vdj": "",
         "vdj_aa": "aa_",
@@ -345,27 +259,23 @@ def main():
     with concurrent.futures.ThreadPoolExecutor() as executor:
         for species, query in species_dict.items():
             logging.info(f"    - {species}")
-            for folder in tqdm(
-                [
-                    "vdj",
-                    "vdj_aa",
-                    # "leader_vexon",
-                    # "leader",
-                    "constant",
-                ],
-                desc=f"Downloading IMGT fasta files for {species}",
-            ):
+            for folder in [
+                "vdj",
+                "vdj_aa",
+                # "leader_vexon",
+                # "leader",
+                "constant",
+            ]:
                 futures = []
                 logging.info(f"        - {folder}")
                 file_path = germline_out / species / folder
                 file_path.mkdir(parents=True, exist_ok=True)
                 if folder == "vdj":
-                    query_type, add_prefix, add_suffix, url_suffix, add_v = (
+                    query_type, add_prefix, add_suffix, url_suffix = (
                         "7.1",
                         "",
                         "",
                         "",
-                        False,
                     )
                     for chain in [
                         "IGHV",
@@ -394,21 +304,18 @@ def main():
                                 chain,
                                 file_path,
                                 source,
-                                out_dict,
                                 query_type,
                                 add_prefix,
                                 add_suffix,
                                 url_suffix,
-                                add_v,
                             )
                         )
                 elif folder == "vdj_aa":
-                    query_type, add_prefix, add_suffix, url_suffix, add_v = (
+                    query_type, add_prefix, add_suffix, url_suffix = (
                         "7.3",
                         "aa_",
                         "",
                         "",
-                        False,
                     )
                     for chain in [
                         "IGHV",
@@ -427,21 +334,18 @@ def main():
                                 chain,
                                 file_path,
                                 source,
-                                out_dict,
                                 query_type,
                                 add_prefix,
                                 add_suffix,
                                 url_suffix,
-                                add_v,
                             )
                         )
                 # elif folder == "leader_vexon":
-                #     query_type, add_prefix, add_suffix, url_suffix, add_v = (
+                #     query_type, add_prefix, add_suffix, url_suffix = (
                 #         "8.1",
                 #         "lv_",
                 #         "",
                 #         "&IMGTlabel=L-PART1+V-EXON",
-                #         False,
                 #     )
                 #     for chain in [
                 #         "IGHV",
@@ -460,30 +364,27 @@ def main():
                 #                 chain,
                 #                 file_path,
                 #                 source,
-                #                 out_dict,
                 #                 query_type,
                 #                 add_prefix,
                 #                 add_suffix,
                 #                 url_suffix,
-                #                 add_v,
                 #             )
                 #         )
                 # elif folder == "leader":
-                #     query_type, add_prefix, add_suffix, url_suffix, add_v = (
+                #     query_type, add_prefix, add_suffix, url_suffix = (
                 #         "8.1",
                 #         "",
                 #         "L",
                 #         "&IMGTlabel=L-PART1+L-PART2",
-                #         True,
                 #     )
                 #     for chain in [
-                #         "IGH",
-                #         "IGK",
-                #         "IGL",
-                #         "TRA",
-                #         "TRB",
-                #         "TRD",
-                #         "TRG",
+                #         "IGHV",
+                #         "IGKV",
+                #         "IGLV",
+                #         "TRAV",
+                #         "TRBV",
+                #         "TRDV",
+                #         "TRGV",
                 #     ]:
                 #         futures.append(
                 #             executor.submit(
@@ -493,21 +394,18 @@ def main():
                 #                 chain,
                 #                 file_path,
                 #                 source,
-                #                 out_dict,
                 #                 query_type,
                 #                 add_prefix,
                 #                 add_suffix,
                 #                 url_suffix,
-                #                 add_v,
                 #             )
                 #         )
                 elif folder == "constant":
-                    query_type, add_prefix, add_suffix, url_suffix, add_v = (
+                    query_type, add_prefix, add_suffix, url_suffix = (
                         "7.5",
                         "",
                         "",
                         "",
-                        False,
                     )
                     futures.append(
                         executor.submit(
@@ -517,12 +415,10 @@ def main():
                             "IGHC",
                             file_path,
                             source,
-                            out_dict,
                             "14.1",
                             add_prefix,
                             add_suffix,
                             url_suffix,
-                            add_v,
                         )
                     )
                     for chain in [
@@ -541,68 +437,73 @@ def main():
                                 chain,
                                 file_path,
                                 source,
-                                out_dict,
                                 query_type,
                                 add_prefix,
                                 add_suffix,
                                 url_suffix,
-                                add_v,
                             )
                         )
                 # Wait for all futures to complete
                 concurrent.futures.wait(futures)
         for species, query in species_dict.items():
             logging.info(f"Converting to igblast database for {species}")
+            igblast_out.mkdir(parents=True, exist_ok=True)
             for folder in [
                 "vdj",
                 "vdj_aa",
                 "constant",
             ]:
+                file_tree, out_filename_tree = Tree(), Tree()
                 file_path = germline_out / species / folder
-                (igblast_out / folder).mkdir(parents=True, exist_ok=True)
-                for file in file_path.iterdir():
-                    seqs = {}
+                for file in sorted(file_path.iterdir()):
                     file_code = file.stem.rsplit("_", 1)[1].lower()
                     chain, segment = file_code[:2], file_code[3]
                     out_filename = (
                         igblast_out
-                        / folder
                         / f"imgt_{igblast_out_dict[folder]}{species}_{chain}_{segment}.fasta"
                     )
-                    if not out_filename.is_file():
-                        fh = open(out_filename, "w")
-                        fh.close()
-                    if file.stat().st_size != 0:
-                        fh = open(file, "r")
-                        for header, sequence in fasta_iterator(fh):
-                            seqs[header.split("|")[1].strip()] = (
-                                sequence.replace(".", "").upper().rstrip()
-                            )
-                        fh.close()
-                        write_fasta(seqs, out_filename)
+                    file_tree[chain + segment][file].value = 1
+                    out_filename_tree[chain + segment][out_filename].value = 1
+                for chain_segment in file_tree:
+                    in_files = list(file_tree[chain_segment])
+                    out_file = list(out_filename_tree[chain_segment])[0]
+                    fh = open(out_file, "w")
+                    fh.close()
+                    seqs = {}
+                    for file in in_files:
+                        if file.stat().st_size != 0:
+                            fh = open(file, "r")
+                            for header, sequence in fasta_iterator(fh):
+                                new_header = header.split("|")[1].strip()
+                                if new_header not in seqs:
+                                    seqs[new_header] = (
+                                        sequence.replace(".", "")
+                                        .upper()
+                                        .rstrip()
+                                    )
+                            fh.close()
+                    write_fasta(seqs, out_file)
         # convert to igblast database
         igblastdb_out.mkdir(parents=True, exist_ok=True)
-        for folder in [
-            "vdj",
-            "vdj_aa",
-            "constant",
+        for fastafile in [
+            f
+            for f in sorted(igblast_out.iterdir())
+            if f.stem.startswith("imgt")
         ]:
-            dbtype = "prot" if folder == "vdj_aa" else "nucl"
-            for fastafile in (igblast_out / folder).iterdir():
-                cmd = [
-                    str(makeblastdb),
-                    "-parse_seqids",
-                    "-dbtype",
-                    dbtype,
-                    "-input_type",
-                    "fasta",
-                    "-in",
-                    str(fastafile),
-                    "-out",
-                    str(igblastdb_out / fastafile.stem),
-                ]
-                res = subprocess.run(cmd, stdout=subprocess.PIPE)
-                logging.info(res.stdout.decode("utf-8"))
+            cmd = [
+                str(makeblastdb),
+                "-parse_seqids",
+                "-dbtype",
+                "prot" if re.search("aa", fastafile.stem) else "nucl",
+                "-input_type",
+                "fasta",
+                "-in",
+                str(fastafile),
+                "-out",
+                str(igblastdb_out / fastafile.stem),
+            ]
+            res = subprocess.run(cmd, stdout=subprocess.PIPE)
+            logging.info(res.stdout.decode("utf-8"))
     # copying igblast internal data to igblast folder
     copy_db_from_igblast(
         out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
