@@ -4,17 +4,19 @@ From: ubuntu:latest
 
 %files    
     environment_test.yml /environment.yml
-    setup_mamba.sh /share/setup_mamba.sh
-    dandelion_preprocess.py /share/dandelion_preprocess.py
-    changeo_clonotypes.py /share/changeo_clonotypes.py
-    prepare_database.py /share/prepare_database.py
+    scripts/setup_mamba.sh /share/setup_mamba.sh
+    scripts/dandelion_preprocess.py /share/dandelion_preprocess.py
+    scripts/changeo_clonotypes.py /share/changeo_clonotypes.py
+    scripts/prepare_imgt_database.py /share/prepare_imgt_database.py
+    scripts/prepare_ogrdb_database.py /share/prepare_ogrdb_database.py
     tests /tests
 
 %post
     # Setup and install dependencies
     . /share/setup_mamba.sh
     # Download and setup reference databases
-    python /share/prepare_database.py --outdir /share/database
+    python /share/prepare_imgt_database.py --outdir /share/database
+    python /share/prepare_ogrdb_database.py --outdir /share/database
 
 %environment
     export GERMLINE=/share/database/germlines/
