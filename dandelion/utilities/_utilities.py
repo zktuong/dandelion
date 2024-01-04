@@ -969,6 +969,7 @@ def set_germline_env(
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     input_file: Optional[Union[str, Path]] = None,
+    db: Literal["imgt", "ogrdb"] = "imgt",
 ) -> Tuple[Dict, Path, Path]:
     """
     Set the paths to germline database and environment variables and relevant input files.
@@ -981,6 +982,8 @@ def set_germline_env(
         organism for germline sequences.
     input_file : Optional[Union[str, Path]], optional
         path to input file.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use. Defaults to imgt.
     Returns
     -------
     Tuple[Dict, Path]
@@ -1002,7 +1005,7 @@ def set_germline_env(
                     "Please 'export GERMLINE=/path/to/database/germlines/'"
                 )
             )
-        gml = gml / "imgt" / org / "vdj"
+        gml = gml / db / org / "vdj"
     else:
         gml = env["GERMLINE"] = Path(germline)
     if input_file is not None:

@@ -3973,6 +3973,7 @@ def run_igblastn(
     loci: Literal["ig", "tr"] = "ig",
     evalue: float = 1e-4,
     min_d_match: int = 9,
+    db: Literal["imgt", "ogrdb"] = "imgt",
     additional_args: List[str] = [],
 ):
     """
@@ -3996,6 +3997,8 @@ def run_igblastn(
         sequence and the targets.
     min_d_match : int, optional
         minimum D nucleotide match.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use for germline sequences.
     additional_args: List[str], optional
         additional arguments to pass to `igblastn`.
     """
@@ -4008,11 +4011,11 @@ def run_igblastn(
     outformat = {"blast": "7 std qseq sseq btop", "airr": "19"}
 
     dbpath = igdb / "database"
-    imgt_org_loci = "imgt_" + org + "_" + loci + "_"
-    vpath = dbpath / (imgt_org_loci + "v")
-    dpath = dbpath / (imgt_org_loci + "d")
-    jpath = dbpath / (imgt_org_loci + "j")
-    cpath = dbpath / (imgt_org_loci + "c")
+    db_org_loci = db + "_" + org + "_" + loci + "_"
+    vpath = dbpath / (db_org_loci + "v")
+    dpath = dbpath / (db_org_loci + "d")
+    jpath = dbpath / (db_org_loci + "j")
+    cpath = dbpath / (db_org_loci + "c")
     auxpath = igdb / "optional_file" / (org + "_gl.aux")
 
     for fileformat in ["blast", "airr"]:
@@ -4076,10 +4079,13 @@ def run_igblastn(
                 str(evalue),
                 "-min_D_match",
                 str(min_d_match),
-                "-c_region_db",
-                str(cpath),
             ]
-        cmd = cmd + additional_args
+            if db == "imgt":
+                cmd += [
+                    "-c_region_db",
+                    str(cpath),
+                ]
+        cmd += additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
