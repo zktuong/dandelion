@@ -922,6 +922,7 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
+    db: Literal["imgt", "orgdb"] = "imgt",
     additional_args: Dict[str, List[str]] = {
         "assigngenes": [],
         "makedb": [],
@@ -996,6 +997,8 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
+    db : Literal["imgt", "orgdb"], optional
+        database to use for igblastn. Defaults to 'imgt'.
     additional_args : Dict[str, List[str]], optional
         additional arguments to pass to `AssignGenes.py`, `MakeDb.py`, `igblastn` and `blastn`.
         This accepts a dictionary with keys as the name of the sub-function (`assigngenes`, `makedb`,
@@ -1055,6 +1058,7 @@ def reannotate_genes(
                 loci=loci,
                 evalue=v_evalue,
                 min_d_match=min_d_match,
+                db=db,
                 additional_args=additional_args["igblastn"],
             )
         makedb_igblast(
