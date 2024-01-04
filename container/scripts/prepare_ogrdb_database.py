@@ -328,14 +328,18 @@ def main():
                 out_filename = (
                     igblast_out / f"ogrdb_{species}_{chain}_{segment}.fasta"
                 )
+                file_tree[chain + segment][file].value = 1
+                out_filename_tree[chain + segment][out_filename].value = 1
             elif species == "mouse":
                 strain = file.stem.rsplit("_", 1)[0].split("_", 2)[2]
                 out_filename = (
                     igblast_out
                     / f"ogrdb_{species}_{strain}_{chain}_{segment}.fasta"
                 )
-            file_tree[chain + segment][file].value = 1
-            out_filename_tree[chain + segment][out_filename].value = 1
+                file_tree[chain + segment + strain][file].value = 1
+                out_filename_tree[chain + segment + strain][
+                    out_filename
+                ].value = 1
         for chain_segment in file_tree:
             in_files = list(file_tree[chain_segment])
             out_file = list(out_filename_tree[chain_segment])[0]
