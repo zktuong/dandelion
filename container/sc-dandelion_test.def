@@ -9,6 +9,7 @@ From: ubuntu:latest
     scripts/changeo_clonotypes.py /share/changeo_clonotypes.py
     scripts/prepare_imgt_database.py /share/prepare_imgt_database.py
     scripts/prepare_ogrdb_database.py /share/prepare_ogrdb_database.py
+    scripts/utils.py /share/utils.py
     tests /tests
 
 %post
