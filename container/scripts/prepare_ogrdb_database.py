@@ -189,55 +189,58 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                     if gene == "J":
                         if header not in j_seqs:
                             j_seqs[header] = sequence
-                if len(v_seqs) > 0:
-                    write_fasta(
-                        v_seqs,
-                        new_file_path / f"ogrdb_{species}_{locus}V.fasta",
-                    )
-                if len(d_seqs) > 0:
-                    write_fasta(
-                        d_seqs,
-                        new_file_path / f"ogrdb_{species}_{locus}D.fasta",
-                    )
-                if len(j_seqs) > 0:
-                    write_fasta(
-                        j_seqs,
-                        new_file_path / f"ogrdb_{species}_{locus}J.fasta",
-                    )
-                # uncomment this if want to do it for strain?
-                # if species == "human":
-                #     if len(v_seqs) > 0:
-                #         write_fasta(
-                #             v_seqs, new_file_path / f"ogrdb_{species}_{locus}V.fasta"
-                #         )
-                #     if len(d_seqs) > 0:
-                #         write_fasta(
-                #             d_seqs, new_file_path / f"ogrdb_{species}_{locus}D.fasta"
-                #         )
-                #     if len(j_seqs) > 0:
-                #         write_fasta(
-                #             j_seqs, new_file_path / f"ogrdb_{species}_{locus}J.fasta"
-                #         )
-                # else:
-                #     _, subgroups = return_ogrdb_info(species)
-                #     set_id = file.stem
-                #     strain = re.sub("\\/| ", "", subgroups[set_id]).lower()
-                #     strain = "all" if strain == "" else strain
-                #     if len(v_seqs) > 0:
-                #         write_fasta(
-                #             v_seqs,
-                #             new_file_path / f"ogrdb_{species}_{strain}_{locus}V.fasta",
-                #         )
-                #     if len(d_seqs) > 0:
-                #         write_fasta(
-                #             d_seqs,
-                #             new_file_path / f"ogrdb_{species}_{strain}_{locus}D.fasta",
-                #         )
-                #     if len(j_seqs) > 0:
-                #         write_fasta(
-                #             j_seqs,
-                #             new_file_path / f"ogrdb_{species}_{strain}_{locus}J.fasta",
-                #         )
+                # uncomment this if want to do it just grouped for mouse?
+                # if len(v_seqs) > 0:
+                #     write_fasta(
+                #         v_seqs, new_file_path / f"ogrdb_{species}_{locus}V.fasta"
+                #     )
+                # if len(d_seqs) > 0:
+                #     write_fasta(
+                #         d_seqs, new_file_path / f"ogrdb_{species}_{locus}D.fasta"
+                #     )
+                # if len(j_seqs) > 0:
+                #     write_fasta(
+                #         j_seqs, new_file_path / f"ogrdb_{species}_{locus}J.fasta"
+                #     )
+                if species == "human":
+                    if len(v_seqs) > 0:
+                        write_fasta(
+                            v_seqs,
+                            new_file_path / f"ogrdb_{species}_{locus}V.fasta",
+                        )
+                    if len(d_seqs) > 0:
+                        write_fasta(
+                            d_seqs,
+                            new_file_path / f"ogrdb_{species}_{locus}D.fasta",
+                        )
+                    if len(j_seqs) > 0:
+                        write_fasta(
+                            j_seqs,
+                            new_file_path / f"ogrdb_{species}_{locus}J.fasta",
+                        )
+                else:
+                    _, subgroups = return_ogrdb_info(species)
+                    set_id = file.stem
+                    strain = re.sub("\\/| ", "_", subgroups[set_id])
+                    strain = "all" if strain == "" else strain
+                    if len(v_seqs) > 0:
+                        write_fasta(
+                            v_seqs,
+                            new_file_path
+                            / f"ogrdb_{species}_{strain}_{locus}V.fasta",
+                        )
+                    if len(d_seqs) > 0:
+                        write_fasta(
+                            d_seqs,
+                            new_file_path
+                            / f"ogrdb_{species}_{strain}_{locus}D.fasta",
+                        )
+                    if len(j_seqs) > 0:
+                        write_fasta(
+                            j_seqs,
+                            new_file_path
+                            / f"ogrdb_{species}_{strain}_{locus}J.fasta",
+                        )
                 fh.close()
             file.unlink()
 
