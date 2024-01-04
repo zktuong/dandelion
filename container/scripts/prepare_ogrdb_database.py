@@ -171,8 +171,29 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
     if os.path.exists(new_file_path):
         logging.info(f"Skipping download of files as it already exists.")
         return
-    new_file_path.mkdir(parents=True, exist_ok=True)
     # generate the split v/d/j files
+    # find the "all" file first
+    if species == "mouse":
+        all_v_seqs, all_j_seqs = {}, {}
+        for file in sorted(file_path.iterdir()):
+            if file.is_file():
+                _, subgroups = return_ogrdb_info(species)
+                if file.stat().st_size != 0:
+                    set_id = file.stem
+                    strain = re.sub("\\/| ", "_", subgroups[set_id])
+                    strain = "all" if strain == "" else strain
+                    if strain == "all":
+                        fh = open(file, "r")
+                        for header, sequence in fasta_iterator(fh):
+                            locus, gene = header[:3], header[3]
+                            if gene == "V":
+                                if header not in all_v_seqs:
+                                    all_v_seqs[header] = sequence
+                            if gene == "J":
+                                if header not in all_j_seqs:
+                                    all_j_seqs[header] = sequence
+                        fh.close()
+    new_file_path.mkdir(parents=True, exist_ok=True)
     for file in sorted(file_path.iterdir()):
         if file.is_file():
             v_seqs, d_seqs, j_seqs = {}, {}, {}
@@ -223,6 +244,11 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                     set_id = file.stem
                     strain = re.sub("\\/| ", "_", subgroups[set_id])
                     strain = "all" if strain == "" else strain
+                    if strain == "all":
+                        file.unlink()
+                        continue
+                    v_seqs.update(all_v_seqs)
+                    j_seqs.update(all_j_seqs)
                     if len(v_seqs) > 0:
                         write_fasta(
                             v_seqs,
@@ -298,9 +324,16 @@ def main():
         for file in sorted(file_path.iterdir()):
             file_code = file.stem.rsplit("_", 1)[1].lower()
             chain, segment = file_code[:2], file_code[3]
-            out_filename = (
-                igblast_out / f"ogrdb_{species}_{chain}_{segment}.fasta"
-            )
+            if species == "human":
+                out_filename = (
+                    igblast_out / f"ogrdb_{species}_{chain}_{segment}.fasta"
+                )
+            elif species == "mouse":
+                strain = file.stem.rsplit("_", 1)[0].split("_", 2)[2]
+                out_filename = (
+                    igblast_out
+                    / f"ogrdb_{species}_{strain}_{chain}_{segment}.fasta"
+                )
             file_tree[chain + segment][file].value = 1
             out_filename_tree[chain + segment][out_filename].value = 1
         for chain_segment in file_tree:
