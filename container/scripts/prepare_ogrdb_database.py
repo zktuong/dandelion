@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.request import urlopen, Request
 from urllib.error import URLError
 
-from container.scripts.utils import Tree, fasta_iterator, write_fasta
+from utils import Tree, fasta_iterator, write_fasta
 
 
 def parse_args():
