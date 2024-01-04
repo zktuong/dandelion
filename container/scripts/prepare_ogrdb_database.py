@@ -244,9 +244,6 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                     set_id = file.stem
                     strain = re.sub("\\/| ", "_", subgroups[set_id])
                     strain = "all" if strain == "" else strain
-                    if strain == "all":
-                        file.unlink()
-                        continue
                     v_seqs.update(all_v_seqs)
                     j_seqs.update(all_j_seqs)
                     if len(v_seqs) > 0:
@@ -267,6 +264,11 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                             new_file_path
                             / f"ogrdb_{species}_{strain}_{locus}J.fasta",
                         )
+                    if strain == "all":
+                        (
+                            new_file_path
+                            / f"ogrdb_{species}_{strain}_{locus}J.fasta"
+                        ).unlink()
                 fh.close()
             file.unlink()
 
