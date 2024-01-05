@@ -114,7 +114,7 @@ def return_ogrdb_info(species: str) -> tuple[list[str], dict[str, str]]:
 
 
 def copy_ogrdb_aux_to_igblast(
-    out_dir: str | Path,
+    out_dir: str | Path, in_dir: str | Path | None = None
 ):
     """
     Copy files in optional_file to where igblast expects them.
@@ -123,9 +123,13 @@ def copy_ogrdb_aux_to_igblast(
     ----------
     out_dir : str | Path
         Location of new database folder.
+    in_dir : str | Path | None, optional
+        Location of optional_file folder. Defaults to None.
     """
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    shutil.copytree(Path("./optional_file"), Path(out_dir), dirs_exist_ok=True)
+    if in_dir is None:
+        in_dir = Path(__file__).parent
+    shutil.copytree(in_dir / "optional_file", Path(out_dir), dirs_exist_ok=True)
 
 
 def download_germline_and_process(
