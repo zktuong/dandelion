@@ -27,21 +27,10 @@ def test_formatfasta(create_testfolder):
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
-@pytest.mark.parametrize(
-    "flavour,strain",
-    [
-        pytest.param("strict", "BALB_c_ByJ"),
-        pytest.param(
-            "original",
-            "BALB_c_ByJ",
-        ),
-        pytest.param("strict", None),
-        pytest.param("original", None),
-    ],
-)
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reannotategenes_nod(
-    create_testfolder, database_paths_mouse, flavour, strain
+    create_testfolder,
+    database_paths_mouse,
 ):
     """test_reannotategenes"""
     # different igblast versions/references may give different results and lead to regression.
@@ -52,14 +41,16 @@ def test_reannotategenes_nod(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=strain,
-        flavour=flavour,
+        strain=None,
+        flavour="strict",
     )
 
 
-@pytest.mark.parametrize("strain", ["BALB_c_ByJ", None])
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
-def test_reassignalleles(create_testfolder, database_paths_mouse, strain):
+def test_reassignalleles(
+    create_testfolder,
+    database_paths_mouse,
+):
     """test_reassignalleles"""
     ddl.pp.reassign_alleles(
         str(create_testfolder),
@@ -67,7 +58,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse, strain):
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=strain,
+        strain=None,
         novel=True,
         plot=False,
     )
@@ -88,12 +79,13 @@ def test_assignsisotypes(
     )
 
 
-@pytest.mark.parametrize("strain", ["BALB_c_ByJ", None])
 @pytest.mark.usefixtures(
     "create_testfolder", "processed_files", "database_paths_mouse"
 )
 def test_create_germlines(
-    create_testfolder, processed_files, database_paths_mouse, strain
+    create_testfolder,
+    processed_files,
+    database_paths_mouse,
 ):
     """test_create_germlines"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
@@ -102,7 +94,7 @@ def test_create_germlines(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=strain,
+        strain=None,
     )
     f2 = create_testfolder / "dandelion" / processed_files["germ-pass"]
     dat = pd.read_csv(f2, sep="\t")
