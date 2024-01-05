@@ -25,6 +25,31 @@ def assigngenes_igblast(
     igblast_db: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
+    db: Literal["imgt", "ogrdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     additional_args: List[str] = [],
 ):
     """
@@ -40,6 +65,10 @@ def assigngenes_igblast(
         organism for germline sequences.
     loci : Literal["ig", "tr"], optional
         `ig` or `tr` mode for running igblastn.
+    db : Literal["imgt", "ogrdb"], optional
+        `imgt` or `ogrdb` reference database for running igblastn.
+    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`.
     additional_args : List[str], optional
         Additional arguments to pass to `AssignGenes.py`.
     """
@@ -67,7 +96,20 @@ def assigngenes_igblast(
             "-o",
             str(outfolder / outfile),
         ]
-        cmd = cmd + additional_args
+        if db == "ogrdb":
+            _strain = "_" + strain if strain is not None else ""
+            cmd += [
+                "--vdb",
+                "ogrdb_" + org + _strain + "_" + loci + "_v",
+                "--jdb",
+                "ogrdb_" + org + _strain + "_" + loci + "_j",
+            ]
+            if strain not in NO_DS:
+                cmd += [
+                    "--ddb",
+                    "ogrdb_" + org + _strain + "_" + loci + "_d",
+                ]
+        cmd += additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
@@ -77,6 +119,7 @@ def makedb_igblast(
     igblast_output: Optional[Union[str, Path]] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     extended: bool = True,
     additional_args: List[str] = [],
 ):
@@ -93,13 +136,18 @@ def makedb_igblast(
         path to germline database.
     org : Literal["human", "mouse"], optional
         organism of germline sequences.
+    db : Literal["imgt", "ogrdb"], optional
+        `imgt` or `ogrdb` reference database for running igblastn.
     extended : bool, optional
         whether or not to parse extended 10x annotations.
     additional_args: List[str], optional
         Additional arguments to pass to `MakeDb.py`.
     """
     env, gml, fasta = set_germline_env(
-        germline=germline, org=org, input_file=fasta
+        germline=germline,
+        org=org,
+        input_file=fasta,
+        db=db,
     )
     if igblast_output is None:
         indir = fasta.parent / "tmp"
@@ -196,6 +244,7 @@ def creategermlines(
     org: Literal["human", "mouse"] = "human",
     genotyped_fasta: Optional[str] = None,
     mode: Optional[Literal["heavy", "light"]] = None,
+    db: Literal["imgt", "ogrdb"] = "imgt",
     additional_args: List[str] = [],
 ):
     """
@@ -214,11 +263,16 @@ def creategermlines(
     mode : Optional[Literal["heavy", "light"]], optional
         whether to run on heavy or light mode. If left as None, heavy and
         light will be run together.
+    db : Literal["imgt", "ogrdb"], optional
+        `imgt` or `ogrdb` reference database.
     additional_args : List[str], optional
         Additional arguments to pass to `CreateGermlines.py`.
     """
     env, gml, airr_file = set_germline_env(
-        germline=germline, org=org, input_file=airr_file
+        germline=germline,
+        org=org,
+        input_file=airr_file,
+        db=db,
     )
 
     if germline is None:
@@ -286,6 +340,7 @@ def tigger_genotype(
     org: Literal["human", "mouse"] = "human",
     fileformat: Literal["airr", "changeo"] = "airr",
     novel_: Literal["YES", "NO"] = "YES",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     additional_args: List[str] = [],
 ):
     """
@@ -306,14 +361,19 @@ def tigger_genotype(
         format for running tigger. Default is 'airr'. Also accepts 'changeo'.
     novel_ : Literal["YES", "NO"], optional
         whether or not to run novel allele discovery.
+    db : Literal["imgt", "ogrdb"], optional
+        `imgt` or `ogrdb` reference database.
     additional_args : List[str], optional
         Additional arguments to pass to `tigger-genotype.R`.
     """
     env, gml, airr_file = set_germline_env(
-        germline=v_germline, org=org, input_file=airr_file
+        germline=v_germline,
+        org=org,
+        input_file=airr_file,
+        db=db,
     )
     if v_germline is None:
-        v_gml = gml / ("imgt_" + org + "_IGHV.fasta")
+        v_gml = gml / (db + "_" + org + "_IGHV.fasta")
     else:
         v_gml = Path(v_germline)
     if outdir is not None:
