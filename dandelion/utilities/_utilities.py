@@ -31,6 +31,8 @@ NO_DS = [
     "AKR_J",
     "A_J",
     "C3H_HeJ",
+    "C57BL_6J",
+    "BALB_c_ByJ",
     "CBA_J",
     "DBA_1J",
     "DBA_2J",

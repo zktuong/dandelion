@@ -41,7 +41,7 @@ def test_reannotategenes_nod(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain="balbc",
     )
 
 
@@ -57,7 +57,7 @@ def test_reassignalleles(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain="balbc",
         novel=True,
         plot=False,
     )
@@ -94,7 +94,7 @@ def test_create_germlines(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain="balbc",
     )
     f2 = create_testfolder / "dandelion" / processed_files["germ-pass"]
     dat = pd.read_csv(f2, sep="\t")
