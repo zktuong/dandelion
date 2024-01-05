@@ -68,7 +68,7 @@ def assigngenes_igblast(
     db : Literal["imgt", "ogrdb"], optional
         `imgt` or `ogrdb` reference database for running igblastn.
     strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`.
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
     additional_args : List[str], optional
         Additional arguments to pass to `AssignGenes.py`.
     """
@@ -290,7 +290,7 @@ def creategermlines(
     db : Literal["imgt", "ogrdb"], optional
         `imgt` or `ogrdb` reference database.
     strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`.
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
     additional_args : List[str], optional
         Additional arguments to pass to `CreateGermlines.py`.
     """
@@ -427,7 +427,7 @@ def tigger_genotype(
     db : Literal["imgt", "ogrdb"], optional
         `imgt` or `ogrdb` reference database.
     strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`.
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
     additional_args : List[str], optional
         Additional arguments to pass to `tigger-genotype.R`.
     """
