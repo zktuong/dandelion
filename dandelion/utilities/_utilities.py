@@ -26,6 +26,21 @@ JCALL = "j_call"
 VCALLG = "v_call_genotyped"
 JCALLG = "j_call_genotyped"
 STRIPALLELENUM = "[*][0-9][0-9]"
+NO_DS = [
+    "129S1_SvImJ",
+    "AKR_J",
+    "A_J",
+    "BALB_c_ByJ",
+    "C3H_HeJ",
+    "C57BL_6J",
+    "CBA_J",
+    "DBA_1J",
+    "DBA_2J",
+    "MRL_MpJ",
+    "NOR_LtJ",
+    "NZB_BlNJ",
+    "SJL_J",
+]
 
 # for compatibility with python>=3.10
 try:
