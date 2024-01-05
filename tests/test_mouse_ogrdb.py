@@ -73,6 +73,21 @@ def test_reassignalleles(create_testfolder, database_paths_mouse, strain):
     )
 
 
+@pytest.mark.usefixtures(
+    "create_testfolder", "database_paths_mouse", "balbc_ighg_primers"
+)
+def test_assignsisotypes(
+    create_testfolder, database_paths_mouse, balbc_ighg_primers
+):
+    """test_assignsisotypes"""
+    ddl.pp.assign_isotypes(
+        create_testfolder,
+        blastdb=database_paths_mouse["blastdb_fasta"],
+        correction_dict=balbc_ighg_primers,
+        plot=False,
+    )
+
+
 @pytest.mark.parametrize("strain", ["BALB_c_ByJ", None])
 @pytest.mark.usefixtures(
     "create_testfolder", "processed_files", "database_paths_mouse"
