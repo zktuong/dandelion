@@ -1259,6 +1259,31 @@ def reassign_alleles(
     v_germline: Optional[str] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
+    db: Literal["imgt", "orgdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     novel: bool = True,
     plot: bool = True,
     save_plot: bool = False,
@@ -1293,6 +1318,10 @@ def reassign_alleles(
         variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use for germline sequences.
+    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`.
     novel : bool, optional
         whether or not to run novel allele discovery during tigger-genotyping.
     plot : bool, optional
@@ -1481,6 +1510,9 @@ def reassign_alleles(
         )
 
     novel_dict = {True: "YES", False: "NO"}
+    logg.info(
+        "      Do not worry about ERROR appearing below. There is a check in place to ensure that the script continues to run."
+    )
     if novel:
         try:
             logg.info(
@@ -1495,6 +1527,8 @@ def reassign_alleles(
                 org=org,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[novel],
+                db=db,
+                strain=strain,
                 additional_args=additional_args["tigger"],
             )
             creategermlines(
@@ -1509,6 +1543,8 @@ def reassign_alleles(
                     / (out_dir.stem + "_heavy" + germline_dict[fileformat])
                 ),
                 mode="heavy",
+                db=db,
+                strain=strain,
                 additional_args=["--vf", "v_call_genotyped"]
                 + additional_args["creategermlines"],
             )
@@ -1531,6 +1567,8 @@ def reassign_alleles(
                     org=org,
                     fileformat=fform_dict[fileformat],
                     novel_=novel_dict[False],
+                    db=db,
+                    strain=strain,
                     additional_args=additional_args["tigger"],
                 )
                 creategermlines(
@@ -1549,6 +1587,8 @@ def reassign_alleles(
                         / (out_dir.stem + "_heavy" + germline_dict[fileformat])
                     ),
                     mode="heavy",
+                    db=db,
+                    strain=strain,
                     additional_args=["--vf", "v_call_genotyped"]
                     + additional_args["creategermlines"],
                 )
@@ -1579,6 +1619,8 @@ def reassign_alleles(
                 org=org,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[False],
+                db=db,
+                strain=strain,
                 additional_args=additional_args["tigger"],
             )
             creategermlines(
@@ -1593,6 +1635,8 @@ def reassign_alleles(
                     / (out_dir.stem + "_heavy" + germline_dict[fileformat])
                 ),
                 mode="heavy",
+                db=db,
+                strain=strain,
                 additional_args=["--vf", "v_call_genotyped"]
                 + additional_args["creategermlines"],
             )
@@ -1621,6 +1665,8 @@ def reassign_alleles(
             org=org,
             genotyped_fasta=None,
             mode="heavy",
+            db=db,
+            strain=strain,
             additional_args=["--vf", "v_call"]
             + additional_args["creategermlines"],
         )
@@ -1632,6 +1678,8 @@ def reassign_alleles(
         org=org,
         genotyped_fasta=None,
         mode="light",
+        db=db,
+        strain=strain,
         additional_args=["--vf", "v_call"] + additional_args["creategermlines"],
     )
     if "tigger_failed" in locals():
@@ -1828,6 +1876,31 @@ def create_germlines(
     vdj_data: Union[Dandelion, pd.DataFrame, str],
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
+    db: Literal["imgt", "ogrdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     genotyped_fasta: Optional[str] = None,
     additional_args: List[str] = [],
     save: Optional[str] = None,
@@ -1844,6 +1917,10 @@ def create_germlines(
         path to germline database folder. `None` defaults to  environmental variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
+    db : Literal["imgt", "ogrdb"], optional
+        `imgt` or `ogrdb` reference database.
+    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`.
     genotyped_fasta : Optional[str], optional
         location to corrected v genotyped fasta file.
     additional_args : List[str], optional
@@ -1870,6 +1947,8 @@ def create_germlines(
             germline=germline,
             org=org,
             genotyped_fasta=genotyped_fasta,
+            db=db,
+            strain=strain,
             additional_args=additional_args,
         )
     else:
@@ -1884,6 +1963,8 @@ def create_germlines(
                 airr_file=tmpfile,
                 germline=tmpgmlfile,
                 org=org,
+                db=db,
+                strain=strain,
                 additional_args=additional_args,
             )
         else:
@@ -1892,6 +1973,8 @@ def create_germlines(
                 germline=germline,
                 org=org,
                 genotyped_fasta=genotyped_fasta,
+                db=db,
+                strain=strain,
                 additional_args=additional_args,
             )
     # return as Dandelion object

@@ -53,6 +53,20 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--db",
+        type=str,
+        default="imgt",
+        help=("Which database to use for reannotation. imgt or ogrdb."),
+    )
+    parser.add_argument(
+        "--strain",
+        type=str,
+        default=None,
+        help=(
+            "Which mouse strain to use for running the reannotation. Only for ogrdb. Defaults to all (None) mouse strains."
+        ),
+    )
+    parser.add_argument(
         "--sep",
         type=str,
         default="_",
@@ -73,6 +87,22 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--filter_to_high_confidence",
+        action="store_true",
+        help=(
+            "If passed, limits the contig space to ones that are set to "
+            + '"True" in the high_confidence column of the contig annotation.'
+        ),
+    )
+    parser.add_argument(
+        "--keep_trailing_hyphen_number",
+        action="store_false",
+        help=(
+            "If passed, do not strip out the trailing hyphen number, "
+            + 'e.g. "-1", from the end of barcodes.'
+        ),
+    )
+    parser.add_argument(
         "--skip_format_header",
         action="store_true",
         help=("If passed, skips formatting of contig headers."),
@@ -81,14 +111,6 @@ def parse_args():
         "--skip_tigger",
         action="store_true",
         help=("If passed, skips TIgGER reassign alleles step."),
-    )
-    parser.add_argument(
-        "--filter_to_high_confidence",
-        action="store_true",
-        help=(
-            "If passed, limits the contig space to ones that are set to "
-            + '"True" in the high_confidence column of the contig annotation.'
-        ),
     )
     parser.add_argument(
         "--skip_reassign_dj",
@@ -102,14 +124,6 @@ def parse_args():
         action="store_false",
         help=(
             "If passed, skips correcting c calls at assign_isotypes stage. Only if Chain == IG."
-        ),
-    )
-    parser.add_argument(
-        "--keep_trailing_hyphen_number",
-        action="store_false",
-        help=(
-            "If passed, do not strip out the trailing hyphen number, "
-            + 'e.g. "-1", from the end of barcodes.'
         ),
     )
     parser.add_argument(
@@ -160,12 +174,14 @@ def main():
             f"    --chain = {args.chain}\n"
             f"    --org = {args.org}\n"
             f"    --file_prefix = {args.file_prefix}\n"
+            f"    --db = {args.db}\n"
+            f"    --strain = {str(args.strain)}\n"
             f"    --sep = {args.sep}\n"
             f"    --flavour = {args.flavour}\n"
-            f"    --skip_format_header = {args.skip_format_header}\n"
-            f"    --skip_tigger = {args.skip_tigger}\n"
             f"    --filter_to_high_confidence = {args.filter_to_high_confidence}\n"
             f"    --keep_trailing_hyphen_number = {keep_trailing_hyphen_number_log}\n"
+            f"    --skip_format_header = {args.skip_format_header}\n"
+            f"    --skip_tigger = {args.skip_tigger}\n"
             f"    --skip_reassign_dj = {skip_reassign_dj_log}\n"
             f"    --skip_correct_c = {skip_correct_c_log}\n"
             f"    --clean_output = {args.clean_output}\n"
@@ -255,6 +271,8 @@ def main():
         filename_prefix=filename_prefixes,
         flavour=args.flavour,
         reassign_dj=args.skip_reassign_dj,
+        db=args.db,
+        strain=args.strain,
     )
 
     # IG requires further preprocessing, TR is done now
@@ -279,6 +297,8 @@ def main():
                         save_plot=True,
                         show_plot=False,
                         filename_prefix=filename_prefixes,
+                        db=args.db,
+                        strain=args.strain,
                     )
                     # remove if cleaning output - the important information is
                     # ported to sample folders already
@@ -293,6 +313,8 @@ def main():
                     save_plot=True,
                     show_plot=False,
                     filename_prefix=filename_prefixes,
+                    db=args.db,
+                    strain=args.strain,
                 )
                 # remove if cleaning output - the important information is ported
                 # to sample folders already
@@ -311,6 +333,7 @@ def main():
             }
         else:
             correction_dict = None  # TODO: next time maybe can provide a fasta file with the sequences to correct to
+        # only imgt here, there's no ogrdb c references afaik.
         ddl.pp.assign_isotypes(
             samples,
             org=args.org,

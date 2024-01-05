@@ -86,7 +86,9 @@ def test_create_germlines(
 ):
     """test_create_germlines"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
-    ddl.pp.create_germlines(f, germline=database_paths_mouse["germline"])
+    ddl.pp.create_germlines(
+        f, org="mouse", germline=database_paths_mouse["germline"]
+    )
     f2 = create_testfolder / "dandelion" / processed_files["germ-pass"]
     dat = pd.read_csv(f2, sep="\t")
     assert not dat["germline_alignment_d_mask"].empty
