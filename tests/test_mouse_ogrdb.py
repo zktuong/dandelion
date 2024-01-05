@@ -27,9 +27,22 @@ def test_formatfasta(create_testfolder):
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
-@pytest.mark.parametrize("flavour", ["strict", "original"])
+@pytest.mark.parametrize(
+    "flavour,strain",
+    [
+        pytest.param("strict", "BALB_c_ByJ"),
+        pytest.param(
+            "original",
+            "BALB_c_ByJ",
+        ),
+        pytest.param("strict", None),
+        pytest.param("original", None),
+    ],
+)
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
-def test_reannotategenes(create_testfolder, database_paths_mouse, flavour):
+def test_reannotategenes_nod(
+    create_testfolder, database_paths_mouse, flavour, strain
+):
     """test_reannotategenes"""
     # different igblast versions/references may give different results and lead to regression.
     # disabling those checks would work for now.
@@ -39,23 +52,43 @@ def test_reannotategenes(create_testfolder, database_paths_mouse, flavour):
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain=strain,
         flavour=flavour,
     )
 
 
-@pytest.mark.parametrize("flavour", ["strict", "original"])
+@pytest.mark.parametrize("strain", ["BALB_c_ByJ", None])
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
-def test_reannotategenes_nod(create_testfolder, database_paths_mouse, flavour):
-    """test_reannotategenes"""
-    # different igblast versions/references may give different results and lead to regression.
-    # disabling those checks would work for now.
-    ddl.pp.reannotate_genes(
-        create_testfolder,
-        igblast_db=database_paths_mouse["igblast_db"],
+def test_reassignalleles(create_testfolder, database_paths_mouse, strain):
+    """test_reassignalleles"""
+    ddl.pp.reassign_alleles(
+        str(create_testfolder),
+        combined_folder="test_mouse",
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain="C57BL_6J",
-        flavour=flavour,
+        strain=strain,
+        novel=True,
+        plot=False,
     )
+
+
+@pytest.mark.parametrize("strain", ["BALB_c_ByJ", None])
+@pytest.mark.usefixtures(
+    "create_testfolder", "processed_files", "database_paths_mouse"
+)
+def test_create_germlines(
+    create_testfolder, processed_files, database_paths_mouse, strain
+):
+    """test_create_germlines"""
+    f = create_testfolder / "dandelion" / processed_files["filtered"]
+    ddl.pp.create_germlines(
+        f,
+        germline=database_paths_mouse["ogrdb"],
+        org="mouse",
+        db="ogrdb",
+        strain=strain,
+    )
+    f2 = create_testfolder / "dandelion" / processed_files["germ-pass"]
+    dat = pd.read_csv(f2, sep="\t")
+    assert not dat["germline_alignment_d_mask"].empty
