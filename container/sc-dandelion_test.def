@@ -10,6 +10,7 @@ From: ubuntu:latest
     scripts/prepare_imgt_database.py /share/prepare_imgt_database.py
     scripts/prepare_ogrdb_database.py /share/prepare_ogrdb_database.py
     scripts/utils.py /share/utils.py
+    optional_data /share/optional_data
     tests /tests
 
 %post
