@@ -4174,11 +4174,13 @@ def run_igblastn(
     dbpath = igdb / "database"
     db_org_loci = db + "_" + org + _strain + "_" + loci + "_"
     vpath = dbpath / (db_org_loci + "v")
-    dpath = dbpath / (db_org_loci + "d")
+    if strain in NO_DS:
+        dpath = dbpath / (db + "_" + org + "_" + loci + "_" + "d")
+    else:
+        dpath = dbpath / (db_org_loci + "d")
     jpath = dbpath / (db_org_loci + "j")
-    cpath = dbpath / (db_org_loci + "c")
+    cpath = dbpath / ("imgt_" + org + "_" + loci + "_" + "c")  # only imgt
     auxpath = igdb / "optional_file" / (org + aux)
-
     for fileformat in ["blast", "airr"]:
         outfile = str(fasta.stem + informat_dict[fileformat])
         if loci == "tr":
@@ -4240,16 +4242,9 @@ def run_igblastn(
                 str(evalue),
                 "-min_D_match",
                 str(min_d_match),
+                "-c_region_db",
+                str(cpath),
             ]
-            if db == "imgt":
-                cmd += [
-                    "-c_region_db",
-                    str(cpath),
-                ]
-            if db == "ogrdb":
-                if strain in NO_DS:
-                    cmd.remove("-germline_db_D")
-                    cmd.remove(str(dpath))
         cmd += additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
