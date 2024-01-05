@@ -1883,7 +1883,7 @@ def create_germlines(
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     db: Literal["imgt", "ogrdb"] = "imgt",
-    strain: Optionstrain: Optional[
+    strain: Optional[
         Literal[
             "c57bl6",
             "balbc",
