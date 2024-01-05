@@ -925,6 +925,8 @@ def reannotate_genes(
     db: Literal["imgt", "orgdb"] = "imgt",
     strain: Optional[
         Literal[
+            "c57bl6",
+            "balbc",
             "129S1_SvImJ",
             "AKR_J",
             "A_J",
@@ -1023,8 +1025,9 @@ def reannotate_genes(
         If None, defaults to `20 64 1`.
     db : Literal["imgt", "orgdb"], optional
         database to use for igblastn. Defaults to 'imgt'.
-    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args : Dict[str, List[str]], optional
         additional arguments to pass to `AssignGenes.py`, `MakeDb.py`, `igblastn` and `blastn`.
         This accepts a dictionary with keys as the name of the sub-function (`assigngenes`, `makedb`,
@@ -1262,6 +1265,8 @@ def reassign_alleles(
     db: Literal["imgt", "orgdb"] = "imgt",
     strain: Optional[
         Literal[
+            "c57bl6",
+            "balbc",
             "129S1_SvImJ",
             "AKR_J",
             "A_J",
@@ -1320,8 +1325,9 @@ def reassign_alleles(
         organism of germline database.
     db : Literal["imgt", "ogrdb"], optional
         database to use for germline sequences.
-    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     novel : bool, optional
         whether or not to run novel allele discovery during tigger-genotyping.
     plot : bool, optional
@@ -1877,8 +1883,10 @@ def create_germlines(
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     db: Literal["imgt", "ogrdb"] = "imgt",
-    strain: Optional[
+    strain: Optionstrain: Optional[
         Literal[
+            "c57bl6",
+            "balbc",
             "129S1_SvImJ",
             "AKR_J",
             "A_J",
@@ -1919,8 +1927,9 @@ def create_germlines(
         organism of germline database.
     db : Literal["imgt", "ogrdb"], optional
         `imgt` or `ogrdb` reference database.
-    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     genotyped_fasta : Optional[str], optional
         location to corrected v genotyped fasta file.
     additional_args : List[str], optional
@@ -4097,6 +4106,8 @@ def run_igblastn(
     db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
+            "c57bl6",
+            "balbc",
             "129S1_SvImJ",
             "AKR_J",
             "A_J",
@@ -4144,8 +4155,9 @@ def run_igblastn(
         minimum D nucleotide match.
     db : Literal["imgt", "ogrdb"], optional
         database to use for germline sequences.
-    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args: List[str], optional
         additional arguments to pass to `igblastn`.
     """
@@ -4265,6 +4277,8 @@ def assign_DJ(
     db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
+            "c57bl6",
+            "balbc",
             "129S1_SvImJ",
             "AKR_J",
             "A_J",
@@ -4332,8 +4346,9 @@ def assign_DJ(
         whether or not to overwrite the assignments.
     db : Literal["imgt", "ogrdb"], optional
         database to use for germline sequences.
-    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args: List[str], optional
         additional arguments to pass to `blastn`.
     """
@@ -4388,6 +4403,8 @@ def run_blastn(
     db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
+            "c57bl6",
+            "balbc",
             "129S1_SvImJ",
             "AKR_J",
             "A_J",
@@ -4451,8 +4468,9 @@ def run_blastn(
         Must be >=4. `None` defaults to 4.
     db : Literal["imgt", "ogrdb"], optional
         database to use for germline sequences.
-    strain : Optional[Literal["129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set. The rest will not allow igblastn MakeDB.py to generate a successful airr table (check the failed file).
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args: List[str], optional
         additional arguments to pass to `blastn`.
 
