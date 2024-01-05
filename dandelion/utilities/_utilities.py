@@ -30,9 +30,7 @@ NO_DS = [
     "129S1_SvImJ",
     "AKR_J",
     "A_J",
-    "BALB_c_ByJ",
     "C3H_HeJ",
-    "C57BL_6J",
     "CBA_J",
     "DBA_1J",
     "DBA_2J",
@@ -41,6 +39,14 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
+STRAIN_PAIRS_LH = {
+    "BALB_c_ByJ": "BALB_c",
+    "C57BL_6J": "C57BL_6",
+}
+STRAIN_PAIRS_HL = {
+    "BALB_c": "BALB_c_ByJ",
+    "C57BL_6": "C57BL_6J",
+}
 
 # for compatibility with python>=3.10
 try:

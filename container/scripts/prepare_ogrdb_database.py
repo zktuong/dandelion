@@ -151,7 +151,9 @@ def download_germline_and_process(
         new_file_name = set_id + ".fasta"
         # Stop if the file already exists
         if os.path.exists(file_path / set_id):
-            logging.info(f"Skipping download of {file_name} as it already exists.")
+            logging.info(
+                f"Skipping download of {file_name} as it already exists."
+            )
             return
         # Check if the downloaded content is empty
         if content.rstrip() == "":
@@ -228,15 +230,18 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                 # make a grouped one for mice.
                 if len(v_seqs) > 0:
                     write_fasta(
-                        v_seqs, new_file_path / f"ogrdb_{species}_{locus}V.fasta"
+                        v_seqs,
+                        new_file_path / f"ogrdb_{species}_{locus}V.fasta",
                     )
                 if len(d_seqs) > 0:
                     write_fasta(
-                        d_seqs, new_file_path / f"ogrdb_{species}_{locus}D.fasta"
+                        d_seqs,
+                        new_file_path / f"ogrdb_{species}_{locus}D.fasta",
                     )
                 if len(j_seqs) > 0:
                     write_fasta(
-                        j_seqs, new_file_path / f"ogrdb_{species}_{locus}J.fasta"
+                        j_seqs,
+                        new_file_path / f"ogrdb_{species}_{locus}J.fasta",
                     )
             if species == "human":
                 file.unlink()
@@ -361,7 +366,9 @@ def main():
         for file in sorted(file_path.iterdir()):
             file_code = file.stem.rsplit("_", 1)[1].lower()
             chain, segment = file_code[:2], file_code[3]
-            out_filename = igblast_out / f"ogrdb_{species}_{chain}_{segment}.fasta"
+            out_filename = (
+                igblast_out / f"ogrdb_{species}_{chain}_{segment}.fasta"
+            )
             file_tree[chain + segment][file].value = 1
             out_filename_tree[chain + segment][out_filename].value = 1
             if species == "mouse":
@@ -372,7 +379,9 @@ def main():
                         / f"ogrdb_{species}_{strain}_{chain}_{segment}.fasta"
                     )
                     file_tree[chain + segment + strain][file].value = 1
-                    out_filename_tree[chain + segment + strain][out_filename].value = 1
+                    out_filename_tree[chain + segment + strain][
+                        out_filename
+                    ].value = 1
         for chain_segment in file_tree:
             in_files = list(file_tree[chain_segment])
             out_file = list(out_filename_tree[chain_segment])[0]
@@ -384,7 +393,9 @@ def main():
                     fh = open(file, "r")
                     for header, sequence in fasta_iterator(fh):
                         if header not in seqs:
-                            seqs[header] = sequence.replace(".", "").upper().rstrip()
+                            seqs[header] = (
+                                sequence.replace(".", "").upper().rstrip()
+                            )
                     fh.close()
             write_fasta(seqs, out_file)
     copy_ogrdb_aux_to_igblast(
