@@ -210,22 +210,6 @@ def download_bcr_constant_and_process(
         write_fasta(seqs, file_name, overwrite=True)
 
 
-def download_igblast_database(file_path: str | Path):
-    """
-    Download database folder from igblast ftp.
-
-    Parameters
-    ----------
-    file_path : str | Path
-        Path to write database folder to.
-    """
-    url = "https://ftp.ncbi.nih.gov/blast/executables/igblast/release/database/mouse_gl_VDJ.tar"
-    urlretrieve(url, file_path / "mouse_gl_VDJ.tar")
-    with tarfile.open(file_path / "mouse_gl_VDJ.tar", "r") as tar:
-        tar.extractall(file_path)
-    (file_path / "mouse_gl_VDJ.tar").unlink()
-
-
 def main():
     """Main function."""
     args = parse_args()
@@ -533,8 +517,6 @@ def main():
         download_bcr_constant_and_process(
             species, query, blast_out / species, source
         )
-    logging.info("Downloading mouse blast database from igblast")
-    download_igblast_database(blast_out)
     for species, query in species_dict.items():
         logging.info(f"Converting to blast database for {species}")
         fastafile = blast_out / species / f"{species}_BCR_C.fasta"
