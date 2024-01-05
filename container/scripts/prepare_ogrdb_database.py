@@ -117,7 +117,7 @@ def copy_ogrdb_aux_to_igblast(
     out_dir: str | Path,
 ):
     """
-    Copy files in optional_data to where igblast expects them.
+    Copy files in optional_file to where igblast expects them.
 
     Parameters
     ----------
@@ -125,7 +125,7 @@ def copy_ogrdb_aux_to_igblast(
         Location of new database folder.
     """
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    shutil.copytree(Path("./optional_data"), Path(out_dir), dirs_exist_ok=True)
+    shutil.copytree(Path("./optional_file"), Path(out_dir), dirs_exist_ok=True)
 
 
 def download_germline_and_process(
@@ -398,7 +398,7 @@ def main():
                     fh.close()
             write_fasta(seqs, out_file)
     copy_ogrdb_aux_to_igblast(
-        out_dir / "igblast" / "optional_data",
+        out_dir / "igblast" / "optional_file",
     )
     # convert to igblast database
     igblastdb_out.mkdir(parents=True, exist_ok=True)
