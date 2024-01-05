@@ -431,6 +431,7 @@ def main():
                             )
                     fh.close()
             write_fasta(seqs, out_file)
+    logging.info("Preparing auxiliary files for igblast")
     copy_ogrdb_aux_to_igblast(
         out_dir / "igblast" / "optional_file",
     )
