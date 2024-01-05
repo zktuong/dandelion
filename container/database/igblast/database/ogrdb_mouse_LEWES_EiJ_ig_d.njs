@@ -6,7 +6,7 @@
   "description": "database/igblast/fasta/ogrdb_mouse_LEWES_EiJ_ig_d.fasta",
   "number-of-letters": 188,
   "number-of-sequences": 11,
-  "last-updated": "2024-01-05T13:24:00",
+  "last-updated": "2024-01-05T19:49:00",
   "number-of-volumes": 1,
   "bytes-total": 50589,
   "bytes-to-cache": 351,
