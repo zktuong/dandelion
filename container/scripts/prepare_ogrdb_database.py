@@ -14,6 +14,14 @@ from urllib.error import URLError
 
 from utils import Tree, fasta_iterator, write_fasta
 
+MERGE_STRAINS = ["BALB_c", "BALB_c_ByJ", "C57BL_6", "C57BL_6J"]
+MERGE_STRAINS_DICT = {
+    "BALB_c": "balbc",
+    "BALB_c_ByJ": "balbc",
+    "C57BL_6": "c57bl6",
+    "C57BL_6J": "c57bl6",
+}
+
 
 def parse_args():
     """Get command line arguments."""
@@ -125,7 +133,11 @@ def copy_ogrdb_aux_to_igblast(
         Location of new database folder.
     """
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    shutil.copytree(Path("./optional_file"), Path(out_dir), dirs_exist_ok=True)
+    shutil.copytree(
+        Path(__file__).parent / "optional_file",
+        Path(out_dir),
+        dirs_exist_ok=True,
+    )
 
 
 def download_germline_and_process(
@@ -275,6 +287,13 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                                 new_file_path
                                 / f"ogrdb_{species}_{strain}_{locus}V.fasta",
                             )
+                            if strain in MERGE_STRAINS:
+                                _strain = MERGE_STRAINS_DICT[strain]
+                                write_fasta(
+                                    v_seqs,
+                                    new_file_path
+                                    / f"ogrdb_{species}_{_strain}_{locus}V.fasta",
+                                )
                         else:
                             fh1 = open(
                                 new_file_path
@@ -288,6 +307,13 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                                 new_file_path
                                 / f"ogrdb_{species}_{strain}_{locus}D.fasta",
                             )
+                            if strain in MERGE_STRAINS:
+                                _strain = MERGE_STRAINS_DICT[strain]
+                                write_fasta(
+                                    d_seqs,
+                                    new_file_path
+                                    / f"ogrdb_{species}_{_strain}_{locus}D.fasta",
+                                )
                         else:
                             if locus == "IGH":
                                 fh1 = open(
@@ -302,6 +328,13 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                                 new_file_path
                                 / f"ogrdb_{species}_{strain}_{locus}J.fasta",
                             )
+                            if strain in MERGE_STRAINS:
+                                _strain = MERGE_STRAINS_DICT[strain]
+                                write_fasta(
+                                    j_seqs,
+                                    new_file_path
+                                    / f"ogrdb_{species}_{_strain}_{locus}J.fasta",
+                                )
                         else:
                             fh1 = open(
                                 new_file_path
