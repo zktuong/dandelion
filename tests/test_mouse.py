@@ -71,6 +71,7 @@ def test_assignsisotypes(
     """test_assignsisotypes"""
     ddl.pp.assign_isotypes(
         create_testfolder,
+        org="mouse",
         blastdb=database_paths_mouse["blastdb_fasta"],
         correction_dict=balbc_ighg_primers,
         plot=False,

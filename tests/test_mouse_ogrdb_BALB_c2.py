@@ -41,8 +41,11 @@ def test_reannotategenes_nod(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain="BALB_c_ByJ",
     )
+    assert (
+        create_testfolder / "dandelion" / "tmp" / "filtered_contig_igblast.fmt7"
+    ).exists()
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
@@ -57,7 +60,7 @@ def test_reassignalleles(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain="BALB_c_ByJ",
         novel=True,
         plot=False,
     )
@@ -94,7 +97,7 @@ def test_create_germlines(
         germline=database_paths_mouse["ogrdb"],
         org="mouse",
         db="ogrdb",
-        strain=None,
+        strain="BALB_c_ByJ",
     )
     f2 = create_testfolder / "dandelion" / processed_files["germ-pass"]
     dat = pd.read_csv(f2, sep="\t")
