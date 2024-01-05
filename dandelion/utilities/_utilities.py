@@ -39,14 +39,6 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
-STRAIN_PAIRS_LH = {
-    "BALB_c_ByJ": "BALB_c",
-    "C57BL_6J": "C57BL_6",
-}
-STRAIN_PAIRS_HL = {
-    "BALB_c": "BALB_c_ByJ",
-    "C57BL_6": "C57BL_6J",
-}
 
 # for compatibility with python>=3.10
 try:

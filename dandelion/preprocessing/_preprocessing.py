@@ -1045,7 +1045,6 @@ def reannotate_genes(
         filename_prefix = [filename_prefix]
     if all(t is None for t in filename_prefix):
         filename_prefix = [None for d in data]
-
     filePath = None
     for i in tqdm(
         range(0, len(data)),
@@ -1070,15 +1069,12 @@ def reannotate_genes(
                 )
 
         logg.info(f"Processing {str(filePath)} \n")
-
         if flavour == "original":
             assigngenes_igblast(
                 filePath,
                 igblast_db=igblast_db,
                 org=org,
                 loci=loci,
-                db=db,
-                strain=strain,
                 additional_args=additional_args["assigngenes"],
             )
         elif flavour == "strict":
@@ -1093,6 +1089,7 @@ def reannotate_genes(
                 strain=strain,
                 additional_args=additional_args["igblastn"],
             )
+        db = "imgt" if flavour == "original" else db
         makedb_igblast(
             filePath,
             org=org,
