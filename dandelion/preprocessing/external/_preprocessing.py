@@ -25,33 +25,6 @@ def assigngenes_igblast(
     igblast_db: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
-    db: Literal["imgt", "ogrdb"] = "imgt",
-    strain: Optional[
-        Literal[
-            "c57bl6",
-            "balbc",
-            "129S1_SvImJ",
-            "AKR_J",
-            "A_J",
-            "BALB_c_ByJ",
-            "BALB_c",
-            "C3H_HeJ",
-            "C57BL_6J",
-            "C57BL_6",
-            "CAST_EiJ",
-            "CBA_J",
-            "DBA_1J",
-            "DBA_2J",
-            "LEWES_EiJ",
-            "MRL_MpJ",
-            "MSM_MsJ",
-            "NOD_ShiLtJ",
-            "NOR_LtJ",
-            "NZB_BlNJ",
-            "PWD_PhJ",
-            "SJL_J",
-        ]
-    ] = None,
     additional_args: List[str] = [],
 ):
     """
@@ -67,11 +40,6 @@ def assigngenes_igblast(
         organism for germline sequences.
     loci : Literal["ig", "tr"], optional
         `ig` or `tr` mode for running igblastn.
-    db : Literal["imgt", "ogrdb"], optional
-        `imgt` or `ogrdb` reference database for running igblastn.
-    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
-        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
-        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args : List[str], optional
         Additional arguments to pass to `AssignGenes.py`.
     """
@@ -99,19 +67,6 @@ def assigngenes_igblast(
             "-o",
             str(outfolder / outfile),
         ]
-        if db == "ogrdb":
-            _strain = "_" + strain if strain is not None else ""
-            cmd += [
-                "--vdb",
-                "ogrdb_" + org + _strain + "_" + loci + "_v",
-                "--jdb",
-                "ogrdb_" + org + _strain + "_" + loci + "_j",
-            ]
-            if strain not in NO_DS:
-                cmd += [
-                    "--ddb",
-                    "ogrdb_" + org + _strain + "_" + loci + "_d",
-                ]
         cmd += additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
