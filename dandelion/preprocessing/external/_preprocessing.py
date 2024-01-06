@@ -8,14 +8,11 @@ import pandas as pd
 import scanpy as sc
 
 from anndata import AnnData
-from datetime import timedelta
 from pathlib import Path
 from scanpy import logging as logg
 from sklearn import mixture
 from subprocess import run
-from time import time
-from typing import Optional
-
+from typing import Optional, Union, List
 
 from ...utilities._utilities import *
 
@@ -262,27 +259,23 @@ def creategermlines(
         db=db,
     )
     _strain = "_" + strain if strain is not None else ""
-
     if germline is None:
         if mode == "heavy":
             if genotyped_fasta is None:
                 gml_ref = [
                     str(gml / ("imgt_" + org + _strain + "_IGHV.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGHJ.fasta")),
                 ]
-                if strain not in NO_DS:
-                    gml_ref += [
-                        str(gml / ("imgt_" + org + _strain + "_IGHD.fasta")),
-                    ]
             else:
                 gml_ref = [
                     str(genotyped_fasta),
-                    str(gml / ("imgt_" + org + _strain + "_IGHJ.fasta")),
                 ]
-                if strain not in NO_DS:
-                    gml_ref += [
-                        str(gml / ("imgt_" + org + _strain + "_IGHD.fasta")),
-                    ]
+            gml_ref += [
+                str(gml / ("imgt_" + org + _strain + "_IGHJ.fasta")),
+            ]
+            _strainD = "" if strain not in NO_DS else _strain
+            gml_ref += [
+                str(gml / ("imgt_" + org + _strainD + "_IGHD.fasta")),
+            ]
         elif mode == "light":
             gml_ref = [
                 str(gml / ("imgt_" + org + _strain + "_IGKV.fasta")),
@@ -294,29 +287,24 @@ def creategermlines(
             if genotyped_fasta is None:
                 gml_ref = [
                     str(gml / ("imgt_" + org + _strain + "_IGHV.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGHJ.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGKV.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGKJ.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGLV.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGLJ.fasta")),
                 ]
-                if strain not in NO_DS:
-                    gml_ref += [
-                        str(gml / ("imgt_" + org + _strain + "_IGHD.fasta")),
-                    ]
             else:
                 gml_ref = [
                     str(genotyped_fasta),
-                    str(gml / ("imgt_" + org + _strain + "_IGHJ.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGKV.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGKJ.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGLV.fasta")),
-                    str(gml / ("imgt_" + org + _strain + "_IGLJ.fasta")),
                 ]
-                if strain not in NO_DS:
-                    gml_ref += [
-                        str(gml / ("imgt_" + org + _strain + "_IGHD.fasta")),
-                    ]
+            gml_ref += [
+                str(gml / ("imgt_" + org + _strain + "_IGHJ.fasta")),
+            ]
+            _strainD = "" if strain not in NO_DS else _strain
+            gml_ref += [
+                str(gml / ("imgt_" + org + _strainD + "_IGHD.fasta")),
+            ]
+            gml_ref += [
+                str(gml / ("imgt_" + org + _strain + "_IGKV.fasta")),
+                str(gml / ("imgt_" + org + _strain + "_IGKJ.fasta")),
+                str(gml / ("imgt_" + org + _strain + "_IGLV.fasta")),
+                str(gml / ("imgt_" + org + _strain + "_IGLJ.fasta")),
+            ]
     else:
         if not isinstance(germline, list):
             germline = [str(germline)]
