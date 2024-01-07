@@ -664,6 +664,7 @@ class Dandelion:
         corrected: Optional[Union[Dict[str, str], str]] = None,
         germline: Optional[str] = None,
         org: Literal["human", "mouse"] = "human",
+        db: Literal["imgt", "ogrdb"] = "imgt",
     ):
         """
         Update germline reference with corrected sequences and store in `Dandelion` object.
@@ -676,7 +677,8 @@ class Dandelion:
             path to germline database folder. Defaults to `` environmental variable.
         org : Literal["human", "mouse"], optional
             organism of reference folder. Default is 'human'.
-
+        db : Literal["imgt", "ogrdb"], optional
+            database of reference sequences. Default is 'imgt'.
         Raises
         ------
         KeyError
@@ -696,7 +698,7 @@ class Dandelion:
                         + "please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files."
                     )
                 )
-            gml = gml / "imgt" / org / "vdj"
+            gml = gml / db / org / "vdj"
         else:
             if type(germline) is list:
                 if len(germline) < 3:

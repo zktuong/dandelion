@@ -922,6 +922,33 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
+    db: Literal["imgt", "orgdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "c57bl6",
+            "balbc",
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     additional_args: Dict[str, List[str]] = {
         "assigngenes": [],
         "makedb": [],
@@ -996,6 +1023,11 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
+    db : Literal["imgt", "orgdb"], optional
+        database to use for igblastn. Defaults to 'imgt'.
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args : Dict[str, List[str]], optional
         additional arguments to pass to `AssignGenes.py`, `MakeDb.py`, `igblastn` and `blastn`.
         This accepts a dictionary with keys as the name of the sub-function (`assigngenes`, `makedb`,
@@ -1013,7 +1045,6 @@ def reannotate_genes(
         filename_prefix = [filename_prefix]
     if all(t is None for t in filename_prefix):
         filename_prefix = [None for d in data]
-
     filePath = None
     for i in tqdm(
         range(0, len(data)),
@@ -1038,7 +1069,6 @@ def reannotate_genes(
                 )
 
         logg.info(f"Processing {str(filePath)} \n")
-
         if flavour == "original":
             assigngenes_igblast(
                 filePath,
@@ -1055,13 +1085,17 @@ def reannotate_genes(
                 loci=loci,
                 evalue=v_evalue,
                 min_d_match=min_d_match,
+                db=db,
+                strain=strain,
                 additional_args=additional_args["igblastn"],
             )
+        db = "imgt" if flavour == "original" else db
         makedb_igblast(
             filePath,
             org=org,
             germline=germline,
             extended=extended,
+            db=db,
             additional_args=additional_args["makedb"],
         )
         # block this for now, until I figure out if it's
@@ -1079,6 +1113,8 @@ def reannotate_genes(
                     dust=dust,
                     word_size=min_j_match,
                     overwrite=overwrite,
+                    db=db,
+                    strain=strain,
                     additional_args=additional_args["blastn_j"],
                 )
                 assign_DJ(
@@ -1092,6 +1128,8 @@ def reannotate_genes(
                     dust=dust,
                     word_size=min_d_match,
                     overwrite=overwrite,
+                    db=db,
+                    strain=strain,
                     additional_args=additional_args["blastn_d"],
                 )
                 ensure_columns_transferred(
@@ -1221,6 +1259,33 @@ def reassign_alleles(
     v_germline: Optional[str] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
+    db: Literal["imgt", "orgdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "c57bl6",
+            "balbc",
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     novel: bool = True,
     plot: bool = True,
     save_plot: bool = False,
@@ -1255,6 +1320,11 @@ def reassign_alleles(
         variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use for germline sequences.
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     novel : bool, optional
         whether or not to run novel allele discovery during tigger-genotyping.
     plot : bool, optional
@@ -1443,6 +1513,9 @@ def reassign_alleles(
         )
 
     novel_dict = {True: "YES", False: "NO"}
+    logg.info(
+        "      Do not worry about ERROR appearing below. There is a check in place to ensure that the script continues to run."
+    )
     if novel:
         try:
             logg.info(
@@ -1457,6 +1530,8 @@ def reassign_alleles(
                 org=org,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[novel],
+                db=db,
+                strain=strain,
                 additional_args=additional_args["tigger"],
             )
             creategermlines(
@@ -1471,6 +1546,8 @@ def reassign_alleles(
                     / (out_dir.stem + "_heavy" + germline_dict[fileformat])
                 ),
                 mode="heavy",
+                db=db,
+                strain=strain,
                 additional_args=["--vf", "v_call_genotyped"]
                 + additional_args["creategermlines"],
             )
@@ -1493,6 +1570,8 @@ def reassign_alleles(
                     org=org,
                     fileformat=fform_dict[fileformat],
                     novel_=novel_dict[False],
+                    db=db,
+                    strain=strain,
                     additional_args=additional_args["tigger"],
                 )
                 creategermlines(
@@ -1511,6 +1590,8 @@ def reassign_alleles(
                         / (out_dir.stem + "_heavy" + germline_dict[fileformat])
                     ),
                     mode="heavy",
+                    db=db,
+                    strain=strain,
                     additional_args=["--vf", "v_call_genotyped"]
                     + additional_args["creategermlines"],
                 )
@@ -1541,6 +1622,8 @@ def reassign_alleles(
                 org=org,
                 fileformat=fform_dict[fileformat],
                 novel_=novel_dict[False],
+                db=db,
+                strain=strain,
                 additional_args=additional_args["tigger"],
             )
             creategermlines(
@@ -1555,6 +1638,8 @@ def reassign_alleles(
                     / (out_dir.stem + "_heavy" + germline_dict[fileformat])
                 ),
                 mode="heavy",
+                db=db,
+                strain=strain,
                 additional_args=["--vf", "v_call_genotyped"]
                 + additional_args["creategermlines"],
             )
@@ -1583,6 +1668,8 @@ def reassign_alleles(
             org=org,
             genotyped_fasta=None,
             mode="heavy",
+            db=db,
+            strain=strain,
             additional_args=["--vf", "v_call"]
             + additional_args["creategermlines"],
         )
@@ -1594,6 +1681,8 @@ def reassign_alleles(
         org=org,
         genotyped_fasta=None,
         mode="light",
+        db=db,
+        strain=strain,
         additional_args=["--vf", "v_call"] + additional_args["creategermlines"],
     )
     if "tigger_failed" in locals():
@@ -1790,6 +1879,33 @@ def create_germlines(
     vdj_data: Union[Dandelion, pd.DataFrame, str],
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
+    db: Literal["imgt", "ogrdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "c57bl6",
+            "balbc",
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     genotyped_fasta: Optional[str] = None,
     additional_args: List[str] = [],
     save: Optional[str] = None,
@@ -1806,6 +1922,11 @@ def create_germlines(
         path to germline database folder. `None` defaults to  environmental variable.
     org : Literal["human", "mouse"], optional
         organism of germline database.
+    db : Literal["imgt", "ogrdb"], optional
+        `imgt` or `ogrdb` reference database.
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     genotyped_fasta : Optional[str], optional
         location to corrected v genotyped fasta file.
     additional_args : List[str], optional
@@ -1832,6 +1953,8 @@ def create_germlines(
             germline=germline,
             org=org,
             genotyped_fasta=genotyped_fasta,
+            db=db,
+            strain=strain,
             additional_args=additional_args,
         )
     else:
@@ -1846,6 +1969,8 @@ def create_germlines(
                 airr_file=tmpfile,
                 germline=tmpgmlfile,
                 org=org,
+                db=db,
+                strain=strain,
                 additional_args=additional_args,
             )
         else:
@@ -1854,6 +1979,8 @@ def create_germlines(
                 germline=germline,
                 org=org,
                 genotyped_fasta=genotyped_fasta,
+                db=db,
+                strain=strain,
                 additional_args=additional_args,
             )
     # return as Dandelion object
@@ -3973,6 +4100,33 @@ def run_igblastn(
     loci: Literal["ig", "tr"] = "ig",
     evalue: float = 1e-4,
     min_d_match: int = 9,
+    db: Literal["imgt", "ogrdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "c57bl6",
+            "balbc",
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     additional_args: List[str] = [],
 ):
     """
@@ -3996,6 +4150,11 @@ def run_igblastn(
         sequence and the targets.
     min_d_match : int, optional
         minimum D nucleotide match.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use for germline sequences.
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args: List[str], optional
         additional arguments to pass to `igblastn`.
     """
@@ -4003,18 +4162,25 @@ def run_igblastn(
     outfolder = fasta.parent / "tmp"
     outfolder.mkdir(parents=True, exist_ok=True)
     informat_dict = {"blast": "_igblast.fmt7", "airr": "_igblast.tsv"}
-
+    if db == "ogrdb":
+        _strain = "_" + strain if strain is not None else ""
+        aux = "_gl_ogrdb.aux"
+    else:
+        _strain = ""
+        aux = "_gl.aux"
     loci_type = {"ig": "Ig", "tr": "TCR"}
     outformat = {"blast": "7 std qseq sseq btop", "airr": "19"}
 
     dbpath = igdb / "database"
-    imgt_org_loci = "imgt_" + org + "_" + loci + "_"
-    vpath = dbpath / (imgt_org_loci + "v")
-    dpath = dbpath / (imgt_org_loci + "d")
-    jpath = dbpath / (imgt_org_loci + "j")
-    cpath = dbpath / (imgt_org_loci + "c")
-    auxpath = igdb / "optional_file" / (org + "_gl.aux")
-
+    db_org_loci = db + "_" + org + _strain + "_" + loci + "_"
+    vpath = dbpath / (db_org_loci + "v")
+    if strain in NO_DS:
+        dpath = dbpath / (db + "_" + org + "_" + loci + "_" + "d")
+    else:
+        dpath = dbpath / (db_org_loci + "d")
+    jpath = dbpath / (db_org_loci + "j")
+    cpath = dbpath / ("imgt_" + org + "_" + loci + "_" + "c")  # only imgt
+    auxpath = igdb / "optional_file" / (org + aux)
     for fileformat in ["blast", "airr"]:
         outfile = str(fasta.stem + informat_dict[fileformat])
         if loci == "tr":
@@ -4079,7 +4245,7 @@ def run_igblastn(
                 "-c_region_db",
                 str(cpath),
             ]
-        cmd = cmd + additional_args
+        cmd += additional_args
         logg.info("Running command: %s\n" % (" ".join(cmd)))
         run(cmd, env=env)  # logs are printed to terminal
 
@@ -4100,6 +4266,33 @@ def assign_DJ(
     ),
     filename_prefix: Optional[str] = None,
     overwrite: bool = False,
+    db: Literal["imgt", "ogrdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "c57bl6",
+            "balbc",
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     additional_args: List[str] = [],
 ):
     """
@@ -4143,6 +4336,11 @@ def assign_DJ(
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
     overwrite : bool, optional
         whether or not to overwrite the assignments.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use for germline sequences.
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args: List[str], optional
         additional arguments to pass to `blastn`.
     """
@@ -4163,6 +4361,8 @@ def assign_DJ(
         outfmt=outfmt,
         dust=dust,
         word_size=word_size,
+        db=db,
+        strain=strain,
         additional_args=additional_args,
     )
 
@@ -4192,6 +4392,33 @@ def run_blastn(
     ),
     dust: Optional[Union[Literal["yes", "no"], str]] = None,
     word_size: Optional[int] = None,
+    db: Literal["imgt", "ogrdb"] = "imgt",
+    strain: Optional[
+        Literal[
+            "c57bl6",
+            "balbc",
+            "129S1_SvImJ",
+            "AKR_J",
+            "A_J",
+            "BALB_c_ByJ",
+            "BALB_c",
+            "C3H_HeJ",
+            "C57BL_6J",
+            "C57BL_6",
+            "CAST_EiJ",
+            "CBA_J",
+            "DBA_1J",
+            "DBA_2J",
+            "LEWES_EiJ",
+            "MRL_MpJ",
+            "MSM_MsJ",
+            "NOD_ShiLtJ",
+            "NOR_LtJ",
+            "NZB_BlNJ",
+            "PWD_PhJ",
+            "SJL_J",
+        ]
+    ] = None,
     additional_args: List[str] = [],
 ) -> pd.DataFrame:
     """
@@ -4231,48 +4458,11 @@ def run_blastn(
     word_size : Optional[int], optional
         Word size for wordfinder algorithm (length of best perfect match).
         Must be >=4. `None` defaults to 4.
-    additional_args: List[str], optional
-        additional arguments to pass to `blastn`.
-
-    Returns
-    -------
-    pd.DataFrame
-        reannotated information after blastn.Annotate contigs using blastn.
-
-    Parameters
-    ----------
-    fasta : Union[str, Path]
-        path to fasta file.
-    database : Optional[str]
-        path to database.
-        Defaults to `IGDATA` environmental variable if v/d/j_call.
-        Defaults to `BLASTDB` environmental variable if c_call.
-    org : Literal["human", "mouse"], optional
-        organism of reference folder.
-    loci : Literal["ig", "tr"], optional
-        locus. 'ig' or 'tr',
-    call : Literal["v", "d", "j", "c"], optional
-        Either 'v', 'd', 'j' or 'c' gene.
-    max_hsps : int, optional
-        Maximum number of HSPs (alignments) to keep for any single query-subject pair.
-        The HSPs shown will be the best as judged by expect value. This number should
-        be an integer that is one or greater. Setting it to one will show only the best
-        HSP for every query-subject pair. Only affects the output file in the tmp folder.
-    evalue : float, optional
-        This is the statistical significance threshold for reporting matches
-        against database sequences. Lower EXPECT thresholds are more stringent
-        and report only high similarity matches. Choose higher EXPECT value
-        (for example 1 or more) if you expect a low identity between your query
-        sequence and the targets.
-    outfmt : str, optional
-        blastn output format.
-    dust : Optional[Union[Literal["yes", "no"], str]], optional
-        dustmasker options. Filter query sequence with DUST
-        Format: 'yes', or 'no' to disable. Accepts str.
-        If None, defaults to `20 64 1`.
-    word_size : Optional[int], optional
-        Word size for wordfinder algorithm (length of best perfect match).
-        Must be >=4. `None` defaults to 4.
+    db : Literal["imgt", "ogrdb"], optional
+        database to use for germline sequences.
+    strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
+        strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
+        The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     additional_args: List[str], optional
         additional arguments to pass to `blastn`.
 
@@ -4283,7 +4473,15 @@ def run_blastn(
     """
     if call != "c":
         env, bdb, fasta = set_igblast_env(igblast_db=database, input_file=fasta)
-        bdb = bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
+        if db == "ogrdb":
+            _strain = "_" + strain if strain is not None else ""
+            bdb = (
+                bdb
+                / "database"
+                / (db + "_" + org + _strain + "_" + loci + "_" + call)
+            )
+        else:
+            bdb = bdb / "database" / (db + "_" + org + "_" + loci + "_" + call)
     else:
         env, bdb, fasta = set_blast_env(blast_db=database, input_file=fasta)
         if database is None:
@@ -4291,7 +4489,9 @@ def run_blastn(
         else:
             if not bdb.stem.endswith("_" + loci + "_" + call):
                 bdb = (
-                    bdb / "database" / ("imgt_" + org + "_" + loci + "_" + call)
+                    bdb
+                    / "database"
+                    / (db + "_" + org + "_" + loci + "_" + call)
                 )
     cmd = [
         "blastn",
