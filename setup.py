@@ -36,7 +36,8 @@ setup(
             "sphinx_rtd_theme<=2.0.0",
             "readthedocs-sphinx-ext<=2.2.5",
             "recommonmark<=0.7.1",
-        ]
+        ],
+        "scirpy": ["scirpy<=0.14", "awkward", "mudata"],
     },
     package_data={"dandelion": ["bin/tigger-genotype.R"]},
     data_files=[("bin", ["bin/tigger-genotype.R"])],
