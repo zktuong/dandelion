@@ -31,7 +31,7 @@ jobs:
             requirements.txt
             container/database
             container/tests
-            container/*.{yml,yaml,py}
+            container/scripts/*.py
             tests
       - name: List all changed files
         run: |
