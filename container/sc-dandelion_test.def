@@ -2,6 +2,11 @@ Bootstrap: docker
 
 From: ubuntu:latest
 
+%setup
+    if [! /share ]; then
+        mkdir -p /share;
+    fi
+
 %files    
     environment_test.yml /environment.yml
     scripts/setup_mamba.sh /share/setup_mamba.sh
