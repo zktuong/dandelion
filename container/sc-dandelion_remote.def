@@ -1,7 +1,12 @@
 Bootstrap: docker
 
 From: ubuntu:latest
-    
+
+%setup
+    if [! /share ]; then
+        mkdir -p /share;
+    fi
+
 %files
     dandelion/container/environment.yml /environment.yml
     dandelion/container/scripts/setup_mamba.sh /share/setup_mamba.sh
