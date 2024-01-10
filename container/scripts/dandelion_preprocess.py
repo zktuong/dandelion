@@ -321,41 +321,41 @@ def main():
                 if args.clean_output:
                     os.system("rm -r tigger")
 
-    # STEP FOUR - ddl.pp.assign_isotypes()
-    # also no tricks here
-    if args.org == "mouse":
-        correction_dict = {
-            "IGHG2": {
-                "IGHG2A": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGATACAACTGGC",
-                "IGHG2B": "GCCAAAACAACACCCCCATCAGTCTATCCACTGGCCCCTGGGTGTGGAGATACAACTGGT",
-                "IGHG2C": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGGTACAACTGGC",
+        # STEP FOUR - ddl.pp.assign_isotypes()
+        # also no tricks here
+        if args.org == "mouse":
+            correction_dict = {
+                "IGHG2": {
+                    "IGHG2A": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGATACAACTGGC",
+                    "IGHG2B": "GCCAAAACAACACCCCCATCAGTCTATCCACTGGCCCCTGGGTGTGGAGATACAACTGGT",
+                    "IGHG2C": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGGTACAACTGGC",
+                }
             }
-        }
-    else:
-        correction_dict = None  # TODO: next time maybe can provide a fasta file with the sequences to correct to
-    # only imgt here, there's no ogrdb c references afaik.
-    ddl.pp.assign_isotypes(
-        samples,
-        org=args.org,
-        save_plot=True,
-        show_plot=False,
-        filename_prefix=filename_prefixes,
-        correct_c_call=args.skip_correct_c,
-        correction_dict=correction_dict,
-    )
-    # STEP FIVE - ddl.pp.quantify_mutations()
-    # this adds the mu_count and mu_freq columns into the table
-    for s in samples:
-        samp_path = (
-            Path(s)
-            / "dandelion"
-            / (str(args.file_prefix) + "_contig_dandelion.tsv")
+        else:
+            correction_dict = None  # TODO: next time maybe can provide a fasta file with the sequences to correct to
+        # only imgt here, there's no ogrdb c references afaik.
+        ddl.pp.assign_isotypes(
+            samples,
+            org=args.org,
+            save_plot=True,
+            show_plot=False,
+            filename_prefix=filename_prefixes,
+            correct_c_call=args.skip_correct_c,
+            correction_dict=correction_dict,
         )
-        ddl.pp.quantify_mutations(samp_path)
-        ddl.pp.quantify_mutations(
-            samp_path,
-            frequency=True,
-        )
+        # STEP FIVE - ddl.pp.quantify_mutations()
+        # this adds the mu_count and mu_freq columns into the table
+        for s in samples:
+            samp_path = (
+                Path(s)
+                / "dandelion"
+                / (str(args.file_prefix) + "_contig_dandelion.tsv")
+            )
+            ddl.pp.quantify_mutations(samp_path)
+            ddl.pp.quantify_mutations(
+                samp_path,
+                frequency=True,
+            )
 
     # at this stage it's safe to remove the per-sample dandelion/tmp folder if
     # need be
