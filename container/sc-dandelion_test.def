@@ -36,7 +36,7 @@ From: ubuntu:latest
     eval ${@}
 
 %test
-    ls /share
+    ls -ltR /share/database
     which blastn
     mamba list
     pytest -p no:cacheprovider /tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
