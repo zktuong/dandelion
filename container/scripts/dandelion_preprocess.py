@@ -276,8 +276,8 @@ def main():
     )
 
     # IG requires further preprocessing, TR is done now
-    if not args.skip_tigger:
-        if args.chain == "ig":
+    if args.chain == "ig":
+        if not args.skip_tigger:
             # STEP THREE - ddl.pp.reassign_alleles()
             # do we have individual information
             if "individual" in meta.columns:
