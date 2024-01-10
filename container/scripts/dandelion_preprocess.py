@@ -276,8 +276,8 @@ def main():
     )
 
     # IG requires further preprocessing, TR is done now
-    if not args.skip_tigger:
-        if args.chain == "ig":
+    if args.chain == "ig":
+        if not args.skip_tigger:
             # STEP THREE - ddl.pp.reassign_alleles()
             # do we have individual information
             if "individual" in meta.columns:
@@ -351,6 +351,14 @@ def main():
                 / "dandelion"
                 / (str(args.file_prefix) + "_contig_dandelion.tsv")
             )
+            if args.skip_tigger:
+                ddl.pp.create_germlines(
+                    vdj_data=samp_path,
+                    org=args.org,
+                    db=args.db,
+                    strain=args.strain,
+                    save=samp_path,
+                )
             ddl.pp.quantify_mutations(samp_path)
             ddl.pp.quantify_mutations(
                 samp_path,
