@@ -351,6 +351,14 @@ def main():
                 / "dandelion"
                 / (str(args.file_prefix) + "_contig_dandelion.tsv")
             )
+            if args.skip_tigger:
+                ddl.pp.create_germlines(
+                    airr_file=samp_path,
+                    org=args.org,
+                    db=args.db,
+                    strain=args.strain,
+                    save=samp_path,
+                )
             ddl.pp.quantify_mutations(samp_path)
             ddl.pp.quantify_mutations(
                 samp_path,
