@@ -1002,8 +1002,6 @@ def from_ak(airr: "Array") -> pd.DataFrame:
 
     if "sequence_id" in df.columns:
         df.set_index("sequence_id", drop=False, inplace=True)
-    if "cell_id" not in df.columns:
-        df["cell_id"] = [c.split("_contig")[0] for c in df["sequence_id"]]
 
     return df
 
