@@ -985,16 +985,26 @@ def from_ak(airr: "Array") -> pd.DataFrame:
     KeyError
         If `sequence_id` not found in the data.
     """
-
     import awkward as ak
 
     df = ak.to_dataframe(airr)
+    # check if 'sequence_id' column does not exist or if any value in 'sequence_id' is NaN
+    if "sequence_id" not in df.columns or df["sequence_id"].isnull().any():
+        df_reset = df.reset_index()
+
+        # create a new 'sequence_id' column
+        df_reset["sequence_id"] = df_reset.apply(
+            lambda row: f"{row['cell_id']}_contig_{row['subentry'] + 1}", axis=1
+        )
+
+        # set 'entry' and 'subentry' back as the index
+        df = df_reset.set_index(["entry", "subentry"])
+
     if "sequence_id" in df.columns:
         df.set_index("sequence_id", drop=False, inplace=True)
     if "cell_id" not in df.columns:
         df["cell_id"] = [c.split("_contig")[0] for c in df["sequence_id"]]
-    else:
-        raise KeyError("'sequence_id' not found in columns of input")
+
     return df
 
 
@@ -1184,5 +1194,8 @@ def from_scirpy(data: Union[AnnData, "MuData"]) -> Dandelion:
 
     if not isinstance(data, AnnData):
         data = data.mod["airr"]
+    data = data.copy()
+    data.obsm["airr"]["cell_id"] = data.obs.index
     data = from_ak(data.obsm["airr"])
+
     return Dandelion(data)
