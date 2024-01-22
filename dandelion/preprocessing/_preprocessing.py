@@ -6017,7 +6017,7 @@ def check_update_same_seq(
         keep_id = list(data.sequence_id)
         keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
         keep_ccall = list(data.c_call)
-        
+
     return (data, keep_id, keep_umi, keep_ccall, umi_adjust, ambi_cont)
 
 
