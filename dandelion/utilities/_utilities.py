@@ -355,7 +355,7 @@ def same_call(a, b, c, pattern):
 
 def present(x):
     """Utility function to check if x is not null or blank."""
-    return pd.notnull(x) and x != ""
+    return pd.notnull(x) and x != "" and x != "None"
 
 
 def check_missing(x):

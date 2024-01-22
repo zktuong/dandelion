@@ -5097,7 +5097,6 @@ def check_contigs(
     filter_missing: bool = True,
     filter_extra: bool = False,
     save: Optional[str] = None,
-    check_c_call: bool = True,
     verbose: bool = True,
     **kwargs,
 ) -> Tuple[Dandelion, AnnData]:
@@ -5153,8 +5152,6 @@ def check_contigs(
     save : Optional[str], optional
         Only used if a pandas data frame or dandelion object is provided. Specifying will save the formatted vdj table
         with a `_checked.tsv` suffix extension.
-    check_c_call : bool, optional
-        whether or not to check the c call.
     verbose : bool, optional
         whether to print progress when marking contigs.
     **kwargs
@@ -5214,7 +5211,7 @@ def check_contigs(
         obs = pd.DataFrame(index=barcode)
         adata_ = ad.AnnData(obs=obs)
         adata_.obs["has_contig"] = "True"
-    contig_status = MarkAmbiguousContigs(dat, umi_foldchange_cutoff, check_c_call, verbose)
+    contig_status = MarkAmbiguousContigs(dat, umi_foldchange_cutoff, verbose)
 
     ambigous = contig_status.ambiguous_contigs.copy()
     extra = contig_status.extra_contigs.copy()
@@ -5307,7 +5304,6 @@ class MarkAmbiguousContigs:
         self,
         data: pd.DataFrame,
         umi_foldchange_cutoff: Union[int, float],
-        check_c_call: bool,
         verbose: bool,
     ):
         """Init method for MarkAmbiguousContigs.
@@ -5318,8 +5314,6 @@ class MarkAmbiguousContigs:
             AIRR data frame in Dandelion.data.
         umi_foldchange_cutoff : Union[int, float]
             fold-change cut off for decision.
-        check_c_call : bool
-            whether or not to check the c call.
         verbose : bool
             whether or not to print progress.
         """
@@ -5669,10 +5663,9 @@ class MarkAmbiguousContigs:
                     if present(j):
                         if not re.search("IGH|TR[BD]", j):
                             self.ambiguous_contigs.append(vdjx)
-                    if check_c_call:
-                        if present(c):
-                            if not re.search("IGH|TR[BD]", c):
-                                self.ambiguous_contigs.append(vdjx)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(vdjx)
                     if present(j):
                         if present(v):
                             if not_same_call(v, j, "IGH"):
@@ -5707,10 +5700,9 @@ class MarkAmbiguousContigs:
                     if present(j):
                         if not re.search("IGH|TR[BD]", j):
                             self.ambiguous_contigs.append(vdjx)
-                    if check_c_call:
-                        if present(c):
-                            if not re.search("IGH|TR[BD]", c):
-                                self.ambiguous_contigs.append(vdjx)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(vdjx)
                     if present(j):
                         if present(v):
                             if not_same_call(v, j, "IGH"):
@@ -5740,10 +5732,9 @@ class MarkAmbiguousContigs:
                     if present(j):
                         if re.search("IGH|TRB", j):
                             self.ambiguous_contigs.append(vjx)
-                    if check_c_call:
-                        if present(c):
-                            if re.search("IGH|TRB", c):
-                                self.ambiguous_contigs.append(vjx)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(vjx)
 
                     if present(j):
                         if present(v):
@@ -5771,10 +5762,9 @@ class MarkAmbiguousContigs:
                     if present(j):
                         if re.search("IGH|TRB", j):
                             self.ambiguous_contigs.append(vjx)
-                    if check_c_call:
-                        if present(c):
-                            if re.search("IGH|TRB", c):
-                                self.ambiguous_contigs.append(vjx)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(vjx)
 
                     if present(j):
                         if present(v):
@@ -5806,10 +5796,9 @@ class MarkAmbiguousContigs:
                     if present(j):
                         if not re.search("IGH|TR[BD]", j):
                             self.ambiguous_contigs.append(evdj)
-                    if check_c_call:
-                        if present(c):
-                            if not re.search("IGH|TR[BD]", c):
-                                self.ambiguous_contigs.append(evdj)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(evdj)
                     if present(j):
                         if present(v):
                             if not_same_call(v, j, "IGH"):
@@ -5841,10 +5830,9 @@ class MarkAmbiguousContigs:
                     if present(j):
                         if re.search("IGH|TRB", j):
                             self.ambiguous_contigs.append(evj)
-                    if check_c_call:
-                        if present(c):
-                            if re.search("IGH|TRB", c):
-                                self.ambiguous_contigs.append(evj)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(evj)
                     if present(j):
                         if present(v):
                             if not_same_call(v, j, "IGK"):
@@ -6029,7 +6017,7 @@ def check_update_same_seq(
         keep_id = list(data.sequence_id)
         keep_umi = [int(x) for x in pd.to_numeric(data.duplicate_count)]
         keep_ccall = list(data.c_call)
-
+        
     return (data, keep_id, keep_umi, keep_ccall, umi_adjust, ambi_cont)
 
 
