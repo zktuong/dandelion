@@ -727,7 +727,7 @@ def define_clones(
             v_call = "v_call"
             j_call = "j_call"
             junction_length = "junction_length"
-            umi_count = "duplicate_count"
+            umi_count = "umi_count"
         else:
             sys.exit("Invalid format %s" % fileformat)
 

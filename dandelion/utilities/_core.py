@@ -123,12 +123,12 @@ class Dandelion:
             except:
                 pass
             if (
-                pd.Series(["cell_id", "duplicate_count", "productive"])
+                pd.Series(["cell_id", "umi_count", "productive"])
                 .isin(self.data.columns)
                 .all()
             ):  # sort so that the productive contig with the largest umi is first
                 self.data.sort_values(
-                    by=["cell_id", "productive", "duplicate_count"],
+                    by=["cell_id", "productive", "umi_count"],
                     inplace=True,
                     ascending=[True, False, False],
                 )
@@ -874,12 +874,12 @@ class Dandelion:
             "d_call",
             "j_call",
             "c_call",
-            "duplicate_count",
+            "umi_count",
             "junction",
             "junction_aa",
         ]
 
-        if "duplicate_count" not in self.data:
+        if "umi_count" not in self.data:
             raise ValueError(
                 "Unable to initialize metadata due to missing keys. "
                 "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
@@ -1841,7 +1841,7 @@ def initialize_metadata(
             "productive",
         ]:
             meta_[k + "_split"] = querier.retrieve_celltype(**v)
-        if k in ["duplicate_count"]:
+        if k in ["umi_count"]:
             v.update({"retrieve_mode": "split and sum"})
             meta_[k] = querier.retrieve_celltype(**v)
         if k in ["mu_count", "mu_freq"]:
@@ -2251,12 +2251,12 @@ def update_metadata(
         "d_call",
         "j_call",
         "c_call",
-        "duplicate_count",
+        "umi_count",
         "junction",
         "junction_aa",
     ]
 
-    if "duplicate_count" not in vdj_data.data:
+    if "umi_count" not in vdj_data.data:
         raise ValueError(
             "Unable to initialize metadata due to missing keys. "
             "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."

@@ -39,7 +39,7 @@ AIRR = [
     "junction",
     "junction_aa",
     "consensus_count",
-    "duplicate_count",
+    "umi_count",
     "cdr3_start",
     "cdr3_end",
     "sequence_length_10x",
@@ -598,7 +598,8 @@ def parse_json(data: list) -> defaultdict:
     }
     main_dict2 = {
         "read_count": "consensus_count",
-        "umi_count": "duplicate_count",
+        "umi_count": "umi_count",
+        "duplicate_count": "umi_count",
         "cdr3_start": "cdr3_start",
         "cdr3_stop": "cdr3_end",
     }
@@ -1145,8 +1146,8 @@ def to_scirpy(
         The converted data in either AnnData or MuData format.
     """
 
-    if "duplicate_count" not in data.data and "umi_count" in data.data:
-        data.data["duplicate_count"] = data.data["umi_count"]
+    if "umi_count" not in data.data and "duplicate_count" in data.data:
+        data.data["umi_count"] = data.data["duplicate_count"]
     for h in [
         "sequence",
         "rev_comp",

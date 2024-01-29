@@ -438,12 +438,12 @@ def sanitize_data(data, ignore="clone_id"):
         pass
 
     if (
-        pd.Series(["cell_id", "duplicate_count", "productive"])
+        pd.Series(["cell_id", "umi_count", "productive"])
         .isin(data.columns)
         .all()
     ):  # sort so that the productive contig with the largest umi is first
         data.sort_values(
-            by=["cell_id", "productive", "duplicate_count"],
+            by=["cell_id", "productive", "umi_count"],
             inplace=True,
             ascending=[True, False, False],
         )
@@ -628,10 +628,10 @@ def load_data(obj: Optional[Union[pd.DataFrame, str, Path]]) -> pd.DataFrame:
         else:
             raise KeyError("'sequence_id' not found in columns of input")
 
-        if "umi_count" in obj_.columns:
-            if "duplicate_count" not in obj_.columns:
+        if "duplicate_count" in obj_.columns:
+            if "umi_count" not in obj_.columns:
                 obj_.rename(
-                    columns={"umi_count": "duplicate_count"}, inplace=True
+                    columns={"duplicate_count": "umi_count"}, inplace=True
                 )
 
         return obj_

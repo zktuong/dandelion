@@ -9,12 +9,10 @@ def test_query(airr_generic):
     vdj = ddl.Dandelion(airr_generic)
     ddl.pp.check_contigs(vdj)
     ddl.update_metadata(
-        vdj, retrieve="duplicate_count", retrieve_mode="split and sum"
+        vdj, retrieve="umi_count", retrieve_mode="split and sum"
     )
-    ddl.update_metadata(vdj, retrieve="duplicate_count", retrieve_mode="sum")
-    ddl.update_metadata(
-        vdj, retrieve="duplicate_count", retrieve_mode="average"
-    )
+    ddl.update_metadata(vdj, retrieve="umi_count", retrieve_mode="sum")
+    ddl.update_metadata(vdj, retrieve="umi_count", retrieve_mode="average")
     ddl.update_metadata(
         vdj, retrieve="np2_length", retrieve_mode="split and sum"
     )
@@ -61,11 +59,9 @@ def test_query2(airr_generic):
     """test load_data"""
     vdj = ddl.Dandelion(airr_generic)
     ddl.pp.check_contigs(vdj)
-    vdj.update_metadata(
-        retrieve="duplicate_count", retrieve_mode="split and sum"
-    )
-    vdj.update_metadata(retrieve="duplicate_count", retrieve_mode="sum")
-    vdj.update_metadata(retrieve="duplicate_count", retrieve_mode="average")
+    vdj.update_metadata(retrieve="umi_count", retrieve_mode="split and sum")
+    vdj.update_metadata(retrieve="umi_count", retrieve_mode="sum")
+    vdj.update_metadata(retrieve="umi_count", retrieve_mode="average")
     vdj.update_metadata(retrieve="np2_length", retrieve_mode="split and sum")
     vdj.update_metadata(retrieve="np2_length", retrieve_mode="average")
     vdj.update_metadata(retrieve="np2_length", retrieve_mode="sum")
