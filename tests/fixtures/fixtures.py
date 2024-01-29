@@ -1687,7 +1687,7 @@ def airr_10x():
             "c_sequence_start",
             "c_sequence_end",
             "consensus_count",
-            "duplicate_count",
+            "umi_count",
             "is_cell",
         ],
     )
