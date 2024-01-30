@@ -973,9 +973,11 @@ def clone_overlap(
                     + (
                         {
                             str(clone_): x,
-                            "weight": tmp_edge_weight_dict[y]
-                            if not isinstance(tmp_edge_weight_dict[y], list)
-                            else 0,
+                            "weight": (
+                                tmp_edge_weight_dict[y]
+                                if not isinstance(tmp_edge_weight_dict[y], list)
+                                else 0
+                            ),
                         },
                     )
                     for y in list(

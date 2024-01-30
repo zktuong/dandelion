@@ -192,9 +192,11 @@ def generate_network(
                     d_mat_tmp = squareform(
                         pdist(
                             tdarray,
-                            lambda x, y: levenshtein(x[0], y[0])
-                            if (x[0] == x[0]) and (y[0] == y[0])
-                            else 0,
+                            lambda x, y: (
+                                levenshtein(x[0], y[0])
+                                if (x[0] == x[0]) and (y[0] == y[0])
+                                else 0
+                            ),
                         )
                     )
                     dmat[x][t] = pd.DataFrame(
