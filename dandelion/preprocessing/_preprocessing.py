@@ -4670,11 +4670,11 @@ def transfer_assignment(
                                 ):
                                     if present(eval1):
                                         if eval1 > eval2:
-                                            db_pass.at[
-                                                i, call + "_call"
-                                            ] = db_pass.at[
-                                                i, call + "_call_blastn"
-                                            ]
+                                            db_pass.at[i, call + "_call"] = (
+                                                db_pass.at[
+                                                    i, call + "_call_blastn"
+                                                ]
+                                            )
                                             db_pass.at[
                                                 i, call + "_sequence_start"
                                             ] = db_pass.at[
@@ -4697,16 +4697,16 @@ def transfer_assignment(
                                             ] = db_pass.at[
                                                 i, call + "_germline_end_blastn"
                                             ]
-                                            db_pass.at[
-                                                i, call + "_source"
-                                            ] = "blastn"
+                                            db_pass.at[i, call + "_source"] = (
+                                                "blastn"
+                                            )
                                     else:
                                         if present(eval2):
-                                            db_pass.at[
-                                                i, call + "_call"
-                                            ] = db_pass.at[
-                                                i, call + "_call_blastn"
-                                            ]
+                                            db_pass.at[i, call + "_call"] = (
+                                                db_pass.at[
+                                                    i, call + "_call_blastn"
+                                                ]
+                                            )
                                             db_pass.at[
                                                 i, call + "_sequence_start"
                                             ] = db_pass.at[
@@ -4729,9 +4729,9 @@ def transfer_assignment(
                                             ] = db_pass.at[
                                                 i, call + "_germline_end_blastn"
                                             ]
-                                            db_pass.at[
-                                                i, call + "_source"
-                                            ] = "blastn"
+                                            db_pass.at[i, call + "_source"] = (
+                                                "blastn"
+                                            )
                                 else:
                                     db_pass.at[i, call + "_source"] = "10x"
                                     db_pass.at[i, call + "_call"] = db_pass.at[
@@ -4745,68 +4745,68 @@ def transfer_assignment(
                                                     i, "junction_10x"
                                                 ]
                                             ):
-                                                db_pass.at[
-                                                    i, "junction"
-                                                ] = db_pass.at[
-                                                    i, "junction_10x"
-                                                ]
-                                                db_pass.at[
-                                                    i, "junction_aa"
-                                                ] = db_pass.at[
-                                                    i, "junction_10x_aa"
-                                                ]
+                                                db_pass.at[i, "junction"] = (
+                                                    db_pass.at[
+                                                        i, "junction_10x"
+                                                    ]
+                                                )
+                                                db_pass.at[i, "junction_aa"] = (
+                                                    db_pass.at[
+                                                        i, "junction_10x_aa"
+                                                    ]
+                                                )
                         else:
                             if present(eval1):
                                 if eval1 > eval2:
                                     db_pass.at[i, call + "_call"] = db_pass.at[
                                         i, call + "_call_blastn"
                                     ]
-                                    db_pass.at[
-                                        i, call + "_sequence_start"
-                                    ] = db_pass.at[
-                                        i, call + "_sequence_start_blastn"
-                                    ]
-                                    db_pass.at[
-                                        i, call + "_sequence_end"
-                                    ] = db_pass.at[
-                                        i, call + "_sequence_end_blastn"
-                                    ]
-                                    db_pass.at[
-                                        i, call + "_germline_start"
-                                    ] = db_pass.at[
-                                        i, call + "_germline_start_blastn"
-                                    ]
-                                    db_pass.at[
-                                        i, call + "_germline_end"
-                                    ] = db_pass.at[
-                                        i, call + "_germline_end_blastn"
-                                    ]
+                                    db_pass.at[i, call + "_sequence_start"] = (
+                                        db_pass.at[
+                                            i, call + "_sequence_start_blastn"
+                                        ]
+                                    )
+                                    db_pass.at[i, call + "_sequence_end"] = (
+                                        db_pass.at[
+                                            i, call + "_sequence_end_blastn"
+                                        ]
+                                    )
+                                    db_pass.at[i, call + "_germline_start"] = (
+                                        db_pass.at[
+                                            i, call + "_germline_start_blastn"
+                                        ]
+                                    )
+                                    db_pass.at[i, call + "_germline_end"] = (
+                                        db_pass.at[
+                                            i, call + "_germline_end_blastn"
+                                        ]
+                                    )
                                     db_pass.at[i, call + "_source"] = "blastn"
                             else:
                                 if present(eval2):
                                     db_pass.at[i, call + "_call"] = db_pass.at[
                                         i, call + "_call_blastn"
                                     ]
-                                    db_pass.at[
-                                        i, call + "_sequence_start"
-                                    ] = db_pass.at[
-                                        i, call + "_sequence_start_blastn"
-                                    ]
-                                    db_pass.at[
-                                        i, call + "_sequence_end"
-                                    ] = db_pass.at[
-                                        i, call + "_sequence_end_blastn"
-                                    ]
-                                    db_pass.at[
-                                        i, call + "_germline_start"
-                                    ] = db_pass.at[
-                                        i, call + "_germline_start_blastn"
-                                    ]
-                                    db_pass.at[
-                                        i, call + "_germline_end"
-                                    ] = db_pass.at[
-                                        i, call + "_germline_end_blastn"
-                                    ]
+                                    db_pass.at[i, call + "_sequence_start"] = (
+                                        db_pass.at[
+                                            i, call + "_sequence_start_blastn"
+                                        ]
+                                    )
+                                    db_pass.at[i, call + "_sequence_end"] = (
+                                        db_pass.at[
+                                            i, call + "_sequence_end_blastn"
+                                        ]
+                                    )
+                                    db_pass.at[i, call + "_germline_start"] = (
+                                        db_pass.at[
+                                            i, call + "_germline_start_blastn"
+                                        ]
+                                    )
+                                    db_pass.at[i, call + "_germline_end"] = (
+                                        db_pass.at[
+                                            i, call + "_germline_end_blastn"
+                                        ]
+                                    )
                                     db_pass.at[i, call + "_source"] = "blastn"
 
                 vend = db_pass["v_sequence_end"]
@@ -4817,18 +4817,22 @@ def transfer_assignment(
                 np1 = [
                     str(int(n)) if n >= 0 else ""
                     for n in [
-                        (d - v) - 1
-                        if pd.notnull(v) and pd.notnull(d)
-                        else np.nan
+                        (
+                            (d - v) - 1
+                            if pd.notnull(v) and pd.notnull(d)
+                            else np.nan
+                        )
                         for v, d in zip(vend, dstart)
                     ]
                 ]
                 np2 = [
                     str(int(n)) if n >= 0 else ""
                     for n in [
-                        (j - d) - 1
-                        if pd.notnull(j) and pd.notnull(d)
-                        else np.nan
+                        (
+                            (j - d) - 1
+                            if pd.notnull(j) and pd.notnull(d)
+                            else np.nan
+                        )
                         for d, j in zip(dend, jstart)
                     ]
                 ]
@@ -4907,11 +4911,11 @@ def transfer_assignment(
                                 ):
                                     if present(eval1):
                                         if eval1 > eval2:
-                                            db_fail.at[
-                                                i, call + "_call"
-                                            ] = db_fail.at[
-                                                i, call + "_call_blastn"
-                                            ]
+                                            db_fail.at[i, call + "_call"] = (
+                                                db_fail.at[
+                                                    i, call + "_call_blastn"
+                                                ]
+                                            )
                                             db_fail.at[
                                                 i, call + "_sequence_start"
                                             ] = db_fail.at[
@@ -4934,16 +4938,16 @@ def transfer_assignment(
                                             ] = db_fail.at[
                                                 i, call + "_germline_end_blastn"
                                             ]
-                                            db_fail.at[
-                                                i, call + "_source"
-                                            ] = "blastn"
+                                            db_fail.at[i, call + "_source"] = (
+                                                "blastn"
+                                            )
                                     else:
                                         if present(eval2):
-                                            db_fail.at[
-                                                i, call + "_call"
-                                            ] = db_fail.at[
-                                                i, call + "_call_blastn"
-                                            ]
+                                            db_fail.at[i, call + "_call"] = (
+                                                db_fail.at[
+                                                    i, call + "_call_blastn"
+                                                ]
+                                            )
                                             db_fail.at[
                                                 i, call + "_sequence_start"
                                             ] = db_fail.at[
@@ -4966,9 +4970,9 @@ def transfer_assignment(
                                             ] = db_fail.at[
                                                 i, call + "_germline_end_blastn"
                                             ]
-                                            db_fail.at[
-                                                i, call + "_source"
-                                            ] = "blastn"
+                                            db_fail.at[i, call + "_source"] = (
+                                                "blastn"
+                                            )
                                 else:
                                     db_fail.at[i, call + "_source"] = "10x"
                                     db_fail.at[i, call + "_call"] = db_fail.at[
@@ -4982,68 +4986,68 @@ def transfer_assignment(
                                                     i, "junction_10x"
                                                 ]
                                             ):
-                                                db_fail.at[
-                                                    i, "junction"
-                                                ] = db_fail.at[
-                                                    i, "junction_10x"
-                                                ]
-                                                db_fail.at[
-                                                    i, "junction_aa"
-                                                ] = db_fail.at[
-                                                    i, "junction_10x_aa"
-                                                ]
+                                                db_fail.at[i, "junction"] = (
+                                                    db_fail.at[
+                                                        i, "junction_10x"
+                                                    ]
+                                                )
+                                                db_fail.at[i, "junction_aa"] = (
+                                                    db_fail.at[
+                                                        i, "junction_10x_aa"
+                                                    ]
+                                                )
                         else:
                             if present(eval1):
                                 if eval1 > eval2:
                                     db_fail.at[i, call + "_call"] = db_fail.at[
                                         i, call + "_call_blastn"
                                     ]
-                                    db_fail.at[
-                                        i, call + "_sequence_start"
-                                    ] = db_fail.at[
-                                        i, call + "_sequence_start_blastn"
-                                    ]
-                                    db_fail.at[
-                                        i, call + "_sequence_end"
-                                    ] = db_fail.at[
-                                        i, call + "_sequence_end_blastn"
-                                    ]
-                                    db_fail.at[
-                                        i, call + "_germline_start"
-                                    ] = db_fail.at[
-                                        i, call + "_germline_start_blastn"
-                                    ]
-                                    db_fail.at[
-                                        i, call + "_germline_end"
-                                    ] = db_fail.at[
-                                        i, call + "_germline_end_blastn"
-                                    ]
+                                    db_fail.at[i, call + "_sequence_start"] = (
+                                        db_fail.at[
+                                            i, call + "_sequence_start_blastn"
+                                        ]
+                                    )
+                                    db_fail.at[i, call + "_sequence_end"] = (
+                                        db_fail.at[
+                                            i, call + "_sequence_end_blastn"
+                                        ]
+                                    )
+                                    db_fail.at[i, call + "_germline_start"] = (
+                                        db_fail.at[
+                                            i, call + "_germline_start_blastn"
+                                        ]
+                                    )
+                                    db_fail.at[i, call + "_germline_end"] = (
+                                        db_fail.at[
+                                            i, call + "_germline_end_blastn"
+                                        ]
+                                    )
                                     db_fail.at[i, call + "_source"] = "blastn"
                             else:
                                 if present(eval2):
                                     db_fail.at[i, call + "_call"] = db_fail.at[
                                         i, call + "_call_blastn"
                                     ]
-                                    db_fail.at[
-                                        i, call + "_sequence_start"
-                                    ] = db_fail.at[
-                                        i, call + "_sequence_start_blastn"
-                                    ]
-                                    db_fail.at[
-                                        i, call + "_sequence_end"
-                                    ] = db_fail.at[
-                                        i, call + "_sequence_end_blastn"
-                                    ]
-                                    db_fail.at[
-                                        i, call + "_germline_start"
-                                    ] = db_fail.at[
-                                        i, call + "_germline_start_blastn"
-                                    ]
-                                    db_fail.at[
-                                        i, call + "_germline_end"
-                                    ] = db_fail.at[
-                                        i, call + "_germline_end_blastn"
-                                    ]
+                                    db_fail.at[i, call + "_sequence_start"] = (
+                                        db_fail.at[
+                                            i, call + "_sequence_start_blastn"
+                                        ]
+                                    )
+                                    db_fail.at[i, call + "_sequence_end"] = (
+                                        db_fail.at[
+                                            i, call + "_sequence_end_blastn"
+                                        ]
+                                    )
+                                    db_fail.at[i, call + "_germline_start"] = (
+                                        db_fail.at[
+                                            i, call + "_germline_start_blastn"
+                                        ]
+                                    )
+                                    db_fail.at[i, call + "_germline_end"] = (
+                                        db_fail.at[
+                                            i, call + "_germline_end_blastn"
+                                        ]
+                                    )
                                     db_fail.at[i, call + "_source"] = "blastn"
 
                 vend = db_fail["v_sequence_end"]
@@ -5054,18 +5058,22 @@ def transfer_assignment(
                 np1 = [
                     str(int(n)) if n >= 0 else ""
                     for n in [
-                        (d - v) - 1
-                        if pd.notnull(v) and pd.notnull(d)
-                        else np.nan
+                        (
+                            (d - v) - 1
+                            if pd.notnull(v) and pd.notnull(d)
+                            else np.nan
+                        )
                         for v, d in zip(vend, dstart)
                     ]
                 ]
                 np2 = [
                     str(int(n)) if n >= 0 else ""
                     for n in [
-                        (j - d) - 1
-                        if pd.notnull(j) and pd.notnull(d)
-                        else np.nan
+                        (
+                            (j - d) - 1
+                            if pd.notnull(j) and pd.notnull(d)
+                            else np.nan
+                        )
                         for d, j in zip(dend, jstart)
                     ]
                 ]

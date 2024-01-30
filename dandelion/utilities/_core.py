@@ -1983,11 +1983,15 @@ def initialize_metadata(
         )
         size_dict.update({"": "None"})
         tmp_metadata[str(clonekey) + "_by_size"] = [
-            "|".join(
-                sorted(list(set([str(size_dict[c_]) for c_ in c.split("|")])))
+            (
+                "|".join(
+                    sorted(
+                        list(set([str(size_dict[c_]) for c_ in c.split("|")]))
+                    )
+                )
+                if len(c.split("|")) > 1
+                else str(size_dict[c])
             )
-            if len(c.split("|")) > 1
-            else str(size_dict[c])
             for c in tmp_metadata[str(clonekey)]
         ]
         tmp_metadata[str(clonekey) + "_by_size"] = tmp_metadata[
@@ -2071,11 +2075,11 @@ def initialize_metadata(
                 isotype.append("None")
         tmp_metadata["isotype"] = isotype
         tmp_metadata["isotype_status"] = [
-            "IgM/IgD"
-            if (i == "IgM|IgD") or (i == "IgD|IgM")
-            else "Multi"
-            if "|" in i
-            else i
+            (
+                "IgM/IgD"
+                if (i == "IgM|IgD") or (i == "IgD|IgM")
+                else "Multi" if "|" in i else i
+            )
             for i in tmp_metadata["isotype"]
         ]
 
@@ -2131,11 +2135,11 @@ def initialize_metadata(
 
     for x in tmpxregstat:
         tmpxregstat[x] = [
-            "chimeric"
-            if re.search("chimeric", y)
-            else "Multi"
-            if "|" in y
-            else y
+            (
+                "chimeric"
+                if re.search("chimeric", y)
+                else "Multi" if "|" in y else y
+            )
             for y in tmpxregstat[x]
         ]
         tmp_metadata[x] = pd.Series(tmpxregstat[x])
