@@ -599,7 +599,7 @@ def parse_json(data: list) -> defaultdict:
     main_dict2 = {
         "read_count": "consensus_count",
         "umi_count": "umi_count",
-        "duplicate_count": "umi_count",
+        # "duplicate_count": "umi_count",
         "cdr3_start": "cdr3_start",
         "cdr3_stop": "cdr3_end",
     }
