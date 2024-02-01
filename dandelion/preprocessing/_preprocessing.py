@@ -3021,9 +3021,7 @@ class FilterContigs:
                     ],
                 )
                 h_p = list(data1["sequence_id"])
-                h_umi_p = [
-                    int(x) for x in pd.to_numeric(data1["umi_count"])
-                ]
+                h_umi_p = [int(x) for x in pd.to_numeric(data1["umi_count"])]
                 h_ccall_p = list(data1["c_call"])
                 h_locus_p = list(data1["locus"])
                 if len(h_p) > 1:
@@ -3148,14 +3146,10 @@ class FilterContigs:
                         elif all(x in ["TRB", "TRD"] for x in h_locus_p):
                             if len(list(set(h_locus_p))) == 2:
                                 h_locus_p_trb_count = dict(
-                                    data1[data1["locus"] == "TRB"][
-                                        "umi_count"
-                                    ]
+                                    data1[data1["locus"] == "TRB"]["umi_count"]
                                 )
                                 h_locus_p_trd_count = dict(
-                                    data1[data1["locus"] == "TRD"][
-                                        "umi_count"
-                                    ]
+                                    data1[data1["locus"] == "TRD"]["umi_count"]
                                 )
 
                                 if len(h_locus_p_trb_count) > 1:
@@ -3283,9 +3277,7 @@ class FilterContigs:
                     ],
                 )
                 h_np = list(data2["sequence_id"])
-                h_umi_np = [
-                    int(x) for x in pd.to_numeric(data2["umi_count"])
-                ]
+                h_umi_np = [int(x) for x in pd.to_numeric(data2["umi_count"])]
                 if len(h_np) > 1:
                     highest_umi_h = max(h_umi_np)
                     highest_umi_idx = [
@@ -3312,8 +3304,7 @@ class FilterContigs:
                         data2 = pd.DataFrame([data2.loc[keep_hc_contig]])
                         h_np = list(data2["sequence_id"])
                         h_umi_np = [
-                            int(x)
-                            for x in pd.to_numeric(data2["umi_count"])
+                            int(x) for x in pd.to_numeric(data2["umi_count"])
                         ]
             if len(self.Cell[cell]["VJ"]["P"]) > 0:
                 data3 = pd.DataFrame(
@@ -3329,9 +3320,7 @@ class FilterContigs:
                     ],
                 )
                 l_p = list(data3["sequence_id"])
-                l_umi_p = [
-                    int(x) for x in pd.to_numeric(data3["umi_count"])
-                ]
+                l_umi_p = [int(x) for x in pd.to_numeric(data3["umi_count"])]
                 if len(l_p) > 1:
                     if "sequence_alignment" in data3:
                         (
@@ -3406,9 +3395,7 @@ class FilterContigs:
                     ],
                 )
                 l_np = list(data4["sequence_id"])
-                l_umi_np = [
-                    int(x) for x in pd.to_numeric(data4["umi_count"])
-                ]
+                l_umi_np = [int(x) for x in pd.to_numeric(data4["umi_count"])]
                 if len(l_np) > 1:
                     highest_umi_l = max(l_umi_np)
                     highest_umi_l_idx = [
@@ -3812,9 +3799,7 @@ class FilterContigsLite:
                     ],
                 )
                 h_p = list(data1["sequence_id"])
-                h_umi_p = [
-                    int(x) for x in pd.to_numeric(data1["umi_count"])
-                ]
+                h_umi_p = [int(x) for x in pd.to_numeric(data1["umi_count"])]
                 h_ccall_p = list(data1["c_call"])
                 if len(h_p) > 1:
                     if "sequence_alignment" in data1:
@@ -3855,9 +3840,7 @@ class FilterContigsLite:
                                 h_p = list(data1["sequence_id"])
                                 h_umi_p = [
                                     int(x)
-                                    for x in pd.to_numeric(
-                                        data1["umi_count"]
-                                    )
+                                    for x in pd.to_numeric(data1["umi_count"])
                                 ]
             if len(self.Cell[cell]["VDJ"]["NP"]) > 0:
                 data2 = pd.DataFrame(
@@ -3873,9 +3856,7 @@ class FilterContigsLite:
                     ],
                 )
                 h_np = list(data2["sequence_id"])
-                h_umi_np = [
-                    int(x) for x in pd.to_numeric(data2["umi_count"])
-                ]
+                h_umi_np = [int(x) for x in pd.to_numeric(data2["umi_count"])]
             if len(self.Cell[cell]["VJ"]["P"]) > 0:
                 data3 = pd.DataFrame(
                     [
@@ -3890,9 +3871,7 @@ class FilterContigsLite:
                     ],
                 )
                 l_p = list(data3["sequence_id"])
-                l_umi_p = [
-                    int(x) for x in pd.to_numeric(data3["umi_count"])
-                ]
+                l_umi_p = [int(x) for x in pd.to_numeric(data3["umi_count"])]
                 if len(l_p) > 1:
                     if "sequence_alignment" in data3:
                         l_seq_p = list(data3["sequence_alignment"])
@@ -3945,9 +3924,7 @@ class FilterContigsLite:
                     ],
                 )
                 l_np = list(data4["sequence_id"])
-                l_umi_np = [
-                    int(x) for x in pd.to_numeric(data4["umi_count"])
-                ]
+                l_umi_np = [int(x) for x in pd.to_numeric(data4["umi_count"])]
 
             if "h_p" not in locals():
                 h_p = []
@@ -5374,9 +5351,7 @@ class MarkAmbiguousContigs:
                     ],
                 )
                 vdj_p = list(data1["sequence_id"])
-                vdj_umi_p = [
-                    int(x) for x in pd.to_numeric(data1["umi_count"])
-                ]
+                vdj_umi_p = [int(x) for x in pd.to_numeric(data1["umi_count"])]
                 vdj_ccall_p = list(data1["c_call"])
                 vdj_locus_p = list(data1["locus"])
                 if len(vdj_p) > 1:
@@ -5445,9 +5420,7 @@ class MarkAmbiguousContigs:
                                 extra_vdj = extra_igm + extra_igd
                                 ambiguous_vdj = ambiguous_igm + ambiguous_igd
                             else:
-                                vdj_ccall_p_count = dict(
-                                    data1["umi_count"]
-                                )
+                                vdj_ccall_p_count = dict(data1["umi_count"])
                                 if len(vdj_ccall_p_count) > 1:
                                     (
                                         vdj_p,
@@ -5461,14 +5434,10 @@ class MarkAmbiguousContigs:
                         elif all(x in ["TRB", "TRD"] for x in vdj_locus_p):
                             if len(list(set(vdj_locus_p))) == 2:
                                 vdj_locus_p_trb_count = dict(
-                                    data1[data1["locus"] == "TRB"][
-                                        "umi_count"
-                                    ]
+                                    data1[data1["locus"] == "TRB"]["umi_count"]
                                 )
                                 vdj_locus_p_trd_count = dict(
-                                    data1[data1["locus"] == "TRD"][
-                                        "umi_count"
-                                    ]
+                                    data1[data1["locus"] == "TRD"]["umi_count"]
                                 )
 
                                 if len(vdj_locus_p_trb_count) > 1:
@@ -5507,9 +5476,7 @@ class MarkAmbiguousContigs:
                                 extra_vdj = extra_trb + extra_trd
                                 ambiguous_vdj = ambiguous_trb + ambiguous_trd
                             else:
-                                vdj_ccall_p_count = dict(
-                                    data1["umi_count"]
-                                )
+                                vdj_ccall_p_count = dict(data1["umi_count"])
                                 if len(vdj_ccall_p_count) > 1:
                                     (
                                         vdj_p,
@@ -5581,9 +5548,7 @@ class MarkAmbiguousContigs:
                     ],
                 )
                 vj_p = list(data3["sequence_id"])
-                vj_umi_p = [
-                    int(x) for x in pd.to_numeric(data3["umi_count"])
-                ]
+                vj_umi_p = [int(x) for x in pd.to_numeric(data3["umi_count"])]
                 if len(vj_p) > 1:
                     if "sequence_alignment" in data3:
                         (
@@ -6006,9 +5971,7 @@ def check_update_same_seq(
                     for dk in dup_keys[1:]:
                         ambi_cont.append(dk)
                     keep_seqs_ids.append(keep_index_vj)
-                    data.umi_count.update(
-                        {keep_index_vj: keep_index_count}
-                    )
+                    data.umi_count.update({keep_index_vj: keep_index_count})
                 # refresh
                 empty_seqs_ids = [
                     k
