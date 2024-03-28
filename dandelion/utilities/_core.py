@@ -2062,21 +2062,45 @@ def initialize_metadata(
     multi, multic = {}, {}
 
     if "c_call" + suffix_vdj in tmp_metadata:
-        for k in tmp_metadata["c_call" + suffix_vdj]:
+        for k, p in zip(
+            tmp_metadata["c_call" + suffix_vdj],
+            tmp_metadata["productive" + suffix_vdj],
+        ):
             if isinstance(k, str):
-                isotype.append(
-                    "|".join(
-                        [
-                            str(z)
-                            for z in [
-                                conversion_dict[y.split(",")[0].lower()]
-                                for y in [
-                                    re.sub("[0-9]", "", x) for x in k.split("|")
+                if report_productive_only:
+                    isotype.append(
+                        "|".join(
+                            [
+                                str(z)
+                                for z, pp in zip(
+                                    [
+                                        conversion_dict[y.split(",")[0].lower()]
+                                        for y in [
+                                            re.sub("[0-9]", "", x)
+                                            for x in k.split("|")
+                                        ]
+                                    ],
+                                    p.split("|"),
+                                )
+                                if pp in TRUES
+                            ]
+                        )
+                    )
+                else:
+                    isotype.append(
+                        "|".join(
+                            [
+                                str(z)
+                                for z in [
+                                    conversion_dict[y.split(",")[0].lower()]
+                                    for y in [
+                                        re.sub("[0-9]", "", x)
+                                        for x in k.split("|")
+                                    ]
                                 ]
                             ]
-                        ]
+                        )
                     )
-                )
             else:
                 isotype.append("None")
         tmp_metadata["isotype"] = isotype
