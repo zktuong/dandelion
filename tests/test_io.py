@@ -341,3 +341,9 @@ def test_to_scirpy_v2(create_testfolder, annotation_10x, fasta_10x):
     assert vdjx.data.shape[0] == 35
     vdjx = ddl.from_scirpy(mdata)
     assert vdjx.data.shape[0] == 35
+
+
+def test_locus_productive(airr_generic):
+    """Just test if this works. don't care about the output."""
+    tmp = ddl.Dandelion(airr_generic, report_status_productive=True)
+    tmp = ddl.Dandelion(airr_generic, report_status_productive=False)

@@ -797,21 +797,51 @@ def format_call(
 
 
 def format_locus(
-    metadata: pd.DataFrame, suffix_vdj: str = "_VDJ", suffix_vj: str = "_VJ"
+    metadata: pd.DataFrame,
+    suffix_vdj: str = "_VDJ",
+    suffix_vj: str = "_VJ",
+    productive_only: bool = True,
 ) -> pd.Series:
     """Extract locus call value from data."""
     locus_1 = dict(metadata["locus" + suffix_vdj])
     locus_2 = dict(metadata["locus" + suffix_vj])
     constant_1 = dict(metadata["isotype_status"])
-
+    prod_1 = dict(metadata["productive" + suffix_vdj])
+    prod_2 = dict(metadata["productive" + suffix_vj])
     locus_dict = {}
     for i in metadata.index:
-        loc1 = {
-            e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
-        }
-        loc2 = {
-            e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
-        }
+        if productive_only:
+            loc1 = {
+                e: l
+                for e, l in enumerate(
+                    [
+                        ll
+                        for ll, p in zip(
+                            locus_1[i].split("|"), prod_1[i].split("|")
+                        )
+                        if p in TRUES
+                    ]
+                )
+            }
+            loc2 = {
+                e: l
+                for e, l in enumerate(
+                    [
+                        ll
+                        for ll, p in zip(
+                            locus_2[i].split("|"), prod_2[i].split("|")
+                        )
+                        if p in TRUES
+                    ]
+                )
+            }
+        else:
+            loc1 = {
+                e: l for e, l in enumerate([ll for ll in locus_1[i].split("|")])
+            }
+            loc2 = {
+                e: l for e, l in enumerate([ll for ll in locus_2[i].split("|")])
+            }
         loc1x, loc2x = [], []
         if not all([px == "None" for px in loc1.values()]):
             loc1xx = list(loc1.values())
