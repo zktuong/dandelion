@@ -241,12 +241,14 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
     vdj = ddl.read_10x_vdj(annot_file)
     vdjx = ddl.concat([vdj, vdj], prefixes=["x", "y"])
     vdjx = ddl.concat([vdj, vdj], suffixes=["x", "y"])
-    vdjx = ddl.concat(
-        [vdj, vdj], prefixes=["x", "y"], remove_trailing_hyphen_number=True
-    )
-    vdjx = ddl.concat(
-        [vdj, vdj], suffixes=["x", "y"], remove_trailing_hyphen_number=True
-    )
+    with pytest.raises(ValueError):
+        vdjx = ddl.concat(
+            [vdj, vdj], prefixes=["x", "y"], remove_trailing_hyphen_number=True
+        )
+    with pytest.raises(ValueError):
+        vdjx = ddl.concat(
+            [vdj, vdj], suffixes=["x", "y"], remove_trailing_hyphen_number=True
+        )
 
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
