@@ -220,6 +220,7 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
 def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
     """test_io_prefix_suffix_combinations"""
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
+    airr_file = create_testfolder / "test_airr_rearrangements.tsv"
     annotation_10x.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(annot_file, suffix="x")
     vdj = ddl.read_10x_vdj(annot_file, prefix="y")
@@ -228,6 +229,14 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
     )
     vdj = ddl.read_10x_vdj(
         annot_file, prefix="x", remove_trailing_hyphen_number=True
+    )
+    vdj = ddl.read_10x_airr(airr_file, suffix="x")
+    vdj = ddl.read_10x_airr(airr_file, prefix="y")
+    vdj = ddl.read_10x_airr(
+        airr_file, suffix="x", remove_trailing_hyphen_number=True
+    )
+    vdj = ddl.read_10x_airr(
+        airr_file, prefix="x", remove_trailing_hyphen_number=True
     )
     vdj = ddl.read_10x_vdj(annot_file)
     vdjx = ddl.concat([vdj, vdj], prefixes=["x", "y"])
