@@ -278,7 +278,13 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     return res
 
 
-def read_10x_airr(file: str) -> Dandelion:
+def read_10x_airr(
+    file: str,
+    prefix: Optional[str] = None,
+    suffix: Optional[str] = None,
+    sep: str = "_",
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
     """
     Read the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
@@ -286,6 +292,15 @@ def read_10x_airr(file: str) -> Dandelion:
     ----------
     file : str
         path to `airr_rearrangement.tsv`
+    prefix : Optional[str], optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : Optional[str], optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
 
     Returns
     -------
@@ -323,6 +338,30 @@ def read_10x_airr(file: str) -> Dandelion:
     null_columns = [col for col in dat.columns if all_missing(dat[col])]
     if len(null_columns) > 0:
         dat.drop(null_columns, inplace=True, axis=1)
+    if suffix is not None:
+        if remove_trailing_hyphen_number:
+            dat["sequence_id"] = [
+                x.split("_contig")[0].split("-")[0] + sep + suffix
+                for x in dat["sequence_id"]
+            ]
+            dat["cell_id"] = [
+                x.rsplit("-", 1)[0] + sep + suffix for x in dat["cell_id"]
+            ]
+        else:
+            dat["sequence_id"] = [x + sep + suffix for x in dat["sequence_id"]]
+            dat["cell_id"] = [x + sep + suffix for x in dat["cell_id"]]
+    elif prefix is not None:
+        if remove_trailing_hyphen_number:
+            dat["sequence_id"] = [
+                prefix + sep + x.split("_contig")[0].split("-")[0]
+                for x in dat["sequence_id"]
+            ]
+            dat["cell_id"] = [
+                prefix + sep + x.rsplit("-", 1)[0] for x in dat["cell_id"]
+            ]
+        else:
+            dat["sequence_id"] = [prefix + sep + x for x in dat["sequence_id"]]
+            dat["cell_id"] = [prefix + sep + x for x in dat["cell_id"]]
 
     return Dandelion(dat)
 
@@ -467,6 +506,7 @@ def read_10x_vdj(
     sep: str = "_",
     return_dandelion: bool = True,
     remove_malformed: bool = True,
+    remove_trailing_hyphen_number: bool = False,
 ) -> Union[Dandelion, pd.DataFrame]:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
@@ -493,6 +533,9 @@ def read_10x_vdj(
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
     remove_malformed : bool, optional
         whether or not to remove malformed contigs.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
 
     Returns
     -------
