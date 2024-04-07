@@ -806,8 +806,8 @@ class Dandelion:
         ] = "split and merge",
         collapse_alleles: bool = True,
         reinitialize: bool = True,
-        verbose: bool = False,
         by_celltype: bool = False,
+        report_status_productive: bool = True,
     ):
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -847,10 +847,10 @@ class Dandelion:
         reinitialize : bool, optional
             whether or not to reinitialize the current metadata.
             useful when updating older versions of `dandelion` to newer version.
-        verbose : bool, optional
-            whether to print progress.
         by_celltype : bool, optional
             whether to return the query/update by celltype.
+        report_status_productive : bool, optional
+            whether to report the locus and chain status for only productive contigs.
 
         Raises
         ------
@@ -910,7 +910,9 @@ class Dandelion:
 
         metadata_status = self.metadata
         if (metadata_status is None) or reinitialize:
-            initialize_metadata(self, cols, clonekey, collapse_alleles)
+            initialize_metadata(
+                self, cols, clonekey, collapse_alleles, report_status_productive
+            )
 
         tmp_metadata = self.metadata.copy()
 
@@ -1776,7 +1778,11 @@ class Query:
 
 
 def initialize_metadata(
-    vdj_data, cols: List[str], clonekey: str, collapse_alleles: bool
+    vdj_data,
+    cols: List[str],
+    clonekey: str,
+    collapse_alleles: bool,
+    report_productive_only: bool,
 ):
     """Initialize Dandelion metadata."""
     init_dict = {}
@@ -2056,21 +2062,45 @@ def initialize_metadata(
     multi, multic = {}, {}
 
     if "c_call" + suffix_vdj in tmp_metadata:
-        for k in tmp_metadata["c_call" + suffix_vdj]:
+        for k, p in zip(
+            tmp_metadata["c_call" + suffix_vdj],
+            tmp_metadata["productive" + suffix_vdj],
+        ):
             if isinstance(k, str):
-                isotype.append(
-                    "|".join(
-                        [
-                            str(z)
-                            for z in [
-                                conversion_dict[y.split(",")[0].lower()]
-                                for y in [
-                                    re.sub("[0-9]", "", x) for x in k.split("|")
+                if report_productive_only:
+                    isotype.append(
+                        "|".join(
+                            [
+                                str(z)
+                                for z, pp in zip(
+                                    [
+                                        conversion_dict[y.split(",")[0].lower()]
+                                        for y in [
+                                            re.sub("[0-9]", "", x)
+                                            for x in k.split("|")
+                                        ]
+                                    ],
+                                    p.split("|"),
+                                )
+                                if pp in TRUES
+                            ]
+                        )
+                    )
+                else:
+                    isotype.append(
+                        "|".join(
+                            [
+                                str(z)
+                                for z in [
+                                    conversion_dict[y.split(",")[0].lower()]
+                                    for y in [
+                                        re.sub("[0-9]", "", x)
+                                        for x in k.split("|")
+                                    ]
                                 ]
                             ]
-                        ]
+                        )
                     )
-                )
             else:
                 isotype.append("None")
         tmp_metadata["isotype"] = isotype
@@ -2104,7 +2134,9 @@ def initialize_metadata(
                             for t in tmp_metadata[c]
                         ]
 
-    tmp_metadata["locus_status"] = format_locus(tmp_metadata)
+    tmp_metadata["locus_status"] = format_locus(
+        tmp_metadata, productive_only=report_productive_only
+    )
     tmp_metadata["chain_status"] = format_chain_status(
         tmp_metadata["locus_status"]
     )
@@ -2185,6 +2217,7 @@ def update_metadata(
     collapse_alleles: bool = True,
     reinitialize: bool = True,
     by_celltype: bool = False,
+    report_status_productive: bool = True,
 ):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -2228,6 +2261,8 @@ def update_metadata(
         useful when updating older versions of `dandelion` to newer version.
     by_celltype : bool, optional
         whether to return the query/update by celltype.
+    report_status_productive : bool, optional
+        whether to report the locus and chain status for only productive contigs.
 
     Raises
     ------
@@ -2287,7 +2322,9 @@ def update_metadata(
 
     metadata_status = vdj_data.metadata
     if (metadata_status is None) or reinitialize:
-        initialize_metadata(vdj_data, cols, clonekey, collapse_alleles)
+        initialize_metadata(
+            vdj_data, cols, clonekey, collapse_alleles, report_status_productive
+        )
 
     tmp_metadata = vdj_data.metadata.copy()
 
