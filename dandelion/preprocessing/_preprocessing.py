@@ -5383,6 +5383,11 @@ class MarkAmbiguousContigs:
                                             "umi_count"
                                         ]
                                     )
+                                else:
+                                    (
+                                        vdj_ccall_p_igm_count,
+                                        vdj_ccall_p_igd_count,
+                                    ) = ({}, {})
 
                                 if len(vdj_ccall_p_igm_count) > 1:
                                     (
