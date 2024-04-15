@@ -2192,9 +2192,8 @@ def initialize_metadata(
     if vdj_data.metadata is not None:
         if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
             vdj_data.metadata = tmp_metadata.copy()  # reindex and replace.
-        else:
-            for col in tmp_metadata:
-                vdj_data.metadata[col] = pd.Series(tmp_metadata[col])
+        for col in tmp_metadata:
+            vdj_data.metadata[col] = pd.Series(tmp_metadata[col])
     else:
         vdj_data.metadata = tmp_metadata.copy()
 
