@@ -911,7 +911,12 @@ class Dandelion:
         metadata_status = self.metadata
         if (metadata_status is None) or reinitialize:
             initialize_metadata(
-                self, cols, clonekey, collapse_alleles, report_status_productive
+                self,
+                cols,
+                clonekey,
+                collapse_alleles,
+                report_status_productive,
+                reinitialize,
             )
 
         tmp_metadata = self.metadata.copy()
@@ -1783,6 +1788,7 @@ def initialize_metadata(
     clonekey: str,
     collapse_alleles: bool,
     report_productive_only: bool,
+    reinitialize: bool,
 ):
     """Initialize Dandelion metadata."""
     init_dict = {}
@@ -1824,11 +1830,14 @@ def initialize_metadata(
         vdj_data.querier = querier
     else:
         if vdj_data.metadata is not None:
-            if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
+            if reinitialize:
                 querier = Query(dataq)
-                vdj_data.querier = querier
             else:
-                querier = vdj_data.querier
+                if any(~vdj_data.metadata_names.isin(vdj_data.data.cell_id)):
+                    querier = Query(dataq)
+                    vdj_data.querier = querier
+                else:
+                    querier = vdj_data.querier
         else:
             querier = vdj_data.querier
 
@@ -2322,7 +2331,12 @@ def update_metadata(
     metadata_status = vdj_data.metadata
     if (metadata_status is None) or reinitialize:
         initialize_metadata(
-            vdj_data, cols, clonekey, collapse_alleles, report_status_productive
+            vdj_data,
+            cols,
+            clonekey,
+            collapse_alleles,
+            report_status_productive,
+            reinitialize,
         )
 
     tmp_metadata = vdj_data.metadata.copy()
