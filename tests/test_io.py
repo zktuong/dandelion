@@ -216,6 +216,41 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
     os.remove(fasta_file)
 
 
+@pytest.mark.usefixtures("create_testfolder", "annotation_10x")
+def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
+    """test_io_prefix_suffix_combinations"""
+    annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
+    airr_file = create_testfolder / "test_airr_rearrangements.tsv"
+    annotation_10x.to_csv(annot_file, index=False)
+    vdj = ddl.read_10x_vdj(annot_file, suffix="x")
+    vdj = ddl.read_10x_vdj(annot_file, prefix="y")
+    vdj = ddl.read_10x_vdj(
+        annot_file, suffix="x", remove_trailing_hyphen_number=True
+    )
+    vdj = ddl.read_10x_vdj(
+        annot_file, prefix="x", remove_trailing_hyphen_number=True
+    )
+    vdj = ddl.read_10x_airr(airr_file, suffix="x")
+    vdj = ddl.read_10x_airr(airr_file, prefix="y")
+    vdj = ddl.read_10x_airr(
+        airr_file, suffix="x", remove_trailing_hyphen_number=True
+    )
+    vdj = ddl.read_10x_airr(
+        airr_file, prefix="x", remove_trailing_hyphen_number=True
+    )
+    vdj = ddl.read_10x_vdj(annot_file)
+    vdjx = ddl.concat([vdj, vdj], prefixes=["x", "y"])
+    vdjx = ddl.concat([vdj, vdj], suffixes=["x", "y"])
+    with pytest.raises(ValueError):
+        vdjx = ddl.concat(
+            [vdj, vdj], prefixes=["x", "y"], remove_trailing_hyphen_number=True
+        )
+    with pytest.raises(ValueError):
+        vdjx = ddl.concat(
+            [vdj, vdj], suffixes=["x", "y"], remove_trailing_hyphen_number=True
+        )
+
+
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
 def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     """test_to_scirpy"""
@@ -341,3 +376,9 @@ def test_to_scirpy_v2(create_testfolder, annotation_10x, fasta_10x):
     assert vdjx.data.shape[0] == 35
     vdjx = ddl.from_scirpy(mdata)
     assert vdjx.data.shape[0] == 35
+
+
+def test_locus_productive(airr_generic):
+    """Just test if this works. don't care about the output."""
+    tmp = ddl.Dandelion(airr_generic, report_status_productive=True)
+    tmp = ddl.Dandelion(airr_generic, report_status_productive=False)

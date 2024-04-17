@@ -278,7 +278,13 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     return res
 
 
-def read_10x_airr(file: str) -> Dandelion:
+def read_10x_airr(
+    file: str,
+    prefix: Optional[str] = None,
+    suffix: Optional[str] = None,
+    sep: str = "_",
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
     """
     Read the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
 
@@ -286,6 +292,15 @@ def read_10x_airr(file: str) -> Dandelion:
     ----------
     file : str
         path to `airr_rearrangement.tsv`
+    prefix : Optional[str], optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : Optional[str], optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
 
     Returns
     -------
@@ -323,6 +338,30 @@ def read_10x_airr(file: str) -> Dandelion:
     null_columns = [col for col in dat.columns if all_missing(dat[col])]
     if len(null_columns) > 0:
         dat.drop(null_columns, inplace=True, axis=1)
+    if suffix is not None:
+        if remove_trailing_hyphen_number:
+            dat["sequence_id"] = [
+                x.split("_contig")[0].split("-")[0] + sep + suffix
+                for x in dat["sequence_id"]
+            ]
+            dat["cell_id"] = [
+                x.rsplit("-", 1)[0] + sep + suffix for x in dat["cell_id"]
+            ]
+        else:
+            dat["sequence_id"] = [x + sep + suffix for x in dat["sequence_id"]]
+            dat["cell_id"] = [x + sep + suffix for x in dat["cell_id"]]
+    elif prefix is not None:
+        if remove_trailing_hyphen_number:
+            dat["sequence_id"] = [
+                prefix + sep + x.split("_contig")[0].split("-")[0]
+                for x in dat["sequence_id"]
+            ]
+            dat["cell_id"] = [
+                prefix + sep + x.rsplit("-", 1)[0] for x in dat["cell_id"]
+            ]
+        else:
+            dat["sequence_id"] = [prefix + sep + x for x in dat["sequence_id"]]
+            dat["cell_id"] = [prefix + sep + x for x in dat["cell_id"]]
 
     return Dandelion(dat)
 
@@ -330,9 +369,10 @@ def read_10x_airr(file: str) -> Dandelion:
 def concat(
     arrays: List[Union[pd.DataFrame, Dandelion]],
     check_unique: bool = True,
-    sep: str = "-",
+    sep: str = "_",
     suffixes: Optional[List[str]] = None,
     prefixes: Optional[List[str]] = None,
+    remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
     """
     Concatenate data frames and return as `Dandelion` object.
@@ -349,9 +389,12 @@ def concat(
     sep : str, optional
         the separator to append suffix/prefix.
     suffixes : Optional[List[str]], optional
-        List of suffixes to append to sequence_id.
+        List of suffixes to append to sequence_id and cell_id.
     prefixes : Optional[List[str]], optional
-        List of prefixes to append to sequence_id.
+        List of prefixes to append to sequence_id and cell_id.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
 
     Returns
     -------
@@ -392,19 +435,58 @@ def concat(
             for i in range(0, len(arrays)):
                 if (suffixes is None) and (prefixes is None):
                     ii = str(i)
-                    arrays_[i]["sequence_id"] = [
-                        x + sep + ii for x in arrays_[i]["sequence_id"]
-                    ]
+                    if remove_trailing_hyphen_number:
+                        arrays_[i]["sequence_id"] = [
+                            x.split("_contig")[0].split("-")[0] + sep + ii
+                            for x in arrays_[i]["sequence_id"]
+                        ]
+                        arrays_[i]["cell_id"] = [
+                            x.rsplit("-", 1)[0] + sep + ii
+                            for x in arrays_[i]["cell_id"]
+                        ]
+                    else:
+                        arrays_[i]["sequence_id"] = [
+                            x + sep + ii for x in arrays_[i]["sequence_id"]
+                        ]
+                        arrays_[i]["cell_id"] = [
+                            x + sep + ii for x in arrays_[i]["cell_id"]
+                        ]
                 elif suffixes is not None:
                     ii = str(suffixes[i])
-                    arrays_[i]["sequence_id"] = [
-                        x + sep + ii for x in arrays_[i]["sequence_id"]
-                    ]
+                    if remove_trailing_hyphen_number:
+                        arrays_[i]["sequence_id"] = [
+                            x.split("_contig")[0].split("-")[0] + sep + ii
+                            for x in arrays_[i]["sequence_id"]
+                        ]
+                        arrays_[i]["cell_id"] = [
+                            x.rsplit("-", 1)[0] + sep + ii
+                            for x in arrays_[i]["cell_id"]
+                        ]
+                    else:
+                        arrays_[i]["sequence_id"] = [
+                            x + sep + ii for x in arrays_[i]["sequence_id"]
+                        ]
+                        arrays_[i]["cell_id"] = [
+                            x + sep + ii for x in arrays_[i]["cell_id"]
+                        ]
                 elif prefixes is not None:
                     ii = str(prefixes[i])
-                    arrays_[i]["sequence_id"] = [
-                        ii + sep + x for x in arrays_[i]["sequence_id"]
-                    ]
+                    if remove_trailing_hyphen_number:
+                        arrays_[i]["sequence_id"] = [
+                            ii + sep + x.split("_contig")[0].split("-")[0]
+                            for x in arrays_[i]["sequence_id"]
+                        ]
+                        arrays_[i]["cell_id"] = [
+                            ii + sep + x.rsplit("-", 1)[0]
+                            for x in arrays_[i]["cell_id"]
+                        ]
+                    else:
+                        arrays_[i]["sequence_id"] = [
+                            ii + sep + x for x in arrays_[i]["sequence_id"]
+                        ]
+                        arrays_[i]["cell_id"] = [
+                            ii + sep + x for x in arrays_[i]["cell_id"]
+                        ]
             arrays_ = [load_data(x) for x in arrays_]
             df = pd.concat(arrays_, verify_integrity=True)
     else:
@@ -419,8 +501,12 @@ def concat(
 def read_10x_vdj(
     path: str,
     filename_prefix: Optional[str] = None,
+    prefix: Optional[str] = None,
+    suffix: Optional[str] = None,
+    sep: str = "_",
     return_dandelion: bool = True,
     remove_malformed: bool = True,
+    remove_trailing_hyphen_number: bool = False,
 ) -> Union[Dandelion, pd.DataFrame]:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
@@ -437,10 +523,19 @@ def read_10x_vdj(
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
+    prefix : Optional[str], optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : Optional[str], optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
     return_dandelion : bool, optional
         whether or not to return the output as an initialised `Dandelion` object or as a pandas `DataFrame`.
     remove_malformed : bool, optional
         whether or not to remove malformed contigs.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
 
     Returns
     -------
@@ -575,6 +670,31 @@ def read_10x_vdj(
         raise IOError("{} not found.".format(path))
     res = pd.DataFrame.from_dict(out, orient="index")
     # quick check if locus is malformed
+    if suffix is not None:
+        if remove_trailing_hyphen_number:
+            res["sequence_id"] = [
+                x.split("_contig")[0].split("-")[0] + sep + suffix
+                for x in res["sequence_id"]
+            ]
+            res["cell_id"] = [
+                x.rsplit("-", 1)[0] + sep + suffix for x in res["cell_id"]
+            ]
+        else:
+            res["sequence_id"] = [x + sep + suffix for x in res["sequence_id"]]
+            res["cell_id"] = [x + sep + suffix for x in res["cell_id"]]
+    elif prefix is not None:
+        if remove_trailing_hyphen_number:
+            res["sequence_id"] = [
+                prefix + sep + x.split("_contig")[0].split("-")[0]
+                for x in res["sequence_id"]
+            ]
+            res["cell_id"] = [
+                prefix + sep + x.rsplit("-", 1)[0] for x in res["cell_id"]
+            ]
+        else:
+            res["sequence_id"] = [prefix + sep + x for x in res["sequence_id"]]
+            res["cell_id"] = [prefix + sep + x for x in res["cell_id"]]
+
     if remove_malformed:
         res = res[~res["locus"].str.contains("[|]")]
     if return_dandelion:
