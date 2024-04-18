@@ -8,17 +8,12 @@ pre-processing, leveraging some tools from immcantation suite, and
 integrates with scanpy/anndata for single-cell BCR/TCR analysis. It also
 includes a couple of functions for visualization. Try it out on |Colab| !
 
-Also check out our review at Nature Methods on "Single-cell immune 
+Also check out our review at `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__ on "Single-cell immune 
 repertoire analysis":
 
 .. [Irac2024] Irac *et al.* (2021),
    *Single-cell immune repertoire analysis*,
    `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__.
-
-*Sergio E Irac, Megan Sioe Fei Soon, Nicholas Borcherding, Zewen Kelvin 
-Tuong.* **Single-cell immune repertoire analysis**. *Nature Methods 
-2024.04.18; doi: https://doi.org/10.1038/s41592-024-02243-4*
-
 
 Overview
 --------
