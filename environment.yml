@@ -5,12 +5,10 @@ channels:
   - anaconda
   - defaults
 dependencies:
-  - biopython>=1.65,<1.78
   - numpy
   - pandas
   - pandoc
   - pyyaml
-  - changeo
   - seaborn
   - statsmodels
   - pytables>=3.8.0
@@ -19,6 +17,8 @@ dependencies:
   - pip
   - tbb
   - pip:
+      - biopython>=1.65,<1.78
+      - changeo
       - numba
       - matplotlib
       - nbsphinx
