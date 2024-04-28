@@ -1097,6 +1097,7 @@ def reannotate_genes(
             extended=extended,
             db=db,
             additional_args=additional_args["makedb"],
+            loci=loci,
         )
         # block this for now, until I figure out if it's
         # worth it
