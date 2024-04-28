@@ -5,6 +5,7 @@ channels:
   - anaconda
   - defaults
 dependencies:
+  - biopython
   - numpy
   - pandas
   - pandoc
