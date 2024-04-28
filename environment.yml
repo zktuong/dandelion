@@ -17,7 +17,7 @@ dependencies:
   - pip
   - tbb
   - pip:
-      - biopython>=1.65,<1.78
+      # - biopython>=1.65,<1.78
       - changeo
       - numba
       - matplotlib
