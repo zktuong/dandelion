@@ -30,10 +30,11 @@ jobs:
           - { python-version: 3.9, os: ubuntu-latest }
           - { python-version: "3.10", os: ubuntu-latest }
           - { python-version: "3.11", os: ubuntu-latest }
-          - { python-version: 3.9, os: macos-latest }
-          - { python-version: "3.10", os: macos-latest }
-          - { python-version: "3.11", os: macos-latest }
+          # - { python-version: 3.9, os: macos-latest }
+          # - { python-version: "3.10", os: macos-latest }
+          # - { python-version: "3.11", os: macos-latest }
           # disabled until it's fixed.
+          # there is no arm64 packages for igblast/blast/biopython etc
     runs-on: ${{ matrix.config.os }}
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
