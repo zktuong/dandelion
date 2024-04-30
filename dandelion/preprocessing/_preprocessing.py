@@ -1097,6 +1097,7 @@ def reannotate_genes(
             extended=extended,
             db=db,
             additional_args=additional_args["makedb"],
+            loci=loci,
         )
         # block this for now, until I figure out if it's
         # worth it
@@ -5383,6 +5384,11 @@ class MarkAmbiguousContigs:
                                             "umi_count"
                                         ]
                                     )
+                                else:
+                                    (
+                                        vdj_ccall_p_igm_count,
+                                        vdj_ccall_p_igd_count,
+                                    ) = ({}, {})
 
                                 if len(vdj_ccall_p_igm_count) > 1:
                                     (

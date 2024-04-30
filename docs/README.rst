@@ -8,6 +8,13 @@ pre-processing, leveraging some tools from immcantation suite, and
 integrates with scanpy/anndata for single-cell BCR/TCR analysis. It also
 includes a couple of functions for visualization. Try it out on |Colab| !
 
+Also check out our review at `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__ on "Single-cell immune 
+repertoire analysis":
+
+.. [Irac2024] Irac *et al.* (2021),
+   *Single-cell immune repertoire analysis*,
+   `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__.
+
 Overview
 --------
 
@@ -209,6 +216,10 @@ References
 .. [Gupta2015] Gupta *et al.* (2015),
    *Change-O: a toolkit for analyzing large-scale B cell immunoglobulin repertoire sequencing data*,
    `Bioinformatics <https://academic.oup.com/bioinformatics/article/31/20/3356/195677>`__.
+
+.. [Irac2024] Irac *et al.* (2024),
+   *Single-cell immune repertoire analysis*,
+   `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__.
 
 .. [Setty2019] Setty *et al.* (2019)
    *Characterization of cell fate probabilities in single-cell data with Palantir*,
