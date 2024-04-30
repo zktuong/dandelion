@@ -14,7 +14,7 @@ from sklearn import mixture
 from subprocess import run
 from typing import Optional, Union, List
 
-from ...utilities._utilities import *
+from dandelion.utilities._utilities import *
 
 
 def assigngenes_igblast(
@@ -77,6 +77,7 @@ def makedb_igblast(
     db: Literal["imgt", "ogrdb"] = "imgt",
     extended: bool = True,
     additional_args: List[str] = [],
+    loci: Literal["ig", "tr"] = "ig",
 ):
     """
     Parse IgBLAST output to AIRR format.
@@ -113,18 +114,32 @@ def makedb_igblast(
 
     cellranger_annotation = fasta.parent / (fasta.stem + "_annotations.csv")
 
-    cmd = [
-        "MakeDb.py",
-        "igblast",
-        "-i",
-        str(igbo),
-        "-s",
-        str(fasta),
-        "-r",
-        str(gml),
-        "--10x",
-        str(cellranger_annotation),
-    ]
+    if (org == "mouse") and (loci.lower() == "tr"):
+        cmd = [
+            "MakeDb_gentle.py",
+            "igblast",
+            "-i",
+            str(igbo),
+            "-s",
+            str(fasta),
+            "-r",
+            str(gml),
+            "--10x",
+            str(cellranger_annotation),
+        ]
+    else:
+        cmd = [
+            "MakeDb.py",
+            "igblast",
+            "-i",
+            str(igbo),
+            "-s",
+            str(fasta),
+            "-r",
+            str(gml),
+            "--10x",
+            str(cellranger_annotation),
+        ]
     if extended:
         cmd = cmd + ["--extended"]
     for add_cmd in [[], ["--failed"]]:
