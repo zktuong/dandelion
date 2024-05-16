@@ -1,5 +1,7 @@
 """Functions to encode data inside visual properties of nodes and edges."""
 
+import matplotlib
+
 from functools import partial
 from typing import Callable, Tuple, Optional, Union, Dict, List
 from itertools import cycle
@@ -7,7 +9,6 @@ from itertools import cycle
 import numpy as np
 import pandas as pd
 
-from matplotlib.cm import get_cmap
 from matplotlib.colors import ListedColormap, Normalize, BoundaryNorm
 from palettable.colorbrewer import qualitative, sequential
 
@@ -41,11 +42,11 @@ def data_cmap(
         else:
             cmap = palette
     elif data_family == "ordinal":
-        cmap = get_cmap("viridis")
+        cmap = matplotlib.colormaps["viridis"]
     elif data_family == "continuous":
-        cmap = get_cmap("viridis")
+        cmap = matplotlib.colormaps["viridis"]
     elif data_family == "divergent":
-        cmap = get_cmap("bwr")
+        cmap = matplotlib.colormaps["bwr"]
     return cmap, data_family
 
 
