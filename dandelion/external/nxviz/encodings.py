@@ -7,7 +7,7 @@ from itertools import cycle
 import numpy as np
 import pandas as pd
 
-from matplotlib.cm import get_cmap
+from matplotlib.cm.ColormapRegistry import get_cmap
 from matplotlib.colors import ListedColormap, Normalize, BoundaryNorm
 from palettable.colorbrewer import qualitative, sequential
 
