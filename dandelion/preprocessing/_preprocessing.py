@@ -2760,7 +2760,7 @@ def calculate_threshold(
             dist_ham = rpy2.robjects.conversion.rpy2py(dist_ham)
     # Find threshold using density method
     dist = np.array(dist_ham["dist_nearest"])
-    if manual_threshold is not None:
+    if manual_threshold is None:
         if threshold_method_ == "density":
             if edge is None:
                 edge_ = 0.9
