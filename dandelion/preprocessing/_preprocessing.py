@@ -2856,7 +2856,9 @@ def calculate_threshold(
                 with localconverter(
                     rpy2.robjects.default_converter + pandas2ri.converter
                 ):
-                    dist_threshold = rpy2.robjects.conversion.rpy2py(dist_threshold)
+                    dist_threshold = rpy2.robjects.conversion.rpy2py(
+                        dist_threshold
+                    )
             threshold = np.array(dist_threshold.slots["threshold"])[0]
         if np.isnan(threshold):
             raise ValueError(
@@ -2866,7 +2868,7 @@ def calculate_threshold(
         # dist_ham = pandas2ri.rpy2py_data frame(dist_ham)
         tr = threshold
     else:
-        tr = manual_threshold        
+        tr = manual_threshold
 
     if plot:
         options.figure_size = figsize
