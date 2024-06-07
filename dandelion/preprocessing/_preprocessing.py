@@ -2760,23 +2760,66 @@ def calculate_threshold(
             dist_ham = rpy2.robjects.conversion.rpy2py(dist_ham)
     # Find threshold using density method
     dist = np.array(dist_ham["dist_nearest"])
-    if threshold_method_ == "density":
-        if edge is None:
-            edge_ = 0.9
-        else:
-            edge_ = edge
-        dist_threshold = sh.findThreshold(
-            FloatVector(dist[~np.isnan(dist)]),
-            method=threshold_method_,
-            subsample=subsample_,
-            edge=edge_,
-        )
-        threshold = np.array(dist_threshold.slots["threshold"])[0]
-        if np.isnan(threshold):
-            logg.info(
-                "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
+    if manual_threshold is not None:
+        if threshold_method_ == "density":
+            if edge is None:
+                edge_ = 0.9
+            else:
+                edge_ = edge
+            dist_threshold = sh.findThreshold(
+                FloatVector(dist[~np.isnan(dist)]),
+                method=threshold_method_,
+                subsample=subsample_,
+                edge=edge_,
             )
-            threshold_method_ = "gmm"
+            threshold = np.array(dist_threshold.slots["threshold"])[0]
+            if np.isnan(threshold):
+                logg.info(
+                    "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
+                )
+                threshold_method_ = "gmm"
+                if threshold_model is None:
+                    threshold_model_ = "gamma-gamma"
+                else:
+                    threshold_model_ = threshold_model
+                if cross is None:
+                    cross_ = NULL
+                else:
+                    cross_ = cross
+                if cutoff is None:
+                    cutoff_ = "optimal"
+                else:
+                    cutoff_ = cutoff
+                if sensitivity is None:
+                    sen_ = NULL
+                else:
+                    sen_ = sensitivity
+                if specificity is None:
+                    spc_ = NULL
+                else:
+                    spc_ = specificity
+                dist_threshold = sh.findThreshold(
+                    FloatVector(dist[~np.isnan(dist)]),
+                    method=threshold_method_,
+                    model=threshold_model_,
+                    cross=cross_,
+                    subsample=subsample_,
+                    cutoff=cutoff_,
+                    sen=sen_,
+                    spc=spc_,
+                )
+                if rpy2.__version__ >= "3.4.5":
+                    from rpy2.robjects.conversion import localconverter
+
+                    with localconverter(
+                        rpy2.robjects.default_converter + pandas2ri.converter
+                    ):
+                        dist_threshold = rpy2.robjects.conversion.rpy2py(
+                            dist_threshold
+                        )
+
+                threshold = np.array(dist_threshold.slots["threshold"])[0]
+        else:
             if threshold_model is None:
                 threshold_model_ = "gamma-gamma"
             else:
@@ -2813,61 +2856,17 @@ def calculate_threshold(
                 with localconverter(
                     rpy2.robjects.default_converter + pandas2ri.converter
                 ):
-                    dist_threshold = rpy2.robjects.conversion.rpy2py(
-                        dist_threshold
-                    )
-
+                    dist_threshold = rpy2.robjects.conversion.rpy2py(dist_threshold)
             threshold = np.array(dist_threshold.slots["threshold"])[0]
-    else:
-        if threshold_model is None:
-            threshold_model_ = "gamma-gamma"
-        else:
-            threshold_model_ = threshold_model
-        if cross is None:
-            cross_ = NULL
-        else:
-            cross_ = cross
-        if cutoff is None:
-            cutoff_ = "optimal"
-        else:
-            cutoff_ = cutoff
-        if sensitivity is None:
-            sen_ = NULL
-        else:
-            sen_ = sensitivity
-        if specificity is None:
-            spc_ = NULL
-        else:
-            spc_ = specificity
-        dist_threshold = sh.findThreshold(
-            FloatVector(dist[~np.isnan(dist)]),
-            method=threshold_method_,
-            model=threshold_model_,
-            cross=cross_,
-            subsample=subsample_,
-            cutoff=cutoff_,
-            sen=sen_,
-            spc=spc_,
-        )
-        if rpy2.__version__ >= "3.4.5":
-            from rpy2.robjects.conversion import localconverter
-
-            with localconverter(
-                rpy2.robjects.default_converter + pandas2ri.converter
-            ):
-                dist_threshold = rpy2.robjects.conversion.rpy2py(dist_threshold)
-        threshold = np.array(dist_threshold.slots["threshold"])[0]
-    if np.isnan(threshold):
-        raise ValueError(
-            "Automatic thresholding failed. Please visually inspect the resulting distribution fits"
-            + " and choose a threshold value manually."
-        )
-    # dist_ham = pandas2ri.rpy2py_data frame(dist_ham)
-
-    if manual_threshold is None:
+        if np.isnan(threshold):
+            raise ValueError(
+                "Automatic thresholding failed. Please visually inspect the resulting distribution fits"
+                + " and choose a threshold value manually."
+            )
+        # dist_ham = pandas2ri.rpy2py_data frame(dist_ham)
         tr = threshold
     else:
-        tr = manual_threshold
+        tr = manual_threshold        
 
     if plot:
         options.figure_size = figsize
