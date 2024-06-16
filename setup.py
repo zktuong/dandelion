@@ -40,9 +40,9 @@ setup(
         "scirpy": ["scirpy<=0.17.0", "awkward", "mudata"],
     },
     package_data={
-        "dandelion": ["bin/tigger-genotype.R", "bin/MakeDB_gentle.py"]
+        "dandelion": ["bin/tigger-genotype.R", "bin/MakeDb_gentle.py"]
     },
-    data_files=[("bin", ["bin/tigger-genotype.R", "bin/MakeDB_gentle.py"])],
+    data_files=[("bin", ["bin/tigger-genotype.R", "bin/MakeDb_gentle.py"])],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3.7",
