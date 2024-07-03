@@ -2083,7 +2083,14 @@ def initialize_metadata(
                                 str(z)
                                 for z, pp in zip(
                                     [
-                                        conversion_dict[y.split(",")[0].lower()]
+                                        (
+                                            conversion_dict[
+                                                y.split(",")[0].lower()
+                                            ]
+                                            if y.split(",")[0].lower()
+                                            in conversion_dict
+                                            else "None"
+                                        )
                                         for y in [
                                             re.sub("[0-9]", "", x)
                                             for x in k.split("|")
@@ -2101,7 +2108,12 @@ def initialize_metadata(
                             [
                                 str(z)
                                 for z in [
-                                    conversion_dict[y.split(",")[0].lower()]
+                                    (
+                                        conversion_dict[y.split(",")[0].lower()]
+                                        if y.split(",")[0].lower()
+                                        in conversion_dict
+                                        else "None"
+                                    )
                                     for y in [
                                         re.sub("[0-9]", "", x)
                                         for x in k.split("|")
