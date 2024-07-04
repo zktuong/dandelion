@@ -35,6 +35,7 @@ def find_clones(
     key_added: Optional[str] = None,
     recalculate_length: bool = True,
     verbose: bool = True,
+    **kwargs,
 ) -> Dandelion:
     """
     Find clones based on VDJ chain and VJ chain CDR3 junction hamming distance.
@@ -58,6 +59,8 @@ def find_clones(
         wrong). Default is True
     verbose : bool, optional
         whether or not to print progress.
+    **kwargs
+        Additional arguments to pass to `Dandelion.update_metadata`.
 
     Returns
     -------
@@ -220,7 +223,7 @@ def find_clones(
                 layout=layout_,
                 graph=graph_,
             )
-            vdj_data.update_metadata(reinitialize=True)
+            vdj_data.update_metadata(reinitialize=True, **kwargs)
         elif ("clone_id" in vdj_data.data.columns) and (key_added is not None):
             vdj_data.__init__(
                 data=dat_,
@@ -233,6 +236,7 @@ def find_clones(
                 clone_key="clone_id",
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
+                **kwargs,
             )
         else:
             vdj_data.__init__(
@@ -242,7 +246,9 @@ def find_clones(
                 graph=graph_,
                 clone_key=clone_key,
             )
-            vdj_data.update_metadata(reinitialize=True, clone_key=clone_key)
+            vdj_data.update_metadata(
+                reinitialize=True, clone_key=clone_key, **kwargs
+            )
         vdj_data.threshold = threshold_
 
     else:
@@ -251,6 +257,7 @@ def find_clones(
             clone_key=clone_key,
             retrieve=clone_key,
             retrieve_mode="merge and unique only",
+            **kwargs,
         )
         return out
 

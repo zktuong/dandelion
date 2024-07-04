@@ -333,6 +333,7 @@ class Dandelion:
             "cdr3 lengths",
             "mutations and cdr3 lengths",
         ] = "mutations and cdr3 lengths",
+        **kwargs,
     ):
         """
         Retrieve additional data columns that are useful.
@@ -342,6 +343,8 @@ class Dandelion:
         option : Literal["all", "sequence", "mutations", "cdr3 lengths", "mutations and cdr3 lengths", ], optional
             One of 'all', 'sequence', 'mutations', 'cdr3 lengths',
             'mutations and cdr3 lengths'
+        **kwargs
+            passed to `Dandelion.update_metadata`.
         """
         mutations_type = ["mu_count", "mu_freq"]
         mutationsdef = [
@@ -613,50 +616,60 @@ class Dandelion:
         if option == "all":
             if len(mutations) > 0:
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="split and average"
+                    retrieve=mutations,
+                    retrieve_mode="split and average",
+                    **kwargs,
                 )
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="average"
+                    retrieve=mutations, retrieve_mode="average", **kwargs
                 )
             if len(vdjlengths) > 0:
                 self.update_metadata(
-                    retrieve=vdjlengths, retrieve_mode="split and average"
+                    retrieve=vdjlengths,
+                    retrieve_mode="split and average",
+                    **kwargs,
                 )
             if len(seqinfo) > 0:
                 self.update_metadata(
-                    retrieve=seqinfo,
-                    retrieve_mode="split and merge",
+                    retrieve=seqinfo, retrieve_mode="split and merge", **kwargs
                 )
         if option == "sequence":
             if len(seqinfo) > 0:
                 self.update_metadata(
-                    retrieve=seqinfo,
-                    retrieve_mode="split and merge",
+                    retrieve=seqinfo, retrieve_mode="split and merge", **kwargs
                 )
         if option == "mutations":
             if len(mutations) > 0:
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="split and average"
+                    retrieve=mutations,
+                    retrieve_mode="split and average",
+                    **kwargs,
                 )
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="average"
+                    retrieve=mutations, retrieve_mode="average", **kwargs
                 )
         if option == "cdr3 lengths":
             if len(vdjlengths) > 0:
                 self.update_metadata(
-                    retrieve=vdjlengths, retrieve_mode="split and average"
+                    retrieve=vdjlengths,
+                    retrieve_mode="split and average",
+                    **kwargs,
                 )
         if option == "mutations and cdr3 lengths":
             if len(mutations) > 0:
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="split and average"
+                    retrieve=mutations,
+                    retrieve_mode="split and average",
+                    **kwargs,
                 )
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="average"
+                    retrieve=mutations, retrieve_mode="average", **kwargs
                 )
             if len(vdjlengths) > 0:
                 self.update_metadata(
-                    retrieve=vdjlengths, retrieve_mode="split and average"
+                    retrieve=vdjlengths,
+                    retrieve_mode="split and average",
+                    **kwargs,
                 )
 
     def store_germline_reference(
@@ -808,6 +821,7 @@ class Dandelion:
         reinitialize: bool = True,
         by_celltype: bool = False,
         report_status_productive: bool = True,
+        custom_isotype_dict: Optional[Dict[str, str]] = None,
     ):
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -851,6 +865,8 @@ class Dandelion:
             whether to return the query/update by celltype.
         report_status_productive : bool, optional
             whether to report the locus and chain status for only productive contigs.
+        custom_isotype_dict : Optional[Dict[str, str]], optional
+            custom isotype dictionary to update the default isotype dictionary.
 
         Raises
         ------
@@ -917,6 +933,7 @@ class Dandelion:
                 collapse_alleles,
                 report_status_productive,
                 reinitialize,
+                custom_isotype_dict,
             )
 
         tmp_metadata = self.metadata.copy()
@@ -1789,6 +1806,7 @@ def initialize_metadata(
     collapse_alleles: bool,
     report_productive_only: bool,
     reinitialize: bool,
+    custom_isotype_dict: Optional[Dict[str, str]] = None,
 ):
     """Initialize Dandelion metadata."""
     init_dict = {}
@@ -2022,54 +2040,17 @@ def initialize_metadata(
         ]
 
     conversion_dict = {
-        "igha": "IgA",
-        "igha1": "IgA",
-        "igha2": "IgA",
-        "ighd": "IgD",
-        "ighe": "IgE",
-        "ighg": "IgG",
-        "ighg1": "IgG",
-        "ighg2": "IgG",
-        "ighg3": "IgG",
-        "ighg4": "IgG",
-        "ighg2a": "IgG",
-        "ighg2b": "IgG",
-        "ighg2c": "IgG",
-        "ighga": "IgG",
-        "ighgb": "IgG",
-        "ighgc": "IgG",
-        "ighm": "IgM",
-        "igkc": "IgK",
-        "iglc": "IgL",
-        "iglc1": "IgL",
-        "iglc2": "IgL",
-        "iglc3": "IgL",
-        "iglc4": "IgL",
-        "iglc5": "IgL",
-        "iglc6": "IgL",
-        "iglc7": "IgL",
-        "na": "None",
-        "nan": "None",
-        "": "None",
-        "none": "None",
-        "trac": "None",
-        "trbc": "None",
-        "trbc1": "None",
-        "trbc2": "None",
-        "trdc": "None",
-        "trgc": "None",
-        "trgc1": "None",
-        "trgc2": "None",
-        "trgc3": "None",
-        "trgc4": "None",
-        "unassigned": "None",
-        None: "None",
-        np.nan: "None",
+        "IGHA": "IgA",
+        "IGHD": "IgD",
+        "IGHE": "IgE",
+        "IGHG": "IgG",
+        "IGHM": "IgM",
+        "IGKC": "IgK",
+        "IGLC": "IgL",
     }
-
+    if custom_isotype_dict is not None:
+        conversion_dict.update(custom_isotype_dict)
     isotype = []
-    multi, multic = {}, {}
-
     if "c_call" + suffix_vdj in tmp_metadata:
         for k, p in zip(
             tmp_metadata["c_call" + suffix_vdj],
@@ -2083,11 +2064,13 @@ def initialize_metadata(
                                 str(z)
                                 for z, pp in zip(
                                     [
-                                        conversion_dict[y.split(",")[0].lower()]
-                                        for y in [
-                                            re.sub("[0-9]", "", x)
-                                            for x in k.split("|")
-                                        ]
+                                        (
+                                            conversion_dict[y.split(",")[0][:4]]
+                                            if y.split(",")[0][:4]
+                                            in conversion_dict
+                                            else "None"
+                                        )
+                                        for y in k.split("|")
                                     ],
                                     p.split("|"),
                                 )
@@ -2101,11 +2084,13 @@ def initialize_metadata(
                             [
                                 str(z)
                                 for z in [
-                                    conversion_dict[y.split(",")[0].lower()]
-                                    for y in [
-                                        re.sub("[0-9]", "", x)
-                                        for x in k.split("|")
-                                    ]
+                                    (
+                                        conversion_dict[y.split(",")[0][:4]]
+                                        if y.split(",")[0][:4]
+                                        in conversion_dict
+                                        else "None"
+                                    )
+                                    for y in k.split("|")
                                 ]
                             ]
                         )
@@ -2226,6 +2211,7 @@ def update_metadata(
     reinitialize: bool = True,
     by_celltype: bool = False,
     report_status_productive: bool = True,
+    custom_isotype_dict: Optional[Dict[str, str]] = None,
 ):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -2271,6 +2257,8 @@ def update_metadata(
         whether to return the query/update by celltype.
     report_status_productive : bool, optional
         whether to report the locus and chain status for only productive contigs.
+    custom_isotype_dict : Optional[Dict[str, str]], optional
+        custom isotype dictionary to update the default isotype dictionary.
 
     Raises
     ------
@@ -2337,6 +2325,7 @@ def update_metadata(
             collapse_alleles,
             report_status_productive,
             reinitialize,
+            custom_isotype_dict,
         )
 
     tmp_metadata = vdj_data.metadata.copy()
