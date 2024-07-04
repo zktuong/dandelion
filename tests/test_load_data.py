@@ -168,4 +168,4 @@ def test_slice_data_with_graph(airr_generic):
 @pytest.mark.usefixtures("airr_generic")
 def test_isotype(airr_generic):
     """test load_data"""
-    vdj = ddl.Dandelion(airr_generic, custom_isotype_dictionary={"IGHC": "IGC"})
+    vdj = ddl.Dandelion(airr_generic, custom_isotype_dict={"IGHC": "IGC"})
