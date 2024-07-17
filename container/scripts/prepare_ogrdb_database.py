@@ -122,6 +122,7 @@ def return_ogrdb_info(species: str) -> tuple[list[str], dict[str, str]]:
 
 
 def copy_ogrdb_aux_to_igblast(
+    igblast_out: str | Path,
     out_dir: str | Path,
 ):
     """
@@ -129,15 +130,22 @@ def copy_ogrdb_aux_to_igblast(
 
     Parameters
     ----------
+    igblast_out : str | Path
+        Location of downloaded fasta files for igblast.
     out_dir : str | Path
         Location of new database folder.
     """
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-    shutil.copytree(
-        Path(__file__).parent / "optional_file",
-        Path(out_dir),
-        dirs_exist_ok=True,
+    OUT_DIR = (Path(out_dir) / "optional_file").mkdir(
+        parents=True, exist_ok=True
     )
+    for org in ["human", "mouse"]:
+        cmd = [
+            "annotate_j",
+            str(Path(igblast_out) / f"ogrdb_{org}_ig_j.fasta"),
+            str(OUT_DIR / f"{org}_gl_ogrdb.aux"),
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE)
+        logging.info(res.stdout.decode("utf-8"))
 
 
 def download_germline_and_process(
@@ -433,6 +441,7 @@ def main():
             write_fasta(seqs, out_file)
     logging.info("Preparing auxiliary files for igblast")
     copy_ogrdb_aux_to_igblast(
+        igblast_out,
         out_dir / "igblast" / "optional_file",
     )
     # convert to igblast database
