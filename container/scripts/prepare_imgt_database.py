@@ -222,7 +222,7 @@ def main():
     species_dict = {
         "human": "Homo+sapiens",
         "mouse": "Mus",
-        "rat": "Rattus+norvegicus",
+        # "rat": "Rattus+norvegicus", # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
         "rabbit": "Oryctolagus+cuniculus",
         "rhesus_monkey": "Macaca+mulatta",
     }
