@@ -401,8 +401,9 @@ def sanitize_data(data, ignore="clone_id"):
                 "boolean",
                 "integer",
             ]:
-                data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""], "", inplace=True
+                data[d] = data[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""],
+                    "",
                 )
                 if RearrangementSchema.properties[d]["type"] == "integer":
                     data[d] = [
@@ -410,18 +411,18 @@ def sanitize_data(data, ignore="clone_id"):
                         for x in pd.to_numeric(data[d])
                     ]
             else:
-                data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""], np.nan, inplace=True
+                data[d] = data[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""],
+                    np.nan,
                 )
         else:
             if d != ignore:
                 try:
                     data[d] = pd.to_numeric(data[d])
                 except:
-                    data[d].replace(
+                    data[d] = data[d].replace(
                         to_replace=[None, np.nan, pd.NA, "nan", ""],
                         value="",
-                        inplace=True,
                     )
         if re.search("mu_freq", d):
             data[d] = [
@@ -464,8 +465,9 @@ def sanitize_blastn(data):
                 "boolean",
                 "integer",
             ]:
-                data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""], "", inplace=True
+                data[d] = data[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""],
+                    "",
                 )
                 if RearrangementSchema.properties[d]["type"] == "integer":
                     data[d] = [
@@ -473,17 +475,17 @@ def sanitize_blastn(data):
                         for x in pd.to_numeric(data[d])
                     ]
             else:
-                data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""], np.nan, inplace=True
+                data[d] = data[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""],
+                    np.nan,
                 )
         else:
             try:
                 data[d] = pd.to_numeric(data[d])
             except:
-                data[d].replace(
+                data[d] = data[d].replace(
                     to_replace=[None, np.nan, pd.NA, "nan", ""],
                     value="",
-                    inplace=True,
                 )
     return data
 
@@ -497,22 +499,25 @@ def sanitize_data_for_saving(data):
                 "string",
                 "boolean",
             ]:
-                tmp[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""], "", inplace=True
+                tmp[d] = tmp[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""],
+                    "",
                 )
             if RearrangementSchema.properties[d]["type"] in [
                 "integer",
                 "number",
             ]:
-                tmp[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""], np.nan, inplace=True
+                tmp[d] = tmp[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""],
+                    np.nan,
                 )
         else:
             try:
                 tmp[d] = pd.to_numeric(tmp[d])
             except:
-                tmp[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""], "", inplace=True
+                tmp[d] = tmp[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""],
+                    "",
                 )
     return tmp
 
@@ -527,22 +532,6 @@ def validate_airr(data):
             int_columns.append(d)
         except:
             pass
-    bool_columns = [
-        "rev_comp",
-        "productive",
-        "vj_in_frame",
-        "stop_codon",
-        "complete_vdj",
-    ]
-    str_columns = list(tmp.dtypes[tmp.dtypes == "object"].index)
-    columns = [
-        c
-        for c in list(set(int_columns + str_columns + bool_columns))
-        if c in tmp
-    ]
-    # if len(columns) > 0:
-    # for c in columns:
-    # tmp[c].fillna("", inplace=True)
     for _, row in tmp.iterrows():
         contig = Contig(row).contig
         for required in [
