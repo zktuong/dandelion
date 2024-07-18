@@ -1731,8 +1731,8 @@ def reassign_alleles(
     for file in sampleNames_dict.keys():
         dat_f = load_data(file)
         dat_f["sample_id"] = sampleNames_dict[file]
-        heavy["sample_id"].update(dat_f["sample_id"])
-        light["sample_id"].update(dat_f["sample_id"])
+        heavy.update(dat_f[["sample_id"]])
+        light.update(dat_f[["sample_id"]])
 
     dat_ = pd.concat([heavy, light])
     if "cell_id" in dat_.columns:
