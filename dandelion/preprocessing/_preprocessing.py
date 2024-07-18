@@ -1694,7 +1694,7 @@ def reassign_alleles(
         except FileNotFoundError:
             # print error message and return
             logg.info(
-                "Processing has failed for {}. ".format(
+                "Processing has failed for {}. Please check the error message for what went wrong.".format(
                     {
                         str(
                             out_dir
@@ -1705,9 +1705,7 @@ def reassign_alleles(
                             )
                         )
                     }
-                ),
-                "Please check the error message for what went wrong.",
-                "The best course of action is to preprocess this file separately with less stringent parameters.",
+                )
             )
             return
         logg.info(
