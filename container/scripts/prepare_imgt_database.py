@@ -98,9 +98,9 @@ def download_germline_and_process(
     imgt_out_dict = {
         "human": ["Homo sapiens", "Homo_sapiens"],
         "mouse": ["Mus musculus", "Mus_musculus"],
-        "rat": ["Rattus norvegicus", "Rattus_norvegicus"],
+        # "rat": ["Rattus norvegicus", "Rattus_norvegicus"], # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
         "rabbit": ["Oryctolagus cuniculus", "Oryctolagus_cuniculus"],
-        "rhesus_monkey": ["Macaca mulatta", "Macaca_mulatta"],
+        # "rhesus_monkey": ["Macaca mulatta", "Macaca_mulatta"], # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
     }
     url = f"{source}/GENElect?query={query_type}+{chain}&species={query}{url_suffix}"
     file_name = (
@@ -222,9 +222,9 @@ def main():
     species_dict = {
         "human": "Homo+sapiens",
         "mouse": "Mus",
-        "rat": "Rattus+norvegicus",
+        # "rat": "Rattus+norvegicus", # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
         "rabbit": "Oryctolagus+cuniculus",
-        "rhesus_monkey": "Macaca+mulatta",
+        # "rhesus_monkey": "Macaca+mulatta", # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
     }
     igblast_out_dict = {
         "vdj": "",

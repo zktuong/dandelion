@@ -2143,7 +2143,9 @@ def filter_contigs(
         for b in barcode:
             bc_.update({b: "True"})
         contig_check["has_contig"] = pd.Series(bc_)
-        contig_check.replace(np.nan, "No_contig", inplace=True)
+        contig_check["has_contig"] = contig_check["has_contig"].replace(
+            np.nan, "No_contig"
+        )
         adata_.obs["has_contig"] = pd.Series(contig_check["has_contig"])
     else:
         adata_provided = False
@@ -2270,7 +2272,9 @@ def filter_contigs(
             failed2 = {b: "False" for b in failed}
             bc_2.update(failed2)
         contig_check["contig_QC_pass"] = pd.Series(bc_2)
-        contig_check.replace(np.nan, "No_contig", inplace=True)
+        contig_check["contig_QC_pass"] = contig_check["contig_QC_pass"].replace(
+            np.nan, "No_contig"
+        )
         adata_.obs["contig_QC_pass"] = pd.Series(contig_check["contig_QC_pass"])
         adata_.obs["filter_contig"] = adata_.obs_names.isin(filter_ids)
         if filter_rna:
@@ -4568,13 +4572,13 @@ def transfer_assignment(
     if os.path.isfile(failfile):
         db_fail = load_data(failfile)
         # should be pretty safe to fill this in
-        db_fail["vj_in_frame"].fillna(value="F", inplace=True)
-        db_fail["productive"].fillna(value="F", inplace=True)
-        db_fail["c_call"].fillna(value="", inplace=True)
-        db_fail["v_call"].fillna(value="", inplace=True)
-        db_fail["d_call"].fillna(value="", inplace=True)
-        db_fail["j_call"].fillna(value="", inplace=True)
-        db_fail["locus"].fillna(value="", inplace=True)
+        db_fail["vj_in_frame"] = db_fail["vj_in_frame"].fillna(value="F")
+        db_fail["productive"] = db_fail["productive"].fillna(value="F")
+        db_fail["c_call"] = db_fail["c_call"].fillna(value="")
+        db_fail["v_call"] = db_fail["v_call"].fillna(value="")
+        db_fail["d_call"] = db_fail["d_call"].fillna(value="")
+        db_fail["j_call"] = db_fail["j_call"].fillna(value="")
+        db_fail["locus"] = db_fail["locus"].fillna(value="")
         for i, r in db_fail.iterrows():
             if not present(r.locus):
                 calls = list(
@@ -4596,14 +4600,16 @@ def transfer_assignment(
                 db_pass_evalues = dict(db_pass[call + "_support"])
             if call + "_score" in db_pass:
                 db_pass_scores = dict(db_pass[call + "_score"])
-            db_pass[call + "_call"].fillna(value="", inplace=True)
+            db_pass[call + "_call"] = db_pass[call + "_call"].fillna(value="")
             db_pass_call = dict(db_pass[call + "_call"])
             if call + "_support" in db_pass:
                 db_pass[call + "_support_igblastn"] = pd.Series(db_pass_evalues)
             if call + "_score" in db_pass:
                 db_pass[call + "_score_igblastn"] = pd.Series(db_pass_scores)
             db_pass[call + "_call_igblastn"] = pd.Series(db_pass_call)
-            db_pass[call + "_call_igblastn"].fillna(value="", inplace=True)
+            db_pass[call + "_call_igblastn"] = db_pass[
+                call + "_call_igblastn"
+            ].fillna(value="")
             for col in blast_result:
                 if col not in ["sequence_id", "cell_id"]:
                     db_pass[col + "_blastn"] = pd.Series(blast_result[col])
@@ -4612,7 +4618,9 @@ def transfer_assignment(
                         call + "_sequence_alignment",
                         call + "_germline_alignment",
                     ]:
-                        db_pass[col + "_blastn"].fillna(value="", inplace=True)
+                        db_pass[col + "_blastn"] = db_pass[
+                            col + "_blastn"
+                        ].fillna(value="")
             db_pass[call + "_source"] = ""
             if overwrite:
                 for i in db_pass["sequence_id"]:
@@ -4837,14 +4845,16 @@ def transfer_assignment(
                 db_fail_evalues = dict(db_fail[call + "_support"])
             if call + "_score" in db_fail:
                 db_fail_scores = dict(db_fail[call + "_score"])
-            db_fail[call + "_call"].fillna(value="", inplace=True)
+            db_fail[call + "_call"] = db_fail[call + "_call"].fillna(value="")
             db_fail_call = dict(db_fail[call + "_call"])
             if call + "_support" in db_fail:
                 db_fail[call + "_support_igblastn"] = pd.Series(db_fail_evalues)
             if call + "_score" in db_fail:
                 db_fail[call + "_score_igblastn"] = pd.Series(db_fail_scores)
             db_fail[call + "_call_igblastn"] = pd.Series(db_fail_call)
-            db_fail[call + "_call_igblastn"].fillna(value="", inplace=True)
+            db_fail[call + "_call_igblastn"] = db_fail[
+                call + "_call_igblastn"
+            ].fillna(value="")
             for col in blast_result:
                 if col not in ["sequence_id", "cell_id"]:
                     db_fail[col + "_blastn"] = pd.Series(blast_result[col])
@@ -4853,7 +4863,9 @@ def transfer_assignment(
                         call + "_sequence_alignment",
                         call + "_germline_alignment",
                     ]:
-                        db_fail[col + "_blastn"].fillna(value="", inplace=True)
+                        db_fail[col + "_blastn"] = db_fail[
+                            col + "_blastn"
+                        ].fillna(value="")
             db_fail[call + "_source"] = ""
             if overwrite:
                 for i in db_fail["sequence_id"]:
@@ -5191,7 +5203,9 @@ def check_contigs(
         for b in barcode:
             bc_.update({b: "True"})
         contig_check["has_contig"] = pd.Series(bc_)
-        contig_check.replace(np.nan, "No_contig", inplace=True)
+        contig_check["has_contig"] = contig_check["has_contig"].replace(
+            np.nan, "No_contig"
+        )
         adata_.obs["has_contig"] = pd.Series(contig_check["has_contig"])
     else:
         adata_provided = False
@@ -5243,7 +5257,7 @@ def check_contigs(
         dat_["umi_count"].update(dat["umi_count"])
         for column in ["ambiguous", "extra"]:
             dat_[column] = dat[column]
-            dat_[column].fillna("T", inplace=True)
+            dat_[column] = dat_[column].fillna("T")
         dat = dat_.copy()
 
     if filter_extra:
