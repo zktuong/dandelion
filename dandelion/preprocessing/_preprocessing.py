@@ -6209,29 +6209,17 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath1 is not None:
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(
-                        zip(dbpass.index, ["" for x in dbpass.index])
-                    )
-                    res.update(dict(jmulti[col]))
-                    dbpass["j_call_" + col] = list(res.values())
+                    update_j_col_df(dbpass, jmulti, col)
                 write_airr(dbpass, filePath1)
             if filePath1g is not None:
                 dbpassg = load_data(filePath1g)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(
-                        zip(dbpassg.index, ["" for x in dbpassg.index])
-                    )
-                    res.update(dict(jmulti[col]))
-                    dbpassg["j_call_" + col] = list(res.values())
+                    update_j_col_df(dbpassg, jmulti, col)
                 write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(
-                        zip(dbfail.index, ["" for x in dbfail.index])
-                    )
-                    res.update(dict(jmulti[col]))
-                    dbfail["j_call_" + col] = list(res.values())
+                    update_j_col_df(dbfail, jmulti, col)
                 for i in dbfail.index:
                     if not present(dbfail.loc[i, "v_call"]):
                         jmmappers = dbfail.at[i, "j_call_multimappers"].split(
@@ -6255,11 +6243,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath3 is not None:
                 dball = load_data(filePath3)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(
-                        zip(dball.index, ["" for x in dball.index])
-                    )
-                    res.update(dict(jmulti[col]))
-                    dball["j_call_" + col] = list(res.values())
+                    update_j_col_df(dball, jmulti, col)
                 for i in dball.index:
                     if not present(dball.loc[i, "v_call"]):
                         jmmappers = dball.at[i, "j_call_multimappers"].split(
@@ -6283,11 +6267,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath4 is not None:
                 dandy = load_data(filePath4)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(
-                        zip(dandy.index, ["" for x in dandy.index])
-                    )
-                    res.update(dict(jmulti[col]))
-                    dandy["j_call_" + col] = list(res.values())
+                    update_j_col_df(dandy, jmulti, col)
                 write_airr(dandy, filePath4)
 
 
@@ -6334,3 +6314,23 @@ def check_multimapper(
                             keep.append(i)
             keepdf = df_new.loc[keep]
             keepdf.to_csv(filename1, sep="\t", index=False)
+
+def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col:str):
+    """
+    Update the j_call column in the dataframe with the values from the jmulti dataframe without triggering future warning.
+
+    Parameters
+    ----------
+    airrdata : pd.DataFrame
+        The airr dataframe to update.
+    jmulti : pd.DataFrame
+        The jmulti dataframe to update from.
+    col : str
+        The column to update.
+    """
+    df = pd.DataFrame(index = airrdata.index)
+    df[col] = ""
+    df.update(jmulti[[col]])
+    df["j_call_" + col] = df[col]
+    df.drop(col, axis=1, inplace=True)
+    airrdata.update(df[["j_call_" + col]])
