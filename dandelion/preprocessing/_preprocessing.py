@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-import anndata as ad
 import functools
-import numpy as np
 import os
-import pandas as pd
 import re
 import tempfile
+import warnings
+
+import anndata as ad
+import numpy as np
+import pandas as pd
 
 from anndata import AnnData
 from Bio import Align
@@ -1694,7 +1696,7 @@ def reassign_alleles(
             )
         except FileNotFoundError:
             # print error message and return
-            logg.info(
+            warnings.warn(
                 "Processing has failed for {}. Please check the error message for what went wrong.".format(
                     {
                         str(
