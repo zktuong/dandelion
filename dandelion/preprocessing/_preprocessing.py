@@ -1694,9 +1694,21 @@ def reassign_alleles(
         except FileNotFoundError:
             # print error message and return
             logg.info(
-                f"Processing has failed for {str(out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat]))}."
-                "Please check the error message for what went wrong."
-                "The best course of action is to preprocess this file separately with less stringent parameters.")
+                "Processing has failed for {}. ".format(
+                    {
+                        str(
+                            out_dir
+                            / (
+                                out_dir.stem
+                                + "_heavy"
+                                + germpass_dict[fileformat]
+                            )
+                        )
+                    }
+                ),
+                "Please check the error message for what went wrong.",
+                "The best course of action is to preprocess this file separately with less stringent parameters.",
+            )
             return
         logg.info(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
