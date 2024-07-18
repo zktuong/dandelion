@@ -1,5 +1,5 @@
 # set up miniforge
-apt-get --allow-releaseinfo-change update && apt-get install -y curl git gcc
+apt-get --allow-releaseinfo-change update && apt-get install -y curl git gcc language-pack-en
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 bash Miniforge3-$(uname)-$(uname -m).sh -b -p "/opt/conda"
 rm Miniforge3-$(uname)-$(uname -m).sh
@@ -12,11 +12,9 @@ echo "conda activate sc-dandelion-container" | tee -a $SINGULARITY_ENVIRONMENT
 echo "export GERMLINE=/share/database/germlines/" | tee -a $SINGULARITY_ENVIRONMENT
 echo "export IGDATA=/share/database/igblast/" | tee -a $SINGULARITY_ENVIRONMENT
 echo "export BLASTDB=/share/database/blast/" | tee -a $SINGULARITY_ENVIRONMENT
+echo "LANG=en_US.UTF-8" | tee -a $SINGULARITY_ENVIRONMENT
 chmod +x /share/dandelion_preprocess.py
 chmod +x /share/changeo_clonotypes.py
 # install dependencies
 mamba env update --name sc-dandelion-container -f environment.yml
 mamba activate sc-dandelion-container
-Rscript -e 'install.packages(c("optparse", "airr", "BiocManager"), repos = "http://cran.us.r-project.org")'
-Rscript -e 'BiocManager::install(c("Biostrings", "GenomicAlignments", "IRanges"))'
-Rscript -e 'install.packages(c("shazam", "alakazam", "tigger"), repos = "http://cran.us.r-project.org")'
