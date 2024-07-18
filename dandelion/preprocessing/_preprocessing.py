@@ -1440,7 +1440,7 @@ def reassign_alleles(
         filepathlist_light.append(filePath_light)
 
     # make output directory
-    out_dir = Path(combined_folder)
+    out_dir = Path(str(combined_folder))
     out_dir.mkdir(parents=True, exist_ok=True)
     # concatenate
     if len(filepathlist_heavy) > 1:

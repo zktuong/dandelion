@@ -255,9 +255,9 @@ def check_filepath(
 
     ends_with = "" if ends_with is None else ends_with
     input_path = (
-        Path(file_or_folder_path).expanduser()
+        Path(str(file_or_folder_path)).expanduser()
         if str(file_or_folder_path)[0] == "~"
-        else Path(file_or_folder_path)
+        else Path(str(file_or_folder_path))
     )
     if input_path.is_file() and str(input_path).endswith(ends_with):
         return input_path

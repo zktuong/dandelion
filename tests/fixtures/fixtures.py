@@ -45,6 +45,13 @@ def create_testfolder(tmp_path_factory):
     return fn
 
 
+@pytest.fixture(scope="module")
+def create_testfolder_number(tmp_path_factory):
+    """Create test folder but as a number."""
+    fn = tmp_path_factory.mktemp("123456")
+    return fn
+
+
 @pytest.fixture
 def database_paths() -> Dict[str, Path]:
     """
