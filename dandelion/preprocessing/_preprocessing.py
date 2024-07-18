@@ -6207,19 +6207,19 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
                     dbpass["j_call_" + col] = ""
-                    dbpass.loc[jmulti.index, "j_call_" + col] = jmulti[col]
+                    dbpass["j_call_" + col].update(jmulti[col])
                 write_airr(dbpass, filePath1)
             if filePath1g is not None:
                 dbpassg = load_data(filePath1g)
                 for col in jmm_transfer_cols:
                     dbpassg["j_call_" + col] = ""
-                    dbpassg.loc[jmulti.index, "j_call_" + col] = jmulti[col]
+                    dbpassg["j_call_" + col].update(jmulti[col])
                 write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:
                     dbfail["j_call_" + col] = ""
-                    dbfail.loc[jmulti.index, "j_call_" + col] = jmulti[col]
+                    dbfail["j_call_" + col].update(jmulti[col])
                 for i in dbfail.index:
                     if not present(dbfail.loc[i, "v_call"]):
                         jmmappers = dbfail.at[i, "j_call_multimappers"].split(
@@ -6244,7 +6244,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                 dball = load_data(filePath3)
                 for col in jmm_transfer_cols:
                     dball["j_call_" + col] = ""
-                    dball.loc[jmulti.index, "j_call_" + col] = jmulti[col]
+                    dball["j_call_" + col].update(jmulti[col])
                 for i in dball.index:
                     if not present(dball.loc[i, "v_call"]):
                         jmmappers = dball.at[i, "j_call_multimappers"].split(
@@ -6269,7 +6269,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
                 dandy = load_data(filePath4)
                 for col in jmm_transfer_cols:
                     dandy["j_call_" + col] = ""
-                    dandy.loc[jmulti.index, "j_call_" + col] = jmulti[col]
+                    dandy["j_call_" + col].update(jmulti[col])
                 write_airr(dandy, filePath4)
 
 
