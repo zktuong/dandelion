@@ -6315,7 +6315,8 @@ def check_multimapper(
             keepdf = df_new.loc[keep]
             keepdf.to_csv(filename1, sep="\t", index=False)
 
-def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col:str):
+
+def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     """
     Update the j_call column in the dataframe with the values from the jmulti dataframe without triggering future warning.
 
@@ -6328,7 +6329,7 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col:str):
     col : str
         The column to update.
     """
-    df = pd.DataFrame(index = airrdata.index)
+    df = pd.DataFrame(index=airrdata.index)
     df[col] = ""
     df.update(jmulti[[col]])
     df["j_call_" + col] = df[col]
