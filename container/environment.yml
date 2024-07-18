@@ -17,12 +17,18 @@ dependencies:
   - pip
   - pytest
   - tbb
-  - r-base>=4.4.0
+  - rpy2
+  - r-base
+  - r-essentials
+  - r-optparse
+  - r-tigger
+  - r-shazam
+  - r-airr
+  - r-alakazam
   - igblast
   - blast
   - pip:
       - scanpy>=1.7.0
       - git+https://www.github.com/zktuong/dandelion.git
-      - rpy2
       - biopython
       - receptor-utils
