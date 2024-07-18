@@ -55,7 +55,8 @@ def query_ogrdb_set_info(species: str):
         Name of species.
 
     """
-    url = f"https://ogrdb.airr-community.org/api/germline/sets/{species.capitalize()}"
+    species_dict = {"human": "homo%20sapiens", "mouse": "mus%20musculus"}
+    url = f"https://ogrdb.airr-community.org/api/germline/sets/{species_dict[species]}"
     headers = {"accept": "application/json"}
     # Create a request object with the URL and headers
     request = Request(url, headers=headers)
