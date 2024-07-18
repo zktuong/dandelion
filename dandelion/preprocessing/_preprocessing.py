@@ -6209,17 +6209,17 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath1 is not None:
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
-                    dbpass = update_j_col_df(dbpass, jmulti, col)
+                    update_j_col_df(dbpass, jmulti, col)
                 write_airr(dbpass, filePath1)
             if filePath1g is not None:
                 dbpassg = load_data(filePath1g)
                 for col in jmm_transfer_cols:
-                    dbpassg = update_j_col_df(dbpassg, jmulti, col)
+                    update_j_col_df(dbpassg, jmulti, col)
                 write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:
-                    dbfail = update_j_col_df(dbfail, jmulti, col)
+                    update_j_col_df(dbfail, jmulti, col)
                 for i in dbfail.index:
                     if not present(dbfail.loc[i, "v_call"]):
                         jmmappers = dbfail.at[i, "j_call_multimappers"].split(
@@ -6243,7 +6243,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath3 is not None:
                 dball = load_data(filePath3)
                 for col in jmm_transfer_cols:
-                    dball = update_j_col_df(dball, jmulti, col)
+                    update_j_col_df(dball, jmulti, col)
                 for i in dball.index:
                     if not present(dball.loc[i, "v_call"]):
                         jmmappers = dball.at[i, "j_call_multimappers"].split(
@@ -6267,7 +6267,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath4 is not None:
                 dandy = load_data(filePath4)
                 for col in jmm_transfer_cols:
-                    dandy = update_j_col_df(dandy, jmulti, col)
+                    update_j_col_df(dandy, jmulti, col)
                 write_airr(dandy, filePath4)
 
 
@@ -6316,9 +6316,7 @@ def check_multimapper(
             keepdf.to_csv(filename1, sep="\t", index=False)
 
 
-def update_j_col_df(
-    airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str
-) -> pd.DataFrame:
+def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     """
     Update the j_call column in the dataframe with the values from the jmulti dataframe without triggering future warning.
 
@@ -6330,16 +6328,11 @@ def update_j_col_df(
         The jmulti dataframe to update from.
     col : str
         The column to update.
-    Returns
-    -------
-    pd.DataFrame
-        The updated airr dataframe.
     """
-    out = airrdata.copy()
-    df = pd.DataFrame(index=out.index)
+    airrdata["j_call_" + col] = ""
+    df = pd.DataFrame(index=airrdata.index)
     df[col] = ""
     df.update(jmulti[[col]])
     df["j_call_" + col] = df[col]
     df = df[["j_call_" + col]]
-    out.update(df[["j_call_" + col]])
-    return out
+    airrdata.update(df[["j_call_" + col]])
