@@ -307,7 +307,7 @@ def transfer(
         elif overwrite is True:
             adata.obs[x] = pd.Series(dandelion.metadata[x])
         if type_check(dandelion.metadata, x):
-            adata.obs[x].replace(np.nan, "No_contig", inplace=True)
+            adata.obs[x] = adata.obs[x].replace(np.nan, "No_contig")
         if adata.obs[x].dtype == "bool":
             adata.obs[x] = [str(x) for x in adata.obs[x]]
 
@@ -317,7 +317,7 @@ def transfer(
         for ow in overwrite:
             adata.obs[ow] = pd.Series(dandelion.metadata[ow])
             if type_check(dandelion.metadata, ow):
-                adata.obs[ow].replace(np.nan, "No_contig", inplace=True)
+                adata.obs[ow] = adata.obs[ow].replace(np.nan, "No_contig")
 
     if dandelion.graph is not None:
         if expanded_only:
@@ -779,10 +779,10 @@ def define_clones(
             light_df[junction_length] = light_df[junction_length].astype("int")
         except:
             heavy_df[junction_length] = heavy_df[junction_length].replace(
-                np.nan, pd.NA, inplace=True
+                np.nan, pd.NA
             )
             light_df[junction_length] = light_df[junction_length].replace(
-                np.nan, pd.NA, inplace=True
+                np.nan, pd.NA
             )
             heavy_df[junction_length] = heavy_df[junction_length].astype(
                 "Int64"
@@ -876,7 +876,7 @@ def define_clones(
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
-    dat_[str(clone_key)].fillna("", inplace=True)
+    dat_[str(clone_key)] = dat_[str(clone_key)].fillna("")
     if isinstance(vdj_data, Dandelion):
         germline_ = vdj_data.germline if vdj_data.germline is not None else None
         layout_ = vdj_data.layout if vdj_data.layout is not None else None
