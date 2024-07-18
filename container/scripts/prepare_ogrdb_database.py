@@ -136,7 +136,7 @@ def copy_ogrdb_aux_to_igblast(
     out_dir : str | Path
         Location of new database folder.
     """
-    OUT_DIR = Path(out_dir) / "optional_file"
+    OUT_DIR = Path(out_dir)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for org in ["human", "mouse"]:
         cmd = [
