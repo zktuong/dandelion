@@ -6333,5 +6333,5 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     df[col] = ""
     df.update(jmulti[[col]])
     df["j_call_" + col] = df[col]
-    df.drop(col, axis=1, inplace=True)
+    df = df[["j_call_" + col]]
     airrdata.update(df[["j_call_" + col]])
