@@ -6207,21 +6207,27 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath1 is not None:
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(zip(dbpass.index, ["" for x in dbpass.index]))
+                    res = OrderedDict(
+                        zip(dbpass.index, ["" for x in dbpass.index])
+                    )
                     res.update(dict(jmulti[col]))
                     dbpass["j_call_" + col] = list(res.values())
                 write_airr(dbpass, filePath1)
             if filePath1g is not None:
                 dbpassg = load_data(filePath1g)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(zip(dbpassg.index, ["" for x in dbpassg.index]))
+                    res = OrderedDict(
+                        zip(dbpassg.index, ["" for x in dbpassg.index])
+                    )
                     res.update(dict(jmulti[col]))
                     dbpassg["j_call_" + col] = list(res.values())
                 write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(zip(dbfail.index, ["" for x in dbfail.index]))
+                    res = OrderedDict(
+                        zip(dbfail.index, ["" for x in dbfail.index])
+                    )
                     res.update(dict(jmulti[col]))
                     dbfail["j_call_" + col] = list(res.values())
                 for i in dbfail.index:
@@ -6247,7 +6253,9 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath3 is not None:
                 dball = load_data(filePath3)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(zip(dball.index, ["" for x in dball.index]))
+                    res = OrderedDict(
+                        zip(dball.index, ["" for x in dball.index])
+                    )
                     res.update(dict(jmulti[col]))
                     dball["j_call_" + col] = list(res.values())
                 for i in dball.index:
@@ -6273,7 +6281,9 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath4 is not None:
                 dandy = load_data(filePath4)
                 for col in jmm_transfer_cols:
-                    res = OrderedDict(zip(dandy.index, ["" for x in dandy.index]))
+                    res = OrderedDict(
+                        zip(dandy.index, ["" for x in dandy.index])
+                    )
                     res.update(dict(jmulti[col]))
                     dandy["j_call_" + col] = list(res.values())
                 write_airr(dandy, filePath4)
