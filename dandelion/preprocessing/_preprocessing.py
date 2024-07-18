@@ -1687,11 +1687,19 @@ def reassign_alleles(
         additional_args=["--vf", "v_call"] + additional_args["creategermlines"],
     )
     if "tigger_failed" in locals():
+        try:
+            heavy = load_data(
+                out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat])
+            )
+        except FileNotFoundError:
+            # print error message and return
+            logg.info(
+                f"Processing has failed for {str(out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat]))}."
+                "Please check the error message for what went wrong."
+                "The best course of action is to preprocess this file separately with less stringent parameters.")
+            return
         logg.info(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
-        )
-        heavy = load_data(
-            out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat])
         )
         heavy["v_call_genotyped"] = heavy["v_call"]
     else:
