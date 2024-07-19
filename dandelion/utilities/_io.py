@@ -200,12 +200,6 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     """
     try:
         data = pd.read_hdf(filename, "data")
-        # data = sanitize_data(data)
-
-        # if check_mix_dtype(data):
-        #     for x in return_mix_dtype(data):
-        #        data[x].replace('', pd.NA, inplace=True)
-        #     data = sanitize_data(data)
     except:
         raise AttributeError(
             "{} does not contain attribute `data`".format(filename)

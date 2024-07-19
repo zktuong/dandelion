@@ -1383,7 +1383,7 @@ class Query:
                     try:
                         out[x] = pd.to_numeric(out[x])
                     except:
-                        out[x].fillna("None", inplace=True)
+                        out[x] = out[x].fillna("None")
             else:
                 out.fillna("None", inplace=True)
         return out
@@ -1793,7 +1793,7 @@ class Query:
                     try:
                         out[x] = pd.to_numeric(out[x])
                     except:
-                        out[x].fillna("None", inplace=True)
+                        out[x] = out[x].fillna("None")
             else:
                 out.fillna("None", inplace=True)
         return out
@@ -1982,7 +1982,9 @@ def initialize_metadata(
         suffix_vj = ""
 
     if clonekey in init_dict:
-        tmp_metadata[str(clonekey)].replace("", "None", inplace=True)
+        tmp_metadata[str(clonekey)] = tmp_metadata[str(clonekey)].replace(
+            "", "None"
+        )
         clones = tmp_metadata[str(clonekey)].str.split("|", expand=False)
         tmpclones = []
         for i in clones:
@@ -2141,9 +2143,9 @@ def initialize_metadata(
                 ["isotype", "isotype_status"], axis=1, inplace=True
             )
     for rc in reqcols:
-        tmp_metadata[rc].replace("", "None", inplace=True)
+        tmp_metadata[rc] = tmp_metadata[rc].replace("", "None")
     if clonekey in init_dict:
-        tmp_metadata[clonekey].replace("", "None", inplace=True)
+        tmp_metadata[clonekey] = tmp_metadata[clonekey].replace("", "None")
 
     tmp_metadata = movecol(
         tmp_metadata,
