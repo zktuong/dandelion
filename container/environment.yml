@@ -19,7 +19,7 @@ dependencies:
   - tbb
   - rpy2
   - r-base
-  - r-essentials
+  - r-stringi
   - r-optparse
   - r-tigger
   - r-shazam

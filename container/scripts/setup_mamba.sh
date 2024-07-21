@@ -1,5 +1,5 @@
 # set up miniforge
-apt-get --allow-releaseinfo-change update && apt-get install -y curl git gcc language-pack-en
+apt-get --allow-releaseinfo-change update && apt-get install -y curl git language-pack-en
 curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 bash Miniforge3-$(uname)-$(uname -m).sh -b -p "/opt/conda"
 rm Miniforge3-$(uname)-$(uname -m).sh
