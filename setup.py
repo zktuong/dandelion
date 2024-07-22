@@ -32,12 +32,12 @@ setup(
             "yamlordereddictloader",
             "sphinx<7",  # see issue at https://github.com/readthedocs/readthedocs.org/issues/10279
             "nbsphinx<=0.9.2",
-            "sphinx-autodoc-typehints<=2.2.2",
+            "sphinx-autodoc-typehints<=2.2.3",
             "sphinx_rtd_theme<=2.0.0",
             "readthedocs-sphinx-ext<=2.2.5",
             "recommonmark<=0.7.1",
         ],
-        "scirpy": ["scirpy<=0.17.0", "awkward", "mudata"],
+        "scirpy": ["scirpy<=0.17.2", "awkward", "mudata"],
     },
     package_data={
         "dandelion": ["bin/tigger-genotype.R", "bin/MakeDb_gentle.py"]

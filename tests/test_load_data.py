@@ -163,3 +163,9 @@ def test_slice_data_with_graph(airr_generic):
     assert len(vdj2.graph[0]) == 12
     # assert len(vdj2.graph[1]) == 4
     assert len(vdj2.graph[1]) == 10
+
+
+@pytest.mark.usefixtures("airr_generic")
+def test_isotype(airr_generic):
+    """test load_data"""
+    vdj = ddl.Dandelion(airr_generic, custom_isotype_dict={"IGHC": "IGC"})

@@ -35,6 +35,7 @@ def find_clones(
     key_added: Optional[str] = None,
     recalculate_length: bool = True,
     verbose: bool = True,
+    **kwargs,
 ) -> Dandelion:
     """
     Find clones based on VDJ chain and VJ chain CDR3 junction hamming distance.
@@ -58,6 +59,8 @@ def find_clones(
         wrong). Default is True
     verbose : bool, optional
         whether or not to print progress.
+    **kwargs
+        Additional arguments to pass to `Dandelion.update_metadata`.
 
     Returns
     -------
@@ -220,7 +223,7 @@ def find_clones(
                 layout=layout_,
                 graph=graph_,
             )
-            vdj_data.update_metadata(reinitialize=True)
+            vdj_data.update_metadata(reinitialize=True, **kwargs)
         elif ("clone_id" in vdj_data.data.columns) and (key_added is not None):
             vdj_data.__init__(
                 data=dat_,
@@ -233,6 +236,7 @@ def find_clones(
                 clone_key="clone_id",
                 retrieve=clone_key,
                 retrieve_mode="merge and unique only",
+                **kwargs,
             )
         else:
             vdj_data.__init__(
@@ -242,7 +246,9 @@ def find_clones(
                 graph=graph_,
                 clone_key=clone_key,
             )
-            vdj_data.update_metadata(reinitialize=True, clone_key=clone_key)
+            vdj_data.update_metadata(
+                reinitialize=True, clone_key=clone_key, **kwargs
+            )
         vdj_data.threshold = threshold_
 
     else:
@@ -251,6 +257,7 @@ def find_clones(
             clone_key=clone_key,
             retrieve=clone_key,
             retrieve_mode="merge and unique only",
+            **kwargs,
         )
         return out
 
@@ -300,7 +307,7 @@ def transfer(
         elif overwrite is True:
             adata.obs[x] = pd.Series(dandelion.metadata[x])
         if type_check(dandelion.metadata, x):
-            adata.obs[x].replace(np.nan, "No_contig", inplace=True)
+            adata.obs[x] = adata.obs[x].replace(np.nan, "No_contig")
         if adata.obs[x].dtype == "bool":
             adata.obs[x] = [str(x) for x in adata.obs[x]]
 
@@ -310,7 +317,7 @@ def transfer(
         for ow in overwrite:
             adata.obs[ow] = pd.Series(dandelion.metadata[ow])
             if type_check(dandelion.metadata, ow):
-                adata.obs[ow].replace(np.nan, "No_contig", inplace=True)
+                adata.obs[ow] = adata.obs[ow].replace(np.nan, "No_contig")
 
     if dandelion.graph is not None:
         if expanded_only:
@@ -772,10 +779,10 @@ def define_clones(
             light_df[junction_length] = light_df[junction_length].astype("int")
         except:
             heavy_df[junction_length] = heavy_df[junction_length].replace(
-                np.nan, pd.NA, inplace=True
+                np.nan, pd.NA
             )
             light_df[junction_length] = light_df[junction_length].replace(
-                np.nan, pd.NA, inplace=True
+                np.nan, pd.NA
             )
             heavy_df[junction_length] = heavy_df[junction_length].astype(
                 "Int64"
@@ -869,7 +876,7 @@ def define_clones(
     cloned_ = pd.concat([h_df, l_df])
     # transfer the new clone_id to the heavy + light file
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
-    dat_[str(clone_key)].fillna("", inplace=True)
+    dat_[str(clone_key)] = dat_[str(clone_key)].fillna("")
     if isinstance(vdj_data, Dandelion):
         germline_ = vdj_data.germline if vdj_data.germline is not None else None
         layout_ = vdj_data.layout if vdj_data.layout is not None else None

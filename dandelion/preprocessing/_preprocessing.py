@@ -1,14 +1,17 @@
 #!/usr/bin/env python
-import anndata as ad
 import functools
-import numpy as np
 import os
-import pandas as pd
 import re
 import tempfile
+import warnings
+
+import anndata as ad
+import numpy as np
+import pandas as pd
 
 from anndata import AnnData
 from Bio import Align
+from collections import OrderedDict
 from operator import countOf
 from pathlib import Path
 from plotnine import (
@@ -1437,7 +1440,7 @@ def reassign_alleles(
         filepathlist_light.append(filePath_light)
 
     # make output directory
-    out_dir = Path(combined_folder)
+    out_dir = Path(str(combined_folder))
     out_dir.mkdir(parents=True, exist_ok=True)
     # concatenate
     if len(filepathlist_heavy) > 1:
@@ -1687,11 +1690,29 @@ def reassign_alleles(
         additional_args=["--vf", "v_call"] + additional_args["creategermlines"],
     )
     if "tigger_failed" in locals():
+        try:
+            heavy = load_data(
+                out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat])
+            )
+        except FileNotFoundError:
+            # print error message and return
+            warnings.warn(
+                "Processing has failed for {}. Please check the error message for what went wrong.".format(
+                    {
+                        str(
+                            out_dir
+                            / (
+                                out_dir.stem
+                                + "_heavy"
+                                + germpass_dict[fileformat]
+                            )
+                        )
+                    }
+                )
+            )
+            return
         logg.info(
             "      For convenience, entries for heavy chain in `v_call` are copied to `v_call_genotyped`."
-        )
-        heavy = load_data(
-            out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat])
         )
         heavy["v_call_genotyped"] = heavy["v_call"]
     else:
@@ -1713,8 +1734,8 @@ def reassign_alleles(
     for file in sampleNames_dict.keys():
         dat_f = load_data(file)
         dat_f["sample_id"] = sampleNames_dict[file]
-        heavy["sample_id"].update(dat_f["sample_id"])
-        light["sample_id"].update(dat_f["sample_id"])
+        heavy.update(dat_f[["sample_id"]])
+        light.update(dat_f[["sample_id"]])
 
     dat_ = pd.concat([heavy, light])
     if "cell_id" in dat_.columns:
@@ -2143,7 +2164,9 @@ def filter_contigs(
         for b in barcode:
             bc_.update({b: "True"})
         contig_check["has_contig"] = pd.Series(bc_)
-        contig_check.replace(np.nan, "No_contig", inplace=True)
+        contig_check["has_contig"] = contig_check["has_contig"].replace(
+            np.nan, "No_contig"
+        )
         adata_.obs["has_contig"] = pd.Series(contig_check["has_contig"])
     else:
         adata_provided = False
@@ -2270,7 +2293,9 @@ def filter_contigs(
             failed2 = {b: "False" for b in failed}
             bc_2.update(failed2)
         contig_check["contig_QC_pass"] = pd.Series(bc_2)
-        contig_check.replace(np.nan, "No_contig", inplace=True)
+        contig_check["contig_QC_pass"] = contig_check["contig_QC_pass"].replace(
+            np.nan, "No_contig"
+        )
         adata_.obs["contig_QC_pass"] = pd.Series(contig_check["contig_QC_pass"])
         adata_.obs["filter_contig"] = adata_.obs_names.isin(filter_ids)
         if filter_rna:
@@ -4568,13 +4593,13 @@ def transfer_assignment(
     if os.path.isfile(failfile):
         db_fail = load_data(failfile)
         # should be pretty safe to fill this in
-        db_fail["vj_in_frame"].fillna(value="F", inplace=True)
-        db_fail["productive"].fillna(value="F", inplace=True)
-        db_fail["c_call"].fillna(value="", inplace=True)
-        db_fail["v_call"].fillna(value="", inplace=True)
-        db_fail["d_call"].fillna(value="", inplace=True)
-        db_fail["j_call"].fillna(value="", inplace=True)
-        db_fail["locus"].fillna(value="", inplace=True)
+        db_fail["vj_in_frame"] = db_fail["vj_in_frame"].fillna(value="F")
+        db_fail["productive"] = db_fail["productive"].fillna(value="F")
+        db_fail["c_call"] = db_fail["c_call"].fillna(value="")
+        db_fail["v_call"] = db_fail["v_call"].fillna(value="")
+        db_fail["d_call"] = db_fail["d_call"].fillna(value="")
+        db_fail["j_call"] = db_fail["j_call"].fillna(value="")
+        db_fail["locus"] = db_fail["locus"].fillna(value="")
         for i, r in db_fail.iterrows():
             if not present(r.locus):
                 calls = list(
@@ -4596,14 +4621,16 @@ def transfer_assignment(
                 db_pass_evalues = dict(db_pass[call + "_support"])
             if call + "_score" in db_pass:
                 db_pass_scores = dict(db_pass[call + "_score"])
-            db_pass[call + "_call"].fillna(value="", inplace=True)
+            db_pass[call + "_call"] = db_pass[call + "_call"].fillna(value="")
             db_pass_call = dict(db_pass[call + "_call"])
             if call + "_support" in db_pass:
                 db_pass[call + "_support_igblastn"] = pd.Series(db_pass_evalues)
             if call + "_score" in db_pass:
                 db_pass[call + "_score_igblastn"] = pd.Series(db_pass_scores)
             db_pass[call + "_call_igblastn"] = pd.Series(db_pass_call)
-            db_pass[call + "_call_igblastn"].fillna(value="", inplace=True)
+            db_pass[call + "_call_igblastn"] = db_pass[
+                call + "_call_igblastn"
+            ].fillna(value="")
             for col in blast_result:
                 if col not in ["sequence_id", "cell_id"]:
                     db_pass[col + "_blastn"] = pd.Series(blast_result[col])
@@ -4612,7 +4639,9 @@ def transfer_assignment(
                         call + "_sequence_alignment",
                         call + "_germline_alignment",
                     ]:
-                        db_pass[col + "_blastn"].fillna(value="", inplace=True)
+                        db_pass[col + "_blastn"] = db_pass[
+                            col + "_blastn"
+                        ].fillna(value="")
             db_pass[call + "_source"] = ""
             if overwrite:
                 for i in db_pass["sequence_id"]:
@@ -4837,14 +4866,16 @@ def transfer_assignment(
                 db_fail_evalues = dict(db_fail[call + "_support"])
             if call + "_score" in db_fail:
                 db_fail_scores = dict(db_fail[call + "_score"])
-            db_fail[call + "_call"].fillna(value="", inplace=True)
+            db_fail[call + "_call"] = db_fail[call + "_call"].fillna(value="")
             db_fail_call = dict(db_fail[call + "_call"])
             if call + "_support" in db_fail:
                 db_fail[call + "_support_igblastn"] = pd.Series(db_fail_evalues)
             if call + "_score" in db_fail:
                 db_fail[call + "_score_igblastn"] = pd.Series(db_fail_scores)
             db_fail[call + "_call_igblastn"] = pd.Series(db_fail_call)
-            db_fail[call + "_call_igblastn"].fillna(value="", inplace=True)
+            db_fail[call + "_call_igblastn"] = db_fail[
+                call + "_call_igblastn"
+            ].fillna(value="")
             for col in blast_result:
                 if col not in ["sequence_id", "cell_id"]:
                     db_fail[col + "_blastn"] = pd.Series(blast_result[col])
@@ -4853,7 +4884,9 @@ def transfer_assignment(
                         call + "_sequence_alignment",
                         call + "_germline_alignment",
                     ]:
-                        db_fail[col + "_blastn"].fillna(value="", inplace=True)
+                        db_fail[col + "_blastn"] = db_fail[
+                            col + "_blastn"
+                        ].fillna(value="")
             db_fail[call + "_source"] = ""
             if overwrite:
                 for i in db_fail["sequence_id"]:
@@ -5191,7 +5224,9 @@ def check_contigs(
         for b in barcode:
             bc_.update({b: "True"})
         contig_check["has_contig"] = pd.Series(bc_)
-        contig_check.replace(np.nan, "No_contig", inplace=True)
+        contig_check["has_contig"] = contig_check["has_contig"].replace(
+            np.nan, "No_contig"
+        )
         adata_.obs["has_contig"] = pd.Series(contig_check["has_contig"])
     else:
         adata_provided = False
@@ -5243,7 +5278,7 @@ def check_contigs(
         dat_["umi_count"].update(dat["umi_count"])
         for column in ["ambiguous", "extra"]:
             dat_[column] = dat[column]
-            dat_[column].fillna("T", inplace=True)
+            dat_[column] = dat_[column].fillna("T")
         dat = dat_.copy()
 
     if filter_extra:
@@ -6174,20 +6209,17 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath1 is not None:
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
-                    dbpass["j_call_" + col] = ""
-                    dbpass["j_call_" + col].update(jmulti[col])
+                    update_j_col_df(dbpass, jmulti, col)
                 write_airr(dbpass, filePath1)
             if filePath1g is not None:
                 dbpassg = load_data(filePath1g)
                 for col in jmm_transfer_cols:
-                    dbpassg["j_call_" + col] = ""
-                    dbpassg["j_call_" + col].update(jmulti[col])
+                    update_j_col_df(dbpassg, jmulti, col)
                 write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
                 for col in jmm_transfer_cols:
-                    dbfail["j_call_" + col] = ""
-                    dbfail["j_call_" + col].update(jmulti[col])
+                    update_j_col_df(dbfail, jmulti, col)
                 for i in dbfail.index:
                     if not present(dbfail.loc[i, "v_call"]):
                         jmmappers = dbfail.at[i, "j_call_multimappers"].split(
@@ -6211,8 +6243,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath3 is not None:
                 dball = load_data(filePath3)
                 for col in jmm_transfer_cols:
-                    dball["j_call_" + col] = ""
-                    dball["j_call_" + col].update(jmulti[col])
+                    update_j_col_df(dball, jmulti, col)
                 for i in dball.index:
                     if not present(dball.loc[i, "v_call"]):
                         jmmappers = dball.at[i, "j_call_multimappers"].split(
@@ -6236,8 +6267,7 @@ def update_j_multimap(data: List[str], filename_prefix: List[str]):
             if filePath4 is not None:
                 dandy = load_data(filePath4)
                 for col in jmm_transfer_cols:
-                    dandy["j_call_" + col] = ""
-                    dandy["j_call_" + col].update(jmulti[col])
+                    update_j_col_df(dandy, jmulti, col)
                 write_airr(dandy, filePath4)
 
 
@@ -6284,3 +6314,25 @@ def check_multimapper(
                             keep.append(i)
             keepdf = df_new.loc[keep]
             keepdf.to_csv(filename1, sep="\t", index=False)
+
+
+def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
+    """
+    Update the j_call column in the dataframe with the values from the jmulti dataframe without triggering future warning.
+
+    Parameters
+    ----------
+    airrdata : pd.DataFrame
+        The airr dataframe to update.
+    jmulti : pd.DataFrame
+        The jmulti dataframe to update from.
+    col : str
+        The column to update.
+    """
+    airrdata["j_call_" + col] = ""
+    df = pd.DataFrame(index=airrdata.index)
+    df[col] = ""
+    df.update(jmulti[[col]])
+    df["j_call_" + col] = df[col]
+    df = df[["j_call_" + col]]
+    airrdata.update(df[["j_call_" + col]])

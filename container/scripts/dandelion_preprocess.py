@@ -194,7 +194,16 @@ def main():
     if args.meta is not None:
         # if so, read it and use the index as the sample list
         meta = pd.read_csv(args.meta, index_col=0)
-        samples = list(meta.index)
+        samples = [str(s) for s in meta.index]
+        if "individual" in meta.columns:
+            individuals = list(meta["individual"])
+            if any(ind in samples for ind in individuals):
+                if args.clean_output:
+                    raise ValueError(
+                        "Individuals in metadata file must not be the same as sample names when `--clean_output` flag is used."
+                        "Otherwise, your sample folders will be deleted. "
+                        "Please rename the individual or sample folders, or run without `--clean_output`."
+                    )
     else:
         # no metadata file. create empty data frame so we can easily check for
         # column presence
@@ -303,7 +312,7 @@ def main():
                     # remove if cleaning output - the important information is
                     # ported to sample folders already
                     if args.clean_output:
-                        os.system("rm -r " + ind)
+                        os.system("rm -r " + str(ind))
             else:
                 # run on the whole thing at once
                 ddl.pp.reassign_alleles(

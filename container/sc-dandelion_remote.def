@@ -15,7 +15,6 @@ From: ubuntu:latest
     dandelion/container/scripts/prepare_imgt_database.py /share/prepare_imgt_database.py
     dandelion/container/scripts/prepare_ogrdb_database.py /share/prepare_ogrdb_database.py
     dandelion/container/scripts/utils.py /share/utils.py
-    dandelion/container/optional_file /share/optional_file
     dandelion/container/tests /tests
 
 %post
