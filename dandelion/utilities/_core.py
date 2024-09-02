@@ -2445,17 +2445,17 @@ def return_none_call(call: str) -> str:
 
 # from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/_core/index.py#L43-L111
 def _normalize_index(
-    indexer: (
-        slice
-        | np.integer
-        | int
-        | str
-        | Sequence[bool | int | np.integer]
-        | np.ndarray
-        | pd.Index
-    ),
+    indexer: Union[
+        slice,
+        np.integer,
+        int,
+        str,
+        Sequence[bool, int, np.integer],
+        np.ndarray,
+        pd.Index,
+    ],
     index: pd.Index,
-) -> slice | int | np.ndarray:  # ndarray of int or bool
+) -> Union[slice, int, np.ndarray]:  # ndarray of int or bool
     """normalize index from anndata"""
     if not isinstance(index, pd.RangeIndex):
         msg = "Don’t call _normalize_index with non-categorical/string names"
