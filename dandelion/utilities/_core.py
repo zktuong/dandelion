@@ -2450,7 +2450,7 @@ def _normalize_index(
         np.integer,
         int,
         str,
-        Sequence[bool, int, np.integer],
+        Sequence[Union[bool, int, np.integer]],
         np.ndarray,
         pd.Index,
     ],
