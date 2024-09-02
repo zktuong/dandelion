@@ -37,14 +37,7 @@ setup(
             "readthedocs-sphinx-ext<=2.2.5",
             "recommonmark<=0.7.1",
         ],
-        "scirpy": [
-            "scirpy<=0.17.2",
-            "awkward",
-            "mudata<=0.2.4;python_version<'3.10'",
-            "mudata<=0.3.1;python_version>'3.9'",
-            "anndata<=0.10.8;python_version<'3.10'",
-            "anndata>=0.10.9;python_version>'3.9'",
-        ],
+        "scirpy": ["scirpy<=0.17.2", "awkward", "mudata"],
     },
     package_data={
         "dandelion": ["bin/tigger-genotype.R", "bin/MakeDb_gentle.py"]
