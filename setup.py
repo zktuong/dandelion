@@ -37,7 +37,7 @@ setup(
             "readthedocs-sphinx-ext<=2.2.5",
             "recommonmark<=0.7.1",
         ],
-        "scirpy": ["scirpy<=0.17.2", "awkward", "mudata<=0.3.1"],
+        "scirpy": ["scirpy<=0.17.2", "awkward", "mudata"],
     },
     package_data={
         "dandelion": ["bin/tigger-genotype.R", "bin/MakeDb_gentle.py"]
@@ -45,7 +45,6 @@ setup(
     data_files=[("bin", ["bin/tigger-genotype.R", "bin/MakeDb_gentle.py"])],
     include_package_data=True,
     classifiers=[
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
