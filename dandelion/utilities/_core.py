@@ -2456,7 +2456,7 @@ def _normalize_index(
     ],
     index: pd.Index,
 ) -> Union[slice, int, np.ndarray]:  # ndarray of int or bool
-    """normalize index from anndata"""
+    """normalize index from anndata."""
     if not isinstance(index, pd.RangeIndex):
         msg = "Don’t call _normalize_index with non-categorical/string names"
         assert index.dtype != float, msg
@@ -2465,6 +2465,7 @@ def _normalize_index(
     # the following is insanely slow for sequences,
     # we replaced it using pandas below
     def name_idx(i):
+        """name index."""
         if isinstance(i, str):
             i = index.get_loc(i)
         return i
@@ -2519,7 +2520,7 @@ def _normalize_index(
 
 
 def unpack_index(index: Index) -> Tuple[Index1D, Index1D]:
-    """unpack index from anndata"""
+    """unpack index from anndata."""
     if not isinstance(index, tuple):
         return index, slice(None)
     elif len(index) == 2:
