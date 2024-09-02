@@ -12,7 +12,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from anndata.compat import Index, Index1D
 from changeo.IO import readGermlines
 from collections import defaultdict
 from pandas.api.types import infer_dtype
@@ -25,6 +24,10 @@ from typing import Union, List, Dict, Optional, Sequence, Tuple
 
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
+
+# from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/compat/__init__.py#L48-L49
+Index1D = Union[slice, int, str, np.int64, np.ndarray]
+Index = Union[Index1D, Tuple[Index1D, Index1D], spmatrix, sparray]
 
 
 class Dandelion:
@@ -2440,7 +2443,7 @@ def return_none_call(call: str) -> str:
     return call.split("|")[0] if not call in ["None", ""] else "None"
 
 
-## from anndata
+# from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/_core/index.py#L43-L111
 def _normalize_index(
     indexer: (
         slice
@@ -2512,6 +2515,7 @@ def _normalize_index(
             return positions  # np.ndarray[int]
     else:
         raise IndexError(f"Unknown indexer {indexer!r} of type {type(indexer)}")
+
 
 def unpack_index(index: Index) -> Tuple[Index1D, Index1D]:
     if not isinstance(index, tuple):
