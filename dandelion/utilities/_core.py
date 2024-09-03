@@ -5,7 +5,6 @@ import gzip
 import h5py
 import os
 import re
-import sys
 import warnings
 
 import _pickle as cPickle
@@ -13,11 +12,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from anndata._core.index import (
-    _normalize_index,
-    Index,
-    unpack_index,
-)
 from changeo.IO import readGermlines
 from collections import defaultdict
 from pandas.api.types import infer_dtype
@@ -29,6 +23,11 @@ from typing import Union, List, Dict, Optional, Tuple
 
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
+from dandelion.external.anndata._compat import (
+    _normalize_index,
+    unpack_index,
+    Index,
+)
 
 
 class Dandelion:
