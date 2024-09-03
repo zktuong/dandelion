@@ -17,19 +17,13 @@ from collections import defaultdict
 from pandas.api.types import infer_dtype
 from pathlib import Path
 from scanpy import logging as logg
-from scipy.sparse import spmatrix, sparray
 from textwrap import dedent
 from tqdm import tqdm
 from typing import Union, List, Dict, Optional, Tuple
 
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
-from dandelion.external.anndata._compat import _normalize_index, unpack_index
-
-# from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/compat/__init__.py#L48-L49
-Index1D = Union[slice, int, str, np.int64, np.ndarray]
-Index = Union[Index1D, Tuple[Index1D, Index1D], spmatrix, sparray]
-
+from dandelion.external.anndata._compat import _normalize_index, unpack_index, Index
 
 class Dandelion:
     """
