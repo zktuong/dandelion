@@ -2,7 +2,11 @@ import numpy as np
 import pandas as pd
 
 from scipy.sparse import spmatrix, sparray
-from typing import Sequence, Union
+from typing import Sequence, Union, Tuple
+
+# from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/compat/__init__.py#L48-L49
+Index1D = Union[slice, int, str, np.int64, np.ndarray]
+Index = Union[Index1D, Tuple[Index1D, Index1D], spmatrix, sparray]
 
 
 # from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/_core/index.py#L43-L111
