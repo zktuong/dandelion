@@ -23,11 +23,11 @@ from dandelion.utilities._utilities import *
 
 
 def generate_network(
-    vdj_data: Union[Dandelion, pd.DataFrame, str],
-    key: Optional[str] = None,
-    clone_key: Optional[str] = None,
+    vdj_data: Dandelion | pd.DataFrame | str,
+    key: str | None = None,
+    clone_key: str | None = None,
     min_size: int = 2,
-    downsample: Optional[int] = None,
+    downsample: int | None = None,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
@@ -43,17 +43,17 @@ def generate_network(
 
     Parameters
     ----------
-    vdj_data : Union[Dandelion, pd.DataFrame, str]
+    vdj_data : Dandelion | pd.DataFrame | str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
         have been determined.
-    key : Optional[str], optional
+    key : str | None, optional
         column name for distance calculations. None defaults to 'sequence_alignment_aa'.
-    clone_key : Optional[str], optional
+    clone_key : str | None, optional
         column name to build network on.
     min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    downsample : Optional[int], optional
+    downsample : int | None, optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be
         randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool, optional
@@ -560,7 +560,7 @@ def generate_network(
 
 def mst(
     mat: dict,
-    num_cores: Optional[int] = None,
+    num_cores: int | None = None,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -606,21 +606,21 @@ def mst(
 
 
 def process_mst_per_clonotype(
-    mat: Dict[str, pd.DataFrame], c: str
-) -> Tuple[str, nx.Graph]:
+    mat: dict[str, pd.DataFrame], c: str
+) -> tuple[str, nx.Graph]:
     """
     Function to calculate minimum spanning tree.
 
     Parameters
     ----------
-    mat : Dict[str, pd.DataFrame]
+    mat : dict[str, pd.DataFrame]
         Dictionary holding distance matrices.
     c : str
         Name of clonotype.
 
     Returns
     -------
-    Tuple[str, nx.Graph]
+    tuple[str, nx.Graph]
         Graph holding minimum spanning tree.
     """
     tmp = mat[c] + 1
@@ -631,7 +631,7 @@ def process_mst_per_clonotype(
 
 def link_edges_per_clonotype(
     clone_tree: Tree, c: str, full_edge_list: pd.DataFrame
-) -> Tuple[str, pd.DataFrame]:
+) -> tuple[str, pd.DataFrame]:
     """
     Link edges after constructing the clonotype tree.
 
@@ -646,7 +646,7 @@ def link_edges_per_clonotype(
 
     Returns
     -------
-    Tuple[str, pd.DataFrame]
+    tuple[str, pd.DataFrame]
         Edge list after linking.
     """
     G = create_networkx_graph(
@@ -737,7 +737,7 @@ def adjacency_to_edge_list(
 
 
 def clone_degree(
-    vdj_data: Dandelion, weight: Optional[str] = None, verbose: bool = True
+    vdj_data: Dandelion, weight: str | None = None, verbose: bool = True
 ) -> Dandelion:
     """
     Calculate node degree in BCR/TCR network.
@@ -746,7 +746,7 @@ def clone_degree(
     ----------
     vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    weight : Optional[str], optional
+    weight : str | None, optional
         Attribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
     verbose : bool, optional
         Whether or not to show logging information.
@@ -824,14 +824,14 @@ def _generate_layout(
     vertices: Optional[list] = None,
     edges: Optional[pd.DataFrame] = None,
     min_size: int = 2,
-    weight: Optional[str] = None,
+    weight: str | None = None,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
-    graphs: Optional[Tuple[nx.Graph, nx.Graph]] = None,
+    graphs: Optional[tuple[nx.Graph, nx.Graph]] = None,
     **kwargs,
-) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
+) -> tuple[nx.Graph, nx.Graph, dict, dict]:
     """Generate layout.
 
     Parameters
@@ -842,7 +842,7 @@ def _generate_layout(
         edge list in a pandas data frame.
     min_size : int, optional
         minimum clone size.
-    weight : Optional[str], optional
+    weight : str | None, optional
         name of weight column.
     verbose : bool, optional
         whether or not to print status
@@ -852,14 +852,14 @@ def _generate_layout(
         layout method.
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clones.
-    graphs: Optional[Tuple[nx.Graph, nx.Graph]], optional
+    graphs: Optional[tuple[nx.Graph, nx.Graph]], optional
         tuple of graphs.
     **kwargs
         passed to fruchterman_reingold_layout.
 
     Returns
     -------
-    Tuple[nx.Graph, nx.Graph, dict, dict]
+    tuple[nx.Graph, nx.Graph, dict, dict]
         graphs and layout positions.
     """
     if graphs is None:

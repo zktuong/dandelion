@@ -53,13 +53,13 @@ def create_testfolder_number(tmp_path_factory):
 
 
 @pytest.fixture
-def database_paths() -> Dict[str, Path]:
+def database_paths() -> dict[str, Path]:
     """
     Fixture to get the database paths.
 
     Returns
     -------
-    Dict[str, Path]
+    dict[str, Path]
         Dictionary with the database paths.
     """
     db = {

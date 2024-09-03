@@ -2,26 +2,26 @@ import numpy as np
 import pandas as pd
 
 from scipy.sparse import spmatrix, sparray
-from typing import Sequence, Union, Tuple
+from typing import Sequence
 
 # from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/compat/__init__.py#L48-L49
-Index1D = Union[slice, int, str, np.int64, np.ndarray]
-Index = Union[Index1D, Tuple[Index1D, Index1D], spmatrix, sparray]
+Index1D = slice | int | str | np.int64 | np.ndarray
+Index = Index1D | tuple[Index1D, Index1D] | spmatrix | sparray
 
 
 # from https://github.com/scverse/anndata/blob/53537b5219ff82cbdee96b7733172fb114e80ca8/src/anndata/_core/index.py#L43-L111
 def _normalize_index(
-    indexer: Union[
-        slice,
-        np.integer,
-        int,
-        str,
-        Sequence[Union[bool, int, np.integer]],
-        np.ndarray,
-        pd.Index,
-    ],
+    indexer: (
+        slice
+        | np.integer
+        | int
+        | str
+        | Sequence[bool | int | np.integer]
+        | np.ndarray
+        | pd.Index
+    ),
     index: pd.Index,
-) -> Union[slice, int, np.ndarray]:  # ndarray of int or bool
+) -> slice | int | np.ndarray:  # ndarray of int or bool
     """normalize index from anndata."""
     if not isinstance(index, pd.RangeIndex):
         msg = "Don’t call _normalize_index with non-categorical/string names"
@@ -85,7 +85,7 @@ def _normalize_index(
         raise IndexError(f"Unknown indexer {indexer!r} of type {type(indexer)}")
 
 
-def unpack_index(index: Index) -> Tuple[Index1D, Index1D]:
+def unpack_index(index: Index) -> tuple[Index1D, Index1D]:
     """unpack index from anndata."""
     if not isinstance(index, tuple):
         return index, slice(None)

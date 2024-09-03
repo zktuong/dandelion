@@ -42,7 +42,7 @@ class Dandelion:
         AIRR formatted data.
     germline : dict
         dictionary of germline gene:sequence records.
-    graph : Tuple[NetworkxGraph, NetworkxGraph]
+    graph : tuple[NetworkxGraph, NetworkxGraph]
         networkx graphs for clonotype networks.
     layout : pd.DataFrame
         node positions for computed graph.
@@ -68,7 +68,7 @@ class Dandelion:
         metadata: Optional[pd.DataFrame] = None,
         germline: Optional[Dict] = None,
         layout: Optional[pd.DataFrame] = None,
-        graph: Optional[Tuple[NetworkxGraph, NetworkxGraph]] = None,
+        graph: Optional[tuple[NetworkxGraph, NetworkxGraph]] = None,
         initialize: bool = True,
         library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
         **kwargs,
@@ -85,7 +85,7 @@ class Dandelion:
             dictionary of germline gene:sequence records.
         layout : Optional[pd.DataFrame], optional
             node positions for computed graph.
-        graph : Optional[Tuple[NetworkxGraph, NetworkxGraph]], optional
+        graph : Optional[tuple[NetworkxGraph, NetworkxGraph]], optional
             networkx graphs for clonotype networks.
         initialize : bool, optional
             whether or not to initialize `.metadata` slot.
@@ -233,7 +233,7 @@ class Dandelion:
         return self.data.index
 
     @data_names.setter
-    def data_names(self, names: List[str]):
+    def data_names(self, names: list[str]):
         """data names setter"""
         names = self._prep_dim_index(names, "data")
         self._set_dim_index(names, "data")
@@ -254,12 +254,12 @@ class Dandelion:
         return self.metadata.index
 
     @metadata_names.setter
-    def metadata_names(self, names: List[str]):
+    def metadata_names(self, names: list[str]):
         """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
 
-    def _normalize_indices(self, index: Index) -> Tuple[slice, str]:
+    def _normalize_indices(self, index: Index) -> tuple[slice, str]:
         """retrieve indices"""
         return _normalize_indices(index, self.metadata_names, self.data_names)
 
@@ -673,8 +673,8 @@ class Dandelion:
 
     def store_germline_reference(
         self,
-        corrected: Optional[Union[Dict[str, str], str]] = None,
-        germline: Optional[str] = None,
+        corrected: dict[str, str] | str | None = None,
+        germline: str | None = None,
         org: Literal["human", "mouse"] = "human",
         db: Literal["imgt", "ogrdb"] = "imgt",
     ):
@@ -683,9 +683,9 @@ class Dandelion:
 
         Parameters
         ----------
-        corrected : Optional[Union[Dict[str, str], str]], optional
+        corrected : dict[str, str] | str] | None, optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : Optional[str], optional
+        germline : str | None, optional
             path to germline database folder. Defaults to `` environmental variable.
         org : Literal["human", "mouse"], optional
             organism of reference folder. Default is 'human'.
@@ -803,8 +803,8 @@ class Dandelion:
 
     def update_metadata(
         self,
-        retrieve: Optional[Union[List[str], str]] = None,
-        clone_key: Optional[str] = None,
+        retrieve: list[str] | str | None = None,
+        clone_key: str | None = None,
         retrieve_mode: Literal[
             "split and unique only",
             "merge and unique only",
@@ -820,16 +820,16 @@ class Dandelion:
         reinitialize: bool = True,
         by_celltype: bool = False,
         report_status_productive: bool = True,
-        custom_isotype_dict: Optional[Dict[str, str]] = None,
+        custom_isotype_dict: Optional[dict[str, str]] = None,
     ):
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
         Parameters
         ----------
-        retrieve : Optional[Union[List[str], str]], optional
+        retrieve : list[str] | str | None, optional
             column name in `.data` slot to retrieve and update the metadata.
-        clone_key : Optional[str], optional
+        clone_key : str | None, optional
             column name of clone id. None defaults to 'clone_id'.
         retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ], optional
             one of:
@@ -864,7 +864,7 @@ class Dandelion:
             whether to return the query/update by celltype.
         report_status_productive : bool, optional
             whether to report the locus and chain status for only productive contigs.
-        custom_isotype_dict : Optional[Dict[str, str]], optional
+        custom_isotype_dict : Optional[dict[str, str]], optional
             custom isotype dictionary to update the default isotype dictionary.
 
         Raises
@@ -1092,7 +1092,7 @@ class Dandelion:
             "blosc:zlib",
             "blosc:zstd",
         ] = None,
-        compression_level: Optional[int] = None,
+        compression_level: int | None = None,
         **kwargs,
     ):
         """
@@ -1107,7 +1107,7 @@ class Dandelion:
             https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
         compression : Literal["zlib", "lzo", "bzip2", "blosc", "blosc:blosclz", "blosc:lz4", "blosc:lz4hc", "blosc:snappy", "blosc:zlib", "blosc:zstd", ], optional
             same call as complib. Just a convenience option.
-        compression_level : Optional[int], optional
+        compression_level : int | None, optional
             Specifies a compression level for data. A value of 0 disables compression.
         **kwargs
             passed to `pd.DataFrame.to_hdf`.
@@ -1800,12 +1800,12 @@ class Query:
 
 def initialize_metadata(
     vdj_data,
-    cols: List[str],
+    cols: list[str],
     clonekey: str,
     collapse_alleles: bool,
     report_productive_only: bool,
     reinitialize: bool,
-    custom_isotype_dict: Optional[Dict[str, str]] = None,
+    custom_isotype_dict: Optional[dict[str, str]] = None,
 ):
     """Initialize Dandelion metadata."""
     init_dict = {}
@@ -2195,8 +2195,8 @@ def initialize_metadata(
 
 def update_metadata(
     vdj_data: Dandelion,
-    retrieve: Optional[Union[List[str], str]] = None,
-    clone_key: Optional[str] = None,
+    retrieve: list[str] | str | None = None,
+    clone_key: str | None = None,
     retrieve_mode: Literal[
         "split and unique only",
         "merge and unique only",
@@ -2212,7 +2212,7 @@ def update_metadata(
     reinitialize: bool = True,
     by_celltype: bool = False,
     report_status_productive: bool = True,
-    custom_isotype_dict: Optional[Dict[str, str]] = None,
+    custom_isotype_dict: Optional[dict[str, str]] = None,
 ):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -2221,9 +2221,9 @@ def update_metadata(
     ----------
     vdj_data : Dandelion
         input `Dandelion` object.
-    retrieve : Optional[Union[List[str], str]], optional
+    retrieve : list[str] | str | None, optional
         column name in `.data` slot to retrieve and update the metadata.
-    clone_key : Optional[str], optional
+    clone_key : str | None, optional
         column name of clone id. None defaults to 'clone_id'.
     retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ], optional
         one of:
@@ -2258,7 +2258,7 @@ def update_metadata(
         whether to return the query/update by celltype.
     report_status_productive : bool, optional
         whether to report the locus and chain status for only productive contigs.
-    custom_isotype_dict : Optional[Dict[str, str]], optional
+    custom_isotype_dict : Optional[dict[str, str]], optional
         custom isotype dictionary to update the default isotype dictionary.
 
     Raises
@@ -2409,7 +2409,7 @@ def update_metadata(
 
 def _normalize_indices(
     index: Optional[Index], names0: pd.Index, names1: pd.Index
-) -> Tuple[slice, str]:
+) -> tuple[slice, str]:
     """return indices"""
     # deal with tuples of length 1
     if isinstance(index, tuple) and len(index) == 1:
