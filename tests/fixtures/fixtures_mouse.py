@@ -12,13 +12,13 @@ MBLASTDB_PATH = DATABASE_PATH / "blast" / "mouse"
 
 
 @pytest.fixture
-def database_paths_mouse() -> Dict[str, Path]:
+def database_paths_mouse() -> dict[str, Path]:
     """
     Fixture for database paths for tests.
 
     Returns
     -------
-    Dict[str, Path]
+    dict[str, Path]
         keys are database names, values are paths to the databases.
     """
     db = {

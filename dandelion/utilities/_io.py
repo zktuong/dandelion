@@ -3,7 +3,7 @@ from dandelion.utilities._utilities import *
 from dandelion.utilities._core import *
 from dandelion.tools._tools import transfer as tf
 
-from typing import Any, Collection, Union, Optional, List
+from typing import Any, Collection, Optional, List
 from scanpy import logging as logg
 from pathlib import Path
 from collections import defaultdict, OrderedDict
@@ -123,14 +123,14 @@ def fasta_iterator(fh: str):
 
 
 def write_fasta(
-    fasta_dict: Dict[str, str], out_fasta: Union[str, Path], overwrite=True
+    fasta_dict: dict[str, str], out_fasta: str | Path, overwrite=True
 ):
     """
     Generic fasta writer using fasta_iterator
 
     Parameters
     ----------
-    fasta_dict : Dict[str, str]
+    fasta_dict : dict[str, str]
         dictionary containing fasta headers and sequences as keys and records respectively.
     out_fasta : str
         path to write fasta file to.
@@ -146,7 +146,7 @@ def write_fasta(
         write_output(out, out_fasta)
 
 
-def write_output(out: str, file: Union[str, Path]):
+def write_output(out: str, file: str | Path):
     """General line writer."""
     fh = open(file, "a")
     fh.write(out)
@@ -274,8 +274,8 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
 
 def read_10x_airr(
     file: str,
-    prefix: Optional[str] = None,
-    suffix: Optional[str] = None,
+    prefix: str | None = None,
+    suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
@@ -286,9 +286,9 @@ def read_10x_airr(
     ----------
     file : str
         path to `airr_rearrangement.tsv`
-    prefix : Optional[str], optional
+    prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
-    suffix : Optional[str], optional
+    suffix : str | None, optional
         Suffix to append to sequence_id and cell_id.
     sep : str, optional
         the separator to append suffix/prefix.
@@ -361,11 +361,11 @@ def read_10x_airr(
 
 
 def concat(
-    arrays: List[Union[pd.DataFrame, Dandelion]],
+    arrays: List[pd.DataFrame | Dandelion],
     check_unique: bool = True,
     sep: str = "_",
-    suffixes: Optional[List[str]] = None,
-    prefixes: Optional[List[str]] = None,
+    suffixes: list[str] | None = None,
+    prefixes: list[str] | None = None,
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
     """
@@ -375,16 +375,16 @@ def concat(
 
     Parameters
     ----------
-    arrays : List[Union[pd.DataFrame, Dandelion]]
+    arrays : List[pd.DataFrame | Dandelion]
         List of `Dandelion` class objects or pandas data frames
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
     sep : str, optional
         the separator to append suffix/prefix.
-    suffixes : Optional[List[str]], optional
+    suffixes : list[str] | None, optional
         List of suffixes to append to sequence_id and cell_id.
-    prefixes : Optional[List[str]], optional
+    prefixes : list[str] | None, optional
         List of prefixes to append to sequence_id and cell_id.
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
@@ -494,14 +494,14 @@ def concat(
 
 def read_10x_vdj(
     path: str,
-    filename_prefix: Optional[str] = None,
-    prefix: Optional[str] = None,
-    suffix: Optional[str] = None,
+    filename_prefix: str | None = None,
+    prefix: str | None = None,
+    suffix: str | None = None,
     sep: str = "_",
     return_dandelion: bool = True,
     remove_malformed: bool = True,
     remove_trailing_hyphen_number: bool = False,
-) -> Union[Dandelion, pd.DataFrame]:
+) -> Dandelion | pd.DataFrame:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
 
@@ -515,11 +515,11 @@ def read_10x_vdj(
     ----------
     path : str
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
-    filename_prefix : Optional[str], optional
+    filename_prefix : str | None, optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
-    prefix : Optional[str], optional
+    prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
-    suffix : Optional[str], optional
+    suffix : str | None, optional
         Suffix to append to sequence_id and cell_id.
     sep : str, optional
         the separator to append suffix/prefix.
@@ -533,7 +533,7 @@ def read_10x_vdj(
 
     Returns
     -------
-    Union[Dandelion, pd.DataFrame]
+    Dandelion | pd.DataFrame
         `Dandelion` or pandas `DataFrame` object.
 
     Raises
@@ -850,8 +850,8 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
 
 
 def change_file_location(
-    data: List[Union[str, Path]],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    data: List[str | Path],
+    filename_prefix: list[str] | str | None = None,
 ):
     """
     Move file from tmp folder to dandelion folder.
@@ -860,10 +860,10 @@ def change_file_location(
 
     Parameters
     ----------
-    data : List[Union[str, Path]]
+    data : List[str | Path]
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : Optional[Union[List[str], str]], optional
+    filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
 
     No Longer Raises
@@ -920,7 +920,7 @@ def change_file_location(
 
 
 def move_to_tmp(
-    data: List[str], filename_prefix: Optional[Union[List[str], str]] = None
+    data: list[str], filename_prefix: list[str] | str | None = None
 ):
     """Move file to tmp."""
     if type(data) is not list:
@@ -945,8 +945,8 @@ def move_to_tmp(
 
 
 def make_all(
-    data: List[str],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    data: list[str],
+    filename_prefix: list[str] | str | None = None,
     loci: Literal["ig", "tr"] = "tr",
 ):
     """Construct db-all tsv file."""
@@ -1031,10 +1031,10 @@ def make_all(
 
 
 def rename_dandelion(
-    data: List[str],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    data: list[str],
+    filename_prefix: list[str] | str | None = None,
     ends_with="_igblast_db-pass_genotyped.tsv",
-    sub_dir: Optional[str] = None,
+    sub_dir: str | None = None,
 ):
     """Rename final dandlion file."""
     if type(data) is not list:
@@ -1126,7 +1126,7 @@ def from_ak(airr: "Array") -> pd.DataFrame:
 def to_ak(
     data: pd.DataFrame,
     **kwargs,
-) -> Tuple["Array", pd.DataFrame]:
+) -> tuple["Array", pd.DataFrame]:
     """
     Convert data from a DataFrame to an AnnData object with AIRR format.
 
@@ -1139,7 +1139,7 @@ def to_ak(
 
     Returns
     -------
-    Tuple[Array, pd.DataFrame]
+    tuple[Array, pd.DataFrame]
         A tuple containing the AIRR-formatted data as an ak.Array and the cell-level attributes as a pd.DataFrame.
     """
 
@@ -1156,7 +1156,7 @@ def to_ak(
 def _create_anndata(
     airr: "Array",
     obs: pd.DataFrame,
-    adata: Optional[AnnData] = None,
+    adata: AnnData | None = None,
 ) -> AnnData:
     """
     Create an AnnData object with the given AIRR array and observation data.
@@ -1167,7 +1167,7 @@ def _create_anndata(
         The AIRR array.
     obs : pd.DataFrame
         The observation data.
-    adata : Optional[AnnData], optional
+    adata : AnnData | None, optional
         An existing AnnData object to update. If None, a new AnnData object will be created.
 
     Returns
@@ -1193,7 +1193,7 @@ def _create_anndata(
 def _create_mudata(
     gex: AnnData,
     adata: AnnData,
-    key: Tuple[str, str] = ("gex", "airr"),
+    key: tuple[str, str] = ("gex", "airr"),
 ) -> "MuData":
     """
     Create a MuData object from the given AnnData objects.
@@ -1204,7 +1204,7 @@ def _create_mudata(
         The AnnData object containing gene expression data.
     adata : AnnData
         The AnnData object containing additional data.
-    key : Tuple[str, str], optional
+    key : tuple[str, str], optional
         The keys to use for the gene expression and additional data in the MuData object. Defaults to ("gex", "airr").
 
     Returns
@@ -1231,10 +1231,10 @@ def to_scirpy(
     data: Dandelion,
     transfer: bool = False,
     to_mudata: bool = True,
-    gex_adata: Optional[AnnData] = None,
-    key: Tuple[str, str] = ("gex", "airr"),
+    gex_adata: AnnData | None = None,
+    key: tuple[str, str] = ("gex", "airr"),
     **kwargs,
-) -> Union[AnnData, "MuData"]:
+) -> AnnData | "MuData":
     """
     Convert Dandelion data to scirpy-compatible format.
 
@@ -1256,7 +1256,7 @@ def to_scirpy(
 
     Returns
     -------
-    Union[AnnData, "MuData"]
+    AnnData | "MuData"
         The converted data in either AnnData or MuData format.
     """
 
@@ -1292,13 +1292,13 @@ def to_scirpy(
         return adata
 
 
-def from_scirpy(data: Union[AnnData, "MuData"]) -> Dandelion:
+def from_scirpy(data: AnnData | "MuData") -> Dandelion:
     """
     Convert data from scirpy format to Dandelion format.
 
     Parameters
     ----------
-    data : Union[AnnData, "MuData"]
+    data : AnnData | "MuData"
         The input data in scirpy format.
 
     Returns
