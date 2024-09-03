@@ -23,7 +23,12 @@ from typing import Union, List, Dict, Optional, Tuple
 
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
-from dandelion.external.anndata._compat import _normalize_index, unpack_index, Index
+from dandelion.external.anndata._compat import (
+    _normalize_index,
+    unpack_index,
+    Index,
+)
+
 
 class Dandelion:
     """
