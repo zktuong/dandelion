@@ -14,6 +14,7 @@ import pandas as pd
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
+from __future__ import annotations
 from pathlib import Path
 from scanpy import logging as logg
 from typing import Literal
@@ -1259,7 +1260,7 @@ def to_scirpy(
 
     Returns
     -------
-    AnnData | "MuData"
+    AnnData | MuData
         The converted data in either AnnData or MuData format.
     """
 
