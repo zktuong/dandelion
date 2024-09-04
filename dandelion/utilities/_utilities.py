@@ -989,7 +989,7 @@ def set_germline_env(
     org: Literal["human", "mouse"] = "human",
     input_file: str | Path | None = None,
     db: Literal["imgt", "ogrdb"] = "imgt",
-) -> tuple[Dict, Path, Path]:
+) -> tuple[dict, Path, Path]:
     """
     Set the paths to germline database and environment variables and relevant input files.
 
@@ -1006,7 +1006,7 @@ def set_germline_env(
 
     Returns
     -------
-    tuple[Dict, Path]
+    tuple[dict, Path]
         environment dictionary and path to germline database.
 
     Raises
@@ -1036,7 +1036,7 @@ def set_germline_env(
 def set_igblast_env(
     igblast_db: str | Path | None = None,
     input_file: str | Path | None = None,
-) -> tuple[Dict, Path, Path]:
+) -> tuple[dict, Path, Path]:
     """
     Set the igblast database and environment variables and relevant input files.
 
@@ -1049,7 +1049,7 @@ def set_igblast_env(
 
     Returns
     -------
-    tuple[Dict, Path]
+    tuple[dict, Path]
         environment dictionary and path to igblast database.
 
     Raises
@@ -1078,7 +1078,7 @@ def set_igblast_env(
 def set_blast_env(
     blast_db: str | None = None,
     input_file: str | Path | None = None,
-) -> tuple[Dict, Path, Path]:
+) -> tuple[dict, Path, Path]:
     """
     Set the blast database and environment variables and relevant input files.
 
@@ -1091,7 +1091,7 @@ def set_blast_env(
 
     Returns
     -------
-    tuple[Dict, Path]
+    tuple[dict, Path]
         environment dictionary and path to igblast database.
 
     Raises
