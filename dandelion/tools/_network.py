@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import multiprocessing
-
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -10,7 +8,7 @@ from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
 from tqdm import tqdm
-from typing import Union, Tuple, Optional
+from typing import Literal
 
 try:
     from networkx.utils import np_random_state as random_state

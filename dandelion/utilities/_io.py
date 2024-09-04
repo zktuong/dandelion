@@ -1,24 +1,27 @@
 #!/usr/bin/env python
-from dandelion.utilities._utilities import *
-from dandelion.utilities._core import *
-from dandelion.tools._tools import transfer as tf
-
-from typing import Any, Collection, Optional, List
-from scanpy import logging as logg
-from pathlib import Path
-from collections import defaultdict, OrderedDict
-from anndata import AnnData
-import pandas as pd
-import numpy as np
-import networkx as nx
 import bz2
 import gzip
 import json
 import os
+import pickle
 import re
 import shutil
+
 import _pickle as cPickle
-import pickle
+import networkx as nx
+import numpy as np
+import pandas as pd
+
+from anndata import AnnData
+from collections import defaultdict, OrderedDict
+from pathlib import Path
+from scanpy import logging as logg
+from typing import Literal
+
+from dandelion.tools._tools import transfer as tf
+from dandelion.utilities._core import *
+from dandelion.utilities._utilities import *
+
 
 pickle.HIGHEST_PROTOCOL = 4
 

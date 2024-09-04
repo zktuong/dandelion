@@ -6,11 +6,10 @@ import pandas as pd
 import scanpy as sc
 import scipy as sp
 
-from collections import Counter
 from anndata import AnnData
-from typing import List, Optional
+from typing import Literal
 
-from dandelion.utilities._utilities import bh, Literal
+from dandelion.utilities._utilities import bh
 
 
 def _filter_cells(

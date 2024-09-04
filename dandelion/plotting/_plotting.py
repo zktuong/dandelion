@@ -26,7 +26,7 @@ from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
 from time import sleep
 from tqdm import tqdm
-from typing import Union, Tuple, Dict, Optional, List, Callable
+from typing import Callable, Literal
 
 import dandelion.external.nxviz as nxv
 from dandelion.external.nxviz import annotate

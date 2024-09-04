@@ -12,7 +12,7 @@ from pathlib import Path
 from scanpy import logging as logg
 from sklearn import mixture
 from subprocess import run
-from typing import Optional, List
+from typing import Literal
 
 from dandelion.utilities._utilities import *
 

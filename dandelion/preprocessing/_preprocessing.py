@@ -11,7 +11,6 @@ import pandas as pd
 
 from anndata import AnnData
 from Bio import Align
-from collections import OrderedDict
 from operator import countOf
 from pathlib import Path
 from plotnine import (
@@ -40,7 +39,7 @@ from scanpy import logging as logg
 from subprocess import run
 from time import sleep
 from tqdm import tqdm
-from typing import Union, List, Tuple, Optional
+from typing import Literal
 
 from dandelion.preprocessing.external._preprocessing import (
     assigngenes_igblast,

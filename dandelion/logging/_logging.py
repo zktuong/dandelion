@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from typing import List, Tuple
-
 modules = [
     "dandelion",
     "pandas",

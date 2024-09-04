@@ -19,7 +19,7 @@ from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform
 from subprocess import run
 from tqdm import tqdm
-from typing import Union, List, Optional
+from typing import Literal
 
 from dandelion.tools._network import *
 from dandelion.utilities._core import *

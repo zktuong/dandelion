@@ -19,7 +19,7 @@ from pathlib import Path
 from scanpy import logging as logg
 from textwrap import dedent
 from tqdm import tqdm
-from typing import Union, List, Dict, Optional, Tuple
+from typing import Literal
 
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
@@ -28,6 +28,8 @@ from dandelion.external.anndata._compat import (
     unpack_index,
     Index,
 )
+
+NetworkxGraph = nx.classes.graph.Graph
 
 
 class Dandelion:

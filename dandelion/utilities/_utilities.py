@@ -10,12 +10,10 @@ from airr import RearrangementSchema
 from collections import defaultdict
 from pathlib import Path
 from subprocess import run
-from typing import Tuple, Optional, TypeVar, List, Dict
+from typing import Literal
 
 # help silence the dtype warning?
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
-
-NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
 
 TRUES = ["T", "True", "true", "TRUE", True]
 FALSES = ["F", "False", "false", "FALSE", False]
@@ -916,7 +914,7 @@ def lib_type(lib: str):
 
 def movecol(
     df: pd.DataFrame,
-    cols_to_move: List = [],
+    cols_to_move: list[str] = [],
     ref_col: str = "",
 ) -> pd.DataFrame:
     """A way to order columns."""

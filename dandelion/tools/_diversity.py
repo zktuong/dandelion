@@ -2,14 +2,13 @@
 import numpy as np
 import networkx as nx
 import pandas as pd
-import warnings
 
 from anndata import AnnData
 from time import sleep
 from tqdm import tqdm
 from scanpy import logging as logg
 from scipy.special import gammaln
-from typing import Union, Dict, Optional
+from typing import Literal
 
 from dandelion.external.skbio._chao1 import chao1
 from dandelion.external.skbio._gini import gini_index
