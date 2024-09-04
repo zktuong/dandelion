@@ -4,7 +4,6 @@ import pytest
 import pandas as pd
 
 from pathlib import Path
-from typing import Dict
 
 from .fixtures import setup_anndata, DATABASE_PATH
 

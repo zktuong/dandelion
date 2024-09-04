@@ -6,7 +6,6 @@ import scipy.sparse
 
 from anndata import AnnData
 from pathlib import Path
-from typing import Dict
 
 DATABASE_PATH = Path("container") / "database"
 HBLASTDB_PATH = DATABASE_PATH / "blast" / "human"
