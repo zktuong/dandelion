@@ -14,7 +14,7 @@ dependencies:
   - statsmodels
   - pytables>=3.8.0
   - pytest
-  - graph-tool>=2.77
+  - graph-tool
   - pip
   - tbb
   - pip:

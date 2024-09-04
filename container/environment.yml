@@ -13,7 +13,7 @@ dependencies:
   - pytables
   - python-igraph
   - leidenalg
-  - graph-tool>=2.77
+  - graph-tool
   - pip
   - pytest
   - tbb
