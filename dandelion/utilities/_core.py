@@ -64,32 +64,32 @@ class Dandelion:
 
     def __init__(
         self,
-        data: Optional[pd.DataFrame] = None,
-        metadata: Optional[pd.DataFrame] = None,
-        germline: Optional[Dict] = None,
-        layout: Optional[pd.DataFrame] = None,
-        graph: Optional[tuple[NetworkxGraph, NetworkxGraph]] = None,
+        data: pd.DataFrame | None = None,
+        metadata: pd.DataFrame | None = None,
+        germline: dict[str, str] | None = None,
+        layout: pd.DataFrame | None = None,
+        graph: tuple[NetworkxGraph, NetworkxGraph] | None = None,
         initialize: bool = True,
-        library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
+        library_type: Literal["tr-ab", "tr-gd", "ig"] | None = None,
         **kwargs,
     ):
         """Init method for Dandelion.
 
         Parameters
         ----------
-        data : Optional[pd.DataFrame], optional
+        data : pd.DataFrame | None, optional
             AIRR formatted data.
-        metadata : Optional[pd.DataFrame], optional
+        metadata : pd.DataFrame | None, optional
             AIRR data collapsed per cell.
-        germline : Optional[Dict], optional
+        germline : dict[str, str] | None, optional
             dictionary of germline gene:sequence records.
-        layout : Optional[pd.DataFrame], optional
+        layout : pd.DataFrame | None, optional
             node positions for computed graph.
-        graph : Optional[tuple[NetworkxGraph, NetworkxGraph]], optional
+        graph : tuple[NetworkxGraph, NetworkxGraph] | None, optional
             networkx graphs for clonotype networks.
         initialize : bool, optional
             whether or not to initialize `.metadata` slot.
-        library_type : Optional[Literal["tr-ab", "tr-gd", "ig"]], optional
+        library_type : Literal["tr-ab", "tr-gd", "ig"] | None, optional
             One of "tr-ab", "tr-gd", "ig".
         **kwargs
             passed to `Dandelion.update_metadata`.
@@ -820,7 +820,7 @@ class Dandelion:
         reinitialize: bool = True,
         by_celltype: bool = False,
         report_status_productive: bool = True,
-        custom_isotype_dict: Optional[dict[str, str]] = None,
+        custom_isotype_dict: dict[str, str] | None = None,
     ):
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -864,7 +864,7 @@ class Dandelion:
             whether to return the query/update by celltype.
         report_status_productive : bool, optional
             whether to report the locus and chain status for only productive contigs.
-        custom_isotype_dict : Optional[dict[str, str]], optional
+        custom_isotype_dict : dict[str, str] | None, optional
             custom isotype dictionary to update the default isotype dictionary.
 
         Raises
@@ -1805,7 +1805,7 @@ def initialize_metadata(
     collapse_alleles: bool,
     report_productive_only: bool,
     reinitialize: bool,
-    custom_isotype_dict: Optional[dict[str, str]] = None,
+    custom_isotype_dict: dict[str, str] | None = None,
 ):
     """Initialize Dandelion metadata."""
     init_dict = {}
@@ -2212,7 +2212,7 @@ def update_metadata(
     reinitialize: bool = True,
     by_celltype: bool = False,
     report_status_productive: bool = True,
-    custom_isotype_dict: Optional[dict[str, str]] = None,
+    custom_isotype_dict: dict[str, str] | None = None,
 ):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -2258,7 +2258,7 @@ def update_metadata(
         whether to return the query/update by celltype.
     report_status_productive : bool, optional
         whether to report the locus and chain status for only productive contigs.
-    custom_isotype_dict : Optional[dict[str, str]], optional
+    custom_isotype_dict : dict[str, str] | None, optional
         custom isotype dictionary to update the default isotype dictionary.
 
     Raises
@@ -2408,7 +2408,7 @@ def update_metadata(
 
 
 def _normalize_indices(
-    index: Optional[Index], names0: pd.Index, names1: pd.Index
+    index: Index | None, names0: pd.Index, names1: pd.Index
 ) -> tuple[slice, str]:
     """return indices"""
     # deal with tuples of length 1

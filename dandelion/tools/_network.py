@@ -570,7 +570,7 @@ def mst(
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
-    num_cores: int, optional
+    num_cores: int | None, optional
         Number of cores to run this step. Parallelise using joblib if more than 1.
     verbose : bool, optional
         Whether or not to show logging information.
@@ -641,7 +641,7 @@ def link_edges_per_clonotype(
         Clonotype tree.
     c : str
         Name of clonotype.
-    full_edge_list: pd.DataFrame
+    full_edge_list : pd.DataFrame
         Edge list containing all the weights.
 
     Returns
@@ -821,24 +821,24 @@ def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
 
 
 def _generate_layout(
-    vertices: Optional[list] = None,
-    edges: Optional[pd.DataFrame] = None,
+    vertices: list[str] | None = None,
+    edges: pd.DataFrame | None = None,
     min_size: int = 2,
     weight: str | None = None,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
-    graphs: Optional[tuple[nx.Graph, nx.Graph]] = None,
+    graphs: tuple[nx.Graph, nx.Graph] | None = None,
     **kwargs,
 ) -> tuple[nx.Graph, nx.Graph, dict, dict]:
     """Generate layout.
 
     Parameters
     ----------
-    vertices : list
+    vertices : list[str] | None, optional
         list of vertices
-    edges : pd.DataFrame, optional
+    edges : pd.DataFrame | None, optional
         edge list in a pandas data frame.
     min_size : int, optional
         minimum clone size.
@@ -852,7 +852,7 @@ def _generate_layout(
         layout method.
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clones.
-    graphs: Optional[tuple[nx.Graph, nx.Graph]], optional
+    graphs: tuple[nx.Graph, nx.Graph] | None, optional
         tuple of graphs.
     **kwargs
         passed to fruchterman_reingold_layout.
@@ -1446,12 +1446,26 @@ def nx2gt(nxG):
     return gtG
 
 
-def get_prop_type(value, key=None):
+def get_prop_type(
+    value: bool | float | int | dict | str, key: str | None = None
+):
     """
     Perform typing and value conversion for the graph_tool PropertyMap class.
 
     If a key is provided, it also ensures the key is in a format that can be
     used with the PropertyMap. Returns a tuple, (type name, value, key)
+
+    Parameters
+    ----------
+    value : bool | float | int | dict | str
+        value.
+    key : str | None, optional
+        keu.
+
+    Returns
+    -------
+    TYPE
+        Description
     """
     # Deal with the value
     if isinstance(value, bool):

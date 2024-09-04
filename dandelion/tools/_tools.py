@@ -29,7 +29,7 @@ from dandelion.utilities._utilities import *
 
 def find_clones(
     vdj_data: Dandelion | pd.DataFrame,
-    identity: dict | float = 0.85,
+    identity: dict[str, float] | float = 0.85,
     key: str | None = None,
     by_alleles: bool = False,
     key_added: str | None = None,
@@ -45,7 +45,7 @@ def find_clones(
     vdj_data : Dandelion | pd.DataFrame
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file
         after clones have been determined.
-    identity : dict | float, optional
+    identity : dict[str, float] | float, optional
         junction similarity parameter. Default 0.85. If provided as a dictionary, please use the following
         keys:'ig', 'tr-ab', 'tr-gd'.
     key : str | None, optional
@@ -271,7 +271,7 @@ def transfer(
     vdj_key: str | None = None,
     clone_key: str | None = None,
     collapse_nodes: bool = False,
-    overwrite: bool | list[str | str | None = None,
+    overwrite: bool | list[str] | str | None = None,
 ):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
@@ -295,7 +295,7 @@ def transfer(
     collapse_nodes : bool, optional
         Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for
         integration with scirpy.
-    overwrite : bool | list[str | str | None, optional
+    overwrite : bool | list[str] | str | None, optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
         list of column names will overwrite that specific column(s).
     """
@@ -1828,6 +1828,7 @@ def rename_clonotype_ids(
         Suffix to append to the end of the clonotype ID.
     prefix : str, optional
         Prefix to append to the beginning of the clonotype ID.
+
     Returns
     -------
     clone_dict : dict

@@ -42,7 +42,7 @@ def clone_rarefaction(
     clone_key: str | None = None,
     palette: list[str] | None = None,
     figsize: tuple[int | float, int | float] = (5, 3),
-    chain_status_include: List[
+    chain_status_include: list[
         Literal[
             "Single pair",
             "Orphan VDJ",
@@ -76,7 +76,7 @@ def clone_rarefaction(
         Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
     figsize : tuple[int | float, int | float], optional
         Size of plot.
-    chain_status_include : List[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
+    chain_status_include : list[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
         chain statuses to include.
     save : str | None, optional
         Save path.
@@ -835,7 +835,7 @@ def clone_overlap(
     colorby: str | None = None,
     weighted_overlap: bool = False,
     clone_key: str | None = None,
-    color_mapping: list | dict | None = None,
+    color_mapping: list[str] | dict[str, str] | None = None,
     node_labels: bool = True,
     return_graph: bool = False,
     save: str | None = None,
@@ -870,7 +870,7 @@ def clone_overlap(
         index instead.
     clone_key : str | None, optional
         column name for clones. None defaults to 'clone_id'.
-    color_mapping : list | dict | None, optional
+    color_mapping : list[str] | dict[str, str] | None, optional
         custom color mapping provided as a sequence (correpsonding to order of categories or
         alpha-numeric order ifdtype is not category), or dictionary containing custom {category:color} mapping.
     node_labels : bool, optional

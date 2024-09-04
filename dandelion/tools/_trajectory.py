@@ -50,11 +50,11 @@ def setup_vdj_pseudobulk(
     productive_vj: bool = True,
     extract_cols: list[str] | None = None,
     productive_cols: list[str] | None = None,
-    check_vdj_mapping: Optional[List[Literal["v_call", "d_call", "j_call"]]] = [
+    check_vdj_mapping: list[Literal["v_call", "d_call", "j_call"]] | None = [
         "v_call",
         "j_call",
     ],
-    check_vj_mapping: Optional[List[Literal["v_call", "j_call"]]] = [
+    check_vj_mapping: list[Literal["v_call", "j_call"]] | None = [
         "v_call",
         "j_call",
     ],
@@ -85,10 +85,10 @@ def setup_vdj_pseudobulk(
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
     productive_cols : list[str] | None, optional
         Column names where contig productive status is stored so that this will be used instead of the standard columns.
-    check_vdj_mapping : Optional[List[Literal["v_call", "d_call", "j_call"]]], optional
+    check_vdj_mapping : list[Literal["v_call", "d_call", "j_call"]] | None, optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
         Specifying None will skip this step.
-    check_vj_mapping : Optional[List[Literal["v_call", "j_call"]]], optional
+    check_vj_mapping : list[Literal["v_call", "j_call"]] | None, optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
         Specifying None will skip this step.
     check_extract_cols_mapping : list[str] | None, optional
