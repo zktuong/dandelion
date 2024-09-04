@@ -1003,6 +1003,7 @@ def set_germline_env(
         path to input file.
     db : Literal["imgt", "ogrdb"], optional
         database to use. Defaults to imgt.
+
     Returns
     -------
     tuple[Dict, Path]
@@ -1087,6 +1088,7 @@ def set_blast_env(
         path to blast database. None defaults to environmental variable $BLASTDB.
     input_file : str | Path | None, optional
         path to input file.
+
     Returns
     -------
     tuple[Dict, Path]

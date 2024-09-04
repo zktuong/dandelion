@@ -132,7 +132,7 @@ def write_fasta(
     ----------
     fasta_dict : dict[str, str]
         dictionary containing fasta headers and sequences as keys and records respectively.
-    out_fasta : str
+    out_fasta : str | Path
         path to write fasta file to.
     overwrite : bool, optional
         whether or not to overwrite the output file (out_fasta).
@@ -1298,7 +1298,7 @@ def from_scirpy(data: AnnData | "MuData") -> Dandelion:
 
     Parameters
     ----------
-    data : AnnData | "MuData"
+    data : AnnData | MuData
         The input data in scirpy format.
 
     Returns
