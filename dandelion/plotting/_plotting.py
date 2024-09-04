@@ -1100,10 +1100,10 @@ def clone_overlap(
 def productive_ratio(
     adata: AnnData,
     figsize: tuple[int | float, int | float] = (8, 4),
-    palette: List = ["lightblue", "darkblue"],
+    palette: list[str] = ["lightblue", "darkblue"],
     fontsize: inf | float = 8,
     rotation: inf | float = 90,
-    legend_kwargs: Dict = {
+    legend_kwargs: dict = {
         "bbox_to_anchor": (1, 0.5),
         "loc": "center left",
         "frameon": False,
@@ -1118,13 +1118,13 @@ def productive_ratio(
         `tl.productive_ratio`.
     figsize : tuple[int | float, int | float], optional
         Size of figure.
-    palette : List, optional
+    palette : list[str], optional
         List of colours to plot non-productive and productive respectively.
     fontsize : inf | float, optional
         Font size of x and y tick labels.
     rotation : inf | float, optional
         Rotation of x tick labels.
-    legend_kwargs : Dict, optional
+    legend_kwargs : dict, optional
         Any additional kwargs to `plt.legend`
     """
     res = adata.uns["productive_ratio"]["results"]
