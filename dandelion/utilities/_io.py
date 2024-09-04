@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import annotations
-
 import bz2
 import gzip
 import json
@@ -18,7 +16,7 @@ from anndata import AnnData
 from collections import defaultdict, OrderedDict
 from pathlib import Path
 from scanpy import logging as logg
-from typing import Literal
+from typing import Literal, TypeVar
 
 from dandelion.tools._tools import transfer as tf
 from dandelion.utilities._core import *
@@ -26,7 +24,7 @@ from dandelion.utilities._utilities import *
 
 
 pickle.HIGHEST_PROTOCOL = 4
-
+MuData = TypeVar("MuData")
 
 AIRR = [
     "cell_id",
@@ -1199,7 +1197,7 @@ def _create_mudata(
     gex: AnnData,
     adata: AnnData,
     key: tuple[str, str] = ("gex", "airr"),
-) -> "MuData":
+) -> MuData:
     """
     Create a MuData object from the given AnnData objects.
 
@@ -1239,7 +1237,7 @@ def to_scirpy(
     gex_adata: AnnData | None = None,
     key: tuple[str, str] = ("gex", "airr"),
     **kwargs,
-) -> AnnData | "MuData":
+) -> AnnData | MuData:
     """
     Convert Dandelion data to scirpy-compatible format.
 
@@ -1297,7 +1295,7 @@ def to_scirpy(
         return adata
 
 
-def from_scirpy(data: AnnData | "MuData") -> Dandelion:
+def from_scirpy(data: AnnData | MuData) -> Dandelion:
     """
     Convert data from scirpy format to Dandelion format.
 
