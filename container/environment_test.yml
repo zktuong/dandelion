@@ -5,7 +5,7 @@ channels:
   - anaconda
   - defaults
 dependencies:
-  - python=3.11
+  - python
   - seaborn
   - scikit-learn
   - statsmodels
@@ -13,7 +13,7 @@ dependencies:
   - pytables
   - python-igraph
   - leidenalg
-  - graph-tool
+  - graph-tool>=2.77
   - pip
   - pytest
   - tbb
