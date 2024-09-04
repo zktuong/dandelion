@@ -339,7 +339,7 @@ class Dandelion:
 
         Parameters
         ----------
-        option : Literal["all", "sequence", "mutations", "cdr3 lengths", "mutations and cdr3 lengths", ], optional
+        option : Literal["all", "sequence", "mutations", "cdr3 lengths", "mutations and cdr3 lengths",], optional
             One of 'all', 'sequence', 'mutations', 'cdr3 lengths',
             'mutations and cdr3 lengths'
         **kwargs
@@ -683,7 +683,7 @@ class Dandelion:
 
         Parameters
         ----------
-        corrected : dict[str, str] | str] | None, optional
+        corrected : dict[str, str] | str | None, optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
         germline : str | None, optional
             path to germline database folder. Defaults to `` environmental variable.
@@ -691,6 +691,7 @@ class Dandelion:
             organism of reference folder. Default is 'human'.
         db : Literal["imgt", "ogrdb"], optional
             database of reference sequences. Default is 'imgt'.
+
         Raises
         ------
         KeyError
