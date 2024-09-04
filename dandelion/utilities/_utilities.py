@@ -48,28 +48,6 @@ try:
 except ImportError:
     from collections import Iterable
 
-# for compatibility with python==3.7
-try:
-    from typing import Literal
-except ImportError:
-    try:
-        from typing_extensions import Literal
-    except ImportError:
-
-        class LiteralMeta(type):
-            """LiteralMeta class."""
-
-            def __getitem__(self, values):
-                """Return Literal."""
-                if not isinstance(values, tuple):
-                    values = (values,)
-                return type("Literal_", (Literal,), dict(__args__=values))
-
-        class Literal(metaclass=LiteralMeta):
-            """Literal type."""
-
-            pass
-
 
 class Tree(defaultdict):
     """Create a recursive defaultdict."""
@@ -248,7 +226,7 @@ def check_filepath(
 
     Returns
     -------
-    Union[Path, None]
+    Path | None
         Path object if file is found, else None.
     """
     filename_pre = "filtered" if filename_prefix is None else filename_prefix

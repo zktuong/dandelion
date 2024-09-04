@@ -361,7 +361,7 @@ def read_10x_airr(
 
 
 def concat(
-    arrays: List[pd.DataFrame | Dandelion],
+    arrays: list[pd.DataFrame | Dandelion],
     check_unique: bool = True,
     sep: str = "_",
     suffixes: list[str] | None = None,
@@ -375,7 +375,7 @@ def concat(
 
     Parameters
     ----------
-    arrays : List[pd.DataFrame | Dandelion]
+    arrays : list[pd.DataFrame | Dandelion]
         List of `Dandelion` class objects or pandas data frames
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
@@ -850,7 +850,7 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
 
 
 def change_file_location(
-    data: List[str | Path],
+    data: list[str | Path],
     filename_prefix: list[str] | str | None = None,
 ):
     """
@@ -860,7 +860,7 @@ def change_file_location(
 
     Parameters
     ----------
-    data : List[str | Path]
+    data : list[str | Path]
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
     filename_prefix : list[str] | str | None, optional

@@ -295,7 +295,7 @@ def format_fasta(
 
 
 def format_fastas(
-    fastas: List[str | Path],
+    fastas: list[str | Path],
     prefix: list[str] | None = None,
     suffix: list[str] | None = None,
     sep: str | None = None,
@@ -309,7 +309,7 @@ def format_fastas(
 
     Parameters
     ----------
-    fastas : List[str | Path]
+    fastas : list[str | Path]
         list of paths to fasta files.
     prefix : list[str] | None, optional
         list of prefixes to append to headers/contig ids in each fasta file.
@@ -834,7 +834,7 @@ def assign_isotype(
 
 
 def assign_isotypes(
-    fastas: List[str | Path],
+    fastas: list[str | Path],
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e4,
     correct_c_call: bool = True,
@@ -925,7 +925,7 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Literal["yes", "no"] | str | None = "no",
-    db: Literal["imgt", "orgdb"] = "imgt",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     strain: (
         Literal[
             "c57bl6",
@@ -1027,7 +1027,7 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
-    db : Literal["imgt", "orgdb"], optional
+    db : Literal["imgt", "ogrdb"], optional
         database to use for igblastn. Defaults to 'imgt'.
     strain : Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"] | None, optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
@@ -1264,7 +1264,7 @@ def reassign_alleles(
     v_germline: str | None = None,
     germline: str | None = None,
     org: Literal["human", "mouse"] = "human",
-    db: Literal["imgt", "orgdb"] = "imgt",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     strain: (
         Literal[
             "c57bl6",
@@ -5956,7 +5956,7 @@ def check_productive_vj(
 def check_update_same_seq(
     data: pd.DataFrame,
 ) -> tuple[
-    pd.DataFrame, list[str], List[int], list[str], dict[str, int], list[str]
+    pd.DataFrame, list[str], list[int], list[str], dict[str, int], list[str]
 ]:
     """Check if sequences are the same.
 
@@ -5967,7 +5967,7 @@ def check_update_same_seq(
 
     Returns
     -------
-    tuple[pd.DataFrame, list[str], List[int], list[str], dict[str, int], list[str]]
+    tuple[pd.DataFrame, list[str], list[int], list[str], dict[str, int], list[str]]
         updated  AIRR data frame, lists of contigs to keep, their umi counts, their c_calls,
         adjusted umi counts, and list of ambiguous contigs.
     """
