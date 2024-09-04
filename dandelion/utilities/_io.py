@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import annotations
+
 import bz2
 import gzip
 import json
@@ -14,7 +16,6 @@ import pandas as pd
 
 from anndata import AnnData
 from collections import defaultdict, OrderedDict
-from __future__ import annotations
 from pathlib import Path
 from scanpy import logging as logg
 from typing import Literal
