@@ -2977,7 +2977,7 @@ class FilterContigs:
         self,
         data: pd.DataFrame,
         keep_highest_umi: bool,
-        umi_foldchange_cutoff: inf | float,
+        umi_foldchange_cutoff: int | float,
         filter_poorqualitycontig: bool,
         filter_extra_vdj_chains: bool,
         filter_extra_vj_chains: bool,
@@ -2991,7 +2991,7 @@ class FilterContigs:
             AIRR data frame in Dandelion.data.
         keep_highest_umi : bool
             whether or not to keep highest UMI contig.
-        umi_foldchange_cutoff : inf | float
+        umi_foldchange_cutoff : int | float
             fold-change cut off for decision.
         filter_poorqualitycontig : bool
             whether or not to flter poor quality contigs.
@@ -5333,7 +5333,7 @@ class MarkAmbiguousContigs:
     def __init__(
         self,
         data: pd.DataFrame,
-        umi_foldchange_cutoff: inf | float,
+        umi_foldchange_cutoff: int | float,
         verbose: bool,
     ):
         """Init method for MarkAmbiguousContigs.
@@ -5342,7 +5342,7 @@ class MarkAmbiguousContigs:
         ----------
         data : pd.DataFrame
             AIRR data frame in Dandelion.data.
-        umi_foldchange_cutoff : inf | float
+        umi_foldchange_cutoff : int | float
             fold-change cut off for decision.
         verbose : bool
             whether or not to print progress.
@@ -5872,7 +5872,7 @@ class MarkAmbiguousContigs:
 
 
 def check_productive_vdj(
-    vdj_contigs: dict[str, int], umi_foldchange_cutoff: inf | float
+    vdj_contigs: dict[str, int], umi_foldchange_cutoff: int | float
 ) -> tuple[list[str], list[str], list[str]]:
     """Keep top productive because of allelic exclusion."""
     keep_contigs, extra_contigs, ambiguous_contigs = [], [], []

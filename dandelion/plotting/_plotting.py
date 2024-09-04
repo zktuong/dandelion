@@ -1101,8 +1101,8 @@ def productive_ratio(
     adata: AnnData,
     figsize: tuple[int | float, int | float] = (8, 4),
     palette: list[str] = ["lightblue", "darkblue"],
-    fontsize: inf | float = 8,
-    rotation: inf | float = 90,
+    fontsize: int | float = 8,
+    rotation: int | float = 90,
     legend_kwargs: dict = {
         "bbox_to_anchor": (1, 0.5),
         "loc": "center left",
@@ -1120,9 +1120,9 @@ def productive_ratio(
         Size of figure.
     palette : list[str], optional
         List of colours to plot non-productive and productive respectively.
-    fontsize : inf | float, optional
+    fontsize : int | float, optional
         Font size of x and y tick labels.
-    rotation : inf | float, optional
+    rotation : int | float, optional
         Rotation of x tick labels.
     legend_kwargs : dict, optional
         Any additional kwargs to `plt.legend`
