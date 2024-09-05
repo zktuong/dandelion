@@ -5,14 +5,9 @@ channels:
   - anaconda
   - defaults
 dependencies:
-  - numpy
-  - pandas
   - pandoc
   - pyyaml
-  - changeo
-  - seaborn
   - statsmodels
-  - pytables>=3.8.0
   - pytest
   - graph-tool
   - pip
