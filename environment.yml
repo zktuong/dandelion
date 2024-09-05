@@ -12,7 +12,7 @@ dependencies:
   - changeo
   - seaborn
   - statsmodels
-  - pytables>=3.8.0
+  - pytables
   - pytest
   - graph-tool
   - pip
