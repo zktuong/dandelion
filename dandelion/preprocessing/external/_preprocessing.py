@@ -18,8 +18,8 @@ from dandelion.utilities._utilities import *
 
 
 def assigngenes_igblast(
-    fasta: Union[str, Path],
-    igblast_db: Optional[Union[str, Path]] = None,
+    fasta: Path | str,
+    igblast_db: Optional[Path | str] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
     additional_args: list[str] = [],
@@ -29,9 +29,9 @@ def assigngenes_igblast(
 
     Parameters
     ----------
-    fasta : Union[str, Path]
+    fasta : Path | str
         path to fasta file for reannotation.
-    igblast_db : Optional[Union[str, Path]], optional
+    igblast_db : Optional[Path | str], optional
         path to igblast database.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
@@ -70,9 +70,9 @@ def assigngenes_igblast(
 
 
 def makedb_igblast(
-    fasta: Union[str, Path],
-    igblast_output: Optional[Union[str, Path]] = None,
-    germline: Optional[str] = None,
+    fasta: Path | str,
+    igblast_output: Optional[Path | str] = None,
+    germline: str | None = None,
     org: Literal["human", "mouse"] = "human",
     db: Literal["imgt", "ogrdb"] = "imgt",
     extended: bool = True,
@@ -84,11 +84,11 @@ def makedb_igblast(
 
     Parameters
     ----------
-    fasta : Union[str, Path]
+    fasta : Path | str
         path to fasta file used for reannotation.
-    igblast_output : Optional[Union[str, Path]], optional
+    igblast_output : Optional[Path | str], optional
         path to igblast output file.
-    germline : Optional[str], optional
+    germline : str | None, optional
         path to germline database.
     org : Literal["human", "mouse"], optional
         organism of germline sequences.
@@ -148,13 +148,13 @@ def makedb_igblast(
         run(cmd, env=env)  # logs are printed to terminal
 
 
-def parsedb_heavy(airr_file: Union[str, Path]):
+def parsedb_heavy(airr_file: Path | str):
     """
     Parse AIRR tsv file (heavy chain contigs only).
 
     Parameters
     ----------
-    airr_file : Union[str, Path]
+    airr_file : Path | str
         path to AIRR tsv file.
     """
     outname = Path(airr_file).stem + "_heavy"
@@ -178,13 +178,13 @@ def parsedb_heavy(airr_file: Union[str, Path]):
     run(cmd)  # logs are printed to terminal
 
 
-def parsedb_light(airr_file: Union[str, Path]):
+def parsedb_light(airr_file: Path | str):
     """
     Parse AIRR tsv file (light chain contigs only).
 
     Parameters
     ----------
-    airr_file : Union[str, Path]
+    airr_file : Path | str
         path to AIRR tsv file.
     """
     outname = Path(airr_file).stem + "_light"
@@ -209,10 +209,10 @@ def parsedb_light(airr_file: Union[str, Path]):
 
 
 def creategermlines(
-    airr_file: Union[str, Path],
-    germline: Optional[list[str]] = None,
+    airr_file: Path | str,
+    germline: list[str] | None = None,
     org: Literal["human", "mouse"] = "human",
-    genotyped_fasta: Optional[str] = None,
+    genotyped_fasta: str | None = None,
     mode: Optional[Literal["heavy", "light"]] = None,
     db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
@@ -248,13 +248,13 @@ def creategermlines(
 
     Parameters
     ----------
-    airr_file : Union[str, Path]
+    airr_file : Path | str
         path to AIRR tsv file.
-    germline : Optional[list[str]], optional
+    germline : list[str] | None, optional
         location to germline fasta files as a list.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
-    genotyped_fasta : Optional[str], optional
+    genotyped_fasta : str | None, optional
         location to V genotyped fasta file.
     mode : Optional[Literal["heavy", "light"]], optional
         whether to run on heavy or light mode. If left as None, heavy and
@@ -337,9 +337,9 @@ def creategermlines(
 
 
 def tigger_genotype(
-    airr_file: Union[str, Path],
-    v_germline: Optional[Union[str, Path]] = None,
-    outdir: Optional[Union[str, Path]] = None,
+    airr_file: Path | str,
+    v_germline: Optional[Path | str] = None,
+    outdir: Optional[Path | str] = None,
     org: Literal["human", "mouse"] = "human",
     fileformat: Literal["airr", "changeo"] = "airr",
     novel_: Literal["YES", "NO"] = "YES",
@@ -377,11 +377,11 @@ def tigger_genotype(
 
     Parameters
     ----------
-    airr_file : Union[str, Path]
+    airr_file : Path | str
         path to AIRR tsv file.
-    v_germline : Optional[Union[str, Path]], optional
+    v_germline : Optional[Path | str], optional
         fasta file containing IMGT-gapped V segment reference germlines.
-    outdir : Optional[Union[str, Path]], optional
+    outdir : Optional[Path | str], optional
         output directory. Will be created if it does not exist.
         Defaults to the current working directory.
     org : Literal["human", "mouse"], optional
@@ -437,16 +437,16 @@ def tigger_genotype(
 
 def recipe_scanpy_qc(
     adata: AnnData,
-    layer: Optional[str] = None,
+    layer: str | None = None,
     mito_startswith: str = "MT-",
     max_genes: int = 2500,
     min_genes: int = 200,
-    mito_cutoff: Optional[int] = 5,
+    mito_cutoff: int | None = 5,
     run_scrublet: bool = True,
     pval_cutoff: float = 0.1,
-    min_counts: Optional[int] = None,
-    max_counts: Optional[int] = None,
-    blacklist: Optional[list[str]] = None,
+    min_counts: int | None = None,
+    max_counts: int | None = None,
+    blacklist: list[str] | None = None,
     vdj_pattern: str = "^TR[AB][VDJ]|^IG[HKL][VDJC]",
 ):
     """
@@ -457,7 +457,7 @@ def recipe_scanpy_qc(
     adata : AnnData
         annotated data matrix of shape n_obs × n_vars. Rows correspond to cells
         and columns to genes.
-    layer : Optional[str], optional
+    layer : str | None, optional
         name of layer to run scrublet on if supplied.
     mito_startswith : str, optional
         string pattern used for searching mitochondrial genes.
@@ -465,18 +465,18 @@ def recipe_scanpy_qc(
         maximum number of genes expressed required for a cell to pass filtering
     min_genes : int, optional
         minimum number of genes expressed required for a cell to pass filtering
-    mito_cutoff : Optional[int], optional
+    mito_cutoff : int | None, optional
         maximum percentage mitochondrial content allowed for a cell to pass filtering.
     run_scrublet : bool, optional
         whether or not to run scrublet for doublet detection.
     pval_cutoff : float, optional
         maximum Benjamini-Hochberg corrected p value from doublet detection
         protocol allowed for a cell to pass filtering. Default is 0.1.
-    min_counts : Optional[int], optional
+    min_counts : int | None, optional
         minimum number of counts required for a cell to pass filtering.
-    max_counts : Optional[int], optional
+    max_counts : int | None, optional
         maximum number of counts required for a cell to pass filtering.
-    blacklist : Optional[list[str]], optional
+    blacklist : list[str] | None, optional
         if provided, will exclude these genes from highly variable genes list.
     vdj_pattern : str, optional
         string pattern for search VDJ genes to exclude from highly variable genes.

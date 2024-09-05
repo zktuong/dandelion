@@ -146,7 +146,7 @@ def flatten(l: list) -> list:
             yield el
 
 
-def makeblastdb(ref: Union[str, Path]):
+def makeblastdb(ref: Path | str):
     """
     Run makeblastdb on constant region fasta file.
 
@@ -154,7 +154,7 @@ def makeblastdb(ref: Union[str, Path]):
 
     Parameters
     ----------
-    ref : Union[str, Path]
+    ref : Path | str
         constant region fasta file.
     """
     cmd = ["makeblastdb", "-dbtype", "nucl", "-parse_seqids", "-in", str(ref)]
@@ -224,10 +224,10 @@ def isBZIP(filename: str) -> bool:
 
 
 def check_filepath(
-    file_or_folder_path: Union[str, Path],
-    filename_prefix: Optional[str] = None,
-    ends_with: Optional[str] = None,
-    sub_dir: Optional[str] = None,
+    file_or_folder_path: Path | str,
+    filename_prefix: str | None = None,
+    ends_with: str | None = None,
+    sub_dir: str | None = None,
     within_dandelion: bool = True,
 ) -> Path:
     """
@@ -235,13 +235,13 @@ def check_filepath(
 
     Parameters
     ----------
-    file_or_folder_path : Union[str, Path]
+    file_or_folder_path : Path | str
         either a string or Path object pointing to a file or folder.
-    filename_prefix : Optional[str], optional
+    filename_prefix : str | None, optional
         the prefix of the filename.
-    ends_with : Optional[str], optional
+    ends_with : str | None, optional
         the suffix of the filename. Can be flexible i.e. not just the extension.
-    sub_dir : Optional[str], optional
+    sub_dir : str | None, optional
         the subdirectory to look for the file if specified
     within_dandelion : bool, optional
         whether to look for the file within a 'dandelion' sub folder.
@@ -1007,27 +1007,27 @@ def update_rearrangement_status(self):
 
 
 def set_germline_env(
-    germline: Optional[str] = None,
+    germline: str | None = None,
     org: Literal["human", "mouse"] = "human",
-    input_file: Optional[Union[str, Path]] = None,
+    input_file: Optional[Path | str] = None,
     db: Literal["imgt", "ogrdb"] = "imgt",
-) -> Tuple[Dict, Path, Path]:
+) -> tuple[Dict, Path, Path]:
     """
     Set the paths to germline database and environment variables and relevant input files.
 
     Parameters
     ----------
-    germline : Optional[str], optional
+    germline : str | None, optional
         path to germline database. None defaults to environmental variable $GERMLINE.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
-    input_file : Optional[Union[str, Path]], optional
+    input_file : Optional[Path | str], optional
         path to input file.
     db : Literal["imgt", "ogrdb"], optional
         database to use. Defaults to imgt.
     Returns
     -------
-    Tuple[Dict, Path]
+    tuple[Dict, Path]
         environment dictionary and path to germline database.
 
     Raises
@@ -1055,22 +1055,22 @@ def set_germline_env(
 
 
 def set_igblast_env(
-    igblast_db: Optional[Union[str, Path]] = None,
-    input_file: Optional[Union[str, Path]] = None,
-) -> Tuple[Dict, Path, Path]:
+    igblast_db: Optional[Path | str] = None,
+    input_file: Optional[Path | str] = None,
+) -> tuple[Dict, Path, Path]:
     """
     Set the igblast database and environment variables and relevant input files.
 
     Parameters
     ----------
-    igblast_db : Optional[str], optional
+    igblast_db : str | None, optional
         path to igblast database. None defaults to environmental variable $IGDATA.
-    input_file : Optional[Union[str, Path]], optional
+    input_file : Optional[Path | str], optional
         path to input file.
 
     Returns
     -------
-    Tuple[Dict, Path]
+    tuple[Dict, Path]
         environment dictionary and path to igblast database.
 
     Raises
@@ -1097,21 +1097,21 @@ def set_igblast_env(
 
 
 def set_blast_env(
-    blast_db: Optional[str] = None,
-    input_file: Optional[Union[str, Path]] = None,
-) -> Tuple[Dict, Path, Path]:
+    blast_db: str | None = None,
+    input_file: Optional[Path | str] = None,
+) -> tuple[Dict, Path, Path]:
     """
     Set the blast database and environment variables and relevant input files.
 
     Parameters
     ----------
-    blast_db : Optional[str], optional
+    blast_db : str | None, optional
         path to blast database. None defaults to environmental variable $BLASTDB.
-    input_file : Optional[Union[str, Path]], optional
+    input_file : Optional[Path | str], optional
         path to input file.
     Returns
     -------
-    Tuple[Dict, Path]
+    tuple[Dict, Path]
         environment dictionary and path to igblast database.
 
     Raises

@@ -16,7 +16,7 @@ from dandelion.utilities._utilities import bh, Literal
 def _filter_cells(
     adata: AnnData,
     col: str,
-    filter_pattern: Optional[str] = ",|None|No_contig",
+    filter_pattern: str | None = ",|None|No_contig",
     remove_missing: bool = True,
 ) -> AnnData:
     """
@@ -37,9 +37,9 @@ def _filter_cells(
 def setup_vdj_pseudobulk(
     adata: AnnData,
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
-    subsetby: Optional[str] = None,
-    groups: Optional[list[str]] = None,
-    allowed_chain_status: Optional[list[str]] = [
+    subsetby: str | None = None,
+    groups: list[str] | None = None,
+    allowed_chain_status: list[str] | None = [
         "Single pair",
         "Extra pair",
         "Extra pair-exception",
@@ -48,18 +48,18 @@ def setup_vdj_pseudobulk(
     ],
     productive_vdj: bool = True,
     productive_vj: bool = True,
-    extract_cols: Optional[list[str]] = None,
-    productive_cols: Optional[list[str]] = None,
-    check_vdj_mapping: Optional[List[Literal["v_call", "d_call", "j_call"]]] = [
+    extract_cols: list[str] | None = None,
+    productive_cols: list[str] | None = None,
+    check_vdj_mapping: Optional[list[Literal["v_call", "d_call", "j_call"]]] = [
         "v_call",
         "j_call",
     ],
-    check_vj_mapping: Optional[List[Literal["v_call", "j_call"]]] = [
+    check_vj_mapping: Optional[list[Literal["v_call", "j_call"]]] = [
         "v_call",
         "j_call",
     ],
-    check_extract_cols_mapping: Optional[list[str]] = None,
-    filter_pattern: Optional[str] = ",|None|No_contig",
+    check_extract_cols_mapping: list[str] | None = None,
+    filter_pattern: str | None = ",|None|No_contig",
     remove_missing: bool = True,
 ) -> AnnData:
     """Function for prepare anndata for computing pseudobulk vdj feature space.
@@ -71,30 +71,30 @@ def setup_vdj_pseudobulk(
     mode : Optional[Literal["B", "abT", "gdT"]], optional
         Optional mode for extractin the V(D)J genes. If set as `None`, it requires the option `extract_cols` to be
         specified with a list of column names where this will be used to retrieve the main call.
-    subsetby : Optional[str], optional
+    subsetby : str | None, optional
         If provided, only the groups/categories in this column will be used for computing the VDJ feature space.
-    groups : Optional[list[str]], optional
+    groups : list[str] | None, optional
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
-    allowed_chain_status : Optional[list[str]], optional
+    allowed_chain_status : list[str] | None, optional
         If provided, only the ones in this list are kept from the `chain_status` column.
     productive_vdj : bool, optional
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj : bool, optional
         If True, cells will only be kept if the main VJ chain is productive.
-    extract_cols : Optional[list[str]], optional
+    extract_cols : list[str] | None, optional
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
-    productive_cols : Optional[list[str]], optional
+    productive_cols : list[str] | None, optional
         Column names where contig productive status is stored so that this will be used instead of the standard columns.
-    check_vdj_mapping : Optional[List[Literal["v_call", "d_call", "j_call"]]], optional
+    check_vdj_mapping : Optional[list[Literal["v_call", "d_call", "j_call"]]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
         Specifying None will skip this step.
-    check_vj_mapping : Optional[List[Literal["v_call", "j_call"]]], optional
+    check_vj_mapping : Optional[list[Literal["v_call", "j_call"]]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
         Specifying None will skip this step.
-    check_extract_cols_mapping : Optional[list[str]], optional
+    check_extract_cols_mapping : list[str] | None, optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in columns specified in extract_cols.
         Specifying None will skip this step.
-    filter_pattern : Optional[str], optional
+    filter_pattern : str | None, optional
         pattern to filter from object. If `None`, does not filter.
     remove_missing : bool, optional
         If True, will remove cells with contigs matching the filter from the object. If False, will mask them with a uniform
@@ -318,7 +318,7 @@ def vdj_pseudobulk(
     renormalise: bool = False,
     min_count: int = 1,
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
-    extract_cols: Optional[list[str]] = [
+    extract_cols: list[str] | None = [
         "v_call_abT_VDJ_main",
         "j_call_abT_VDJ_main",
         "v_call_abT_VJ_main",
@@ -350,7 +350,7 @@ def vdj_pseudobulk(
     mode : Optional[Literal["B", "abT", "gdT"]], optional
         Optional mode for extracting the V(D)J genes. If set as `None`, it will use e.g. `v_call_VDJ` instead of `v_call_abT_VDJ`.
         If `extract_cols` is provided, then this argument is ignored.
-    extract_cols : Optional[list[str]], optional
+    extract_cols : list[str] | None, optional
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
 
     Returns
