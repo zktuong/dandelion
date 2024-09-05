@@ -123,14 +123,14 @@ def fasta_iterator(fh: str):
 
 
 def write_fasta(
-    fasta_dict: Dict[str, str], out_fasta: Union[str, Path], overwrite=True
+    fasta_dict: dict[str, str], out_fasta: Union[str, Path], overwrite=True
 ):
     """
     Generic fasta writer using fasta_iterator
 
     Parameters
     ----------
-    fasta_dict : Dict[str, str]
+    fasta_dict : dict[str, str]
         dictionary containing fasta headers and sequences as keys and records respectively.
     out_fasta : str
         path to write fasta file to.
@@ -364,8 +364,8 @@ def concat(
     arrays: List[Union[pd.DataFrame, Dandelion]],
     check_unique: bool = True,
     sep: str = "_",
-    suffixes: Optional[List[str]] = None,
-    prefixes: Optional[List[str]] = None,
+    suffixes: Optional[list[str]] = None,
+    prefixes: Optional[list[str]] = None,
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
     """
@@ -382,9 +382,9 @@ def concat(
         Setting to False will improve the performance of this method.
     sep : str, optional
         the separator to append suffix/prefix.
-    suffixes : Optional[List[str]], optional
+    suffixes : Optional[list[str]], optional
         List of suffixes to append to sequence_id and cell_id.
-    prefixes : Optional[List[str]], optional
+    prefixes : Optional[list[str]], optional
         List of prefixes to append to sequence_id and cell_id.
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
@@ -851,7 +851,7 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
 
 def change_file_location(
     data: List[Union[str, Path]],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    filename_prefix: Optional[Union[list[str], str]] = None,
 ):
     """
     Move file from tmp folder to dandelion folder.
@@ -863,7 +863,7 @@ def change_file_location(
     data : List[Union[str, Path]]
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : Optional[Union[List[str], str]], optional
+    filename_prefix : Optional[Union[list[str], str]], optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
 
     No Longer Raises
@@ -920,7 +920,7 @@ def change_file_location(
 
 
 def move_to_tmp(
-    data: List[str], filename_prefix: Optional[Union[List[str], str]] = None
+    data: list[str], filename_prefix: Optional[Union[list[str], str]] = None
 ):
     """Move file to tmp."""
     if type(data) is not list:
@@ -945,8 +945,8 @@ def move_to_tmp(
 
 
 def make_all(
-    data: List[str],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    data: list[str],
+    filename_prefix: Optional[Union[list[str], str]] = None,
     loci: Literal["ig", "tr"] = "tr",
 ):
     """Construct db-all tsv file."""
@@ -1031,8 +1031,8 @@ def make_all(
 
 
 def rename_dandelion(
-    data: List[str],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    data: list[str],
+    filename_prefix: Optional[Union[list[str], str]] = None,
     ends_with="_igblast_db-pass_genotyped.tsv",
     sub_dir: Optional[str] = None,
 ):
@@ -1193,7 +1193,7 @@ def _create_anndata(
 def _create_mudata(
     gex: AnnData,
     adata: AnnData,
-    key: Tuple[str, str] = ("gex", "airr"),
+    key: tuple[str, str] = ("gex", "airr"),
 ) -> "MuData":
     """
     Create a MuData object from the given AnnData objects.
@@ -1204,7 +1204,7 @@ def _create_mudata(
         The AnnData object containing gene expression data.
     adata : AnnData
         The AnnData object containing additional data.
-    key : Tuple[str, str], optional
+    key : tuple[str, str], optional
         The keys to use for the gene expression and additional data in the MuData object. Defaults to ("gex", "airr").
 
     Returns
@@ -1232,7 +1232,7 @@ def to_scirpy(
     transfer: bool = False,
     to_mudata: bool = True,
     gex_adata: Optional[AnnData] = None,
-    key: Tuple[str, str] = ("gex", "airr"),
+    key: tuple[str, str] = ("gex", "airr"),
     **kwargs,
 ) -> Union[AnnData, "MuData"]:
     """

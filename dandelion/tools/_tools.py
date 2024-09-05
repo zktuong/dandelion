@@ -271,7 +271,7 @@ def transfer(
     vdj_key: Optional[str] = None,
     clone_key: Optional[str] = None,
     collapse_nodes: bool = False,
-    overwrite: Optional[Union[bool, List[str], str]] = None,
+    overwrite: Optional[Union[bool, list[str], str]] = None,
 ):
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
@@ -295,7 +295,7 @@ def transfer(
     collapse_nodes : bool, optional
         Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for
         integration with scirpy.
-    overwrite : Optional[Union[bool, List[str], str]], optional
+    overwrite : Optional[Union[bool, list[str], str]], optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
         list of column names will overwrite that specific column(s).
     """
@@ -501,7 +501,7 @@ def define_clones(
     outFilePrefix: Optional[int] = None,
     key_added: Optional[int] = None,
     out_dir: Optional[Union[str, Path]] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ) -> Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
@@ -545,7 +545,7 @@ def define_clones(
         Column name to add for define_clones.
     out_dir : Optional[Union[str, Path]], optional
         If specified, the files will be written to this directory.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         Additional arguments to pass to `DefineClones.py`.
 
     Returns
@@ -1339,7 +1339,7 @@ def productive_ratio(
     adata: AnnData,
     vdj: Dandelion,
     groupby: str,
-    groups: Optional[List[str]] = None,
+    groups: Optional[list[str]] = None,
     locus: Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"] = "TRB",
 ):
     """
@@ -1358,7 +1358,7 @@ def productive_ratio(
         Dandelion object holding the repertoire data (`.data`).
     groupby : str
         Name of column in `AnnData.obs` to return the row tabulations.
-    groups : Optional[List[str]], optional
+    groups : Optional[list[str]], optional
         Optional list of categories to return.
     locus : Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"], optional
         One of the accepted locuses to perform the tabulation
@@ -1429,8 +1429,8 @@ def vj_usage_pca(
     mode: Literal["B", "abT", "gdT"] = "abT",
     transfer_mapping=None,
     n_comps: int = 30,
-    groups: Optional[List[str]] = None,
-    allowed_chain_status: Optional[List[str]] = [
+    groups: Optional[list[str]] = None,
+    allowed_chain_status: Optional[list[str]] = [
         "Single pair",
         "Extra pair",
         "Extra pair-exception",
@@ -1456,9 +1456,9 @@ def vj_usage_pca(
         If provided, the columns will be mapped to the output AnnData from the original AnnData.
     n_comps : int, optional
         Number of principal components to compute. Defaults to 30.
-    groups : Optional[List[str]], optional
+    groups : Optional[list[str]], optional
         If provided, only the following groups/categories will be used for computing the PCA.
-    allowed_chain_status : Optional[List[str]], optional
+    allowed_chain_status : Optional[list[str]], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
         Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
     verbose : bool, optional

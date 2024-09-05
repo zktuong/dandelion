@@ -79,7 +79,7 @@ class Tree(defaultdict):
         self.value = value
 
 
-def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> dict:
+def dict_from_table(meta: pd.DataFrame, columns: tuple[str, str]) -> dict:
     """
     Generate a dictionary from a dataframe.
 
@@ -87,7 +87,7 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> dict:
     ----------
     meta : pd.DataFrame
         pandas data frame or file path
-    columns : Tuple[str, str]
+    columns : tuple[str, str]
         column names in data frame
 
     Returns

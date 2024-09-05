@@ -40,7 +40,7 @@ def clone_rarefaction(
     vdj_data: Union[AnnData, Dandelion],
     color: str,
     clone_key: Optional[str] = None,
-    palette: Optional[List[str]] = None,
+    palette: Optional[list[str]] = None,
     figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
     chain_status_include: List[
         Literal[
@@ -72,7 +72,7 @@ def clone_rarefaction(
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : Optional[str], optional
         Column name specifying the clone_id column in metadata/obs.
-    palette : Optional[List[str]], optional
+    palette : Optional[list[str]], optional
         Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         Size of plot.
@@ -387,7 +387,7 @@ def stackedbarplot(
         (1, 1),
         1,
     ),
-    labels: Optional[List[str]] = None,
+    labels: Optional[list[str]] = None,
     min_clone_size: int = 1,
     clone_key: Optional[str] = None,
     **kwargs,
@@ -419,7 +419,7 @@ def stackedbarplot(
         whether or not to hide the legend.
     legend_options : Tuple[str, Tuple[float, float], int], optional
         a tuple holding 3 options for specify legend options: 1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : Optional[List[str]], optional
+    labels : Optional[list[str]], optional
         Names of objects will be used for the legend if list of multiple data frames supplied.
     min_clone_size : int, optional
         minimum clone size to keep.
@@ -470,7 +470,7 @@ def stackedbarplot(
 
     def _plot_bar_stacked(
         dfall: pd.DataFrame,
-        labels: Optional[List[str]] = None,
+        labels: Optional[list[str]] = None,
         figsize: Tuple[Union[int, float], Union[int, float]] = (8, 3),
         title: str = "multiple stacked bar plot",
         xtick_fontsize: Optional[int] = None,
@@ -487,7 +487,7 @@ def stackedbarplot(
         ----------
         dfall : pd.DataFrame
             data frame for plotting.
-        labels : Optional[List[str]], optional
+        labels : Optional[list[str]], optional
             a list of the data frame objects. Names of objects will be used for the legend.
         figsize : Tuple[Union[int, float], Union[int, float]], optional
             size of figure.
@@ -623,7 +623,7 @@ def spectratype(
         (1, 1),
         1,
     ),
-    labels: Optional[List[str]] = None,
+    labels: Optional[list[str]] = None,
     **kwargs,
 ) -> Tuple[Figure, Axes]:
     """
@@ -654,7 +654,7 @@ def spectratype(
     legend_options : Tuple[str, Tuple[float, float], int], optional
         a tuple holding 3 options for specify legend options:
         1) loc (string), 2) bbox_to_anchor (tuple), 3) ncol (int).
-    labels : Optional[List[str]], optional
+    labels : Optional[list[str]], optional
         Names of objects will be used for the legend if list of
         multiple data frames supplied.
     **kwargs
@@ -689,7 +689,7 @@ def spectratype(
 
     def _plot_spectra_stacked(
         dfall: pd.DataFrame,
-        labels: Optional[List[str]] = None,
+        labels: Optional[list[str]] = None,
         figsize: Tuple[Union[int, float], Union[int, float]] = (5, 3),
         title: str = "multiple stacked bar plot",
         width: Optional[Union[int, float]] = None,
@@ -706,7 +706,7 @@ def spectratype(
         ----------
         dfall : pd.DataFrame
             data frame for plotting.
-        labels : Optional[List[str]], optional
+        labels : Optional[list[str]], optional
             a list of the data frame objects. Names of objects will be used for the legend.
         figsize : Tuple[Union[int, float], Union[int, float]], optional
             size of figure.

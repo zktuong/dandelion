@@ -22,7 +22,7 @@ def assigngenes_igblast(
     igblast_db: Optional[Union[str, Path]] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Reannotate with IgBLASTn.
@@ -37,7 +37,7 @@ def assigngenes_igblast(
         organism for germline sequences.
     loci : Literal["ig", "tr"], optional
         `ig` or `tr` mode for running igblastn.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         Additional arguments to pass to `AssignGenes.py`.
     """
     env, igdb, fasta = set_igblast_env(igblast_db=igblast_db, input_file=fasta)
@@ -76,7 +76,7 @@ def makedb_igblast(
     org: Literal["human", "mouse"] = "human",
     db: Literal["imgt", "ogrdb"] = "imgt",
     extended: bool = True,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
     loci: Literal["ig", "tr"] = "ig",
 ):
     """
@@ -96,7 +96,7 @@ def makedb_igblast(
         `imgt` or `ogrdb` reference database for running igblastn.
     extended : bool, optional
         whether or not to parse extended 10x annotations.
-    additional_args: List[str], optional
+    additional_args: list[str], optional
         Additional arguments to pass to `MakeDb.py`.
     """
     env, gml, fasta = set_germline_env(
@@ -210,7 +210,7 @@ def parsedb_light(airr_file: Union[str, Path]):
 
 def creategermlines(
     airr_file: Union[str, Path],
-    germline: Optional[List[str]] = None,
+    germline: Optional[list[str]] = None,
     org: Literal["human", "mouse"] = "human",
     genotyped_fasta: Optional[str] = None,
     mode: Optional[Literal["heavy", "light"]] = None,
@@ -241,7 +241,7 @@ def creategermlines(
             "SJL_J",
         ]
     ] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Wrapper for CreateGermlines.py for reconstructing germline sequences.
@@ -250,7 +250,7 @@ def creategermlines(
     ----------
     airr_file : Union[str, Path]
         path to AIRR tsv file.
-    germline : Optional[List[str]], optional
+    germline : Optional[list[str]], optional
         location to germline fasta files as a list.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
@@ -264,7 +264,7 @@ def creategermlines(
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         Additional arguments to pass to `CreateGermlines.py`.
     """
     env, gml, airr_file = set_germline_env(
@@ -370,7 +370,7 @@ def tigger_genotype(
             "SJL_J",
         ]
     ] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Reassign alleles with TIgGER in R.
@@ -395,7 +395,7 @@ def tigger_genotype(
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         Additional arguments to pass to `tigger-genotype.R`.
     """
     env, gml, airr_file = set_germline_env(
@@ -446,7 +446,7 @@ def recipe_scanpy_qc(
     pval_cutoff: float = 0.1,
     min_counts: Optional[int] = None,
     max_counts: Optional[int] = None,
-    blacklist: Optional[List[str]] = None,
+    blacklist: Optional[list[str]] = None,
     vdj_pattern: str = "^TR[AB][VDJ]|^IG[HKL][VDJC]",
 ):
     """
@@ -476,7 +476,7 @@ def recipe_scanpy_qc(
         minimum number of counts required for a cell to pass filtering.
     max_counts : Optional[int], optional
         maximum number of counts required for a cell to pass filtering.
-    blacklist : Optional[List[str]], optional
+    blacklist : Optional[list[str]], optional
         if provided, will exclude these genes from highly variable genes list.
     vdj_pattern : str, optional
         string pattern for search VDJ genes to exclude from highly variable genes.

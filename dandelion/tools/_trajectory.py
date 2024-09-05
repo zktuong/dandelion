@@ -38,8 +38,8 @@ def setup_vdj_pseudobulk(
     adata: AnnData,
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
     subsetby: Optional[str] = None,
-    groups: Optional[List[str]] = None,
-    allowed_chain_status: Optional[List[str]] = [
+    groups: Optional[list[str]] = None,
+    allowed_chain_status: Optional[list[str]] = [
         "Single pair",
         "Extra pair",
         "Extra pair-exception",
@@ -48,8 +48,8 @@ def setup_vdj_pseudobulk(
     ],
     productive_vdj: bool = True,
     productive_vj: bool = True,
-    extract_cols: Optional[List[str]] = None,
-    productive_cols: Optional[List[str]] = None,
+    extract_cols: Optional[list[str]] = None,
+    productive_cols: Optional[list[str]] = None,
     check_vdj_mapping: Optional[List[Literal["v_call", "d_call", "j_call"]]] = [
         "v_call",
         "j_call",
@@ -58,7 +58,7 @@ def setup_vdj_pseudobulk(
         "v_call",
         "j_call",
     ],
-    check_extract_cols_mapping: Optional[List[str]] = None,
+    check_extract_cols_mapping: Optional[list[str]] = None,
     filter_pattern: Optional[str] = ",|None|No_contig",
     remove_missing: bool = True,
 ) -> AnnData:
@@ -73,17 +73,17 @@ def setup_vdj_pseudobulk(
         specified with a list of column names where this will be used to retrieve the main call.
     subsetby : Optional[str], optional
         If provided, only the groups/categories in this column will be used for computing the VDJ feature space.
-    groups : Optional[List[str]], optional
+    groups : Optional[list[str]], optional
         If provided, only the following groups/categories will be used for computing the VDJ feature space.
-    allowed_chain_status : Optional[List[str]], optional
+    allowed_chain_status : Optional[list[str]], optional
         If provided, only the ones in this list are kept from the `chain_status` column.
     productive_vdj : bool, optional
         If True, cells will only be kept if the main VDJ chain is productive.
     productive_vj : bool, optional
         If True, cells will only be kept if the main VJ chain is productive.
-    extract_cols : Optional[List[str]], optional
+    extract_cols : Optional[list[str]], optional
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
-    productive_cols : Optional[List[str]], optional
+    productive_cols : Optional[list[str]], optional
         Column names where contig productive status is stored so that this will be used instead of the standard columns.
     check_vdj_mapping : Optional[List[Literal["v_call", "d_call", "j_call"]]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VDJ calls.
@@ -91,7 +91,7 @@ def setup_vdj_pseudobulk(
     check_vj_mapping : Optional[List[Literal["v_call", "j_call"]]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in VJ calls.
         Specifying None will skip this step.
-    check_extract_cols_mapping : Optional[List[str]], optional
+    check_extract_cols_mapping : Optional[list[str]], optional
         Only columns in the argument will be checked for unclear mapping (containing comma) in columns specified in extract_cols.
         Specifying None will skip this step.
     filter_pattern : Optional[str], optional
@@ -312,13 +312,13 @@ def _get_pbs_obs(pbs, obs_to_take, adata):
 def vdj_pseudobulk(
     adata: AnnData,
     pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
-    obs_to_bulk: Optional[Union[str, List[str]]] = None,
-    obs_to_take: Optional[Union[str, List[str]]] = None,
+    obs_to_bulk: Optional[Union[str, list[str]]] = None,
+    obs_to_take: Optional[Union[str, list[str]]] = None,
     normalise: bool = True,
     renormalise: bool = False,
     min_count: int = 1,
     mode: Optional[Literal["B", "abT", "gdT"]] = "abT",
-    extract_cols: Optional[List[str]] = [
+    extract_cols: Optional[list[str]] = [
         "v_call_abT_VDJ_main",
         "j_call_abT_VDJ_main",
         "v_call_abT_VJ_main",
@@ -334,10 +334,10 @@ def vdj_pseudobulk(
         Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
     pbs : Optional[Union[np.ndarray, sp.sparse.csr_matrix]], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk : Optional[Union[str, List[str]]], optional
+    obs_to_bulk : Optional[Union[str, list[str]]], optional
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
-    obs_to_take : Optional[Union[str, List[str]]], optional
+    obs_to_take : Optional[Union[str, list[str]]], optional
         Optional obs column(s) to identify the most common value of for each pseudobulk.
     normalise : bool, optional
         If True, will scale the counts of each V(D)J gene group to 1 for each pseudobulk.
@@ -350,7 +350,7 @@ def vdj_pseudobulk(
     mode : Optional[Literal["B", "abT", "gdT"]], optional
         Optional mode for extracting the V(D)J genes. If set as `None`, it will use e.g. `v_call_VDJ` instead of `v_call_abT_VDJ`.
         If `extract_cols` is provided, then this argument is ignored.
-    extract_cols : Optional[List[str]], optional
+    extract_cols : Optional[list[str]], optional
         Column names where VDJ/VJ information is stored so that this will be used instead of the standard columns.
 
     Returns
@@ -474,7 +474,7 @@ def pseudotime_transfer(
 
 
 def project_pseudotime_to_cell(
-    adata: AnnData, pb_adata: AnnData, term_states: List[str], suffix: str = ""
+    adata: AnnData, pb_adata: AnnData, term_states: list[str], suffix: str = ""
 ) -> AnnData:
     """Function to project pseudotime & branch probabilities from pb_adata (pseudobulk adata) to adata (cell adata).
 
@@ -484,7 +484,7 @@ def project_pseudotime_to_cell(
         Cell adata, preferably after `ddl.tl.setup_vdj_pseudobulk()`
     pb_adata : AnnData
         neighbourhood/pseudobulked adata
-    term_states : List[str]
+    term_states : list[str]
         list of terminal states with branch probabilities to be transferred
     suffix : str, optional
         suffix to be added after the added column names, default "" (none)
@@ -534,8 +534,8 @@ def project_pseudotime_to_cell(
 def pseudobulk_gex(
     adata_raw: AnnData,
     pbs: Optional[Union[np.ndarray, sp.sparse.csr_matrix]] = None,
-    obs_to_bulk: Optional[Union[str, List[str]]] = None,
-    obs_to_take: Optional[Union[str, List[str]]] = None,
+    obs_to_bulk: Optional[Union[str, list[str]]] = None,
+    obs_to_take: Optional[Union[str, list[str]]] = None,
 ) -> AnnData:
     """Function to pseudobulk gene expression (raw count).
 
@@ -545,10 +545,10 @@ def pseudobulk_gex(
         Needs to have raw counts in .X
     pbs : Optional[Union[np.ndarray, sp.sparse.csr_matrix]], optional
         Optional binary matrix with cells as rows and pseudobulk groups as columns
-    obs_to_bulk : Optional[Union[str, List[str]]], optional
+    obs_to_bulk : Optional[Union[str, list[str]]], optional
         Optional obs column(s) to group pseudobulks into; if multiple are provided, they
         will be combined
-    obs_to_take : Optional[Union[str, List[str]]], optional
+    obs_to_take : Optional[Union[str, list[str]]], optional
         Optional obs column(s) to identify the most common value of for each pseudobulk
 
     Returns
@@ -578,7 +578,7 @@ def pseudobulk_gex(
 
 
 def bin_expression(
-    adata: AnnData, bin_no: int, genes: List[str], pseudotime_col: str
+    adata: AnnData, bin_no: int, genes: list[str], pseudotime_col: str
 ) -> pd.DataFrame:
     """Function to compute average gene expression in bins along pseudotime.
 
@@ -588,7 +588,7 @@ def bin_expression(
         cell adata.
     bin_no : int
         number of bins to be divided along pseudotime.
-    genes : List[str]
+    genes : list[str]
         list of genes for the computation
     pseudotime_col : str
         column in adata.obs where pseudotime is stored
@@ -617,7 +617,7 @@ def bin_expression(
 
 
 def chatterjee_corr(
-    adata: AnnData, genes: List[str], pseudotime_col: str
+    adata: AnnData, genes: list[str], pseudotime_col: str
 ) -> pd.DataFrame:
     """Function to compute chatterjee correlation of gene expression with pseudotime.
 
@@ -625,7 +625,7 @@ def chatterjee_corr(
     ----------
     adata : AnnData
         cell adata
-    genes : List[str]
+    genes : list[str]
         List of genes selected to compute the correlation
     pseudotime_col : str
         column in adata.obs where pseudotime is stored

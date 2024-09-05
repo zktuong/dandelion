@@ -233,7 +233,7 @@ class Dandelion:
         return self.data.index
 
     @data_names.setter
-    def data_names(self, names: List[str]):
+    def data_names(self, names: list[str]):
         """data names setter"""
         names = self._prep_dim_index(names, "data")
         self._set_dim_index(names, "data")
@@ -254,7 +254,7 @@ class Dandelion:
         return self.metadata.index
 
     @metadata_names.setter
-    def metadata_names(self, names: List[str]):
+    def metadata_names(self, names: list[str]):
         """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
@@ -673,7 +673,7 @@ class Dandelion:
 
     def store_germline_reference(
         self,
-        corrected: Optional[Union[Dict[str, str], str]] = None,
+        corrected: Optional[Union[dict[str, str], str]] = None,
         germline: Optional[str] = None,
         org: Literal["human", "mouse"] = "human",
         db: Literal["imgt", "ogrdb"] = "imgt",
@@ -683,7 +683,7 @@ class Dandelion:
 
         Parameters
         ----------
-        corrected : Optional[Union[Dict[str, str], str]], optional
+        corrected : Optional[Union[dict[str, str], str]], optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
         germline : Optional[str], optional
             path to germline database folder. Defaults to `` environmental variable.
@@ -803,7 +803,7 @@ class Dandelion:
 
     def update_metadata(
         self,
-        retrieve: Optional[Union[List[str], str]] = None,
+        retrieve: Optional[Union[list[str], str]] = None,
         clone_key: Optional[str] = None,
         retrieve_mode: Literal[
             "split and unique only",
@@ -820,14 +820,14 @@ class Dandelion:
         reinitialize: bool = True,
         by_celltype: bool = False,
         report_status_productive: bool = True,
-        custom_isotype_dict: Optional[Dict[str, str]] = None,
+        custom_isotype_dict: Optional[dict[str, str]] = None,
     ):
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
         Parameters
         ----------
-        retrieve : Optional[Union[List[str], str]], optional
+        retrieve : Optional[Union[list[str], str]], optional
             column name in `.data` slot to retrieve and update the metadata.
         clone_key : Optional[str], optional
             column name of clone id. None defaults to 'clone_id'.
@@ -864,7 +864,7 @@ class Dandelion:
             whether to return the query/update by celltype.
         report_status_productive : bool, optional
             whether to report the locus and chain status for only productive contigs.
-        custom_isotype_dict : Optional[Dict[str, str]], optional
+        custom_isotype_dict : Optional[dict[str, str]], optional
             custom isotype dictionary to update the default isotype dictionary.
 
         Raises
@@ -1800,12 +1800,12 @@ class Query:
 
 def initialize_metadata(
     vdj_data,
-    cols: List[str],
+    cols: list[str],
     clonekey: str,
     collapse_alleles: bool,
     report_productive_only: bool,
     reinitialize: bool,
-    custom_isotype_dict: Optional[Dict[str, str]] = None,
+    custom_isotype_dict: Optional[dict[str, str]] = None,
 ):
     """Initialize Dandelion metadata."""
     init_dict = {}
@@ -2195,7 +2195,7 @@ def initialize_metadata(
 
 def update_metadata(
     vdj_data: Dandelion,
-    retrieve: Optional[Union[List[str], str]] = None,
+    retrieve: Optional[Union[list[str], str]] = None,
     clone_key: Optional[str] = None,
     retrieve_mode: Literal[
         "split and unique only",
@@ -2212,7 +2212,7 @@ def update_metadata(
     reinitialize: bool = True,
     by_celltype: bool = False,
     report_status_productive: bool = True,
-    custom_isotype_dict: Optional[Dict[str, str]] = None,
+    custom_isotype_dict: Optional[dict[str, str]] = None,
 ):
     """
     A `Dandelion` initialisation function to update and populate the `.metadata` slot.
@@ -2221,7 +2221,7 @@ def update_metadata(
     ----------
     vdj_data : Dandelion
         input `Dandelion` object.
-    retrieve : Optional[Union[List[str], str]], optional
+    retrieve : Optional[Union[list[str], str]], optional
         column name in `.data` slot to retrieve and update the metadata.
     clone_key : Optional[str], optional
         column name of clone id. None defaults to 'clone_id'.
@@ -2258,7 +2258,7 @@ def update_metadata(
         whether to return the query/update by celltype.
     report_status_productive : bool, optional
         whether to report the locus and chain status for only productive contigs.
-    custom_isotype_dict : Optional[Dict[str, str]], optional
+    custom_isotype_dict : Optional[dict[str, str]], optional
         custom isotype dictionary to update the default isotype dictionary.
 
     Raises

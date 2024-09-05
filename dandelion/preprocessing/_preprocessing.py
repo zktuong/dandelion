@@ -296,13 +296,13 @@ def format_fasta(
 
 def format_fastas(
     fastas: List[Union[str, Path]],
-    prefix: Optional[List[str]] = None,
-    suffix: Optional[List[str]] = None,
+    prefix: Optional[list[str]] = None,
+    suffix: Optional[list[str]] = None,
     sep: Optional[str] = None,
     remove_trailing_hyphen_number: bool = True,
     high_confidence_filtering: bool = False,
     out_dir: Optional[Union[str, Path]] = None,
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    filename_prefix: Optional[Union[list[str], str]] = None,
 ):
     """
     Add prefix to the headers/contig ids in input fasta and annotation file.
@@ -311,9 +311,9 @@ def format_fastas(
     ----------
     fastas : List[Union[str, Path]]
         list of paths to fasta files.
-    prefix : Optional[List[str]], optional
+    prefix : Optional[list[str]], optional
         list of prefixes to append to headers/contig ids in each fasta file.
-    suffix : Optional[List[str]], optional
+    suffix : Optional[list[str]], optional
         list of suffixes to append to headers/contig ids in each fasta file.
     sep : Optional[str], optional
         separator after prefix or before suffix to append to the headers/contig
@@ -325,7 +325,7 @@ def format_fastas(
         whether ot not to filter to only `high confidence` contigs.
     out_dir : Optional[Union[str, Path]], optional
         path to out put location.
-    filename_prefix : Optional[Union[List[str], str]], optional
+    filename_prefix : Optional[Union[list[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
     """
@@ -413,14 +413,14 @@ def assign_isotype(
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e-4,
     correct_c_call: bool = True,
-    correction_dict: Optional[Dict[str, Dict[str, str]]] = None,
+    correction_dict: Optional[Dict[str, dict[str, str]]] = None,
     plot: bool = True,
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
     blastdb: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[str] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
@@ -440,7 +440,7 @@ def assign_isotype(
     correct_c_call : bool, optional
         whether or not to adjust the c_calls after blast based on provided
         primers specified in `primer_dict` option.
-    correction_dict : Optional[Union[Dict[str, str]]], optional
+    correction_dict : Optional[Union[dict[str, str]]], optional
         a nested dictionary contain isotype/c_genes as keys and primer
         sequences as records to use for correcting annotated c_calls. Defaults
         to a curated dictionary for human sequences if left as none.
@@ -456,7 +456,7 @@ def assign_isotype(
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : Optional[str], optional
         prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         additional arguments to pass to `blastn`.
     Raises
     ------
@@ -466,7 +466,7 @@ def assign_isotype(
     aligner = Align.PairwiseAligner()
 
     def two_gene_correction(
-        self: pd.DataFrame, i: str, dictionary: Dict[str, str]
+        self: pd.DataFrame, i: str, dictionary: dict[str, str]
     ):
         """Pairwise alignment for two genes.
 
@@ -474,7 +474,7 @@ def assign_isotype(
         ----------
         i : str
             index name.
-        dictionary : Dict[str, str]
+        dictionary : dict[str, str]
             dictionary holding gene name as key and sequence as value.
         """
         key1, key2 = dictionary.keys()
@@ -491,7 +491,7 @@ def assign_isotype(
             self.at[i, "c_call"] = str(key2)
 
     def three_gene_correction(
-        self: pd.DataFrame, i: str, dictionary: Dict[str, str]
+        self: pd.DataFrame, i: str, dictionary: dict[str, str]
     ):
         """Pairwise alignment for three genes.
 
@@ -499,7 +499,7 @@ def assign_isotype(
         ----------
         i : str
             index name.
-        dictionary : Dict[str, str]
+        dictionary : dict[str, str]
             dictionary holding gene name as key and sequence as value.
         """
         key1, key2, key3 = dictionary.keys()
@@ -526,7 +526,7 @@ def assign_isotype(
             self.at[i, "c_call"] = str(key2) + "," + str(key3)
 
     def four_gene_correction(
-        self: pd.DataFrame, i: str, dictionary: Dict[str, str]
+        self: pd.DataFrame, i: str, dictionary: dict[str, str]
     ):
         """Pairwise alignment for four genes.
 
@@ -534,7 +534,7 @@ def assign_isotype(
         ----------
         i : str
             index name.
-        dictionary : Dict[str, str]
+        dictionary : dict[str, str]
             dictionary holding gene name as key and sequence as value.
         """
         key1, key2, key3, key4 = dictionary.keys()
@@ -582,7 +582,7 @@ def assign_isotype(
 
     def _correct_c_call(
         data: pd.DataFrame,
-        primers_dict: Optional[Dict[str, Dict[str, str]]] = None,
+        primers_dict: Optional[Dict[str, dict[str, str]]] = None,
     ) -> pd.DataFrame:
         """Pairwise alignment for c genes.
 
@@ -590,7 +590,7 @@ def assign_isotype(
         ----------
         data : pd.DataFrame
             Input data Frame.
-        primers_dict : Optional[Dict[str, Dict[str, str]]], optional
+        primers_dict : Optional[Dict[str, dict[str, str]]], optional
             Gene:Sequence dictionary to do pairwise alignment with.
 
         Returns
@@ -838,21 +838,21 @@ def assign_isotypes(
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e4,
     correct_c_call: bool = True,
-    correction_dict: Optional[Dict[str, Dict[str, str]]] = None,
+    correction_dict: Optional[Dict[str, dict[str, str]]] = None,
     plot: bool = True,
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 4),
     blastdb: Optional[Union[str, Path]] = None,
     filename_prefix: Optional[Union[List, str]] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
 
     Parameters
     ----------
-    fastas : List[str]
+    fastas : list[str]
         list of paths to fasta files.
     org : Literal["human", "mouse"], optional
         organism of reference folder.
@@ -864,7 +864,7 @@ def assign_isotypes(
         sequence and the targets.
     correct_c_call : bool, optional
         whether or not to adjust the c_calls after blast based on provided primers specified in `primer_dict` option.
-    correction_dict : Optional[Dict[str, Dict[str, str]]], optional
+    correction_dict : Optional[Dict[str, dict[str, str]]], optional
         a nested dictionary contain isotype/c_genes as keys and primer sequences as records to use for correcting
         annotated c_calls. Defaults to a curated dictionary for human sequences if left as none.
     plot : bool, optional
@@ -879,7 +879,7 @@ def assign_isotypes(
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : Optional[Union[List, str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         additional arguments to pass to `blastn`.
     """
     if type(fastas) is not list:
@@ -909,13 +909,13 @@ def assign_isotypes(
 
 
 def reannotate_genes(
-    data: List[str],
+    data: list[str],
     igblast_db: Optional[str] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
     loci: Literal["ig", "tr"] = "ig",
     extended: bool = True,
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    filename_prefix: Optional[Union[list[str], str]] = None,
     flavour: Literal["strict", "original"] = "strict",
     min_j_match: int = 7,
     min_d_match: int = 9,
@@ -952,7 +952,7 @@ def reannotate_genes(
             "SJL_J",
         ]
     ] = None,
-    additional_args: Dict[str, List[str]] = {
+    additional_args: Dict[str, list[str]] = {
         "assigngenes": [],
         "makedb": [],
         "igblastn": [],
@@ -965,7 +965,7 @@ def reannotate_genes(
 
     Parameters
     ----------
-    data : List[str]
+    data : list[str]
         list of fasta file locations, or folder name containing fasta files.
         if provided as a single string, it will first be converted to a list;
         this allows for the function to be run on single/multiple samples.
@@ -981,7 +981,7 @@ def reannotate_genes(
         mode for igblastn. 'ig' for BCRs, 'tr' for TCRs.
     extended : bool, optional
         whether or not to transfer additional 10X annotations to output file.
-    filename_prefix : Optional[Union[List[str], str]], optional
+    filename_prefix : Optional[Union[list[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults
         to 'filtered'.
     flavour : Literal["strict", "original"], optional
@@ -1031,7 +1031,7 @@ def reannotate_genes(
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
-    additional_args : Dict[str, List[str]], optional
+    additional_args : Dict[str, list[str]], optional
         additional arguments to pass to `AssignGenes.py`, `MakeDb.py`, `igblastn` and `blastn`.
         This accepts a dictionary with keys as the name of the sub-function (`assigngenes`, `makedb`,
         `igblastn`, `blastn_j` and `blastn_d`) and the records as lists of arguments to pass to the
@@ -1258,7 +1258,7 @@ def ensure_columns_transferred(
 
 
 def reassign_alleles(
-    data: List[str],
+    data: list[str],
     combined_folder: str,
     v_germline: Optional[str] = None,
     germline: Optional[str] = None,
@@ -1295,9 +1295,9 @@ def reassign_alleles(
     save_plot: bool = False,
     show_plot: bool = True,
     figsize: Tuple[Union[int, float], Union[int, float]] = (4, 3),
-    sample_id_dictionary: Optional[Dict[str, str]] = None,
-    filename_prefix: Optional[Union[List[str], str]] = None,
-    additional_args: Dict[str, List[str]] = {
+    sample_id_dictionary: Optional[dict[str, str]] = None,
+    filename_prefix: Optional[Union[list[str], str]] = None,
+    additional_args: Dict[str, list[str]] = {
         "tigger": [],
         "creategermlines": [],
     },
@@ -1310,7 +1310,7 @@ def reassign_alleles(
 
     Parameters
     ----------
-    data : List[str]
+    data : list[str]
         list of data folders containing the .tsv files. if provided as a single
         string, it will first be converted to a list; this allows for the
         function to be run on single/multiple samples.
@@ -1339,12 +1339,12 @@ def reassign_alleles(
         whether or not to show plot.
     figsize : Tuple[Union[int, float], Union[int, float]], optional
         size of figure.
-    sample_id_dictionary : Optional[Dict[str, str]], optional
+    sample_id_dictionary : Optional[dict[str, str]], optional
         dictionary for creating a sample_id column in the concatenated file.
-    filename_prefix : Optional[Union[List[str], str]], optional
+    filename_prefix : Optional[Union[list[str], str]], optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
         'filtered'.
-    additional_args : Dict[str, List[str]], optional
+    additional_args : Dict[str, list[str]], optional
         additional arguments to pass to `tigger-genotype.R` and `CreateGermlines.py`.
         This accepts a dictionary with keys as the name of the sub-function (`tigger` or `creategermlines`)
         and the records as lists of arguments to pass to the relevant scripts/tools.
@@ -1929,7 +1929,7 @@ def create_germlines(
         ]
     ] = None,
     genotyped_fasta: Optional[str] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
     save: Optional[str] = None,
 ) -> Dandelion:
     """
@@ -1951,7 +1951,7 @@ def create_germlines(
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
     genotyped_fasta : Optional[str], optional
         location to corrected v genotyped fasta file.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         additional arguments to pass to `CreateGermlines.py.`
     save : Optional[str], optional
         if provided, saves to specified file path.
@@ -2958,13 +2958,13 @@ class FilterContigs:
     ----------
     Cell : dandelion.utilities._utilities.Tree
         nested dictionary of cells.
-    drop_contig : List[str]
+    drop_contig : list[str]
         list of `sequence_id`s to drop.
-    h_doublet : List[str]
+    h_doublet : list[str]
         list of `sequence_id`s that are VDJ 'multiplets'.
-    l_doublet : List[str]
+    l_doublet : list[str]
         list of `sequence_id`s that are VJ 'multiplets'.
-    poor_qual : List[str]
+    poor_qual : list[str]
         list of `sequence_id`s that are VDJ 'multiplets'.
     umi_adjustment : Dict[str, int]
         dictionary of `sequence_id`s with adjusted umi value.
@@ -3756,13 +3756,13 @@ class FilterContigsLite:
     ----------
     Cell : dandelion.utilities._utilities.Tree
         nested dictionary of cells.
-    drop_contig : List[str]
+    drop_contig : list[str]
         list of `sequence_id`s to drop.
-    h_doublet : List[str]
+    h_doublet : list[str]
         list of `sequence_id`s that are VDJ 'multiplets'.
-    l_doublet : List[str]
+    l_doublet : list[str]
         list of `sequence_id`s that are VJ 'multiplets'.
-    poor_qual : List[str]
+    poor_qual : list[str]
         list of `sequence_id`s that are VDJ 'multiplets'.
     umi_adjustment : Dict[str, int]
         dictionary of `sequence_id`s with adjusted umi value.
@@ -4131,7 +4131,7 @@ def run_igblastn(
             "SJL_J",
         ]
     ] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Reannotate with IgBLASTn.
@@ -4159,7 +4159,7 @@ def run_igblastn(
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
-    additional_args: List[str], optional
+    additional_args: list[str], optional
         additional arguments to pass to `igblastn`.
     """
     env, igdb, fasta = set_igblast_env(igblast_db=igblast_db, input_file=fasta)
@@ -4297,7 +4297,7 @@ def assign_DJ(
             "SJL_J",
         ]
     ] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ):
     """
     Annotate contigs with constant region call using blastn.
@@ -4345,7 +4345,7 @@ def assign_DJ(
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
-    additional_args: List[str], optional
+    additional_args: list[str], optional
         additional arguments to pass to `blastn`.
     """
     # main function from here
@@ -4423,7 +4423,7 @@ def run_blastn(
             "SJL_J",
         ]
     ] = None,
-    additional_args: List[str] = [],
+    additional_args: list[str] = [],
 ) -> pd.DataFrame:
     """
     Annotate contigs using blastn.
@@ -4467,7 +4467,7 @@ def run_blastn(
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
         The rest will not allow igblastn and MakeDB.py to generate a successful airr table (check the failed file). "c57bl6" and "balbc" are merged databases of "C57BL_6" with "C57BL_6J" and "BALB_c" with "BALB_c_ByJ" respectively. None defaults to all combined.
-    additional_args: List[str], optional
+    additional_args: list[str], optional
         additional arguments to pass to `blastn`.
 
     Returns
@@ -5314,7 +5314,7 @@ class MarkAmbiguousContigs:
 
     Attributes
     ----------
-    ambiguous_contigs : List[str]
+    ambiguous_contigs : list[str]
         list of `sequence_id`s that are ambiguous.
     Cell : dandelion.utilities._utilities.Tree
         nested dictionary of cells.
@@ -5865,7 +5865,7 @@ class MarkAmbiguousContigs:
 
 def check_productive_vdj(
     vdj_contigs: Dict[str, int], umi_foldchange_cutoff: Union[int, float]
-) -> Tuple[List[str], List[str], List[str]]:
+) -> Tuple[list[str], list[str], list[str]]:
     """Keep top productive because of allelic exclusion."""
     keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
     counts = vdj_contigs.values()
@@ -5899,7 +5899,7 @@ def check_productive_vdj(
 
 def check_productive_vj(
     vj_contigs: Dict[str, int]
-) -> Tuple[List[str], List[str], List[str]]:
+) -> Tuple[list[str], list[str], list[str]]:
     """Function to keep top two productive vj chains because of allelic inclusions.
 
     Parameters
@@ -5909,7 +5909,7 @@ def check_productive_vj(
 
     Returns
     -------
-    Tuple[List[str], List[str], List[str]]
+    Tuple[list[str], list[str], list[str]]
         lists of contigs to keep, are extra or are ambiguous.
     """
     keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
@@ -5949,7 +5949,7 @@ def check_productive_vj(
 def check_update_same_seq(
     data: pd.DataFrame,
 ) -> Tuple[
-    pd.DataFrame, List[str], List[int], List[str], Dict[str, int], List[str]
+    pd.DataFrame, list[str], List[int], list[str], Dict[str, int], list[str]
 ]:
     """Check if sequences are the same.
 
@@ -5960,7 +5960,7 @@ def check_update_same_seq(
 
     Returns
     -------
-    Tuple[pd.DataFrame, List[str], List[int], List[str], Dict[str, int], List[str]]
+    Tuple[pd.DataFrame, list[str], List[int], list[str], Dict[str, int], list[str]]
         updated  AIRR data frame, lists of contigs to keep, their umi counts, their c_calls,
         adjusted umi counts, and list of ambiguous contigs.
     """
@@ -6036,7 +6036,7 @@ def check_update_same_seq(
 
 def choose_segments(
     starts: pd.Series, ends: pd.Series, scores: pd.Series
-) -> List[str]:
+) -> list[str]:
     """Choose left most segment
 
     Parameters
@@ -6050,7 +6050,7 @@ def choose_segments(
 
     Returns
     -------
-    List[str]
+    list[str]
         list of chosen segments.
     """
     starts = np.array(starts)
@@ -6145,14 +6145,14 @@ def multimapper(filename: str) -> pd.DataFrame:
     return mapped
 
 
-def update_j_multimap(data: List[str], filename_prefix: List[str]):
+def update_j_multimap(data: list[str], filename_prefix: list[str]):
     """Update j multimapper call.
 
     Parameters
     ----------
-    data : List[str]
+    data : list[str]
         input folders.
-    filename_prefix : List[str]
+    filename_prefix : list[str]
         prefixes to append to front of files.
     """
     if not isinstance(data, list):
