@@ -1070,12 +1070,17 @@ class Dandelion:
     def write_h5ddl(
         self,
         filename: str = "dandelion_data.h5ddl",
-        compression: Literal[
-            "gzip",
-            "lzf",
-            "szip",
-        ] = "gzip",
+        compression: (
+            Literal[
+                "gzip",
+                "lzf",
+                "szip",
+            ]
+            | None
+        ) = None,
         compression_level: Optional[int] = None,
+        version: Literal[3, 4] = 4,
+        **kwargs,
     ):
         """
         Writes a `Dandelion` class to .h5ddl format.
@@ -1088,137 +1093,136 @@ class Dandelion:
             Specifies the compression algorithm to use.
         compression_level : Optional[int], optional
             Specifies a compression level for data. A value of 0 disables compression.
+        **kwargs
+            passed to `pandas.DataFrame.to_hdf`. Only if version is 3.
         """
-        compression_level = (
-            9 if compression_level is None else compression_level
-        )
-
+        save_args = {
+            "compression": compression,
+            "compression_opts": (
+                9 if compression_level is None else compression_level
+            ),
+        }
+        if compression is None:
+            save_args.pop("compression", None)
+            save_args.pop("compression_opts", None)
         clear_h5file(filename)
-
-        # now to actually saving
-        data = self.data.copy()
-        data = sanitize_data(data)
-        data, data_dtypes = sanitize_data_for_saving(data)
-        # Convert the DataFrame to a NumPy structured array
-        structured_data_array = np.array(
-            [tuple(row) for row in data.to_numpy()], dtype=data_dtypes
-        )
-
-        with h5py.File(filename, "w") as hf:
-            hf.create_dataset(
-                "data",
-                data=structured_data_array,
-                compression=compression,
-                compression_opts=compression_level,
-            )
-
-        if self.metadata is not None:
-            metadata = self.metadata.copy()
-            metadata, metadata_dtypes = sanitize_data_for_saving(metadata)
+        if version == 3:
+            write_h5ddl_legacy(self, filename=filename, **kwargs)
+        elif version == 4:
+            # now to actually saving
+            data = self.data.copy()
+            data = sanitize_data(data)
+            data, data_dtypes = sanitize_data_for_saving(data)
             # Convert the DataFrame to a NumPy structured array
-            structured_metadata_array = np.array(
-                [tuple(row) for row in metadata.to_numpy()],
-                dtype=metadata_dtypes,
+            structured_data_array = np.array(
+                [tuple(row) for row in data.to_numpy()], dtype=data_dtypes
             )
-            structured_metadata_names_array = np.array(
-                [s.encode("utf-8") for s in metadata.index.to_numpy()]
-            )
-            with h5py.File(filename, "a") as hf:
+
+            with h5py.File(filename, "w") as hf:
                 hf.create_dataset(
-                    "metadata",
-                    data=structured_metadata_array,
-                    compression=compression,
-                    compression_opts=compression_level,
-                )
-                hf.create_dataset(
-                    "metadata_names",
-                    data=structured_metadata_names_array,
-                    compression=compression,
-                    compression_opts=compression_level,
+                    "data",
+                    data=structured_data_array,
+                    **save_args,
                 )
 
-        if self.graph is not None:
-            for i, g in enumerate(self.graph):
-                G_df = nx.to_pandas_adjacency(g, nonedge=np.nan)
-                G_x = csr_matrix(G_df.to_numpy())
-                G_column_array = np.array(
-                    [s.encode("utf-8") for s in G_df.columns.to_numpy()]
+            if self.metadata is not None:
+                metadata = self.metadata.copy()
+                metadata, metadata_dtypes = sanitize_data_for_saving(metadata)
+                # Convert the DataFrame to a NumPy structured array
+                structured_metadata_array = np.array(
+                    [tuple(row) for row in metadata.to_numpy()],
+                    dtype=metadata_dtypes,
                 )
-                G_index_array = np.array(
-                    [s.encode("utf-8") for s in G_df.index.to_numpy()]
+                structured_metadata_names_array = np.array(
+                    [s.encode("utf-8") for s in metadata.index.to_numpy()]
                 )
                 with h5py.File(filename, "a") as hf:
                     hf.create_dataset(
-                        f"graph/graph_{str(i)}/data",
-                        data=G_x.data,
-                        compression=compression,
-                        compression_opts=compression_level,
+                        "metadata",
+                        data=structured_metadata_array,
+                        **save_args,
                     )
                     hf.create_dataset(
-                        f"graph/graph_{str(i)}/indices",
-                        data=G_x.indices,
-                        compression=compression,
-                        compression_opts=compression_level,
-                    )
-                    hf.create_dataset(
-                        f"graph/graph_{str(i)}/indptr",
-                        data=G_x.indptr,
-                        compression=compression,
-                        compression_opts=compression_level,
-                    )
-                    hf.create_dataset(
-                        f"graph/graph_{str(i)}/shape",
-                        data=G_x.shape,
-                        compression=compression,
-                        compression_opts=compression_level,
-                    )
-                    hf.create_dataset(
-                        f"graph/graph_{str(i)}/column",
-                        data=G_column_array,
-                        compression=compression,
-                        compression_opts=compression_level,
-                    )
-                    hf.create_dataset(
-                        f"graph/graph_{str(i)}/index",
-                        data=G_index_array,
-                        compression=compression,
-                        compression_opts=compression_level,
+                        "metadata_names",
+                        data=structured_metadata_names_array,
+                        **save_args,
                     )
 
-        if self.threshold is not None:
-            for i, l in enumerate(self.layout):
-                with h5py.File(filename, "a") as hf:
-                    layout_group = hf.create_group("layout/layout_" + str(i))
-                    # Iterate through the dictionary and create datasets in the "layout" group
-                    for key, value in l.items():
-                        layout_group.create_dataset(
-                            key,
-                            data=value,
-                            compression=compression,
-                            compression_opts=compression_level,
+            if self.graph is not None:
+                for i, g in enumerate(self.graph):
+                    G_df = nx.to_pandas_adjacency(g, nonedge=np.nan)
+                    G_x = csr_matrix(G_df.to_numpy())
+                    G_column_array = np.array(
+                        [s.encode("utf-8") for s in G_df.columns.to_numpy()]
+                    )
+                    G_index_array = np.array(
+                        [s.encode("utf-8") for s in G_df.index.to_numpy()]
+                    )
+                    with h5py.File(filename, "a") as hf:
+                        hf.create_dataset(
+                            f"graph/graph_{str(i)}/data",
+                            data=G_x.data,
+                            **save_args,
+                        )
+                        hf.create_dataset(
+                            f"graph/graph_{str(i)}/indices",
+                            data=G_x.indices,
+                            **save_args,
+                        )
+                        hf.create_dataset(
+                            f"graph/graph_{str(i)}/indptr",
+                            data=G_x.indptr,
+                            **save_args,
+                        )
+                        hf.create_dataset(
+                            f"graph/graph_{str(i)}/shape",
+                            data=G_x.shape,
+                            **save_args,
+                        )
+                        hf.create_dataset(
+                            f"graph/graph_{str(i)}/column",
+                            data=G_column_array,
+                            **save_args,
+                        )
+                        hf.create_dataset(
+                            f"graph/graph_{str(i)}/index",
+                            data=G_index_array,
+                            **save_args,
                         )
 
-        if len(self.germline) > 0:
-            with h5py.File(filename, "a") as hf:
-                try:
-                    germline_group = hf.create_group("germline")
-                except:
-                    pass
-                for key, value in self.germline.items():
-                    germline_group.create_dataset(
-                        key,
-                        data=value,
-                        compression=compression,
-                        compression_opts=compression_level,
+            if self.layout is not None:
+                for i, l in enumerate(self.layout):
+                    with h5py.File(filename, "a") as hf:
+                        layout_group = hf.create_group(
+                            "layout/layout_" + str(i)
+                        )
+                        # Iterate through the dictionary and create datasets in the "layout" group
+                        for key, value in l.items():
+                            layout_group.create_dataset(
+                                key,
+                                data=value,
+                                **save_args,
+                            )
+
+            if len(self.germline) > 0:
+                with h5py.File(filename, "a") as hf:
+                    hf.create_dataset(
+                        "germline/keys",
+                        data=np.array(list(self.germline.keys()), dtype="S"),
+                        **save_args,
                     )
-        if self.threshold is not None:
-            tr = self.threshold
-            hf.create_dataset(
-                "threshold",
-                data=tr,
-                compression=compression,
-                compression_opts=compression_level,
-            )
+                    hf.create_dataset(
+                        "germline/values",
+                        data=np.array(list(self.germline.values()), dtype="S"),
+                        **save_args,
+                    )
+
+            if self.threshold is not None:
+                tr = self.threshold
+                hf.create_dataset(
+                    "threshold",
+                    data=tr,
+                )
 
     write = write_h5ddl
 
@@ -2442,3 +2446,91 @@ def _normalize_indices(
 def return_none_call(call: str) -> str:
     """Return None if not present."""
     return call.split("|")[0] if not call in ["None", ""] else "None"
+
+
+def write_h5ddl_legacy(
+    self: Dandelion,
+    filename: Path | str = "dandelion_data.h5ddl",
+    **kwargs,
+):
+    """
+    Writes a `Dandelion` class to .h5ddl format for legacy support.
+
+    Parameters
+    ----------
+    self : Dandelion
+        input `Dandelion` object.
+    filename : Path | str, optional
+        path to `.h5ddl` file, by default "dandelion_data.h5ddl".
+    **kwargs
+        Additional arguments to `pd.DataFrame.to_hdf`.
+    """
+    clear_h5file(filename)
+    # now to actually saving
+    data = self.data.copy()
+    data = sanitize_data(data)
+    data, _ = sanitize_data_for_saving(data)
+    data.to_hdf(
+        filename,
+        "data",
+        **kwargs,
+    )
+    if self.metadata is not None:
+        metadata = self.metadata.copy()
+        for col in metadata.columns:
+            if pd.__version__ < "2.1.0":
+                weird = (
+                    metadata[[col]].applymap(type)
+                    != metadata[[col]].iloc[0].apply(type)
+                ).any(axis=1)
+            else:
+                weird = (
+                    metadata[[col]].map(type)
+                    != metadata[[col]].iloc[0].apply(type)
+                ).any(axis=1)
+            if len(metadata[weird]) > 0:
+                metadata[col] = metadata[col].where(
+                    pd.notnull(metadata[col]), ""
+                )
+        metadata.to_hdf(
+            filename,
+            "metadata",
+            format="table",
+            nan_rep=np.nan,
+            **kwargs,
+        )
+    graph_counter = 0
+    try:
+        for g in self.graph:
+            G = nx.to_pandas_adjacency(g, nonedge=np.nan)
+            G.to_hdf(
+                filename,
+                "graph/graph_" + str(graph_counter),
+                **kwargs,
+            )
+            graph_counter += 1
+    except:
+        pass
+    with h5py.File(filename, "a") as hf:
+        try:
+            layout_counter = 0
+            for l in self.layout:
+                try:
+                    hf.create_group("layout/layout_" + str(layout_counter))
+                except:
+                    pass
+                for k in l.keys():
+                    hf["layout/layout_" + str(layout_counter)].attrs[k] = l[k]
+                layout_counter += 1
+        except:
+            pass
+        if len(self.germline) > 0:
+            try:
+                hf.create_group("germline")
+            except:
+                pass
+            for k in self.germline.keys():
+                hf["germline"].attrs[k] = self.germline[k]
+        if self.threshold is not None:
+            tr = self.threshold
+            hf.create_dataset("threshold", data=tr)

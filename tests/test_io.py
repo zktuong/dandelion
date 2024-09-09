@@ -384,11 +384,11 @@ def test_locus_productive(airr_generic):
     tmp = ddl.Dandelion(airr_generic, report_status_productive=False)
 
 
-@pytest.mark.skip(reason="pytables fails to install on github actions.")
+@pytest.mark.skipif("LOCAL_DDL" not in os.environ, reason="requires LOCAL_DDL")
 def test_legacy_write(create_testfolder):
     """check i can read and write in legacy mode."""
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="junction")
-    ddl.utl.write_h5ddl_legacy(vdj, create_testfolder / "legacy.h5ddl")
+    vdj.write_h5ddl(create_testfolder / "legacy.h5ddl", version=3)
     leg = ddl.read_h5ddl(create_testfolder / "legacy.h5ddl")

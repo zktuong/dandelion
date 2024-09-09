@@ -228,8 +228,9 @@ def read_h5ddl(
         pass
 
     try:
-        germline = _read_h5_dict(filename, "germline")
+        germline = _read_h5_zip(filename, "germline/keys", "germline/values")
     except:
+
         pass
 
     try:
@@ -1443,20 +1444,20 @@ def _create_graph(
     return g
 
 
-def _read_h5_dict(filename: Union[Path, str], group: str) -> Dict[str, Any]:
+def _read_h5_dict(filename: Path | str, group: str) -> dict:
     """
     Read a dictionary from an H5 file.
 
     Parameters
     ----------
-    filename : Union[Path, str]
+    filename : Path | str
         The path to the H5 file.
     group : str
         The group to read from the H5 file.
 
     Returns
     -------
-    Dict[str, Any]
+    dict
         The dictionary data from the specified group.
     """
     out_dict = {}
@@ -1467,112 +1468,41 @@ def _read_h5_dict(filename: Union[Path, str], group: str) -> Dict[str, Any]:
     return out_dict
 
 
-def write_h5ddl_legacy(
-    vdj_data: Dandelion,
-    filename: Path | str = "dandelion_data.h5ddl",
-    compression: Literal[
-        "zlib",
-        "lzo",
-        "bzip2",
-        "blosc",
-        "blosc:blosclz",
-        "blosc:lz4",
-        "blosc:lz4hc",
-        "blosc:snappy",
-        "blosc:zlib",
-        "blosc:zstd",
-    ] = "zlib",
-    compression_level: Optional[int] = None,
-    **kwargs,
-):
+def _read_h5_zip(
+    filename: Path | str, group: str, key_group: str, value_group: str
+) -> dict:
     """
-    Writes a `Dandelion` class to .h5ddl format for legacy support.
+    Read two groups from an H5 file and return them as a dictionary.
 
     Parameters
     ----------
-    data : Dandelion
+    filename : Path | str
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+    key_group : str
+        The name of the group containing the keys.
+    value_group : str
+        The name of the group containing the values.
 
-    filename : Path | str, optional
-        path to `.h5ddl` file, by default "dandelion_data.h5ddl".
-    compression : _type_, optional
-        method for compression for data frames. see
-        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
-    compression_level : Optional[int], optional
-        Specifies a compression level for data. A value of 0 disables compression, by default None.
+    Returns
+    -------
+    dict
+        The dictionary data from the specified groups.
     """
-    compression_level = 9 if compression_level is None else compression_level
-    clear_h5file(filename)
-    # now to actually saving
-    data = vdj_data.data.copy()
-    data = sanitize_data(data)
-    data, _ = sanitize_data_for_saving(data)
-    data.to_hdf(
-        filename,
-        "data",
-        complib=compression,
-        complevel=compression_level,
-        **kwargs,
-    )
-    if vdj_data.metadata is not None:
-        metadata = vdj_data.metadata.copy()
-        for col in metadata.columns:
-            if pd.__version__ < "2.1.0":
-                weird = (
-                    metadata[[col]].applymap(type)
-                    != metadata[[col]].iloc[0].apply(type)
-                ).any(axis=1)
-            else:
-                weird = (
-                    metadata[[col]].map(type)
-                    != metadata[[col]].iloc[0].apply(type)
-                ).any(axis=1)
-            if len(metadata[weird]) > 0:
-                metadata[col] = metadata[col].where(
-                    pd.notnull(metadata[col]), ""
-                )
-        metadata.to_hdf(
-            filename,
-            "metadata",
-            complib=compression,
-            complevel=compression_level,
-            format="table",
-            nan_rep=np.nan,
-            **kwargs,
-        )
-    graph_counter = 0
-    try:
-        for g in vdj_data.graph:
-            G = nx.to_pandas_adjacency(g, nonedge=np.nan)
-            G.to_hdf(
-                filename,
-                "graph/graph_" + str(graph_counter),
-                complib=compression,
-                complevel=compression_level,
-                **kwargs,
-            )
-            graph_counter += 1
-    except:
-        pass
-    with h5py.File(filename, "a") as hf:
+    with h5py.File(filename, "r") as hf:
         try:
-            layout_counter = 0
-            for l in vdj_data.layout:
-                try:
-                    hf.create_group("layout/layout_" + str(layout_counter))
-                except:
-                    pass
-                for k in l.keys():
-                    hf["layout/layout_" + str(layout_counter)].attrs[k] = l[k]
-                layout_counter += 1
+            keys = [
+                key.decode("utf-8") for key in hf[f"{group}/{key_group}"][:]
+            ]
+            values = [
+                value.decode("utf-8")
+                for value in hf[f"{group}/{value_group}"][:]
+            ]
+            # Reconstruct the dictionary
+            out_dict = dict(zip(keys, values))
         except:
-            pass
-        if len(vdj_data.germline) > 0:
-            try:
-                hf.create_group("germline")
-            except:
-                pass
-            for k in vdj_data.germline.keys():
-                hf["germline"].attrs[k] = vdj_data.germline[k]
-        if vdj_data.threshold is not None:
-            tr = vdj_data.threshold
-            hf.create_dataset("threshold", data=tr)
+            out_dict = {}
+            for g in hf[group].attrs:
+                out_dict.update({g: hf[group].attrs[g]})
+    return out_dict
