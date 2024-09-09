@@ -1068,13 +1068,11 @@ class Dandelion:
     def write_h5ddl(
         self,
         filename: str = "dandelion_data.h5ddl",
-        compression: (
-            Literal[
-                "gzip",
-                "lzf",
-                "szip",
-            ]
-        ) = "gzip",
+        compression: Literal[
+            "gzip",
+            "lzf",
+            "szip",
+        ] = "gzip",
         compression_level: Optional[int] = None,
     ):
         """
