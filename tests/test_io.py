@@ -384,6 +384,7 @@ def test_locus_productive(airr_generic):
     tmp = ddl.Dandelion(airr_generic, report_status_productive=False)
 
 
+@pytest.mark.skip(reason="pytables fails to install on github actions.")
 def test_legacy_write(create_testfolder):
     """check i can read and write in legacy mode."""
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
