@@ -212,41 +212,31 @@ def read_h5ddl(
         pass
 
     try:
-        try:
-            g_0 = _read_h5_csr_matrix(filename, "graph/graph_0")
-            g_1 = _read_h5_csr_matrix(filename, "graph/graph_1")
-        except:
-            g_0 = pd.read_hdf(filename, "graph/graph_0")
-            g_1 = pd.read_hdf(filename, "graph/graph_1")
+        g_0 = _read_h5_csr_matrix(filename, "graph/graph_0")
+        g_1 = _read_h5_csr_matrix(filename, "graph/graph_1")
         graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
         graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
         graph = (graph0, graph1)
-    except:  # pragma: no cover
+    except:
         pass
 
-    with h5py.File(filename, "r") as hf:
-        try:
-            layout0 = {}
-            for k in hf["layout/layout_0"].attrs.keys():
-                layout0.update({k: np.array(hf["layout/layout_0"].attrs[k])})
-            layout1 = {}
-            for k in hf["layout/layout_1"].attrs.keys():
-                layout1.update({k: np.array(hf["layout/layout_1"].attrs[k])})
-            layout = (layout0, layout1)
-        except:
-            pass
+    try:
+        layout0 = _read_h5_dict(filename, "layout/layout_0")
+        layout1 = _read_h5_dict(filename, "layout/layout_1")
+        layout = (layout0, layout1)
+    except:
+        pass
 
-        germline = {}
-        try:
-            for g in hf["germline"].attrs:
-                germline.update({g: hf["germline"].attrs[g]})
-        except:
-            pass
+    try:
+        germline = _read_h5_dict(filename, "germline")
+    except:
+        pass
 
-        try:
+    try:
+        with h5py.File(filename, "r") as hf:
             threshold = float(np.array(hf["threshold"]))
-        except:
-            threshold = None
+    except:
+        threshold = None
 
     constructor = {}
     constructor["data"] = data
@@ -1247,7 +1237,7 @@ def to_scirpy(
         If converting to AnnData, it will assert that the same cell_ids and .obs_names are present in the `gex_adata` provided.
     gex_adata : AnnData, optional
         An existing AnnData object to be used as the base for the converted data if provided.
-    key : tuple of str, optional
+    key : Tuple[str, str], optional
         A tuple specifying the keys for the 'gex' and 'airr' fields in the converted data. Defaults to ("gex", "airr").
     **kwargs
         Additional keyword arguments passed to `scirpy.io.read_airr`.
@@ -1405,8 +1395,8 @@ def _read_h5_csr_matrix(filename: Union[Path, str], group: str) -> pd.DataFrame:
             # Reconstruct CSR matrix
             loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
             df = pd.DataFrame(loaded_matrix.toarray())
-            df_col = read_h5_group(filename, f"{group}/column")
-            df_index = read_h5_group(filename, f"{group}/index")
+            df_col = _read_h5_group(filename, f"{group}/column")
+            df_index = _read_h5_group(filename, f"{group}/index")
             df.columns = df_col
             df.index = df_index
     except TypeError:
@@ -1451,6 +1441,30 @@ def _create_graph(
             d["weight"] -= adjust_adjacency
 
     return g
+
+
+def _read_h5_dict(filename: Union[Path, str], group: str) -> Dict[str, Any]:
+    """
+    Read a dictionary from an H5 file.
+
+    Parameters
+    ----------
+    filename : Union[Path, str]
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+
+    Returns
+    -------
+    Dict[str, Any]
+        The dictionary data from the specified group.
+    """
+    out_dict = {}
+    with h5py.File(filename, "r") as hf:
+        for k in hf[group].keys():
+            out_dict[k] = hf[group][k][:]
+
+    return out_dict
 
 
 def write_h5ddl_legacy(

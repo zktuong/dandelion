@@ -67,7 +67,9 @@ class Dandelion:
         data: Optional[pd.DataFrame] = None,
         metadata: Optional[pd.DataFrame] = None,
         germline: Optional[Dict] = None,
-        layout: Optional[pd.DataFrame] = None,
+        layout: Optional[
+            Tuple[Dict[str, np.array], Dict[str, np.array]]
+        ] = None,
         graph: Optional[Tuple[NetworkxGraph, NetworkxGraph]] = None,
         initialize: bool = True,
         library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
@@ -83,7 +85,7 @@ class Dandelion:
             AIRR data collapsed per cell.
         germline : Optional[Dict], optional
             dictionary of germline gene:sequence records.
-        layout : Optional[pd.DataFrame], optional
+        layout : Optional[Tuple[Dict[str, np.array], Dict[str, np.array]]], optional
             node positions for computed graph.
         graph : Optional[Tuple[NetworkxGraph, NetworkxGraph]], optional
             networkx graphs for clonotype networks.
@@ -1135,9 +1137,8 @@ class Dandelion:
                     compression_opts=compression_level,
                 )
 
-        graph_counter = 0
-        try:
-            for g in self.graph:
+        if self.graph is not None:
+            for i, g in enumerate(self.graph):
                 G_df = nx.to_pandas_adjacency(g, nonedge=np.nan)
                 G_x = csr_matrix(G_df.to_numpy())
                 G_column_array = np.array(
@@ -1148,55 +1149,46 @@ class Dandelion:
                 )
                 with h5py.File(filename, "a") as hf:
                     hf.create_dataset(
-                        f"graph/graph_{str(graph_counter)}/data",
+                        f"graph/graph_{str(i)}/data",
                         data=G_x.data,
                         compression=compression,
                         compression_opts=compression_level,
                     )
                     hf.create_dataset(
-                        f"graph/graph_{str(graph_counter)}/indices",
+                        f"graph/graph_{str(i)}/indices",
                         data=G_x.indices,
                         compression=compression,
                         compression_opts=compression_level,
                     )
                     hf.create_dataset(
-                        f"graph/graph_{str(graph_counter)}/indptr",
+                        f"graph/graph_{str(i)}/indptr",
                         data=G_x.indptr,
                         compression=compression,
                         compression_opts=compression_level,
                     )
                     hf.create_dataset(
-                        f"graph/graph_{str(graph_counter)}/shape",
+                        f"graph/graph_{str(i)}/shape",
                         data=G_x.shape,
                         compression=compression,
                         compression_opts=compression_level,
                     )
                     hf.create_dataset(
-                        f"graph/graph_{str(graph_counter)}/column",
+                        f"graph/graph_{str(i)}/column",
                         data=G_column_array,
                         compression=compression,
                         compression_opts=compression_level,
                     )
                     hf.create_dataset(
-                        f"graph/graph_{str(graph_counter)}/index",
+                        f"graph/graph_{str(i)}/index",
                         data=G_index_array,
                         compression=compression,
                         compression_opts=compression_level,
                     )
-                graph_counter += 1
-        except:
-            pass
 
-        layout_counter = 0
-        try:
-            for l in self.layout:
+        if self.threshold is not None:
+            for i, l in enumerate(self.layout):
                 with h5py.File(filename, "a") as hf:
-                    try:
-                        layout_group = hf.create_group(
-                            "layout/layout_" + str(layout_counter)
-                        )
-                    except:
-                        pass
+                    layout_group = hf.create_group("layout/layout_" + str(i))
                     # Iterate through the dictionary and create datasets in the "layout" group
                     for key, value in l.items():
                         layout_group.create_dataset(
@@ -1205,9 +1197,6 @@ class Dandelion:
                             compression=compression,
                             compression_opts=compression_level,
                         )
-                    layout_counter += 1
-        except:
-            pass
 
         if len(self.germline) > 0:
             with h5py.File(filename, "a") as hf:
