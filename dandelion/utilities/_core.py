@@ -1210,17 +1210,18 @@ class Dandelion:
             pass
 
         if len(self.germline) > 0:
-            try:
-                germline_group = hf.create_group("germline")
-            except:
-                pass
-            for key, value in self.germline.items():
-                germline_group.create_dataset(
-                    key,
-                    data=value,
-                    compression=compression,
-                    compression_opts=compression_level,
-                )
+            with h5py.File(filename, "a") as hf:
+                try:
+                    germline_group = hf.create_group("germline")
+                except:
+                    pass
+                for key, value in self.germline.items():
+                    germline_group.create_dataset(
+                        key,
+                        data=value,
+                        compression=compression,
+                        compression_opts=compression_level,
+                    )
         if self.threshold is not None:
             tr = self.threshold
             hf.create_dataset(
