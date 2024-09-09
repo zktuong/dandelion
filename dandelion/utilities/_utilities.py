@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import h5py
 import os
 import re
 import warnings
@@ -490,9 +491,59 @@ def sanitize_blastn(data):
     return data
 
 
-def sanitize_data_for_saving(data):
-    """Quick sanitize dtypes for saving."""
+def get_numpy_dtype(series: pd.Series) -> str:
+    """
+    Map a Pandas dtype to an appropriate NumPy dtype.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The Pandas Series.
+
+    Returns
+    -------
+    str
+        A string representing the NumPy dtype corresponding to the Pandas dtype.
+
+    Raises
+    ------
+    TypeError
+        If the Pandas dtype is unsupported.
+    """
+    if pd.api.types.is_integer_dtype(series):
+        return "i4"  # 32-bit integer
+    elif pd.api.types.is_float_dtype(series):
+        return "f8"  # 64-bit float
+    elif pd.api.types.is_bool_dtype(series):
+        return "i1"  # 8-bit integer for booleans (True/False)
+    elif pd.api.types.is_string_dtype(series) or pd.api.types.is_object_dtype(
+        series
+    ):
+        # Handle object or string columns; dynamically calculate the max string length
+        max_length = series.astype(str).map(len).max()
+        return "S{}".format(max(1, max_length))  # String with max length
+    else:
+        raise TypeError(f"Unsupported data type: {series.name}")
+
+
+def sanitize_data_for_saving(
+    data: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, str]]:
+    """
+    Quick sanitize dtypes for saving.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        input dataframe.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, dict[str, str]]
+        dataframe and corresponding numpy structured dtype.
+    """
     tmp = data.copy()
+    dtype_dict = {}
     for d in tmp:
         if d in RearrangementSchema.properties:
             if RearrangementSchema.properties[d]["type"] in [
@@ -503,6 +554,7 @@ def sanitize_data_for_saving(data):
                     [None, np.nan, pd.NA, "nan", ""],
                     "",
                 )
+                tmp[d] = tmp[d].astype(str)
             if RearrangementSchema.properties[d]["type"] in [
                 "integer",
                 "number",
@@ -519,7 +571,10 @@ def sanitize_data_for_saving(data):
                     [None, pd.NA, np.nan, "nan", ""],
                     "",
                 )
-    return tmp
+                tmp[d] = tmp[d].astype(str)
+        dtype_dict[d] = get_numpy_dtype(tmp[d])
+    dtypes = [(key, record) for key, record in dtype_dict.items()]
+    return tmp, dtypes
 
 
 def validate_airr(data):
@@ -1148,3 +1203,10 @@ def sum_col(vals):
 def check_same_celltype(clone_def1, clone_def2):
     """Check if the first key is the same."""
     return clone_def1.split("_", 1)[0] == clone_def2.split("_", 1)[0]
+
+
+def clear_h5file(filename: Path | str):
+    """Little hack to overwrite an existing h5 file."""
+    with h5py.File(filename, "w") as hf:
+        for datasetname in hf.keys():
+            del hf[datasetname]

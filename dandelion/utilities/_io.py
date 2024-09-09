@@ -1,24 +1,27 @@
 #!/usr/bin/env python
-from dandelion.utilities._utilities import *
-from dandelion.utilities._core import *
-from dandelion.tools._tools import transfer as tf
-
-from typing import Any, Collection, Union, Optional, List
-from scanpy import logging as logg
-from pathlib import Path
-from collections import defaultdict, OrderedDict
-from anndata import AnnData
-import pandas as pd
-import numpy as np
-import networkx as nx
 import bz2
 import gzip
+import h5py
 import json
 import os
+import pickle
 import re
 import shutil
+
 import _pickle as cPickle
-import pickle
+import networkx as nx
+import numpy as np
+import pandas as pd
+
+from anndata import AnnData
+from collections import defaultdict, OrderedDict
+from pathlib import Path
+from scanpy import logging as logg
+from typing import Any, Collection, Union, Optional, List
+
+from dandelion.tools._tools import transfer as tf
+from dandelion.utilities._core import *
+from dandelion.utilities._utilities import *
 
 pickle.HIGHEST_PROTOCOL = 4
 
@@ -179,13 +182,15 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     return data
 
 
-def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
+def read_h5ddl(
+    filename: Union[Path, str] = "dandelion_data.h5ddl"
+) -> Dandelion:
     """
     Read in and returns a `Dandelion` class from .h5ddl format.
 
     Parameters
     ----------
-    filename : str, optional
+    filename : Union[Path, str], optional
         path to `.h5ddl` file
 
     Returns
@@ -198,32 +203,25 @@ def read_h5ddl(filename: str = "dandelion_data.h5ddl") -> Dandelion:
     AttributeError
         if `data` not found in `.h5ddl` file.
     """
+    data = load_data(_read_h5_group(filename, "data"))
+    metadata = _read_h5_group(filename, "metadata")
     try:
-        data = pd.read_hdf(filename, "data")
-    except:
-        raise AttributeError(
-            "{} does not contain attribute `data`".format(filename)
-        )
-    try:
-        metadata = pd.read_hdf(filename, "metadata")
-    except:
+        metadata_names = _read_h5_group(filename, "metadata_names")
+        metadata.index = metadata_names
+    except KeyError:  # pragma: no cover
         pass
 
     try:
-        g_0 = pd.read_hdf(filename, "graph/graph_0")
-        g_1 = pd.read_hdf(filename, "graph/graph_1")
-        g_0 = g_0 + 1
-        g_0 = g_0.fillna(0)
-        g_1 = g_1 + 1
-        g_1 = g_1.fillna(0)
-        graph0 = nx.from_pandas_adjacency(g_0)
-        graph1 = nx.from_pandas_adjacency(g_1)
-        for u, v, d in graph0.edges(data=True):
-            d["weight"] = d["weight"] - 1
-        for u, v, d in graph1.edges(data=True):
-            d["weight"] = d["weight"] - 1
+        try:
+            g_0 = _read_h5_csr_matrix(filename, "graph/graph_0")
+            g_1 = _read_h5_csr_matrix(filename, "graph/graph_1")
+        except:
+            g_0 = pd.read_hdf(filename, "graph/graph_0")
+            g_1 = pd.read_hdf(filename, "graph/graph_1")
+        graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
+        graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
         graph = (graph0, graph1)
-    except:
+    except:  # pragma: no cover
         pass
 
     with h5py.File(filename, "r") as hf:
@@ -1314,3 +1312,253 @@ def from_scirpy(data: Union[AnnData, "MuData"]) -> Dandelion:
     data = from_ak(data.obsm["airr"])
 
     return Dandelion(data)
+
+
+def _read_h5_group(filename: Union[Path, str], group: str) -> pd.DataFrame:
+    """
+    Read a specific group from an H5 file.
+
+    Parameters
+    ----------
+    filename : Union[Path, str]
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The data from the specified group as a pandas dataframe.
+
+    Raises
+    ------
+    KeyError
+        If the specified group is not found in the H5 file.
+    """
+    try:
+        with h5py.File(filename, "r") as hf:
+            data_group = hf[group]
+            structured_data_array = data_group[:]
+            decoded = {}
+            if structured_data_array.dtype.names is not None:
+                for col in structured_data_array.dtype.names:
+                    dtype = structured_data_array.dtype[col]
+                    if dtype.char == "S":  # Check if dtype is byte strings
+                        # Decode byte strings
+                        decoded.update(
+                            {
+                                col: np.array(
+                                    [
+                                        (
+                                            x.astype(str)
+                                            if isinstance(x, bytes)
+                                            else x
+                                        )
+                                        for x in structured_data_array[col]
+                                    ]
+                                )
+                            }
+                        )
+                    else:
+                        decoded.update({col: structured_data_array[col]})
+                # Create a DataFrame from the structured array
+                data = pd.DataFrame(decoded)
+            else:
+                data = np.array(
+                    [
+                        x.astype(str) if isinstance(x, bytes) else x
+                        for x in structured_data_array
+                    ]
+                )
+    except TypeError:
+        try:
+            data = pd.read_hdf(filename, group)
+        except:
+            raise KeyError(
+                f"{str(filename)} does not contain attribute `{group}`"
+            )
+    return data
+
+
+def _read_h5_csr_matrix(filename: Union[Path, str], group: str) -> pd.DataFrame:
+    """
+    Read a group from an H5 file originally stored as a compressed sparse matrix.
+
+    Parameters
+    ----------
+    filename : Union[Path, str]
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The data from the specified group as a pandas dataframe.
+    """
+    try:
+        with h5py.File(filename, "r") as f:
+            data = f[f"{group}/data"][:]
+            indices = f[f"{group}/indices"][:]
+            indptr = f[f"{group}/indptr"][:]
+            shape = tuple(f[f"{group}/shape"][:])
+            # Reconstruct CSR matrix
+            loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
+            df = pd.DataFrame(loaded_matrix.toarray())
+            df_col = read_h5_group(filename, f"{group}/column")
+            df_index = read_h5_group(filename, f"{group}/index")
+            df.columns = df_col
+            df.index = df_index
+    except TypeError:
+        try:
+            data = pd.read_hdf(filename, group)
+        except:
+            raise KeyError(
+                f"{str(filename)} does not contain attribute `{group}`"
+            )
+    return df
+
+
+def _create_graph(
+    adj: pd.DataFrame,
+    adjust_adjacency: Union[int, float] = 0,
+    fillna: Union[int, float] = 0,
+) -> NetworkxGraph:
+    """
+    Create a networkx graph from the given adjacency matrix.
+
+    Parameters
+    ----------
+    adj : pd.DataFrame
+        The adjacency matrix to create the graph from.
+    adjust_adjacency : Union[int, float], optional
+        The value to add to the graph by as a way to adjust the adjacency matrix. Defaults to 0.
+    fillna : Union[int, float], optional
+        The value to fill NaN values with. Defaults to 0.
+
+    Returns
+    -------
+    NetworkxGraph
+        The created networkx graph.
+    """
+    if adjust_adjacency != 0:
+        adj += adjust_adjacency
+    adj = adj.fillna(fillna)
+    g = nx.from_pandas_adjacency(adj)
+
+    if adjust_adjacency != 0:
+        for u, v, d in g.edges(data=True):
+            d["weight"] -= adjust_adjacency
+
+    return g
+
+
+def write_h5ddl_legacy(
+    vdj_data: Dandelion,
+    filename: Path | str = "dandelion_data.h5ddl",
+    compression: Literal[
+        "zlib",
+        "lzo",
+        "bzip2",
+        "blosc",
+        "blosc:blosclz",
+        "blosc:lz4",
+        "blosc:lz4hc",
+        "blosc:snappy",
+        "blosc:zlib",
+        "blosc:zstd",
+    ] = "zlib",
+    compression_level: Optional[int] = None,
+    **kwargs,
+):
+    """
+    Writes a `Dandelion` class to .h5ddl format for legacy support.
+
+    Parameters
+    ----------
+    data : Dandelion
+
+    filename : Path | str, optional
+        path to `.h5ddl` file, by default "dandelion_data.h5ddl".
+    compression : _type_, optional
+        method for compression for data frames. see
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_hdf.html
+    compression_level : Optional[int], optional
+        Specifies a compression level for data. A value of 0 disables compression, by default None.
+    """
+    compression_level = 9 if compression_level is None else compression_level
+    clear_h5file(filename)
+    # now to actually saving
+    data = vdj_data.data.copy()
+    data = sanitize_data(data)
+    data, _ = sanitize_data_for_saving(data)
+    data.to_hdf(
+        filename,
+        "data",
+        complib=compression,
+        complevel=compression_level,
+        **kwargs,
+    )
+    if vdj_data.metadata is not None:
+        metadata = vdj_data.metadata.copy()
+        for col in metadata.columns:
+            if pd.__version__ < "2.1.0":
+                weird = (
+                    metadata[[col]].applymap(type)
+                    != metadata[[col]].iloc[0].apply(type)
+                ).any(axis=1)
+            else:
+                weird = (
+                    metadata[[col]].map(type)
+                    != metadata[[col]].iloc[0].apply(type)
+                ).any(axis=1)
+            if len(metadata[weird]) > 0:
+                metadata[col] = metadata[col].where(
+                    pd.notnull(metadata[col]), ""
+                )
+        metadata.to_hdf(
+            filename,
+            "metadata",
+            complib=compression,
+            complevel=compression_level,
+            format="table",
+            nan_rep=np.nan,
+            **kwargs,
+        )
+    graph_counter = 0
+    try:
+        for g in vdj_data.graph:
+            G = nx.to_pandas_adjacency(g, nonedge=np.nan)
+            G.to_hdf(
+                filename,
+                "graph/graph_" + str(graph_counter),
+                complib=compression,
+                complevel=compression_level,
+                **kwargs,
+            )
+            graph_counter += 1
+    except:
+        pass
+    with h5py.File(filename, "a") as hf:
+        try:
+            layout_counter = 0
+            for l in vdj_data.layout:
+                try:
+                    hf.create_group("layout/layout_" + str(layout_counter))
+                except:
+                    pass
+                for k in l.keys():
+                    hf["layout/layout_" + str(layout_counter)].attrs[k] = l[k]
+                layout_counter += 1
+        except:
+            pass
+        if len(vdj_data.germline) > 0:
+            try:
+                hf.create_group("germline")
+            except:
+                pass
+            for k in vdj_data.germline.keys():
+                hf["germline"].attrs[k] = vdj_data.germline[k]
+        if vdj_data.threshold is not None:
+            tr = vdj_data.threshold
+            hf.create_dataset("threshold", data=tr)
