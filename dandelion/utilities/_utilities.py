@@ -395,44 +395,22 @@ def sanitize_data(data, ignore="clone_id"):
     """Quick sanitize dtypes."""
     data = data.astype("object")
     data = data.infer_objects()
-    for d in data:
-        if d in RearrangementSchema.properties:
-            if RearrangementSchema.properties[d]["type"] in [
-                "string",
-                "boolean",
-                "integer",
-            ]:
-                data[d] = data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
-                    "",
-                )
-                if RearrangementSchema.properties[d]["type"] == "integer":
-                    data[d] = [
-                        int(x) if present(x) else ""
-                        for x in pd.to_numeric(data[d])
-                    ]
-            else:
-                data[d] = data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
-                    np.nan,
-                )
+    for col in data:
+        if col in RearrangementSchema.properties:
+            if col != ignore:
+                dtype = RearrangementSchema.properties[col]["type"]
+                data[col] = sanitize_column(data[col], dtype)
         else:
-            if d != ignore:
-                try:
-                    data[d] = pd.to_numeric(data[d])
-                except:
-                    data[d] = data[d].replace(
-                        to_replace=[None, np.nan, pd.NA, "nan", ""],
-                        value="",
-                    )
-        if re.search("mu_freq", d):
-            data[d] = [
+            if col != ignore:
+                data[col] = try_numeric_conversion(data[col])
+        if re.search("mu_freq", col):
+            data[col] = [
                 float(x) if present(x) else np.nan
-                for x in pd.to_numeric(data[d])
+                for x in pd.to_numeric(data[col])
             ]
-        if re.search("mu_count", d):
-            data[d] = [
-                int(x) if present(x) else "" for x in pd.to_numeric(data[d])
+        if re.search("mu_count", col):
+            data[col] = [
+                int(x) if present(x) else "" for x in pd.to_numeric(data[col])
             ]
     try:
         data = check_travdv(data)
@@ -459,35 +437,13 @@ def sanitize_blastn(data):
     """Quick sanitize dtypes."""
     data = data.astype("object")
     data = data.infer_objects()
-    for d in data:
-        if d in RearrangementSchema.properties:
-            if RearrangementSchema.properties[d]["type"] in [
-                "string",
-                "boolean",
-                "integer",
-            ]:
-                data[d] = data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
-                    "",
-                )
-                if RearrangementSchema.properties[d]["type"] == "integer":
-                    data[d] = [
-                        int(x) if present(x) else ""
-                        for x in pd.to_numeric(data[d])
-                    ]
-            else:
-                data[d] = data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
-                    np.nan,
-                )
+    for col in data:
+        if col in RearrangementSchema.properties:
+            dtype = RearrangementSchema.properties[col]["type"]
+            data[col] = sanitize_column(data[col], dtype)
         else:
-            try:
-                data[d] = pd.to_numeric(data[d])
-            except:
-                data[d] = data[d].replace(
-                    to_replace=[None, np.nan, pd.NA, "nan", ""],
-                    value="",
-                )
+            data[col] = try_numeric_conversion(data[col])
+
     return data
 
 
@@ -544,37 +500,67 @@ def sanitize_data_for_saving(
     """
     tmp = data.copy()
     dtype_dict = {}
-    for d in tmp:
-        if d in RearrangementSchema.properties:
-            if RearrangementSchema.properties[d]["type"] in [
-                "string",
-                "boolean",
-            ]:
-                tmp[d] = tmp[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
-                    "",
-                )
-                tmp[d] = tmp[d].astype(str)
-            if RearrangementSchema.properties[d]["type"] in [
-                "integer",
-                "number",
-            ]:
-                tmp[d] = tmp[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
-                    np.nan,
-                )
+    for col in tmp:
+        if col in RearrangementSchema.properties:
+            dtype = RearrangementSchema.properties[col]["type"]
+            tmp[col] = sanitize_column(tmp[col], dtype)
         else:
-            try:
-                tmp[d] = pd.to_numeric(tmp[d])
-            except:
-                tmp[d] = tmp[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
-                    "",
-                )
-                tmp[d] = tmp[d].astype(str)
-        dtype_dict[d] = get_numpy_dtype(tmp[d])
+            tmp[col] = try_numeric_conversion(tmp[col])
+        dtype_dict[col] = get_numpy_dtype(tmp[col])
     dtypes = [(key, record) for key, record in dtype_dict.items()]
     return tmp, dtypes
+
+
+def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
+    """
+    Sanitize a column based on the specified dtype.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The column to be sanitized.
+    dtype : str
+        The expected data type of the column (`string`, `boolean`, `integer`, or `number`).
+
+    Returns
+    -------
+    pd.Series
+        The sanitized column with replaced values and appropriate data type.
+    """
+    if dtype in ["string", "boolean"]:
+        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        series = series.replace(
+            [None, np.nan, "nan", "na", "NA", "NAN", ""], ""
+        )
+        return series.astype(str)
+    elif dtype in ["integer", "number"]:
+        series = series.apply(lambda x: np.nan if pd.isna(x) else x)
+        return series.replace(
+            [None, np.nan, "nan", "na", "NA", "NAN", ""], np.nan
+        )
+    return series
+
+
+def try_numeric_conversion(series: pd.Series) -> pd.Series:
+    """
+    Attempt to convert a column to numeric, or fallback to treating it as a string.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The column to be converted.
+
+    Returns
+    -------
+    pd.Series
+        The column converted to numeric if possible, or sanitized as a string if not.
+    """
+    if series.apply(lambda x: isinstance(x, str) and "|" in x).any():
+        return sanitize_column(series, "string")
+    try:
+        return pd.to_numeric(series)
+    except:
+        return sanitize_column(series, "string")
 
 
 def validate_airr(data):
@@ -1082,7 +1068,7 @@ def set_germline_env(
         database to use. Defaults to imgt.
     Returns
     -------
-    Tuple[Dict, Path]
+    Tuple[Dict, Path, Path]
         environment dictionary and path to germline database.
 
     Raises
