@@ -391,62 +391,6 @@ def return_mix_dtype(data):
     return check
 
 
-def sanitize_data(data, ignore="clone_id"):
-    """Quick sanitize dtypes."""
-    data = data.astype("object")
-    data = data.infer_objects()
-    for col in data:
-        if col in RearrangementSchema.properties:
-            if col != ignore:
-                dtype = RearrangementSchema.properties[col]["type"]
-                data[col] = sanitize_column(data[col], dtype)
-        else:
-            if col != ignore:
-                data[col] = try_numeric_conversion(data[col])
-        if re.search("mu_freq", col):
-            data[col] = [
-                float(x) if present(x) else np.nan
-                for x in pd.to_numeric(data[col])
-            ]
-        if re.search("mu_count", col):
-            data[col] = [
-                int(x) if present(x) else "" for x in pd.to_numeric(data[col])
-            ]
-    try:
-        data = check_travdv(data)
-    except:
-        pass
-
-    if (
-        pd.Series(["cell_id", "umi_count", "productive"])
-        .isin(data.columns)
-        .all()
-    ):  # sort so that the productive contig with the largest umi is first
-        data.sort_values(
-            by=["cell_id", "productive", "umi_count"],
-            inplace=True,
-            ascending=[True, False, False],
-        )
-
-    # check if airr-standards is happy
-    validate_airr(data)
-    return data
-
-
-def sanitize_blastn(data):
-    """Quick sanitize dtypes."""
-    data = data.astype("object")
-    data = data.infer_objects()
-    for col in data:
-        if col in RearrangementSchema.properties:
-            dtype = RearrangementSchema.properties[col]["type"]
-            data[col] = sanitize_column(data[col], dtype)
-        else:
-            data[col] = try_numeric_conversion(data[col])
-
-    return data
-
-
 def get_numpy_dtype(series: pd.Series) -> str:
     """
     Map a Pandas dtype to an appropriate NumPy dtype.
@@ -564,6 +508,106 @@ def try_numeric_conversion(series: pd.Series) -> pd.Series:
         return pd.to_numeric(series)
     except:
         return sanitize_column(series, "string")
+
+
+def sanitize_data(data, ignore="clone_id"):
+    """Quick sanitize dtypes."""
+    data = data.astype("object")
+    data = data.infer_objects()
+    for d in data:
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]["type"] in [
+                "string",
+                "boolean",
+                "integer",
+            ]:
+                data[d] = data[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""],
+                    "",
+                )
+                if RearrangementSchema.properties[d]["type"] == "integer":
+                    data[d] = [
+                        int(x) if present(x) else ""
+                        for x in pd.to_numeric(data[d])
+                    ]
+            else:
+                data[d] = data[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""],
+                    np.nan,
+                )
+        else:
+            if d != ignore:
+                try:
+                    data[d] = pd.to_numeric(data[d])
+                except:
+                    data[d] = data[d].replace(
+                        to_replace=[None, np.nan, pd.NA, "nan", ""],
+                        value="",
+                    )
+        if re.search("mu_freq", d):
+            data[d] = [
+                float(x) if present(x) else np.nan
+                for x in pd.to_numeric(data[d])
+            ]
+        if re.search("mu_count", d):
+            data[d] = [
+                int(x) if present(x) else "" for x in pd.to_numeric(data[d])
+            ]
+    try:
+        data = check_travdv(data)
+    except:
+        pass
+
+    if (
+        pd.Series(["cell_id", "umi_count", "productive"])
+        .isin(data.columns)
+        .all()
+    ):  # sort so that the productive contig with the largest umi is first
+        data.sort_values(
+            by=["cell_id", "productive", "umi_count"],
+            inplace=True,
+            ascending=[True, False, False],
+        )
+
+    # check if airr-standards is happy
+    validate_airr(data)
+    return data
+
+
+def sanitize_blastn(data):
+    """Quick sanitize dtypes."""
+    data = data.astype("object")
+    data = data.infer_objects()
+    for d in data:
+        if d in RearrangementSchema.properties:
+            if RearrangementSchema.properties[d]["type"] in [
+                "string",
+                "boolean",
+                "integer",
+            ]:
+                data[d] = data[d].replace(
+                    [None, np.nan, pd.NA, "nan", ""],
+                    "",
+                )
+                if RearrangementSchema.properties[d]["type"] == "integer":
+                    data[d] = [
+                        int(x) if present(x) else ""
+                        for x in pd.to_numeric(data[d])
+                    ]
+            else:
+                data[d] = data[d].replace(
+                    [None, pd.NA, np.nan, "nan", ""],
+                    np.nan,
+                )
+        else:
+            try:
+                data[d] = pd.to_numeric(data[d])
+            except:
+                data[d] = data[d].replace(
+                    to_replace=[None, np.nan, pd.NA, "nan", ""],
+                    value="",
+                )
+    return data
 
 
 def validate_airr(data):
