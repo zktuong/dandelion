@@ -42,6 +42,15 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
+EMPTIES = [
+    None,
+    np.nan,
+    pd.NA,
+    "nan",
+    "NaN",
+    "",
+]
+
 
 # for compatibility with python>=3.10
 try:
@@ -363,6 +372,7 @@ def present(x):
         "NA",
         "na",
         "NaN",
+        "nan",
     ]
 
 
@@ -473,15 +483,11 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     """
     if dtype in ["string", "boolean"]:
         series = series.apply(lambda x: "" if pd.isna(x) else x)
-        series = series.replace(
-            [None, np.nan, "nan", "na", "NA", "NAN", ""], ""
-        )
+        series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
         return series.astype(str)
     elif dtype in ["integer", "number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
-        return series.replace(
-            [None, np.nan, "nan", "na", "NA", "NAN", ""], np.nan
-        )
+        return series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
     return series
 
 
@@ -522,7 +528,7 @@ def sanitize_data(data, ignore="clone_id"):
                 "integer",
             ]:
                 data[d] = data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
+                    EMPTIES,
                     "",
                 )
                 if RearrangementSchema.properties[d]["type"] == "integer":
@@ -532,7 +538,7 @@ def sanitize_data(data, ignore="clone_id"):
                     ]
             else:
                 data[d] = data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
+                    EMPTIES,
                     np.nan,
                 )
         else:
@@ -541,7 +547,7 @@ def sanitize_data(data, ignore="clone_id"):
                     data[d] = pd.to_numeric(data[d])
                 except:
                     data[d] = data[d].replace(
-                        to_replace=[None, np.nan, pd.NA, "nan", ""],
+                        to_replace=EMPTIES,
                         value="",
                     )
         if re.search("mu_freq", d):
@@ -586,7 +592,7 @@ def sanitize_blastn(data):
                 "integer",
             ]:
                 data[d] = data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
+                    EMPTIES,
                     "",
                 )
                 if RearrangementSchema.properties[d]["type"] == "integer":
@@ -596,7 +602,7 @@ def sanitize_blastn(data):
                     ]
             else:
                 data[d] = data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
+                    EMPTIES,
                     np.nan,
                 )
         else:
@@ -604,7 +610,7 @@ def sanitize_blastn(data):
                 data[d] = pd.to_numeric(data[d])
             except:
                 data[d] = data[d].replace(
-                    to_replace=[None, np.nan, pd.NA, "nan", ""],
+                    to_replace=EMPTIES,
                     value="",
                 )
     return data
