@@ -31,42 +31,13 @@ from dandelion.external.anndata._compat import (
 
 
 class Dandelion:
-    """
-    `Dandelion` class object.
-
-    Main class object storing input/output slots for all functions.
-
-    Attributes
-    ----------
-    data : pd.DataFrame
-        AIRR formatted data.
-    germline : dict
-        dictionary of germline gene:sequence records.
-    graph : Tuple[NetworkxGraph, NetworkxGraph]
-        networkx graphs for clonotype networks.
-    layout : pd.DataFrame
-        node positions for computed graph.
-    library_type : str
-        One of "tr-ab", "tr-gd", "ig".
-    metadata : pd.DataFrame
-        AIRR data collapsed per cell.
-    n_contigs : int
-        number of contigs in `.data` slot.
-    n_obs : int
-        number of cells in `.metadata` slot.
-    querier : Query
-        internal `Query` class.
-    threshold : float
-        threshold for `define_clones`.
-    write : None
-        write method.
-    """
+    """`Dandelion` class object."""
 
     def __init__(
         self,
-        data: Optional[pd.DataFrame] = None,
+        data: Optional[Union[pd.DataFrame, str, Path]] = None,
         metadata: Optional[pd.DataFrame] = None,
-        germline: Optional[Dict] = None,
+        germline: Optional[Dict[str, str]] = None,
         layout: Optional[
             Tuple[Dict[str, np.array], Dict[str, np.array]]
         ] = None,
@@ -75,15 +46,16 @@ class Dandelion:
         library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
         **kwargs,
     ):
-        """Init method for Dandelion.
+        """
+        Init method for Dandelion.
 
         Parameters
         ----------
-        data : Optional[pd.DataFrame], optional
+        data : Optional[Union[pd.DataFrame, str, Path]], optional
             AIRR formatted data.
         metadata : Optional[pd.DataFrame], optional
             AIRR data collapsed per cell.
-        germline : Optional[Dict], optional
+        germline : Optional[Dict[str, str]], optional
             dictionary of germline gene:sequence records.
         layout : Optional[Tuple[Dict[str, np.array], Dict[str, np.array]]], optional
             node positions for computed graph.
@@ -618,16 +590,16 @@ class Dandelion:
             if len(mutations) > 0:
                 self.update_metadata(
                     retrieve=mutations,
-                    retrieve_mode="split and average",
+                    retrieve_mode="split and sum",
                     **kwargs,
                 )
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="average", **kwargs
+                    retrieve=mutations, retrieve_mode="sum", **kwargs
                 )
             if len(vdjlengths) > 0:
                 self.update_metadata(
                     retrieve=vdjlengths,
-                    retrieve_mode="split and average",
+                    retrieve_mode="split and sum",
                     **kwargs,
                 )
             if len(seqinfo) > 0:
@@ -643,33 +615,33 @@ class Dandelion:
             if len(mutations) > 0:
                 self.update_metadata(
                     retrieve=mutations,
-                    retrieve_mode="split and average",
+                    retrieve_mode="split and sum",
                     **kwargs,
                 )
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="average", **kwargs
+                    retrieve=mutations, retrieve_mode="sum", **kwargs
                 )
         if option == "cdr3 lengths":
             if len(vdjlengths) > 0:
                 self.update_metadata(
                     retrieve=vdjlengths,
-                    retrieve_mode="split and average",
+                    retrieve_mode="split and sum",
                     **kwargs,
                 )
         if option == "mutations and cdr3 lengths":
             if len(mutations) > 0:
                 self.update_metadata(
                     retrieve=mutations,
-                    retrieve_mode="split and average",
+                    retrieve_mode="split and sum",
                     **kwargs,
                 )
                 self.update_metadata(
-                    retrieve=mutations, retrieve_mode="average", **kwargs
+                    retrieve=mutations, retrieve_mode="sum", **kwargs
                 )
             if len(vdjlengths) > 0:
                 self.update_metadata(
                     retrieve=vdjlengths,
-                    retrieve_mode="split and average",
+                    retrieve_mode="split and sum",
                     **kwargs,
                 )
 
@@ -1093,6 +1065,8 @@ class Dandelion:
             Specifies the compression algorithm to use.
         compression_level : Optional[int], optional
             Specifies a compression level for data. A value of 0 disables compression.
+        version : Literal[3, 4], optional
+            Specifies the version of the h5ddl format to use.
         **kwargs
             passed to `pandas.DataFrame.to_hdf`. Only if version is 3.
         """
@@ -1225,6 +1199,85 @@ class Dandelion:
                 )
 
     write = write_h5ddl
+
+    def write_10x(
+        self,
+        folder: Path | str = "dandelion_data",
+        filename_prefix: str = "all",
+        sequence_key: str = "sequence",
+        clone_key: str = "clone_id",
+    ):
+        """
+        Writes a `Dandelion` class to 10x formatted files so that it can be ingested for other tools.
+
+        Parameters
+        ----------
+        folder : Path | str, optional
+            path to save the 10x formatted files.
+        filename_prefix : str, optional
+            prefix for the 10x formatted files.
+        sequence_key : str, optional
+            column name in `.data` slot to retrieve and write out in fasta format.
+        clone_key : str, optional
+            column name in `.data` slot for clone id information.
+        """
+        folder = Path(folder) if isinstance(folder, str) else folder
+        folder.mkdir(parents=True, exist_ok=True)
+        out_fasta = folder / f"{filename_prefix}_contig.fasta"
+        out_anno_path = folder / f"{filename_prefix}_contig_annotations.csv"
+
+        seqs = self.data[sequence_key].to_dict()
+        write_fasta(seqs, out_fasta=out_fasta)
+
+        # also create the contig_annotations.csv
+        column_map = {
+            "barcode": "cell_id",
+            "is_cell": "is_cell_10x",
+            "contig_id": "sequence_id",
+            "high_confidence": "high_confidence_10x",
+            "length": "length",
+            "chain": "locus",
+            "v_gene": "v_call",
+            "d_gene": "d_call",
+            "j_gene": "j_call",
+            "c_gene": "c_call",
+            "full_length": "complete_vdj",
+            "productive": "productive",
+            "cdr3": "junction_aa",
+            "cdr3_nt": "junction",
+            "reads": "consensus_count",
+            "umis": "umi_count",
+            "raw_clonotype_id": clone_key,
+            "raw_consensus_id": clone_key,
+        }
+        if "is_cell_10x" not in self.data.columns:
+            column_map.pop("is_cell")
+        if "high_confidence_10x" not in self.data.columns:
+            column_map.pop("high_confidence")
+        anno = []
+        bool_map = {
+            "T": "True",
+            "F": "False",
+            "True": "True",
+            "False": "False",
+            "TRUE": "True",
+            "FALSE": "False",
+        }
+        for _, r in self.data.iterrows():
+            info = []
+            for v in column_map.values():
+                if v in r.index:
+                    info.append(r[v])
+                elif v in ["is_cell", "high_confidence"]:
+                    info.append("True")
+                elif v == "length":
+                    info.append(len(r[sequence_key]))
+            anno.append({k: r for k, r in zip(column_map.keys(), info)})
+        anno = pd.DataFrame(anno)
+        anno = anno.applymap(
+            lambda x: bool_map[x] if x in bool_map.keys() else x
+        )
+        anno.to_csv(out_anno_path, index=False)
 
 
 class Query:
@@ -1878,11 +1931,8 @@ def initialize_metadata(
             "productive",
         ]:
             meta_[k + "_split"] = querier.retrieve_celltype(**v)
-        if k in ["umi_count"]:
+        if k in ["umi_count", "mu_count", "mu_freq"]:
             v.update({"retrieve_mode": "split and sum"})
-            meta_[k] = querier.retrieve_celltype(**v)
-        if k in ["mu_count", "mu_freq"]:
-            v.update({"retrieve_mode": "split and average"})
             meta_[k] = querier.retrieve_celltype(**v)
 
     tmp_metadata = pd.concat(meta_.values(), axis=1, join="inner")

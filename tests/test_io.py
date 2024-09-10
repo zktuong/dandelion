@@ -384,6 +384,11 @@ def test_locus_productive(airr_generic):
     tmp = ddl.Dandelion(airr_generic, report_status_productive=False)
 
 
+def test_write_10x(airr_generic):
+    vdj = ddl.Dandelion(airr_generic)
+    vdj.write_10x(folder="test_10x")
+
+
 @pytest.mark.skipif("LOCAL_DDL" not in os.environ, reason="requires LOCAL_DDL")
 def test_legacy_write(create_testfolder):
     """check i can read and write in legacy mode."""
