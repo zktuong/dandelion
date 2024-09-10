@@ -105,6 +105,7 @@ Dandelion
    update_plus
    write
    write_h5ddl
+   write_h5ddl_legacy
    write_pkl
    write_airr
 

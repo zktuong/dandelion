@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import h5py
 import os
 import re
 import warnings
@@ -41,6 +42,15 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
+EMPTIES = [
+    None,
+    np.nan,
+    pd.NA,
+    "nan",
+    "NaN",
+    "",
+]
+
 
 # for compatibility with python>=3.10
 try:
@@ -362,6 +372,7 @@ def present(x):
         "NA",
         "na",
         "NaN",
+        "nan",
     ]
 
 
@@ -390,6 +401,121 @@ def return_mix_dtype(data):
     return check
 
 
+def get_numpy_dtype(series: pd.Series) -> str:
+    """
+    Map a Pandas dtype to an appropriate NumPy dtype.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The Pandas Series.
+
+    Returns
+    -------
+    str
+        A string representing the NumPy dtype corresponding to the Pandas dtype.
+
+    Raises
+    ------
+    TypeError
+        If the Pandas dtype is unsupported.
+    """
+    if pd.api.types.is_integer_dtype(series):
+        return "i4"  # 32-bit integer
+    elif pd.api.types.is_float_dtype(series):
+        return "f8"  # 64-bit float
+    elif pd.api.types.is_bool_dtype(series):
+        return "i1"  # 8-bit integer for booleans (True/False)
+    elif pd.api.types.is_string_dtype(series) or pd.api.types.is_object_dtype(
+        series
+    ):
+        # Handle object or string columns; dynamically calculate the max string length
+        max_length = series.astype(str).map(len).max()
+        return "S{}".format(max(1, max_length))  # String with max length
+    else:
+        raise TypeError(f"Unsupported data type: {series.name}")
+
+
+def sanitize_data_for_saving(
+    data: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, str]]:
+    """
+    Quick sanitize dtypes for saving.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        input dataframe.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, dict[str, str]]
+        dataframe and corresponding numpy structured dtype.
+    """
+    tmp = data.copy()
+    dtype_dict = {}
+    for col in tmp:
+        if col in RearrangementSchema.properties:
+            dtype = RearrangementSchema.properties[col]["type"]
+            tmp[col] = sanitize_column(tmp[col], dtype)
+        else:
+            tmp[col] = try_numeric_conversion(tmp[col])
+        dtype_dict[col] = get_numpy_dtype(tmp[col])
+    dtypes = [(key, record) for key, record in dtype_dict.items()]
+    return tmp, dtypes
+
+
+def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
+    """
+    Sanitize a column based on the specified dtype.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The column to be sanitized.
+    dtype : str
+        The expected data type of the column (`string`, `boolean`, `integer`, or `number`).
+
+    Returns
+    -------
+    pd.Series
+        The sanitized column with replaced values and appropriate data type.
+    """
+    if dtype in ["string", "boolean"]:
+        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
+        return series.astype(str)
+    elif dtype in ["integer", "number"]:
+        series = series.apply(lambda x: np.nan if pd.isna(x) else x)
+        return series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
+    return series
+
+
+def try_numeric_conversion(series: pd.Series) -> pd.Series:
+    """
+    Attempt to convert a column to numeric, or fallback to treating it as a string.
+
+    Parameters
+    ----------
+    series : pd.Series
+        The column to be converted.
+
+    Returns
+    -------
+    pd.Series
+        The column converted to numeric if possible, or sanitized as a string if not.
+    """
+    if series.dtype.name == "category":
+        series = sanitize_column(series, "string")
+
+    if series.apply(lambda x: isinstance(x, str) and "|" in x).any():
+        return sanitize_column(series, "string")
+    try:
+        return pd.to_numeric(series)
+    except:
+        return sanitize_column(series, "string")
+
+
 def sanitize_data(data, ignore="clone_id"):
     """Quick sanitize dtypes."""
     data = data.astype("object")
@@ -402,7 +528,7 @@ def sanitize_data(data, ignore="clone_id"):
                 "integer",
             ]:
                 data[d] = data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
+                    EMPTIES,
                     "",
                 )
                 if RearrangementSchema.properties[d]["type"] == "integer":
@@ -412,7 +538,7 @@ def sanitize_data(data, ignore="clone_id"):
                     ]
             else:
                 data[d] = data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
+                    EMPTIES,
                     np.nan,
                 )
         else:
@@ -421,7 +547,7 @@ def sanitize_data(data, ignore="clone_id"):
                     data[d] = pd.to_numeric(data[d])
                 except:
                     data[d] = data[d].replace(
-                        to_replace=[None, np.nan, pd.NA, "nan", ""],
+                        to_replace=EMPTIES,
                         value="",
                     )
         if re.search("mu_freq", d):
@@ -466,7 +592,7 @@ def sanitize_blastn(data):
                 "integer",
             ]:
                 data[d] = data[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
+                    EMPTIES,
                     "",
                 )
                 if RearrangementSchema.properties[d]["type"] == "integer":
@@ -476,7 +602,7 @@ def sanitize_blastn(data):
                     ]
             else:
                 data[d] = data[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
+                    EMPTIES,
                     np.nan,
                 )
         else:
@@ -484,42 +610,10 @@ def sanitize_blastn(data):
                 data[d] = pd.to_numeric(data[d])
             except:
                 data[d] = data[d].replace(
-                    to_replace=[None, np.nan, pd.NA, "nan", ""],
+                    to_replace=EMPTIES,
                     value="",
                 )
     return data
-
-
-def sanitize_data_for_saving(data):
-    """Quick sanitize dtypes for saving."""
-    tmp = data.copy()
-    for d in tmp:
-        if d in RearrangementSchema.properties:
-            if RearrangementSchema.properties[d]["type"] in [
-                "string",
-                "boolean",
-            ]:
-                tmp[d] = tmp[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
-                    "",
-                )
-            if RearrangementSchema.properties[d]["type"] in [
-                "integer",
-                "number",
-            ]:
-                tmp[d] = tmp[d].replace(
-                    [None, np.nan, pd.NA, "nan", ""],
-                    np.nan,
-                )
-        else:
-            try:
-                tmp[d] = pd.to_numeric(tmp[d])
-            except:
-                tmp[d] = tmp[d].replace(
-                    [None, pd.NA, np.nan, "nan", ""],
-                    "",
-                )
-    return tmp
 
 
 def validate_airr(data):
@@ -1027,7 +1121,7 @@ def set_germline_env(
         database to use. Defaults to imgt.
     Returns
     -------
-    Tuple[Dict, Path]
+    Tuple[Dict, Path, Path]
         environment dictionary and path to germline database.
 
     Raises
@@ -1148,3 +1242,41 @@ def sum_col(vals):
 def check_same_celltype(clone_def1, clone_def2):
     """Check if the first key is the same."""
     return clone_def1.split("_", 1)[0] == clone_def2.split("_", 1)[0]
+
+
+def clear_h5file(filename: Path | str):
+    """Little hack to overwrite an existing h5 file."""
+    with h5py.File(filename, "w") as hf:
+        for datasetname in hf.keys():
+            del hf[datasetname]
+
+
+def write_fasta(
+    fasta_dict: Dict[str, str], out_fasta: Union[str, Path], overwrite=True
+):
+    """
+    Generic fasta writer using fasta_iterator
+
+    Parameters
+    ----------
+    fasta_dict : Dict[str, str]
+        dictionary containing fasta headers and sequences as keys and records respectively.
+    out_fasta : str
+        path to write fasta file to.
+    overwrite : bool, optional
+        whether or not to overwrite the output file (out_fasta).
+    """
+    if overwrite:
+        fh = open(out_fasta, "w")
+        fh.close()
+    out = ""
+    for l in fasta_dict:
+        out = ">" + l + "\n" + fasta_dict[l] + "\n"
+        write_output(out, out_fasta)
+
+
+def write_output(out: str, file: Union[str, Path]):
+    """General line writer."""
+    fh = open(file, "a")
+    fh.write(out)
+    fh.close()

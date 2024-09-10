@@ -925,7 +925,7 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
-    db: Literal["imgt", "orgdb"] = "imgt",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
             "c57bl6",
@@ -1026,7 +1026,7 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
-    db : Literal["imgt", "orgdb"], optional
+    db : Literal["imgt", "ogrdb"], optional
         database to use for igblastn. Defaults to 'imgt'.
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
@@ -1263,7 +1263,7 @@ def reassign_alleles(
     v_germline: Optional[str] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
-    db: Literal["imgt", "orgdb"] = "imgt",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
             "c57bl6",
