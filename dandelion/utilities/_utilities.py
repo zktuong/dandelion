@@ -555,6 +555,9 @@ def try_numeric_conversion(series: pd.Series) -> pd.Series:
     pd.Series
         The column converted to numeric if possible, or sanitized as a string if not.
     """
+    if series.dtype.name == "category":
+        series = sanitize_column(series, "string")
+
     if series.apply(lambda x: isinstance(x, str) and "|" in x).any():
         return sanitize_column(series, "string")
     try:
