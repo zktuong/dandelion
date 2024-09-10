@@ -415,6 +415,7 @@ def concat(
 
     if check_unique:
         try:
+            arrays_ = [load_data(x) for x in arrays_]
             df = pd.concat(arrays_, verify_integrity=True)
         except:
             for i in range(0, len(arrays)):
