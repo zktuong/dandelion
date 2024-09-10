@@ -1081,7 +1081,7 @@ class Dandelion:
             save_args.pop("compression_opts", None)
         clear_h5file(filename)
         if version == 3:  # pragma: no cover
-            write_h5ddl_legacy(self, filename=filename, **kwargs) 
+            write_h5ddl_legacy(self, filename=filename, **kwargs)
         elif version == 4:
             # now to actually saving
             data = self.data.copy()
@@ -2502,7 +2502,7 @@ def write_h5ddl_legacy(
     self: Dandelion,
     filename: Path | str = "dandelion_data.h5ddl",
     **kwargs,
-): # pragma: no cover
+):  # pragma: no cover
     """
     Writes a `Dandelion` class to .h5ddl format for legacy support.
 
