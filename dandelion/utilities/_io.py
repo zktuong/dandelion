@@ -203,17 +203,17 @@ def read_h5ddl(
     AttributeError
         if `data` not found in `.h5ddl` file.
     """
-    data = load_data(_read_h5_group(filename, "data"))
-    metadata = _read_h5_group(filename, "metadata")
+    data = load_data(_read_h5_group(filename, group="data"))
+    metadata = _read_h5_group(filename, group="metadata")
     try:
-        metadata_names = _read_h5_group(filename, "metadata_names")
+        metadata_names = _read_h5_group(filename, group="metadata_names")
         metadata.index = metadata_names
     except KeyError:  # pragma: no cover
         pass
 
     try:
-        g_0 = _read_h5_csr_matrix(filename, "graph/graph_0")
-        g_1 = _read_h5_csr_matrix(filename, "graph/graph_1")
+        g_0 = _read_h5_csr_matrix(filename, group="graph/graph_0")
+        g_1 = _read_h5_csr_matrix(filename, group="graph/graph_1")
         graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
         graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
         graph = (graph0, graph1)
@@ -221,14 +221,16 @@ def read_h5ddl(
         pass
 
     try:
-        layout0 = _read_h5_dict(filename, "layout/layout_0")
-        layout1 = _read_h5_dict(filename, "layout/layout_1")
+        layout0 = _read_h5_dict(filename, group="layout/layout_0")
+        layout1 = _read_h5_dict(filename, group="layout/layout_1")
         layout = (layout0, layout1)
     except:
         pass
 
     try:
-        germline = _read_h5_zip(filename, "germline/keys", "germline/values")
+        germline = _read_h5_zip(
+            filename, group="germline", key_group="keys", value_group="values"
+        )
     except:
 
         pass
