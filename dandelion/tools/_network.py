@@ -144,9 +144,7 @@ def generate_network(
                 dat_ = sanitize_data(dat, ignore=clonekey)
             else:
                 logg.info("Downsampling to {} cells.".format(str(downsample)))
-                keep_cells = vdj_data.metadata.sample(
-                    downsample
-                )
+                keep_cells = vdj_data.metadata.sample(downsample)
                 keep_cells = list(keep_cells.index)
                 dat = load_data(
                     dat.set_index("cell_id").loc[keep_cells].reset_index()
