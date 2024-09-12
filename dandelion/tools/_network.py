@@ -146,9 +146,10 @@ def generate_network(
                 logg.info("Downsampling to {} cells.".format(str(downsample)))
                 keep_cells = vdj_data.metadata.sample(downsample)
                 keep_cells = list(keep_cells.index)
-                dat = load_data(
-                    dat.set_index("cell_id").loc[keep_cells].reset_index()
-                )
+                # dat = load_data(
+                #     dat.set_index("cell_id").loc[keep_cells].reset_index()
+                # )
+                dat = dat[dat["cell_id"].isin(keep_cells)]
                 dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
                 dat_l = dat[
                     dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])
