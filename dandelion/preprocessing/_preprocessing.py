@@ -925,7 +925,7 @@ def reannotate_genes(
     reassign_dj: bool = True,
     overwrite: bool = True,
     dust: Optional[Union[Literal["yes", "no"], str]] = "no",
-    db: Literal["imgt", "orgdb"] = "imgt",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
             "c57bl6",
@@ -1026,7 +1026,7 @@ def reannotate_genes(
         dustmasker options. Filter query sequence with DUST
         Format: 'yes', or 'no' to disable. Accepts str.
         If None, defaults to `20 64 1`.
-    db : Literal["imgt", "orgdb"], optional
+    db : Literal["imgt", "ogrdb"], optional
         database to use for igblastn. Defaults to 'imgt'.
     strain : Optional[Literal["c57bl6", "balbc", "129S1_SvImJ", "AKR_J", "A_J", "BALB_c_ByJ", "BALB_c", "C3H_HeJ", "C57BL_6J", "C57BL_6", "CAST_EiJ", "CBA_J", "DBA_1J", "DBA_2J", "LEWES_EiJ", "MRL_MpJ", "MSM_MsJ", "NOD_ShiLtJ", "NOR_LtJ", "NZB_BlNJ", "PWD_PhJ", "SJL_J"]], optional
         strain of mouse to use for germline sequences. Only for `db="ogrdb"`. Note that only "c57bl6", "balbc", "CAST_EiJ", "LEWES_EiJ", "MSM_MsJ", "NOD_ShiLt_J" and "PWD_PhJ" contains both heavy chain and light chain germline sequences as a set.
@@ -1263,7 +1263,7 @@ def reassign_alleles(
     v_germline: Optional[str] = None,
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
-    db: Literal["imgt", "orgdb"] = "imgt",
+    db: Literal["imgt", "ogrdb"] = "imgt",
     strain: Optional[
         Literal[
             "c57bl6",
@@ -5423,9 +5423,19 @@ class MarkAmbiguousContigs:
                                             "consensus_count"
                                         ]
                                     )
+                                    vdj_ccall_c_igm_count = dict(
+                                        data1[data1["c_call"] == "IGHM"][
+                                            "consensus_count"
+                                        ]
+                                    )
                                     vdj_ccall_p_igd_count = dict(
                                         data1[data1["c_call"] == "IGHD"][
                                             "umi_count"
+                                        ]
+                                    )
+                                    vdj_ccall_c_igd_count = dict(
+                                        data1[data1["c_call"] == "IGHD"][
+                                            "consensus_count"
                                         ]
                                     )
                                     vdj_ccall_c_igd_count = dict(
@@ -5449,6 +5459,7 @@ class MarkAmbiguousContigs:
                                         vdj_ccall_c_igm_count,
                                         umi_foldchange_cutoff,
                                         con_foldchange_cutoff,
+                                        con_foldchange_cutoff,
                                     )
                                 else:
                                     keep_igm, extra_igm, ambiguous_igm = (
@@ -5466,6 +5477,7 @@ class MarkAmbiguousContigs:
                                         vdj_ccall_p_igd_count,
                                         vdj_ccall_c_igd_count,
                                         umi_foldchange_cutoff,
+                                        con_foldchange_cutoff,
                                         con_foldchange_cutoff,
                                     )
                                 else:
@@ -5513,7 +5525,9 @@ class MarkAmbiguousContigs:
                                     ) = check_productive_vdj(
                                         vdj_locus_p_trb_count,
                                         vdj_locus_c_trb_count,
+                                        vdj_locus_c_trb_count,
                                         umi_foldchange_cutoff,
+                                        con_foldchange_cutoff,
                                         con_foldchange_cutoff,
                                     )
                                 else:
@@ -5638,6 +5652,7 @@ class MarkAmbiguousContigs:
                                 self.ambiguous_contigs.append(avj)
                     if len(vj_p) > 1:
                         vj_ccall_p_count = dict(data3["umi_count"])
+                        vj_ccall_c_count = dict(data3["consensus_count"])
                         vj_ccall_c_count = dict(data3["consensus_count"])
                         # maximum keep 2?
                         vj_p, extra_vj, ambiguous_vj = check_productive_vj(
@@ -5901,6 +5916,7 @@ def check_productive_vdj(
     vdj_contigs: Dict[str, int],vdj_contigs2: Dict[str, int], umi_foldchange_cutoff: Union[int, float],con_foldchange_cutoff: Union[int, float] #add con_foldchange_cutoff--Sun 240906
 ) -> Tuple[List[str], List[str], List[str]]:
     """Keep top productive because of allelic exclusion."""
+    """add consensus_count(vdj_contigs2) and its logfoldchange--240906Sun"""
     """add consensus_count(vdj_contigs2) and its logfoldchange--240906Sun"""
     keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
     counts = vdj_contigs.values()
