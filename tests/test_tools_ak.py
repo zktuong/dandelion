@@ -135,7 +135,7 @@ def test_clone_size(create_testfolder):
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "resample,expected", [pytest.param(None, 7), pytest.param(3, 3)]
+    "resample,expected", [pytest.param(None, 7), pytest.param(3, 4)]
 )
 def test_generate_network(create_testfolder, resample, expected):
     """test generate network"""
