@@ -135,22 +135,24 @@ def generate_network(
 
         # calculate distance
         if downsample is not None:
-            # if downsample >= dat_h.shape[0]:
             if downsample >= vdj_data.metadata.shape[0]:
                 logg.info(
                     "Cannot downsample to {} cells. Using all {} cells.".format(
                         str(downsample), vdj_data.metadata.shape[0]
                     )
                 )
+                dat_ = sanitize_data(dat, ignore=clonekey)
             else:
                 logg.info("Downsampling to {} cells.".format(str(downsample)))
+                keep_cells = vdj_data.metadata.sample(downsample)
+                keep_cells = list(keep_cells.index)
+                # dat = load_data(
+                #     dat.set_index("cell_id").loc[keep_cells].reset_index()
+                # )
+                dat = dat[dat["cell_id"].isin(keep_cells)]
                 dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
                 dat_l = dat[
                     dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])
-                ].copy()
-                dat_h = dat_h.sample(downsample)
-                dat_l = dat_l[
-                    dat_l["cell_id"].isin(list(dat_h["cell_id"]))
                 ].copy()
                 dat_ = pd.concat([dat_h, dat_l], ignore_index=True)
                 dat_ = sanitize_data(dat_, ignore=clonekey)
@@ -249,9 +251,10 @@ def generate_network(
 
             # generate edge list
             if isinstance(vdj_data, Dandelion):
-                out = vdj_data.copy()
                 if downsample is not None:
-                    out = Dandelion(dat_)
+                    vdj_data = vdj_data[vdj_data.data.cell_id.isin(keep_cells)]
+                out = vdj_data.copy()
+
             else:  # re-initiate a Dandelion class object
                 out = Dandelion(dat_)
 
@@ -508,6 +511,7 @@ def generate_network(
             if (lyt and lyt_) is not None:
                 out = Dandelion(
                     data=dat_,
+                    metadata=vdj_data.metadata,
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
@@ -515,6 +519,7 @@ def generate_network(
             else:
                 out = Dandelion(
                     data=dat_,
+                    metadata=vdj_data.metadata,
                     graph=(g, g_),
                     germline=germline_,
                 )

@@ -55,18 +55,18 @@ def test_readwrite_h5ddl(create_testfolder):
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
-    vdj.write_h5ddl(out_file2, complib="blosc:lz4")
+    vdj.write_h5ddl(out_file2)
     vdj2 = ddl.read_h5ddl(out_file2)
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
-    vdj.write_h5ddl(out_file2, compression="blosc:lz4")
+    vdj.write_h5ddl(out_file2)
     vdj2 = ddl.read_h5ddl(out_file2)
     assert not vdj2.data.np1_length.empty
     assert not vdj2.data.np2_length.empty
     assert not vdj2.data.junction_length.empty
     with pytest.raises(ValueError):
-        vdj.write_h5ddl(out_file2, complib="blosc:lz4", compression="blosc:lz4")
+        vdj.write_h5ddl(out_file2, compression="blosc")
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -382,3 +382,18 @@ def test_locus_productive(airr_generic):
     """Just test if this works. don't care about the output."""
     tmp = ddl.Dandelion(airr_generic, report_status_productive=True)
     tmp = ddl.Dandelion(airr_generic, report_status_productive=False)
+
+
+def test_write_10x(airr_generic):
+    vdj = ddl.Dandelion(airr_generic)
+    vdj.write_10x(folder="test_10x")
+
+
+@pytest.mark.skip(reason="can't install dependencies on github actions.")
+def test_legacy_write(create_testfolder):
+    """check i can read and write in legacy mode."""
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
+    ddl.tl.find_clones(vdj)
+    ddl.tl.generate_network(vdj, key="junction")
+    vdj.write_h5ddl(create_testfolder / "legacy.h5ddl", version=3)
+    leg = ddl.read_h5ddl(create_testfolder / "legacy.h5ddl")
