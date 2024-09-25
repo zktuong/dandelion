@@ -251,9 +251,10 @@ def generate_network(
 
             # generate edge list
             if isinstance(vdj_data, Dandelion):
-                out = vdj_data.copy()
                 if downsample is not None:
-                    out = Dandelion(dat_)
+                    vdj_data = vdj_data[vdj_data.data.cell_id.isin(keep_cells)]
+                out = vdj_data.copy()
+
             else:  # re-initiate a Dandelion class object
                 out = Dandelion(dat_)
 
@@ -510,6 +511,7 @@ def generate_network(
             if (lyt and lyt_) is not None:
                 out = Dandelion(
                     data=dat_,
+                    metadata=vdj_data.metadata,
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
@@ -517,6 +519,7 @@ def generate_network(
             else:
                 out = Dandelion(
                     data=dat_,
+                    metadata=vdj_data.metadata,
                     graph=(g, g_),
                     germline=germline_,
                 )
