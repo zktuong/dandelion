@@ -89,14 +89,12 @@ jobs:
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          auto-activate-base: true
-          activate-environment: dandelion
-          channels: conda-forge, bioconda, anaconda, defaults
-          channel-priority: true
-          python-version: ${{ matrix.config.python-version }}
+          environment-name: dandelion
           environment-file: environment.yml
           cache-environment: true
           post-cleanup: "all"
+          create-args: >-
+            ${{ matrix.config.python-version }}
 
       - name: Display Python version
         run: |
