@@ -94,7 +94,7 @@ jobs:
           cache-environment: true
           post-cleanup: "all"
           create-args: >-
-            ${{ matrix.config.python-version }}
+            python=${{ matrix.config.python-version }}
             igblast>=1.17.0
             blast
 
