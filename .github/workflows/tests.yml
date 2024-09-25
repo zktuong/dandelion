@@ -95,7 +95,7 @@ jobs:
           post-cleanup: "all"
           create-args: >-
             ${{ matrix.config.python-version }}
-            "igblast>=1.17.0"
+            igblast>=1.17.0
             blast
 
       - name: Display Python version
