@@ -47,6 +47,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
     zip_safe=False,

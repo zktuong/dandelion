@@ -66,6 +66,64 @@ pip install sc-dandelion
 
 Between this and the pipelines within the singularity container, you should be covered for most of your needs.
 
+
+### Manual Full Installation
+
+I understand that the singularity container may not be for everyone, so here is a more detailed installation guide for those who want to install the package manually. The instructions may vary depending on your system, so please adjust accordingly. The easiest way is to still to just use the singularity container for the preprocessing steps.
+
+```bash
+# install igblast and blast
+conda install -c bioconda igblast blast # if this doesn't work, download them manually
+# https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/
+# https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+# Set the paths to them appropriately
+echo 'export PATH=path/to/igblast/bin:$PATH' >> ~/.bash_profile
+echo 'export PATH=path/to/blast+/bin:$PATH' >> ~/.bash_profile
+```
+
+You will need to download the database folder in this repository and place them somewhere accessible. There are [scripts](https://github.com/zktuong/dandelion/tree/master/container/scripts) in the `container` folder that will help you download the imgt/ogrdb databases and you can use them like this:
+
+```bash
+python prepare_imgt_database.py
+python prepare_ogrdb_database.py
+```
+
+Also set the paths to the germline and igblast databases
+```bash
+echo 'export GERMLINE=path/to/database/germlines/' >> ~/.bash_profile
+echo 'export IGDATA=path/to/database/igblast/' >> ~/.bash_profile
+echo 'export BLASTDB=path/to/database/blast/' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+For some of the pre-processing steps, you will need to install `rpy2` and some R packages. The easiest way to do this is to install them all via conda:
+
+```bash
+# in bash/zsh terminal
+conda install -c conda-forge rpy2 r-optparse r-alakazam r-tigger r-airr r-shazam
+```
+
+Otherwise, you can also use `pip` to install `rpy2` and then install the R packages manually:
+```bash
+pip install rpy2
+# If it fails because it's compiling using clang, first, work out where the path is to your gcc compiler (use brew to install gcc if needed):
+# then run
+# env CC=/path/to/location/of/bin/gcc-9 pip install rpy2
+# Use pip to install the following with --no-cache-dir --upgrade if necessary
+```
+```R
+# in R
+install.packages(c("optparse", "alakazam", "tigger", "airr", "shazam"))
+```
+and then lastly install dandelion:
+```bash
+pip install sc-dandelion
+# or
+pip install git+https://github.com/zktuong/dandelion.git
+# or  installing from a specific branch
+pip install git+https://github.com/zktuong/dandelion@branch_name
+```
+
 ## Basic requirements
 Python packages
 ```python
