@@ -9,7 +9,6 @@ dependencies:
   - pandas
   - pandoc
   - pyyaml
-  - changeo
   - seaborn
   - statsmodels
   - pytables>=3.8.0
@@ -19,6 +18,7 @@ dependencies:
   - tbb
   - pip:
       - numba
+      - changeo
       - matplotlib
       - nbsphinx
       - sphinx-autodoc-typehints
