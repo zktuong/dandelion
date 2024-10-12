@@ -197,13 +197,14 @@ def main():
         samples = [str(s) for s in meta.index]
         if "individual" in meta.columns:
             individuals = list(meta["individual"])
-            if any(ind in samples for ind in individuals):
-                if args.clean_output:
-                    raise ValueError(
-                        "Individuals in metadata file must not be the same as sample names when `--clean_output` flag is used."
-                        "Otherwise, your sample folders will be deleted. "
-                        "Please rename the individual or sample folders, or run without `--clean_output`."
-                    )
+            if not args.skip_tigger:
+                if any(ind in samples for ind in individuals):
+                    if args.clean_output:
+                        raise ValueError(
+                            "Individuals in metadata file must not be the same as sample names when `--clean_output` flag is used."
+                            "Otherwise, your sample folders will be deleted. "
+                            "Please rename the individual or sample folders, or run without `--clean_output`."
+                        )
     else:
         # no metadata file. create empty data frame so we can easily check for
         # column presence
