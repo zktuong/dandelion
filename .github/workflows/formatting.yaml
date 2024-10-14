@@ -17,9 +17,9 @@ jobs:
       - name: Black
         uses: psf/black@stable
         with:
-          options: "--check"
+          options: "--config pyproject.toml --check"
           src: "."
-          use_pyproject: true
+          # use_pyproject: true
 
   docstring:
     name: Check docstring compliance.
