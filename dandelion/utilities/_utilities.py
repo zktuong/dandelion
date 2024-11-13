@@ -1071,35 +1071,6 @@ def format_chain_status(locus_status):
     return chain_status
 
 
-def update_rearrangement_status(self):
-    """Check rearrangement status."""
-    if "v_call_genotyped" in self.data:
-        vcall = "v_call_genotyped"
-    else:
-        vcall = "v_call"
-    contig_status = []
-    for v, j, c in zip(
-        self.data[vcall], self.data["j_call"], self.data["c_call"]
-    ):
-        if present(v):
-            if present(j):
-                if present(c):
-                    if len(list(set([v[:3], j[:3], c[:3]]))) > 1:
-                        contig_status.append("chimeric")
-                    else:
-                        contig_status.append("standard")
-                else:
-                    if len(list(set([v[:3], j[:3]]))) > 1:
-                        contig_status.append("chimeric")
-                    else:
-                        contig_status.append("standard")
-            else:
-                contig_status.append("unknown")
-        else:
-            contig_status.append("unknown")
-    self.data["rearrangement_status"] = contig_status
-
-
 def set_germline_env(
     germline: Optional[str] = None,
     org: Literal["human", "mouse"] = "human",
