@@ -20,7 +20,7 @@ from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from textwrap import dedent
 from tqdm import tqdm
-from typing import Union, List, Dict, Optional, Tuple
+from typing import Literal
 
 from dandelion.utilities._utilities import *
 from dandelion.external.anndata._compat import (
@@ -35,35 +35,33 @@ class Dandelion:
 
     def __init__(
         self,
-        data: Optional[Union[pd.DataFrame, str, Path]] = None,
-        metadata: Optional[pd.DataFrame] = None,
-        germline: Optional[Dict[str, str]] = None,
-        layout: Optional[
-            Tuple[Dict[str, np.array], Dict[str, np.array]]
-        ] = None,
-        graph: Optional[Tuple[NetworkxGraph, NetworkxGraph]] = None,
+        data: pd.DataFrame | Path | str | None = None,
+        metadata: pd.DataFrame | None = None,
+        germline: dict[str, str] | None = None,
+        layout: tuple[dict[str, np.array], dict[str, np.array]] | None = None,
+        graph: tuple[nx.Graph, nx.Graph] | None = None,
         initialize: bool = True,
-        library_type: Optional[Literal["tr-ab", "tr-gd", "ig"]] = None,
+        library_type: Literal["tr-ab", "tr-gd", "ig"] | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Init method for Dandelion.
 
         Parameters
         ----------
-        data : Optional[Union[pd.DataFrame, str, Path]], optional
+        data : pd.DataFrame | Path | str | None, optional
             AIRR formatted data.
-        metadata : Optional[pd.DataFrame], optional
+        metadata : pd.DataFrame | None, optional
             AIRR data collapsed per cell.
-        germline : Optional[Dict[str, str]], optional
+        germline : dict[str, str] | None, optional
             dictionary of germline gene:sequence records.
-        layout : Optional[Tuple[Dict[str, np.array], Dict[str, np.array]]], optional
+        layout : tuple[dict[str, np.array], dict[str, np.array]] | None, optional
             node positions for computed graph.
-        graph : Optional[Tuple[NetworkxGraph, NetworkxGraph]], optional
+        graph : tuple[nx.Graph, nx.Graph] | None, optional
             networkx graphs for clonotype networks.
         initialize : bool, optional
             whether or not to initialize `.metadata` slot.
-        library_type : Optional[Literal["tr-ab", "tr-gd", "ig"]], optional
+        library_type : Literal["tr-ab", "tr-gd", "ig"] | None, optional
             One of "tr-ab", "tr-gd", "ig".
         **kwargs
             passed to `Dandelion.update_metadata`.
@@ -212,7 +210,7 @@ class Dandelion:
         return self.data.index
 
     @data_names.setter
-    def data_names(self, names: List[str]):
+    def data_names(self, names: list[str]):
         """data names setter"""
         names = self._prep_dim_index(names, "data")
         self._set_dim_index(names, "data")
@@ -233,12 +231,12 @@ class Dandelion:
         return self.metadata.index
 
     @metadata_names.setter
-    def metadata_names(self, names: List[str]):
+    def metadata_names(self, names: list[str]):
         """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
 
-    def _normalize_indices(self, index: Index) -> Tuple[slice, str]:
+    def _normalize_indices(self, index: Index) -> tuple[slice, str]:
         """retrieve indices"""
         return _normalize_indices(index, self.metadata_names, self.data_names)
 
@@ -283,7 +281,7 @@ class Dandelion:
         # fmt: on
         return value
 
-    def _set_dim_index(self, value: pd.Index, attr: str):
+    def _set_dim_index(self, value: pd.Index, attr: str) -> None:
         """set dim index"""
         # Assumes _prep_dim_index has been run
         getattr(self, attr).index = value
@@ -373,7 +371,7 @@ class Dandelion:
 
     def _clean_sequence_id(
         self, value: str, remove_trailing_hyphen_number: bool = False
-    ):
+    ) -> str:
         """
         Clean sequence_id based on specified rules.
 
@@ -400,7 +398,7 @@ class Dandelion:
 
     def _clean_cell_id(
         self, value: str, remove_trailing_hyphen_number: bool = False
-    ):
+    ) -> str:
         """
         Clean cell_id based on specified rules.
 
@@ -554,13 +552,13 @@ class Dandelion:
 
     def _initialize_metadata(
         self,
-        cols: List[str],
+        cols: list[str],
         clonekey: str,
         collapse_alleles: bool,
         report_productive_only: bool,
         reinitialize: bool,
-        custom_isotype_dict: Optional[Dict[str, str]] = None,
-    ):
+        custom_isotype_dict: dict[str, str] | None = None,
+    ) -> None:
         """Initialize Dandelion metadata."""
         init_dict = {}
         for col in cols:
@@ -961,7 +959,7 @@ class Dandelion:
         else:
             self.metadata = tmp_metadata.copy()
 
-    def _update_rearrangement_status(self):
+    def _update_rearrangement_status(self) -> None:
         """Check rearrangement status."""
         if "v_call_genotyped" in self.data:
             vcall = "v_call_genotyped"
@@ -1010,7 +1008,7 @@ class Dandelion:
             "mutations and cdr3 lengths",
         ] = "mutations and cdr3 lengths",
         **kwargs,
-    ):
+    ) -> None:
         """
         Retrieve additional data columns that are useful.
 
@@ -1350,19 +1348,19 @@ class Dandelion:
 
     def store_germline_reference(
         self,
-        corrected: Optional[Union[Dict[str, str], str]] = None,
-        germline: Optional[str] = None,
+        corrected: dict[str, str] | str | None = None,
+        germline: str | None = None,
         org: Literal["human", "mouse"] = "human",
         db: Literal["imgt", "ogrdb"] = "imgt",
-    ):
+    ) -> None:
         """
         Update germline reference with corrected sequences and store in `Dandelion` object.
 
         Parameters
         ----------
-        corrected : Optional[Union[Dict[str, str], str]], optional
+        corrected : dict[str, str] | str | None, optional
             dictionary of corrected germline sequences or file path to corrected germline sequences fasta file.
-        germline : Optional[str], optional
+        germline : str | None, optional
             path to germline database folder. Defaults to `` environmental variable.
         org : Literal["human", "mouse"], optional
             organism of reference folder. Default is 'human'.
@@ -1480,8 +1478,8 @@ class Dandelion:
 
     def update_metadata(
         self,
-        retrieve: Optional[Union[List[str], str]] = None,
-        clone_key: Optional[str] = None,
+        retrieve: list[str] | str | None = None,
+        clone_key: str | None = None,
         retrieve_mode: Literal[
             "split and unique only",
             "merge and unique only",
@@ -1497,16 +1495,16 @@ class Dandelion:
         reinitialize: bool = True,
         by_celltype: bool = False,
         report_status_productive: bool = True,
-        custom_isotype_dict: Optional[Dict[str, str]] = None,
-    ):
+        custom_isotype_dict: dict[str, str] | None = None,
+    ) -> None:
         """
         A `Dandelion` initialisation function to update and populate the `.metadata` slot.
 
         Parameters
         ----------
-        retrieve : Optional[Union[List[str], str]], optional
+        retrieve : list[str] | str | None, optional
             column name in `.data` slot to retrieve and update the metadata.
-        clone_key : Optional[str], optional
+        clone_key : str | None, optional
             column name of clone id. None defaults to 'clone_id'.
         retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ], optional
             one of:
@@ -1541,7 +1539,7 @@ class Dandelion:
             whether to return the query/update by celltype.
         report_status_productive : bool, optional
             whether to report the locus and chain status for only productive contigs.
-        custom_isotype_dict : Optional[Dict[str, str]], optional
+        custom_isotype_dict : dict[str, str] | None, optional
             custom isotype dictionary to update the default isotype dictionary.
 
         Raises
@@ -1552,11 +1550,7 @@ class Dandelion:
             if missing columns in Dandelion.data.
         """
 
-        if clone_key is None:
-            clonekey = "clone_id"
-        else:
-            clonekey = clone_key
-
+        clonekey = clone_key if clone_key is not None else "clone_id"
         cols = [
             "sequence_id",
             "cell_id",
@@ -1697,7 +1691,9 @@ class Dandelion:
                     tmp_metadata.drop(dcol, axis=1, inplace=True)
             self.metadata = tmp_metadata.copy()
 
-    def write_pkl(self, filename: str = "dandelion_data.pkl.pbz2", **kwargs):
+    def write_pkl(
+        self, filename: str = "dandelion_data.pkl.pbz2", **kwargs
+    ) -> None:
         """
         Writes a `Dandelion` class to .pkl format.
 
@@ -1727,7 +1723,9 @@ class Dandelion:
             cPickle.dump(self, f, **kwargs)
             f.close()
 
-    def write_airr(self, filename: str = "dandelion_airr.tsv", **kwargs):
+    def write_airr(
+        self, filename: str = "dandelion_airr.tsv", **kwargs
+    ) -> None:
         """
         Writes a `Dandelion` class to AIRR formatted .tsv format.
 
@@ -1752,7 +1750,7 @@ class Dandelion:
             ]
             | None
         ) = None,
-        compression_level: Optional[int] = None,
+        compression_level: int | None = None,
         version: Literal[3, 4] = 4,
         **kwargs,
     ):
@@ -1765,7 +1763,7 @@ class Dandelion:
             path to `.h5ddl` file.
         compression : Literal["gzip", "lzf", "szip"], optional
             Specifies the compression algorithm to use.
-        compression_level : Optional[int], optional
+        compression_level : int | None, optional
             Specifies a compression level for data. A value of 0 disables compression.
         version : Literal[3, 4], optional
             Specifies the version of the h5ddl format to use.
@@ -1908,7 +1906,7 @@ class Dandelion:
         filename_prefix: str = "all",
         sequence_key: str = "sequence",
         clone_key: str = "clone_id",
-    ):
+    ) -> None:
         """
         Writes a `Dandelion` class to 10x formatted files so that it can be ingested for other tools.
 
@@ -1985,7 +1983,17 @@ class Dandelion:
 class Query:
     """Query class"""
 
-    def __init__(self, data, verbose=False):
+    def __init__(self, data: pd.DataFrame, verbose=False) -> None:
+        """
+        Query class to retrieve data from the Dandelion object.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Dataframe to query.
+        verbose : bool, optional
+            Whether to print the process, by default False.
+        """
         self.data = data.copy()
         self.Cell = Tree()
         for contig, row in tqdm(
@@ -2000,8 +2008,57 @@ class Query:
         """Check dtype."""
         return str(self.data[self.query].dtype)
 
-    def retrieve(self, query, retrieve_mode):
-        """Retrieve query."""
+    def retrieve(
+        self,
+        query: str,
+        retrieve_mode: Literal[
+            "split and unique only",
+            "merge and unique only",
+            "split and merge",
+            "split and sum",
+            "split and average",
+            "split",
+            "merge",
+            "sum",
+            "average",
+        ],
+    ) -> pd.DataFrame:
+        """
+        Retrieve query.
+
+        Parameters
+        ----------
+        query : str
+            column name in `.data` slot to retrieve and update the metadata.
+        retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ]
+            one of:
+                `split and unique only`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for unique elements.
+                `merge and unique only`
+                    returns the retrieval merged into one column,
+                    separated by `|` for unique elements.
+                `split and merge`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for every elements.
+                `split`
+                    returns the retrieval splitted into separate columns for each contig.
+                `merge`
+                    returns the retrieval merged into one columns for each contig,
+                    separated by `|` for unique elements.
+                `split and sum`
+                    returns the retrieval sum in the VDJ and VJ columns (separately).
+                `split and average`
+                    returns the retrieval averaged in the VDJ and VJ columns (separately).
+                `sum`
+                    returns the retrieval sum into one column for all contigs.
+                `average`
+                    returns the retrieval averaged into one column for all contigs.
+        Returns
+        -------
+        pd.DataFrame
+            Retrieved data.
+        """
         self.query = query
         ret = {}
         for cell in self.Cell:
@@ -2147,8 +2204,58 @@ class Query:
                 out.fillna("None", inplace=True)
         return out
 
-    def retrieve_celltype(self, query, retrieve_mode):
-        """Retrieve query."""
+    def retrieve_celltype(
+        self,
+        query: str,
+        retrieve_mode: Literal[
+            "split and unique only",
+            "merge and unique only",
+            "split and merge",
+            "split and sum",
+            "split and average",
+            "split",
+            "merge",
+            "sum",
+            "average",
+        ],
+    ) -> pd.DataFrame:
+        """
+        Retrieve query split by celltype.
+
+        Parameters
+        ----------
+        query : str
+            column name in `.data` slot to retrieve and update the metadata.
+        retrieve_mode : Literal["split and unique only", "merge and unique only", "split and merge", "split and sum", "split and average", "split", "merge", "sum", "average", ]
+            one of:
+                `split and unique only`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for unique elements.
+                `merge and unique only`
+                    returns the retrieval merged into one column,
+                    separated by `|` for unique elements.
+                `split and merge`
+                    returns the retrieval splitted into two columns,
+                    i.e. one for VDJ and one for VJ chains, separated by `|` for every elements.
+                `split`
+                    returns the retrieval splitted into separate columns for each contig.
+                `merge`
+                    returns the retrieval merged into one columns for each contig,
+                    separated by `|` for unique elements.
+                `split and sum`
+                    returns the retrieval sum in the VDJ and VJ columns (separately).
+                `split and average`
+                    returns the retrieval averaged in the VDJ and VJ columns (separately).
+                `sum`
+                    returns the retrieval sum into one column for all contigs.
+                `average`
+                    returns the retrieval averaged into one column for all contigs.
+
+        Returns
+        -------
+        pd.DataFrame
+            Retrieved data.
+        """
         self.query = query
         ret = {}
         for cell in self.Cell:
@@ -2559,9 +2666,9 @@ class Query:
 
 
 def _normalize_indices(
-    index: Optional[Index], names0: pd.Index, names1: pd.Index
-) -> Tuple[slice, str]:
-    """return indices"""
+    index: Index | None, names0: pd.Index, names1: pd.Index
+) -> tuple[slice, str]:
+    """Return indices"""
     # deal with tuples of length 1
     if isinstance(index, tuple) and len(index) == 1:
         index = index[0]
@@ -2598,7 +2705,7 @@ def write_h5ddl_legacy(
     self: Dandelion,
     filename: Path | str = "dandelion_data.h5ddl",
     **kwargs,
-):  # pragma: no cover
+) -> None:  # pragma: no cover
     """
     Writes a `Dandelion` class to .h5ddl format for legacy support.
 
@@ -2683,11 +2790,11 @@ def write_h5ddl_legacy(
 
 
 def concat(
-    arrays: List[Union[pd.DataFrame, Dandelion]],
+    arrays: list[pd.DataFrame | Dandelion],
     check_unique: bool = True,
     sep: str = "_",
-    suffixes: Optional[List[str]] = None,
-    prefixes: Optional[List[str]] = None,
+    suffixes: list[str] | None = None,
+    prefixes: list[str] | None = None,
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
     """
@@ -2697,16 +2804,16 @@ def concat(
 
     Parameters
     ----------
-    arrays : List[Union[pd.DataFrame, Dandelion]]
+    arrays : list[pd.DataFrame | Dandelion]
         List of `Dandelion` class objects or pandas data frames
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
     sep : str, optional
         the separator to append suffix/prefix.
-    suffixes : Optional[List[str]], optional
+    suffixes : list[str] | None, optional
         List of suffixes to append to sequence_id and cell_id.
-    prefixes : Optional[List[str]], optional
+    prefixes : list[str] | None, optional
         List of prefixes to append to sequence_id and cell_id.
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the

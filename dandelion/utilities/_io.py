@@ -17,7 +17,7 @@ from anndata import AnnData
 from collections import defaultdict, OrderedDict
 from pathlib import Path
 from scanpy import logging as logg
-from typing import Any, Collection, Union, Optional, List
+from typing import Literal
 
 from dandelion.tools._tools import transfer as tf
 from dandelion.utilities._core import *
@@ -104,7 +104,7 @@ CELLRANGER = [
 ]
 
 
-def fasta_iterator(fh: str):
+def fasta_iterator(fh: str) -> tuple[str, str]:
     """Read in a fasta file as an iterator."""
     while True:
         line = fh.readline()
@@ -151,15 +151,13 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     return data
 
 
-def read_h5ddl(
-    filename: Union[Path, str] = "dandelion_data.h5ddl"
-) -> Dandelion:
+def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     """
     Read in and returns a `Dandelion` class from .h5ddl format.
 
     Parameters
     ----------
-    filename : Union[Path, str], optional
+    filename : Path | str, optional
         path to `.h5ddl` file
 
     Returns
@@ -234,8 +232,8 @@ def read_h5ddl(
 
 def read_10x_airr(
     file: str,
-    prefix: Optional[str] = None,
-    suffix: Optional[str] = None,
+    prefix: str | None = None,
+    suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
@@ -246,9 +244,9 @@ def read_10x_airr(
     ----------
     file : str
         path to `airr_rearrangement.tsv`
-    prefix : Optional[str], optional
+    prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
-    suffix : Optional[str], optional
+    suffix : str | None, optional
         Suffix to append to sequence_id and cell_id.
     sep : str, optional
         the separator to append suffix/prefix.
@@ -295,20 +293,24 @@ def read_10x_airr(
     vdj = Dandelion(dat)
     if suffix is not None:
         vdj.add_sequence_suffix(
-            suffix, remove_trailing_hyphen_number=remove_trailing_hyphen_number
+            suffix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
         )
     elif prefix is not None:
         vdj.add_sequence_prefix(
-            prefix, remove_trailing_hyphen_number=remove_trailing_hyphen_number
+            prefix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
         )
     return vdj
 
 
 def read_10x_vdj(
     path: str,
-    filename_prefix: Optional[str] = None,
-    prefix: Optional[str] = None,
-    suffix: Optional[str] = None,
+    filename_prefix: str | None = None,
+    prefix: str | None = None,
+    suffix: str | None = None,
     sep: str = "_",
     remove_malformed: bool = True,
     remove_trailing_hyphen_number: bool = False,
@@ -326,11 +328,11 @@ def read_10x_vdj(
     ----------
     path : str
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
-    filename_prefix : Optional[str], optional
+    filename_prefix : str | None, optional
         prefix of file name preceding '_contig'. None defaults to 'filtered'.
-    prefix : Optional[str], optional
+    prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
-    suffix : Optional[str], optional
+    suffix : str | None, optional
         Suffix to append to sequence_id and cell_id.
     sep : str, optional
         the separator to append suffix/prefix.
@@ -644,9 +646,9 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
 
 
 def change_file_location(
-    data: List[Union[str, Path]],
-    filename_prefix: Optional[Union[List[str], str]] = None,
-):
+    data: list[Path | str],
+    filename_prefix: list[str] | str | None = None,
+) -> None:
     """
     Move file from tmp folder to dandelion folder.
 
@@ -654,16 +656,11 @@ def change_file_location(
 
     Parameters
     ----------
-    data : List[Union[str, Path]]
+    data : list[Path | str]
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : Optional[Union[List[str], str]], optional
+    filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
-
-    No Longer Raises
-    ----------------
-    FileNotFoundError
-        if path to input file is not found.
     """
     fileformat = "blast"
     if type(data) is not list:
@@ -714,8 +711,8 @@ def change_file_location(
 
 
 def move_to_tmp(
-    data: List[str], filename_prefix: Optional[Union[List[str], str]] = None
-):
+    data: list[str], filename_prefix: list[str] | str | None = None
+) -> None:
     """Move file to tmp."""
     if type(data) is not list:
         data = [data]
@@ -739,10 +736,10 @@ def move_to_tmp(
 
 
 def make_all(
-    data: List[str],
-    filename_prefix: Optional[Union[List[str], str]] = None,
+    data: list[str],
+    filename_prefix: list[str] | str | None = None,
     loci: Literal["ig", "tr"] = "tr",
-):
+) -> None:
     """Construct db-all tsv file."""
     if type(data) is not list:
         data = [data]
@@ -825,11 +822,11 @@ def make_all(
 
 
 def rename_dandelion(
-    data: List[str],
-    filename_prefix: Optional[Union[List[str], str]] = None,
-    ends_with="_igblast_db-pass_genotyped.tsv",
-    sub_dir: Optional[str] = None,
-):
+    data: list[str],
+    filename_prefix: list[str] | str | None = None,
+    ends_with: str = "_igblast_db-pass_genotyped.tsv",
+    sub_dir: str | None = None,
+) -> None:
     """Rename final dandlion file."""
     if type(data) is not list:
         data = [data]
@@ -920,7 +917,7 @@ def from_ak(airr: "Array") -> pd.DataFrame:
 def to_ak(
     data: pd.DataFrame,
     **kwargs,
-) -> Tuple["Array", pd.DataFrame]:
+) -> tuple["Array", pd.DataFrame]:
     """
     Convert data from a DataFrame to an AnnData object with AIRR format.
 
@@ -933,7 +930,7 @@ def to_ak(
 
     Returns
     -------
-    Tuple[Array, pd.DataFrame]
+    tuple[Array, pd.DataFrame]
         A tuple containing the AIRR-formatted data as an ak.Array and the cell-level attributes as a pd.DataFrame.
     """
 
@@ -950,7 +947,7 @@ def to_ak(
 def _create_anndata(
     airr: "Array",
     obs: pd.DataFrame,
-    adata: Optional[AnnData] = None,
+    adata: AnnData | None = None,
 ) -> AnnData:
     """
     Create an AnnData object with the given AIRR array and observation data.
@@ -961,7 +958,7 @@ def _create_anndata(
         The AIRR array.
     obs : pd.DataFrame
         The observation data.
-    adata : Optional[AnnData], optional
+    adata : AnnData | None, optional
         An existing AnnData object to update. If None, a new AnnData object will be created.
 
     Returns
@@ -987,8 +984,8 @@ def _create_anndata(
 def _create_mudata(
     gex: AnnData,
     adata: AnnData,
-    key: Tuple[str, str] = ("gex", "airr"),
-) -> "MuData":
+    key: tuple[str, str] = ("gex", "airr"),
+) -> MuData:
     """
     Create a MuData object from the given AnnData objects.
 
@@ -998,7 +995,7 @@ def _create_mudata(
         The AnnData object containing gene expression data.
     adata : AnnData
         The AnnData object containing additional data.
-    key : Tuple[str, str], optional
+    key : tuple[str, str], optional
         The keys to use for the gene expression and additional data in the MuData object. Defaults to ("gex", "airr").
 
     Returns
@@ -1013,22 +1010,22 @@ def _create_mudata(
     """
 
     try:
-        from mudata import MuData
+        import mudata
     except ImportError:
         raise ImportError("Please install mudata. pip install mudata")
     if gex is not None:
-        return MuData({key[0]: gex, key[1]: adata})
-    return MuData({key[1]: adata})
+        return mudata.MuData({key[0]: gex, key[1]: adata})
+    return mudata.MuData({key[1]: adata})
 
 
 def to_scirpy(
     data: Dandelion,
     transfer: bool = False,
     to_mudata: bool = True,
-    gex_adata: Optional[AnnData] = None,
-    key: Tuple[str, str] = ("gex", "airr"),
+    gex_adata: AnnData | None = None,
+    key: tuple[str, str] = ("gex", "airr"),
     **kwargs,
-) -> Union[AnnData, "MuData"]:
+) -> AnnData | MuData:
     """
     Convert Dandelion data to scirpy-compatible format.
 
@@ -1043,14 +1040,14 @@ def to_scirpy(
         If converting to AnnData, it will assert that the same cell_ids and .obs_names are present in the `gex_adata` provided.
     gex_adata : AnnData, optional
         An existing AnnData object to be used as the base for the converted data if provided.
-    key : Tuple[str, str], optional
+    key : tuple[str, str], optional
         A tuple specifying the keys for the 'gex' and 'airr' fields in the converted data. Defaults to ("gex", "airr").
     **kwargs
         Additional keyword arguments passed to `scirpy.io.read_airr`.
 
     Returns
     -------
-    Union[AnnData, "MuData"]
+    AnnData | MuData
         The converted data in either AnnData or MuData format.
     """
 
@@ -1086,13 +1083,13 @@ def to_scirpy(
         return adata
 
 
-def from_scirpy(data: Union[AnnData, "MuData"]) -> Dandelion:
+def from_scirpy(data: AnnData | MuData) -> Dandelion:
     """
     Convert data from scirpy format to Dandelion format.
 
     Parameters
     ----------
-    data : Union[AnnData, "MuData"]
+    data : AnnData | MuData
         The input data in scirpy format.
 
     Returns
@@ -1110,13 +1107,13 @@ def from_scirpy(data: Union[AnnData, "MuData"]) -> Dandelion:
     return Dandelion(data)
 
 
-def _read_h5_group(filename: Union[Path, str], group: str) -> pd.DataFrame:
+def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
     """
     Read a specific group from an H5 file.
 
     Parameters
     ----------
-    filename : Union[Path, str]
+    filename : Path | str
         The path to the H5 file.
     group : str
         The group to read from the H5 file.
@@ -1176,13 +1173,13 @@ def _read_h5_group(filename: Union[Path, str], group: str) -> pd.DataFrame:
     return data
 
 
-def _read_h5_csr_matrix(filename: Union[Path, str], group: str) -> pd.DataFrame:
+def _read_h5_csr_matrix(filename: Path | str, group: str) -> pd.DataFrame:
     """
     Read a group from an H5 file originally stored as a compressed sparse matrix.
 
     Parameters
     ----------
-    filename : Union[Path, str]
+    filename : Path | str
         The path to the H5 file.
     group : str
         The group to read from the H5 file.
@@ -1217,9 +1214,9 @@ def _read_h5_csr_matrix(filename: Union[Path, str], group: str) -> pd.DataFrame:
 
 def _create_graph(
     adj: pd.DataFrame,
-    adjust_adjacency: Union[int, float] = 0,
-    fillna: Union[int, float] = 0,
-) -> NetworkxGraph:
+    adjust_adjacency: int | float = 0,
+    fillna: int | float = 0,
+) -> nx.Graph:
     """
     Create a networkx graph from the given adjacency matrix.
 
@@ -1227,14 +1224,14 @@ def _create_graph(
     ----------
     adj : pd.DataFrame
         The adjacency matrix to create the graph from.
-    adjust_adjacency : Union[int, float], optional
+    adjust_adjacency : int | float, optional
         The value to add to the graph by as a way to adjust the adjacency matrix. Defaults to 0.
-    fillna : Union[int, float], optional
+    fillna : int | float, optional
         The value to fill NaN values with. Defaults to 0.
 
     Returns
     -------
-    NetworkxGraph
+    nx.Graph
         The created networkx graph.
     """
     if adjust_adjacency != 0:
