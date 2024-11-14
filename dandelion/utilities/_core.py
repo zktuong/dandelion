@@ -291,16 +291,32 @@ class Dandelion:
             if isinstance(v, pd.DataFrame):
                 v.index = value
 
-    def _update_ids(self, column, operation, value, sync=True, **kwargs):
+    def _update_ids(
+        self,
+        column: str,
+        operation: str,
+        value: str,
+        sync: bool = True,
+        remove_trailing_hyphen_number: bool = False,
+        **kwargs,
+    ) -> None:
         """
-        Internal method to update IDs and optionally sync changes
+        Internal method to update IDs and optionally sync changes.
 
-        Parameters:
-        column (str): The column to update ('sequence_id' or 'cell_id')
-        operation (str): The operation to perform ('prefix' or 'suffix')
-        value (str): The value to add as prefix or suffix
-        sync (bool): Whether to sync changes to the other column
-        **kwargs: Additional arguments to pass to the update_metadata method
+        Parameters
+        ----------
+        column : str
+            The column to update ('sequence_id' or 'cell_id').
+        operation : str
+            The operation to perform ('prefix' or 'suffix').
+        value : str
+            The value to add as prefix or suffix.
+        sync : bool, optional
+            Whether to sync changes to the other column, by default True.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers, by default False.
+        **kwargs
+            Additional arguments to pass to the update_metadata method
         """
         other_column = "cell_id" if column == "sequence_id" else "sequence_id"
         original_values = (
@@ -308,11 +324,19 @@ class Dandelion:
             if column == "sequence_id"
             else self._original_cell_ids
         )
-
+        clean_func = (
+            self._clean_sequence_id
+            if column == "sequence_id"
+            else self._clean_cell_id
+        )
+        cleaned_values = [
+            clean_func(x, remove_trailing_hyphen_number)
+            for x in original_values.astype(str)
+        ]
         if operation == "prefix":
-            self._data[column] = value + original_values.astype(str)
+            self._data[column] = [value + x for x in cleaned_values]
         elif operation == "suffix":
-            self._data[column] = original_values.astype(str) + value
+            self._data[column] = [x + value for x in cleaned_values]
 
         if sync:
             other_original = (
@@ -320,32 +344,200 @@ class Dandelion:
                 if column == "sequence_id"
                 else self._original_sequence_ids
             )
+            other_clean_func = (
+                self._clean_cell_id
+                if column == "sequence_id"
+                else self._clean_sequence_id
+            )
+
+            cleaned_other = [
+                other_clean_func(x, remove_trailing_hyphen_number)
+                for x in other_original.astype(str)
+            ]
             if operation == "prefix":
-                self._data[other_column] = value + other_original.astype(str)
+                self._data[other_column] = [value + x for x in cleaned_other]
             elif operation == "suffix":
-                self._data[other_column] = other_original.astype(str) + value
+                self._data[other_column] = [x + value for x in cleaned_other]
         self._data = load_data(self._data)
         if self._metadata is not None:
             self.update_metadata(**kwargs)
 
-    def add_sequence_prefix(self, prefix, sync=True, **kwargs):
-        """Add prefix to sequence_id and optionally to cell_id"""
-        self._update_ids("sequence_id", "prefix", prefix, sync, **kwargs)
+    def _clean_sequence_id(
+        self, value: str, remove_trailing_hyphen_number: bool = False
+    ):
+        """
+        Clean sequence_id based on specified rules.
 
-    def add_sequence_suffix(self, suffix, sync=True, **kwargs):
-        """Add suffix to sequence_id and optionally to cell_id"""
-        self._update_ids("sequence_id", "suffix", suffix, sync, **kwargs)
+        Parameters
+        ----------
+        value : str
+            Original sequence_id value.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers and _contig suffix, by default False.
 
-    def add_cell_prefix(self, prefix, sync=True, **kwargs):
-        """Add prefix to cell_id and optionally to sequence_id"""
-        self._update_ids("cell_id", "prefix", prefix, sync, **kwargs)
+        Returns
+        -------
+        str
+            Cleaned sequence_id value.
+        """
+        if remove_trailing_hyphen_number:
+            # First remove _contig and everything after it, then remove trailing hyphen number
+            return (
+                value.split("_contig")[0].split("-")[0]
+                + "_contig"
+                + value.split("_contig")[1]
+            )
+        return value
 
-    def add_cell_suffix(self, suffix, sync=True, **kwargs):
-        """Add suffix to cell_id and optionally to sequence_id"""
-        self._update_ids("cell_id", "suffix", suffix, sync, **kwargs)
+    def _clean_cell_id(
+        self, value: str, remove_trailing_hyphen_number: bool = False
+    ):
+        """
+        Clean cell_id based on specified rules.
 
-    def reset_ids(self):
-        """Reset both IDs to their original values"""
+        Parameters
+        ----------
+        value : str
+            Original cell_id value.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers, by default False.
+
+        Returns
+        -------
+        str
+            Cleaned cell_id value.
+        """
+        if remove_trailing_hyphen_number:
+            # Remove the last occurrence of hyphen and everything after it
+            return value.rsplit("-", 1)[0]
+        return value
+
+    def add_sequence_prefix(
+        self,
+        prefix: str,
+        sync: bool = True,
+        remove_trailing_hyphen_number: bool = False,
+        **kwargs,
+    ) -> None:
+        """
+        Add prefix to sequence_id and then apply to cell_id as well.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix to add to the IDs.
+        sync : bool, optional
+            Whether to apply the same prefix to cell_id, by default True.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers before adding prefix, by default False.
+        **kwargs
+            Additional arguments to pass to the update_metadata method
+        """
+        self._update_ids(
+            column="sequence_id",
+            operation="prefix",
+            value=prefix,
+            sync=sync,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+            **kwargs,
+        )
+
+    def add_sequence_suffix(
+        self,
+        suffix: str,
+        sync: bool = True,
+        remove_trailing_hyphen_number: bool = False,
+        **kwargs,
+    ) -> None:
+        """
+        Add suffix to sequence_id and then apply to cell_id as well.
+
+        Parameters
+        ----------
+        suffix : str
+            Prefix to add to the IDs.
+        sync : bool, optional
+            Whether to apply the same suffix to cell_id, by default True.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers before adding suffix, by default False.
+        **kwargs
+            Additional arguments to pass to the update_metadata method
+        """
+        self._update_ids(
+            column="sequence_id",
+            operation="suffix",
+            value=suffix,
+            sync=sync,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+            **kwargs,
+        )
+
+    def add_cell_prefix(
+        self,
+        prefix: str,
+        sync: bool = True,
+        remove_trailing_hyphen_number: bool = False,
+        **kwargs,
+    ) -> None:
+        """
+        Add prefix to cell_id and optionally to sequence_id.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix to add to the IDs.
+        sync : bool, optional
+            Whether to apply the same prefix to sequence_id, by default True.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers before adding prefix, by default False.
+        **kwargs
+            Additional arguments to pass to the update_metadata method
+        """
+        self._update_ids(
+            column="cell_id",
+            operation="prefix",
+            value=prefix,
+            sync=sync,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+            **kwargs,
+        )
+
+    def add_cell_suffix(
+        self,
+        suffix: str,
+        sync: bool = True,
+        remove_trailing_hyphen_number: bool = False,
+        **kwargs,
+    ) -> None:
+        """
+        Add prefix to cell_id and optionally to sequence_id.
+
+        Parameters
+        ----------
+        suffix : str
+            Suffix to add to the IDs.
+        sync : bool, optional
+            Whether to apply the same suffix to sequence_id, by default True.
+        remove_trailing_hyphen_number : bool, optional
+            Whether to remove trailing hyphen numbers before adding suffix, by default False.
+        **kwargs
+            Additional arguments to pass to the update_metadata method
+        """
+        self._update_ids(
+            column="cell_id",
+            operation="suffix",
+            value=suffix,
+            sync=sync,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+            **kwargs,
+        )
+
+    def reset_ids(self) -> None:
+        """
+        Reset both IDs to their original values.
+
+        This method restores both sequence_id and cell_id in the .data and .metadata slots to their original state when the Dandelion class was initialized.
+        """
         self._data.index = self._original_data_ids
         self._metadata.index = self._original_metadata_ids
         self._data["sequence_id"] = self._original_sequence_ids
