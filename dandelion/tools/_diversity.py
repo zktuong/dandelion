@@ -900,6 +900,7 @@ def diversity_chao1(
     resample: bool = False,
     n_resample: int = 50,
     downsample: int | None = None,
+    key_added: str | None = None,
     verbose: bool = False,
 ) -> pd.DataFrame | Dandelion | AnnData:
     """
@@ -925,6 +926,8 @@ def diversity_chao1(
         Number of times to perform resampling. Default is 50.
     downsample : int | None, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
+    key_added : str | None, optional
+        column names for output.
     verbose : bool, optional
         whether to print progress.
 
@@ -1071,6 +1074,7 @@ def diversity_chao1(
         resample=resample,
         n_resample=n_resample,
         downsample=downsample,
+        key_added=key_added,
         verbose=verbose,
     )
 
@@ -1121,6 +1125,7 @@ def diversity_shannon(
     resample: bool = False,
     n_resample: int = 50,
     normalize: bool = True,
+    key_added: str | None = None,
     downsample: int | None = None,
 ) -> pd.DataFrame | Dandelion | AnnData:
     """
@@ -1144,6 +1149,8 @@ def diversity_shannon(
         Number of times to perform resampling. Default is 50.
     normalize : bool, optional
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
+    key_added : str | None, optional
+        column names for output.
     downsample : int | None, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
 
@@ -1333,6 +1340,7 @@ def diversity_shannon(
         resample=resample,
         n_resample=n_resample,
         normalize=normalize,
+        key_added=key_added,
         downsample=downsample,
     )
 
