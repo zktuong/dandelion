@@ -297,6 +297,7 @@ class Dandelion:
         operation: str,
         value: str,
         sync: bool = True,
+        sep: str | None = None,
         remove_trailing_hyphen_number: bool = False,
         **kwargs,
     ) -> None:
@@ -313,12 +314,16 @@ class Dandelion:
             The value to add as prefix or suffix.
         sync : bool, optional
             Whether to sync changes to the other column, by default True.
+        sep : str, optional
+            Separator to use when adding prefix or suffix, by default None, which means no separator.
         remove_trailing_hyphen_number : bool, optional
             Whether to remove trailing hyphen numbers, by default False.
         **kwargs
             Additional arguments to pass to the update_metadata method
         """
         other_column = "cell_id" if column == "sequence_id" else "sequence_id"
+        sep = "" if sep is None else sep
+
         original_values = (
             self._original_sequence_ids
             if column == "sequence_id"
@@ -334,9 +339,9 @@ class Dandelion:
             for x in original_values.astype(str)
         ]
         if operation == "prefix":
-            self._data[column] = [value + x for x in cleaned_values]
+            self._data[column] = [value + sep + x for x in cleaned_values]
         elif operation == "suffix":
-            self._data[column] = [x + value for x in cleaned_values]
+            self._data[column] = [x + sep + value for x in cleaned_values]
 
         if sync:
             other_original = (
@@ -355,9 +360,13 @@ class Dandelion:
                 for x in other_original.astype(str)
             ]
             if operation == "prefix":
-                self._data[other_column] = [value + x for x in cleaned_other]
+                self._data[other_column] = [
+                    value + sep + x for x in cleaned_other
+                ]
             elif operation == "suffix":
-                self._data[other_column] = [x + value for x in cleaned_other]
+                self._data[other_column] = [
+                    x + sep + value for x in cleaned_other
+                ]
         self._data = load_data(self._data)
         if self._metadata is not None:
             self.update_metadata(**kwargs)
@@ -2671,3 +2680,99 @@ def write_h5ddl_legacy(
         if self.threshold is not None:
             tr = self.threshold
             hf.create_dataset("threshold", data=tr)
+
+
+def concat(
+    arrays: List[Union[pd.DataFrame, Dandelion]],
+    check_unique: bool = True,
+    sep: str = "_",
+    suffixes: Optional[List[str]] = None,
+    prefixes: Optional[List[str]] = None,
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
+    """
+    Concatenate data frames and return as `Dandelion` object.
+
+    If both suffixes and prefixes are `None` and check_unique is True, then a sequential number suffix will be appended.
+
+    Parameters
+    ----------
+    arrays : List[Union[pd.DataFrame, Dandelion]]
+        List of `Dandelion` class objects or pandas data frames
+    check_unique : bool, optional
+        Check the new index for duplicates. Otherwise defer the check until necessary.
+        Setting to False will improve the performance of this method.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    suffixes : Optional[List[str]], optional
+        List of suffixes to append to sequence_id and cell_id.
+    prefixes : Optional[List[str]], optional
+        List of prefixes to append to sequence_id and cell_id.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+
+    Returns
+    -------
+    Dandelion
+        concatenated `Dandelion` object
+
+    Raises
+    ------
+    ValueError
+        if both prefixes and suffixes are provided.
+    """
+    arrays = list(arrays)
+
+    try:
+        arrays_ = [x.data.copy() for x in arrays]
+    except:
+        arrays_ = [x.copy() for x in arrays]
+
+    if (suffixes is not None) and (prefixes is not None):
+        raise ValueError("Please provide only prefixes or suffixes, not both.")
+
+    if suffixes is not None:
+        if len(arrays_) != len(suffixes):
+            raise ValueError(
+                "Please provide the same number of suffixes as the number of objects to concatenate."
+            )
+
+    if prefixes is not None:
+        if len(arrays_) != len(prefixes):
+            raise ValueError(
+                "Please provide the same number of prefixes as the number of objects to concatenate."
+            )
+
+    vdjs = [Dandelion(array) for array in arrays_]
+    if check_unique:
+        try:
+            arrays_ = [vdj.data for vdj in vdjs]
+            df = pd.concat(arrays_, verify_integrity=True)
+        except:
+            for i in range(0, len(arrays)):
+                if (suffixes is None) and (prefixes is None):
+                    vdjs[i].add_sequence_suffix(
+                        str(i),
+                        sep=sep,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif suffixes is not None:
+                    vdjs[i].add_sequence_suffix(
+                        str(suffixes[i]),
+                        sep=sep,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif prefixes is not None:
+                    vdjs[i].add_sequence_prefix(
+                        str(prefixes[i]),
+                        sep=sep,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+            arrays_ = [vdj.data for vdj in vdjs]
+            df = pd.concat(arrays_, verify_integrity=True)
+    else:
+        arrays_ = [vdj.data for vdj in vdjs]
+        df = pd.concat(arrays_)
+
+    return Dandelion(df)
