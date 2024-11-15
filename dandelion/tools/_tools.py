@@ -155,7 +155,8 @@ def find_clones(
                 )
                 # add it to the original dataframes
                 dat_vdj[clone_key] = pd.Series(clone_dict_vdj)
-                dat[clone_key].update(pd.Series(dat_vdj[clone_key]))
+                # dat[clone_key].update(pd.Series(dat_vdj[clone_key]))
+                dat.update({clone_key: pd.Series(dat_vdj[clone_key])})
             if dat_vj.shape[0] > 0:
                 vj_len_grp_vj, seq_grp_vj = group_sequences(
                     dat_vj,
@@ -182,7 +183,8 @@ def find_clones(
                     clone_dict_vj=clone_dict_vj,
                     verbose=verbose,
                 )
-                dat_[clone_key].update(pd.Series(dat[clone_key]))
+                # dat_[clone_key].update(pd.Series(dat[clone_key]))
+                dat_.update({clone_key: pd.Series(dat[clone_key])})
 
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
