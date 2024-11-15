@@ -465,44 +465,48 @@ def assign_isotype(
     aligner = Align.PairwiseAligner()
 
     def two_gene_correction(
-        self: pd.DataFrame, i: str, dictionary: dict[str, str]
+        df: pd.DataFrame, i: str, dictionary: dict[str, str]
     ):
         """Pairwise alignment for two genes.
 
         Parameters
         ----------
+        df : pd.DataFrame
+            Input data frame.
         i : str
             index name.
         dictionary : dict[str, str]
             dictionary holding gene name as key and sequence as value.
         """
         key1, key2 = dictionary.keys()
-        seq = self.loc[i, "c_sequence_alignment"].replace("-", "")
+        seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
         alignments1 = aligner.align(dictionary[key1], seq)
         alignments2 = aligner.align(dictionary[key2], seq)
         score1 = alignments1.score
         score2 = alignments2.score
         if score1 == score2:
-            self.at[i, "c_call"] = str(key1) + "," + str(key2)
+            df.at[i, "c_call"] = str(key1) + "," + str(key2)
         if score1 > score2:
-            self.at[i, "c_call"] = str(key1)
+            df.at[i, "c_call"] = str(key1)
         if score1 < score2:
-            self.at[i, "c_call"] = str(key2)
+            df.at[i, "c_call"] = str(key2)
 
     def three_gene_correction(
-        self: pd.DataFrame, i: str, dictionary: dict[str, str]
+        df: pd.DataFrame, i: str, dictionary: dict[str, str]
     ):
         """Pairwise alignment for three genes.
 
         Parameters
         ----------
+        df : pd.DataFrame
+            Input data frame.
         i : str
             index name.
         dictionary : dict[str, str]
             dictionary holding gene name as key and sequence as value.
         """
         key1, key2, key3 = dictionary.keys()
-        seq = self.loc[i, "c_sequence_alignment"].replace("-", "")
+        seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
         alignments1 = aligner.align(dictionary[key1], seq)
         alignments2 = aligner.align(dictionary[key2], seq)
         alignments3 = aligner.align(dictionary[key3], seq)
@@ -510,34 +514,36 @@ def assign_isotype(
         score2 = alignments2.score
         score3 = alignments3.score
         if score1 == score2 == score3:
-            self.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key3)
+            df.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key3)
         elif score1 > score2 and score1 > score3:
-            self.at[i, "c_call"] = str(key1)
+            df.at[i, "c_call"] = str(key1)
         elif score2 > score1 and score2 > score3:
-            self.at[i, "c_call"] = str(key2)
+            df.at[i, "c_call"] = str(key2)
         elif score3 > score1 and score3 > score2:
-            self.at[i, "c_call"] = str(key3)
+            df.at[i, "c_call"] = str(key3)
         elif score1 == score2 and score1 > score3:
-            self.at[i, "c_call"] = str(key1) + "," + str(key2)
+            df.at[i, "c_call"] = str(key1) + "," + str(key2)
         elif score1 > score2 and score1 == score3:
-            self.at[i, "c_call"] = str(key1) + "," + str(key3)
+            df.at[i, "c_call"] = str(key1) + "," + str(key3)
         elif score2 > score1 and score2 == score3:
-            self.at[i, "c_call"] = str(key2) + "," + str(key3)
+            df.at[i, "c_call"] = str(key2) + "," + str(key3)
 
     def four_gene_correction(
-        self: pd.DataFrame, i: str, dictionary: dict[str, str]
+        df: pd.DataFrame, i: str, dictionary: dict[str, str]
     ):
         """Pairwise alignment for four genes.
 
         Parameters
         ----------
+        df : pd.DataFrame
+            Input data frame.
         i : str
             index name.
         dictionary : dict[str, str]
             dictionary holding gene name as key and sequence as value.
         """
         key1, key2, key3, key4 = dictionary.keys()
-        seq = self.loc[i, "c_sequence_alignment"].replace("-", "")
+        seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
         alignments1 = aligner.align(dictionary[key1], seq)
         alignments2 = aligner.align(dictionary[key2], seq)
         alignments3 = aligner.align(dictionary[key3], seq)
@@ -547,37 +553,37 @@ def assign_isotype(
         score3 = alignments3.score
         score4 = alignments4.score
         if score1 == score2 == score3 == score4:
-            self.at[i, "c_call"] = (
+            df.at[i, "c_call"] = (
                 str(key1) + "," + str(key2) + "," + str(key3) + "," + str(key4)
             )
         elif score1 > score2 and score1 > score3 and score1 > score4:
-            self.at[i, "c_call"] = str(key1)
+            df.at[i, "c_call"] = str(key1)
         elif score2 > score1 and score2 > score3 and score2 > score4:
-            self.at[i, "c_call"] = str(key2)
+            df.at[i, "c_call"] = str(key2)
         elif score3 > score1 and score3 > score2 and score3 > score4:
-            self.at[i, "c_call"] = str(key3)
+            df.at[i, "c_call"] = str(key3)
         elif score4 > score1 and score4 > score2 and score4 > score3:
-            self.at[i, "c_call"] = str(key4)
+            df.at[i, "c_call"] = str(key4)
         elif score1 == score2 and score1 > score3 and score1 > score4:
-            self.at[i, "c_call"] = str(key1) + "," + str(key2)
+            df.at[i, "c_call"] = str(key1) + "," + str(key2)
         elif score1 > score2 and score1 == score3 and score1 > score4:
-            self.at[i, "c_call"] = str(key1) + "," + str(key3)
+            df.at[i, "c_call"] = str(key1) + "," + str(key3)
         elif score1 > score2 and score1 > score3 and score1 == score4:
-            self.at[i, "c_call"] = str(key1) + "," + str(key4)
+            df.at[i, "c_call"] = str(key1) + "," + str(key4)
         elif score2 == score3 and score2 > score1 and score2 > score4:
-            self.at[i, "c_call"] = str(key1) + "," + str(key3)
+            df.at[i, "c_call"] = str(key1) + "," + str(key3)
         elif score2 == score4 and score2 > score1 and score2 > score3:
-            self.at[i, "c_call"] = str(key2) + "," + str(key4)
+            df.at[i, "c_call"] = str(key2) + "," + str(key4)
         elif score3 == score4 and score3 > score1 and score3 > score2:
-            self.at[i, "c_call"] = str(key3) + "," + str(key4)
+            df.at[i, "c_call"] = str(key3) + "," + str(key4)
         elif score1 == score2 == score3 and score1 > score4:
-            self.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key3)
+            df.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key3)
         elif score1 == score2 == score4 and score1 > score3:
-            self.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key4)
+            df.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key4)
         elif score1 == score3 == score4 and score1 > score2:
-            self.at[i, "c_call"] = str(key1) + "," + str(key3) + "," + str(key4)
+            df.at[i, "c_call"] = str(key1) + "," + str(key3) + "," + str(key4)
         elif score2 == score3 == score4 and score2 > score1:
-            self.at[i, "c_call"] = str(key2) + "," + str(key3) + "," + str(key4)
+            df.at[i, "c_call"] = str(key2) + "," + str(key3) + "," + str(key4)
 
     def _correct_c_call(
         data: pd.DataFrame,
