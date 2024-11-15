@@ -460,396 +460,6 @@ def diversity_gini(
     """
     start = logg.info("Calculating Gini indices")
 
-    def gini_indices(
-        data: Dandelion,
-        groupby: str,
-        metric: str | None = None,
-        clone_key: str | None = None,
-        resample: bool = False,
-        n_resample: int = 50,
-        downsample: int | None = None,
-        reconstruct_network: bool = True,
-        expanded_only: bool = False,
-        contracted: bool = False,
-        key_added: str | None = None,
-        verbose: bool = False,
-        **kwargs,
-    ) -> pd.DataFrame:
-        """Gini indices."""
-        if isinstance(data, AnnData):
-            raise TypeError("Only Dandelion class object accepted.")
-        elif isinstance(data, Dandelion):
-            _metadata = data.metadata.copy()
-        clonekey = clone_key if clone_key is not None else "clone_id"
-        met = metric if metric is not None else "clone_network"
-
-        # split up the table by groupby
-        _metadata[groupby] = _metadata[groupby].astype("category")
-        _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
-        groups = list(set(_metadata[groupby]))
-
-        if downsample is None:
-            minsize = _metadata[groupby].value_counts().min()
-        else:
-            minsize = downsample
-            if minsize > _metadata[groupby].value_counts().min():
-                logg.info(
-                    "Downsampling size provided of {} was larger than the smallest group size. ".format(
-                        downsample
-                    )
-                    + "Defaulting to the smallest group size for downsampling."
-                )
-                minsize = _metadata[groupby].value_counts().min()
-
-        if minsize < 100:
-            logg.info(
-                "The minimum cell numbers when grouped by {} is {}.".format(
-                    groupby, minsize
-                )
-                + " Exercise caution when interpreting diversity measures."
-            )
-
-        res1 = {}
-        if met == "clone_network":
-            logg.info(
-                "Computing Gini indices for cluster and vertex size using network."
-            )
-            if not reconstruct_network:
-                n_n, v_s, c_s = clone_networkstats(
-                    data,
-                    expanded_only=expanded_only,
-                    network_clustersize=contracted,
-                    verbose=verbose,
-                )
-                g_c_v = defaultdict(dict)
-                g_c_v_res, g_c_c_res = {}, {}
-                for vs in v_s:
-                    v_sizes = np.array(v_s[vs])
-                    if len(v_sizes) > 1:
-                        v_sizes = np.append(v_sizes, 0)
-                    g_c_v[vs] = gini_index(v_sizes, method="trapezoids")
-                    if g_c_v[vs] < 0 or np.isnan(g_c_v[vs]):
-                        g_c_v[vs] = 0
-                    for cell in n_n:
-                        g_c_v_res.update({cell: g_c_v[n_n[cell]]})
-                c_sizes = np.array(
-                    np.array(sorted(list(flatten(c_s.values())), reverse=True))
-                )
-                if len(c_sizes) > 1:
-                    c_sizes = np.append(c_sizes, 0)
-                g_c_c = gini_index(c_sizes, method="trapezoids")
-                if g_c_c < 0 or np.isnan(g_c_c):
-                    g_c_c = 0
-                for cell in n_n:
-                    g_c_c_res.update({cell: g_c_c})
-                data.metadata["clone_network_vertex_size_gini"] = pd.Series(
-                    g_c_v_res
-                )
-                data.metadata["clone_network_cluster_size_gini"] = pd.Series(
-                    g_c_c_res
-                )
-        elif met == "clone_centrality":
-            logg.info(
-                "Computing gini indices for clone size using metadata and node closeness centrality using network."
-            )
-            clone_centrality(data)
-        elif met == "clone_degree":
-            logg.info(
-                "Computing gini indices for clone size using metadata and node degree using network."
-            )
-            clone_degree(data)
-        _metadata = data.metadata.copy()
-        _data = data.data.copy()
-        res2 = {}
-
-        if resample:
-            logg.info(
-                "Downsampling each group specified in `{}` to {} cells for calculating gini indices.".format(
-                    groupby, minsize
-                )
-            )
-
-        for g in groups:
-            # clone size distribution
-            _dat = _metadata[_metadata[groupby] == g]
-            __data = _data[_data["cell_id"].isin(list(_dat.index))]
-            ddl_dat = Dandelion(__data, metadata=_dat)
-            if resample:
-                sizelist = []
-                if isinstance(data, Dandelion):
-                    graphlist = []
-                for i in tqdm(
-                    range(0, n_resample),
-                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-                    disable=not verbose,
-                ):
-                    if isinstance(data, Dandelion):
-                        resampled = generate_network(
-                            ddl_dat,
-                            clone_key=clonekey,
-                            downsample=minsize,
-                            verbose=verbose,
-                            compute_layout=False,
-                            **kwargs,
-                        )
-                        if met == "clone_network":
-                            n_n, v_s, c_s = clone_networkstats(
-                                resampled,
-                                expanded_only=expanded_only,
-                                network_clustersize=contracted,
-                                verbose=verbose,
-                            )
-                            g_c_v = defaultdict(dict)
-                            g_c_v_res, g_c_c_res = {}, {}
-                            for vs in v_s:
-                                v_sizes = np.array(v_s[vs])
-                                if len(v_sizes) > 1:
-                                    v_sizes = np.append(v_sizes, 0)
-                                g_c_v[vs] = gini_index(
-                                    v_sizes, method="trapezoids"
-                                )
-                                if g_c_v[vs] < 0 or np.isnan(g_c_v[vs]):
-                                    g_c_v[vs] = 0
-                                for cell in n_n:
-                                    g_c_v_res.update({cell: g_c_v[n_n[cell]]})
-                            c_sizes = np.array(
-                                sorted(
-                                    list(flatten(c_s.values())), reverse=True
-                                )
-                            )
-                            if len(c_sizes) > 1:
-                                c_sizes = np.append(c_sizes, 0)
-                            g_c_c = gini_index(c_sizes, method="trapezoids")
-                            if g_c_c < 0 or np.isnan(g_c_c):
-                                g_c_c = 0
-                            for cell in n_n:
-                                g_c_c_res.update({cell: g_c_c})
-                            resampled.metadata[
-                                "clone_network_vertex_size_gini"
-                            ] = pd.Series(g_c_v_res)
-                            resampled.metadata[
-                                "clone_network_cluster_size_gini"
-                            ] = pd.Series(g_c_c_res)
-                        elif met == "clone_centrality":
-                            clone_centrality(resampled)
-                        elif met == "clone_degree":
-                            clone_degree(resampled)
-                        else:
-                            raise ValueError(
-                                (
-                                    "Unknown metric for calculating network stats. Please specify "
-                                    + "one of `clone_network`, `clone_centrality` or `clone_degree`."
-                                )
-                            )
-                        # clone size gini
-                        _dat = resampled.metadata.copy()
-                        _tab = _dat[clonekey].value_counts()
-                        if "nan" in _tab.index or np.nan in _tab.index:
-                            try:
-                                _tab.drop("nan", inplace=True)
-                            except:
-                                _tab.drop(np.nan, inplace=True)
-                        if met == "clone_network":
-                            sizelist.append(
-                                _dat[met + "_cluster_size_gini"].mean()
-                            )
-                        else:
-                            clonesizecounts = np.array(_tab)
-                            clonesizecounts = clonesizecounts[
-                                clonesizecounts > 0
-                            ]
-                            if len(clonesizecounts) > 1:
-                                # append a single zero for lorenz curve calculation
-                                clonesizecounts = np.append(clonesizecounts, 0)
-                            if len(clonesizecounts) > 0:
-                                g_c = gini_index(
-                                    clonesizecounts, method="trapezoids"
-                                )
-                                # probably not needed anymore but keep just in case
-                                if g_c < 0 or np.isnan(g_c):
-                                    g_c = 0
-                            else:
-                                g_c = 0
-                            sizelist.append(g_c)
-
-                        if met == "clone_network":
-                            graphlist.append(
-                                _dat[met + "_vertex_size_gini"].mean()
-                            )
-                        else:
-                            # vertex closeness centrality or weighted degree distribution
-                            # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
-                            connectednodes = resampled.metadata[met][
-                                resampled.metadata[met] > 0
-                            ]
-                            graphcounts = np.array(
-                                connectednodes.value_counts()
-                            )
-                            # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
-                            if len(graphcounts) > 0:
-                                g_c = gini_index(
-                                    graphcounts, method="trapezoids"
-                                )
-                                if g_c < 0 or np.isnan(g_c):
-                                    g_c = 0
-                            else:
-                                g_c = 0
-                            graphlist.append(g_c)
-                try:
-                    g_c = sum(sizelist) / len(sizelist)
-                except:
-                    g_c = 0
-
-                res1.update({g: g_c})
-                if "graphlist" in locals():
-                    g_c = sum(graphlist) / len(graphlist)
-                    try:
-                        g_c = sum(graphlist) / len(graphlist)
-                    except:
-                        g_c = 0
-                    res2.update({g: g_c})
-            else:
-                _tab = _dat[clonekey].value_counts()
-                if "nan" in _tab.index or np.nan in _tab.index:
-                    try:
-                        _tab.drop("nan", inplace=True)
-                    except:
-                        _tab.drop(np.nan, inplace=True)
-                if met != "clone_network":
-                    clonesizecounts = np.array(_tab)
-                    clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                    if len(clonesizecounts) > 1:
-                        # append a single zero for lorenz curve calculation
-                        clonesizecounts = np.append(clonesizecounts, 0)
-                    if len(clonesizecounts) > 0:
-                        g_c = gini_index(clonesizecounts, method="trapezoids")
-                        # probably not needed anymore but keep just in case
-                        if g_c < 0 or np.isnan(g_c):
-                            g_c = 0
-                    else:
-                        g_c = 0
-                    res1.update({g: g_c})
-                if isinstance(data, Dandelion):
-                    if met == "clone_network":
-                        if reconstruct_network:
-                            generate_network(
-                                ddl_dat,
-                                clone_key=clonekey,
-                                verbose=verbose,
-                                compute_layout=False,
-                                **kwargs,
-                            )
-                            n_n, v_s, c_s = clone_networkstats(
-                                ddl_dat,
-                                expanded_only=expanded_only,
-                                network_clustersize=contracted,
-                                verbose=verbose,
-                            )
-                            g_c_v = defaultdict(dict)
-                            g_c_v_res, g_c_c_res = {}, {}
-                            for vs in v_s:
-                                v_sizes = np.array(v_s[vs])
-                                if len(v_sizes) > 1:
-                                    v_sizes = np.append(v_sizes, 0)
-                                g_c_v[vs] = gini_index(
-                                    v_sizes, method="trapezoids"
-                                )
-                                if g_c_v[vs] < 0 or np.isnan(g_c_v[vs]):
-                                    g_c_v[vs] = 0
-                                for cell in n_n:
-                                    g_c_v_res.update({cell: g_c_v[n_n[cell]]})
-                            c_sizes = np.array(
-                                sorted(
-                                    list(flatten(c_s.values())), reverse=True
-                                )
-                            )
-                            if len(c_sizes) > 1:
-                                c_sizes = np.append(c_sizes, 0)
-                            g_c_c = gini_index(c_sizes, method="trapezoids")
-                            if g_c_c < 0 or np.isnan(g_c_c):
-                                g_c_c = 0
-                            for cell in n_n:
-                                g_c_c_res.update({cell: g_c_c})
-                            # ddl_dat.metadata['clone_network_vertex_size_gini'] = pd.Series(g_c_v_res)
-                            # ddl_dat.metadata['clone_network_cluster_size_gini'] = pd.Series(g_c_c_res)
-                            res2.update({g: pd.Series(g_c_v_res).mean()})
-                            res1.update({g: pd.Series(g_c_c_res).mean()})
-                        else:
-                            res2.update(
-                                {g: _dat[met + "_vertex_size_gini"].mean()}
-                            )
-                            res1.update(
-                                {g: _dat[met + "_cluster_size_gini"].mean()}
-                            )
-                    else:
-                        # vertex closeness centrality or weighted degree distribution
-                        # only calculate for expanded clones. If including non-expanded clones, the centrality is
-                        # just zero which doesn't help.
-                        connectednodes = _dat[met][_dat[met] > 0]
-                        graphcounts = np.array(connectednodes.value_counts())
-                        # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results
-                        # when the centrality measure is uniform.... so leave it out for now.
-                        if len(graphcounts) > 0:
-                            g_c = gini_index(graphcounts, method="trapezoids")
-                            if g_c < 0 or np.isnan(g_c):
-                                g_c = 0
-                        else:
-                            g_c = 0
-                        res2.update({g: g_c})
-
-        if "res2" in locals():
-            res_df = pd.DataFrame.from_dict([res1, res2]).T
-            if key_added is None:
-                if met == "clone_network":
-                    res_df.columns = [
-                        met + "_cluster_size_gini",
-                        met + "_vertex_size_gini",
-                    ]
-                else:
-                    res_df.columns = ["clone_size_gini", met + "_gini"]
-            else:
-                if not type(key_added) is list:
-                    key_added = [key_added]
-                if len(key_added) == len(res_df.columns):
-                    res_df.columns = key_added
-                else:
-                    raise ValueError(
-                        "Please provide {} key(s) for new column names.".format(
-                            len(res_df.columns)
-                        )
-                    )
-        else:
-            res_df = pd.DataFrame.from_dict([res1]).T
-            if key_added is None:
-                res_df.columns = ["clone_size_gini"]
-            else:
-                if not type(key_added) is list:
-                    key_added = [key_added]
-                if len(key_added) == len(res_df.columns):
-                    res_df.columns = key_added
-                else:
-                    raise ValueError(
-                        "Please provide {} key(s) for new column names.".format(
-                            len(res_df.columns)
-                        )
-                    )
-        return res_df
-
-    def transfer_gini_indices(
-        vdj_data: Dandelion, gini_results: pd.DataFrame, groupby: str
-    ) -> None:
-        """Transfer gini indicies."""
-        _metadata = vdj_data.metadata.copy()
-
-        groups = list(set(_metadata[groupby]))
-        for c in gini_results.columns:
-            _metadata[c] = np.nan
-            for g in groups:
-                for i in _metadata.index:
-                    if _metadata.at[i, groupby] == g:
-                        _metadata.at[i, c] = gini_results[c][g]
-        vdj_data.metadata = _metadata.copy()
-
     res = gini_indices(
         vdj_data,
         groupby=groupby,
@@ -1425,3 +1035,401 @@ def rarefun(y, sample) -> float:
             res.append(np.exp(chooseln(d, sample) - ldiv))
     out = np.sum(1 - np.array(res))
     return out
+
+
+def gini_indices(
+    data: Dandelion,
+    groupby: str,
+    metric: str | None = None,
+    clone_key: str | None = None,
+    resample: bool = False,
+    n_resample: int = 50,
+    downsample: int | None = None,
+    reconstruct_network: bool = True,
+    expanded_only: bool = False,
+    contracted: bool = False,
+    key_added: str | None = None,
+    verbose: bool = False,
+    **kwargs,
+) -> pd.DataFrame:
+    """Gini indices."""
+    if isinstance(data, AnnData):
+        raise TypeError("Only Dandelion class object accepted.")
+    elif isinstance(data, Dandelion):
+        _metadata = data.metadata.copy()
+    clonekey = clone_key if clone_key is not None else "clone_id"
+    met = metric if metric is not None else "clone_network"
+    # split up the table by groupby
+    _metadata[groupby] = _metadata[groupby].astype("category")
+    _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
+    groups = list(set(_metadata[groupby]))
+    if downsample is None:
+        minsize = _metadata[groupby].value_counts().min()
+    else:
+        minsize = downsample
+        if minsize > _metadata[groupby].value_counts().min():
+            logg.info(
+                "Downsampling size provided of {} was larger than the smallest group size. ".format(
+                    downsample
+                )
+                + "Defaulting to the smallest group size for downsampling."
+            )
+            minsize = _metadata[groupby].value_counts().min()
+    if minsize < 100:
+        logg.info(
+            "The minimum cell numbers when grouped by {} is {}.".format(
+                groupby, minsize
+            )
+            + " Exercise caution when interpreting diversity measures."
+        )
+    res1 = {}
+    if met == "clone_network":
+        logg.info(
+            "Computing Gini indices for cluster and vertex size using network."
+        )
+        if not reconstruct_network:
+            n_n, v_s, c_s = clone_networkstats(
+                data,
+                expanded_only=expanded_only,
+                network_clustersize=contracted,
+                verbose=verbose,
+            )
+            g_c_v = defaultdict(dict)
+            g_c_v_res, g_c_c_res = {}, {}
+            for vs in v_s:
+                v_sizes = np.array(v_s[vs])
+                if len(v_sizes) > 1:
+                    v_sizes = np.append(v_sizes, 0)
+                g_c_v[vs] = calculate_gini_index(v_sizes)
+                for cell in n_n:
+                    g_c_v_res.update({cell: g_c_v[n_n[cell]]})
+            c_sizes = np.array(
+                np.array(sorted(list(flatten(c_s.values())), reverse=True))
+            )
+            if len(c_sizes) > 1:
+                c_sizes = np.append(c_sizes, 0)
+            g_c_c = calculate_gini_index(c_sizes)
+            for cell in n_n:
+                g_c_c_res.update({cell: g_c_c})
+            data.metadata["clone_network_vertex_size_gini"] = pd.Series(
+                g_c_v_res
+            )
+            data.metadata["clone_network_cluster_size_gini"] = pd.Series(
+                g_c_c_res
+            )
+    elif met == "clone_centrality":
+        logg.info(
+            "Computing gini indices for clone size using metadata and node closeness centrality using network."
+        )
+        clone_centrality(data)
+    elif met == "clone_degree":
+        logg.info(
+            "Computing gini indices for clone size using metadata and node degree using network."
+        )
+        clone_degree(data)
+    _metadata = data.metadata.copy()
+    _data = data.data.copy()
+    res2 = {}
+    if resample:
+        logg.info(
+            "Downsampling each group specified in `{}` to {} cells for calculating gini indices.".format(
+                groupby, minsize
+            )
+        )
+    for g in groups:
+        # clone size distribution
+        _dat = _metadata[_metadata[groupby] == g]
+        __data = _data[_data["cell_id"].isin(list(_dat.index))]
+        ddl_dat = Dandelion(__data, metadata=_dat)
+        if resample:
+            sizelist = []
+            if isinstance(data, Dandelion):
+                graphlist = []
+            for i in tqdm(
+                range(0, n_resample),
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                disable=not verbose,
+            ):
+                if isinstance(data, Dandelion):
+                    resampled = generate_network(
+                        ddl_dat,
+                        clone_key=clonekey,
+                        downsample=minsize,
+                        verbose=verbose,
+                        compute_layout=False,
+                        **kwargs,
+                    )
+                    if met == "clone_network":
+                        g_c_v_res, g_c_c_res = process_clone_network_stats(
+                            resampled,
+                            expanded_only=expanded_only,
+                            contracted=contracted,
+                            verbose=verbose,
+                        )
+                        resampled.metadata["clone_network_vertex_size_gini"] = (
+                            pd.Series(g_c_v_res)
+                        )
+                        resampled.metadata[
+                            "clone_network_cluster_size_gini"
+                        ] = pd.Series(g_c_c_res)
+                    elif met == "clone_centrality":
+                        clone_centrality(resampled)
+                    elif met == "clone_degree":
+                        clone_degree(resampled)
+                    else:
+                        raise ValueError(
+                            (
+                                "Unknown metric for calculating network stats. Please specify "
+                                + "one of `clone_network`, `clone_centrality` or `clone_degree`."
+                            )
+                        )
+                    # clone size gini
+                    _dat = resampled.metadata.copy()
+                    _tab = _dat[clonekey].value_counts()
+                    drop_nan_values(_tab)
+                    if met == "clone_network":
+                        sizelist.append(_dat[met + "_cluster_size_gini"].mean())
+                    else:
+                        clonesizecounts = np.array(_tab)
+                        clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                        if len(clonesizecounts) > 1:
+                            # append a single zero for lorenz curve calculation
+                            clonesizecounts = np.append(clonesizecounts, 0)
+                        g_c = (
+                            calculate_gini_index(clonesizecounts)
+                            if len(clonesizecounts) > 0
+                            else 0
+                        )
+                        sizelist.append(g_c)
+                    if met == "clone_network":
+                        graphlist.append(_dat[met + "_vertex_size_gini"].mean())
+                    else:
+                        # vertex closeness centrality or weighted degree distribution
+                        # only calculate for expanded clones. If including non-expanded clones, the centrality is just zero which doesn't help.
+                        connectednodes = resampled.metadata[met][
+                            resampled.metadata[met] > 0
+                        ]
+                        graphcounts = np.array(connectednodes.value_counts())
+                        # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results when the centrality measure is uniform.... so leave it out for now.
+                        g_c = (
+                            calculate_gini_index(graphcounts)
+                            if len(graphcounts) > 0
+                            else 0
+                        )
+                        graphlist.append(g_c)
+
+            safe_average_update(res1, g, sizelist)
+            if "graphlist" in locals():
+                safe_average_update(res2, g, graphlist)
+        else:
+            _tab = _dat[clonekey].value_counts()
+            drop_nan_values(_tab)
+            if met != "clone_network":
+                clonesizecounts = np.array(_tab)
+                clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                if len(clonesizecounts) > 1:
+                    # append a single zero for lorenz curve calculation
+                    clonesizecounts = np.append(clonesizecounts, 0)
+                g_c = (
+                    calculate_gini_index(clonesizecounts)
+                    if len(clonesizecounts) > 0
+                    else 0
+                )
+                res1.update({g: g_c})
+            if isinstance(data, Dandelion):
+                if met == "clone_network":
+                    if reconstruct_network:
+                        generate_network(
+                            ddl_dat,
+                            clone_key=clonekey,
+                            verbose=verbose,
+                            compute_layout=False,
+                            **kwargs,
+                        )
+                        g_c_v_res, g_c_c_res = process_clone_network_stats(
+                            ddl_dat,
+                            expanded_only=expanded_only,
+                            contracted=contracted,
+                            verbose=verbose,
+                        )
+                        res2.update({g: pd.Series(g_c_v_res).mean()})
+                        res1.update({g: pd.Series(g_c_c_res).mean()})
+                    else:
+                        res2.update({g: _dat[met + "_vertex_size_gini"].mean()})
+                        res1.update(
+                            {g: _dat[met + "_cluster_size_gini"].mean()}
+                        )
+                else:
+                    # vertex closeness centrality or weighted degree distribution
+                    # only calculate for expanded clones. If including non-expanded clones, the centrality is
+                    # just zero which doesn't help.
+                    connectednodes = _dat[met][_dat[met] > 0]
+                    graphcounts = np.array(connectednodes.value_counts())
+                    # graphcounts = np.append(graphcounts, 0) # if I add a  zero here, it will skew the results
+                    # when the centrality measure is uniform.... so leave it out for now.
+                    g_c = (
+                        calculate_gini_index(graphcounts)
+                        if len(graphcounts) > 0
+                        else 0
+                    )
+                    res2.update({g: g_c})
+    if "res2" in locals():
+        res_df = pd.DataFrame.from_dict([res1, res2]).T
+        if key_added is None:
+            if met == "clone_network":
+                res_df.columns = [
+                    met + "_cluster_size_gini",
+                    met + "_vertex_size_gini",
+                ]
+            else:
+                res_df.columns = ["clone_size_gini", met + "_gini"]
+        else:
+            if not type(key_added) is list:
+                key_added = [key_added]
+            if len(key_added) == len(res_df.columns):
+                res_df.columns = key_added
+            else:
+                raise ValueError(
+                    "Please provide {} key(s) for new column names.".format(
+                        len(res_df.columns)
+                    )
+                )
+    else:
+        res_df = pd.DataFrame.from_dict([res1]).T
+        if key_added is None:
+            res_df.columns = ["clone_size_gini"]
+        else:
+            if not type(key_added) is list:
+                key_added = [key_added]
+            if len(key_added) == len(res_df.columns):
+                res_df.columns = key_added
+            else:
+                raise ValueError(
+                    "Please provide {} key(s) for new column names.".format(
+                        len(res_df.columns)
+                    )
+                )
+    return res_df
+
+
+def calculate_gini_index(
+    values: np.ndarray, method: str = "trapezoids"
+) -> float:
+    """
+    Calculate the Gini index for a given array of values.
+
+    Parameters
+    ----------
+    values : np.ndarray
+        Array of values to calculate the Gini index for.
+    method : str, optional
+        Method to use for Gini index calculation, by default "trapezoids".
+
+    Returns
+    -------
+    float
+        The calculated Gini index, or 0 if the index is negative or NaN.
+    """
+    gini = gini_index(values, method=method)
+    return 0 if gini < 0 or np.isnan(gini) else gini
+
+
+def drop_nan_values(df: pd.DataFrame) -> None:
+    """
+    Drop NaN values from a pandas DataFrame.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame from which to drop NaN values.
+    """
+    if "nan" in df.index or np.nan in df.index:
+        try:
+            df.drop("nan", inplace=True)
+        except:
+            df.drop(np.nan, inplace=True)
+
+
+def safe_average_update(data_dict: dict, key: str, values: list[float]) -> None:
+    """
+    Safely calculate the average of a list of values and update the dictionary.
+
+    Parameters
+    ----------
+    data_dict : dict
+        The dictionary to update.
+    key : Any
+        The key to update in the dictionary.
+    values : list of float
+        The list of values to average.
+    """
+    try:
+        average = sum(values) / len(values)
+    except ZeroDivisionError:
+        average = 0
+    data_dict.update({key: average})
+
+
+def process_clone_network_stats(
+    ddl_dat: Dandelion, expanded_only: bool, contracted: bool, verbose: bool
+) -> tuple[dict, dict, dict]:
+    """
+    Process clone network statistics and calculate Gini indices.
+
+    Parameters
+    ----------
+    ddl_dat : Any
+        The `Dandelion` object to process.
+    expanded_only : bool
+        Whether to consider only expanded clones.
+    contracted : bool
+        Whether to use contracted network clusters.
+    verbose : bool
+        Whether to display progress information.
+
+    Returns
+    -------
+    tuple[dict, dict, dict]
+        Tuple containing dictionaries for node names, vertex sizes, and cluster sizes.
+    """
+    n_n, v_s, c_s = clone_networkstats(
+        ddl_dat,
+        expanded_only=expanded_only,
+        network_clustersize=contracted,
+        verbose=verbose,
+    )
+    g_c_v = defaultdict(dict)
+    g_c_v_res, g_c_c_res = {}, {}
+
+    for vs in v_s:
+        v_sizes = np.array(v_s[vs])
+        if len(v_sizes) > 1:
+            v_sizes = np.append(v_sizes, 0)
+        g_c_v[vs] = calculate_gini_index(v_sizes)
+        for cell in n_n:
+            g_c_v_res.update({cell: g_c_v[n_n[cell]]})
+
+    c_sizes = np.array(sorted(list(flatten(c_s.values())), reverse=True))
+    if len(c_sizes) > 1:
+        c_sizes = np.append(c_sizes, 0)
+    g_c_c = calculate_gini_index(c_sizes)
+    for cell in n_n:
+        g_c_c_res.update({cell: g_c_c})
+
+    return g_c_v_res, g_c_c_res
+
+
+def transfer_gini_indices(
+    vdj_data: Dandelion, gini_results: pd.DataFrame, groupby: str
+) -> None:
+    """Transfer gini indicies."""
+    _metadata = vdj_data.metadata.copy()
+
+    groups = list(set(_metadata[groupby]))
+    for c in gini_results.columns:
+        _metadata[c] = np.nan
+        for g in groups:
+            for i in _metadata.index:
+                if _metadata.at[i, groupby] == g:
+                    _metadata.at[i, c] = gini_results[c][g]
+    vdj_data.metadata = _metadata.copy()
