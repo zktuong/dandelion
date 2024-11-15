@@ -55,23 +55,20 @@ def clone_rarefaction(
     start = logg.info("Constructing rarefaction curve")
 
     if isinstance(vdj_data, AnnData):
-        metadata = vdj_data.obs.copy()
+        _metadata = vdj_data.obs.copy()
     elif isinstance(vdj_data, Dandelion):
-        metadata = vdj_data.metadata.copy()
+        _metadata = vdj_data.metadata.copy()
 
-    if clone_key is None:
-        clonekey = "clone_id"
-    else:
-        clonekey = clone_key
+    clonekey = clone_key if clone_key is not None else "clone_id"
 
-    groups = list(set(metadata[groupby]))
-    metadata = metadata[metadata["contig_QC_pass"].isin([True, "True"])]
-    if type(metadata[clonekey]) == "category":
-        metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
+    groups = list(set(_metadata[groupby]))
+    _metadata = _metadata[_metadata["contig_QC_pass"].isin([True, "True"])]
+    if type(_metadata[clonekey]) == "category":
+        _metadata[clonekey] = _metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
-        _metadata = metadata[metadata[groupby] == g]
-        res[g] = _metadata[clonekey].value_counts()
+        __metadata = _metadata[_metadata[groupby] == g]
+        res[g] = __metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient="index")
 
     # remove those with no counts
@@ -113,10 +110,7 @@ def clone_rarefaction(
         index=res_.index,
     ).T
 
-    if diversity_key is None:
-        diversitykey = "diversity"
-    else:
-        diversitykey = diversity_key
+    diversitykey = diversity_key if diversity_key is not None else "diversity"
 
     if isinstance(vdj_data, AnnData):
         if diversitykey not in vdj_data.uns:
@@ -485,31 +479,27 @@ def diversity_gini(
         if isinstance(data, AnnData):
             raise TypeError("Only Dandelion class object accepted.")
         elif isinstance(data, Dandelion):
-            metadata = data.metadata.copy()
+            _metadata = data.metadata.copy()
         clonekey = clone_key if clone_key is not None else "clone_id"
-
-        if metric is None:
-            met = "clone_network"
-        else:
-            met = metric
+        met = metric if metric is not None else "clone_network"
 
         # split up the table by groupby
-        metadata[groupby] = metadata[groupby].astype("category")
-        metadata[groupby] = metadata[groupby].cat.remove_unused_categories()
-        groups = list(set(metadata[groupby]))
+        _metadata[groupby] = _metadata[groupby].astype("category")
+        _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
+        groups = list(set(_metadata[groupby]))
 
         if downsample is None:
-            minsize = metadata[groupby].value_counts().min()
+            minsize = _metadata[groupby].value_counts().min()
         else:
             minsize = downsample
-            if minsize > metadata[groupby].value_counts().min():
+            if minsize > _metadata[groupby].value_counts().min():
                 logg.info(
                     "Downsampling size provided of {} was larger than the smallest group size. ".format(
                         downsample
                     )
                     + "Defaulting to the smallest group size for downsampling."
                 )
-                minsize = metadata[groupby].value_counts().min()
+                minsize = _metadata[groupby].value_counts().min()
 
         if minsize < 100:
             logg.info(
@@ -568,8 +558,8 @@ def diversity_gini(
                 "Computing gini indices for clone size using metadata and node degree using network."
             )
             clone_degree(data)
-        metadata = data.metadata.copy()
-        data = data.data.copy()
+        _metadata = data.metadata.copy()
+        _data = data.data.copy()
         res2 = {}
 
         if resample:
@@ -581,9 +571,9 @@ def diversity_gini(
 
         for g in groups:
             # clone size distribution
-            _dat = metadata[metadata[groupby] == g]
-            _data = data[data["cell_id"].isin(list(_dat.index))]
-            ddl_dat = Dandelion(_data, metadata=_dat)
+            _dat = _metadata[_metadata[groupby] == g]
+            __data = _data[_data["cell_id"].isin(list(_dat.index))]
+            ddl_dat = Dandelion(__data, metadata=_dat)
             if resample:
                 sizelist = []
                 if isinstance(data, Dandelion):
@@ -849,16 +839,16 @@ def diversity_gini(
         vdj_data: Dandelion, gini_results: pd.DataFrame, groupby: str
     ) -> None:
         """Transfer gini indicies."""
-        metadata = vdj_data.metadata.copy()
+        _metadata = vdj_data.metadata.copy()
 
-        groups = list(set(metadata[groupby]))
+        groups = list(set(_metadata[groupby]))
         for c in gini_results.columns:
-            metadata[c] = np.nan
+            _metadata[c] = np.nan
             for g in groups:
-                for i in metadata.index:
-                    if metadata.at[i, groupby] == g:
-                        metadata.at[i, c] = gini_results[c][g]
-        vdj_data.metadata = metadata.copy()
+                for i in _metadata.index:
+                    if _metadata.at[i, groupby] == g:
+                        _metadata.at[i, c] = gini_results[c][g]
+        vdj_data.metadata = _metadata.copy()
 
     res = gini_indices(
         vdj_data,
@@ -950,28 +940,28 @@ def diversity_chao1(
     ) -> pd.DataFrame:
         """Chao1 estimates."""
         if isinstance(data, AnnData):
-            metadata = data.obs.copy()
+            _metadata = data.obs.copy()
         elif isinstance(data, Dandelion):
-            metadata = data.metadata.copy()
+            _metadata = data.metadata.copy()
         clonekey = clone_key if clone_key is not None else "clone_id"
 
         # split up the table by groupby
-        metadata[groupby] = metadata[groupby].astype("category")
-        metadata[groupby] = metadata[groupby].cat.remove_unused_categories()
-        groups = list(set(metadata[groupby]))
+        _metadata[groupby] = _metadata[groupby].astype("category")
+        _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
+        groups = list(set(_metadata[groupby]))
 
         if downsample is None:
-            minsize = metadata[groupby].value_counts().min()
+            minsize = _metadata[groupby].value_counts().min()
         else:
             minsize = downsample
-            if minsize > metadata[groupby].value_counts().min():
+            if minsize > _metadata[groupby].value_counts().min():
                 logg.info(
                     "Downsampling size provided of {} was larger than the smallest group size. ".format(
                         downsample
                     )
                     + "Defaulting to the smallest group size for downsampling."
                 )
-                minsize = metadata[groupby].value_counts().min()
+                minsize = _metadata[groupby].value_counts().min()
 
         if minsize < 100:
             logg.info(
@@ -990,7 +980,7 @@ def diversity_chao1(
         res1 = {}
         for g in groups:
             # clone size distribution
-            _dat = metadata[metadata[groupby] == g]
+            _dat = _metadata[_metadata[groupby] == g]
             if resample:
                 sizelist = []
                 graphlist = []
@@ -1051,21 +1041,21 @@ def diversity_chao1(
     ) -> None:
         """Transfer chao1 estimates."""
         if isinstance(data, AnnData):
-            metadata = data.obs.copy()
+            _metadata = data.obs.copy()
         elif isinstance(data, Dandelion):
-            metadata = data.metadata.copy()
+            _metadata = data.metadata.copy()
 
-        groups = list(set(metadata[groupby]))
+        groups = list(set(_metadata[groupby]))
         for c in chao1_results.columns:
-            metadata[c] = np.nan
+            _metadata[c] = np.nan
             for g in groups:
-                for i in metadata.index:
-                    if metadata.at[i, groupby] == g:
-                        metadata.at[i, c] = chao1_results[c][g]
+                for i in _metadata.index:
+                    if _metadata.at[i, groupby] == g:
+                        _metadata.at[i, c] = chao1_results[c][g]
         if isinstance(data, AnnData):
-            data.obs = metadata.copy()
+            data.obs = _metadata.copy()
         elif isinstance(data, Dandelion):
-            data.metadata = metadata.copy()
+            data.metadata = _metadata.copy()
 
     res = chao1_estimates(
         vdj_data,
@@ -1177,28 +1167,28 @@ def diversity_shannon(
     ) -> pd.DataFrame:
         """Shannon entropy."""
         if isinstance(data, AnnData):
-            metadata = data.obs.copy()
+            _metadata = data.obs.copy()
         elif isinstance(data, Dandelion):
-            metadata = data.metadata.copy()
+            _metadata = data.metadata.copy()
         clonekey = clone_key if clone_key is not None else "clone_id"
 
         # split up the table by groupby
-        metadata[groupby] = metadata[groupby].astype("category")
-        metadata[groupby] = metadata[groupby].cat.remove_unused_categories()
-        groups = list(set(metadata[groupby]))
+        _metadata[groupby] = _metadata[groupby].astype("category")
+        _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
+        groups = list(set(_metadata[groupby]))
 
         if downsample is None:
-            minsize = metadata[groupby].value_counts().min()
+            minsize = _metadata[groupby].value_counts().min()
         else:
             minsize = downsample
-            if minsize > metadata[groupby].value_counts().min():
+            if minsize > _metadata[groupby].value_counts().min():
                 logg.info(
                     "Downsampling size provided of {} was larger than the smallest group size. ".format(
                         downsample
                     )
                     + "Defaulting to the smallest group size for downsampling."
                 )
-                minsize = metadata[groupby].value_counts().min()
+                minsize = _metadata[groupby].value_counts().min()
 
         if minsize < 100:
             logg.info(
@@ -1219,7 +1209,7 @@ def diversity_shannon(
         sleep(0.5)
         for g in groups:
             # clone size distribution
-            _dat = metadata[metadata[groupby] == g]
+            _dat = _metadata[_metadata[groupby] == g]
             if resample:
                 sizelist = []
                 graphlist = []
@@ -1320,21 +1310,21 @@ def diversity_shannon(
     ) -> None:
         """Transfer shannon entropy."""
         if isinstance(data, AnnData):
-            metadata = data.obs.copy()
+            _metadata = data.obs.copy()
         elif isinstance(data, Dandelion):
-            metadata = data.metadata.copy()
+            _metadata = data.metadata.copy()
 
-        groups = list(set(metadata[groupby]))
+        groups = list(set(_metadata[groupby]))
         for c in shannon_results.columns:
-            metadata[c] = np.nan
+            _metadata[c] = np.nan
             for g in groups:
-                for i in metadata.index:
-                    if metadata.at[i, groupby] == g:
-                        metadata.at[i, c] = shannon_results[c][g]
+                for i in _metadata.index:
+                    if _metadata.at[i, groupby] == g:
+                        _metadata.at[i, c] = shannon_results[c][g]
         if isinstance(data, AnnData):
-            data.obs = metadata.copy()
+            data.obs = _metadata.copy()
         elif isinstance(data, Dandelion):
-            data.metadata = metadata.copy()
+            data.metadata = _metadata.copy()
 
     res = shannon_entropy(
         vdj_data,
