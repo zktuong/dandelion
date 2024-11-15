@@ -641,9 +641,9 @@ def diversity_gini(
                                 "clone_network_cluster_size_gini"
                             ] = pd.Series(g_c_c_res)
                         elif met == "clone_centrality":
-                            clone_centrality(resampled, verbose=verbose)
+                            clone_centrality(resampled)
                         elif met == "clone_degree":
-                            clone_degree(resampled, verbose=verbose)
+                            clone_degree(resampled)
                         else:
                             raise ValueError(
                                 (
@@ -1127,6 +1127,7 @@ def diversity_shannon(
     normalize: bool = True,
     key_added: str | None = None,
     downsample: int | None = None,
+    verbose: bool = False,
 ) -> pd.DataFrame | Dandelion | AnnData:
     """
     Compute clones Shannon entropy.
@@ -1153,6 +1154,8 @@ def diversity_shannon(
         column names for output.
     downsample : int | None, optional
         number of cells to downsample to. If None, defaults to size of smallest group.
+    verbose : bool, optional
+        whether to print progress.
 
     Returns
     -------
@@ -1342,6 +1345,7 @@ def diversity_shannon(
         normalize=normalize,
         key_added=key_added,
         downsample=downsample,
+        verbose=verbose,
     )
 
     if diversity_key is None:
