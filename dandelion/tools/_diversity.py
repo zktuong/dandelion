@@ -467,7 +467,7 @@ def diversity_gini(
     start = logg.info("Calculating Gini indices")
 
     def gini_indices(
-        self: Dandelion,
+        data: Dandelion,
         groupby: str,
         metric: str | None = None,
         clone_key: str | None = None,
@@ -482,10 +482,10 @@ def diversity_gini(
         **kwargs,
     ) -> pd.DataFrame:
         """Gini indices."""
-        if isinstance(self, AnnData):
+        if isinstance(data, AnnData):
             raise TypeError("Only Dandelion class object accepted.")
-        elif isinstance(self, Dandelion):
-            metadata = self.metadata.copy()
+        elif isinstance(data, Dandelion):
+            metadata = data.metadata.copy()
         clonekey = clone_key if clone_key is not None else "clone_id"
 
         if metric is None:
@@ -526,7 +526,7 @@ def diversity_gini(
             )
             if not reconstruct_network:
                 n_n, v_s, c_s = clone_networkstats(
-                    self,
+                    data,
                     expanded_only=expanded_only,
                     network_clustersize=contracted,
                     verbose=verbose,
@@ -552,24 +552,24 @@ def diversity_gini(
                     g_c_c = 0
                 for cell in n_n:
                     g_c_c_res.update({cell: g_c_c})
-                self.metadata["clone_network_vertex_size_gini"] = pd.Series(
+                data.metadata["clone_network_vertex_size_gini"] = pd.Series(
                     g_c_v_res
                 )
-                self.metadata["clone_network_cluster_size_gini"] = pd.Series(
+                data.metadata["clone_network_cluster_size_gini"] = pd.Series(
                     g_c_c_res
                 )
         elif met == "clone_centrality":
             logg.info(
                 "Computing gini indices for clone size using metadata and node closeness centrality using network."
             )
-            clone_centrality(self)
+            clone_centrality(data)
         elif met == "clone_degree":
             logg.info(
                 "Computing gini indices for clone size using metadata and node degree using network."
             )
-            clone_degree(self)
-        metadata = self.metadata.copy()
-        data = self.data.copy()
+            clone_degree(data)
+        metadata = data.metadata.copy()
+        data = data.data.copy()
         res2 = {}
 
         if resample:
@@ -586,14 +586,14 @@ def diversity_gini(
             ddl_dat = Dandelion(_data, metadata=_dat)
             if resample:
                 sizelist = []
-                if isinstance(self, Dandelion):
+                if isinstance(data, Dandelion):
                     graphlist = []
                 for i in tqdm(
                     range(0, n_resample),
                     bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
                     disable=not verbose,
                 ):
-                    if isinstance(self, Dandelion):
+                    if isinstance(data, Dandelion):
                         resampled = generate_network(
                             ddl_dat,
                             clone_key=clonekey,
@@ -739,7 +739,7 @@ def diversity_gini(
                     else:
                         g_c = 0
                     res1.update({g: g_c})
-                if isinstance(self, Dandelion):
+                if isinstance(data, Dandelion):
                     if met == "clone_network":
                         if reconstruct_network:
                             generate_network(
@@ -939,7 +939,7 @@ def diversity_chao1(
     start = logg.info("Calculating Chao1 estimates")
 
     def chao1_estimates(
-        self: Dandelion | AnnData,
+        data: Dandelion | AnnData,
         groupby: str,
         clone_key: str | None = None,
         resample: bool = False,
@@ -949,10 +949,10 @@ def diversity_chao1(
         verbose: bool = False,
     ) -> pd.DataFrame:
         """Chao1 estimates."""
-        if isinstance(self, AnnData):
-            metadata = self.obs.copy()
-        elif isinstance(self, Dandelion):
-            metadata = self.metadata.copy()
+        if isinstance(data, AnnData):
+            metadata = data.obs.copy()
+        elif isinstance(data, Dandelion):
+            metadata = data.metadata.copy()
         clonekey = clone_key if clone_key is not None else "clone_id"
 
         # split up the table by groupby
@@ -1045,15 +1045,15 @@ def diversity_chao1(
         return res_df
 
     def transfer_chao1_estimates(
-        self: Dandelion | AnnData,
+        data: Dandelion | AnnData,
         chao1_results: pd.DataFrame,
         groupby: str,
     ) -> None:
         """Transfer chao1 estimates."""
-        if isinstance(self, AnnData):
-            metadata = self.obs.copy()
-        elif isinstance(self, Dandelion):
-            metadata = self.metadata.copy()
+        if isinstance(data, AnnData):
+            metadata = data.obs.copy()
+        elif isinstance(data, Dandelion):
+            metadata = data.metadata.copy()
 
         groups = list(set(metadata[groupby]))
         for c in chao1_results.columns:
@@ -1062,10 +1062,10 @@ def diversity_chao1(
                 for i in metadata.index:
                     if metadata.at[i, groupby] == g:
                         metadata.at[i, c] = chao1_results[c][g]
-        if isinstance(self, AnnData):
-            self.obs = metadata.copy()
-        elif isinstance(self, Dandelion):
-            self.metadata = metadata.copy()
+        if isinstance(data, AnnData):
+            data.obs = metadata.copy()
+        elif isinstance(data, Dandelion):
+            data.metadata = metadata.copy()
 
     res = chao1_estimates(
         vdj_data,
@@ -1165,7 +1165,7 @@ def diversity_shannon(
     start = logg.info("Calculating Shannon entropy")
 
     def shannon_entropy(
-        self: Dandelion | AnnData,
+        data: Dandelion | AnnData,
         groupby: str,
         clone_key: str | None = None,
         resample: bool = False,
@@ -1176,10 +1176,10 @@ def diversity_shannon(
         verbose: bool = False,
     ) -> pd.DataFrame:
         """Shannon entropy."""
-        if isinstance(self, AnnData):
-            metadata = self.obs.copy()
-        elif isinstance(self, Dandelion):
-            metadata = self.metadata.copy()
+        if isinstance(data, AnnData):
+            metadata = data.obs.copy()
+        elif isinstance(data, Dandelion):
+            metadata = data.metadata.copy()
         clonekey = clone_key if clone_key is not None else "clone_id"
 
         # split up the table by groupby
@@ -1314,15 +1314,15 @@ def diversity_shannon(
         return res_df
 
     def transfer_shannon_entropy(
-        self: Dandelion | AnnData,
+        data: Dandelion | AnnData,
         shannon_results: pd.DataFrame,
         groupby: str,
     ) -> None:
         """Transfer shannon entropy."""
-        if isinstance(self, AnnData):
-            metadata = self.obs.copy()
-        elif isinstance(self, Dandelion):
-            metadata = self.metadata.copy()
+        if isinstance(data, AnnData):
+            metadata = data.obs.copy()
+        elif isinstance(data, Dandelion):
+            metadata = data.metadata.copy()
 
         groups = list(set(metadata[groupby]))
         for c in shannon_results.columns:
@@ -1331,10 +1331,10 @@ def diversity_shannon(
                 for i in metadata.index:
                     if metadata.at[i, groupby] == g:
                         metadata.at[i, c] = shannon_results[c][g]
-        if isinstance(self, AnnData):
-            self.obs = metadata.copy()
-        elif isinstance(self, Dandelion):
-            self.metadata = metadata.copy()
+        if isinstance(data, AnnData):
+            data.obs = metadata.copy()
+        elif isinstance(data, Dandelion):
+            data.metadata = metadata.copy()
 
     res = shannon_entropy(
         vdj_data,
