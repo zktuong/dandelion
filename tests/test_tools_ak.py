@@ -367,8 +367,7 @@ def test_diversity_rarefaction3(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -388,8 +387,7 @@ def test_diversity_gini3(create_testfolder, metric):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -421,8 +419,7 @@ def test_diversity2a(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -440,8 +437,7 @@ def test_diversity2b(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -459,8 +455,7 @@ def test_diversity2c(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
