@@ -431,8 +431,8 @@ def generate_network(
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                     set_edge_list_index(tmp_edge_list[c])
 
-                    tmp_edge_list[c]["weight"].update(
-                        tmp_totaldiststack["weight"]
+                    tmp_edge_list[c].update(
+                        {"weight": tmp_totaldiststack["weight"]}
                     )
                     # keep only edges when there is 100% identity, to minimise crowding
                     tmp_edge_list[c] = tmp_edge_list[c][
@@ -451,7 +451,7 @@ def generate_network(
                 set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                edge_list_final["weight"].update(tmp_totaldiststack["weight"])
+                edge_list_final.update({"weight": tmp_totaldiststack["weight"]})
                 # return the edge list
                 edge_list_final.reset_index(drop=True, inplace=True)
             except:

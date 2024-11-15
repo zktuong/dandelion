@@ -2203,7 +2203,7 @@ def filter_contigs(
     umi_adjustment = tofilter.umi_adjustment.copy()
 
     if len(umi_adjustment) > 0:
-        dat["umi_count"].update(umi_adjustment)
+        dat.update({"umi_count": umi_adjustment})
 
     poorqual = {c: "False" for c in adata_.obs_names}
     hdoublet = {c: "False" for c in adata_.obs_names}
