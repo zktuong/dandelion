@@ -134,7 +134,7 @@ def clone_diversity(
     method: Literal["gini", "chao1", "shannon"] = "gini",
     metric: Literal["clone_network", "clone_degree", "clone_centrality"] = None,
     clone_key: str | None = None,
-    update_obs_meta: bool = True,
+    return_table: bool = True,
     diversity_key: str | None = None,
     resample: bool = False,
     downsample: int | None = None,
@@ -164,7 +164,7 @@ def clone_diversity(
         `None` defaults to 'clone_network'.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata.
-    update_obs_meta : bool, optional
+    return_table : bool, optional
         If True, a `pandas` data frame is returned.
         If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str | None, optional
@@ -204,13 +204,13 @@ def clone_diversity(
         resample = True
 
     if method == "gini":
-        if update_obs_meta:
-            diversity_gini(
+        if return_table:
+            return diversity_gini(
                 vdj_data,
                 groupby=groupby,
                 metric=metric,
                 clone_key=clone_key,
-                update_obs_meta=update_obs_meta,
+                return_table=return_table,
                 diversity_key=diversity_key,
                 resample=resample,
                 n_resample=n_resample,
@@ -223,12 +223,12 @@ def clone_diversity(
                 **kwargs,
             )
         else:
-            return diversity_gini(
+            diversity_gini(
                 vdj_data,
                 groupby=groupby,
                 metric=metric,
                 clone_key=clone_key,
-                update_obs_meta=update_obs_meta,
+                return_table=return_table,
                 diversity_key=diversity_key,
                 resample=resample,
                 n_resample=n_resample,
@@ -241,12 +241,12 @@ def clone_diversity(
                 **kwargs,
             )
     if method == "chao1":
-        if update_obs_meta:
-            diversity_chao1(
+        if return_table:
+            return diversity_chao1(
                 vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
-                update_obs_meta=update_obs_meta,
+                return_table=return_table,
                 diversity_key=diversity_key,
                 resample=resample,
                 n_resample=n_resample,
@@ -255,11 +255,11 @@ def clone_diversity(
                 verbose=verbose,
             )
         else:
-            return diversity_chao1(
+            diversity_chao1(
                 vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
-                update_obs_meta=update_obs_meta,
+                return_table=return_table,
                 diversity_key=diversity_key,
                 resample=resample,
                 n_resample=n_resample,
@@ -268,12 +268,12 @@ def clone_diversity(
                 verbose=verbose,
             )
     if method == "shannon":
-        if update_obs_meta:
-            diversity_shannon(
+        if return_table:
+            return diversity_shannon(
                 vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
-                update_obs_meta=update_obs_meta,
+                return_table=return_table,
                 diversity_key=diversity_key,
                 resample=resample,
                 n_resample=n_resample,
@@ -283,11 +283,11 @@ def clone_diversity(
                 verbose=verbose,
             )
         else:
-            return diversity_shannon(
+            diversity_shannon(
                 vdj_data,
                 groupby=groupby,
                 clone_key=clone_key,
-                update_obs_meta=update_obs_meta,
+                return_table=return_table,
                 diversity_key=diversity_key,
                 resample=resample,
                 n_resample=n_resample,
@@ -393,7 +393,7 @@ def diversity_gini(
     groupby: str,
     metric: str | None = None,
     clone_key: str | None = None,
-    update_obs_meta: bool = False,
+    return_table: bool = False,
     resample: bool = False,
     n_resample: int = 50,
     downsample: int | None = None,
@@ -419,7 +419,7 @@ def diversity_gini(
         Defaults to 'clone_centrality'.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata.
-    update_obs_meta : bool, optional
+    return_table : bool, optional
         If True, a `pandas` data frame is returned.
         If False, function will try to populate the input object's metadata/obs slot.
     resample : bool, optional
@@ -476,26 +476,26 @@ def diversity_gini(
         **kwargs,
     )
 
-    if update_obs_meta:
+    if return_table:
         res_ = res.copy()
-        transfer_gini_indices(vdj_data, res_, groupby)
+        logg.info(" finished", time=start)
+        return res_
+    else:
+        res_ = res.copy()
+        transfer_diversity_results(vdj_data, res_, groupby)
         if isinstance(vdj_data, Dandelion):
             logg.info(
                 " finished",
                 time=start,
                 deep=("updated `.metadata` with Gini indices.\n"),
             )
-    else:
-        res_ = res.copy()
-        logg.info(" finished", time=start)
-        return res_
 
 
 def diversity_chao1(
     vdj_data: Dandelion | AnnData,
     groupby: str,
     clone_key: str | None = None,
-    update_obs_meta: bool = False,
+    return_table: bool = False,
     diversity_key: str | None = None,
     resample: bool = False,
     n_resample: int = 50,
@@ -514,7 +514,7 @@ def diversity_chao1(
         Column name to calculate the Chao1 estimates on, for e.g. sample, patient etc.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata.
-    update_obs_meta : bool, optional
+    return_table : bool, optional
         If True, a `pandas` dataframe is returned. If False, function will try to populate the input object's
         metadata/obs slot.
     diversity_key : str | None, optional
@@ -538,135 +538,6 @@ def diversity_chao1(
     """
     start = logg.info("Calculating Chao1 estimates")
 
-    def chao1_estimates(
-        data: Dandelion | AnnData,
-        groupby: str,
-        clone_key: str | None = None,
-        resample: bool = False,
-        n_resample: int = 50,
-        downsample: int | None = None,
-        key_added: str | None = None,
-        verbose: bool = False,
-    ) -> pd.DataFrame:
-        """Chao1 estimates."""
-        if isinstance(data, AnnData):
-            _metadata = data.obs.copy()
-        elif isinstance(data, Dandelion):
-            _metadata = data.metadata.copy()
-        clonekey = clone_key if clone_key is not None else "clone_id"
-
-        # split up the table by groupby
-        _metadata[groupby] = _metadata[groupby].astype("category")
-        _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
-        groups = list(set(_metadata[groupby]))
-
-        if downsample is None:
-            minsize = _metadata[groupby].value_counts().min()
-        else:
-            minsize = downsample
-            if minsize > _metadata[groupby].value_counts().min():
-                logg.info(
-                    "Downsampling size provided of {} was larger than the smallest group size. ".format(
-                        downsample
-                    )
-                    + "Defaulting to the smallest group size for downsampling."
-                )
-                minsize = _metadata[groupby].value_counts().min()
-
-        if minsize < 100:
-            logg.info(
-                "The minimum cell numbers when grouped by {} is {}.".format(
-                    groupby, minsize
-                )
-                + " Exercise caution when interpreting diversity measures."
-            )
-
-        if resample:
-            logg.info(
-                "Downsampling each group specified in `{}` to {} cells for calculating Chao1 estimates.".format(
-                    groupby, minsize
-                )
-            )
-        res1 = {}
-        for g in groups:
-            # clone size distribution
-            _dat = _metadata[_metadata[groupby] == g]
-            if resample:
-                sizelist = []
-                graphlist = []
-                for i in tqdm(
-                    range(0, n_resample),
-                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-                    disable=not verbose,
-                ):
-                    _dat = _dat.sample(minsize)
-                    _tab = _dat[clonekey].value_counts()
-                    if "nan" in _tab.index or np.nan in _tab.index:
-                        try:
-                            _tab.drop("nan", inplace=True)
-                        except:
-                            _tab.drop(np.nan, inplace=True)
-                    clonesizecounts = np.array(_tab)
-                    clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                    if len(clonesizecounts) > 0:
-                        g_c = chao1(clonesizecounts)
-                    else:
-                        g_c = 0
-                    sizelist.append(g_c)
-                try:
-                    g_c = sum(sizelist) / len(sizelist)
-                except:
-                    g_c = 0
-                res1.update({g: g_c})
-            else:
-                _tab = _dat[clonekey].value_counts()
-                if "nan" in _tab.index or np.nan in _tab.index:
-                    try:
-                        _tab.drop("nan", inplace=True)
-                    except:
-                        _tab.drop(np.nan, inplace=True)
-                clonesizecounts = np.array(_tab)
-                clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                if len(clonesizecounts) > 0:
-                    g_c = chao1(clonesizecounts)
-                else:
-                    g_c = 0
-                res1.update({g: g_c})
-
-        res_df = pd.DataFrame.from_dict([res1]).T
-        if key_added is None:
-            res_df.columns = ["clone_size_chao1"]
-        else:
-            if type(key_added) is list:
-                res_df.columns = key_added[0]
-            else:
-                res_df.columns = [key_added]
-
-        return res_df
-
-    def transfer_chao1_estimates(
-        data: Dandelion | AnnData,
-        chao1_results: pd.DataFrame,
-        groupby: str,
-    ) -> None:
-        """Transfer chao1 estimates."""
-        if isinstance(data, AnnData):
-            _metadata = data.obs.copy()
-        elif isinstance(data, Dandelion):
-            _metadata = data.metadata.copy()
-
-        groups = list(set(_metadata[groupby]))
-        for c in chao1_results.columns:
-            _metadata[c] = np.nan
-            for g in groups:
-                for i in _metadata.index:
-                    if _metadata.at[i, groupby] == g:
-                        _metadata.at[i, c] = chao1_results[c][g]
-        if isinstance(data, AnnData):
-            data.obs = _metadata.copy()
-        elif isinstance(data, Dandelion):
-            data.metadata = _metadata.copy()
-
     res = chao1_estimates(
         vdj_data,
         groupby=groupby,
@@ -678,19 +549,27 @@ def diversity_chao1(
         verbose=verbose,
     )
 
-    if diversity_key is None:
-        diversitykey = "diversity"
-    else:
-        diversitykey = diversity_key
+    diversitykey = diversity_key if diversity_key is not None else "diversity"
 
     if isinstance(vdj_data, AnnData):
         if diversitykey not in vdj_data.uns:
             vdj_data.uns[diversitykey] = {}
         vdj_data.uns[diversitykey].update({"chao1": res})
 
-    if update_obs_meta:
+    if return_table:
         res_ = res.copy()
-        transfer_chao1_estimates(vdj_data, res_, groupby)
+        if isinstance(vdj_data, AnnData):
+            logg.info(
+                " finished",
+                time=start,
+                deep=("updated `.uns` with Chao1 estimates.\n"),
+            )
+        else:
+            logg.info(" finished", time=start)
+        return res_
+    else:
+        res_ = res.copy()
+        transfer_diversity_results(vdj_data, res_, groupby)
         if isinstance(vdj_data, Dandelion):
             logg.info(
                 " finished",
@@ -703,24 +582,13 @@ def diversity_chao1(
                 time=start,
                 deep=("updated `.obs` and `.uns` with Chao1 estimates.\n"),
             )
-    else:
-        res_ = res.copy()
-        if isinstance(vdj_data, AnnData):
-            logg.info(
-                " finished",
-                time=start,
-                deep=("updated `.uns` with Chao1 estimates.\n"),
-            )
-        else:
-            logg.info(" finished", time=start)
-        return res_
 
 
 def diversity_shannon(
     vdj_data: Dandelion | AnnData,
     groupby: str,
     clone_key: str | None = None,
-    update_obs_meta: bool = False,
+    return_table: bool = False,
     diversity_key: str | None = None,
     resample: bool = False,
     n_resample: int = 50,
@@ -740,7 +608,7 @@ def diversity_shannon(
         Column name to calculate the Shannon entropy on, for e.g. sample, patient etc.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata.
-    update_obs_meta : bool, optional
+    return_table : bool, optional
         If True, a `pandas` data frame is returned. If False, function will try to populate the input object's metadata/obs slot.
     diversity_key : str | None, optional
         key for 'diversity' results in `.uns`.
@@ -764,178 +632,6 @@ def diversity_shannon(
     """
     start = logg.info("Calculating Shannon entropy")
 
-    def shannon_entropy(
-        data: Dandelion | AnnData,
-        groupby: str,
-        clone_key: str | None = None,
-        resample: bool = False,
-        n_resample: int = 50,
-        normalize: bool = True,
-        downsample: int | None = None,
-        key_added: str | None = None,
-        verbose: bool = False,
-    ) -> pd.DataFrame:
-        """Shannon entropy."""
-        if isinstance(data, AnnData):
-            _metadata = data.obs.copy()
-        elif isinstance(data, Dandelion):
-            _metadata = data.metadata.copy()
-        clonekey = clone_key if clone_key is not None else "clone_id"
-
-        # split up the table by groupby
-        _metadata[groupby] = _metadata[groupby].astype("category")
-        _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
-        groups = list(set(_metadata[groupby]))
-
-        if downsample is None:
-            minsize = _metadata[groupby].value_counts().min()
-        else:
-            minsize = downsample
-            if minsize > _metadata[groupby].value_counts().min():
-                logg.info(
-                    "Downsampling size provided of {} was larger than the smallest group size. ".format(
-                        downsample
-                    )
-                    + "Defaulting to the smallest group size for downsampling."
-                )
-                minsize = _metadata[groupby].value_counts().min()
-
-        if minsize < 100:
-            logg.info(
-                "The minimum cell numbers when grouped by {} is {}.".format(
-                    groupby, minsize
-                )
-                + " Exercise caution when interpreting diversity measures."
-            )
-
-        if resample:
-            logg.info(
-                "Downsampling each group specified in `{}` to {} cells for calculating Shannon entropy.".format(
-                    groupby, minsize
-                )
-            )
-
-        res1 = {}
-        sleep(0.5)
-        for g in groups:
-            # clone size distribution
-            _dat = _metadata[_metadata[groupby] == g]
-            if resample:
-                sizelist = []
-                graphlist = []
-
-                for i in tqdm(
-                    range(0, n_resample),
-                    bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-                    disable=not verbose,
-                ):
-                    _dat = _dat.sample(minsize)
-                    _tab = _dat[clonekey].value_counts()
-                    if "nan" in _tab.index or np.nan in _tab.index:
-                        try:
-                            _tab.drop("nan", inplace=True)
-                        except:
-                            _tab.drop(np.nan, inplace=True)
-                    clonesizecounts = np.array(_tab)
-                    clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                    if len(clonesizecounts) > 0:
-                        if normalize:
-                            if len(clonesizecounts) == 1:
-                                g_c = 0
-                            else:
-                                clonesizecounts_freqs = (
-                                    clonesizecounts / np.sum(clonesizecounts)
-                                )
-                                g_c = -np.sum(
-                                    (
-                                        clonesizecounts_freqs
-                                        * np.log(clonesizecounts_freqs)
-                                    )
-                                    / np.log(len(clonesizecounts_freqs))
-                                )
-                        else:
-                            g_c = shannon(clonesizecounts)
-                    else:
-                        if normalize:
-                            g_c = 1
-                        else:
-                            g_c = 0
-                    sizelist.append(g_c)
-                try:
-                    g_c = sum(sizelist) / len(sizelist)
-                except:
-                    g_c = 0
-                res1.update({g: g_c})
-            else:
-                _tab = _dat[clonekey].value_counts()
-                if "nan" in _tab.index or np.nan in _tab.index:
-                    try:
-                        _tab.drop("nan", inplace=True)
-                    except:
-                        _tab.drop(np.nan, inplace=True)
-                clonesizecounts = np.array(_tab)
-                clonesizecounts = clonesizecounts[clonesizecounts > 0]
-                if len(clonesizecounts) > 0:
-                    if normalize:
-                        if len(clonesizecounts) == 1:
-                            g_c = 0
-                        else:
-                            clonesizecounts_freqs = clonesizecounts / np.sum(
-                                clonesizecounts
-                            )
-                            g_c = -np.sum(
-                                (
-                                    clonesizecounts_freqs
-                                    * np.log(clonesizecounts_freqs)
-                                )
-                                / np.log(len(clonesizecounts_freqs))
-                            )
-                    else:
-                        g_c = shannon(clonesizecounts)
-                else:
-                    if normalize:
-                        g_c = 1
-                    else:
-                        g_c = 0
-                res1.update({g: g_c})
-
-        res_df = pd.DataFrame.from_dict([res1]).T
-        if key_added is None:
-            if normalize:
-                res_df.columns = ["clone_size_normalized_shannon"]
-            else:
-                res_df.columns = ["clone_size_shannon"]
-        else:
-            if type(key_added) is list:
-                res_df.columns = key_added[0]
-            else:
-                res_df.columns = [key_added]
-
-        return res_df
-
-    def transfer_shannon_entropy(
-        data: Dandelion | AnnData,
-        shannon_results: pd.DataFrame,
-        groupby: str,
-    ) -> None:
-        """Transfer shannon entropy."""
-        if isinstance(data, AnnData):
-            _metadata = data.obs.copy()
-        elif isinstance(data, Dandelion):
-            _metadata = data.metadata.copy()
-
-        groups = list(set(_metadata[groupby]))
-        for c in shannon_results.columns:
-            _metadata[c] = np.nan
-            for g in groups:
-                for i in _metadata.index:
-                    if _metadata.at[i, groupby] == g:
-                        _metadata.at[i, c] = shannon_results[c][g]
-        if isinstance(data, AnnData):
-            data.obs = _metadata.copy()
-        elif isinstance(data, Dandelion):
-            data.metadata = _metadata.copy()
-
     res = shannon_entropy(
         vdj_data,
         groupby=groupby,
@@ -948,19 +644,34 @@ def diversity_shannon(
         verbose=verbose,
     )
 
-    if diversity_key is None:
-        diversitykey = "diversity"
-    else:
-        diversitykey = diversity_key
+    diversitykey = diversity_key if diversity_key is not None else "diversity"
 
     if isinstance(vdj_data, AnnData):
         if diversitykey not in vdj_data.uns:
             vdj_data.uns[diversitykey] = {}
         vdj_data.uns[diversitykey].update({"shannon": res})
 
-    if update_obs_meta:
+    if return_table:
         res_ = res.copy()
-        transfer_shannon_entropy(vdj_data, res_, groupby)
+        if isinstance(vdj_data, AnnData):
+            if normalize:
+                logg.info(
+                    " finished",
+                    time=start,
+                    deep=("updated `.uns` with normalized Shannon entropy.\n"),
+                )
+            else:
+                logg.info(
+                    " finished",
+                    time=start,
+                    deep=("updated `.uns` with Shannon entropy.\n"),
+                )
+        else:
+            logg.info(" finished", time=start)
+        return res_
+    else:
+        res_ = res.copy()
+        transfer_diversity_results(vdj_data, res_, groupby)
         if isinstance(vdj_data, Dandelion):
             if normalize:
                 logg.info(
@@ -991,24 +702,6 @@ def diversity_shannon(
                     time=start,
                     deep=("updated `.obs` and `.uns` with Shannon entropy.\n"),
                 )
-    else:
-        res_ = res.copy()
-        if isinstance(vdj_data, AnnData):
-            if normalize:
-                logg.info(
-                    " finished",
-                    time=start,
-                    deep=("updated `.uns` with normalized Shannon entropy.\n"),
-                )
-            else:
-                logg.info(
-                    " finished",
-                    time=start,
-                    deep=("updated `.uns` with Shannon entropy.\n"),
-                )
-        else:
-            logg.info(" finished", time=start)
-        return res_
 
 
 def chooseln(N, k) -> float:
@@ -1037,6 +730,91 @@ def rarefun(y, sample) -> float:
     return out
 
 
+def drop_nan_values(df: pd.DataFrame) -> None:
+    """
+    Drop NaN values from a pandas DataFrame.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame from which to drop NaN values.
+    """
+    if "nan" in df.index or np.nan in df.index:
+        try:
+            df.drop("nan", inplace=True)
+        except:
+            df.drop(np.nan, inplace=True)
+
+
+def safe_average_update(data_dict: dict, key: str, values: list[float]) -> None:
+    """
+    Safely calculate the average of a list of values and update the dictionary.
+
+    Parameters
+    ----------
+    data_dict : dict
+        The dictionary to update.
+    key : Any
+        The key to update in the dictionary.
+    values : list of float
+        The list of values to average.
+    """
+    try:
+        average = sum(values) / len(values)
+    except ZeroDivisionError:
+        average = 0
+    data_dict.update({key: average})
+
+
+def process_clone_network_stats(
+    ddl_dat: Dandelion, expanded_only: bool, contracted: bool, verbose: bool
+) -> tuple[dict, dict, dict]:
+    """
+    Process clone network statistics and calculate Gini indices.
+
+    Parameters
+    ----------
+    ddl_dat : Any
+        The `Dandelion` object to process.
+    expanded_only : bool
+        Whether to consider only expanded clones.
+    contracted : bool
+        Whether to use contracted network clusters.
+    verbose : bool
+        Whether to display progress information.
+
+    Returns
+    -------
+    tuple[dict, dict, dict]
+        Tuple containing dictionaries for node names, vertex sizes, and cluster sizes.
+    """
+    n_n, v_s, c_s = clone_networkstats(
+        ddl_dat,
+        expanded_only=expanded_only,
+        network_clustersize=contracted,
+        verbose=verbose,
+    )
+    g_c_v = defaultdict(dict)
+    g_c_v_res, g_c_c_res = {}, {}
+
+    for vs in v_s:
+        v_sizes = np.array(v_s[vs])
+        if len(v_sizes) > 1:
+            v_sizes = np.append(v_sizes, 0)
+        g_c_v[vs] = calculate_gini_index(v_sizes)
+        for cell in n_n:
+            g_c_v_res.update({cell: g_c_v[n_n[cell]]})
+
+    c_sizes = np.array(sorted(list(flatten(c_s.values())), reverse=True))
+    if len(c_sizes) > 1:
+        c_sizes = np.append(c_sizes, 0)
+    g_c_c = calculate_gini_index(c_sizes)
+    for cell in n_n:
+        g_c_c_res.update({cell: g_c_c})
+
+    return g_c_v_res, g_c_c_res
+
+
 def gini_indices(
     data: Dandelion,
     groupby: str,
@@ -1063,25 +841,11 @@ def gini_indices(
     _metadata[groupby] = _metadata[groupby].astype("category")
     _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
     groups = list(set(_metadata[groupby]))
-    if downsample is None:
-        minsize = _metadata[groupby].value_counts().min()
-    else:
-        minsize = downsample
-        if minsize > _metadata[groupby].value_counts().min():
-            logg.info(
-                "Downsampling size provided of {} was larger than the smallest group size. ".format(
-                    downsample
-                )
-                + "Defaulting to the smallest group size for downsampling."
-            )
-            minsize = _metadata[groupby].value_counts().min()
-    if minsize < 100:
-        logg.info(
-            "The minimum cell numbers when grouped by {} is {}.".format(
-                groupby, minsize
-            )
-            + " Exercise caution when interpreting diversity measures."
-        )
+
+    minsize = calculate_minsize_and_log(
+        df=_metadata, col=groupby, downsample=downsample, resample=resample
+    )
+
     res1 = {}
     if met == "clone_network":
         logg.info(
@@ -1312,6 +1076,141 @@ def gini_indices(
     return res_df
 
 
+def chao1_estimates(
+    data: Dandelion | AnnData,
+    groupby: str,
+    clone_key: str | None = None,
+    resample: bool = False,
+    n_resample: int = 50,
+    downsample: int | None = None,
+    key_added: str | None = None,
+    verbose: bool = False,
+) -> pd.DataFrame:
+    """Chao1 estimates."""
+    if isinstance(data, AnnData):
+        _metadata = data.obs.copy()
+    elif isinstance(data, Dandelion):
+        _metadata = data.metadata.copy()
+    clonekey = clone_key if clone_key is not None else "clone_id"
+    diversity_mode = "chao1"
+    # split up the table by groupby
+    _metadata[groupby] = _metadata[groupby].astype("category")
+    _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
+    groups = list(set(_metadata[groupby]))
+
+    minsize = calculate_minsize_and_log(
+        df=_metadata, col=groupby, downsample=downsample, resample=resample
+    )
+
+    res1 = {}
+    for g in groups:
+        # clone size distribution
+        _dat = _metadata[_metadata[groupby] == g]
+        if resample:
+            sizelist = []
+            for i in tqdm(
+                range(0, n_resample),
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                disable=not verbose,
+            ):
+                _dat = _dat.sample(minsize)
+                _tab = _dat[clonekey].value_counts()
+                drop_nan_values(_tab)
+                clonesizecounts = np.array(_tab)
+                clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                g_c = (
+                    calculate_chao1(clonesizecounts)
+                    if len(clonesizecounts) > 0
+                    else 0
+                )
+                sizelist.append(g_c)
+            safe_average_update(res1, g, sizelist)
+        else:
+            _tab = _dat[clonekey].value_counts()
+            drop_nan_values(_tab)
+            clonesizecounts = np.array(_tab)
+            clonesizecounts = clonesizecounts[clonesizecounts > 0]
+            g_c = (
+                calculate_chao1(clonesizecounts)
+                if len(clonesizecounts) > 0
+                else 0
+            )
+            res1.update({g: g_c})
+
+    res_df = pd.DataFrame.from_dict([res1]).T
+    rename_result_column(res_df, diversity_mode, key_added)
+
+    return res_df
+
+
+def shannon_entropy(
+    data: Dandelion | AnnData,
+    groupby: str,
+    clone_key: str | None = None,
+    resample: bool = False,
+    n_resample: int = 50,
+    normalize: bool = True,
+    downsample: int | None = None,
+    key_added: str | None = None,
+    verbose: bool = False,
+) -> pd.DataFrame:
+    """Shannon entropy."""
+    if isinstance(data, AnnData):
+        _metadata = data.obs.copy()
+    elif isinstance(data, Dandelion):
+        _metadata = data.metadata.copy()
+    clonekey = clone_key if clone_key is not None else "clone_id"
+    diversity_mode = "shannon" if not normalize else "normalized_shannon"
+    # split up the table by groupby
+    _metadata[groupby] = _metadata[groupby].astype("category")
+    _metadata[groupby] = _metadata[groupby].cat.remove_unused_categories()
+    groups = list(set(_metadata[groupby]))
+
+    minsize = calculate_minsize_and_log(
+        df=_metadata, col=groupby, downsample=downsample, resample=resample
+    )
+
+    res1 = {}
+    for g in groups:
+        # clone size distribution
+        _dat = _metadata[_metadata[groupby] == g]
+        if resample:
+            sizelist = []
+            for i in tqdm(
+                range(0, n_resample),
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+                disable=not verbose,
+            ):
+                _dat = _dat.sample(minsize)
+                _tab = _dat[clonekey].value_counts()
+                drop_nan_values(_tab)
+                clonesizecounts = np.array(_tab)
+                clonesizecounts = clonesizecounts[clonesizecounts > 0]
+                g_c = (
+                    calculate_shannon_entropy(clonesizecounts, normalize)
+                    if len(clonesizecounts) > 0
+                    else 0
+                )
+                sizelist.append(g_c)
+            safe_average_update(res1, g, sizelist)
+        else:
+            _tab = _dat[clonekey].value_counts()
+            drop_nan_values(_tab)
+            clonesizecounts = np.array(_tab)
+            clonesizecounts = clonesizecounts[clonesizecounts > 0]
+            g_c = (
+                calculate_shannon_entropy(clonesizecounts, normalize)
+                if len(clonesizecounts) > 0
+                else 0
+            )
+            res1.update({g: g_c})
+
+    res_df = pd.DataFrame.from_dict([res1]).T
+    rename_result_column(res_df, diversity_mode, key_added)
+
+    return res_df
+
+
 def calculate_gini_index(
     values: np.ndarray, method: str = "trapezoids"
 ) -> float:
@@ -1334,102 +1233,156 @@ def calculate_gini_index(
     return 0 if gini < 0 or np.isnan(gini) else gini
 
 
-def drop_nan_values(df: pd.DataFrame) -> None:
+def calculate_chao1(values: np.ndarray) -> float:
     """
-    Drop NaN values from a pandas DataFrame.
+    Calculate the Chao1 estimate for a given array of values
 
     Parameters
     ----------
-    df : pd.DataFrame
-        The DataFrame from which to drop NaN values.
-    """
-    if "nan" in df.index or np.nan in df.index:
-        try:
-            df.drop("nan", inplace=True)
-        except:
-            df.drop(np.nan, inplace=True)
-
-
-def safe_average_update(data_dict: dict, key: str, values: list[float]) -> None:
-    """
-    Safely calculate the average of a list of values and update the dictionary.
-
-    Parameters
-    ----------
-    data_dict : dict
-        The dictionary to update.
-    key : Any
-        The key to update in the dictionary.
-    values : list of float
-        The list of values to average.
-    """
-    try:
-        average = sum(values) / len(values)
-    except ZeroDivisionError:
-        average = 0
-    data_dict.update({key: average})
-
-
-def process_clone_network_stats(
-    ddl_dat: Dandelion, expanded_only: bool, contracted: bool, verbose: bool
-) -> tuple[dict, dict, dict]:
-    """
-    Process clone network statistics and calculate Gini indices.
-
-    Parameters
-    ----------
-    ddl_dat : Any
-        The `Dandelion` object to process.
-    expanded_only : bool
-        Whether to consider only expanded clones.
-    contracted : bool
-        Whether to use contracted network clusters.
-    verbose : bool
-        Whether to display progress information.
+    values : np.ndarray
+        Array of values to calculate the Chao1 estimates for.
 
     Returns
     -------
-    tuple[dict, dict, dict]
-        Tuple containing dictionaries for node names, vertex sizes, and cluster sizes.
+    float
+        The calculated Chao1 estimates, or 0 if the index is negative or NaN.
     """
-    n_n, v_s, c_s = clone_networkstats(
-        ddl_dat,
-        expanded_only=expanded_only,
-        network_clustersize=contracted,
-        verbose=verbose,
-    )
-    g_c_v = defaultdict(dict)
-    g_c_v_res, g_c_c_res = {}, {}
-
-    for vs in v_s:
-        v_sizes = np.array(v_s[vs])
-        if len(v_sizes) > 1:
-            v_sizes = np.append(v_sizes, 0)
-        g_c_v[vs] = calculate_gini_index(v_sizes)
-        for cell in n_n:
-            g_c_v_res.update({cell: g_c_v[n_n[cell]]})
-
-    c_sizes = np.array(sorted(list(flatten(c_s.values())), reverse=True))
-    if len(c_sizes) > 1:
-        c_sizes = np.append(c_sizes, 0)
-    g_c_c = calculate_gini_index(c_sizes)
-    for cell in n_n:
-        g_c_c_res.update({cell: g_c_c})
-
-    return g_c_v_res, g_c_c_res
+    chao1e = chao1(values)
+    return 0 if chao1e < 0 or np.isnan(chao1e) else chao1e
 
 
-def transfer_gini_indices(
-    vdj_data: Dandelion, gini_results: pd.DataFrame, groupby: str
+def calculate_shannon_entropy(values: np.ndarray, normalize: bool) -> float:
+    """
+    Calculate the Shannon entropy for a given array of values
+
+    Parameters
+    ----------
+    values : np.ndarray
+        Array of values to calculate the Shannon entropys for.
+    normalize : bool, optional
+        Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
+    Returns
+    -------
+    float
+        The calculated Shannon entropys, or 0 if the index is negative or NaN.
+    """
+    if normalize:
+        if len(values) == 1:
+            return 0
+        else:
+            values_freqs = values / np.sum(values)
+            return -np.sum(
+                (values_freqs * np.log(values_freqs))
+                / np.log(len(values_freqs))
+            )
+    else:
+        return shannon(values)
+
+
+def transfer_diversity_results(
+    vdj_data: Dandelion | AnnData, diversity_results: pd.DataFrame, groupby: str
 ) -> None:
-    """Transfer gini indicies."""
-    _metadata = vdj_data.metadata.copy()
+    """Transfer diversity results."""
+    if isinstance(vdj_data, AnnData):
+        _metadata = vdj_data.obs.copy()
+    elif isinstance(vdj_data, Dandelion):
+        _metadata = vdj_data.metadata.copy()
 
     groups = list(set(_metadata[groupby]))
-    for c in gini_results.columns:
+    for c in diversity_results.columns:
         _metadata[c] = np.nan
         for g in groups:
             for i in _metadata.index:
                 if _metadata.at[i, groupby] == g:
-                    _metadata.at[i, c] = gini_results[c][g]
-    vdj_data.metadata = _metadata.copy()
+                    _metadata.at[i, c] = diversity_results[c][g]
+    if isinstance(vdj_data, AnnData):
+        vdj_data.obs = _metadata.copy()
+    elif isinstance(vdj_data, Dandelion):
+        vdj_data.metadata = _metadata.copy()
+
+
+def rename_result_column(
+    res_df: pd.DataFrame,
+    diversity_mode: str,
+    key_added: list[str] | str | None = None,
+) -> None:
+    """Processes the output result"""
+    if key_added is None:
+        res_df.columns = ["clone_size_" + diversity_mode]
+    else:
+        if isinstance(key_added, list):
+            res_df.columns = key_added[0]
+        else:
+            res_df.columns = [key_added]
+
+
+def calculate_minsize_and_log(
+    df: pd.DataFrame,
+    col: str,
+    downsample: int | None = None,
+    resample: int | bool | None = False,
+):
+    """
+    Calculate the minimum group size for downsampling and log related information.
+
+    Parameters
+    ----------
+    _df : pd.DataFrame
+        Metadata DataFrame containing the grouping information.
+    col : str
+        Column name in `_df` to group by.
+    downsample : int | None, optional
+        Downsampling size. If None or larger than the smallest group size, defaults to the smallest group size.
+    resample : bool | int | None, optional
+        Whether to log a message about resampling.
+    logg : logging.Logger, optional
+        Logger instance for logging messages. If None, no logs will be emitted.
+
+    Returns
+    -------
+    int
+        The determined minimum group size (`minsize`).
+
+    Notes
+    -----
+    - If `downsample` is greater than the smallest group size, the function logs a warning and defaults
+      to the smallest group size.
+    - If `minsize` is less than 100, a cautionary message is logged about potential issues with
+      diversity measures.
+    - When `resample` is True, a message is logged about the downsampling process.
+    """
+    # Determine minimum group size
+    if downsample is None:
+        minsize = df[col].value_counts().min()
+    else:
+        minsize = downsample
+        if minsize > df[col].value_counts().min():
+
+            logg.info(
+                "Downsampling size provided of {} was larger than the smallest group size. ".format(
+                    downsample
+                )
+                + "Defaulting to the smallest group size for downsampling."
+            )
+            minsize = df[col].value_counts().min()
+
+    # Log a warning if the minimum size is too small
+    if minsize < 100:
+
+        logg.info(
+            "The minimum cell numbers when grouped by {} is {}.".format(
+                col, minsize
+            )
+            + " Exercise caution when interpreting diversity measures."
+        )
+
+    # Log information about resampling
+    if resample:
+
+        logg.info(
+            "Downsampling each group specified in `{}` to {} cells for calculating Shannon entropy.".format(
+                col, minsize
+            )
+        )
+
+    return minsize
