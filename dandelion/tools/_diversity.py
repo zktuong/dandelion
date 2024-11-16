@@ -134,7 +134,7 @@ def clone_diversity(
     method: Literal["gini", "chao1", "shannon"] = "gini",
     metric: Literal["clone_network", "clone_degree", "clone_centrality"] = None,
     clone_key: str | None = None,
-    return_table: bool = True,
+    return_table: bool = False,
     diversity_key: str | None = None,
     resample: bool = False,
     downsample: int | None = None,
@@ -146,7 +146,7 @@ def clone_diversity(
     key_added: str | None = None,
     verbose: bool = False,
     **kwargs,
-) -> pd.DataFrame | Dandelion | AnnData:
+) -> pd.DataFrame:
     """
     Compute B cell clones diversity : Gini indices, Chao1 estimates, or Shannon entropy.
 
@@ -197,8 +197,8 @@ def clone_diversity(
 
     Returns
     -------
-    pd.DataFrame | Dandelion | AnnData
-        Pandas DataFrame, `Dandelion` or `AnnData` object holding diversity information.
+    pd.DataFrame
+        Pandas DataFrame holding diversity information.
     """
     if downsample is not None:
         resample = True
@@ -403,7 +403,7 @@ def diversity_gini(
     key_added: str | None = None,
     verbose: bool = False,
     **kwargs,
-) -> Dandelion | pd.DataFrame:
+) -> pd.DataFrame:
     """
     Compute clones Gini indices.
 
@@ -448,8 +448,8 @@ def diversity_gini(
 
     Returns
     -------
-    Dandelion | pd.DataFrame
-        `Dandelion` or pandas DataFrame holding diversity information.
+    pd.DataFrame
+        pandas DataFrame holding diversity information.
 
     Raises
     ------
@@ -477,12 +477,10 @@ def diversity_gini(
     )
 
     if return_table:
-        res_ = res.copy()
         logg.info(" finished", time=start)
-        return res_
+        return res
     else:
-        res_ = res.copy()
-        transfer_diversity_results(vdj_data, res_, groupby)
+        transfer_diversity_results(vdj_data, res, groupby)
         if isinstance(vdj_data, Dandelion):
             logg.info(
                 " finished",
@@ -502,7 +500,7 @@ def diversity_chao1(
     downsample: int | None = None,
     key_added: str | None = None,
     verbose: bool = False,
-) -> pd.DataFrame | Dandelion | AnnData:
+) -> pd.DataFrame:
     """
     Compute clones Chao1 estimates.
 
@@ -533,8 +531,8 @@ def diversity_chao1(
 
     Returns
     -------
-    pd.DataFrame | Dandelion | AnnData
-        `Dandelion`, pandas DataFrame or `AnnData` holding diversity information.
+    pd.DataFrame
+        pandas DataFrame holding diversity information.
     """
     start = logg.info("Calculating Chao1 estimates")
 
@@ -557,7 +555,6 @@ def diversity_chao1(
         vdj_data.uns[diversitykey].update({"chao1": res})
 
     if return_table:
-        res_ = res.copy()
         if isinstance(vdj_data, AnnData):
             logg.info(
                 " finished",
@@ -566,10 +563,9 @@ def diversity_chao1(
             )
         else:
             logg.info(" finished", time=start)
-        return res_
+        return res
     else:
-        res_ = res.copy()
-        transfer_diversity_results(vdj_data, res_, groupby)
+        transfer_diversity_results(vdj_data, res, groupby)
         if isinstance(vdj_data, Dandelion):
             logg.info(
                 " finished",
@@ -596,7 +592,7 @@ def diversity_shannon(
     key_added: str | None = None,
     downsample: int | None = None,
     verbose: bool = False,
-) -> pd.DataFrame | Dandelion | AnnData:
+) -> pd.DataFrame:
     """
     Compute clones Shannon entropy.
 
@@ -627,8 +623,8 @@ def diversity_shannon(
 
     Returns
     -------
-    pd.DataFrame | Dandelion | AnnData
-        `Dandelion`, pandas DataFrame or `AnnData` holding diversity information.
+    pd.DataFrame
+        pandas DataFrame holding diversity information.
     """
     start = logg.info("Calculating Shannon entropy")
 
@@ -652,7 +648,6 @@ def diversity_shannon(
         vdj_data.uns[diversitykey].update({"shannon": res})
 
     if return_table:
-        res_ = res.copy()
         if isinstance(vdj_data, AnnData):
             if normalize:
                 logg.info(
@@ -668,10 +663,9 @@ def diversity_shannon(
                 )
         else:
             logg.info(" finished", time=start)
-        return res_
+        return res
     else:
-        res_ = res.copy()
-        transfer_diversity_results(vdj_data, res_, groupby)
+        transfer_diversity_results(vdj_data, res, groupby)
         if isinstance(vdj_data, Dandelion):
             if normalize:
                 logg.info(
