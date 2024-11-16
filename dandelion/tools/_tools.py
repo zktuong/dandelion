@@ -19,7 +19,7 @@ from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform
 from subprocess import run
 from tqdm import tqdm
-from typing import Union, List, Optional
+from typing import Literal
 
 from dandelion.tools._network import *
 from dandelion.utilities._core import *
@@ -28,11 +28,11 @@ from dandelion.utilities._utilities import *
 
 
 def find_clones(
-    vdj_data: Union[Dandelion, pd.DataFrame],
-    identity: Union[Dict, float] = 0.85,
-    key: Optional[str] = None,
+    vdj_data: Dandelion | pd.DataFrame,
+    identity: dict[str, float] | float = 0.85,
+    key: str | None = None,
     by_alleles: bool = False,
-    key_added: Optional[str] = None,
+    key_added: str | None = None,
     recalculate_length: bool = True,
     verbose: bool = True,
     **kwargs,
@@ -42,17 +42,17 @@ def find_clones(
 
     Parameters
     ----------
-    vdj_data : Union[Dandelion, pd.DataFrame]
+    vdj_data : Dandelion | pd.DataFrame
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file
         after clones have been determined.
-    identity : Union[Dict, float], optional
+    identity : dict[str, float] | float, optional
         junction similarity parameter. Default 0.85. If provided as a dictionary, please use the following
         keys:'ig', 'tr-ab', 'tr-gd'.
-    key : Optional[str], optional
+    key : str | None, optional
         column name for performing clone clustering. `None` defaults to 'junction_aa'.
     by_alleles : bool, optional
         whether or not to collapse alleles to genes. `None` defaults to False.
-    key_added : Optional[str], optional
+    key_added : str | None, optional
         If specified, this will be the column name for clones. `None` defaults to 'clone_id'
     recalculate_length : bool, optional
         whether or not to re-calculate junction length, rather than rely on parsed assignment (which occasionally is
@@ -155,7 +155,8 @@ def find_clones(
                 )
                 # add it to the original dataframes
                 dat_vdj[clone_key] = pd.Series(clone_dict_vdj)
-                dat[clone_key].update(pd.Series(dat_vdj[clone_key]))
+                # dat[clone_key].update(pd.Series(dat_vdj[clone_key]))
+                dat.update({clone_key: pd.Series(dat_vdj[clone_key])})
             if dat_vj.shape[0] > 0:
                 vj_len_grp_vj, seq_grp_vj = group_sequences(
                     dat_vj,
@@ -182,7 +183,8 @@ def find_clones(
                     clone_dict_vj=clone_dict_vj,
                     verbose=verbose,
                 )
-                dat_[clone_key].update(pd.Series(dat[clone_key]))
+                # dat_[clone_key].update(pd.Series(dat[clone_key]))
+                dat_.update({clone_key: pd.Series(dat[clone_key])})
 
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
@@ -266,13 +268,13 @@ def transfer(
     adata: AnnData,
     dandelion: Dandelion,
     expanded_only: bool = False,
-    neighbors_key: Optional[str] = None,
-    rna_key: Optional[str] = None,
-    vdj_key: Optional[str] = None,
-    clone_key: Optional[str] = None,
+    neighbors_key: str | None = None,
+    rna_key: str | None = None,
+    vdj_key: str | None = None,
+    clone_key: str | None = None,
     collapse_nodes: bool = False,
-    overwrite: Optional[Union[bool, List[str], str]] = None,
-):
+    overwrite: bool | list[str] | str | None = None,
+) -> None:
     """
     Transfer data in `Dandelion` slots to `AnnData` object, updating the `.obs`, `.uns`, `.obsm` and `.obsp`slots.
 
@@ -284,18 +286,18 @@ def transfer(
         `Dandelion` object.
     expanded_only : bool, optional
         Whether or not to transfer the embedding with all cells with BCR (False) or only for expanded clones (True).
-    neighbors_key : Optional[str], optional
+    neighbors_key : str | None, optional
         key for 'neighbors' slot in `.uns`.
-    rna_key : Optional[str], optional
+    rna_key : str | None, optional
         prefix for stashed RNA connectivities and distances.
-    vdj_key : Optional[str], optional
+    vdj_key : str | None, optional
         prefix for stashed VDJ connectivities and distances.
-    clone_key : Optional[str], optional
+    clone_key : str | None, optional
         column name of clone/clonotype ids. Only used for integration with scirpy.
     collapse_nodes : bool, optional
         Whether or not to transfer a cell x cell or clone x clone connectivity matrix into `.uns`. Only used for
         integration with scirpy.
-    overwrite : Optional[Union[bool, List[str], str]], optional
+    overwrite : bool | list[str] | str | None, optional
         Whether or not to overwrite existing anndata columns. Specifying a string indicating column name or
         list of column names will overwrite that specific column(s).
     """
@@ -394,10 +396,7 @@ def transfer(
         adata.obsp[b_distances_key] = adata.obsp["distances"].copy()
 
         # create the dictionary that will enable the use of scirpy's plotting.
-        if clone_key is None:
-            clonekey = "clone_id"
-        else:
-            clonekey = clone_key
+        clonekey = clone_key if clone_key is not None else "clone_id"
 
         if not collapse_nodes:
             df_connectivities_[df_connectivities_.nonzero()] = 1
@@ -481,8 +480,8 @@ def transfer(
 
 
 def define_clones(
-    vdj_data: Union[Dandelion, pd.DataFrame, str],
-    dist: Optional[float] = None,
+    vdj_data: Dandelion | pd.DataFrame | str,
+    dist: float | None = None,
     action: Literal["first", "set"] = "set",
     model: Literal[
         "ham",
@@ -497,11 +496,11 @@ def define_clones(
     norm: Literal["len", "mut", "none"] = "len",
     doublets: Literal["drop", "count"] = "drop",
     fileformat: Literal["changeo", "airr"] = "airr",
-    ncpu: Optional[int] = None,
-    outFilePrefix: Optional[int] = None,
-    key_added: Optional[int] = None,
-    out_dir: Optional[Union[str, Path]] = None,
-    additional_args: List[str] = [],
+    ncpu: int | None = None,
+    outFilePrefix: int | None = None,
+    key_added: int | None = None,
+    out_dir: Path | str | None = None,
+    additional_args: list[str] = [],
 ) -> Dandelion:
     """
     Find clones using changeo's `DefineClones.py <https://changeo.readthedocs.io/en/stable/tools/DefineClones.html>`__.
@@ -510,10 +509,10 @@ def define_clones(
 
     Parameters
     ----------
-    vdj_data : Union[Dandelion, pd.DataFrame, str]
+    vdj_data : Dandelion | pd.DataFrame | str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after
         clones have been determined.
-    dist : Optional[float], optional
+    dist : float | None, optional
         The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class
         `.threshold` slot.
     action : Literal["first", "set"], optional
@@ -537,15 +536,15 @@ def define_clones(
         the doublets while 'count' will retain only the highest umi count contig.
     fileformat : Literal["changeo", "airr"], optional
         Format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    ncpu : Optional[int], optional
+    ncpu : int | None, optional
         Number of cpus for parallelization. Default is 1, no parallelization.
-    outFilePrefix : Optional[int], optional
+    outFilePrefix : int | None, optional
         If specified, the out file name will have this prefix. `None` defaults to 'dandelion_define_clones'
-    key_added : Optional[int], optional
+    key_added : int | None, optional
         Column name to add for define_clones.
-    out_dir : Optional[Union[str, Path]], optional
+    out_dir : Path | str | None, optional
         If specified, the files will be written to this directory.
-    additional_args : List[str], optional
+    additional_args : list[str], optional
         Additional arguments to pass to `DefineClones.py`.
 
     Returns
@@ -940,10 +939,10 @@ def define_clones(
 
 def clone_size(
     vdj_data: Dandelion,
-    max_size: Optional[int] = None,
-    clone_key: Optional[str] = None,
-    key_added: Optional[str] = None,
-):
+    max_size: int | None = None,
+    clone_key: str | None = None,
+    key_added: str | None = None,
+) -> None:
     """
     Quantify size of clones.
 
@@ -951,11 +950,11 @@ def clone_size(
     ----------
     vdj_data : Dandelion
         `Dandelion` object
-    max_size : Optional[int], optional
+    max_size : int | None, optional
         The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
-    clone_key : Optional[str], optional
+    clone_key : str | None, optional
         Column name specifying the clone_id column in metadata.
-    key_added : Optional[str], optional
+    key_added : str | None, optional
         column name where clone size is tabulated into.
     """
     start = logg.info("Quantifying clone sizes")
@@ -1160,27 +1159,27 @@ def clone_size(
 
 
 def clone_overlap(
-    vdj_data: Union[Dandelion, AnnData],
+    vdj_data: Dandelion | AnnData,
     groupby: str,
-    min_clone_size: Optional[int] = None,
+    min_clone_size: int | None = None,
     weighted_overlap: bool = False,
-    clone_key: Optional[str] = None,
+    clone_key: str | None = None,
 ) -> pd.DataFrame:
     """
     A function to tabulate clonal overlap for input as a circos-style plot.
 
     Parameters
     ----------
-    vdj_data : Union[Dandelion, AnnData]
+    vdj_data : Dandelion | AnnData
         `Dandelion` or `AnnData` object.
     groupby : str
         column name in obs/metadata for collapsing to columns in the clone_id x groupby data frame.
-    min_clone_size : Optional[int], optional
+    min_clone_size : int | None, optional
         minimum size of clone for plotting connections. Defaults to 2 if left as None.
     weighted_overlap : bool, optional
         if True, instead of collapsing to overlap to binary, overlap will be returned as the number of cells.
         In the future, there will be the option to use something like a jaccard index.
-    clone_key : Optional[str], optional
+    clone_key : str | None, optional
         column name for clones. `None` defaults to 'clone_id'.
 
     Returns
@@ -1272,7 +1271,9 @@ def clone_overlap(
         return overlap
 
 
-def clustering(distance_dict, threshold, sequences_dict):
+def clustering(
+    distance_dict: dict, threshold: float, sequences_dict: dict[str, str]
+) -> dict:
     """Clustering the sequences."""
     out_dict = {}
     # find out the unique indices in this subset
@@ -1339,7 +1340,7 @@ def productive_ratio(
     adata: AnnData,
     vdj: Dandelion,
     groupby: str,
-    groups: Optional[List[str]] = None,
+    groups: list[str] | None = None,
     locus: Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"] = "TRB",
 ):
     """
@@ -1358,7 +1359,7 @@ def productive_ratio(
         Dandelion object holding the repertoire data (`.data`).
     groupby : str
         Name of column in `AnnData.obs` to return the row tabulations.
-    groups : Optional[List[str]], optional
+    groups : list[str] | None, optional
         Optional list of categories to return.
     locus : Literal["TRB", "TRA", "TRD", "TRG", "IGH", "IGK", "IGL"], optional
         One of the accepted locuses to perform the tabulation
@@ -1429,8 +1430,8 @@ def vj_usage_pca(
     mode: Literal["B", "abT", "gdT"] = "abT",
     transfer_mapping=None,
     n_comps: int = 30,
-    groups: Optional[List[str]] = None,
-    allowed_chain_status: Optional[List[str]] = [
+    groups: list[str] | None = None,
+    allowed_chain_status: list[str] | None = [
         "Single pair",
         "Extra pair",
         "Extra pair-exception",
@@ -1456,9 +1457,9 @@ def vj_usage_pca(
         If provided, the columns will be mapped to the output AnnData from the original AnnData.
     n_comps : int, optional
         Number of principal components to compute. Defaults to 30.
-    groups : Optional[List[str]], optional
+    groups : list[str] | None, optional
         If provided, only the following groups/categories will be used for computing the PCA.
-    allowed_chain_status : Optional[List[str]], optional
+    allowed_chain_status : list[str] | None, optional
         If provided, only the ones in this list are kept from the `chain_status` column.
         Defaults to ["Single pair", "Extra pair", "Extra pair-exception", "Orphan VDJ-exception"].
     verbose : bool, optional
@@ -1814,7 +1815,7 @@ def rename_clonotype_ids(
     cell_type: str = "",
     suffix: str = "",
     prefix: str = "",
-):
+) -> dict[str, str]:
     """
     Renames clonotype IDs to numerical barcode system.
 
@@ -1830,7 +1831,7 @@ def rename_clonotype_ids(
         Prefix to append to the beginning of the clonotype ID.
     Returns
     -------
-    clone_dict : dict
+    dict[str, str]
         A dictionary that maps sequence IDs to clonotype IDs.
     """
     clone_dict = {}
@@ -1874,7 +1875,7 @@ def refine_clone_assignment(
     clone_key: str,
     clone_dict_vj: dict,
     verbose: bool = True,
-):
+) -> None:
     """
     Refines the clone assignment of VDJ sequences based on their VJ chain pairing.
 

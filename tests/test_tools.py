@@ -135,7 +135,7 @@ def test_diversity_gini(create_testfolder):
         vdj,
         groupby="sample_id",
         metric="clone_centrality",
-        update_obs_meta=False,
+        return_table=True,
     )
     assert isinstance(tmp, pd.DataFrame)
 
@@ -146,9 +146,7 @@ def test_diversity_gini2(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ddl.tl.clone_diversity(vdj, groupby="sample_id")
-    tmp = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", update_obs_meta=False
-    )
+    tmp = ddl.tl.clone_diversity(vdj, groupby="sample_id", return_table=True)
     assert isinstance(tmp, pd.DataFrame)
 
 
@@ -172,7 +170,7 @@ def test_diversity_chao(create_testfolder, resample):
         )
     assert not vdj.metadata.clone_size_chao1.empty
     tmp = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", method="chao1", update_obs_meta=False
+        vdj, groupby="sample_id", method="chao1", return_table=True
     )
     assert isinstance(tmp, pd.DataFrame)
 
@@ -236,7 +234,7 @@ def test_diversity_shannon(create_testfolder, resample, normalize):
     else:
         assert not vdj.metadata.clone_size_shannon.empty
     tmp = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", method="shannon", update_obs_meta=False
+        vdj, groupby="sample_id", method="shannon", return_table=True
     )
     assert isinstance(tmp, pd.DataFrame)
 
@@ -296,8 +294,7 @@ def test_diversity_rarefaction3(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -317,8 +314,7 @@ def test_diversity_gini3(create_testfolder, metric):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -350,8 +346,7 @@ def test_diversity2a(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -369,8 +364,7 @@ def test_diversity2b(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
@@ -388,13 +382,12 @@ def test_diversity2c(create_testfolder):
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
     vdj.data["contig_QC_pass"] = "True"
-    ddl.update_metadata(
-        vdj,
+    vdj.update_metadata(
         retrieve=["sample_id", "contig_QC_pass"],
         retrieve_mode=["merge and unique only", "merge and unique only"],
     )
     x = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", key="sequence", update_obs_meta=False
+        vdj, groupby="sample_id", key="sequence", return_table=True
     )
     assert isinstance(x, pd.DataFrame)
 
@@ -423,6 +416,6 @@ def test_diversity_anndata2(create_testfolder, method):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
     tmp = ddl.tl.clone_diversity(
-        adata, groupby="sample_id", method=method, update_obs_meta=False
+        adata, groupby="sample_id", method=method, return_table=True
     )
     assert isinstance(tmp, pd.DataFrame)
