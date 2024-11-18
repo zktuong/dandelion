@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from typing import List, Tuple
-
 modules = [
     "dandelion",
     "pandas",
@@ -14,17 +12,17 @@ modules = [
 
 
 # borrowed from scanpy's logging module
-def _versions_dependencies(dependencies: List[str]) -> Tuple[str, str]:
+def _versions_dependencies(dependencies: list[str]) -> tuple[str, str]:
     """Version dependencies.
 
     Parameters
     ----------
-    dependencies : List[str]
+    dependencies : list[str]
         list of dependencies.
 
     Yields
     ------
-    Tuple[str, str]
+    tuple[str, str]
         yields dependency name and version.
     """
     for mod in dependencies:
@@ -36,13 +34,13 @@ def _versions_dependencies(dependencies: List[str]) -> Tuple[str, str]:
             pass
 
 
-def print_versions(dependencies: List[str] = modules):
+def print_versions(dependencies: list[str] = modules):
     """
     Versions that are essential for dandelion's operation.
 
     Parameters
     ----------
-    dependencies : List[str], optional
+    dependencies : list[str], optional
         list of dependencies.
     """
     print(
@@ -52,13 +50,13 @@ def print_versions(dependencies: List[str] = modules):
     )
 
 
-def print_header(dependencies: List[str] = modules):
+def print_header(dependencies: list[str] = modules):
     """
     Versions that are essential for dandelion's operation.
 
     Parameters
     ----------
-    dependencies : List[str], optional
+    dependencies : list[str], optional
         list of dependencies.
     """
     print(

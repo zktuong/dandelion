@@ -239,16 +239,11 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
         airr_file, prefix="x", remove_trailing_hyphen_number=True
     )
     vdj = ddl.read_10x_vdj(annot_file)
-    vdjx = ddl.concat([vdj, vdj], prefixes=["x", "y"])
-    vdjx = ddl.concat([vdj, vdj], suffixes=["x", "y"])
+    _ = ddl.concat([vdj, vdj], prefixes=["x", "y"])
     with pytest.raises(ValueError):
-        vdjx = ddl.concat(
-            [vdj, vdj], prefixes=["x", "y"], remove_trailing_hyphen_number=True
-        )
+        _ = ddl.concat([vdj, vdj], suffixes=["x"])
     with pytest.raises(ValueError):
-        vdjx = ddl.concat(
-            [vdj, vdj], suffixes=["x", "y"], remove_trailing_hyphen_number=True
-        )
+        _ = ddl.concat([vdj, vdj], prefixes=["y"])
 
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
@@ -396,4 +391,4 @@ def test_legacy_write(create_testfolder):
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="junction")
     vdj.write_h5ddl(create_testfolder / "legacy.h5ddl", version=3)
-    leg = ddl.read_h5ddl(create_testfolder / "legacy.h5ddl")
+    _ = ddl.read_h5ddl(create_testfolder / "legacy.h5ddl")

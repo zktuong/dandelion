@@ -11,12 +11,18 @@ from airr import RearrangementSchema
 from collections import defaultdict
 from pathlib import Path
 from subprocess import run
-from typing import Tuple, Union, Optional, TypeVar, List, Dict
+from typing import (
+    TypeVar,
+    Literal,
+    Callable,
+)
 
 # help silence the dtype warning?
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
 
-NetworkxGraph = TypeVar("networkx.classes.graph.Graph")
+F = TypeVar("F", bound=Callable)  # Define a TypeVar for any callable type
+MuData = TypeVar("mudata._core.mudata.MuData")
+PResults = TypeVar("palantir.presults.PResults")
 
 TRUES = ["T", "True", "true", "TRUE", True]
 FALSES = ["F", "False", "false", "FALSE", False]
@@ -58,38 +64,16 @@ try:
 except ImportError:
     from collections import Iterable
 
-# for compatibility with python==3.7
-try:
-    from typing import Literal
-except ImportError:
-    try:
-        from typing_extensions import Literal
-    except ImportError:
-
-        class LiteralMeta(type):
-            """LiteralMeta class."""
-
-            def __getitem__(self, values):
-                """Return Literal."""
-                if not isinstance(values, tuple):
-                    values = (values,)
-                return type("Literal_", (Literal,), dict(__args__=values))
-
-        class Literal(metaclass=LiteralMeta):
-            """Literal type."""
-
-            pass
-
 
 class Tree(defaultdict):
     """Create a recursive defaultdict."""
 
-    def __init__(self, value=None):
+    def __init__(self, value=None) -> None:
         super(Tree, self).__init__(Tree)
         self.value = value
 
 
-def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> dict:
+def dict_from_table(meta: pd.DataFrame, columns: tuple[str, str]) -> dict:
     """
     Generate a dictionary from a dataframe.
 
@@ -97,7 +81,7 @@ def dict_from_table(meta: pd.DataFrame, columns: Tuple[str, str]) -> dict:
     ----------
     meta : pd.DataFrame
         pandas data frame or file path
-    columns : Tuple[str, str]
+    columns : tuple[str, str]
         column names in data frame
 
     Returns
@@ -156,7 +140,7 @@ def flatten(l: list) -> list:
             yield el
 
 
-def makeblastdb(ref: Union[str, Path]):
+def makeblastdb(ref: Path | str) -> None:
     """
     Run makeblastdb on constant region fasta file.
 
@@ -164,7 +148,7 @@ def makeblastdb(ref: Union[str, Path]):
 
     Parameters
     ----------
-    ref : Union[str, Path]
+    ref : Path | str
         constant region fasta file.
     """
     cmd = ["makeblastdb", "-dbtype", "nucl", "-parse_seqids", "-in", str(ref)]
@@ -204,12 +188,12 @@ def bh(pvalues: np.array) -> np.array:
     return new_pvalues
 
 
-def is_categorical(array_like) -> bool:
+def is_categorical(array_like: pd.Series) -> bool:
     """Check if categorical."""
     return array_like.dtype.name == "category"
 
 
-def type_check(dataframe, key) -> bool:
+def type_check(dataframe: pd.DataFrame, key: str) -> bool:
     """Check dtype."""
     return (
         dataframe[key].dtype == str
@@ -234,31 +218,31 @@ def isBZIP(filename: str) -> bool:
 
 
 def check_filepath(
-    file_or_folder_path: Union[str, Path],
-    filename_prefix: Optional[str] = None,
-    ends_with: Optional[str] = None,
-    sub_dir: Optional[str] = None,
+    file_or_folder_path: Path | str,
+    filename_prefix: str | None = None,
+    ends_with: str | None = None,
+    sub_dir: str | None = None,
     within_dandelion: bool = True,
-) -> Path:
+) -> Path | None:
     """
     Checks whether file path exists.
 
     Parameters
     ----------
-    file_or_folder_path : Union[str, Path]
+    file_or_folder_path : Path | str
         either a string or Path object pointing to a file or folder.
-    filename_prefix : Optional[str], optional
+    filename_prefix : str | None, optional
         the prefix of the filename.
-    ends_with : Optional[str], optional
+    ends_with : str | None, optional
         the suffix of the filename. Can be flexible i.e. not just the extension.
-    sub_dir : Optional[str], optional
+    sub_dir : str | None, optional
         the subdirectory to look for the file if specified
     within_dandelion : bool, optional
         whether to look for the file within a 'dandelion' sub folder.
 
     Returns
     -------
-    Union[Path, None]
+    Path | None
         Path object if file is found, else None.
     """
     filename_pre = "filtered" if filename_prefix is None else filename_prefix
@@ -319,51 +303,51 @@ def cmp_to_key(mycmp):
     class K:
         """Key class"""
 
-        def __init__(self, obj, *args):
+        def __init__(self, obj, *args) -> None:
             self.obj = obj
 
-        def __lt__(self, other):
+        def __lt__(self, other) -> bool:
             """Less than."""
             return mycmp(self.obj, other.obj) < 0
 
-        def __gt__(self, other):
+        def __gt__(self, other) -> bool:
             """Greater than."""
             return mycmp(self.obj, other.obj) > 0
 
-        def __eq__(self, other):
+        def __eq__(self, other) -> bool:
             """Equal."""
             return mycmp(self.obj, other.obj) == 0
 
-        def __le__(self, other):
+        def __le__(self, other) -> bool:
             """Less than or equal."""
             return mycmp(self.obj, other.obj) <= 0
 
-        def __ge__(self, other):
+        def __ge__(self, other) -> bool:
             """Greater than or equal."""
             return mycmp(self.obj, other.obj) >= 0
 
-        def __ne__(self, other):
+        def __ne__(self, other) -> bool:
             """Not equal."""
             return mycmp(self.obj, other.obj) != 0
 
     return K
 
 
-def not_same_call(a, b, pattern):
+def not_same_call(a: str, b: str, pattern: str) -> bool:
     """Utility function to check if a == b in terms of pattern."""
     return (re.search(pattern, a) and not re.search(pattern, b)) or (
         re.search(pattern, b) and not re.search(pattern, a)
     )
 
 
-def same_call(a, b, c, pattern):
+def same_call(a: str, b: str, c: str, pattern: str) -> bool:
     """Utility function to check if a == b == c in terms of pattern."""
     queries = [a, b, c]
     queries = [q for q in queries if pd.notnull(q)]
     return all([re.search(pattern, x) for x in queries])
 
 
-def present(x):
+def present(x: str | None) -> bool:
     """Utility function to check if x is not null or blank."""
     return pd.notnull(x) and x not in [
         "",
@@ -376,22 +360,22 @@ def present(x):
     ]
 
 
-def check_missing(x):
+def check_missing(x: str | None) -> bool:
     """Utility function to check if x is null or blank."""
     return pd.isnull(x) or x == ""
 
 
-def all_missing(x):
+def all_missing(x: str | None) -> bool:
     """Utility function to check if all x is not null or blank."""
     return all(pd.isnull(x)) or all(x == "")
 
 
-def all_missing2(x):
+def all_missing2(x: str | None) -> bool:
     """Utility function to check if all x is not null or blank or the word None."""
     return all(pd.isnull(x)) or all(x == "") or all(x == "None")
 
 
-def return_mix_dtype(data):
+def return_mix_dtype(data: pd.DataFrame) -> list:
     """Utility function to return mixed dtypes columns."""
     check = [
         c
@@ -516,7 +500,7 @@ def try_numeric_conversion(series: pd.Series) -> pd.Series:
         return sanitize_column(series, "string")
 
 
-def sanitize_data(data, ignore="clone_id"):
+def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
     """Quick sanitize dtypes."""
     data = data.astype("object")
     data = data.infer_objects()
@@ -580,7 +564,7 @@ def sanitize_data(data, ignore="clone_id"):
     return data
 
 
-def sanitize_blastn(data):
+def sanitize_blastn(data: pd.DataFrame) -> None:
     """Quick sanitize dtypes."""
     data = data.astype("object")
     data = data.infer_objects()
@@ -616,7 +600,7 @@ def sanitize_blastn(data):
     return data
 
 
-def validate_airr(data):
+def validate_airr(data: pd.DataFrame) -> None:
     """Validate dtypes in airr table."""
     tmp = data.copy()
     int_columns = []
@@ -643,7 +627,7 @@ def validate_airr(data):
     RearrangementSchema.validate_row(contig)
 
 
-def check_travdv(data):
+def check_travdv(data: pd.DataFrame) -> pd.DataFrame:
     """Check if locus is TRA/D."""
     data = load_data(data)
     contig = [x for x in data["sequence_id"]]
@@ -669,13 +653,13 @@ def check_travdv(data):
     return data
 
 
-def load_data(obj: Optional[Union[pd.DataFrame, str, Path]]) -> pd.DataFrame:
+def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
     """
     Read in or copy dataframe object and set sequence_id as index without dropping.
 
     Parameters
     ----------
-    obj : Optional[Union[pd.DataFrame, str, Path]]
+    obj : pd.DataFrame | Path | str | None
         file path to .tsv file or pandas DataFrame object.
 
     Returns
@@ -723,11 +707,11 @@ def load_data(obj: Optional[Union[pd.DataFrame, str, Path]]) -> pd.DataFrame:
 class ContigDict(dict):
     """Class Object to extract the contigs as a dictionary."""
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: str) -> None:
         """Standard __setitem__."""
         super().__setitem__(key, value)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Make it hashable."""
         return hash(tuple(self))
 
@@ -735,7 +719,7 @@ class ContigDict(dict):
 class Contig:
     """Class Object to hold contig."""
 
-    def __init__(self, contig, mapper=None):
+    def __init__(self, contig: dict, mapper: dict | None = None) -> None:
         if mapper is not None:
             mapper.update({k: k for k in contig.keys() if k not in mapper})
             self._contig = ContigDict(
@@ -748,12 +732,17 @@ class Contig:
                 self._contig[key] = ""
 
     @property
-    def contig(self):
+    def contig(self) -> "ContigDict":
         """Contig slot."""
         return self._contig
 
 
-def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
+def mask_dj(
+    data: list[Path | str],
+    filename_prefix: str,
+    d_evalue_threshold: float,
+    j_evalue_threshold: float,
+) -> None:
     """Mask d/j assignment."""
     for i in range(0, len(data)):
         filePath = check_filepath(
@@ -777,20 +766,22 @@ def mask_dj(data, filename_prefix, d_evalue_threshold, j_evalue_threshold):
             write_airr(dat, filePath)
 
 
-def write_airr(data, save):
+def write_airr(data: pd.DataFrame, save: Path | str) -> None:
     """Save as airr formatted file."""
     data = sanitize_data(data)
     data.to_csv(save, sep="\t", index=False)
 
 
-def write_blastn(data, save):
+def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
     """Write blast output."""
     data = sanitize_blastn(data)
     data.to_csv(save, sep="\t", index=False)
 
 
 ## from skbio==0.5.6
-def _validate_counts_vector(counts, suppress_cast=False):
+def _validate_counts_vector(
+    counts: np.array, suppress_cast: bool = False
+) -> np.array:
     """Validate and convert input to an acceptable counts vector type.
     Note: may not always return a copy of `counts`!
     """
@@ -805,10 +796,12 @@ def _validate_counts_vector(counts, suppress_cast=False):
     return counts
 
 
-def deprecated(details, deprecated_in, removed_in):
+def deprecated(
+    details: str, deprecated_in: str, removed_in: str
+) -> Callable[[F], F]:
     """Decorator to mark a function as deprecated"""
 
-    def deprecated_decorator(func):
+    def deprecated_decorator(func: F) -> F:
         """Deprecate dectorator"""
 
         def deprecated_func(*args, **kwargs):
@@ -1032,7 +1025,7 @@ def lib_type(lib: str):
 
 def movecol(
     df: pd.DataFrame,
-    cols_to_move: List = [],
+    cols_to_move: list = [],
     ref_col: str = "",
 ) -> pd.DataFrame:
     """A way to order columns."""
@@ -1071,57 +1064,28 @@ def format_chain_status(locus_status):
     return chain_status
 
 
-def update_rearrangement_status(self):
-    """Check rearrangement status."""
-    if "v_call_genotyped" in self.data:
-        vcall = "v_call_genotyped"
-    else:
-        vcall = "v_call"
-    contig_status = []
-    for v, j, c in zip(
-        self.data[vcall], self.data["j_call"], self.data["c_call"]
-    ):
-        if present(v):
-            if present(j):
-                if present(c):
-                    if len(list(set([v[:3], j[:3], c[:3]]))) > 1:
-                        contig_status.append("chimeric")
-                    else:
-                        contig_status.append("standard")
-                else:
-                    if len(list(set([v[:3], j[:3]]))) > 1:
-                        contig_status.append("chimeric")
-                    else:
-                        contig_status.append("standard")
-            else:
-                contig_status.append("unknown")
-        else:
-            contig_status.append("unknown")
-    self.data["rearrangement_status"] = contig_status
-
-
 def set_germline_env(
-    germline: Optional[str] = None,
+    germline: str | None = None,
     org: Literal["human", "mouse"] = "human",
-    input_file: Optional[Union[str, Path]] = None,
+    input_file: Path | str | None = None,
     db: Literal["imgt", "ogrdb"] = "imgt",
-) -> Tuple[Dict, Path, Path]:
+) -> tuple[dict[str, str], Path, Path]:
     """
     Set the paths to germline database and environment variables and relevant input files.
 
     Parameters
     ----------
-    germline : Optional[str], optional
+    germline : str | None, optional
         path to germline database. None defaults to environmental variable $GERMLINE.
     org : Literal["human", "mouse"], optional
         organism for germline sequences.
-    input_file : Optional[Union[str, Path]], optional
+    input_file : Path | str | None, optional
         path to input file.
     db : Literal["imgt", "ogrdb"], optional
         database to use. Defaults to imgt.
     Returns
     -------
-    Tuple[Dict, Path, Path]
+    tuple[dict[str, str], Path, Path]
         environment dictionary and path to germline database.
 
     Raises
@@ -1149,22 +1113,22 @@ def set_germline_env(
 
 
 def set_igblast_env(
-    igblast_db: Optional[Union[str, Path]] = None,
-    input_file: Optional[Union[str, Path]] = None,
-) -> Tuple[Dict, Path, Path]:
+    igblast_db: Path | str | None = None,
+    input_file: Path | str | None = None,
+) -> tuple[dict[str, str], Path, Path]:
     """
     Set the igblast database and environment variables and relevant input files.
 
     Parameters
     ----------
-    igblast_db : Optional[str], optional
+    igblast_db : str | None, optional
         path to igblast database. None defaults to environmental variable $IGDATA.
-    input_file : Optional[Union[str, Path]], optional
+    input_file : Path | str | None, optional
         path to input file.
 
     Returns
     -------
-    Tuple[Dict, Path]
+    tuple[dict[str, str], Path, Path]
         environment dictionary and path to igblast database.
 
     Raises
@@ -1191,21 +1155,21 @@ def set_igblast_env(
 
 
 def set_blast_env(
-    blast_db: Optional[str] = None,
-    input_file: Optional[Union[str, Path]] = None,
-) -> Tuple[Dict, Path, Path]:
+    blast_db: str | None = None,
+    input_file: Path | str | None = None,
+) -> tuple[dict[str, str], Path, Path]:
     """
     Set the blast database and environment variables and relevant input files.
 
     Parameters
     ----------
-    blast_db : Optional[str], optional
+    blast_db : str | None, optional
         path to blast database. None defaults to environmental variable $BLASTDB.
-    input_file : Optional[Union[str, Path]], optional
+    input_file : Path | str | None, optional
         path to input file.
     Returns
     -------
-    Tuple[Dict, Path]
+    tuple[dict[str, str], Path, Path]
         environment dictionary and path to igblast database.
 
     Raises
@@ -1231,7 +1195,7 @@ def set_blast_env(
     return env, bdb, input_file
 
 
-def sum_col(vals):
+def sum_col(vals: list) -> float | int:
     """Sum columns if not NaN."""
     if all(pd.isnull(vals)):
         return np.nan
@@ -1239,12 +1203,12 @@ def sum_col(vals):
         return sum(vals)
 
 
-def check_same_celltype(clone_def1, clone_def2):
+def check_same_celltype(clone_def1: str, clone_def2: str) -> bool:
     """Check if the first key is the same."""
     return clone_def1.split("_", 1)[0] == clone_def2.split("_", 1)[0]
 
 
-def clear_h5file(filename: Path | str):
+def clear_h5file(filename: Path | str) -> None:
     """Little hack to overwrite an existing h5 file."""
     with h5py.File(filename, "w") as hf:
         for datasetname in hf.keys():
@@ -1252,14 +1216,14 @@ def clear_h5file(filename: Path | str):
 
 
 def write_fasta(
-    fasta_dict: Dict[str, str], out_fasta: Union[str, Path], overwrite=True
-):
+    fasta_dict: dict[str, str], out_fasta: Path | str, overwrite=True
+) -> None:
     """
     Generic fasta writer using fasta_iterator
 
     Parameters
     ----------
-    fasta_dict : Dict[str, str]
+    fasta_dict : dict[str, str]
         dictionary containing fasta headers and sequences as keys and records respectively.
     out_fasta : str
         path to write fasta file to.
@@ -1275,7 +1239,7 @@ def write_fasta(
         write_output(out, out_fasta)
 
 
-def write_output(out: str, file: Union[str, Path]):
+def write_output(out: str, file: Path | str) -> None:
     """General line writer."""
     fh = open(file, "a")
     fh.write(out)

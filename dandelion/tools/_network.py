@@ -10,7 +10,7 @@ from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
 from tqdm import tqdm
-from typing import Union, Tuple, Optional
+from typing import Literal
 
 try:
     from networkx.utils import np_random_state as random_state
@@ -23,11 +23,11 @@ from dandelion.utilities._utilities import *
 
 
 def generate_network(
-    vdj_data: Union[Dandelion, pd.DataFrame, str],
-    key: Optional[str] = None,
-    clone_key: Optional[str] = None,
+    vdj_data: Dandelion | pd.DataFrame | str,
+    key: str | None = None,
+    clone_key: str | None = None,
     min_size: int = 2,
-    downsample: Optional[int] = None,
+    downsample: int | None = None,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
@@ -43,17 +43,17 @@ def generate_network(
 
     Parameters
     ----------
-    vdj_data : Union[Dandelion, pd.DataFrame, str]
+    vdj_data : Dandelion | pd.DataFrame | str
         `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
         have been determined.
-    key : Optional[str], optional
+    key : str | None, optional
         column name for distance calculations. None defaults to 'sequence_alignment_aa'.
-    clone_key : Optional[str], optional
+    clone_key : str | None, optional
         column name to build network on.
     min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    downsample : Optional[int], optional
+    downsample : int | None, optional
         whether or not to downsample the number of cells prior to construction of network. If provided, cells will be
         randomly sampled to the integer provided. A new Dandelion class will be returned.
     verbose : bool, optional
@@ -124,10 +124,7 @@ def generate_network(
         if key_ not in dat:
             raise ValueError("key {} not found in input table.".format(key_))
 
-        if clone_key is None:
-            clonekey = "clone_id"
-        else:
-            clonekey = clone_key
+        clonekey = clone_key if clone_key is not None else "clone_id"
         if clonekey not in dat:
             raise ValueError(
                 "Data does not contain clone information. Please run find_clones."
@@ -377,7 +374,7 @@ def generate_network(
                         index=tmp_clone_tree2[x],
                         columns=tmp_clone_tree2[x],
                     )
-                    tmp_.fillna(0, inplace=True)
+                    tmp_ = tmp_.astype(float).fillna(0)
                     tmp_clone_tree3[x] = tmp_
 
             for x in tqdm(
@@ -395,7 +392,7 @@ def generate_network(
                     index=tmp_clone_tree3_overlap[x],
                     columns=tmp_clone_tree3_overlap[x],
                 )
-                tmp_.fillna(0, inplace=True)
+                tmp_ = tmp_.astype(float).fillna(0)
                 tmp_clone_tree3[x] = tmp_
 
             # free up memory
@@ -434,8 +431,8 @@ def generate_network(
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                     set_edge_list_index(tmp_edge_list[c])
 
-                    tmp_edge_list[c]["weight"].update(
-                        tmp_totaldiststack["weight"]
+                    tmp_edge_list[c].update(
+                        {"weight": tmp_totaldiststack["weight"]}
                     )
                     # keep only edges when there is 100% identity, to minimise crowding
                     tmp_edge_list[c] = tmp_edge_list[c][
@@ -454,7 +451,7 @@ def generate_network(
                 set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                edge_list_final["weight"].update(tmp_totaldiststack["weight"])
+                edge_list_final.update({"weight": tmp_totaldiststack["weight"]})
                 # return the edge list
                 edge_list_final.reset_index(drop=True, inplace=True)
             except:
@@ -565,7 +562,7 @@ def generate_network(
 
 def mst(
     mat: dict,
-    num_cores: Optional[int] = None,
+    num_cores: int | None = None,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -611,62 +608,27 @@ def mst(
 
 
 def process_mst_per_clonotype(
-    mat: Dict[str, pd.DataFrame], c: str
-) -> Tuple[str, nx.Graph]:
+    mat: dict[str, pd.DataFrame], c: str
+) -> tuple[str, nx.Graph]:
     """
     Function to calculate minimum spanning tree.
 
     Parameters
     ----------
-    mat : Dict[str, pd.DataFrame]
+    mat : dict[str, pd.DataFrame]
         Dictionary holding distance matrices.
     c : str
         Name of clonotype.
 
     Returns
     -------
-    Tuple[str, nx.Graph]
+    tuple[str, nx.Graph]
         Graph holding minimum spanning tree.
     """
     tmp = mat[c] + 1
     tmp[np.isnan(tmp)] = 0
     G = create_networkx_graph(tmp, drop_zero=True)
     return c, nx.minimum_spanning_tree(G)
-
-
-def link_edges_per_clonotype(
-    clone_tree: Tree, c: str, full_edge_list: pd.DataFrame
-) -> Tuple[str, pd.DataFrame]:
-    """
-    Link edges after constructing the clonotype tree.
-
-    Parameters
-    ----------
-    clone_tree : Tree
-        Clonotype tree.
-    c : str
-        Name of clonotype.
-    full_edge_list: pd.DataFrame
-        Edge list containing all the weights.
-
-    Returns
-    -------
-    Tuple[str, pd.DataFrame]
-        Edge list after linking.
-    """
-    G = create_networkx_graph(
-        clone_tree[c],
-        drop_zero=True,
-    )
-    edge_list = nx.to_pandas_edgelist(G)
-    set_edge_list_index(edge_list)
-
-    edge_list["weight"].update(tmp_totaldiststack["weight"])
-    # keep only edges when there is 100% identity, to minimise crowding
-    edge_list = edge_list[edge_list["weight"] == 0]
-    edge_list.reset_index(inplace=True)
-
-    return c, edge_list
 
 
 def create_networkx_graph(
@@ -697,7 +659,7 @@ def create_networkx_graph(
     return G
 
 
-def set_edge_list_index(edge_list: pd.DataFrame):
+def set_edge_list_index(edge_list: pd.DataFrame) -> None:
     """
     Set the index of the edge list in-place.
 
@@ -741,9 +703,7 @@ def adjacency_to_edge_list(
     return edge_list
 
 
-def clone_degree(
-    vdj_data: Dandelion, weight: Optional[str] = None, verbose: bool = True
-) -> Dandelion:
+def clone_degree(vdj_data: Dandelion, weight: str | None = None) -> Dandelion:
     """
     Calculate node degree in BCR/TCR network.
 
@@ -751,10 +711,8 @@ def clone_degree(
     ----------
     vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    weight : Optional[str], optional
+    weight : str | None, optional
         Attribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
-    verbose : bool, optional
-        Whether or not to show logging information.
 
     Raises
     ------
@@ -763,7 +721,6 @@ def clone_degree(
     TypeError
         if input is not Dandelion class.
     """
-    start = logg.info("Calculating node degree")
     if isinstance(vdj_data, Dandelion):
         if vdj_data.graph is None:
             raise AttributeError(
@@ -774,16 +731,11 @@ def clone_degree(
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
             vdj_data.metadata["clone_degree"] = pd.Series(cd[1])
-            logg.info(
-                " finished",
-                time=start,
-                deep=("Updated Dandelion metadata\n"),
-            )
     else:
         raise TypeError("Input object must be of {}".format(Dandelion))
 
 
-def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
+def clone_centrality(vdj_data: Dandelion):
     """
     Calculate node closeness centrality in BCR/TCR network.
 
@@ -791,8 +743,6 @@ def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
     ----------
     vdj_data : Dandelion
         `Dandelion` object after `tl.generate_network` has been run.
-    verbose : bool, optional
-        Whether or not to show logging information.
 
     Raises
     ------
@@ -801,7 +751,6 @@ def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
     TypeError
         if input is not Dandelion class.
     """
-    start = logg.info("Calculating node closeness centrality")
     if isinstance(vdj_data, Dandelion):
         if vdj_data.graph is None:
             raise AttributeError(
@@ -816,27 +765,22 @@ def clone_centrality(vdj_data: Dandelion, verbose: bool = True):
             vdj_data.metadata["clone_centrality"] = pd.Series(
                 cc["clone_centrality"]
             )
-            logg.info(
-                " finished",
-                time=start,
-                deep=("Updated Dandelion metadata\n"),
-            )
     else:
         raise TypeError("Input object must be of {}".format(Dandelion))
 
 
 def _generate_layout(
-    vertices: Optional[list] = None,
-    edges: Optional[pd.DataFrame] = None,
+    vertices: list | None = None,
+    edges: pd.DataFrame | None = None,
     min_size: int = 2,
-    weight: Optional[str] = None,
+    weight: str | None = None,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
-    graphs: Optional[Tuple[nx.Graph, nx.Graph]] = None,
+    graphs: tuple[nx.Graph, nx.Graph] = None,
     **kwargs,
-) -> Tuple[nx.Graph, nx.Graph, dict, dict]:
+) -> tuple[nx.Graph, nx.Graph, dict, dict]:
     """Generate layout.
 
     Parameters
@@ -847,7 +791,7 @@ def _generate_layout(
         edge list in a pandas data frame.
     min_size : int, optional
         minimum clone size.
-    weight : Optional[str], optional
+    weight : str | None, optional
         name of weight column.
     verbose : bool, optional
         whether or not to print status
@@ -857,14 +801,14 @@ def _generate_layout(
         layout method.
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clones.
-    graphs: Optional[Tuple[nx.Graph, nx.Graph]], optional
+    graphs: tuple[nx.Graph, nx.Graph], optional
         tuple of graphs.
     **kwargs
         passed to fruchterman_reingold_layout.
 
     Returns
     -------
-    Tuple[nx.Graph, nx.Graph, dict, dict]
+    tuple[nx.Graph, nx.Graph, dict, dict]
         graphs and layout positions.
     """
     if graphs is None:

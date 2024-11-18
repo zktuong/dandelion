@@ -13,7 +13,6 @@ from dandelion.utilities import (
     read_h5ddl,
     read_pkl,
     to_scirpy,
-    update_metadata,
 )
 from dandelion.logging import (
     __author__,
@@ -42,6 +41,5 @@ __all__ = [
     "read_pkl",
     "tl",
     "to_scirpy",
-    "update_metadata",
     "utl",
 ]
