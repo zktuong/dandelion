@@ -2201,7 +2201,7 @@ class Query:
                     except:
                         out[x] = out[x].fillna("None")
             else:
-                out.fillna("None", inplace=True)
+                out = out.fillna("None")
         return out
 
     def retrieve_celltype(
@@ -2661,7 +2661,7 @@ class Query:
                     except:
                         out[x] = out[x].fillna("None")
             else:
-                out.fillna("None", inplace=True)
+                out = out.fillna("None")
         return out
 
 

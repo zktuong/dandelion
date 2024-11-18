@@ -374,7 +374,7 @@ def generate_network(
                         index=tmp_clone_tree2[x],
                         columns=tmp_clone_tree2[x],
                     )
-                    tmp_.fillna(0, inplace=True)
+                    tmp_ = tmp_.astype(float).fillna(0)
                     tmp_clone_tree3[x] = tmp_
 
             for x in tqdm(
@@ -392,7 +392,7 @@ def generate_network(
                     index=tmp_clone_tree3_overlap[x],
                     columns=tmp_clone_tree3_overlap[x],
                 )
-                tmp_.fillna(0, inplace=True)
+                tmp_ = tmp_.astype(float).fillna(0)
                 tmp_clone_tree3[x] = tmp_
 
             # free up memory
