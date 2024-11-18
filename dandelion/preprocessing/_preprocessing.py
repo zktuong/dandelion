@@ -6248,9 +6248,15 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                         ].split(";")
                         if len(jmmappers) > 1:
                             dbfail.at[i, "j_call"] = jmmappers[0]
-                            dbfail.at[i, "j_sequence_start"] = jmmappersstart[0]
-                            dbfail.at[i, "j_sequence_end"] = jmmappersend[0]
-                            dbfail.at[i, "j_support"] = jmmapperssupport[0]
+                            dbfail.at[i, "j_sequence_start"] = float(
+                                jmmappersstart[0]
+                            )
+                            dbfail.at[i, "j_sequence_end"] = float(
+                                jmmappersend[0]
+                            )
+                            dbfail.at[i, "j_support"] = float(
+                                jmmapperssupport[0]
+                            )
                 write_airr(dbfail, filePath2)
             if filePath3 is not None:
                 dball = load_data(filePath3)
@@ -6272,9 +6278,15 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                         ].split(";")
                         if len(jmmappers) > 1:
                             dball.at[i, "j_call"] = jmmappers[0]
-                            dball.at[i, "j_sequence_start"] = jmmappersstart[0]
-                            dball.at[i, "j_sequence_end"] = jmmappersend[0]
-                            dball.at[i, "j_support"] = jmmapperssupport[0]
+                            dball.at[i, "j_sequence_start"] = float(
+                                jmmappersstart[0]
+                            )
+                            dball.at[i, "j_sequence_end"] = float(
+                                jmmappersend[0]
+                            )
+                            dball.at[i, "j_support"] = float(
+                                jmmapperssupport[0]
+                            )
                 write_airr(dball, filePath3)
             if filePath4 is not None:
                 dandy = load_data(filePath4)
