@@ -33,7 +33,7 @@ setup(
             "sphinx<7",  # see issue at https://github.com/readthedocs/readthedocs.org/issues/10279
             "nbsphinx<=0.9.2",
             "sphinx-autodoc-typehints<=2.5.0",
-            "sphinx_rtd_theme<=3.0.1",
+            "sphinx_rtd_theme<=3.0.2",
             "readthedocs-sphinx-ext<=2.2.5",
             "recommonmark<=0.7.1",
         ],
