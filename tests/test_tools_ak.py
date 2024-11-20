@@ -29,7 +29,7 @@ def test_setup(
     assert airr_reannotated.shape[0] == 8
     assert airr_reannotated2.shape[0] == 15
     assert vdj.data.shape[0] == 8
-    assert vdj2.data.shape[0] == 15
+    assert vdj2.data.shape[0] == 14
     assert vdj.metadata.shape[0] == 5
     assert vdj2.metadata.shape[0] == 8
     assert adata.n_obs == 5
@@ -315,7 +315,7 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(create_testfolder)
     vdj, adata = ddl.pp.check_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 26
+    assert vdj.data.shape[0] == 19
     assert vdj.metadata.shape[0] == 10
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")

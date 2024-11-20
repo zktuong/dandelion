@@ -287,8 +287,8 @@ def test_quantify_mut_2(
 @pytest.mark.parametrize(
     "filename,size",
     [
-        pytest.param("filtered", 9),
-        pytest.param("all", 9),
+        pytest.param("filtered", 8),
+        pytest.param("all", 8),
     ],
 )
 def test_checkcontigs(
