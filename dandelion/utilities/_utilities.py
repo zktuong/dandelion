@@ -689,11 +689,15 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
             )
 
         if "sequence_id" in obj_.columns:
+            # assert that sequence_id is string
+            obj_["sequence_id"] = obj_["sequence_id"].astype(str)
             obj_.set_index("sequence_id", drop=False, inplace=True)
             if "cell_id" not in obj_.columns:
                 obj_["cell_id"] = [
                     c.split("_contig")[0] for c in obj_["sequence_id"]
                 ]
+            # assert that cell_id is string
+            obj_["cell_id"] = obj_["cell_id"].astype(str)
         else:
             raise KeyError("'sequence_id' not found in columns of input")
 

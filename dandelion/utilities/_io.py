@@ -278,6 +278,31 @@ def read_airr(
     return vdj
 
 
+read_bd_airr = read_airr
+read_bd_airr.__doc__ = """
+    Read the TCR or BCR `_AIRR.tsv` produced from BD Rhapsody technology.
+    
+    Parameters
+    ----------
+    file : Path | str
+        path to `_AIRR.tsv`
+    prefix : str | None, optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : str | None, optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+
+    Returns
+    -------
+    Dandelion
+        `Dandelion` object from BD AIRR file.
+    """
+
+
 def read_parse_airr(
     file: Path | str,
     prefix: str | None = None,
@@ -289,7 +314,7 @@ def read_parse_airr(
     Read the TCR or BCR `_annotation_airr.tsv` produced from Parse Biosciences Evercode technology.
 
     This is not to be used for any airr rearrangement file, but specifically for the one produced by Parse Biosciences.
-    For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion("all_contig_dandelion.tsv")` directly.
+    For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion` or `ddl.read_airr` directly.
 
     Parameters
     ----------
@@ -348,7 +373,7 @@ def read_10x_airr(
     Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a `Dandelion` object.
 
     This is not to be used for any airr rearrangement file, but specifically for the one produced by 10x Genomics.
-    For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion("all_contig_dandelion.tsv")` directly.
+    For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion` or `ddl.read_airr` directly.
 
     Parameters
     ----------

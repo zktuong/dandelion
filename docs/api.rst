@@ -83,8 +83,11 @@ Utilities: `utl`
    makeblastdb   
    read_h5ddl
    read_pkl
+   read_airr
    read_10x_airr
    read_10x_vdj
+   read_parse_airr
+   read_bd_airr
    update_metadata
    concat
    to_scirpy
