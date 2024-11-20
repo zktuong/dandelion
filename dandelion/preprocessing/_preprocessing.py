@@ -328,7 +328,7 @@ def format_fastas(
         path to out put location.
     filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
-        'filtered'.
+        'all'.
     """
     fastas, filename_prefix = check_data(fastas, filename_prefix)
     if prefix is not None:
@@ -451,7 +451,7 @@ def assign_isotype(
     blastdb : Path | str | None, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
     additional_args : list[str], optional
         additional arguments to pass to `blastn`.
     Raises
@@ -880,7 +880,7 @@ def assign_isotypes(
     blastdb : Path | str | None, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : list[str] | str | None, optional
-        list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. `None` defaults to 'all'.
     additional_args : list[str], optional
         additional arguments to pass to `blastn`.
     """
@@ -981,7 +981,7 @@ def reannotate_genes(
         whether or not to transfer additional 10X annotations to output file.
     filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. `None` defaults
-        to 'filtered'.
+        to 'all'.
     flavour : Literal["strict", "original"], optional
         Either 'strict' or 'original'. Determines how igblastn should
         be run. Running in 'strict' flavour will add the additional the
@@ -1157,7 +1157,7 @@ def return_pass_fail_filepaths(
     fasta : Path | str
         path to fasta file.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
 
     Returns
     -------
@@ -1200,7 +1200,7 @@ def ensure_columns_transferred(
     fasta : str
         path to fasta file.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
     """
     filePath, passfile, failfile = return_pass_fail_filepaths(
         fasta, filename_prefix=filename_prefix
@@ -1337,7 +1337,7 @@ def reassign_alleles(
         dictionary for creating a sample_id column in the concatenated file.
     filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
-        'filtered'.
+        'all'.
     additional_args : dict[str, list[str]], optional
         additional arguments to pass to `tigger-genotype.R` and `CreateGermlines.py`.
         This accepts a dictionary with keys as the name of the sub-function (`tigger` or `creategermlines`)
@@ -4345,7 +4345,7 @@ def assign_DJ(
     outfmt : str, optional
         specification of output format for blast.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
     overwrite : bool, optional
         whether or not to overwrite the assignments.
     db : Literal["imgt", "ogrdb"], optional

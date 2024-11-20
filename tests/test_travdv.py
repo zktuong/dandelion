@@ -39,7 +39,7 @@ def test_write_annotation_tr(create_testfolder, annotation_10x_travdv):
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
     """test format fasta"""
-    ddl.pp.format_fastas(create_testfolder)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
@@ -51,6 +51,7 @@ def test_reannotategenes(create_testfolder, database_paths):
         igblast_db=database_paths["igblast_db"],
         germline=database_paths["germline"],
         loci="tr",
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 9
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2

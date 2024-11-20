@@ -41,8 +41,8 @@ def test_write_annotation_tr2(create_testfolder, annotation_10x_tr2):
     "filename,expected",
     [
         pytest.param(None, 2),
-        pytest.param("filtered", 2),
-        pytest.param("all", 4),
+        pytest.param("all", 2),
+        pytest.param("filtered", 4),
     ],
 )
 def test_formatfasta(create_testfolder, filename, expected):

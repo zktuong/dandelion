@@ -23,7 +23,7 @@ def test_write_annotation(create_testfolder, annotation_10x_mouse):
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
     """test_formatfasta"""
-    ddl.pp.format_fastas(create_testfolder)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
@@ -42,6 +42,7 @@ def test_reannotategenes_nod(
         org="mouse",
         db="ogrdb",
         strain="BALB_c_ByJ",
+        filename_prefix="filtered",
     )
     assert (
         create_testfolder / "dandelion" / "tmp" / "filtered_contig_igblast.fmt7"
@@ -63,6 +64,7 @@ def test_reassignalleles(
         strain="BALB_c_ByJ",
         novel=True,
         plot=False,
+        filename_prefix="filtered",
     )
 
 
@@ -79,6 +81,7 @@ def test_assignsisotypes(
         blastdb=database_paths_mouse["blastdb_fasta"],
         correction_dict=balbc_ighg_primers,
         plot=False,
+        filename_prefix="filtered",
     )
 
 

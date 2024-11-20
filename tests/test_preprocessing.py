@@ -43,8 +43,8 @@ def test_write_annotation(
     "filename,expected",
     [
         pytest.param(None, 2),
-        pytest.param("filtered", 2),
-        pytest.param("all", 4),
+        pytest.param("all", 2),
+        pytest.param("filtered", 4),
     ],
 )
 def test_formatfasta(create_testfolder, filename, expected):
@@ -273,7 +273,7 @@ def test_checkcontigs(
     vdj, adata = ddl.pp.check_contigs(dat, dummy_adata)
     assert dat.shape[0] == 9
     assert vdj.data.shape[0] == 9
-    assert vdj.metadata.shape[0] == 4
+    assert vdj.metadata.shape[0] == 5
     assert adata.n_obs == 5
 
 
