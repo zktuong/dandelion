@@ -25,14 +25,14 @@ def test_write_annotation(create_testfolder, annotation_10x_mouse):
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
     """test format fasta"""
-    ddl.pp.format_fastas(create_testfolder)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths_mouse")
 def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
     """test reannotate"""
-    ddl.pp.format_fastas(create_testfolder)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     ddl.pp.reannotate_genes(
         create_testfolder,
         igblast_db=database_paths_mouse["igblast_db"],
@@ -40,6 +40,7 @@ def test_reannotategenes_strict(create_testfolder, database_paths_mouse):
         flavour="strict",
         reassign_dj=True,
         org="mouse",
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 6
 
@@ -54,6 +55,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
         org="mouse",
         novel=True,
         plot=False,
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 9
 
@@ -76,6 +78,7 @@ def test_assignsisotypes(
         blastdb=database_paths_mouse["blastdb_fasta"],
         correction_dict=balbc_ighg_primers,
         plot=False,
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
@@ -83,19 +86,15 @@ def test_assignsisotypes(
 @pytest.mark.usefixtures(
     "create_testfolder", "processed_files", "dummy_adata_mouse"
 )
-def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
-    """test filter contigs"""
+def test_checkcontigs(create_testfolder, processed_files, dummy_adata_mouse):
+    """test check contigs"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
+    vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5ddl(f1)
     adata.write_h5ad(f2)
-    # assert dat.shape[0] == 1278
-    # assert vdj.data.shape[0] == 948
-    # assert vdj.metadata.shape[0] == 444
-    # assert adata.n_obs == 547
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")

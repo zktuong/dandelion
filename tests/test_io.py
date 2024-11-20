@@ -118,7 +118,7 @@ def test_read10xvdj_json(create_testfolder, json_10x_cr6):
     json_file = create_testfolder / "test_all_contig_annotations.json"
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
-    vdj = ddl.read_10x_vdj(json_file)
+    vdj = ddl.read_10x_vdj(json_file, filename_prefix="test_all")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     os.remove(json_file)
@@ -135,18 +135,18 @@ def test_read10xvdj_cr6(
     json_file = create_testfolder / "test_all_contig_annotations.json"
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x_cr6.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(annot_file)
+    vdj = ddl.read_10x_vdj(annot_file, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
-    vdj = ddl.read_10x_vdj(annot_file)
+    vdj = ddl.read_10x_vdj(annot_file, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
     os.remove(json_file)
     ddl.utl.write_fasta(fasta_dict=fasta_10x_cr6, out_fasta=fasta_file)
-    vdj = ddl.read_10x_vdj(annot_file)
+    vdj = ddl.read_10x_vdj(annot_file, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
@@ -181,7 +181,7 @@ def test_read10xvdj_cr6_folder(
     json_file = create_testfolder / "test_all_contig_annotations.json"
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x_cr6.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     with open(json_file, "w") as outfile:
@@ -192,7 +192,7 @@ def test_read10xvdj_cr6_folder(
     assert not vdj.data.sequence.empty
     os.remove(json_file)
     ddl.utl.write_fasta(fasta_dict=fasta_10x_cr6, out_fasta=fasta_file)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
     assert not vdj.data.sequence.empty
@@ -205,11 +205,11 @@ def test_read10xvdj_folder(create_testfolder, annotation_10x, fasta_10x):
     fasta_file = create_testfolder / "test_filtered_contig.fasta"
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=fasta_file)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     assert not vdj.data.sequence.empty
@@ -225,10 +225,16 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
     vdj = ddl.read_10x_vdj(annot_file, suffix="x")
     vdj = ddl.read_10x_vdj(annot_file, prefix="y")
     vdj = ddl.read_10x_vdj(
-        annot_file, suffix="x", remove_trailing_hyphen_number=True
+        annot_file,
+        suffix="x",
+        remove_trailing_hyphen_number=True,
+        filename_prefix="filtered",
     )
     vdj = ddl.read_10x_vdj(
-        annot_file, prefix="x", remove_trailing_hyphen_number=True
+        annot_file,
+        prefix="x",
+        remove_trailing_hyphen_number=True,
+        filename_prefix="filtered",
     )
     vdj = ddl.read_10x_airr(airr_file, suffix="x")
     vdj = ddl.read_10x_airr(airr_file, prefix="y")
@@ -238,7 +244,7 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
     vdj = ddl.read_10x_airr(
         airr_file, prefix="x", remove_trailing_hyphen_number=True
     )
-    vdj = ddl.read_10x_vdj(annot_file)
+    vdj = ddl.read_10x_vdj(annot_file, filename_prefix="filtered")
     _ = ddl.concat([vdj, vdj], prefixes=["x", "y"])
     with pytest.raises(ValueError):
         _ = ddl.concat([vdj, vdj], suffixes=["x"])
@@ -252,13 +258,13 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     fasta_file = create_testfolder / "test_filtered_contig.fasta"
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="filtered")
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     adata = ddl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 5
     ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=fasta_file)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="filtered")
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     assert not vdj.data.sequence.empty
@@ -311,7 +317,7 @@ def test_tofro_scirpy_cr6_transfer(
 def test_librarytype(airr_generic):
     """test library type"""
     tmp = ddl.Dandelion(airr_generic)
-    assert tmp.data.shape[0] == 114
+    assert tmp.data.shape[0] == 130
     assert tmp.metadata.shape[0] == 45
 
     tmp = ddl.Dandelion(airr_generic, library_type="ig")
@@ -319,11 +325,11 @@ def test_librarytype(airr_generic):
     assert tmp.metadata.shape[0] == 25
 
     tmp = ddl.Dandelion(airr_generic, library_type="tr-ab")
-    assert tmp.data.shape[0] == 29
+    assert tmp.data.shape[0] == 37
     assert tmp.metadata.shape[0] == 20
 
     tmp = ddl.Dandelion(airr_generic, library_type="tr-gd")
-    assert tmp.data.shape[0] == 17
+    assert tmp.data.shape[0] == 25
     assert tmp.metadata.shape[0] == 15
 
 
@@ -352,13 +358,13 @@ def test_to_scirpy_v2(create_testfolder, annotation_10x, fasta_10x):
     fasta_file = create_testfolder / "test_filtered_contig.fasta"
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x.to_csv(annot_file, index=False)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 35
     assert vdj.metadata.shape[0] == 15
     adata = ddl.utl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 15
     ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=fasta_file)
-    vdj = ddl.read_10x_vdj(create_testfolder)
+    vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     assert vdj.data.shape[0] == 35
     assert vdj.metadata.shape[0] == 15
     assert not vdj.data.sequence.empty

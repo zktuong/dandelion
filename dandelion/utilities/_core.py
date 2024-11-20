@@ -550,6 +550,18 @@ class Dandelion:
         self._data["sequence_id"] = self._original_sequence_ids
         self._data["cell_id"] = self._original_cell_ids
 
+    def simplify(self, **kwargs) -> None:
+        """Disambiguate VDJ and C gene calls when there's multiple calls separated by commas and strip the alleles."""
+        # strip alleles from VDJ and constant gene calls
+        for col in ["v_call", "v_call_genotyped", "d_call", "j_call", "c_call"]:
+            if col in self.data:
+                self._data[col] = self._data[col].str.replace(
+                    r"\*.*", "", regex=True
+                )
+                # only keep the main annotation
+                self._data[col] = self._data[col].str.split(",").str[0]
+        self.update_metadata(**kwargs)
+
     def _initialize_metadata(
         self,
         cols: list[str],

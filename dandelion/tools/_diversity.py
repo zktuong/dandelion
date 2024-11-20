@@ -62,7 +62,6 @@ def clone_rarefaction(
     clonekey = clone_key if clone_key is not None else "clone_id"
 
     groups = list(set(_metadata[groupby]))
-    _metadata = _metadata[_metadata["contig_QC_pass"].isin([True, "True"])]
     if type(_metadata[clonekey]) == "category":
         _metadata[clonekey] = _metadata[clonekey].cat.remove_unused_categories()
     res = {}

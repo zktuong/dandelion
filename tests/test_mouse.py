@@ -23,7 +23,7 @@ def test_write_annotation(create_testfolder, annotation_10x_mouse):
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
     """test_formatfasta"""
-    ddl.pp.format_fastas(create_testfolder)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
@@ -38,6 +38,7 @@ def test_reannotategenes(create_testfolder, database_paths_mouse):
         germline=database_paths_mouse["germline"],
         org="mouse",
         reassign_dj=False,
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 4
 
@@ -52,6 +53,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
         org="mouse",
         novel=True,
         plot=False,
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 7
 
@@ -75,6 +77,7 @@ def test_assignsisotypes(
         blastdb=database_paths_mouse["blastdb_fasta"],
         correction_dict=balbc_ighg_primers,
         plot=False,
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
@@ -102,15 +105,11 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     """test_filtercontigs"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
+    vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5ddl(f1)
     adata.write_h5ad(f2)
-    # assert dat.shape[0] == 1285
-    # assert vdj.data.shape[0] == 956
-    # assert vdj.metadata.shape[0] == 448
-    # assert adata.n_obs == 547
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -144,21 +143,3 @@ def test_generate_network_new(create_testfolder):
     ddl.tl.generate_network(vdj)
     assert vdj.layout is not None
     assert vdj.graph is not None
-
-
-@pytest.mark.usefixtures(
-    "create_testfolder", "processed_files", "dummy_adata_mouse"
-)
-def test_filtercontigs_drop_contigs(
-    create_testfolder, processed_files, dummy_adata_mouse
-):
-    """test_filtercontigs_drop_contigs"""
-    f = create_testfolder / "dandelion" / processed_files["filtered"]
-    dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(
-        dat, dummy_adata_mouse, filter_poorqualitycontig=True
-    )
-    # assert dat.shape[0] == 1285
-    # assert vdj.data.shape[0] == 955
-    # assert vdj.metadata.shape[0] == 447
-    # assert adata.n_obs == 547

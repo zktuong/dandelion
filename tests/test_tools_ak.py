@@ -22,16 +22,16 @@ def test_setup(
     """test setup"""
     awk, _ = to_ak(airr_reannotated)
     airr_reannotated = from_ak(awk)
-    vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
+    vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
     awk, _ = to_ak(airr_reannotated2)
     airr_reannotated2 = from_ak(awk)
-    vdj2 = ddl.pp.filter_contigs(airr_reannotated2)
+    vdj2 = ddl.pp.check_contigs(airr_reannotated2)
     assert airr_reannotated.shape[0] == 8
     assert airr_reannotated2.shape[0] == 15
-    assert vdj.data.shape[0] == 7
-    assert vdj2.data.shape[0] == 13
-    assert vdj.metadata.shape[0] == 4
-    assert vdj2.metadata.shape[0] == 7
+    assert vdj.data.shape[0] == 8
+    assert vdj2.data.shape[0] == 15
+    assert vdj.metadata.shape[0] == 5
+    assert vdj2.metadata.shape[0] == 8
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test2.h5ddl"
@@ -116,8 +116,8 @@ def test_find_clones(create_testfolder):
     assert not vdj.metadata.clone_id.empty
     assert not vdj2.data.clone_id.empty
     assert not vdj2.metadata.clone_id.empty
-    assert len(set(x for x in vdj.metadata["clone_id"] if pd.notnull(x))) == 4
-    assert len(set(x for x in vdj2.metadata["clone_id"] if pd.notnull(x))) == 4
+    assert len(set(x for x in vdj.metadata["clone_id"] if pd.notnull(x))) == 5
+    assert len(set(x for x in vdj2.metadata["clone_id"] if pd.notnull(x))) == 5
     vdj.write_h5ddl(f)
     vdj2.write_h5ddl(f2)
 
@@ -135,7 +135,7 @@ def test_clone_size(create_testfolder):
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "resample,expected", [pytest.param(None, 7), pytest.param(3, 4)]
+    "resample,expected", [pytest.param(None, 8), pytest.param(3, 5)]
 )
 def test_generate_network(create_testfolder, resample, expected):
     """test generate network"""
@@ -180,7 +180,7 @@ def test_transfer(create_testfolder, dummy_adata2):
     """test transfer"""
     f = create_testfolder / "test2.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj, adata = ddl.pp.filter_contigs(vdj, dummy_adata2)
+    vdj, adata = ddl.pp.check_contigs(vdj, dummy_adata2)
     ddl.tl.transfer(dummy_adata2, vdj)
     assert "clone_id" in dummy_adata2.obs
     ddl.tl.generate_network(vdj, layout_method="mod_fr")
@@ -314,9 +314,9 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     with open(json_file, "w") as outfile:
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(create_testfolder)
-    vdj, adata = ddl.pp.filter_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 17
-    assert vdj.metadata.shape[0] == 8
+    vdj, adata = ddl.pp.check_contigs(vdj, dummy_adata_cr6)
+    assert vdj.data.shape[0] == 26
+    assert vdj.metadata.shape[0] == 10
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")
     ddl.tl.transfer(adata, vdj)
@@ -356,23 +356,6 @@ def test_diversity_rarefaction2(create_testfolder):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-def test_diversity_rarefaction3(create_testfolder):
-    """test rarefaction3"""
-    f = create_testfolder / "test.h5ddl"
-    vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
-    vdj.data["contig_QC_pass"] = "True"
-    vdj.update_metadata(
-        retrieve=["sample_id", "contig_QC_pass"],
-        retrieve_mode=["merge and unique only", "merge and unique only"],
-    )
-    df = ddl.tl.clone_rarefaction(vdj, groupby="sample_id")
-    assert isinstance(df, dict)
-    p = ddl.pl.clone_rarefaction(vdj, color="sample_id")
-    assert p is not None
-
-
-@pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
     "metric", ["clone_network", None, "clone_degree", "clone_centrality"]
 )
@@ -381,10 +364,9 @@ def test_diversity_gini3(create_testfolder, metric):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
-    vdj.data["contig_QC_pass"] = "True"
     vdj.update_metadata(
-        retrieve=["sample_id", "contig_QC_pass"],
-        retrieve_mode=["merge and unique only", "merge and unique only"],
+        retrieve=["sample_id"],
+        retrieve_mode=["merge and unique only"],
     )
     ddl.tl.clone_diversity(
         vdj,
@@ -413,10 +395,9 @@ def test_diversity2a(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
-    vdj.data["contig_QC_pass"] = "True"
     vdj.update_metadata(
-        retrieve=["sample_id", "contig_QC_pass"],
-        retrieve_mode=["merge and unique only", "merge and unique only"],
+        retrieve=["sample_id"],
+        retrieve_mode=["merge and unique only"],
     )
     ddl.tl.clone_diversity(
         vdj, groupby="sample_id", reconstruct_network=False, key="sequence"
@@ -431,10 +412,9 @@ def test_diversity2b(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
-    vdj.data["contig_QC_pass"] = "True"
     vdj.update_metadata(
-        retrieve=["sample_id", "contig_QC_pass"],
-        retrieve_mode=["merge and unique only", "merge and unique only"],
+        retrieve=["sample_id"],
+        retrieve_mode=["merge and unique only"],
     )
     ddl.tl.clone_diversity(
         vdj, groupby="sample_id", use_contracted=True, key="sequence"
@@ -449,10 +429,9 @@ def test_diversity2c(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     vdj.data["sample_id"] = "sample_test"
-    vdj.data["contig_QC_pass"] = "True"
     vdj.update_metadata(
-        retrieve=["sample_id", "contig_QC_pass"],
-        retrieve_mode=["merge and unique only", "merge and unique only"],
+        retrieve=["sample_id"],
+        retrieve_mode=["merge and unique only"],
     )
     x = ddl.tl.clone_diversity(
         vdj, groupby="sample_id", key="sequence", return_table=True
@@ -475,8 +454,8 @@ def test_extract_edge_weights(create_testfolder):
 @pytest.mark.parametrize(
     "method",
     [
-        pytest.param("chao1"),
-        pytest.param("shannon"),
+        "chao1",
+        "shannon",
     ],
 )
 def test_diversity_anndata2(create_testfolder, method):

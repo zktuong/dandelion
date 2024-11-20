@@ -43,8 +43,8 @@ def test_write_annotation(
     "filename,expected",
     [
         pytest.param(None, 2),
-        pytest.param("filtered", 2),
-        pytest.param("all", 4),
+        pytest.param("all", 2),
+        pytest.param("filtered", 4),
     ],
 )
 def test_formatfasta(create_testfolder, filename, expected):
@@ -258,24 +258,22 @@ def test_quantify_mut_2(create_testfolder, processed_files, freq, colname):
 
 @pytest.mark.usefixtures("create_testfolder", "processed_files", "dummy_adata")
 @pytest.mark.parametrize(
-    "filename,simple,size",
+    "filename",
     [
-        pytest.param("filtered", True, 8),
-        pytest.param("filtered", False, 7),
-        pytest.param("all", True, 8),
-        pytest.param("all", False, 7),
+        "filtered",
+        "all",
     ],
 )
-def test_filtercontigs(
-    create_testfolder, processed_files, dummy_adata, filename, simple, size
+def test_checkcontigs(
+    create_testfolder, processed_files, dummy_adata, filename
 ):
-    """test_filtercontigs"""
+    """test_checkcontigs"""
     f = create_testfolder / "dandelion" / processed_files[filename]
     dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata, simple=simple)
+    vdj, adata = ddl.pp.check_contigs(dat, dummy_adata)
     assert dat.shape[0] == 9
-    assert vdj.data.shape[0] == size
-    assert vdj.metadata.shape[0] == 4
+    assert vdj.data.shape[0] == 9
+    assert vdj.metadata.shape[0] == 5
     assert adata.n_obs == 5
 
 

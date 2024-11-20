@@ -329,7 +329,7 @@ def read_10x_vdj(
     path : str
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+        prefix of file name preceding '_contig'. None defaults to 'all'.
     prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
     suffix : str | None, optional
@@ -353,10 +353,9 @@ def read_10x_vdj(
         if contig_annotations.csv and all_contig_annotations.json file(s) not found in the input folder.
 
     """
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = (
+        DEFAULT_PREFIX if filename_prefix is None else filename_prefix
+    )
 
     if os.path.isdir(str(path)):
         files = os.listdir(path)
@@ -365,7 +364,10 @@ def read_10x_vdj(
             if re.search(filename_pre + "_contig", fx):
                 if fx.endswith(".fasta") or fx.endswith(".csv"):
                     filelist.append(fx)
-            if re.search("all_contig_annotations", fx):
+            if re.search(
+                f"{filename_pre.replace('filtered', 'all')}_contig_annotations",
+                fx,
+            ):
                 if fx.endswith(".json"):
                     filelist.append(fx)
         csv_idx = [i for i, j in enumerate(filelist) if j.endswith(".csv")]
@@ -378,7 +380,7 @@ def read_10x_vdj(
             fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
             json_file = re.sub(
                 filename_pre + "_contig_annotations",
-                "all_contig_annotations",
+                f"{filename_pre.replace('filtered', 'all')}_contig_annotations",
                 str(file).split(".csv")[0] + ".json",
             )
             if os.path.exists(json_file):
@@ -416,8 +418,10 @@ def read_10x_vdj(
                     out = parse_json(raw)
             else:
                 raise IOError(
-                    "{}_contig_annotations.csv and all_contig_annotations.json file(s) not found in {} folder.".format(
-                        str(filename_pre), str(path)
+                    "{}_contig_annotations.csv and {}_contig_annotations.json file(s) not found in {} folder.".format(
+                        str(filename_pre),
+                        filename_pre.replace("filtered", "all"),
+                        str(path),
                     )
                 )
         elif len(csv_idx) > 1:
@@ -435,7 +439,7 @@ def read_10x_vdj(
             fasta_file = str(file).split("_annotations.csv")[0] + ".fasta"
             json_file = re.sub(
                 filename_pre + "_contig_annotations",
-                "all_contig_annotations",
+                f"{filename_pre.replace('filtered', 'all')}_contig_annotations",
                 str(file).split(".csv")[0] + ".json",
             )
             if os.path.exists(json_file):
@@ -660,7 +664,7 @@ def change_file_location(
         list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
         list; this allows for the function to be run on single/multiple samples.
     filename_prefix : list[str] | str | None, optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. None defaults to 'all'.
     """
     fileformat = "blast"
     if type(data) is not list:

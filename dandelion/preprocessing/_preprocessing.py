@@ -86,14 +86,16 @@ def format_fasta(
     out_dir : str | None, optional
         path to output location. `None` defaults to 'dandelion'.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
 
     Raises
     ------
     FileNotFoundError
         if path to fasta file is unknown.
     """
-    filename_pre = "filtered" if filename_prefix is None else filename_prefix
+    filename_pre = (
+        DEFAULT_PREFIX if filename_prefix is None else filename_prefix
+    )
 
     file_path = check_filepath(
         fasta,
@@ -294,7 +296,7 @@ def format_fasta(
 
 
 def format_fastas(
-    fastas: list[Path | str],
+    fastas: list[Path | str] | Path | str,
     prefix: list[str] | None = None,
     suffix: list[str] | None = None,
     sep: str | None = None,
@@ -326,14 +328,9 @@ def format_fastas(
         path to out put location.
     filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
-        'filtered'.
+        'all'.
     """
-    fastas = [fastas] if not isinstance(fastas, list) else fastas
-    if not isinstance(filename_prefix, list):
-        filename_prefix = [filename_prefix]
-        if len(filename_prefix) == 1:
-            if len(fastas) > 1:
-                filename_prefix = filename_prefix * len(fastas)
+    fastas, filename_prefix = check_data(fastas, filename_prefix)
     if prefix is not None:
         if not isinstance(prefix, list):
             prefix = [prefix]
@@ -454,7 +451,7 @@ def assign_isotype(
     blastdb : Path | str | None, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
     additional_args : list[str], optional
         additional arguments to pass to `blastn`.
     Raises
@@ -839,7 +836,7 @@ def assign_isotype(
 
 
 def assign_isotypes(
-    fastas: list[Path | str],
+    fastas: list[Path | str] | Path | str,
     org: Literal["human", "mouse"] = "human",
     evalue: float = 1e4,
     correct_c_call: bool = True,
@@ -883,16 +880,11 @@ def assign_isotypes(
     blastdb : Path | str | None, optional
         path to blast database. Defaults to `$BLASTDB` environmental variable.
     filename_prefix : list[str] | str | None, optional
-        list of prefixes of file names preceding '_contig'. `None` defaults to 'filtered'.
+        list of prefixes of file names preceding '_contig'. `None` defaults to 'all'.
     additional_args : list[str], optional
         additional arguments to pass to `blastn`.
     """
-    if type(fastas) is not list:
-        fastas = [fastas]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for f in fastas]
+    fastas, filename_prefix = check_data(fastas, filename_prefix)
 
     logg.info("Assign isotypes \n")
 
@@ -914,7 +906,7 @@ def assign_isotypes(
 
 
 def reannotate_genes(
-    data: list[str],
+    data: list[Path | str] | Path | str,
     igblast_db: str | None = None,
     germline: str | None = None,
     org: Literal["human", "mouse"] = "human",
@@ -989,7 +981,7 @@ def reannotate_genes(
         whether or not to transfer additional 10X annotations to output file.
     filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. `None` defaults
-        to 'filtered'.
+        to 'all'.
     flavour : Literal["strict", "original"], optional
         Either 'strict' or 'original'. Determines how igblastn should
         be run. Running in 'strict' flavour will add the additional the
@@ -1048,12 +1040,7 @@ def reannotate_genes(
     FileNotFoundError
         if path to fasta file is unknown.
     """
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
+    data, filename_prefix = check_data(data, filename_prefix)
     filePath = None
     for i in tqdm(
         range(0, len(data)),
@@ -1170,7 +1157,7 @@ def return_pass_fail_filepaths(
     fasta : Path | str
         path to fasta file.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
 
     Returns
     -------
@@ -1213,7 +1200,7 @@ def ensure_columns_transferred(
     fasta : str
         path to fasta file.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
     """
     filePath, passfile, failfile = return_pass_fail_filepaths(
         fasta, filename_prefix=filename_prefix
@@ -1350,7 +1337,7 @@ def reassign_alleles(
         dictionary for creating a sample_id column in the concatenated file.
     filename_prefix : list[str] | str | None, optional
         list of prefixes of file names preceding '_contig'. `None` defaults to
-        'filtered'.
+        'all'.
     additional_args : dict[str, list[str]], optional
         additional arguments to pass to `tigger-genotype.R` and `CreateGermlines.py`.
         This accepts a dictionary with keys as the name of the sub-function (`tigger` or `creategermlines`)
@@ -1362,12 +1349,7 @@ def reassign_alleles(
         if reannotated file is not found.
     """
     fileformat = "blast"
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
+    data, filename_prefix = check_data(data, filename_prefix)
 
     informat_dict = {
         "changeo": "_igblast_db-pass.tsv",
@@ -2040,6 +2022,11 @@ def create_germlines(
     return out_vdj
 
 
+@deprecated(
+    deprecated_in="0.5.0",
+    removed_in="0.6.0",
+    details="check_contigs will be the recommended way to perform QC and filtering.",
+)
 def filter_contigs(
     data: Dandelion | pd.DataFrame | str,
     adata: AnnData | None = None,
@@ -2057,7 +2044,7 @@ def filter_contigs(
     save: Path | str | None = None,
     verbose: bool = True,
     **kwargs,
-) -> tuple[Dandelion, AnnData]:
+) -> tuple[Dandelion, AnnData]:  # pragma: no cover
     """
     Filter doublets and poor quality cells and corresponding contigs based on provided V(D)J `DataFrame` and `AnnData`.
 
@@ -2957,7 +2944,12 @@ def calculate_threshold(
         return output
 
 
-class FilterContigs:
+@deprecated(
+    deprecated_in="0.5.0",
+    removed_in="0.6.0",
+    details="check_contigs will be the recommended way to perform QC and filtering.",
+)
+class FilterContigs:  # pragma: no cover
     """
     `FilterContigs` class object.
 
@@ -3363,7 +3355,7 @@ class FilterContigs:
                             data3,
                             l_p,
                             l_umi_p,
-                            l_ccall_p,
+                            _,
                             umi_adjust_l,
                             drop_l,
                         ) = check_update_same_seq(data3)
@@ -3755,7 +3747,12 @@ class FilterContigs:
                         self.drop_contig.append(lx)
 
 
-class FilterContigsLite:
+@deprecated(
+    deprecated_in="0.5.0",
+    removed_in="0.6.0",
+    details="check_contigs will be the recommended way to perform QC and filtering.",
+)
+class FilterContigsLite:  # pragma: no cover
     """
     `FilterContigsLite` class object.
 
@@ -4348,7 +4345,7 @@ def assign_DJ(
     outfmt : str, optional
         specification of output format for blast.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. `None` defaults to 'filtered'.
+        prefix of file name preceding '_contig'. `None` defaults to 'all'.
     overwrite : bool, optional
         whether or not to overwrite the assignments.
     db : Literal["imgt", "ogrdb"], optional
@@ -5126,8 +5123,13 @@ def check_contigs(
     productive_only: bool = True,
     library_type: Literal["ig", "tr-ab", "tr-gd"] | None = None,
     umi_foldchange_cutoff: int = 2,
+    consensus_foldchange_cutoff: int = 5,
+    ntop_vdj: int = 1,
+    ntop_vj: int = 2,
+    allow_exceptions: bool = True,
     filter_missing: bool = True,
     filter_extra: bool = False,
+    filter_ambiguous: bool = False,
     save: str | None = None,
     verbose: bool = True,
     **kwargs,
@@ -5145,7 +5147,7 @@ def check_contigs(
     B cell if no other isotypes are detected; 2) TRD and TRB contigs are allowed in the same cell because rearrangement
     of TRB and TRD loci happens at the same time during development and TRD variable region genes exhibits allelic
     inclusion. Thus this can potentially result in some situations where T cells expressing productive TRA-TRB chains
-    can also express productive TRD chains.
+    can also express productive TRD chains. This can be toggled by `allow_exceptions` argument.
 
     Default behvaiour is to only consider productive contigs and remove all non-productive before checking, toggled by
     `productive_only` argument.
@@ -5175,12 +5177,21 @@ def check_contigs(
             `tr-gd`:
                 TRG, TRD
     umi_foldchange_cutoff : int, optional
-        related to minimum fold change required to rescue heavy chain contigs/barcode otherwise they will be marked as
-        doublets.
+        related to minimum fold change of UMI count, required to rescue contigs/barcode otherwise they will be marked as extra/ambiguous.
+    consensus_foldchange_cutoff : int, optional
+        related to minimum fold change of consensus count, required to rescue contigs/barcode otherwise they will be marked as extra/ambiguous.
+    ntop_vdj : int, optional
+        number of top VDJ contigs to consider for dominance check.
+    ntop_vj : int, optional
+        number of top VJ contigs to consider for dominance check.
+    allow_exceptions : bool, optional
+        whether or not to allow exceptions for certain loci.
     filter_missing : bool, optional
         cells in V(D)J data not found in `AnnData` object will removed from the dandelion object.
     filter_extra : bool, optional
         whether or not to remove contigs that are marked as extra.
+    filter_ambiguous : bool, optional
+        whether or not to remove contigs that are marked as ambiguous. This step is only for cleaning up the `.data` slot as the ambiguous contigs are not passed to the `.metadata` slot anyway.
     save : str | None, optional
         Only used if a pandas data frame or dandelion object is provided. Specifying will save the formatted vdj table
         with a `_checked.tsv` suffix extension.
@@ -5245,7 +5256,15 @@ def check_contigs(
         obs = pd.DataFrame(index=barcode)
         adata_ = ad.AnnData(obs=obs)
         adata_.obs["has_contig"] = "True"
-    contig_status = MarkAmbiguousContigs(dat, umi_foldchange_cutoff, verbose)
+    contig_status = MarkAmbiguousContigs(
+        dat,
+        umi_foldchange_cutoff,
+        consensus_foldchange_cutoff,
+        ntop_vdj,
+        ntop_vj,
+        allow_exceptions,
+        verbose,
+    )
 
     ambigous = contig_status.ambiguous_contigs.copy()
     extra = contig_status.extra_contigs.copy()
@@ -5287,7 +5306,7 @@ def check_contigs(
                 )
 
     if productive_only:
-        dat_["umi_count"].update(dat["umi_count"])
+        dat_.update({"umi_count": dat["umi_count"]})
         for column in ["ambiguous", "extra"]:
             dat_[column] = dat[column]
             dat_[column] = dat_[column].fillna("T")
@@ -5295,6 +5314,8 @@ def check_contigs(
 
     if filter_extra:
         dat = dat[dat["extra"] == "F"].copy()
+    if filter_ambiguous:
+        dat = dat[dat["ambiguous"] == "F"].copy()
 
     logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=dat, **kwargs)
@@ -5338,6 +5359,10 @@ class MarkAmbiguousContigs:
         self,
         data: pd.DataFrame,
         umi_foldchange_cutoff: int | float,
+        consensus_foldchange_cutoff: int | float,
+        ntop_vdj: int,
+        ntop_vj: int,
+        allow_exceptions: bool,
         verbose: bool,
     ):
         """Init method for MarkAmbiguousContigs.
@@ -5347,7 +5372,15 @@ class MarkAmbiguousContigs:
         data : pd.DataFrame
             AIRR data frame in Dandelion.data.
         umi_foldchange_cutoff : int | float
-            fold-change cut off for decision.
+            fold-change cut off for decision for umi count.
+        consensus_foldchange_cutoff : int | float
+            fold-change cut off for decision for consensus count.
+        ntop_vdj : int
+            number of top VDJ contigs to consider for dominance check.
+        ntop_vj : int
+            number of top VJ contigs to consider for dominance check.
+        allow_exceptions : bool
+            whether or not to allow exceptions.
         verbose : bool
             whether or not to print progress.
         """
@@ -5362,7 +5395,6 @@ class MarkAmbiguousContigs:
         d_dict = dict(zip(data["sequence_id"], data["d_call"]))
         j_dict = dict(zip(data["sequence_id"], data["j_call"]))
         c_dict = dict(zip(data["sequence_id"], data["c_call"]))
-        l_dict = dict(zip(data["sequence_id"], data["locus"]))
         for contig, row in tqdm(
             data.iterrows(),
             desc="Preparing data",
@@ -5400,7 +5432,6 @@ class MarkAmbiguousContigs:
                     ],
                 )
                 vdj_p = list(data1["sequence_id"])
-                vdj_umi_p = [int(x) for x in pd.to_numeric(data1["umi_count"])]
                 vdj_ccall_p = list(data1["c_call"])
                 vdj_locus_p = list(data1["locus"])
                 if len(vdj_p) > 1:
@@ -5408,7 +5439,7 @@ class MarkAmbiguousContigs:
                         (
                             data1,
                             vdj_p,
-                            vdj_umi_p,
+                            _,
                             vdj_ccall_p,
                             umi_adjust_vdj,
                             ambi_cont_vdj,
@@ -5419,137 +5450,273 @@ class MarkAmbiguousContigs:
                             for avdj in ambi_cont_vdj:
                                 self.ambiguous_contigs.append(avdj)
                     if len(vdj_p) > 1:
-                        if "IGHD" in vdj_ccall_p:
-                            if all(x in ["IGHM", "IGHD"] for x in vdj_ccall_p):
-                                if len(list(set(vdj_ccall_p))) == 2:
-                                    vdj_ccall_p_igm_count = dict(
-                                        data1[data1["c_call"] == "IGHM"][
+                        if allow_exceptions:
+                            if "IGHD" in vdj_ccall_p:
+                                if all(
+                                    x in ["IGHM", "IGHD"] for x in vdj_ccall_p
+                                ):
+                                    if len(list(set(vdj_ccall_p))) == 2:
+                                        # the v and j should be the same in order to keep as exception
+                                        vdj_vcall_p = (
+                                            list(data1["v_call_genotyped"])
+                                            if "v_call_genotyped"
+                                            in data1.columns
+                                            else list(data1["v_call"])
+                                        )
+                                        vdj_jcall_p = list(data1["j_call"])
+                                        if (
+                                            len(set(vdj_vcall_p))
+                                            == 1 & len(set(vdj_jcall_p))
+                                            == 1
+                                        ):
+                                            vdj_ccall_p_igm_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHM"
+                                                ]["umi_count"]
+                                            )
+                                            vdj_ccall_c_igm_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHM"
+                                                ]["consensus_count"]
+                                            )
+                                            vdj_ccall_p_igd_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHD"
+                                                ]["umi_count"]
+                                            )
+                                            vdj_ccall_c_igd_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHD"
+                                                ]["consensus_count"]
+                                            )
+                                        else:
+                                            (
+                                                vdj_ccall_p_igm_count,
+                                                vdj_ccall_p_igd_count,
+                                                vdj_ccall_c_igm_count,
+                                                vdj_ccall_c_igd_count,
+                                            ) = ({}, {}, {}, {})
+                                            vdj_ccall_p_count = dict(
+                                                data1["umi_count"]
+                                            )
+                                            vdj_ccall_c_count = dict(
+                                                data1["consensus_count"]
+                                            )
+                                            if len(vdj_ccall_p_count) > 1:
+                                                (
+                                                    vdj_p,
+                                                    extra_vdj,
+                                                    ambiguous_vdj,
+                                                ) = check_productive_chain(
+                                                    umi_counts=vdj_ccall_p_count,
+                                                    consensus_counts=vdj_ccall_c_count,
+                                                    umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                                    consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                                    ntop=ntop_vdj,
+                                                )
+                                            else:
+                                                (
+                                                    vdj_p,
+                                                    extra_vdj,
+                                                    ambiguous_vdj,
+                                                ) = (
+                                                    [],
+                                                    [],
+                                                    [],
+                                                )
+                                    else:
+                                        (
+                                            vdj_ccall_p_igm_count,
+                                            vdj_ccall_p_igd_count,
+                                            vdj_ccall_c_igm_count,
+                                            vdj_ccall_c_igd_count,
+                                        ) = ({}, {}, {}, {})
+
+                                    if len(vdj_ccall_p_igm_count) > 1:
+                                        (
+                                            keep_igm,
+                                            extra_igm,
+                                            ambiguous_igm,
+                                        ) = check_productive_chain(
+                                            umi_counts=vdj_ccall_p_igm_count,
+                                            consensus_counts=vdj_ccall_c_igm_count,
+                                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                            ntop=ntop_vdj,
+                                        )
+                                    else:
+                                        keep_igm, extra_igm, ambiguous_igm = (
+                                            [],
+                                            [],
+                                            [],
+                                        )
+
+                                    if len(vdj_ccall_p_igd_count) > 1:
+                                        (
+                                            keep_igd,
+                                            extra_igd,
+                                            ambiguous_igd,
+                                        ) = check_productive_chain(
+                                            umi_counts=vdj_ccall_p_igd_count,
+                                            consensus_counts=vdj_ccall_c_igd_count,
+                                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                            ntop=ntop_vdj,
+                                        )
+                                    else:
+                                        keep_igd, extra_igd, ambiguous_igd = (
+                                            [],
+                                            [],
+                                            [],
+                                        )
+
+                                    vdj_p = keep_igm + keep_igd
+                                    extra_vdj = extra_igm + extra_igd
+                                    ambiguous_vdj = (
+                                        ambiguous_igm + ambiguous_igd
+                                    )
+                                else:
+                                    vdj_ccall_p_count = dict(data1["umi_count"])
+                                    vdj_ccall_c_count = dict(
+                                        data1["consensus_count"]
+                                    )
+                                    if len(vdj_ccall_p_count) > 1:
+                                        (
+                                            vdj_p,
+                                            extra_vdj,
+                                            ambiguous_vdj,
+                                        ) = check_productive_chain(
+                                            umi_counts=vdj_ccall_p_count,
+                                            consensus_counts=vdj_ccall_c_count,
+                                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                            ntop=ntop_vdj,
+                                        )
+                                    else:
+                                        vdj_p, extra_vdj, ambiguous_vdj = (
+                                            [],
+                                            [],
+                                            [],
+                                        )
+                            elif all(x in ["TRB", "TRD"] for x in vdj_locus_p):
+                                if len(list(set(vdj_locus_p))) == 2:
+                                    vdj_locus_p_trb_count = dict(
+                                        data1[data1["locus"] == "TRB"][
                                             "umi_count"
                                         ]
                                     )
-                                    vdj_ccall_p_igd_count = dict(
-                                        data1[data1["c_call"] == "IGHD"][
+                                    vdj_locus_p_trd_count = dict(
+                                        data1[data1["locus"] == "TRD"][
                                             "umi_count"
                                         ]
                                     )
-                                else:
-                                    (
-                                        vdj_ccall_p_igm_count,
-                                        vdj_ccall_p_igd_count,
-                                    ) = ({}, {})
+                                    vdj_locus_c_trb_count = dict(
+                                        data1[data1["locus"] == "TRB"][
+                                            "consensus_count"
+                                        ]
+                                    )
+                                    vdj_locus_c_trd_count = dict(
+                                        data1[data1["locus"] == "TRD"][
+                                            "consensus_count"
+                                        ]
+                                    )
+                                    if len(vdj_locus_p_trb_count) > 1:
+                                        (
+                                            keep_trb,
+                                            extra_trb,
+                                            ambiguous_trb,
+                                        ) = check_productive_chain(
+                                            umi_counts=vdj_locus_p_trb_count,
+                                            consensus_counts=vdj_locus_c_trb_count,
+                                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                            ntop=ntop_vdj,
+                                        )
+                                    else:
+                                        keep_trb, extra_trb, ambiguous_trb = (
+                                            [],
+                                            [],
+                                            [],
+                                        )
 
-                                if len(vdj_ccall_p_igm_count) > 1:
-                                    (
-                                        keep_igm,
-                                        extra_igm,
-                                        ambiguous_igm,
-                                    ) = check_productive_vdj(
-                                        vdj_ccall_p_igm_count,
-                                        umi_foldchange_cutoff,
+                                    if len(vdj_locus_p_trd_count) > 1:
+                                        (
+                                            keep_trd,
+                                            extra_trd,
+                                            ambiguous_trd,
+                                        ) = check_productive_chain(
+                                            umi_counts=vdj_locus_p_trd_count,
+                                            consensus_counts=vdj_locus_c_trd_count,
+                                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                            ntop=ntop_vdj,
+                                        )
+                                    else:
+                                        keep_trd, extra_trd, ambiguous_trd = (
+                                            [],
+                                            [],
+                                            [],
+                                        )
+
+                                    vdj_p = keep_trb + keep_trd
+                                    extra_vdj = extra_trb + extra_trd
+                                    ambiguous_vdj = (
+                                        ambiguous_trb + ambiguous_trd
                                     )
                                 else:
-                                    keep_igm, extra_igm, ambiguous_igm = (
-                                        [],
-                                        [],
-                                        [],
+                                    vdj_ccall_p_count = dict(data1["umi_count"])
+                                    vdj_ccall_c_count = dict(
+                                        data1["consensus_count"]
                                     )
-
-                                if len(vdj_ccall_p_igd_count) > 1:
-                                    (
-                                        keep_igd,
-                                        extra_igd,
-                                        ambiguous_igd,
-                                    ) = check_productive_vdj(
-                                        vdj_ccall_p_igd_count,
-                                        umi_foldchange_cutoff,
-                                    )
-                                else:
-                                    keep_igd, extra_igd, ambiguous_igd = (
-                                        [],
-                                        [],
-                                        [],
-                                    )
-
-                                vdj_p = keep_igm + keep_igd
-                                extra_vdj = extra_igm + extra_igd
-                                ambiguous_vdj = ambiguous_igm + ambiguous_igd
+                                    if len(vdj_ccall_p_count) > 1:
+                                        (
+                                            vdj_p,
+                                            extra_vdj,
+                                            ambiguous_vdj,
+                                        ) = check_productive_chain(
+                                            umi_counts=vdj_ccall_p_count,
+                                            consensus_counts=vdj_ccall_c_count,
+                                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                            ntop=ntop_vdj,
+                                        )
+                                    else:
+                                        vdj_p, extra_vdj, ambiguous_vdj = (
+                                            [],
+                                            [],
+                                            [],
+                                        )
                             else:
                                 vdj_ccall_p_count = dict(data1["umi_count"])
+                                vdj_ccall_c_count = dict(
+                                    data1["consensus_count"]
+                                )
                                 if len(vdj_ccall_p_count) > 1:
                                     (
                                         vdj_p,
                                         extra_vdj,
                                         ambiguous_vdj,
-                                    ) = check_productive_vdj(
-                                        vdj_ccall_p_count, umi_foldchange_cutoff
+                                    ) = check_productive_chain(
+                                        umi_counts=vdj_ccall_p_count,
+                                        consensus_counts=vdj_ccall_c_count,
+                                        umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                        consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                        ntop=ntop_vdj,
                                     )
-                                else:
-                                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
-                        elif all(x in ["TRB", "TRD"] for x in vdj_locus_p):
-                            if len(list(set(vdj_locus_p))) == 2:
-                                vdj_locus_p_trb_count = dict(
-                                    data1[data1["locus"] == "TRB"]["umi_count"]
-                                )
-                                vdj_locus_p_trd_count = dict(
-                                    data1[data1["locus"] == "TRD"]["umi_count"]
-                                )
-
-                                if len(vdj_locus_p_trb_count) > 1:
-                                    (
-                                        keep_trb,
-                                        extra_trb,
-                                        ambiguous_trb,
-                                    ) = check_productive_vdj(
-                                        vdj_locus_p_trb_count,
-                                        umi_foldchange_cutoff,
-                                    )
-                                else:
-                                    keep_trb, extra_trb, ambiguous_trb = (
-                                        [],
-                                        [],
-                                        [],
-                                    )
-
-                                if len(vdj_locus_p_trd_count) > 1:
-                                    (
-                                        keep_trd,
-                                        extra_trd,
-                                        ambiguous_trd,
-                                    ) = check_productive_vdj(
-                                        vdj_locus_p_trd_count,
-                                        umi_foldchange_cutoff,
-                                    )
-                                else:
-                                    keep_trd, extra_trd, ambiguous_trd = (
-                                        [],
-                                        [],
-                                        [],
-                                    )
-
-                                vdj_p = keep_trb + keep_trd
-                                extra_vdj = extra_trb + extra_trd
-                                ambiguous_vdj = ambiguous_trb + ambiguous_trd
-                            else:
-                                vdj_ccall_p_count = dict(data1["umi_count"])
-                                if len(vdj_ccall_p_count) > 1:
-                                    (
-                                        vdj_p,
-                                        extra_vdj,
-                                        ambiguous_vdj,
-                                    ) = check_productive_vdj(
-                                        vdj_ccall_p_count, umi_foldchange_cutoff
-                                    )
-                                else:
-                                    vdj_p, extra_vdj, ambiguous_vdj = [], [], []
                         else:
                             vdj_ccall_p_count = dict(data1["umi_count"])
+                            vdj_ccall_c_count = dict(data1["consensus_count"])
                             if len(vdj_ccall_p_count) > 1:
                                 (
                                     vdj_p,
                                     extra_vdj,
                                     ambiguous_vdj,
-                                ) = check_productive_vdj(
-                                    vdj_ccall_p_count, umi_foldchange_cutoff
+                                ) = check_productive_chain(
+                                    umi_counts=vdj_ccall_p_count,
+                                    consensus_counts=vdj_ccall_c_count,
+                                    umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                    consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                    ntop=ntop_vdj,
                                 )
                 if "ambiguous_vdj" not in locals():
                     ambiguous_vdj = []
@@ -5602,14 +5769,13 @@ class MarkAmbiguousContigs:
                     ],
                 )
                 vj_p = list(data3["sequence_id"])
-                vj_umi_p = [int(x) for x in pd.to_numeric(data3["umi_count"])]
                 if len(vj_p) > 1:
                     if "sequence_alignment" in data3:
                         (
                             data3,
                             vj_p,
-                            vj_umi_p,
-                            vj_ccall_p,
+                            _,
+                            _,
                             umi_adjust_vj,
                             ambi_cont_vj,
                         ) = check_update_same_seq(data3)
@@ -5620,9 +5786,13 @@ class MarkAmbiguousContigs:
                                 self.ambiguous_contigs.append(avj)
                     if len(vj_p) > 1:
                         vj_ccall_p_count = dict(data3["umi_count"])
-                        # maximum keep 2?
-                        vj_p, extra_vj, ambiguous_vj = check_productive_vj(
-                            vj_ccall_p_count
+                        vj_ccall_c_count = dict(data3["consensus_count"])
+                        vj_p, extra_vj, ambiguous_vj = check_productive_chain(
+                            umi_counts=vj_ccall_p_count,
+                            consensus_counts=vj_ccall_c_count,
+                            umi_foldchange_cutoff=umi_foldchange_cutoff,
+                            consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                            ntop=ntop_vj,  # maximum keep 2 as default?
                         )
                 if "ambiguous_vj" not in locals():
                     ambiguous_vj = []
@@ -5875,49 +6045,28 @@ class MarkAmbiguousContigs:
                     self.extra_contigs.append(evj)
 
 
-def check_productive_vdj(
-    vdj_contigs: dict[str, int], umi_foldchange_cutoff: int | float
+def check_productive_chain(
+    umi_counts: dict[str, int],
+    consensus_counts: dict[str, int],
+    umi_foldchange_cutoff: int | float,
+    consensus_foldchange_cutoff: int | float,
+    ntop: int,
 ) -> tuple[list[str], list[str], list[str]]:
-    """Keep top productive because of allelic exclusion."""
-    keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
-    counts = vdj_contigs.values()
-    max_count = max(counts)
-    max_id_keys = [k for k, v in vdj_contigs.items() if v == max_count]
-    if len(max_id_keys) == 1:
-        other_counts = {
-            k: v for k, v in vdj_contigs.items() if k != max_id_keys[0]
-        }
-        umi_test = {
-            i: ((max_count / j) < umi_foldchange_cutoff)
-            for i, j in other_counts.items()
-        }
-        if any(umi_test.values()):
-            for dk in vdj_contigs.keys():
-                ambiguous_contigs.append(dk)
-        elif max_count >= 3:
-            drop_keys = [k for k, v in vdj_contigs.items() if v < max_count]
-            for dk in drop_keys:
-                extra_contigs.append(dk)
-            for kk in max_id_keys:
-                keep_contigs.append(kk)
-        else:
-            for dk in vdj_contigs.keys():
-                ambiguous_contigs.append(dk)
-    else:
-        for dk in vdj_contigs.keys():
-            ambiguous_contigs.append(dk)
-    return keep_contigs, extra_contigs, ambiguous_contigs
-
-
-def check_productive_vj(
-    vj_contigs: dict[str, int]
-) -> tuple[list[str], list[str], list[str]]:
-    """Function to keep top two productive vj chains because of allelic inclusions.
+    """
+    Function to keep top two productive vj chains because of allelic inclusions.
 
     Parameters
     ----------
-    vj_contigs : dict[str, int]
+    umi_counts : dict[str, int]
         dictionary of contigs with umi count.
+    consensus_counts : dict[str, int]
+        dictionary of contigs with consensus count.
+    umi_foldchange_cutoff : int | float
+        fold-change cut off for decision for umi count.
+    consensus_foldchange_cutoff : int | float
+        fold-change cut off for decision for consensus count.
+    ntop : int
+        number of top contigs to keep.
 
     Returns
     -------
@@ -5925,36 +6074,114 @@ def check_productive_vj(
         lists of contigs to keep, are extra or are ambiguous.
     """
     keep_contigs, extra_contigs, ambiguous_contigs = [], [], []
-    counts = vj_contigs.values()
-    max_counts = max(counts)
-    if len(vj_contigs) > 2:
-        if max(counts) >= 3:
-            set_counts = set(counts)
-            set_counts.remove(max_counts)
-            if len(set_counts) > 0:
-                max_id_keys = [
-                    k for k, v in vj_contigs.items() if v >= max(set_counts)
-                ]
-                if len(max_id_keys) > 2:
-                    for dk in vj_contigs.keys():
-                        ambiguous_contigs.append(dk)
-                else:
-                    drop_keys = [
-                        k for k, v in vj_contigs.items() if v < max(set_counts)
-                    ]
-                    for dk in drop_keys:
-                        extra_contigs.append(dk)
-                    for kk in max_id_keys:
-                        keep_contigs.append(kk)
-            else:
-                for k in vj_contigs.keys():
-                    keep_contigs.append(k)
+    # Look at all the contigs, assessing if their umi counts are >= cutoff compared to the lowest umi count or 3, whichever is lower.
+    # if none pass the cutoff, then mark all as ambiguous
+    # Allow up to two to pass the cutoff, keep those two contigs, and the rest that pass the cut off in the extra contigs, and mark the rest as ambiguous
+    # If there are ties in the umi counts, then look at the consensus counts to break the tie using the same logic as above, but with a cutoff of 5.
+    min_umi_count, min_con_count = min(min(umi_counts.values()), 3), min(
+        min(consensus_counts.values()), 5
+    )
+    # test the umi fold change
+    umi_test = {
+        k: (
+            ((umi_counts[k] / min_umi_count) >= umi_foldchange_cutoff)
+            & (umi_counts[k] >= 3)
+        )
+        for k in umi_counts
+    }
+    # test the consensus fold change
+    con_test = {
+        k: (
+            (
+                (consensus_counts[k] / min_con_count)
+                >= consensus_foldchange_cutoff
+            )
+            & (consensus_counts[k] >= 5)
+        )
+        for k in consensus_counts
+    }
+    filtered_contigs = {k: v for k, v in umi_counts.items() if umi_test[k]}
+    if any(umi_test.values()):
+        # get the top n contigs
+        if len(filtered_contigs) <= ntop:
+            keep_contigs.extend(list(filtered_contigs.keys()))
+            failed_contigs = {
+                k: v for k, v in umi_counts.items() if not umi_test[k]
+            }
+            ambiguous_contigs.extend(list(failed_contigs.keys()))
         else:
-            for dk in vj_contigs.keys():
-                ambiguous_contigs.append(dk)
+            # check the consensus fold change
+            if any(con_test.values()):
+                keep_contigs, extra_contigs, ambiguous_contigs = (
+                    keep_if_consensus_count_is_high(
+                        filtered_contigs=filtered_contigs,
+                        umi_counts=umi_counts,
+                        consensus_counts=consensus_counts,
+                        keep_contigs=keep_contigs,
+                        extra_contigs=extra_contigs,
+                        ambiguous_contigs=ambiguous_contigs,
+                        consensus_test=con_test,
+                        ntop=ntop,
+                    )
+                )
+            else:
+                # not enough counts to confidently classify
+                ambiguous_contigs.extend(list(umi_counts.keys()))
     else:
-        for k in vj_contigs.keys():
-            keep_contigs.append(k)
+        if any(con_test.values()):
+            keep_contigs, extra_contigs, ambiguous_contigs = (
+                keep_if_consensus_count_is_high(
+                    filtered_contigs=filtered_contigs,
+                    umi_counts=umi_counts,
+                    consensus_counts=consensus_counts,
+                    keep_contigs=keep_contigs,
+                    extra_contigs=extra_contigs,
+                    ambiguous_contigs=ambiguous_contigs,
+                    consensus_test=con_test,
+                    ntop=ntop,
+                )
+            )
+        else:
+            # Not enough counts to confidently classify
+            ambiguous_contigs.extend(umi_counts.keys())
+
+    return keep_contigs, extra_contigs, ambiguous_contigs
+
+
+def keep_if_consensus_count_is_high(
+    filtered_contigs: dict[str, int],
+    umi_counts: dict[str, int],
+    consensus_counts: dict[str, int],
+    keep_contigs: list[str],
+    extra_contigs: list[str],
+    ambiguous_contigs: list[str],
+    consensus_test: dict[str, bool],
+    ntop: int,
+) -> tuple[list[str], list[str], list[str]]:
+    """Accessories function to keep the contigs based on consensus counts."""
+    # sort the umi counts and use the consensus counts to break the tie
+    sorted_contigs = dict(
+        sorted(
+            umi_counts.items(),
+            key=lambda k: (k[1], consensus_counts[k[0]]),
+            reverse=True,
+        )
+    )
+    # get the top 2 contigs
+    _keep = list(sorted_contigs.keys())[:ntop]
+    _keep_filtered = [k for k in _keep if consensus_test[k]]
+    # get the extras
+    _extra = [k for k in filtered_contigs if k not in _keep_filtered]
+    # get the ambiguous
+    _ambi = list(
+        set([k for k in umi_counts if k not in _keep_filtered + _extra])
+    )
+    # extend the lists
+    keep_contigs.extend(_keep_filtered)
+    # get the extra contigs
+    extra_contigs.extend(_extra)
+    # get the ambiguous contigs
+    ambiguous_contigs.extend(_ambi)
     return keep_contigs, extra_contigs, ambiguous_contigs
 
 
@@ -6360,3 +6587,19 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     df["j_call_" + col] = df[col]
     df = df[["j_call_" + col]]
     airrdata.update(df[["j_call_" + col]])
+
+
+def check_data(
+    data: list[Path | str] | Path | str, filename_prefix: list[str] | str | None
+) -> tuple[list[str], list[str]]:
+    """Quick check for data and filename prefixes"""
+    if type(data) is not list:
+        data = [data]
+    if not isinstance(filename_prefix, list):
+        filename_prefix = [filename_prefix]
+        if len(filename_prefix) == 1:
+            if len(data) > 1:
+                filename_prefix = filename_prefix * len(data)
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+    return data, filename_prefix

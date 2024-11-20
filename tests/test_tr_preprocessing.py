@@ -41,8 +41,8 @@ def test_write_annotation_tr2(create_testfolder, annotation_10x_tr2):
     "filename,expected",
     [
         pytest.param(None, 2),
-        pytest.param("filtered", 2),
-        pytest.param("all", 4),
+        pytest.param("all", 2),
+        pytest.param("filtered", 4),
     ],
 )
 def test_formatfasta(create_testfolder, filename, expected):
@@ -104,7 +104,7 @@ def test_filtercontigs(
     """test_filtercontigs"""
     f = create_testfolder / "dandelion" / processed_files_tr[filename]
     dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_tr)
+    vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_tr)
     assert dat.shape[0] == expected
     assert vdj.data.shape[0] == expected
     assert vdj.metadata.shape[0] == expected

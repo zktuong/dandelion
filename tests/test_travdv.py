@@ -39,7 +39,7 @@ def test_write_annotation_tr(create_testfolder, annotation_10x_travdv):
 @pytest.mark.usefixtures("create_testfolder")
 def test_formatfasta(create_testfolder):
     """test format fasta"""
-    ddl.pp.format_fastas(create_testfolder)
+    ddl.pp.format_fastas(create_testfolder, filename_prefix="filtered")
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
 
 
@@ -51,6 +51,7 @@ def test_reannotategenes(create_testfolder, database_paths):
         igblast_db=database_paths["igblast_db"],
         germline=database_paths["germline"],
         loci="tr",
+        filename_prefix="filtered",
     )
     assert len(list((create_testfolder / "dandelion" / "tmp").iterdir())) == 9
     assert len(list((create_testfolder / "dandelion").iterdir())) == 2
@@ -72,5 +73,5 @@ def test_travdv_filter(create_testfolder, dummy_adata_travdv):
         create_testfolder / "dandelion" / "filtered_contig_dandelion.tsv"
     )
     assert len([i for i in vdj.data["locus"] if i == "TRD"]) == 0
-    vdj2, adata = ddl.pp.filter_contigs(vdj, dummy_adata_travdv)
+    vdj2, adata = ddl.pp.check_contigs(vdj, dummy_adata_travdv)
     assert vdj2.data.shape[0] > 0

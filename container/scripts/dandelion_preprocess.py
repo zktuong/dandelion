@@ -217,7 +217,6 @@ def main():
                     "."
                 ):  # exclude hidden folders like .ipynb_checkpoints
                     samples.append(item)
-    filename_prefixes = [args.file_prefix for i in range(0, len(samples))]
 
     # STEP ONE - ddl.pp.format_fastas()
     # do we have a prefix/suffix?
@@ -231,7 +230,7 @@ def main():
                 sep=args.sep,
                 high_confidence_filtering=args.filter_to_high_confidence,
                 remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-                filename_prefix=filename_prefixes,
+                filename_prefix=args.file_prefix,
             )
         elif "suffix" in meta.columns:
             # process with suffix
@@ -242,7 +241,7 @@ def main():
                 sep=args.sep,
                 high_confidence_filtering=args.filter_to_high_confidence,
                 remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-                filename_prefix=filename_prefixes,
+                filename_prefix=args.file_prefix,
             )
         else:
             # neither. tag with the sample names as default, if more than one
@@ -254,7 +253,7 @@ def main():
                     sep=args.sep,
                     high_confidence_filtering=args.filter_to_high_confidence,
                     remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-                    filename_prefix=filename_prefixes,
+                    filename_prefix=args.file_prefix,
                 )
             else:
                 # no need to tag as it's a single sample.
@@ -262,14 +261,14 @@ def main():
                     samples,
                     high_confidence_filtering=args.filter_to_high_confidence,
                     remove_trailing_hyphen_number=args.keep_trailing_hyphen_number,
-                    filename_prefix=filename_prefixes,
+                    filename_prefix=args.file_prefix,
                 )
     else:
         ddl.pp.format_fastas(
             samples,
             high_confidence_filtering=args.filter_to_high_confidence,
             remove_trailing_hyphen_number=False,
-            filename_prefix=filename_prefixes,
+            filename_prefix=args.file_prefix,
         )
 
     # STEP TWO - ddl.pp.reannotate_genes()
@@ -278,7 +277,7 @@ def main():
         samples,
         loci=args.chain,
         org=args.org,
-        filename_prefix=filename_prefixes,
+        filename_prefix=args.file_prefix,
         flavour=args.flavour,
         reassign_dj=args.skip_reassign_dj,
         db=args.db,
@@ -306,7 +305,7 @@ def main():
                         org=args.org,
                         save_plot=True,
                         show_plot=False,
-                        filename_prefix=filename_prefixes,
+                        filename_prefix=args.file_prefix,
                         db=args.db,
                         strain=args.strain,
                     )
@@ -322,7 +321,7 @@ def main():
                     org=args.org,
                     save_plot=True,
                     show_plot=False,
-                    filename_prefix=filename_prefixes,
+                    filename_prefix=args.file_prefix,
                     db=args.db,
                     strain=args.strain,
                 )
@@ -349,7 +348,7 @@ def main():
             org=args.org,
             save_plot=True,
             show_plot=False,
-            filename_prefix=filename_prefixes,
+            filename_prefix=args.file_prefix,
             correct_c_call=args.skip_correct_c,
             correction_dict=correction_dict,
         )

@@ -32,7 +32,6 @@
    notebooks/7_dandelion_TCR_data_10x_data.ipynb
    notebooks/8-pseudobulk-trajectory.ipynb
    notebooks/0_dandelion_primer.ipynb
-   notebooks/6_dandelion_running_from_R-10x_data.ipynb
 
 .. toctree::
    :maxdepth: 1

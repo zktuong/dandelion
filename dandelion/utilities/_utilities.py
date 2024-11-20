@@ -56,7 +56,7 @@ EMPTIES = [
     "NaN",
     "",
 ]
-
+DEFAULT_PREFIX = "all"
 
 # for compatibility with python>=3.10
 try:
@@ -245,7 +245,9 @@ def check_filepath(
     Path | None
         Path object if file is found, else None.
     """
-    filename_pre = "filtered" if filename_prefix is None else filename_prefix
+    filename_pre = (
+        DEFAULT_PREFIX if filename_prefix is None else filename_prefix
+    )
 
     ends_with = "" if ends_with is None else ends_with
     input_path = (
