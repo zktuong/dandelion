@@ -5456,33 +5456,81 @@ class MarkAmbiguousContigs:
                                     x in ["IGHM", "IGHD"] for x in vdj_ccall_p
                                 ):
                                     if len(list(set(vdj_ccall_p))) == 2:
-                                        vdj_ccall_p_igm_count = dict(
-                                            data1[data1["c_call"] == "IGHM"][
-                                                "umi_count"
-                                            ]
+                                        # the v and j should be the same in order to keep as exception
+                                        vdj_vcall_p = (
+                                            list(data1["v_call_genotyped"])
+                                            if "v_call_genotyped"
+                                            in data1.columns
+                                            else list(data1["v_call"])
                                         )
-                                        vdj_ccall_c_igm_count = dict(
-                                            data1[data1["c_call"] == "IGHM"][
-                                                "consensus_count"
-                                            ]
-                                        )
-                                        vdj_ccall_p_igd_count = dict(
-                                            data1[data1["c_call"] == "IGHD"][
-                                                "umi_count"
-                                            ]
-                                        )
-                                        vdj_ccall_c_igd_count = dict(
-                                            data1[data1["c_call"] == "IGHD"][
-                                                "consensus_count"
-                                            ]
-                                        )
+                                        vdj_jcall_p = list(data1["j_call"])
+                                        if (
+                                            len(set(vdj_vcall_p))
+                                            == 1 & len(set(vdj_jcall_p))
+                                            == 1
+                                        ):
+                                            vdj_ccall_p_igm_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHM"
+                                                ]["umi_count"]
+                                            )
+                                            vdj_ccall_c_igm_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHM"
+                                                ]["consensus_count"]
+                                            )
+                                            vdj_ccall_p_igd_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHD"
+                                                ]["umi_count"]
+                                            )
+                                            vdj_ccall_c_igd_count = dict(
+                                                data1[
+                                                    data1["c_call"] == "IGHD"
+                                                ]["consensus_count"]
+                                            )
+                                        else:
+                                            (
+                                                vdj_ccall_p_igm_count,
+                                                vdj_ccall_p_igd_count,
+                                                vdj_ccall_c_igm_count,
+                                                vdj_ccall_c_igd_count,
+                                            ) = ({}, {}, {}, {})
+                                            vdj_ccall_p_count = dict(
+                                                data1["umi_count"]
+                                            )
+                                            vdj_ccall_c_count = dict(
+                                                data1["consensus_count"]
+                                            )
+                                            if len(vdj_ccall_p_count) > 1:
+                                                (
+                                                    vdj_p,
+                                                    extra_vdj,
+                                                    ambiguous_vdj,
+                                                ) = check_productive_chain(
+                                                    umi_counts=vdj_ccall_p_count,
+                                                    consensus_counts=vdj_ccall_c_count,
+                                                    umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                                    consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                                    ntop=ntop_vdj,
+                                                )
+                                            else:
+                                                (
+                                                    vdj_p,
+                                                    extra_vdj,
+                                                    ambiguous_vdj,
+                                                ) = (
+                                                    [],
+                                                    [],
+                                                    [],
+                                                )
                                     else:
                                         (
                                             vdj_ccall_p_igm_count,
                                             vdj_ccall_p_igd_count,
                                             vdj_ccall_c_igm_count,
                                             vdj_ccall_c_igd_count,
-                                        ) = ({}, {})
+                                        ) = ({}, {}, {}, {})
 
                                     if len(vdj_ccall_p_igm_count) > 1:
                                         (
