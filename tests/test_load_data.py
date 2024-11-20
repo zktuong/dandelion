@@ -20,10 +20,10 @@ def test_load_data(airr_reannotated):
 def test_slice_data(airr_generic):
     """test load_data"""
     vdj = ddl.Dandelion(airr_generic)
-    assert vdj.data.shape[0] == 114
+    assert vdj.data.shape[0] == 130
     assert vdj.metadata.shape[0] == 45
     vdj2 = vdj[vdj.data["productive"] == "T"]
-    assert vdj2.data.shape[0] == 103
+    assert vdj2.data.shape[0] == 119
     assert vdj2.metadata.shape[0] == 43
     vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
     assert vdj2.data.shape[0] == 41
@@ -97,11 +97,11 @@ def test_slice_data_with_graph(airr_generic):
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="junction", layout_method="mod_fr")
     vdj2 = vdj[vdj.data["productive"] == "T"]
-    assert vdj2.data.shape[0] == 103
+    assert vdj2.data.shape[0] == 119
     assert vdj2.metadata.shape[0] == 43
     vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
-    assert vdj2.data.shape[0] == 30
-    assert vdj2.metadata.shape[0] == 15
+    assert vdj2.data.shape[0] == 39
+    assert vdj2.metadata.shape[0] == 18
     vdj2 = vdj[
         vdj.metadata_names.isin(
             [

@@ -7,10 +7,10 @@ import pytest
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated", "dummy_adata")
 def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     """test setup"""
-    vdj, adata = ddl.pp.filter_contigs(airr_reannotated, dummy_adata)
+    vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
     assert airr_reannotated.shape[0] == 8
-    assert vdj.data.shape[0] == 7
-    assert vdj.metadata.shape[0] == 4
+    assert vdj.data.shape[0] == 8
+    assert vdj.metadata.shape[0] == 5
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5ddl"
     vdj.write_h5ddl(f)

@@ -102,7 +102,7 @@ def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
     """test_filtercontigs"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
+    vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5ddl(f1)
@@ -144,21 +144,3 @@ def test_generate_network_new(create_testfolder):
     ddl.tl.generate_network(vdj)
     assert vdj.layout is not None
     assert vdj.graph is not None
-
-
-@pytest.mark.usefixtures(
-    "create_testfolder", "processed_files", "dummy_adata_mouse"
-)
-def test_filtercontigs_drop_contigs(
-    create_testfolder, processed_files, dummy_adata_mouse
-):
-    """test_filtercontigs_drop_contigs"""
-    f = create_testfolder / "dandelion" / processed_files["filtered"]
-    dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(
-        dat, dummy_adata_mouse, filter_poorqualitycontig=True
-    )
-    # assert dat.shape[0] == 1285
-    # assert vdj.data.shape[0] == 955
-    # assert vdj.metadata.shape[0] == 447
-    # assert adata.n_obs == 547

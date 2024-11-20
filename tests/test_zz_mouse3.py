@@ -83,19 +83,15 @@ def test_assignsisotypes(
 @pytest.mark.usefixtures(
     "create_testfolder", "processed_files", "dummy_adata_mouse"
 )
-def test_filtercontigs(create_testfolder, processed_files, dummy_adata_mouse):
-    """test filter contigs"""
+def test_checkcontigs(create_testfolder, processed_files, dummy_adata_mouse):
+    """test check contigs"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
     dat = pd.read_csv(f, sep="\t")
-    vdj, adata = ddl.pp.filter_contigs(dat, dummy_adata_mouse)
+    vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5ddl(f1)
     adata.write_h5ad(f2)
-    # assert dat.shape[0] == 1278
-    # assert vdj.data.shape[0] == 948
-    # assert vdj.metadata.shape[0] == 444
-    # assert adata.n_obs == 547
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")

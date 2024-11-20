@@ -329,7 +329,7 @@ def read_10x_vdj(
     path : str
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
     filename_prefix : str | None, optional
-        prefix of file name preceding '_contig'. None defaults to 'filtered'.
+        prefix of file name preceding '_contig'. None defaults to 'all'.
     prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
     suffix : str | None, optional
@@ -353,10 +353,9 @@ def read_10x_vdj(
         if contig_annotations.csv and all_contig_annotations.json file(s) not found in the input folder.
 
     """
-    if filename_prefix is None:
-        filename_pre = "filtered"
-    else:
-        filename_pre = filename_prefix
+    filename_pre = (
+        DEFAULT_PREFIX if filename_prefix is None else filename_prefix
+    )
 
     if os.path.isdir(str(path)):
         files = os.listdir(path)
