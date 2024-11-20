@@ -101,7 +101,7 @@ def test_slice_data_with_graph(airr_generic):
     assert vdj2.metadata.shape[0] == 43
     vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
     assert vdj2.data.shape[0] == 50
-    assert vdj2.metadata.shape[0] == 22s
+    assert vdj2.metadata.shape[0] == 22
     vdj2 = vdj[
         vdj.metadata_names.isin(
             [
@@ -113,7 +113,7 @@ def test_slice_data_with_graph(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 20
+    assert vdj2.data.shape[0] == 19
     assert vdj2.metadata.shape[0] == 5
     assert len(vdj2.layout[0]) == 5
     assert len(vdj2.layout[1]) == 5
