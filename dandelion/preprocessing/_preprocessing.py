@@ -5302,7 +5302,7 @@ def check_contigs(
                 )
 
     if productive_only:
-        dat_["umi_count"].update(dat["umi_count"])
+        dat_.update({"umi_count": dat["umi_count"]})
         for column in ["ambiguous", "extra"]:
             dat_[column] = dat[column]
             dat_[column] = dat_[column].fillna("T")
