@@ -272,7 +272,7 @@ def test_checkcontigs(
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.check_contigs(dat, dummy_adata)
     assert dat.shape[0] == 9
-    assert vdj.data.shape[0] == 9
+    assert vdj.data.shape[0] == 8
     assert vdj.metadata.shape[0] == 5
     assert adata.n_obs == 5
 

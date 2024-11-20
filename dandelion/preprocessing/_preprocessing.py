@@ -5128,7 +5128,7 @@ def check_contigs(
     ntop_vj: int = 2,
     allow_exceptions: bool = True,
     filter_missing: bool = True,
-    filter_extra: bool = False,
+    filter_extra: bool = True,
     filter_ambiguous: bool = False,
     save: str | None = None,
     verbose: bool = True,
@@ -5347,10 +5347,12 @@ class MarkAmbiguousContigs:
 
     Attributes
     ----------
-    ambiguous_contigs : list[str]
-        list of `sequence_id`s that are ambiguous.
     Cell : dandelion.utilities._utilities.Tree
         nested dictionary of cells.
+    ambiguous_contigs : list[str]
+        list of `sequence_id`s that are ambiguous.
+    extra_contigs : list[str]
+        list of `sequence_id`s that are extra.
     umi_adjustment : dict[str, int]
         dictionary of `sequence_id`s with adjusted umi value.
     """
@@ -5569,12 +5571,14 @@ class MarkAmbiguousContigs:
                                             [],
                                             [],
                                         )
-
-                                    vdj_p = keep_igm + keep_igd
-                                    extra_vdj = extra_igm + extra_igd
-                                    ambiguous_vdj = (
-                                        ambiguous_igm + ambiguous_igd
-                                    )
+                                    if "vdj_p" not in locals():
+                                        vdj_p = keep_igm + keep_igd
+                                    if "extra_vdj" not in locals():
+                                        extra_vdj = extra_igm + extra_igd
+                                    if "ambiguous_vdj" not in locals():
+                                        ambiguous_vdj = (
+                                            ambiguous_igm + ambiguous_igd
+                                        )
                                 else:
                                     vdj_ccall_p_count = dict(data1["umi_count"])
                                     vdj_ccall_c_count = dict(
