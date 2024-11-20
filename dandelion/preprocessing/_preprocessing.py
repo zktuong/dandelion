@@ -6591,19 +6591,3 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     df["j_call_" + col] = df[col]
     df = df[["j_call_" + col]]
     airrdata.update(df[["j_call_" + col]])
-
-
-def check_data(
-    data: list[Path | str] | Path | str, filename_prefix: list[str] | str | None
-) -> tuple[list[str], list[str]]:
-    """Quick check for data and filename prefixes"""
-    if type(data) is not list:
-        data = [data]
-    if not isinstance(filename_prefix, list):
-        filename_prefix = [filename_prefix]
-        if len(filename_prefix) == 1:
-            if len(data) > 1:
-                filename_prefix = filename_prefix * len(data)
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
-    return data, filename_prefix
