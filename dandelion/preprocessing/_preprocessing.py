@@ -5124,6 +5124,8 @@ def check_contigs(
     library_type: Literal["ig", "tr-ab", "tr-gd"] | None = None,
     umi_foldchange_cutoff: int = 2,
     consensus_foldchange_cutoff: int = 5,
+    ntop_vdj: int = 1,
+    ntop_vj: int = 2,
     filter_missing: bool = True,
     filter_extra: bool = False,
     filter_ambiguous: bool = False,
@@ -5177,6 +5179,10 @@ def check_contigs(
         related to minimum fold change of UMI count, required to rescue contigs/barcode otherwise they will be marked as extra/ambiguous.
     consensus_foldchange_cutoff : int, optional
         related to minimum fold change of consensus count, required to rescue contigs/barcode otherwise they will be marked as extra/ambiguous.
+    ntop_vdj : int, optional
+        number of top VDJ contigs to consider for dominance check.
+    ntop_vj : int, optional
+        number of top VJ contigs to consider for dominance check.
     filter_missing : bool, optional
         cells in V(D)J data not found in `AnnData` object will removed from the dandelion object.
     filter_extra : bool, optional
@@ -5248,7 +5254,12 @@ def check_contigs(
         adata_ = ad.AnnData(obs=obs)
         adata_.obs["has_contig"] = "True"
     contig_status = MarkAmbiguousContigs(
-        dat, umi_foldchange_cutoff, consensus_foldchange_cutoff, verbose
+        dat,
+        umi_foldchange_cutoff,
+        consensus_foldchange_cutoff,
+        ntop_vdj,
+        ntop_vj,
+        verbose,
     )
 
     ambigous = contig_status.ambiguous_contigs.copy()
@@ -5345,6 +5356,8 @@ class MarkAmbiguousContigs:
         data: pd.DataFrame,
         umi_foldchange_cutoff: int | float,
         consensus_foldchange_cutoff: int | float,
+        ntop_vdj: int,
+        ntop_vj: int,
         verbose: bool,
     ):
         """Init method for MarkAmbiguousContigs.
@@ -5357,6 +5370,10 @@ class MarkAmbiguousContigs:
             fold-change cut off for decision for umi count.
         consensus_foldchange_cutoff : int | float
             fold-change cut off for decision for consensus count.
+        ntop_vdj : int
+            number of top VDJ contigs to consider for dominance check.
+        ntop_vj : int
+            number of top VJ contigs to consider for dominance check.
         verbose : bool
             whether or not to print progress.
         """
@@ -5468,7 +5485,7 @@ class MarkAmbiguousContigs:
                                         consensus_counts=vdj_ccall_c_igm_count,
                                         umi_foldchange_cutoff=umi_foldchange_cutoff,
                                         consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                        ntop=1,
+                                        ntop=ntop_vdj,
                                     )
                                 else:
                                     keep_igm, extra_igm, ambiguous_igm = (
@@ -5487,7 +5504,7 @@ class MarkAmbiguousContigs:
                                         consensus_counts=vdj_ccall_c_igd_count,
                                         umi_foldchange_cutoff=umi_foldchange_cutoff,
                                         consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                        ntop=1,
+                                        ntop=ntop_vdj,
                                     )
                                 else:
                                     keep_igd, extra_igd, ambiguous_igd = (
@@ -5514,7 +5531,7 @@ class MarkAmbiguousContigs:
                                         consensus_counts=vdj_ccall_c_count,
                                         umi_foldchange_cutoff=umi_foldchange_cutoff,
                                         consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                        ntop=1,
+                                        ntop=ntop_vdj,
                                     )
                                 else:
                                     vdj_p, extra_vdj, ambiguous_vdj = [], [], []
@@ -5546,7 +5563,7 @@ class MarkAmbiguousContigs:
                                         consensus_counts=vdj_locus_c_trb_count,
                                         umi_foldchange_cutoff=umi_foldchange_cutoff,
                                         consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                        ntop=1,
+                                        ntop=ntop_vdj,
                                     )
                                 else:
                                     keep_trb, extra_trb, ambiguous_trb = (
@@ -5565,7 +5582,7 @@ class MarkAmbiguousContigs:
                                         consensus_counts=vdj_locus_c_trd_count,
                                         umi_foldchange_cutoff=umi_foldchange_cutoff,
                                         consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                        ntop=1,
+                                        ntop=ntop_vdj,
                                     )
                                 else:
                                     keep_trd, extra_trd, ambiguous_trd = (
@@ -5592,7 +5609,7 @@ class MarkAmbiguousContigs:
                                         consensus_counts=vdj_ccall_c_count,
                                         umi_foldchange_cutoff=umi_foldchange_cutoff,
                                         consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                        ntop=1,
+                                        ntop=ntop_vdj,
                                     )
                                 else:
                                     vdj_p, extra_vdj, ambiguous_vdj = [], [], []
@@ -5609,7 +5626,7 @@ class MarkAmbiguousContigs:
                                     consensus_counts=vdj_ccall_c_count,
                                     umi_foldchange_cutoff=umi_foldchange_cutoff,
                                     consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                                    ntop=1,
+                                    ntop=ntop_vdj,
                                 )
                 if "ambiguous_vdj" not in locals():
                     ambiguous_vdj = []
@@ -5685,7 +5702,7 @@ class MarkAmbiguousContigs:
                             consensus_counts=vj_ccall_c_count,
                             umi_foldchange_cutoff=umi_foldchange_cutoff,
                             consensus_foldchange_cutoff=consensus_foldchange_cutoff,
-                            ntop=2,  # maximum keep 2
+                            ntop=ntop_vj,  # maximum keep 2 as default?
                         )
                 if "ambiguous_vj" not in locals():
                     ambiguous_vj = []
