@@ -1205,6 +1205,22 @@ def sum_col(vals: list) -> float | int:
         return sum(vals)
 
 
+def check_data(
+    data: list[Path | str] | Path | str, filename_prefix: list[str] | str | None
+) -> tuple[list[str], list[str]]:
+    """Quick check for data and filename prefixes"""
+    if type(data) is not list:
+        data = [data]
+    if not isinstance(filename_prefix, list):
+        filename_prefix = [filename_prefix]
+        if len(filename_prefix) == 1:
+            if len(data) > 1:
+                filename_prefix = filename_prefix * len(data)
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+    return data, filename_prefix
+
+
 def check_same_celltype(clone_def1: str, clone_def2: str) -> bool:
     """Check if the first key is the same."""
     return clone_def1.split("_", 1)[0] == clone_def2.split("_", 1)[0]
