@@ -336,9 +336,9 @@ def read_parse_airr(
         `Dandelion` object from Parse AIRR file.
     """
     data = load_data(file)
+    data.drop("cell_id", axis=1, inplace=True)  # it's the wrong cell_id
     data = data.rename(
         columns={
-            "cell_id": "cell_id_parse",  # Parse's cell_id is the same as sequence_id ._.
             "cell_barcode": "cell_id",
             "read_count": "consensus_count",
             "transcript_count": "umi_count",
@@ -346,7 +346,7 @@ def read_parse_airr(
             "cdr3_aa": "junction_aa",
         }
     )
-    vdj = ddl.Dandelion(data)
+    vdj = Dandelion(data)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
