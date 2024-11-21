@@ -278,10 +278,16 @@ def read_airr(
     return vdj
 
 
-read_bd_airr = read_airr
-read_bd_airr.__doc__ = """
+def read_airr(
+    file: Path | str,
+    prefix: str | None = None,
+    suffix: str | None = None,
+    sep: str = "_",
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
+    """
     Read the TCR or BCR `_AIRR.tsv` produced from BD Rhapsody technology.
-    
+
     Parameters
     ----------
     file : Path | str
@@ -301,6 +307,20 @@ read_bd_airr.__doc__ = """
     Dandelion
         `Dandelion` object from BD AIRR file.
     """
+    vdj = Dandelion(file)
+    if suffix is not None:
+        vdj.add_sequence_suffix(
+            suffix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    elif prefix is not None:
+        vdj.add_sequence_prefix(
+            prefix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    return vdj
 
 
 def read_parse_airr(
