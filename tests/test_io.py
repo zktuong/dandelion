@@ -333,6 +333,7 @@ def test_librarytype(airr_generic):
     assert tmp.metadata.shape[0] == 15
 
 
+@pytest.mark.usefixtures("create_testfolder")
 def test_convert_obsm_airr_to_data(create_testfolder):
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     mdata = ddl.utl.to_scirpy(vdj)
@@ -379,18 +380,42 @@ def test_to_scirpy_v2(create_testfolder, annotation_10x, fasta_10x):
     assert vdjx.data.shape[0] == 35
 
 
+@pytest.mark.usefixtures("airr_generic")
 def test_locus_productive(airr_generic):
     """Just test if this works. don't care about the output."""
     tmp = ddl.Dandelion(airr_generic, report_status_productive=True)
     tmp = ddl.Dandelion(airr_generic, report_status_productive=False)
 
 
+@pytest.mark.usefixtures("airr_generic")
 def test_write_10x(airr_generic):
     vdj = ddl.Dandelion(airr_generic)
     vdj.write_10x(folder="test_10x")
 
 
+@pytest.mark.usefixtures("airr_bd")
+def test_read_bd(airr_bd):
+    vdj = ddl.read_bd_airr(airr_bd)
+    vdj2 = ddl.pp.check_contigs(vdj)
+    assert vdj2.metadata.shape[0] == 10
+
+
+@pytest.mark.usefixtures("airr_parse")
+def test_read_parse(airr_parse):
+    vdj = ddl.read_parse_airr(airr_parse)
+    vdj2 = ddl.pp.check_contigs(vdj)
+    assert vdj2.metadata.shape[0] == 10
+
+
+@pytest.mark.usefixtures("airr_bd")
+def test_read_standard(airr_bd):
+    vdj = ddl.read_airr(airr_bd)
+    vdj2 = ddl.pp.check_contigs(vdj)
+    assert vdj2.metadata.shape[0] == 10
+
+
 @pytest.mark.skip(reason="can't install dependencies on github actions.")
+@pytest.mark.usefixtures("create_testfolder")
 def test_legacy_write(create_testfolder):
     """check i can read and write in legacy mode."""
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
