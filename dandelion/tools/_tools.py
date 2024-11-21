@@ -156,8 +156,9 @@ def find_clones(
                 # add it to the original dataframes
                 dat_vdj[clone_key] = pd.Series(clone_dict_vdj)
                 # dat[clone_key].update(pd.Series(dat_vdj[clone_key]))
-                for k in dat_vdj.index:
-                    dat.at[k, clone_key] = dat_vdj.loc[k, clone_key]
+                for i, row in dat_vdj.iterrows():
+                    if i in dat.index:
+                        dat.at[i, clone_key] = row[clone_key]
             if dat_vj.shape[0] > 0:
                 vj_len_grp_vj, seq_grp_vj = group_sequences(
                     dat_vj,
@@ -186,7 +187,8 @@ def find_clones(
                 )
                 # dat_[clone_key].update(pd.Series(dat[clone_key]))
                 for i, row in dat.iterrows():
-                    dat_.at[i, clone_key] = row[clone_key]
+                    if i in dat_.index:
+                        dat_.at[i, clone_key] = row[clone_key]
 
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
@@ -1931,7 +1933,7 @@ def refine_clone_assignment(
     dat[clone_key] = [fintree[x] for x in dat["cell_id"]]
     for i, row in dat.iterrows():  # is this going to be slow...?
         if not present(row[clone_key]):
-            if i in clone_dict_vj:
+            if i in clone_dict_vj and i in dat.index:
                 dat.at[i, clone_key] = clone_dict_vj[i]
 
 

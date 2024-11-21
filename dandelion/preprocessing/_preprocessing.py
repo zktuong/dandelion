@@ -5276,7 +5276,8 @@ def check_contigs(
     umi_adjustment = contig_status.umi_adjustment.copy()
     if len(umi_adjustment) > 0:
         for k, v in umi_adjustment.items():
-            dat.at[k, "umi_count"] = v
+            if k in dat.index:
+                dat.at[k, "umi_count"] = v
 
     ambi = {c: "F" for c in dat_.sequence_id}
     ambiguous_ = {x: "T" for x in ambigous}
@@ -5313,7 +5314,8 @@ def check_contigs(
 
     if productive_only:
         for i, row in dat.iterrows():
-            dat_.at[i, "umi_count"] = row["umi_count"]
+            if i in dat_.index:
+                dat_.at[i, "umi_count"] = row["umi_count"]
         for column in ["ambiguous", "extra"]:
             dat_[column] = dat[column]
             dat_[column] = dat_[column].fillna("T")
@@ -6263,7 +6265,8 @@ def check_update_same_seq(
                     for dk in dup_keys[1:]:
                         ambi_cont.append(dk)
                     keep_seqs_ids.append(keep_index_vj)
-                    data.at[keep_index_vj, "umi_count"] = keep_index_count
+                    if keep_index_vj in data.index:
+                        data.at[keep_index_vj, "umi_count"] = keep_index_count
                 # refresh
                 empty_seqs_ids = [
                     k
