@@ -4609,11 +4609,16 @@ def transfer_assignment(
         db_fail["d_call"] = db_fail["d_call"].fillna(value="")
         db_fail["j_call"] = db_fail["j_call"].fillna(value="")
         db_fail["locus"] = db_fail["locus"].fillna(value="")
-        for i, r in db_fail.iterrows():
-            if not present(r.locus):
+        for i, row in db_fail.iterrows():
+            if not present(row.locus):
                 calls = list(
                     set(
-                        [r.v_call[:3], r.d_call[:3], r.j_call[:3], r.c_call[:3]]
+                        [
+                            row.v_call[:3],
+                            row.d_call[:3],
+                            row.j_call[:3],
+                            row.c_call[:3],
+                        ]
                     )
                 )
                 locus = "".join([c for c in calls if present(c)])
@@ -5270,7 +5275,9 @@ def check_contigs(
     extra = contig_status.extra_contigs.copy()
     umi_adjustment = contig_status.umi_adjustment.copy()
     if len(umi_adjustment) > 0:
-        dat["umi_count"].update(umi_adjustment)
+        for k, v in umi_adjustment.items():
+            if k in dat.index:
+                dat.at[k, "umi_count"] = v
 
     ambi = {c: "F" for c in dat_.sequence_id}
     ambiguous_ = {x: "T" for x in ambigous}
@@ -5306,7 +5313,9 @@ def check_contigs(
                 )
 
     if productive_only:
-        dat_.update({"umi_count": dat["umi_count"]})
+        for i, row in dat.iterrows():
+            if i in dat_.index:
+                dat_.at[i, "umi_count"] = row["umi_count"]
         for column in ["ambiguous", "extra"]:
             dat_[column] = dat[column]
             dat_[column] = dat_[column].fillna("T")
@@ -6256,7 +6265,8 @@ def check_update_same_seq(
                     for dk in dup_keys[1:]:
                         ambi_cont.append(dk)
                     keep_seqs_ids.append(keep_index_vj)
-                    data.umi_count.update({keep_index_vj: keep_index_count})
+                    if keep_index_vj in data.index:
+                        data.at[keep_index_vj, "umi_count"] = keep_index_count
                 # refresh
                 empty_seqs_ids = [
                     k
@@ -6591,19 +6601,3 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     df["j_call_" + col] = df[col]
     df = df[["j_call_" + col]]
     airrdata.update(df[["j_call_" + col]])
-
-
-def check_data(
-    data: list[Path | str] | Path | str, filename_prefix: list[str] | str | None
-) -> tuple[list[str], list[str]]:
-    """Quick check for data and filename prefixes"""
-    if type(data) is not list:
-        data = [data]
-    if not isinstance(filename_prefix, list):
-        filename_prefix = [filename_prefix]
-        if len(filename_prefix) == 1:
-            if len(data) > 1:
-                filename_prefix = filename_prefix * len(data)
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
-    return data, filename_prefix

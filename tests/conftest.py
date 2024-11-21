@@ -2,7 +2,9 @@
 # @Author: Kelvin
 from .fixtures.fixtures import (
     airr_10x,
+    airr_bd,
     airr_generic,
+    airr_parse,
     airr_reannotated,
     airr_reannotated2,
     airr_travdv,
@@ -38,7 +40,9 @@ from .fixtures.fixtures_mouse import (
 
 __all__ = [
     "airr_10x",
+    "airr_bd",
     "airr_generic",
+    "airr_parse",
     "airr_reannotated",
     "airr_reannotated2",
     "airr_travdv",

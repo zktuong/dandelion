@@ -689,11 +689,15 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
             )
 
         if "sequence_id" in obj_.columns:
+            # assert that sequence_id is string
+            obj_["sequence_id"] = obj_["sequence_id"].astype(str)
             obj_.set_index("sequence_id", drop=False, inplace=True)
             if "cell_id" not in obj_.columns:
                 obj_["cell_id"] = [
                     c.split("_contig")[0] for c in obj_["sequence_id"]
                 ]
+            # assert that cell_id is string
+            obj_["cell_id"] = obj_["cell_id"].astype(str)
         else:
             raise KeyError("'sequence_id' not found in columns of input")
 
@@ -1203,6 +1207,22 @@ def sum_col(vals: list) -> float | int:
         return np.nan
     else:
         return sum(vals)
+
+
+def check_data(
+    data: list[Path | str] | Path | str, filename_prefix: list[str] | str | None
+) -> tuple[list[str], list[str]]:
+    """Quick check for data and filename prefixes"""
+    if type(data) is not list:
+        data = [data]
+    if not isinstance(filename_prefix, list):
+        filename_prefix = [filename_prefix]
+        if len(filename_prefix) == 1:
+            if len(data) > 1:
+                filename_prefix = filename_prefix * len(data)
+    if all(t is None for t in filename_prefix):
+        filename_prefix = [None for d in data]
+    return data, filename_prefix
 
 
 def check_same_celltype(clone_def1: str, clone_def2: str) -> bool:

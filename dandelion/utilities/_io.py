@@ -230,19 +230,174 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     return res
 
 
-def read_10x_airr(
-    file: str,
+def read_airr(
+    file: Path | str,
     prefix: str | None = None,
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
     """
-    Read the 10x AIRR rearrangement .tsv directly and returns a `Dandelion` object.
+    Reads a standard single-cell AIRR rearrangement file.
+
+    If you have non-single-cell data, use `.load_data` first to load the data and then pass it to `ddl.Dandelion`.
+    That will tell you what columns are missing and you can fill it out accordingly e.g. make up a `cell_id`.
 
     Parameters
     ----------
-    file : str
+    file : Path | str
+        path to AIRR rearrangement .tsv file.
+    prefix : str | None, optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : str | None, optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+
+    Returns
+    -------
+    Dandelion
+        `Dandelion` object from AIRR file.
+    """
+    vdj = Dandelion(file)
+    if suffix is not None:
+        vdj.add_sequence_suffix(
+            suffix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    elif prefix is not None:
+        vdj.add_sequence_prefix(
+            prefix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    return vdj
+
+
+def read_bd_airr(
+    file: Path | str,
+    prefix: str | None = None,
+    suffix: str | None = None,
+    sep: str = "_",
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
+    """
+    Read the TCR or BCR `_AIRR.tsv` produced from BD Rhapsody technology.
+
+    Parameters
+    ----------
+    file : Path | str
+        path to `_AIRR.tsv`
+    prefix : str | None, optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : str | None, optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+
+    Returns
+    -------
+    Dandelion
+        `Dandelion` object from BD AIRR file.
+    """
+    vdj = Dandelion(file)
+    if suffix is not None:
+        vdj.add_sequence_suffix(
+            suffix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    elif prefix is not None:
+        vdj.add_sequence_prefix(
+            prefix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    return vdj
+
+
+def read_parse_airr(
+    file: Path | str,
+    prefix: str | None = None,
+    suffix: str | None = None,
+    sep: str = "_",
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
+    """
+    Read the TCR or BCR `_annotation_airr.tsv` produced from Parse Biosciences Evercode technology.
+
+    This is not to be used for any airr rearrangement file, but specifically for the one produced by Parse Biosciences.
+    For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion` or `ddl.read_airr` directly.
+
+    Parameters
+    ----------
+    file : Path | str
+        path to `_annotation_airr.tsv`
+    prefix : str | None, optional
+        Prefix to append to sequence_id and cell_id.
+    suffix : str | None, optional
+        Suffix to append to sequence_id and cell_id.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+
+    Returns
+    -------
+    Dandelion
+        `Dandelion` object from Parse AIRR file.
+    """
+    data = load_data(file)
+    data.drop("cell_id", axis=1, inplace=True)  # it's the wrong cell_id
+    data = data.rename(
+        columns={
+            "cell_barcode": "cell_id",
+            "read_count": "consensus_count",
+            "transcript_count": "umi_count",
+            "cdr3": "junction",
+            "cdr3_aa": "junction_aa",
+        }
+    )
+    vdj = Dandelion(data)
+    if suffix is not None:
+        vdj.add_sequence_suffix(
+            suffix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    elif prefix is not None:
+        vdj.add_sequence_prefix(
+            prefix,
+            sep=sep,
+            remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+        )
+    return vdj
+
+
+def read_10x_airr(
+    file: Path | str,
+    prefix: str | None = None,
+    suffix: str | None = None,
+    sep: str = "_",
+    remove_trailing_hyphen_number: bool = False,
+) -> Dandelion:
+    """
+    Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a `Dandelion` object.
+
+    This is not to be used for any airr rearrangement file, but specifically for the one produced by 10x Genomics.
+    For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion` or `ddl.read_airr` directly.
+
+    Parameters
+    ----------
+    file : Path | str
         path to `airr_rearrangement.tsv`
     prefix : str | None, optional
         Prefix to append to sequence_id and cell_id.
@@ -307,7 +462,7 @@ def read_10x_airr(
 
 
 def read_10x_vdj(
-    path: str,
+    path: Path | str,
     filename_prefix: str | None = None,
     prefix: str | None = None,
     suffix: str | None = None,
@@ -326,7 +481,7 @@ def read_10x_vdj(
 
     Parameters
     ----------
-    path : str
+    path : Path | str
         path to folder containing `.csv` and/or `.json` files, or path to files directly.
     filename_prefix : str | None, optional
         prefix of file name preceding '_contig'. None defaults to 'all'.
@@ -667,12 +822,7 @@ def change_file_location(
         list of prefixes of file names preceding '_contig'. None defaults to 'all'.
     """
     fileformat = "blast"
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
+    data, filename_prefix = check_data(data, filename_prefix)
 
     informat_dict = {
         "changeo": "_igblast_db-pass.tsv",
@@ -715,15 +865,10 @@ def change_file_location(
 
 
 def move_to_tmp(
-    data: list[str], filename_prefix: list[str] | str | None = None
+    data: list[Path | str], filename_prefix: list[str] | str | None = None
 ) -> None:
     """Move file to tmp."""
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
+    data, filename_prefix = check_data(data, filename_prefix)
 
     for i in range(0, len(data)):
         filePath1 = check_filepath(
@@ -740,17 +885,12 @@ def move_to_tmp(
 
 
 def make_all(
-    data: list[str],
+    data: list[Path | str],
     filename_prefix: list[str] | str | None = None,
     loci: Literal["ig", "tr"] = "tr",
 ) -> None:
     """Construct db-all tsv file."""
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
+    data, filename_prefix = check_data(data, filename_prefix)
 
     for i in range(0, len(data)):
         if loci == "tr":
@@ -826,18 +966,13 @@ def make_all(
 
 
 def rename_dandelion(
-    data: list[str],
+    data: list[Path | str],
     filename_prefix: list[str] | str | None = None,
     ends_with: str = "_igblast_db-pass_genotyped.tsv",
     sub_dir: str | None = None,
 ) -> None:
     """Rename final dandlion file."""
-    if type(data) is not list:
-        data = [data]
-    if type(filename_prefix) is not list:
-        filename_prefix = [filename_prefix]
-    if all(t is None for t in filename_prefix):
-        filename_prefix = [None for d in data]
+    data, filename_prefix = check_data(data, filename_prefix)
 
     for i in range(0, len(data)):
         filePath = check_filepath(
