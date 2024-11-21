@@ -278,7 +278,7 @@ def read_airr(
     return vdj
 
 
-def read_airr(
+def read_bd_airr(
     file: Path | str,
     prefix: str | None = None,
     suffix: str | None = None,
