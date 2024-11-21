@@ -452,7 +452,8 @@ def generate_network(
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
                 for i, row in tmp_totaldiststack.iterrows():
-                    edge_list_final.at[i, "weight"] = row["weight"]
+                    if i in edge_list_final.index:
+                        edge_list_final.at[i, "weight"] = row["weight"]
 
                 # return the edge list
                 edge_list_final.reset_index(drop=True, inplace=True)
