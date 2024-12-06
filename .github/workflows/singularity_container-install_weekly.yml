@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code for the container build
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Singularity
         uses: singularityhub/install-singularity@main
       - name: Extract repository location
