@@ -81,14 +81,11 @@ jobs:
         with:
           bioc-version: release
 
-      - name: Get R and Bioconductor version
+      - name: Get R version
         id: R
         run: |
           R --version > VERSION
           echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
-          echo "mainbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
-          echo "subbiocversion=$(Rscript -e 'cat(unlist(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $2}')" >> $GITHUB_OUTPUT
-          echo "biocversion=$(Rscript -e 'cat(as.character(tools:::.BioC_version_associated_with_R_version()))' | awk '{print $1}')" >> $GITHUB_OUTPUT
         shell: bash -l {0}
 
       - name: Setup micromamba
@@ -127,8 +124,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /home/runner/work/_temp/Library
-          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_${{ steps.R.outputs.mainbiocversion}}_${{ steps.R.outputs.subbiocversion}}-r-${{ steps.R.outputs.version}}-
+          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_$R_BIOC_VERSION-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_$R_BIOC_VERSION-r-${{ steps.R.outputs.version}}-
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
