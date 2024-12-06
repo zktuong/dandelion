@@ -117,9 +117,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /home/runner/work/_temp/Library
-          key: ${{ runner.OS }}-R-${{ steps.install-r.outputs.installed-r-version }}-cache-${{ hashFiles('.github/depends.Rds') }}
+          key: ${{ runner.OS }}-R-${{ steps.install-r.outputs.r-version }}-Bioc-${{ steps.install-r.outputs.bioc-version }}-cache-${{ hashFiles('.github/depends.Rds') }}
           restore-keys: |
-            ${{ runner.OS }}-R-${{ steps.install-r.outputs.installed-r-version }}-cache-
+            ${{ runner.OS }}-R-${{ steps.install-r.outputs.r-version }}-Bioc-${{ steps.install-r.outputs.bioc-version }}-cache-
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
