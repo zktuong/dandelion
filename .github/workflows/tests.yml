@@ -88,6 +88,12 @@ jobs:
           echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
         shell: bash -l {0}
 
+      - name: Get Bioconductor version
+        id: BIOC
+        run: |
+          echo "version=$R_BIOC_VERSION" >> $GITHUB_OUTPUT
+        shell: bash -l {0}
+
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
@@ -124,8 +130,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /home/runner/work/_temp/Library
-          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_$R_BIOC_VERSION-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-RELEASE_$R_BIOC_VERSION-r-${{ steps.R.outputs.version}}-
+          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-${{ steps.BIOC.outputs.version}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-${{ steps.BIOC.outputs.version}}-r-${{ steps.R.outputs.version}}-
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
