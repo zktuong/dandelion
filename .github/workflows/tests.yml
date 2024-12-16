@@ -9,7 +9,7 @@ on:
       - "master"
 
 env:
-  cache-version: "cache-v2"
+  cache-version: "cache-v1"
 
 jobs:
   changes:
@@ -99,7 +99,7 @@ jobs:
         with:
           environment-name: dandelion
           environment-file: environment.yml
-          cache-environment: true
+          cache-environment: false
           post-cleanup: "all"
           create-args: >-
             python=${{ matrix.config.python-version }}
