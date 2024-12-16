@@ -16,5 +16,6 @@ echo "LANG=en_US.UTF-8" | tee -a $SINGULARITY_ENVIRONMENT
 chmod +x /share/dandelion_preprocess.py
 chmod +x /share/changeo_clonotypes.py
 # install dependencies
+mamba create -n sc-dandelion-container
 mamba env update --name sc-dandelion-container -f environment.yml
 mamba activate sc-dandelion-container
