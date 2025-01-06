@@ -607,11 +607,12 @@ def parseIMGT(
         fields.extend(custom)
 
     # Parse IMGT output and write db
-    with open(imgt_files["summary"], "r") as summary_handle, open(
-        imgt_files["gapped"], "r"
-    ) as gapped_handle, open(imgt_files["ntseq"], "r") as ntseq_handle, open(
-        imgt_files["junction"], "r"
-    ) as junction_handle:
+    with (
+        open(imgt_files["summary"], "r") as summary_handle,
+        open(imgt_files["gapped"], "r") as gapped_handle,
+        open(imgt_files["ntseq"], "r") as ntseq_handle,
+        open(imgt_files["junction"], "r") as junction_handle,
+    ):
 
         # Open parser
         parse_iter = IMGTReader(
