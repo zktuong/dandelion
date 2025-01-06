@@ -1003,12 +1003,10 @@ def clone_size(
                                     (
                                         sorted(
                                             list(
-                                                set(
-                                                    [
+                                                {
                                                         clonesize_dict[c_]
                                                         for c_ in c.split("|")
-                                                    ]
-                                                )
+                                                }
                                             ),
                                             key=lambda x: (
                                                 int(x.split(">= ")[1])
@@ -1043,12 +1041,10 @@ def clone_size(
                                 (
                                     sorted(
                                         list(
-                                            set(
-                                                [
+                                            {
                                                     clonesize_dict[c_]
                                                     for c_ in c.split("|")
-                                                ]
-                                            )
+                                            }
                                         ),
                                         key=lambda x: (
                                             int(x.split(">= ")[1])
@@ -1083,12 +1079,10 @@ def clone_size(
                                 (
                                     sorted(
                                         list(
-                                            set(
-                                                [
+                                            {
                                                     clonesize_dict[c_]
                                                     for c_ in c.split("|")
-                                                ]
-                                            )
+                                            }
                                         ),
                                         key=lambda x: (
                                             int(x.split(">= ")[1])
@@ -1123,12 +1117,10 @@ def clone_size(
                                 (
                                     sorted(
                                         list(
-                                            set(
-                                                [
+                                            {
                                                     clonesize_dict[c_]
                                                     for c_ in c.split("|")
-                                                ]
-                                            )
+                                            }
                                         ),
                                         key=lambda x: (
                                             int(x.split(">= ")[1])
@@ -1317,7 +1309,7 @@ def clustering(
                 canbetogether[ii2].append(())
     for x in canbetogether:
         canbetogether[x] = list(
-            set([y for y in canbetogether[x] if len(y) > 0])
+            {y for y in canbetogether[x] if len(y) > 0}
         )
     # convert the indices to sequences
     for x in canbetogether:

@@ -796,7 +796,7 @@ class Dandelion:
                     "|".join(
                         sorted(
                             list(
-                                set([str(size_dict[c_]) for c_ in c.split("|")])
+                                {str(size_dict[c_]) for c_ in c.split("|")}
                             )
                         )
                     )
@@ -984,12 +984,12 @@ class Dandelion:
             if present(v):
                 if present(j):
                     if present(c):
-                        if len(list(set([v[:3], j[:3], c[:3]]))) > 1:
+                        if len(list({v[:3], j[:3], c[:3]})) > 1:
                             contig_status.append("chimeric")
                         else:
                             contig_status.append("standard")
                     else:
-                        if len(list(set([v[:3], j[:3]]))) > 1:
+                        if len(list({v[:3], j[:3]})) > 1:
                             contig_status.append("chimeric")
                         else:
                             contig_status.append("standard")
@@ -1392,32 +1392,26 @@ class Dandelion:
                 gml = Path(env["GERMLINE"])
             except:
                 raise KeyError(
-                    (
                         "Environmental variable GERMLINE must be set. Otherwise, "
                         + "please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files."
-                    )
                 )
             gml = gml / db / org / "vdj"
         else:
             if type(germline) is list:
                 if len(germline) < 3:
                     raise TypeError(
-                        (
                             "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, "
                             + "and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta "
                             + "files (with .fasta extension) as a list."
-                        )
                     )
                 else:
                     gml = []
                     for x in germline:
                         if not x.endswith((".fasta", ".fa")):
                             raise TypeError(
-                                (
                                     "Input for germline is incorrect. Please provide path to folder containing germline "
                                     + "IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ fasta "
                                     + "files (with .fasta extension) as a list."
-                                )
                             )
                         gml.append(x)
             elif type(germline) is not list:
@@ -1427,22 +1421,18 @@ class Dandelion:
                     ]
                     if len(germline_) < 3:
                         raise TypeError(
-                            (
                                 "Input for germline is incorrect. Please provide path to folder containing germline IGHV, "
                                 + "IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, and IGHJ "
                                 + "fasta files (with .fasta extension) as a list."
-                            )
                         )
                     else:
                         gml = []
                         for x in germline_:
                             if not x.endswith((".fasta", ".fa")):
                                 raise TypeError(
-                                    (
                                         "Input for germline is incorrect. Please provide path to folder containing germline "
                                         + "IGHV, IGHD, and IGHJ fasta files, or individual paths to the germline IGHV, IGHD, "
                                         + "and IGHJ fasta files (with .fasta extension) as a list."
-                                    )
                                 )
                             gml.append(x)
                 elif os.path.isfile(germline) and str(germline).endswith(
@@ -1472,10 +1462,8 @@ class Dandelion:
                 germline_ref.update(personalized_ref_dict)
             else:
                 raise TypeError(
-                    (
                         "Input for corrected germline fasta is incorrect. Please provide path to file containing "
                         + "corrected germline fasta sequences."
-                    )
                 )
 
         self.germline.update(germline_ref)
@@ -1676,16 +1664,14 @@ class Dandelion:
                                         [
                                             "|".join(list(set(yy.split(","))))
                                             for yy in list(
-                                                set(
-                                                    [
+                                                {
                                                         re.sub(
                                                             "[*][0-9][0-9]",
                                                             "",
                                                             tx,
                                                         )
                                                         for tx in t.split("|")
-                                                    ]
-                                                )
+                                                }
                                             )
                                         ]
                                     )

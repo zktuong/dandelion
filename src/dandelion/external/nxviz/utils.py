@@ -15,7 +15,7 @@ def is_data_homogenous(data_container: Iterable):
 
     :param data_container: A generic container of data points.
     """
-    data_types = set([type(i) for i in data_container])
+    data_types = {type(i) for i in data_container}
     return len(data_types) == 1
 
 
