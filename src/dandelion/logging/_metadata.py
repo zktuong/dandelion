@@ -6,9 +6,11 @@ try:
 except LookupError:
     try:
         from importlib.metadata import version
+
         __version__ = version("sc-dandelion").split("+")[0]
     except:
         from pkg_resources import get_distribution
+
         __version__ = get_distribution("sc-dandelion").version.split("+")[0]
 
 __author__ = "Zewen Kelvin Tuong"
