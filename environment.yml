@@ -25,6 +25,6 @@ dependencies:
       - annoy==1.16.3
       - rpy2>=3.4.2
       - pytest-cov
-      - -r requirements.txt
       - scirpy
       - scrublet
+      - . # This installs the current directory as a package

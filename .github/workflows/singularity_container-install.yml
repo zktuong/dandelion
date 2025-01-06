@@ -24,7 +24,6 @@ jobs:
         with:
           files: |
             **/*.{yml,yaml,py}
-            requirements.txt
             container/database
             container/tests
             container/scripts/*.{sh,py}
