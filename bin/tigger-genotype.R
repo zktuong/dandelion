@@ -66,7 +66,7 @@ opt_list <- list(make_option(c("-d", "--db"), dest="DB",
                              help=paste("Output directory. Will be created if it does not exist.",
                                         "\n\t\tDefaults to the current working directory.")),
                  make_option(c("-f", "--format"), dest="FORMAT", default=FORMAT,
-                             help=paste("File format. One of 'blast' (default), 'changeo' or 'airr'.")),                 
+                             help=paste("File format. One of 'blast' (default), 'changeo' or 'airr'.")),
                  make_option(c("-p", "--nproc"), dest="NPROC", default=NPROC,
                              help=paste("Number of subprocesses for multiprocessing tools.",
                                         "\n\t\tDefaults to the available processing units.")))

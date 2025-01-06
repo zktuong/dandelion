@@ -8,7 +8,7 @@ pre-processing, leveraging some tools from immcantation suite, and
 integrates with scanpy/anndata for single-cell BCR/TCR analysis. It also
 includes a couple of functions for visualization. Try it out on |Colab| !
 
-Also check out our review at `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__ on "Single-cell immune 
+Also check out our review at `Nature Methods <https://www.nature.com/articles/s41592-024-02243-4>`__ on "Single-cell immune
 repertoire analysis":
 
 .. [Irac2024] Irac *et al.* (2021),
@@ -47,7 +47,7 @@ Installation
 Singularity container
 ~~~~~~~~~~~~~~~~~~~~~
 
-``dandelion`` now comes ready in the form of a singularity container 
+``dandelion`` now comes ready in the form of a singularity container
 which has all the required dependencies installed:
 
 .. code:: bash
@@ -56,10 +56,10 @@ which has all the required dependencies installed:
     singularity shell --writable-tmpfs -B $PWD sc-dandelion_latest.sif
 
 
-This will load up a conda-environment that has all the required 
+This will load up a conda-environment that has all the required
 dependencies installed.
 
-This can be used for the preprocessing steps by navigating to the data 
+This can be used for the preprocessing steps by navigating to the data
 folder and use:
 
 .. code:: bash
@@ -79,7 +79,7 @@ Once done, run the following:
     pip install sc-dandelion
 
 
-Between this and the pipelines within the singularity container, you 
+Between this and the pipelines within the singularity container, you
 should be covered for most of your needs.
 
 Basic requirements
@@ -121,15 +121,15 @@ Python packages
 Acknowledgements
 ----------------
 
-I would like to acknowledge the contributions from Dr. Chenqu Suo, Dr. 
-Krysztof Polanksi, Dr. Sarah Teichmann and Prof. Menna Clatworthy, who 
+I would like to acknowledge the contributions from Dr. Chenqu Suo, Dr.
+Krysztof Polanksi, Dr. Sarah Teichmann and Prof. Menna Clatworthy, who
 helped with the initial conception of the project and for all discussions.
 
 I would also like to acknowledge Dr. Ondrej Suschanek,
-Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers, Dr. Jongeun Park, 
-Dr. Cecilia-Dominguez Conde, Dr. Kirsten Stewart, Dr. Hamish King and 
-Dr. Peng He with whom I have had very useful discussions. I would also 
-like to thank my wife who helped name the package, because she thought 
+Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers, Dr. Jongeun Park,
+Dr. Cecilia-Dominguez Conde, Dr. Kirsten Stewart, Dr. Hamish King and
+Dr. Peng He with whom I have had very useful discussions. I would also
+like to thank my wife who helped name the package, because she thought
 the plots looked like a dandelion =D.
 
 Support
@@ -151,7 +151,7 @@ Please also cite the following paper if you use version 0.3.0 onwards:
    `Nature Biotechnology <https://www.nature.com/articles/s41587-023-01734-7>`__.
 
 *Chenqu Suo, Krzysztof Polanski, Emma Dann, Rik GH Lindeboom, Roser Vilarrasa-Blasi,
-Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Lisa M Dratva, 
+Roser Vento-Tormo, Muzlifah Haniffa, Kerstin B Meyer, Lisa M Dratva,
 Zewen Kelvin Tuong, Menna R Clatworthy, Sarah A Teichmann.*
 **Dandelion uses single cell adaptive immune receptor repertoire to explore
 lymphocyte developmental origins**. Nature Biotechnology 2023.04.13; doi:
@@ -246,7 +246,7 @@ References
 .. [Suo2023] Suo *et al.* (2023),
    *Dandelion uses the single-cell adaptive immune receptor repertoire to explore lymphocyte developmental origins*,
    `Nature Biotechnology <https://www.nature.com/articles/s41587-023-01734-7>`__.
-   
+
 .. [Wolf2018] Wolf *et al.* (2018),
    *Scanpy: large-scale single-cell gene expression data analysis*,
    `Genome Biology <https://doi.org/10.1186/s13059-017-1382-0>`__.
