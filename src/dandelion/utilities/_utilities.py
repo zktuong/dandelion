@@ -1105,8 +1105,8 @@ def set_germline_env(
             gml = Path(env["GERMLINE"])
         except KeyError:
             raise KeyError(
-                    "Environmental variable $GERMLINE is missing. "
-                    "Please 'export GERMLINE=/path/to/database/germlines/'"
+                "Environmental variable $GERMLINE is missing. "
+                "Please 'export GERMLINE=/path/to/database/germlines/'"
             )
         gml = gml / db / org / "vdj"
     else:
@@ -1146,8 +1146,8 @@ def set_igblast_env(
             igdb = Path(env["IGDATA"])
         except KeyError:
             raise KeyError(
-                    "Environmental variable $IGDATA is missing. "
-                    "Please 'export IGDATA=/path/to/database/igblast/'"
+                "Environmental variable $IGDATA is missing. "
+                "Please 'export IGDATA=/path/to/database/igblast/'"
             )
     else:
         igdb = env["IGDATA"] = Path(igblast_db)
@@ -1185,8 +1185,8 @@ def set_blast_env(
             bdb = Path(env["BLASTDB"])
         except KeyError:
             raise KeyError(
-                    "Environmental variable $BLASTDB is missing. "
-                    "Please 'export BLASTDB=/path/to/database/blast/'"
+                "Environmental variable $BLASTDB is missing. "
+                "Please 'export BLASTDB=/path/to/database/blast/'"
             )
     else:
         bdb = env["BLASTDB"] = Path(blast_db)

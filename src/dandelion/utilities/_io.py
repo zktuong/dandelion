@@ -796,9 +796,7 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
             for call in ["v_call", "d_call", "j_call", "c_call"]:
                 if out[contig][call] not in ["None", "none", None, np.nan, ""]:
                     calls.append(out[contig][call])
-            out[contig]["locus"] = "|".join(
-                list({str(c)[:3] for c in calls})
-            )
+            out[contig]["locus"] = "|".join(list({str(c)[:3] for c in calls}))
         if out[contig]["locus"] == "None" or out[contig]["locus"] == "":
             out[contig]["locus"] = "|"
     return out

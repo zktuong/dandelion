@@ -659,8 +659,8 @@ def assign_isotype(
     )
     if filePath is None:
         raise FileNotFoundError(
-                "Path to fasta file is unknown. Please specify path to "
-                + "fasta file or folder containing fasta file."
+            "Path to fasta file is unknown. Please specify path to "
+            + "fasta file or folder containing fasta file."
         )
 
     blast_out = run_blastn(
@@ -1172,8 +1172,8 @@ def return_pass_fail_filepaths(
     )
     if file_path is None:
         raise FileNotFoundError(
-                "Path to fasta file is unknown. Please specify "
-                + "path to fasta file or folder containing fasta file."
+            "Path to fasta file is unknown. Please specify "
+            + "path to fasta file or folder containing fasta file."
         )
     # read the original object
     pass_path = (
@@ -4609,10 +4609,10 @@ def transfer_assignment(
             if not present(row.locus):
                 calls = list(
                     {
-                            row.v_call[:3],
-                            row.d_call[:3],
-                            row.j_call[:3],
-                            row.c_call[:3],
+                        row.v_call[:3],
+                        row.d_call[:3],
+                        row.j_call[:3],
+                        row.c_call[:3],
                     }
                 )
                 locus = "".join([c for c in calls if present(c)])
@@ -6180,9 +6180,7 @@ def keep_if_consensus_count_is_high(
     # get the extras
     _extra = [k for k in filtered_contigs if k not in _keep_filtered]
     # get the ambiguous
-    _ambi = list(
-        {k for k in umi_counts if k not in _keep_filtered + _extra}
-    )
+    _ambi = list({k for k in umi_counts if k not in _keep_filtered + _extra})
     # extend the lists
     keep_contigs.extend(_keep_filtered)
     # get the extra contigs
