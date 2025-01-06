@@ -131,4 +131,3 @@ Logging
 
    print_header
    print_versions
-
