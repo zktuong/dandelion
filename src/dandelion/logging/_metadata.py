@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 from setuptools_scm import get_version
 
-__version__ = get_version().split("+")[0]
+try:
+    __version__ = get_version().split("+")[0]
+except LookupError:
+    try:
+        from importlib.metadata import version
+        __version__ = version("sc-dandelion").split("+")[0]
+    except:
+        from pkg_resources import get_distribution
+        __version__ = get_distribution("sc-dandelion").version.split("+")[0]
+
 __author__ = "Zewen Kelvin Tuong"
-__email__ = "kt16@sanger.ac.uk"
+__email__ = "z.tuong@uq.edu.au"
 __classifiers__ = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
