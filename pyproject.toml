@@ -98,6 +98,7 @@ documentation = "https://sc-dandelion.readthedocs.io/"
 [project.optional-dependencies]
 docs = [
   "airr",
+  "ipykernel",
   "biopython",
   "changeo",
   "presto",
