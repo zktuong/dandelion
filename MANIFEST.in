@@ -1,1 +1,2 @@
-recursive-include bin tigger-genotype.R
+include bin/tigger-genotype.R
+include bin/MakeDb_gentle.py
