@@ -26,8 +26,8 @@ jobs:
         uses: tj-actions/changed-files@v41
         with:
           files: |
-            *.{yml,yaml,py}
-            **/*.{yml,yaml,py}
+            *.{yml,yaml,py,toml}
+            **/*.{yml,yaml,py,toml}
             container/database
             container/tests
             container/scripts/*.py
