@@ -259,7 +259,7 @@ References
    :target: https://pypi.org/project/sc-dandelion/
 .. |Master| image:: https://byob.yarr.is/zktuong/dandelion/master-version
    :target: https://github.com/zktuong/dandelion/tree/master
-.. |MasterTest| image:: https://github.com/zktuong/dandelion/workflows/tests/badge.svg?branch=master
+.. |MasterTest| image:: https://github.com/zktuong/dandelion/actions/workflows/tests.yml/badge.svg?branch=master
    :target: https://github.com/zktuong/dandelion/actions/workflows/tests.yml
 .. |CodeCov| image:: https://codecov.io/gh/zktuong/dandelion/branch/master/graph/badge.svg?token=661BMU1FBO
    :target: https://codecov.io/gh/zktuong/dandelion
