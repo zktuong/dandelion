@@ -39,7 +39,7 @@ Tools: `tl`
 .. autosummary::
    :toctree: modules
 
-   
+
    transfer
    find_clones
    define_clones
@@ -49,7 +49,7 @@ Tools: `tl`
    clone_diversity
    clone_overlap
    clone_rarefaction
-   clone_size   
+   clone_size
    extract_edge_weights
    productive_ratio
    vj_usage_pca
@@ -60,7 +60,7 @@ Tools: `tl`
    project_pseudotime_to_cell
    bin_expression
    chatterjee_corr
-   
+
 
 Plotting: `pl`
 ==============
@@ -83,7 +83,7 @@ Utilities: `utl`
 
 .. autosummary::
    :toctree: modules
-   
+
    concat
    load_data
    read_h5ddl
@@ -96,7 +96,7 @@ Utilities: `utl`
    to_scirpy
    from_scirpy
    makeblastdb
-   
+
 
 Dandelion
 =========
@@ -131,4 +131,3 @@ Logging
 
    print_header
    print_versions
-   

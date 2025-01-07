@@ -219,7 +219,7 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                     strain = re.sub("\\/| ", "_", subgroups[set_id])
                     strain = "all" if strain == "" else strain
                     if strain == "all":
-                        fh = open(file, "r")
+                        fh = open(file)
                         for header, sequence in fasta_iterator(fh):
                             locus, gene = header[:3], header[3]
                             if gene == "V":
@@ -234,7 +234,7 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
         if file.is_file():
             v_seqs, d_seqs, j_seqs = {}, {}, {}
             if file.stat().st_size != 0:
-                fh = open(file, "r")
+                fh = open(file)
                 for header, sequence in fasta_iterator(fh):
                     locus, gene = header[:3], header[3]
                     if gene == "V":
@@ -275,7 +275,7 @@ def process_ogrdb_fasta(species: str, file_path: str | Path):
                 if strain != "all":
                     v_seqs, d_seqs, j_seqs = {}, {}, {}
                     if file.stat().st_size != 0:
-                        fh = open(file, "r")
+                        fh = open(file)
                         for header, sequence in fasta_iterator(fh):
                             locus, gene = header[:3], header[3]
                             if gene == "V":
@@ -431,7 +431,7 @@ def main():
             seqs = {}
             for file in in_files:
                 if file.stat().st_size != 0:
-                    fh = open(file, "r")
+                    fh = open(file)
                     for header, sequence in fasta_iterator(fh):
                         if header not in seqs:
                             seqs[header] = (

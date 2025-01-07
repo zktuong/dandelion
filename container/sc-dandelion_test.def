@@ -7,7 +7,7 @@ From: ubuntu:latest
         mkdir -p /share;
     fi
 
-%files    
+%files
     environment_test.yml /environment.yml
     scripts/setup_mamba.sh /share/setup_mamba.sh
     scripts/dandelion_preprocess.py /share/dandelion_preprocess.py

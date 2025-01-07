@@ -6,7 +6,7 @@ class Tree(defaultdict):
     """Create a recursive defaultdict."""
 
     def __init__(self, value=None):
-        super(Tree, self).__init__(Tree)
+        super().__init__(Tree)
         self.value = value
 
 

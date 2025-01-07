@@ -935,10 +935,8 @@ def gini_indices(
                         clone_degree(resampled)
                     else:
                         raise ValueError(
-                            (
-                                "Unknown metric for calculating network stats. Please specify "
-                                + "one of `clone_network`, `clone_centrality` or `clone_degree`."
-                            )
+                            "Unknown metric for calculating network stats. Please specify "
+                            + "one of `clone_network`, `clone_centrality` or `clone_degree`."
                         )
                     # clone size gini
                     _dat = resampled.metadata.copy()

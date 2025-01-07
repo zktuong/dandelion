@@ -45,8 +45,8 @@ def test_find_clones(create_testfolder):
     assert not vdj.metadata.clone_id.empty
     assert not vdj2.data.clone_id.empty
     assert not vdj2.metadata.clone_id.empty
-    assert len(set(x for x in vdj.metadata["clone_id"] if pd.notnull(x))) == 5
-    assert len(set(x for x in vdj2.metadata["clone_id"] if pd.notnull(x))) == 5
+    assert len({x for x in vdj.metadata["clone_id"] if pd.notnull(x)}) == 5
+    assert len({x for x in vdj2.metadata["clone_id"] if pd.notnull(x)}) == 5
     vdj.write_h5ddl(f)
     vdj2.write_h5ddl(f2)
 

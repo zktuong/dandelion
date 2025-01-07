@@ -110,7 +110,7 @@ def format_fasta(
             + "specify path to fasta file or folder containing fasta file. "
             + "Starting folder should only contain 1 fasta file."
         )
-    fh = open(file_path, "r")
+    fh = open(file_path)
     seqs = {}
     if sep is None:
         separator = "_"
@@ -659,10 +659,8 @@ def assign_isotype(
     )
     if filePath is None:
         raise FileNotFoundError(
-            (
-                "Path to fasta file is unknown. Please specify path to "
-                + "fasta file or folder containing fasta file."
-            )
+            "Path to fasta file is unknown. Please specify path to "
+            + "fasta file or folder containing fasta file."
         )
 
     blast_out = run_blastn(
@@ -1174,10 +1172,8 @@ def return_pass_fail_filepaths(
     )
     if file_path is None:
         raise FileNotFoundError(
-            (
-                "Path to fasta file is unknown. Please specify "
-                + "path to fasta file or folder containing fasta file."
-            )
+            "Path to fasta file is unknown. Please specify "
+            + "path to fasta file or folder containing fasta file."
         )
     # read the original object
     pass_path = (
@@ -1474,7 +1470,7 @@ def reassign_alleles(
                 "a",
             ) as out_file:
                 for filenum, filename in enumerate(filepathlist_heavy):
-                    with open(filename, "r") as in_file:
+                    with open(filename) as in_file:
                         for line_num, line in enumerate(in_file):
                             if (line_num == 0) and (filenum > 0):
                                 continue
@@ -1489,7 +1485,7 @@ def reassign_alleles(
                 "a",
             ) as out_file:
                 for filenum, filename in enumerate(filepathlist_light):
-                    with open(filename, "r") as in_file:
+                    with open(filename) as in_file:
                         skip_next_line = False
                         for line_num, line in enumerate(in_file):
                             if (line_num == 0) and (filenum > 0):
@@ -1845,7 +1841,7 @@ def reassign_alleles(
                     + ylab("% allele calls")
                     + ggtitle("Genotype reassignment with TIgGER")
                     + geom_bar(stat="identity")
-                    + facet_grid("~" + str("vgroup"), scales="free_y")
+                    + facet_grid("~" + "vgroup", scales="free_y")
                     + scale_fill_manual(values=("#86bcb6", "#F28e2b"))
                     + theme(legend_title=element_blank())
                 )
@@ -4612,14 +4608,12 @@ def transfer_assignment(
         for i, row in db_fail.iterrows():
             if not present(row.locus):
                 calls = list(
-                    set(
-                        [
-                            row.v_call[:3],
-                            row.d_call[:3],
-                            row.j_call[:3],
-                            row.c_call[:3],
-                        ]
-                    )
+                    {
+                        row.v_call[:3],
+                        row.d_call[:3],
+                        row.j_call[:3],
+                        row.c_call[:3],
+                    }
                 )
                 locus = "".join([c for c in calls if present(c)])
                 if len(locus) == 3:
@@ -6186,9 +6180,7 @@ def keep_if_consensus_count_is_high(
     # get the extras
     _extra = [k for k in filtered_contigs if k not in _keep_filtered]
     # get the ambiguous
-    _ambi = list(
-        set([k for k in umi_counts if k not in _keep_filtered + _extra])
-    )
+    _ambi = list({k for k in umi_counts if k not in _keep_filtered + _extra})
     # extend the lists
     keep_contigs.extend(_keep_filtered)
     # get the extra contigs

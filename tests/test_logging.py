@@ -8,7 +8,7 @@ from subprocess import run
 def test_badge():
     """test_badge"""
     p = run(
-        ["python", str(Path("dandelion") / "logging" / "_badge.py")],
+        ["python", str(Path("src") / "dandelion" / "logging" / "_badge.py")],
         capture_output=True,
         encoding="utf8",
     )

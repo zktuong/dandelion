@@ -157,11 +157,11 @@ def clone_rarefaction(
             try:
                 pal = vdj_data.uns[str(color) + "_colors"]
             except:
-                if len(list(set((pred.variable)))) <= 20:
+                if len(list(set(pred.variable))) <= 20:
                     pal = palettes.default_20
-                elif len(list(set((pred.variable)))) <= 28:
+                elif len(list(set(pred.variable))) <= 28:
                     pal = palettes.default_28
-                elif len(list(set((pred.variable)))) <= 102:
+                elif len(list(set(pred.variable))) <= 102:
                     pal = palettes.default_102
                 else:
                     pal = cycle(palettes.default_102)
@@ -188,11 +188,11 @@ def clone_rarefaction(
                     + geom_line()
                 )
         else:
-            if len(list(set((pred.variable)))) <= 20:
+            if len(list(set(pred.variable))) <= 20:
                 pal = palettes.default_20
-            elif len(list(set((pred.variable)))) <= 28:
+            elif len(list(set(pred.variable))) <= 28:
                 pal = palettes.default_28
-            elif len(list(set((pred.variable)))) <= 102:
+            elif len(list(set(pred.variable))) <= 102:
                 pal = palettes.default_102
             else:
                 pal = None

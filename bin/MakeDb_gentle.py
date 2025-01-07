@@ -167,10 +167,10 @@ def getIDforIMGT(seq_file, imgt_id_len=default_imgt_id_len):
             id_key = rec.description
         else:  # truncate and replace characters
             if imgt_id_len == 49:  # 28 September 2021 (version 1.8.4)
-                id_key = re.sub("\s|\t", "_", rec.description[:imgt_id_len])
+                id_key = re.sub("\\s|\t", "_", rec.description[:imgt_id_len])
             else:  # older versions
                 id_key = re.sub(
-                    "\||\s|!|&|\*|<|>|\?", "_", rec.description[:imgt_id_len]
+                    r"\||\s|!|&|\*|<|>|\?", "_", rec.description[:imgt_id_len]
                 )
         ids.update({id_key: rec.description})
 
@@ -607,11 +607,12 @@ def parseIMGT(
         fields.extend(custom)
 
     # Parse IMGT output and write db
-    with open(imgt_files["summary"], "r") as summary_handle, open(
-        imgt_files["gapped"], "r"
-    ) as gapped_handle, open(imgt_files["ntseq"], "r") as ntseq_handle, open(
-        imgt_files["junction"], "r"
-    ) as junction_handle:
+    with (
+        open(imgt_files["summary"]) as summary_handle,
+        open(imgt_files["gapped"]) as gapped_handle,
+        open(imgt_files["ntseq"]) as ntseq_handle,
+        open(imgt_files["junction"]) as junction_handle,
+    ):
 
         # Open parser
         parse_iter = IMGTReader(
@@ -749,7 +750,7 @@ def parseIgBLAST(
         fields.extend(custom)
 
     # Parse and write output
-    with open(aligner_file, "r") as f:
+    with open(aligner_file) as f:
         parse_iter = parser(
             f,
             seq_dict,
@@ -863,7 +864,7 @@ def parseIHMM(
         fields.extend(custom)
 
     # Parse and write output
-    with open(aligner_file, "r") as f:
+    with open(aligner_file) as f:
         parse_iter = IHMMuneReader(f, seq_dict, references)
         germ_iter = (addGermline(x, references) for x in parse_iter)
         output = writeDb(
@@ -915,7 +916,7 @@ def numberAIRR(
         printError("Invalid format %s." % format)
 
     # Open input
-    db_handle = open(aligner_file, "rt")
+    db_handle = open(aligner_file)
     db_iter = reader(db_handle)
 
     # Define log handle
@@ -1071,7 +1072,7 @@ def getArgParser():
     group_help.add_argument(
         "--version",
         action="version",
-        version="%(prog)s:" + " %s %s" % (__version__, __date__),
+        version="%(prog)s:" + " {} {}".format(__version__, __date__),
     )
     group_help.add_argument(
         "-h", "--help", action="help", help="show this help message and exit"

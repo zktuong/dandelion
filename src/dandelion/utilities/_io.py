@@ -556,7 +556,7 @@ def read_10x_vdj(
                     )
                 )
                 seqs = {}
-                fh = open(fasta_file, "r")
+                fh = open(fasta_file)
                 for header, sequence in fasta_iterator(fh):
                     seqs[header] = sequence
                 raw["sequence"] = pd.Series(seqs)
@@ -572,7 +572,7 @@ def read_10x_vdj(
                         raw = json.load(f)
                     out = parse_json(raw)
             else:
-                raise IOError(
+                raise OSError(
                     "{}_contig_annotations.csv and {}_contig_annotations.json file(s) not found in {} folder.".format(
                         str(filename_pre),
                         filename_pre.replace("filtered", "all"),
@@ -580,7 +580,7 @@ def read_10x_vdj(
                     )
                 )
         elif len(csv_idx) > 1:
-            raise IOError(
+            raise OSError(
                 "There are multiple input .csv files with the same filename prefix {} in {} folder.".format(
                     str(filename_pre), str(path)
                 )
@@ -615,7 +615,7 @@ def read_10x_vdj(
                     )
                 )
                 seqs = {}
-                fh = open(fasta_file, "r")
+                fh = open(fasta_file)
                 for header, sequence in fasta_iterator(fh):
                     seqs[header] = sequence
                 raw["sequence"] = pd.Series(seqs)
@@ -629,9 +629,9 @@ def read_10x_vdj(
                     raw = json.load(f)
                 out = parse_json(raw)
             else:
-                raise IOError("{} not found.".format(file))
+                raise OSError("{} not found.".format(file))
     else:
-        raise IOError("{} not found.".format(path))
+        raise OSError("{} not found.".format(path))
     res = pd.DataFrame.from_dict(out, orient="index")
     # quick check if locus is malformed
     if remove_malformed:
@@ -796,9 +796,7 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
             for call in ["v_call", "d_call", "j_call", "c_call"]:
                 if out[contig][call] not in ["None", "none", None, np.nan, ""]:
                     calls.append(out[contig][call])
-            out[contig]["locus"] = "|".join(
-                list(set([str(c)[:3] for c in calls]))
-            )
+            out[contig]["locus"] = "|".join(list({str(c)[:3] for c in calls}))
         if out[contig]["locus"] == "None" or out[contig]["locus"] == "":
             out[contig]["locus"] = "|"
     return out

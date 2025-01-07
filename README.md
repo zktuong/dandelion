@@ -8,7 +8,7 @@
 
 ![](docs/notebooks/img/dandelion_logo_illustration.png)
 
-Hi there! I have put together a python package for analyzing single cell BCR/TCR data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR/TCR analysis. It also includes a couple of functions for visualization. 
+Hi there! I have put together a python package for analyzing single cell BCR/TCR data from 10x Genomics 5' solution! It streamlines the pre-processing, leveraging some tools from immcantation suite, and integrates with scanpy/anndata for single-cell BCR/TCR analysis. It also includes a couple of functions for visualization.
 
 ## Citation
 `dandelion` is now published at [***Nature Biotechnology***](https://www.nature.com/articles/s41587-023-01734-7)!
@@ -162,7 +162,7 @@ I would like to acknowledge the contributions from Dr. Chenqu Suo, Dr. Krysztof 
 I would also like to acknowledge Dr. Ondrej Suschanek, Dr. Benjamin Stewart, Dr. Rachel Bashford-Rogers, Dr. Jongeun Park,  Dr. Cecilia-Dominguez Conde, Dr. Kirsten Stewart, Dr. Hamish King and Dr. Peng He with whom I have had very useful discussions. I would also like to thank my wife who helped name the package, because she thought the plots looked like a dandelion =D.
 
 ## Support
- 
+
 Support is provided on a voluntary basis, as time permits.
 
 If there are any ideas, comments, suggestions, thing you would like to know more etc., please feel free to email me at z.tuong@uq.edu.au or post in the issue tracker and I will get back to you.

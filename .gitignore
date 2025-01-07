@@ -13,7 +13,7 @@
 *.coverage*
 *coverage.xml
 *coverage_code.xml
-dandelion/logging/version.py
+src/dandelion/logging/version.py
 /tests/test_local.py
 /tests/test_local_tr.py
 reassigned_all/
@@ -29,3 +29,4 @@ container/database/blast/mouse/mouse_BCR_C.fasta.nin
 .hypothesis/
 .vscode/
 env
+build

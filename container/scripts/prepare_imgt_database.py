@@ -201,7 +201,7 @@ def download_bcr_constant_and_process(
 
     seqs = {}
     if file_name.stat().st_size != 0:
-        fh = open(file_name, "r")
+        fh = open(file_name)
         for header, sequence in fasta_iterator(fh):
             if not re.search("\\/|P", header):
                 if len(sequence) >= 150:  # remove short sequences
@@ -473,7 +473,7 @@ def main():
                     seqs = {}
                     for file in in_files:
                         if file.stat().st_size != 0:
-                            fh = open(file, "r")
+                            fh = open(file)
                             for header, sequence in fasta_iterator(fh):
                                 new_header = header.split("|")[1].strip()
                                 if new_header not in seqs:

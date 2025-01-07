@@ -83,3 +83,5 @@ master_doc = "index"
 napoleon_use_param = False
 autodoc_member_order = "bysource"
 autosummary_generate = True
+
+nbsphinx_execute = "never"

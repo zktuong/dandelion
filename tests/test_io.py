@@ -388,9 +388,9 @@ def test_locus_productive(airr_generic):
 
 
 @pytest.mark.usefixtures("airr_generic")
-def test_write_10x(airr_generic):
+def test_write_10x(airr_generic, create_testfolder):
     vdj = ddl.Dandelion(airr_generic)
-    vdj.write_10x(folder="test_10x")
+    vdj.write_10x(folder=create_testfolder / "test_10x")
 
 
 @pytest.mark.usefixtures("airr_bd")

@@ -1,7 +1,7 @@
 .. include:: README.rst
 
 .. toctree::
-   :hidden:   
+   :hidden:
    :maxdepth: 1
 
    README.rst
@@ -23,7 +23,7 @@
    :caption: Advanced Guide:
 
    notebooks/1_dandelion_preprocessing-10x_data.ipynb
-   notebooks/1b_dandelion_noreannotation-10x_data.ipynb   
+   notebooks/1b_dandelion_noreannotation-10x_data.ipynb
    notebooks/1c_dandelion_scirpy.ipynb
    notebooks/2_dandelion_filtering-10x_data.ipynb
    notebooks/3_dandelion_findingclones-10x_data.ipynb
