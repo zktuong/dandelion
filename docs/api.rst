@@ -100,6 +100,13 @@ Utilities: `utl`
 
 Dandelion
 =========
+.. module:: dandelion.utilities
+
+.. autosummary::
+   :toctree: modules
+
+   Dandelion
+
 .. module:: dandelion.Dandelion
 
 .. autosummary::
