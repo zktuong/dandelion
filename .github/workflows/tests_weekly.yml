@@ -104,15 +104,10 @@ jobs:
         run: |
           igblastn -h
 
-      - name: Cache R packages
-        uses: actions/cache@v4
-        with:
-          path: /home/runner/work/_temp/Library
-          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-${{ steps.BIOC.outputs.version}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-${{ steps.BIOC.outputs.version}}-r-${{ steps.R.outputs.version}}-
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          cache: true
+          cache-version: ${{ env.cache-version }}
           packages: |
             optparse
             shazam
