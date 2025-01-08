@@ -100,7 +100,7 @@ Utilities: `utl`
 
 Dandelion
 =========
-.. module:: dandelion.utilities
+.. module:: dandelion
 
 .. autosummary::
    :toctree: modules
@@ -110,7 +110,7 @@ Dandelion
 .. module:: dandelion.Dandelion
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
 
    add_cell_prefix
    add_cell_suffix
