@@ -2,8 +2,6 @@ name: sc-dandelion-container
 channels:
   - conda-forge
   - bioconda
-  - anaconda
-  - defaults
 dependencies:
   - python
   - seaborn
