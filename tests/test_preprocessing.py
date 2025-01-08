@@ -100,7 +100,7 @@ def test_reassign_alleles_fails(create_testfolder, database_paths):
     with pytest.raises(KeyError):
         ddl.pp.reassign_alleles(
             str(create_testfolder),
-            combined_folder=create_testfolder_number / "reassigned_filtered",
+            combined_folder=create_testfolder / "reassigned_filtered",
             filename_prefix="filtered",
         )
 
