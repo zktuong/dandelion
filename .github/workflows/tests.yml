@@ -156,7 +156,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          python -m pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+          python -m pytest --cov=src/dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
 
       - name: Show coverage
         run: |
