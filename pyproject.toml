@@ -55,6 +55,10 @@ filterWarnings = [
 addopts = "--cov src/dandelion --cov-report=xml"
 testpaths = ["tests"]
 
+[tool.coverage.run]
+branch = true
+source = ["src/dandelion"]
+
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
 build-backend = "setuptools.build_meta"
