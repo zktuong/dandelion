@@ -9,3 +9,7 @@ source = src/dandelion
 [report]
 show_missing = true
 precision = 2
+omit =
+    container/*
+    tests/*
+    src/dandelion/external/*
