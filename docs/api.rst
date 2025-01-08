@@ -109,26 +109,6 @@ Dandelion
 
 .. module:: dandelion.Dandelion
 
-.. autosummary::
-   :toctree: .
-
-   add_cell_prefix
-   add_cell_suffix
-   add_sequence_prefix
-   add_sequence_suffix
-   copy
-   reset_ids
-   simplify
-   store_germline_reference
-   update_metadata
-   update_plus
-   write
-   write_10x
-   write_airr
-   write_h5ddl
-   write_h5ddl_legacy
-   write_pkl
-
 Logging
 =========
 .. module:: dandelion.logging
