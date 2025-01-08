@@ -52,7 +52,7 @@ filterwarnings = [
   "ignore::PendingDeprecationWarning",
   "ignore::FutureWarning",
 ]
-addopts = "--cov src/dandelion --cov-report=xml"
+addopts = "--cov src/dandelion --cov-report=xml --ignore=container -rP"
 testpaths = ["tests"]
 
 [build-system]
