@@ -52,12 +52,8 @@ filterWarnings = [
   "ignore::PendingDeprecationWarning",
   "ignore::FutureWarning",
 ]
-addopts = "--cov src/dandelion --cov-report=xml"
+addopts = "--cov src --cov-report=xml"
 testpaths = ["tests"]
-
-[tool.coverage.run]
-branch = true
-source = ["src/dandelion"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
