@@ -47,11 +47,12 @@ whitelist-regex = []
 color = true
 
 [tool.pytest.ini_options]
-filterWarnings = [
+filterwarnings = [
   "ignore::DeprecationWarning",
   "ignore::PendingDeprecationWarning",
   "ignore::FutureWarning",
 ]
+addopts = "--cov src/dandelion --cov-report=xml"
 testpaths = ["tests"]
 
 [build-system]
