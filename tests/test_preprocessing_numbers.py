@@ -146,7 +146,7 @@ def test_reassign_alleles_combined_number(
     """test_reassign_alleles_fails"""
     ddl.pp.reassign_alleles(
         str(create_testfolder_number),
-        combined_folder=create_testfolder_number / 2,
+        combined_folder=create_testfolder_number / str(2),
         germline=database_paths["germline"],
         filename_prefix="all",
         novel=True,
