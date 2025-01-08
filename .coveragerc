@@ -1,0 +1,11 @@
+[paths]
+source = src
+
+[run]
+branch = true
+parallel = true
+source = src/dandelion
+
+[report]
+show_missing = true
+precision = 2

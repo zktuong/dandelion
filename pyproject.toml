@@ -52,7 +52,6 @@ filterWarnings = [
   "ignore::PendingDeprecationWarning",
   "ignore::FutureWarning",
 ]
-addopts = "--cov src --cov-report=xml"
 testpaths = ["tests"]
 
 [build-system]
