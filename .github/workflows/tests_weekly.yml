@@ -63,19 +63,6 @@ jobs:
         with:
           bioc-version: release
 
-      - name: Get R version
-        id: R
-        run: |
-          R --version > VERSION
-          echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
-        shell: bash -l {0}
-
-      - name: Get Bioconductor version
-        id: BIOC
-        run: |
-          echo "version=$R_BIOC_VERSION" >> $GITHUB_OUTPUT
-        shell: bash -l {0}
-
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
