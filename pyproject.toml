@@ -47,7 +47,7 @@ whitelist-regex = []
 color = true
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-report term-missing"
+addopts = "--cov src/dandelion --cov-report=xml term-missing"
 testpaths = ["tests"]
 
 [build-system]
