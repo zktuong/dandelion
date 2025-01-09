@@ -1,1 +1,2 @@
-notebooks/*.ipynb linguist-detectable=false
+docs/notebooks/*.ipynb linguist-detectable=false
+container/*.ipynb linguist-detectable=false
