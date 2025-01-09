@@ -48,7 +48,7 @@ def test_reassignalleles(create_testfolder, database_paths_mouse):
     """test_reassignalleles"""
     ddl.pp.reassign_alleles(
         str(create_testfolder),
-        combined_folder="test_mouse",
+        combined_folder=create_testfolder / "test_mouse",
         germline=database_paths_mouse["germline"],
         org="mouse",
         novel=True,

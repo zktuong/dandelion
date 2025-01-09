@@ -47,8 +47,16 @@ whitelist-regex = []
 color = true
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-report term-missing"
+filterwarnings = [
+  "ignore::DeprecationWarning",
+  "ignore::PendingDeprecationWarning",
+  "ignore::FutureWarning",
+]
+addopts = "--cov src/dandelion --cov-report=xml -rP"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["containter/*", "src/dandelion/external/*"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]

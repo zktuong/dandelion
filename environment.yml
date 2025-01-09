@@ -2,8 +2,6 @@ name: dandelion
 channels:
   - conda-forge
   - bioconda
-  - anaconda
-  - defaults
 dependencies:
   - numpy
   - pandas

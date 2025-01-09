@@ -15,7 +15,7 @@ on:
     - cron: "0 0 * * 0"
 
 env:
-  cache-version: "cache-v1"
+  cache-version: "cache-v2"
 
 jobs:
   tests:
@@ -63,19 +63,6 @@ jobs:
         with:
           bioc-version: release
 
-      - name: Get R version
-        id: R
-        run: |
-          R --version > VERSION
-          echo "version=$(head -1 VERSION | awk '{print $3}')" >> $GITHUB_OUTPUT
-        shell: bash -l {0}
-
-      - name: Get Bioconductor version
-        id: BIOC
-        run: |
-          echo "version=$R_BIOC_VERSION" >> $GITHUB_OUTPUT
-        shell: bash -l {0}
-
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
@@ -104,15 +91,10 @@ jobs:
         run: |
           igblastn -h
 
-      - name: Cache R packages
-        uses: actions/cache@v4
-        with:
-          path: /home/runner/work/_temp/Library
-          key: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-${{ steps.BIOC.outputs.version}}-r-${{ steps.R.outputs.version}}-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ matrix.config.os }}-biocversion-${{ steps.BIOC.outputs.version}}-r-${{ steps.R.outputs.version}}-
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          cache: true
+          cache-version: ${{ env.cache-version }}
           packages: |
             optparse
             shazam
@@ -121,9 +103,9 @@ jobs:
 
       - name: Install Dandelion
         run: |
-          python -m pip install git+https://github.com/emdann/milopy.git
-          python -m pip install palantir
-          python -m pip install ".[scirpy]"
+          pip install git+https://github.com/emdann/milopy.git
+          pip install palantir
+          pip install ".[scirpy]"
 
       - name: Test if R dependencies are installed properly
         run: |
@@ -132,7 +114,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          python -m pytest --cov=dandelion --cov-report=xml --ignore=container -rP -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning
+          pytest
 
       - name: Show coverage
         run: |

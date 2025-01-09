@@ -10,7 +10,7 @@
 *dist
 *sc_dandelion.egg-info
 *.coverage
-*.coverage*
+*.coverage.*
 *coverage.xml
 *coverage_code.xml
 src/dandelion/logging/version.py
