@@ -118,7 +118,7 @@ docs = [
   "readthedocs-sphinx-ext<=2.2.5",
   "recommonmark<=0.7.1",
 ]
-scirpy = ["scirpy<=0.20.1", "awkward<=2.7.2", "mudata<=0.3.1"]
+scirpy = ["scirpy<=0.20.1", "awkward<=2.7.4", "mudata<=0.3.1"]
 
 [tool.setuptools]
 include-package-data = true
