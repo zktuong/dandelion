@@ -109,6 +109,9 @@ Dandelion
 
 .. module:: dandelion.Dandelion
 
+.. autosummary::
+   :toctree: modules
+
    add_cell_prefix
    add_cell_suffix
    add_sequence_prefix
