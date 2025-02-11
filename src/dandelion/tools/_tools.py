@@ -944,6 +944,7 @@ def define_clones(
 def tabuluate_clone_sizes(
     metadata_: pd.DataFrame, clonesize_dict: dict, clonekey: str
 ) -> pd.Series:
+    """Tabulate clone sizes."""
     return pd.Series(
         dict(
             zip(
