@@ -941,6 +941,40 @@ def define_clones(
     )
 
 
+def tabuluate_clone_sizes(
+    metadata_: pd.DataFrame, clonesize_dict: dict, clonekey: str
+) -> pd.Series:
+    """Tabulate clone sizes."""
+    return pd.Series(
+        dict(
+            zip(
+                metadata_.index,
+                [
+                    str(y) if pd.notnull(y) else str(0)
+                    for y in [
+                        (
+                            sorted(
+                                list(
+                                    {clonesize_dict[c_] for c_ in c.split("|")}
+                                ),
+                                key=lambda x: (
+                                    int(x.split(">= ")[1])
+                                    if type(x) is str
+                                    else int(x)
+                                ),
+                                reverse=True,
+                            )[0]
+                            if "|" in c
+                            else clonesize_dict[c]
+                        )
+                        for c in metadata_[str(clonekey)]
+                    ]
+                ],
+            )
+        )
+    )
+
+
 def clone_size(
     vdj_data: Dandelion,
     max_size: int | None = None,
@@ -965,10 +999,7 @@ def clone_size(
 
     metadata_ = vdj_data.metadata.copy()
 
-    if clone_key is None:
-        clonekey = "clone_id"
-    else:
-        clonekey = clone_key
+    clonekey = "clone_id" if clone_key is None else clone_key
 
     tmp = metadata_[str(clonekey)].str.split("|", expand=True).stack()
     tmp = tmp.reset_index(drop=False)
@@ -990,160 +1021,28 @@ def clone_size(
     clonesize_dict = dict(clonesize_)
     clonesize_dict.update({"None": np.nan})
 
+    col_key, col_key_suffix = "", ""
+    col_key = str(clonekey) if key_added is None else key_added
+    col_key_suffix = (
+        "_size" if max_size is None else "_size_max_" + str(max_size)
+    )
+
+    vdj_data.metadata[col_key + col_key_suffix] = tabuluate_clone_sizes(
+        metadata_, clonesize_dict, clonekey
+    )
     if max_size is not None:
-        if key_added is None:
-            vdj_data.metadata[str(clonekey) + "_size_max_" + str(max_size)] = (
-                pd.Series(
-                    dict(
-                        zip(
-                            metadata_.index,
-                            [
-                                str(y) if pd.notnull(y) else str(0)
-                                for y in [
-                                    (
-                                        sorted(
-                                            list(
-                                                {
-                                                    clonesize_dict[c_]
-                                                    for c_ in c.split("|")
-                                                }
-                                            ),
-                                            key=lambda x: (
-                                                int(x.split(">= ")[1])
-                                                if type(x) is str
-                                                else int(x)
-                                            ),
-                                            reverse=True,
-                                        )[0]
-                                        if "|" in c
-                                        else clonesize_dict[c]
-                                    )
-                                    for c in metadata_[str(clonekey)]
-                                ]
-                            ],
-                        )
-                    )
-                )
-            )
-            vdj_data.metadata[str(clonekey) + "_size_max_" + str(max_size)] = (
-                vdj_data.metadata[
-                    str(clonekey) + "_size_max_" + str(max_size)
-                ].astype("category")
-            )
-        else:
-            vdj_data.metadata[key_added] = pd.Series(
-                dict(
-                    zip(
-                        metadata_.index,
-                        [
-                            str(y) if pd.notnull(y) else str(0)
-                            for y in [
-                                (
-                                    sorted(
-                                        list(
-                                            {
-                                                clonesize_dict[c_]
-                                                for c_ in c.split("|")
-                                            }
-                                        ),
-                                        key=lambda x: (
-                                            int(x.split(">= ")[1])
-                                            if type(x) is str
-                                            else int(x)
-                                        ),
-                                        reverse=True,
-                                    )[0]
-                                    if "|" in c
-                                    else clonesize_dict[c]
-                                )
-                                for c in metadata_[str(clonekey)]
-                            ]
-                        ],
-                    )
-                )
-            )
-            vdj_data.metadata[str(clonekey) + "_size_max_" + str(max_size)] = (
-                vdj_data.metadata[
-                    str(clonekey) + "_size_max_" + str(max_size)
-                ].astype("category")
-            )
+        vdj_data.metadata[col_key + col_key_suffix] = vdj_data.metadata[
+            col_key + col_key_suffix
+        ].astype("category")
     else:
-        if key_added is None:
-            vdj_data.metadata[str(clonekey) + "_size"] = pd.Series(
-                dict(
-                    zip(
-                        metadata_.index,
-                        [
-                            str(y) if pd.notnull(y) else str(0)
-                            for y in [
-                                (
-                                    sorted(
-                                        list(
-                                            {
-                                                clonesize_dict[c_]
-                                                for c_ in c.split("|")
-                                            }
-                                        ),
-                                        key=lambda x: (
-                                            int(x.split(">= ")[1])
-                                            if type(x) is str
-                                            else int(x)
-                                        ),
-                                        reverse=True,
-                                    )[0]
-                                    if "|" in c
-                                    else clonesize_dict[c]
-                                )
-                                for c in metadata_[str(clonekey)]
-                            ]
-                        ],
-                    )
-                )
-            )
-            try:
-                vdj_data.metadata[str(clonekey) + "_size"] = [
-                    float(x) for x in vdj_data.metadata[str(clonekey) + "_size"]
-                ]
-            except:
-                pass
-        else:
-            vdj_data.metadata[key_added] = pd.Series(
-                dict(
-                    zip(
-                        metadata_.index,
-                        [
-                            str(y) if pd.notnull(y) else str(0)
-                            for y in [
-                                (
-                                    sorted(
-                                        list(
-                                            {
-                                                clonesize_dict[c_]
-                                                for c_ in c.split("|")
-                                            }
-                                        ),
-                                        key=lambda x: (
-                                            int(x.split(">= ")[1])
-                                            if type(x) is str
-                                            else int(x)
-                                        ),
-                                        reverse=True,
-                                    )[0]
-                                    if "|" in c
-                                    else clonesize_dict[c]
-                                )
-                                for c in metadata_[str(clonekey)]
-                            ]
-                        ],
-                    )
-                )
-            )
-            try:
-                vdj_data.metadata[key_added] = [
-                    float(x) for x in vdj_data.metadata[str(clonekey) + "_size"]
-                ]
-            except:
-                pass
+        try:
+            vdj_data.metadata[col_key + col_key_suffix] = [
+                float(x) for x in vdj_data.metadata[col_key + col_key_suffix]
+            ]
+        except ValueError:
+            # this happens if there are multiple clonotypes associated to the cell
+            pass
+
     logg.info(
         " finished",
         time=start,
