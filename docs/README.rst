@@ -158,7 +158,7 @@ lymphocyte developmental origins**. Nature Biotechnology 2023.04.13; doi:
 https://doi.org/10.1038/s41587-023-01734-7*
 
 The data used in the Nature Biotechnology papers can be found at
-`a separate repository <https://github.com/zktuong/dandelion-demo-files/tree/master/dandelion_manuscript>`__.
+`a separate repository <https://github.com/zktuong/dandelion-demo-files>`__.
 
 ``dandelion`` was originally published in:
 
