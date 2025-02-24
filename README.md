@@ -17,6 +17,10 @@ Please cite the following if you use version 0.3.0 onwards:
 
 Suo, C., Polanski, K., Dann, E. et al. ***Dandelion uses the single-cell adaptive immune receptor repertoire to explore lymphocyte developmental origins***. Nat Biotechnol (2023). https://doi.org/10.1038/s41587-023-01734-7
 
+The data used in the Nature Biotechnology paper is available at a separate [repository](https://github.com/zktuong/dandelion-demo-files/tree/master/dandelion_manuscript).
+
+This repository also includes a Git submodule for the dandelion_manuscript folder, which is stored in the dandelion-demo-files repository (click link above that says `dandelion_manuscript`)
+
 
 `dandelion` was originally published at [***Nature Medicine***](https://www.nature.com/articles/s41591-021-01329-2):
 
