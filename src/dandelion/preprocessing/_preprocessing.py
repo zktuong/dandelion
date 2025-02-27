@@ -110,6 +110,11 @@ def format_fasta(
             + "specify path to fasta file or folder containing fasta file. "
             + "Starting folder should only contain 1 fasta file."
         )
+    # before continuing, check if the file is not empty
+    if os.stat(file_path).st_size == 0:
+        raise ValueError(
+            f"{str(file_path)} is empty. Please check the file and try again or remove if necessary."
+        )
     fh = open(file_path)
     seqs = {}
     if sep is None:
