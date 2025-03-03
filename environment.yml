@@ -12,7 +12,6 @@ dependencies:
   - pytables>=3.8.0
   - pytest
   - graph-tool
-  - rpy2
   - pip
   - tbb
   - pip:
