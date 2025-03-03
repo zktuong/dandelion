@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
+import nxviz as nxv
 import pandas as pd
 import seaborn as sns
 
@@ -9,7 +11,7 @@ from anndata import AnnData
 from itertools import product, cycle
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-import networkx as nx
+from nxviz import annotate
 from plotnine import (
     aes,
     geom_line,
@@ -28,8 +30,6 @@ from time import sleep
 from tqdm import tqdm
 from typing import Callable, Literal
 
-import dandelion.external.nxviz as nxv
-from dandelion.external.nxviz import annotate
 from dandelion.tools._diversity import rarefun
 from dandelion.utilities._core import *
 from dandelion.utilities._io import *
