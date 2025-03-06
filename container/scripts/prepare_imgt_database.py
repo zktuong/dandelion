@@ -95,54 +95,60 @@ def download_germline_and_process(
     url_suffix : str
         Suffix to add in url.
     """
-    imgt_out_dict = {
-        "human": ["Homo sapiens", "Homo_sapiens"],
-        "mouse": ["Mus musculus", "Mus_musculus"],
-        # "rat": ["Rattus norvegicus", "Rattus_norvegicus"], # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
-        "rabbit": ["Oryctolagus cuniculus", "Oryctolagus_cuniculus"],
-        # "rhesus_monkey": ["Macaca mulatta", "Macaca_mulatta"], # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
-    }
-    url = f"{source}/GENElect?query={query_type}+{chain}&species={query}{url_suffix}"
-    file_name = (
-        f"{str(file_path)}/imgt_{add_prefix}{species}_{chain}{add_suffix}.fasta"
-    )
+    try:
+        imgt_out_dict = {
+            "human": ["Homo sapiens", "Homo_sapiens"],
+            "mouse": ["Mus musculus", "Mus_musculus"],
+            # "rat": ["Rattus norvegicus", "Rattus_norvegicus"], # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
+            "rabbit": ["Oryctolagus cuniculus", "Oryctolagus_cuniculus"],
+            # "rhesus_monkey": ["Macaca mulatta", "Macaca_mulatta"], # seems like there's an issue retrieving this from IMGT/GENE-DB 18/07/2024
+        }
+        url = f"{source}/GENElect?query={query_type}+{chain}&species={query}{url_suffix}"
+        file_name = f"{str(file_path)}/imgt_{add_prefix}{species}_{chain}{add_suffix}.fasta"
 
-    # Stop if the file already exists
-    if os.path.exists(file_name):
-        logging.info(f"Skipping download of {file_name} as it already exists.")
-        return
-    # else download the file
-    with urlopen(url) as response:
-        content = (
-            response.read().decode("utf-8").split("<pre>")[2].split("</pre>")[0]
-        )
-
-    # Check if the downloaded content is empty
-    if content.rstrip() == "":
-        logging.warning(
-            f"Downloaded content for {url} is empty. Skipping processing."
-        )
-        fh = open(file_name, "w")
-        fh.close()
-        return
-
-    # Remove empty lines
-    content_lines = [line for line in content.splitlines() if line.strip()]
-
-    # Substitute patterns in lines starting with '>'
-    for i, line in enumerate(content_lines):
-        if line.startswith(">"):
-            # Example substitution: Homo sapiens to Homo_sapiens
-            line = re.sub(
-                imgt_out_dict[species][0], imgt_out_dict[species][1], line
+        # Stop if the file already exists
+        if os.path.exists(file_name):
+            logging.info(
+                f"Skipping download of {file_name} as it already exists."
             )
-            # Add more substitutions as needed
-            content_lines[i] = line
+            return
+        # else download the file
+        with urlopen(url) as response:
+            content = (
+                response.read()
+                .decode("utf-8")
+                .split("<pre>")[2]
+                .split("</pre>")[0]
+            )
 
-    content = "\n".join(content_lines)
+        # Check if the downloaded content is empty
+        if content.rstrip() == "":
+            logging.warning(
+                f"Downloaded content for {url} is empty. Skipping processing."
+            )
+            fh = open(file_name, "w")
+            fh.close()
+            return
 
-    with open(file_name, "w") as output_file:
-        output_file.write(content)
+        # Remove empty lines
+        content_lines = [line for line in content.splitlines() if line.strip()]
+
+        # Substitute patterns in lines starting with '>'
+        for i, line in enumerate(content_lines):
+            if line.startswith(">"):
+                # Example substitution: Homo sapiens to Homo_sapiens
+                line = re.sub(
+                    imgt_out_dict[species][0], imgt_out_dict[species][1], line
+                )
+                # Add more substitutions as needed
+                content_lines[i] = line
+
+        content = "\n".join(content_lines)
+
+        with open(file_name, "w") as output_file:
+            output_file.write(content)
+    except Exception as e:
+        logging.error(f"Failed to download {species} {chain}: {str(e)}")
 
 
 def download_bcr_constant_and_process(
@@ -249,6 +255,7 @@ def main():
         format="%(asctime)s - %(levelname)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     # Log the start time
     start_time = datetime.now()
     logging.info(f"Source:  {source}")
