@@ -62,7 +62,7 @@ def query_ogrdb_set_info(species: str):
     request = Request(url, headers=headers)
     try:
         # Perform the GET request
-        with urlopen(request) as response:
+        with urlopen(request, timeout=60) as response:
             # Read and decode the response data
             data = response.read().decode("utf-8")
             # Parse the JSON data
@@ -88,7 +88,7 @@ def download_ogrdb_set_fasta(set_id: str):
     request = Request(url, headers=headers)
     try:
         # Perform the GET request
-        with urlopen(request) as response:
+        with urlopen(request, timeout=60) as response:
             filename = response.getheader("Content-disposition").split("=")[1]
             # Read and decode the response data
             data = response.read().decode("utf-8")

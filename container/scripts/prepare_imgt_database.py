@@ -113,7 +113,7 @@ def download_germline_and_process(
             )
             return
         # else download the file
-        with urlopen(url) as response:
+        with urlopen(url, timeout=60) as response:
             content = (
                 response.read()
                 .decode("utf-8")
@@ -191,7 +191,7 @@ def download_bcr_constant_and_process(
     contents = ""
     newline = ""
     for url in urls:
-        with urlopen(url) as response:
+        with urlopen(url, timeout=60) as response:
             content = (
                 response.read()
                 .decode("utf-8")
