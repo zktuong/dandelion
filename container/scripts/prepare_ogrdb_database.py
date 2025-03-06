@@ -379,6 +379,7 @@ def main():
         format="%(asctime)s - %(levelname)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     # Log the start time
     start_time = datetime.now()
     logging.info(f"Source:  {source}")
