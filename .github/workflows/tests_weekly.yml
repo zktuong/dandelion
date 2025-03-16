@@ -15,7 +15,7 @@ on:
     - cron: "0 0 * * 0"
 
 env:
-  cache-version: "cache-v2"
+  cache-version: "cache-v3"
 
 jobs:
   tests:
