@@ -1235,12 +1235,14 @@ def ensure_columns_transferred(
         db_fail = None
     # load the 10x file
     _10xfile = check_filepath(
-        fasta,
+        fasta.parent / (fasta.stem + "_annotations.csv"),
         filename_prefix=filename_prefix,
         ends_with="_annotations.csv",
     )
     if _10xfile is not None:
         dat_10x = read_10x_vdj(_10xfile)
+    else:
+        dat_10x = None
     if db_pass is not None:
         for call in ["d", "j"]:
             for col in addcols:
