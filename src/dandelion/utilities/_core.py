@@ -1970,9 +1970,7 @@ class Dandelion:
                     info.append(len(r[sequence_key]))
             anno.append({k: r for k, r in zip(column_map.keys(), info)})
         anno = pd.DataFrame(anno)
-        anno = anno.applymap(
-            lambda x: bool_map[x] if x in bool_map.keys() else x
-        )
+        anno = anno.map(lambda x: bool_map[x] if x in bool_map.keys() else x)
         anno.to_csv(out_anno_path, index=False)
 
 

@@ -1233,12 +1233,26 @@ def ensure_columns_transferred(
         db_fail = load_data(failfile)
     else:
         db_fail = None
+    # load the 10x file
+    _10xfile = check_filepath(
+        fasta.parent / (fasta.stem + "_annotations.csv"),
+        filename_prefix=filename_prefix,
+        ends_with="_annotations.csv",
+    )
+    if _10xfile is not None:
+        dat_10x = read_10x_vdj(_10xfile)
+    else:
+        dat_10x = None
     if db_pass is not None:
         for call in ["d", "j"]:
             for col in addcols:
                 add_col = call + col
                 if add_col not in db_pass:
                     db_pass[add_col] = ""
+        if dat_10x is not None:
+            for col in ["consensus_count", "umi_count"]:
+                if all_missing(db_pass[col]):
+                    db_pass[col] = pd.Series(dat_10x.data[col])
         db_pass = sanitize_data(db_pass)
         db_pass.to_csv(passfile, sep="\t", index=False)
     if db_fail is not None:
@@ -1247,6 +1261,10 @@ def ensure_columns_transferred(
                 add_col = call + col
                 if add_col not in db_fail:
                     db_fail[add_col] = ""
+        if dat_10x is not None:
+            for col in ["consensus_count", "umi_count"]:
+                if all_missing(db_fail[col]):
+                    db_fail[col] = pd.Series(dat_10x.data[col])
         db_fail = sanitize_data(db_fail)
         db_fail.to_csv(failfile, sep="\t", index=False)
 
