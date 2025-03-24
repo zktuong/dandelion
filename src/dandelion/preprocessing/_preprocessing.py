@@ -602,7 +602,7 @@ def assign_isotype(
     logg.info("Loading 10X annotations \n")
     if _10xfile is not None:
         dat_10x = read_10x_vdj(_10xfile)
-        res_10x = pd.DataFrame(dat_10x.data["c_call"])
+        res_10x = pd.DataFrame(dat_10x.data["c_call"].replace("", "None"))
     else:  # pragma: no cover
         res_10x = pd.DataFrame(dat["c_call"])
         res_10x["c_call"] = "None"
@@ -617,7 +617,7 @@ def assign_isotype(
         "c_identity",
     ]:
         dat[col] = pd.Series(blast_out[col])
-    res_blast = pd.DataFrame(dat["c_call"])
+    res_blast = pd.DataFrame(dat["c_call"].replace("", "None"))
     res_blast = res_blast.fillna(value="None")
     res_10x_sum = pd.DataFrame(
         res_10x["c_call"].value_counts(normalize=True) * 100
@@ -638,7 +638,7 @@ def assign_isotype(
     ):  # TODO: figure out if i need to set up a None correction?
         logg.info("Correcting C calls \n")
         dat = _correct_c_call(dat, primers_dict=correction_dict, org=org)
-        res_corrected = pd.DataFrame(dat["c_call"])
+        res_corrected = pd.DataFrame(dat["c_call"].replace("", "None"))
         res_corrected = res_corrected.fillna(value="None")
         res_corrected_sum = pd.DataFrame(
             res_corrected["c_call"].value_counts(normalize=True) * 100
