@@ -6,11 +6,12 @@ import re
 import shutil
 import subprocess
 import sys
+
 # import tarfile
 
 from datetime import datetime
 from pathlib import Path
-from urllib.request import urlopen # , urlretrieve
+from urllib.request import urlopen  # , urlretrieve
 
 from utils import Tree, fasta_iterator, write_fasta
 
@@ -515,7 +516,7 @@ def main():
             logging.info(res.stdout.decode("utf-8"))
     # copying igblast internal data to igblast folder
     copy_db_from_igblast(
-    out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
+        out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
     )
     # download for blast
     for species, query in species_dict.items():
