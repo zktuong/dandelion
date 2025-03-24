@@ -1946,6 +1946,8 @@ class Dandelion:
             "raw_clonotype_id": clone_key,
             "raw_consensus_id": clone_key,
         }
+        if "complete_vdj" not in self.data.columns:
+            column_map.pop("full_length")
         if "is_cell_10x" not in self.data.columns:
             column_map.pop("is_cell")
         if "high_confidence_10x" not in self.data.columns:
