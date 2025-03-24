@@ -19,13 +19,13 @@ tggtaccggcaaaaagcaaaaaag...tttgagtatctaatatatgtctcaaca......
 ......aactacaatcaacgacccttaggagggaagaacaaaaaaattgaagcaagtaaa
 gattttcaaacttctacctcaaccttagaaataaattacttgaagaaagaagatgaagcc
 acctactactgtgcagtctggata
->X03802|TRGV1*04|Mus_musculus_C57BL/10|(F)|V-REGION|136..428|293 nt|1| | | | |293+27=320| | |
+>IMGT000187|TRGV1*04|Mus_musculus_NOD/SCID|F|V-REGION|123190..123488|299 nt|1| | | | |299+27=326| | |
 cttgggcagctggagcaaactgaattatcggtcaccagagcgacagatgagagtgcgcaa
 atatcctgtatagtttctcttccatatttc............tccaacacagctatacat
 tggtaccggcaaaaagcaaaaaag...tttgagtatctaatatatgtctcaaca......
 ......aactacaatcaacgacccttaggagggaagaacaaaaaaattgaagcaagtaaa
 gattttcaaacttctacctcaaccttgaaaataaattacttgaagaaagaagatgaagcc
-acctactactgtgcagtctg
+acctactactgtgcagtctggataaa
 >U07554|TRGV1*05|Mus_musculus_AKR|(F)|V-REGION|31..330|300 nt|1| | | | |300+27=327| | |
 cttgggcagctaaagcaaactgaagtatccgtcaccagagcgacagatgagagtgcgcaa
 atatcctgtatagcttctcttccagacttc............ggcaacacagaaatacac
@@ -115,7 +115,7 @@ tggtaccggcagaaaccaaaccaaggtttagagtttctattatatgtccttgca......
 ......acccctacccatattttcttagataaggagtacaagaaaatggaggcaagtaaa
 aatcctagtgcttctacatcgatattgacaatatattccttggaggaagaagacgaagct
 atctactactgttcctacggctaaag
->M30171|TRGV4*02|Mus_musculus_BALB/c|(F)|V-REGION|1..296|296 nt|1| | | | |296+30=326|partial in 5'| |
+>M30171|TRGV4*02|Mus_musculus_BALB/c|(F)|V-REGION|1..291|296 nt|1| | | | |296+30=326|partial in 5'| |
 ......aagttggagcaacctgaaatatcaatttccagaccaagagatgagactgcacaa
 atatcctgtaaagttttcatcgaaagcttt............aggagtgtaaccatacac
 tggtaccggcagaaaccaaaccaaggtttagagtttctattatatgtccttgca......
@@ -129,13 +129,13 @@ tggtaccggcaaaaaccaaaccaaagtttagagtttctattatatgtccttgca......
 ......acccctacccatattttcttagataaggagtacaagaaaatggaagcaagtaaa
 gatcctagtgcttctacatcgatattgacaatatattccttggaggaagaagacgaagct
 atctactactgttcctacggctaaatat
->Z12299|TRGV4*04|Mus_musculus_DBA/2|(F)|V-REGION|1..288|288 nt|1| | | | |288+39=327|partial in 5'| |
-...............caacctgaaatatcaatttccagagcaagagatgagactgcacaa
+>IMGT000187|TRGV4*04|Mus_musculus_NOD/SCID|F|V-REGION|16724..17025|302 nt|1| | | | |302+24=326| | |
+catgggaagttggagcaacctgaaatatcaatttccagagcaagagatgagactgcacaa
 atatcctgtaaagttttcatcgaaagcttt............aggagtgtaaccatacac
 tggtaccggcagaaaccaaaccaaggtttagagtttctattatatgtccttgca......
 ......acccctacccatattttcttagataaggagtacaagaaaatggaggcaagtaaa
 aatcctagtgcttctacatcgatattgacaatatattccttggaggaagaagacgaagct
-atctactactgttcctacgcttaatat
+atctactactgttcctacggctaaag
 >Z48590|TRGV4*05|Mus_musculus_L-I|(F)|V-REGION|1..287|287 nt|1| | | | |287+39=326|partial in 5'| |
 ...............caacctgaaatatcaatttccagagcaagagatgagactgcacaa
 atatcctgtaaagttttcatcgaaagcttt............aggagtgtaaccatacac
