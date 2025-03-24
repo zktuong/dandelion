@@ -52,7 +52,9 @@ def copy_db_from_igblast(
         Location of igblast database folder, by default None.
     """
     if igblast_loc is None:
-        lib_path = Path(sys.executable).parent.parent / "share" / "igblast" # if installed with conda/mamba
+        lib_path = (
+            Path(sys.executable).parent.parent / "share" / "igblast"
+        )  # if installed with conda/mamba
     else:
         lib_path = Path(igblast_loc)
     for folder in ["optional_file", "internal_data"]:
