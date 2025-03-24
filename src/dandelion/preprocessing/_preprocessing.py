@@ -466,129 +466,20 @@ def assign_isotype(
     """
     aligner = Align.PairwiseAligner()
 
-    def two_gene_correction(
-        df: pd.DataFrame, i: str, dictionary: dict[str, str]
-    ):
-        """Pairwise alignment for two genes.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Input data frame.
-        i : str
-            index name.
-        dictionary : dict[str, str]
-            dictionary holding gene name as key and sequence as value.
-        """
-        key1, key2 = dictionary.keys()
+    def gene_correction(df: pd.DataFrame, i: str, dictionary: dict[str, str]):
+        """Generalized pairwise alignment for multiple genes."""
         seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
-        alignments1 = aligner.align(dictionary[key1], seq)
-        alignments2 = aligner.align(dictionary[key2], seq)
-        score1 = alignments1.score
-        score2 = alignments2.score
-        if score1 == score2:
-            df.at[i, "c_call"] = str(key1) + "," + str(key2)
-        if score1 > score2:
-            df.at[i, "c_call"] = str(key1)
-        if score1 < score2:
-            df.at[i, "c_call"] = str(key2)
-
-    def three_gene_correction(
-        df: pd.DataFrame, i: str, dictionary: dict[str, str]
-    ):
-        """Pairwise alignment for three genes.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Input data frame.
-        i : str
-            index name.
-        dictionary : dict[str, str]
-            dictionary holding gene name as key and sequence as value.
-        """
-        key1, key2, key3 = dictionary.keys()
-        seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
-        alignments1 = aligner.align(dictionary[key1], seq)
-        alignments2 = aligner.align(dictionary[key2], seq)
-        alignments3 = aligner.align(dictionary[key3], seq)
-        score1 = alignments1.score
-        score2 = alignments2.score
-        score3 = alignments3.score
-        if score1 == score2 == score3:
-            df.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key3)
-        elif score1 > score2 and score1 > score3:
-            df.at[i, "c_call"] = str(key1)
-        elif score2 > score1 and score2 > score3:
-            df.at[i, "c_call"] = str(key2)
-        elif score3 > score1 and score3 > score2:
-            df.at[i, "c_call"] = str(key3)
-        elif score1 == score2 and score1 > score3:
-            df.at[i, "c_call"] = str(key1) + "," + str(key2)
-        elif score1 > score2 and score1 == score3:
-            df.at[i, "c_call"] = str(key1) + "," + str(key3)
-        elif score2 > score1 and score2 == score3:
-            df.at[i, "c_call"] = str(key2) + "," + str(key3)
-
-    def four_gene_correction(
-        df: pd.DataFrame, i: str, dictionary: dict[str, str]
-    ):
-        """Pairwise alignment for four genes.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Input data frame.
-        i : str
-            index name.
-        dictionary : dict[str, str]
-            dictionary holding gene name as key and sequence as value.
-        """
-        key1, key2, key3, key4 = dictionary.keys()
-        seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
-        alignments1 = aligner.align(dictionary[key1], seq)
-        alignments2 = aligner.align(dictionary[key2], seq)
-        alignments3 = aligner.align(dictionary[key3], seq)
-        alignments4 = aligner.align(dictionary[key4], seq)
-        score1 = alignments1.score
-        score2 = alignments2.score
-        score3 = alignments3.score
-        score4 = alignments4.score
-        if score1 == score2 == score3 == score4:
-            df.at[i, "c_call"] = (
-                str(key1) + "," + str(key2) + "," + str(key3) + "," + str(key4)
-            )
-        elif score1 > score2 and score1 > score3 and score1 > score4:
-            df.at[i, "c_call"] = str(key1)
-        elif score2 > score1 and score2 > score3 and score2 > score4:
-            df.at[i, "c_call"] = str(key2)
-        elif score3 > score1 and score3 > score2 and score3 > score4:
-            df.at[i, "c_call"] = str(key3)
-        elif score4 > score1 and score4 > score2 and score4 > score3:
-            df.at[i, "c_call"] = str(key4)
-        elif score1 == score2 and score1 > score3 and score1 > score4:
-            df.at[i, "c_call"] = str(key1) + "," + str(key2)
-        elif score1 > score2 and score1 == score3 and score1 > score4:
-            df.at[i, "c_call"] = str(key1) + "," + str(key3)
-        elif score1 > score2 and score1 > score3 and score1 == score4:
-            df.at[i, "c_call"] = str(key1) + "," + str(key4)
-        elif score2 == score3 and score2 > score1 and score2 > score4:
-            df.at[i, "c_call"] = str(key1) + "," + str(key3)
-        elif score2 == score4 and score2 > score1 and score2 > score3:
-            df.at[i, "c_call"] = str(key2) + "," + str(key4)
-        elif score3 == score4 and score3 > score1 and score3 > score2:
-            df.at[i, "c_call"] = str(key3) + "," + str(key4)
-        elif score1 == score2 == score3 and score1 > score4:
-            df.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key3)
-        elif score1 == score2 == score4 and score1 > score3:
-            df.at[i, "c_call"] = str(key1) + "," + str(key2) + "," + str(key4)
-        elif score1 == score3 == score4 and score1 > score2:
-            df.at[i, "c_call"] = str(key1) + "," + str(key3) + "," + str(key4)
-        elif score2 == score3 == score4 and score2 > score1:
-            df.at[i, "c_call"] = str(key2) + "," + str(key3) + "," + str(key4)
+        scores = {
+            key: aligner.align(seq, dictionary[key]).score for key in dictionary
+        }
+        max_score = max(scores.values())
+        df.at[i, "c_call"] = ",".join(
+            key for key, score in scores.items() if score == max_score
+        )
 
     def _correct_c_call(
         data: pd.DataFrame,
+        org: Literal["human", "mouse"] = "human",
         primers_dict: dict[str, dict[str, str]] | None = None,
     ) -> pd.DataFrame:
         """Pairwise alignment for c genes.
@@ -607,57 +498,52 @@ def assign_isotype(
         """
         dat = data.copy()
         if primers_dict is None:
-            primer_dict = {
-                "IGHG": {
-                    "IGHG1": "GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCCTCCAAGAGCACCTCTGGGGGCACAGCGGCCCTGGGC",
-                    "IGHG2": "GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCGGCCCTGGGC",
-                    "IGHG3": "GCTTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCTGGGGGCACAGCGGCCCTGGGC",
-                    "IGHG4": "GCTTCCACCAAGGGCCCATCCGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCCGCCCTGGGC",
-                },
-                "IGHA": {
-                    "IGHA1": "GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCTGCAGCACCCAGCCAGATGGGAACGTGGTCATCGCCTGC",
-                    "IGHA2": "GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC",
-                },
-                "IGLC7": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
-                    "TGTCTCATAA",
-                    "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
-                    "GTGTCTCGTAA",
-                },
-                "IGLC3": {
-                    "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
-                    "TGTCTCATAA",
-                    "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
-                    "GTGTCTCATAA",
-                },
-                "IGLC6": {
-                    "IGLC": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA",
-                    "IGLC6": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA",
-                },
-            }
+            if org == "human":
+                primer_dict = {
+                    "IGHG": {
+                        "IGHG1": "GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCCTCCAAGAGCACCTCTGGGGGCACAGCGGCCCTGGGC",
+                        "IGHG2": "GCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCGGCCCTGGGC",
+                        "IGHG3": "GCTTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCTGGGGGCACAGCGGCCCTGGGC",
+                        "IGHG4": "GCTTCCACCAAGGGCCCATCCGTCTTCCCCCTGGCGCCCTGCTCCAGGAGCACCTCCGAGAGCACAGCCGCCCTGGGC",
+                    },
+                    "IGHA": {
+                        "IGHA1": "GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCTGCAGCACCCAGCCAGATGGGAACGTGGTCATCGCCTGC",
+                        "IGHA2": "GCATCCCCGACCAGCCCCAAGGTCTTCCCGCTGAGCCTCGACAGCACCCCCCAAGATGGGAACGTGGTCGTCGCATGC",
+                    },
+                    "IGLC7": {
+                        "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
+                        "TGTCTCATAA",
+                        "IGLC7": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
+                        "GTGTCTCGTAA",
+                    },
+                    "IGLC3": {
+                        "IGLC": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTG"
+                        "TGTCTCATAA",
+                        "IGLC3": "GTCAGCCCAAGGCTGCCCCCTCGGTCACTCTGTTCCCACCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGT"
+                        "GTGTCTCATAA",
+                    },
+                    "IGLC6": {
+                        "IGLC": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGTCTCA",
+                        "IGLC6": "TCGGTCACTCTGTTCCCGCCCTCCTCTGAGGAGCTTCAAGCCAACAAGGCCACACTGGTGTGCCTGA",
+                    },
+                }
+            else:
+                primer_dict = {
+                    "IGHG2": {
+                        "IGHG2A": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGATACAACTGGC",
+                        "IGHG2B": "GCCAAAACAACACCCCCATCAGTCTATCCACTGGCCCCTGGGTGTGGAGATACAACTGGT",
+                        "IGHG2C": "GCCAAAACAACAGCCCCATCGGTCTATCCACTGGCCCCTGTGTGTGGAGGTACAACTGGC",
+                    }
+                }
         else:
             primer_dict = primers_dict
 
         for i in dat.index:
-            if (dat.loc[i, "c_call"] == dat.loc[i, "c_call"]) & (
-                dat.loc[i, "c_call"] is not None
-            ):
-                for k in primer_dict:
+            if pd.notnull(dat.loc[i, "c_call"]):
+                for k, genes in primer_dict.items():
                     if k in dat.loc[i, "c_call"]:
-                        if len(primer_dict[k]) == 2:
-                            two_gene_correction(dat, i, primer_dict[k])
-                        elif len(primer_dict[k]) == 3:
-                            three_gene_correction(dat, i, primer_dict[k])
-                        elif len(primer_dict[k]) == 4:
-                            four_gene_correction(dat, i, primer_dict[k])
+                        gene_correction(dat, i, genes)
         return dat
-
-    # main function from here
-    # format_dict = {
-    #     "changeo": "_igblast_db-pass",
-    #     "blast": "_igblast_db-pass",
-    #     "airr": "_igblast_gap",
-    # }
 
     filePath = check_filepath(
         fasta, filename_prefix=filename_prefix, ends_with=".fasta"
@@ -716,7 +602,7 @@ def assign_isotype(
     logg.info("Loading 10X annotations \n")
     if _10xfile is not None:
         dat_10x = read_10x_vdj(_10xfile)
-        res_10x = pd.DataFrame(dat_10x.data["c_call"])
+        res_10x = pd.DataFrame(dat_10x.data["c_call"].replace("", "None"))
     else:  # pragma: no cover
         res_10x = pd.DataFrame(dat["c_call"])
         res_10x["c_call"] = "None"
@@ -731,7 +617,7 @@ def assign_isotype(
         "c_identity",
     ]:
         dat[col] = pd.Series(blast_out[col])
-    res_blast = pd.DataFrame(dat["c_call"])
+    res_blast = pd.DataFrame(dat["c_call"].replace("", "None"))
     res_blast = res_blast.fillna(value="None")
     res_10x_sum = pd.DataFrame(
         res_10x["c_call"].value_counts(normalize=True) * 100
@@ -751,8 +637,8 @@ def assign_isotype(
         correct_c_call
     ):  # TODO: figure out if i need to set up a None correction?
         logg.info("Correcting C calls \n")
-        dat = _correct_c_call(dat, primers_dict=correction_dict)
-        res_corrected = pd.DataFrame(dat["c_call"])
+        dat = _correct_c_call(dat, primers_dict=correction_dict, org=org)
+        res_corrected = pd.DataFrame(dat["c_call"].replace("", "None"))
         res_corrected = res_corrected.fillna(value="None")
         res_corrected_sum = pd.DataFrame(
             res_corrected["c_call"].value_counts(normalize=True) * 100
@@ -826,11 +712,8 @@ def assign_isotype(
         if save_plot:
             _file3 = filePath.parent / "assign_isotype.pdf"
             save_as_pdf_pages([p], filename=_file3, verbose=False)
-            if show_plot:  # pragma: no cover
-                print(p)
-        else:  # pragma: no cover
-            if show_plot:  # pragma: no cover
-                print(p)
+        if show_plot:  # pragma: no cover
+            p.show()
     # move and rename
     move_to_tmp(fasta, filename_prefix)
     make_all(fasta, filename_prefix, loci="ig")
@@ -1873,11 +1756,8 @@ def reassign_alleles(
                         out_dir / (out_dir.stem + "_reassign_alleles.pdf")
                     )
                     save_as_pdf_pages([p], filename=savefile, verbose=False)
-                    if show_plot:
-                        print(p)
-                else:
-                    if show_plot:
-                        print(p)
+                if show_plot:
+                    p.show()
             except:
                 logg.info("Error in plotting encountered. Skipping.")
                 pass
@@ -2939,7 +2819,7 @@ def calculate_threshold(
         )
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
-        print(p)
+        p.show()
     else:
         logg.info(
             "Automatic Threshold : "

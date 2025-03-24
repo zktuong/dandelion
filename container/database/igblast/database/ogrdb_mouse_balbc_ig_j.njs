@@ -6,7 +6,7 @@
   "description": "database/igblast/fasta/ogrdb_mouse_balbc_ig_j.fasta",
   "number-of-letters": 894,
   "number-of-sequences": 22,
-  "last-updated": "2024-01-05T19:49:00",
+  "last-updated": "2025-03-24T15:35:00",
   "number-of-volumes": 1,
   "bytes-total": 51928,
   "bytes-to-cache": 656,

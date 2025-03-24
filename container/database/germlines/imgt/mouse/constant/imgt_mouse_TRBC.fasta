@@ -111,33 +111,3 @@ gcatcctatcatcagggggttctgtctgcaaccatcctctatgagatcctactggggaag
 gccaccctatatgctgtgctggtcagtgtcctggtgctgatggccat
 >M28766|TRBC2*01|Mus spretus_SPE|F|EX4|g,77..94|19 nt|1|+1| | | |19+0=19| | |
 ggtcaagaaaaaaaattcc
->IMGT000023|TRBC1*01|Mustela putorius furo_sable|F|EX1|g,206503..206891|390 nt|1|+1|-1| | |390+0=390| | |
-gagaatctggaaaaggtcaaacctcccacggtcacagtgtttgaaccgtcagaagcagag
-acctcccgaacccagaaggccacactcgtgtgcctggccaccggcttttaccccgaccac
-gtggagctgagctggtgggtgaatgggaaggaagtccagaatggggtcagcacggaccct
-cagccctacaaggagcggctggatgagaatgactccagctactgcctgagcagccggctg
-agggtgtcctctgccttctggcacaaccctcgcaaccactttcgctgccaagtccagttc
-cacgggctcggggacaatgacgagtggcagaacagccaacggaccaaacccgtcacccag
-aacatcagtgccgaggcctggggcagagca
->IMGT000023|TRBC1*01|Mustela putorius furo_sable|F|EX2|g,207430..207446|18 nt|1|+1|-1| | |18+0=18| | |
-gactgtggcttcacttcg
->IMGT000023|TRBC1*01|Mustela putorius furo_sable|F|EX3|g,207597..207703|108 nt|1|+1| | | |108+0=108| | |
-gtgtcctatcagcagggcatcctgtctgccaccatcctctatgagatcctgctggggaag
-gccaccctgtacgctgtgctggtcggtgccctggtgctgatggccaag
->IMGT000023|TRBC1*01|Mustela putorius furo_sable|F|EX4|208019..208036|18 nt|1| | | | |18+0=18| | |
-gtcaggagaaagggttcc
->IMGT000023|TRBC2*01|Mustela putorius furo_sable|F|EX1|g,215548..215936|390 nt|1|+1|-1| | |390+0=390| | |
-gagaatctggaaaaggtcaaacctcccacggtcacagtgtttgaaccgtcagaagcagag
-acctcccgaacccagaaggccacactcgtgtgcctggccaccggcttttaccccgaccac
-gtggagctgagctggtgggtgaatgggaaggaagtccagaatggggtcagcacggaccct
-cagccctacaaggagcggctggatgagaatgactccagctactgcctgagcagccggctg
-agggtgtcctctgccttctggcacaaccctcgcaaccactttcgctgccaagtccagttc
-cacgggctcggggacaatgacgagtggcagaacagccaacggaccaaacccgtcacccag
-aacatcagtgccgaggcctggggcagagca
->IMGT000023|TRBC2*01|Mustela putorius furo_sable|F|EX2|g,216475..216491|18 nt|1|+1|-1| | |18+0=18| | |
-gactgtggcttcacttcg
->IMGT000023|TRBC2*01|Mustela putorius furo_sable|F|EX3|g,216642..216748|108 nt|1|+1| | | |108+0=108| | |
-gtgtcctatcagcagggcatcctgtctgccaccatcctctatgagatcctgctggggaag
-gccaccctgtacgccctgctggtcggtgccctggtgctgatggccaag
->IMGT000023|TRBC2*01|Mustela putorius furo_sable|F|EX4|217021..217038|18 nt|1| | | | |18+0=18| | |
-atcaagagaaagggttcc

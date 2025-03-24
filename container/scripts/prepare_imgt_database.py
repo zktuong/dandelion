@@ -6,11 +6,10 @@ import re
 import shutil
 import subprocess
 import sys
-import tarfile
 
 from datetime import datetime
 from pathlib import Path
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlopen
 
 from utils import Tree, fasta_iterator, write_fasta
 
@@ -51,7 +50,9 @@ def copy_db_from_igblast(
         Location of igblast database folder, by default None.
     """
     if igblast_loc is None:
-        lib_path = Path(sys.executable).parent.parent / "share" / "igblast"
+        lib_path = (
+            Path(sys.executable).parent.parent / "share" / "igblast"
+        )  # if installed with conda/mamba
     else:
         lib_path = Path(igblast_loc)
     for folder in ["optional_file", "internal_data"]:
@@ -209,7 +210,7 @@ def download_bcr_constant_and_process(
     if file_name.stat().st_size != 0:
         fh = open(file_name)
         for header, sequence in fasta_iterator(fh):
-            if not re.search("\\/|P", header):
+            if header.split("|")[3] != "P":  # keep only functional alleles
                 if len(sequence) >= 150:  # remove short sequences
                     seqs[header.split("|")[1].rstrip()] = sequence.upper()
         fh.close()

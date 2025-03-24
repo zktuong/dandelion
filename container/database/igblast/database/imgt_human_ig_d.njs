@@ -6,7 +6,7 @@
   "description": "database/igblast/fasta/imgt_human_ig_d.fasta",
   "number-of-letters": 1161,
   "number-of-sequences": 47,
-  "last-updated": "2024-01-05T13:30:00",
+  "last-updated": "2025-03-24T15:29:00",
   "number-of-volumes": 1,
   "bytes-total": 54528,
   "bytes-to-cache": 1020,

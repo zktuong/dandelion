@@ -23,7 +23,7 @@ dependencies:
   - r-shazam
   - r-airr
   - r-alakazam
-  - igblast
+  # - igblast
   - blast
   - pip:
       - scanpy>=1.7.0

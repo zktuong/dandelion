@@ -18,18 +18,17 @@ acaactggttcgactcctggggccaaggaaccctggtcaccgtctcctcag
 acaactggttcgacccctggggccagggaaccctggtcaccgtctcctcag
 >IMGT000158|IGHJ5*03|Homo_sapiens|P|J-REGION|881967..882017|51 nt|3| | | | |51+0=51| | |
 ccaactggttcgacccctggggccagggaaccctggtcgctgtctcctcag
+>IMGT000207|IGHJ5*04|Homo_sapiens|F|J-REGION|775032..775082|51 nt|3| | || |51+0=51| | |
+acaactggttcgacccctggggccagggaaccctggtctccgtctcctcag
 >J00256|IGHJ6*01|Homo_sapiens|F|J-REGION|2947..3009|63 nt|3| | | | |63+0=63| | |
 attactactactactacggtatggacgtctgggggcaagggaccacggtcaccgtctcct
 cag
 >M25625|IGHJ6*02|Homo_sapiens|F|J-REGION|1480..1542|63 nt|3| | | | |63+0=63| | |
 attactactactactacggtatggacgtctggggccaagggaccacggtcaccgtctcct
 cag
->BK063799|IGHJ6*03|Homo_sapiens|F|J-REGION|1016585..1016647|63 nt|3| | | | |63+0=63| | |
+>M63030|IGHJ6*03|Homo_sapiens|F|J-REGION|58..120|63 nt|3| | || |63+0=63| | |
 attactactactactactacatggacgtctggggcaaagggaccacggtcaccgtctcct
 cag
 >AJ879487|IGHJ6*04|Homo_sapiens|F|J-REGION|39..101|63 nt|3| | | | |63+0=63| | |
 attactactactactacggtatggacgtctggggcaaagggaccacggtcaccgtctcct
-cag
->IMGT000158|IGHJ6*05|Homo_sapiens|F|J-REGION|882573..882635|63 nt|3| | | | |63+0=63| | |
-atcactactactactgctgcatggacgtctggggcaaagggaccacggtcaccgtcgcct
 cag
