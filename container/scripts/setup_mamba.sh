@@ -26,5 +26,6 @@ curl -L -O "ftp://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/ncbi
 tar -xzvf ncbi-igblast-$latest_version-x64-linux.tar.gz
 mv ncbi-igblast-$latest_version /share/ncbi-igblast-$latest_version
 rm ncbi-igblast-$latest_version-x64-linux.tar.gz
-echo "export PATH=/share/ncbi-igblast-$latest_version/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
-echo "export IGBLAST_VERSION=$latest_version" | tee -a $SINGULARITY_ENVIRONMENT
+echo "export PATH=/share/ncbi-igblast-$latest_version/bin:$PATH" >/etc/profile.d/igblast.sh
+echo "export IGBLAST_VERSION=$latest_version" >>/etc/profile.d/igblast.sh
+chmod +x /etc/profile.d/igblast.sh
