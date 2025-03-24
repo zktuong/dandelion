@@ -38,5 +38,6 @@ From: ubuntu:latest
 %test
     ls -ltR /share/database
     which blastn
+    which igblastn
     mamba list
     pytest -p no:cacheprovider /tests -W ignore::DeprecationWarning -W ignore::PendingDeprecationWarning -W ignore::FutureWarning

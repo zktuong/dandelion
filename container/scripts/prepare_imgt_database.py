@@ -6,11 +6,11 @@ import re
 import shutil
 import subprocess
 import sys
-import tarfile
+# import tarfile
 
 from datetime import datetime
 from pathlib import Path
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlopen # , urlretrieve
 
 from utils import Tree, fasta_iterator, write_fasta
 
@@ -51,7 +51,8 @@ def copy_db_from_igblast(
         Location of igblast database folder, by default None.
     """
     if igblast_loc is None:
-        lib_path = Path(sys.executable).parent.parent / "share" / "igblast"
+        # lib_path = Path(sys.executable).parent.parent / "share" / "igblast" # for conda/mamba
+        lib_path = Path(shutil.which("igblastn")).parent.parent
     else:
         lib_path = Path(igblast_loc)
     for folder in ["optional_file", "internal_data"]:
@@ -513,9 +514,9 @@ def main():
             res = subprocess.run(cmd, stdout=subprocess.PIPE)
             logging.info(res.stdout.decode("utf-8"))
     # copying igblast internal data to igblast folder
-    # copy_db_from_igblast(
-    # out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
-    # )
+    copy_db_from_igblast(
+    out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
+    )
     # download for blast
     for species, query in species_dict.items():
         logging.info(
