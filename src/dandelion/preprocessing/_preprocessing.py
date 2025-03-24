@@ -469,9 +469,13 @@ def assign_isotype(
     def gene_correction(df: pd.DataFrame, i: str, dictionary: dict[str, str]):
         """Generalized pairwise alignment for multiple genes."""
         seq = df.loc[i, "c_sequence_alignment"].replace("-", "")
-        scores = {key: aligner.align(seq, dictionary[key]).score for key in dictionary}
+        scores = {
+            key: aligner.align(seq, dictionary[key]).score for key in dictionary
+        }
         max_score = max(scores.values())
-        df.at[i, "c_call"] = ",".join(key for key, score in scores.items() if score == max_score)
+        df.at[i, "c_call"] = ",".join(
+            key for key, score in scores.items() if score == max_score
+        )
 
     def _correct_c_call(
         data: pd.DataFrame,

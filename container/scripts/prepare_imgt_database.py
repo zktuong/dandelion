@@ -209,7 +209,7 @@ def download_bcr_constant_and_process(
     if file_name.stat().st_size != 0:
         fh = open(file_name)
         for header, sequence in fasta_iterator(fh):
-            if header.split("|")[3] != "P": # keep only functional alleles
+            if header.split("|")[3] != "P":  # keep only functional alleles
                 if len(sequence) >= 150:  # remove short sequences
                     seqs[header.split("|")[1].rstrip()] = sequence.upper()
         fh.close()
@@ -514,7 +514,7 @@ def main():
             logging.info(res.stdout.decode("utf-8"))
     # copying igblast internal data to igblast folder
     # copy_db_from_igblast(
-        # out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
+    # out_dir=out_dir / "igblast", igblast_loc=args.igblast_dir
     # )
     # download for blast
     for species, query in species_dict.items():
