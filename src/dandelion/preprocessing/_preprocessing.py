@@ -708,11 +708,8 @@ def assign_isotype(
         if save_plot:
             _file3 = filePath.parent / "assign_isotype.pdf"
             save_as_pdf_pages([p], filename=_file3, verbose=False)
-            if show_plot:  # pragma: no cover
-                print(p)
-        else:  # pragma: no cover
-            if show_plot:  # pragma: no cover
-                print(p)
+        if show_plot:  # pragma: no cover
+            p.show()
     # move and rename
     move_to_tmp(fasta, filename_prefix)
     make_all(fasta, filename_prefix, loci="ig")
@@ -1755,11 +1752,8 @@ def reassign_alleles(
                         out_dir / (out_dir.stem + "_reassign_alleles.pdf")
                     )
                     save_as_pdf_pages([p], filename=savefile, verbose=False)
-                    if show_plot:
-                        print(p)
-                else:
-                    if show_plot:
-                        print(p)
+                if show_plot:
+                    p.show()
             except:
                 logg.info("Error in plotting encountered. Skipping.")
                 pass
@@ -2821,7 +2815,7 @@ def calculate_threshold(
         )
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
-        print(p)
+        p.show()
     else:
         logg.info(
             "Automatic Threshold : "
