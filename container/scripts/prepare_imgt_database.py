@@ -7,11 +7,9 @@ import shutil
 import subprocess
 import sys
 
-# import tarfile
-
 from datetime import datetime
 from pathlib import Path
-from urllib.request import urlopen  # , urlretrieve
+from urllib.request import urlopen
 
 from utils import Tree, fasta_iterator, write_fasta
 

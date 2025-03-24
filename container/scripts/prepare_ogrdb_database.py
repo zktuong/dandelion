@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import subprocess
 import sys
 
@@ -30,11 +29,6 @@ def parse_args():
         "--outdir",
         default="./database",
         help="Output directory for downloaded files. Defaults to current directory.",
-    )
-    parser.add_argument(
-        "--igblast_dir",
-        default=None,
-        help="Igblast directory if not downloaded through conda/mamba. Defaults to None.",
     )
     parser.add_argument(
         "--makeblastdb_bin",
