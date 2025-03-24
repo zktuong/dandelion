@@ -21,12 +21,12 @@ From: ubuntu:latest
     # Setup and install dependencies
     . /share/setup_mamba.sh
     # Download and setup reference databases
-    source /etc/profile.d/igblast.sh # so i can get the right igblast version
+    . /etc/profile.d/igblast.sh # so i can get the right igblast version
     python /share/prepare_imgt_database.py --outdir /share/database --igblast_dir /share/ncbi-igblast-$IGBLAST_VERSION
     python /share/prepare_ogrdb_database.py --outdir /share/database
 
 %environment
-    source /etc/profile.d/igblast.sh
+    . /etc/profile.d/igblast.sh
     export GERMLINE=/share/database/germlines/
     export IGDATA=/share/database/igblast/
     export BLASTDB=/share/database/blast/
