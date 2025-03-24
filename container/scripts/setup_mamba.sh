@@ -24,6 +24,7 @@ URL="https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/"
 latest_version=$(curl -s $URL | grep -oE 'igblast-[0-9]+\.[0-9]+\.[0-9]+' | head -1 | awk -F'-' '{print $2}')
 curl -L -O "ftp://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/ncbi-igblast-$latest_version-x64-linux.tar.gz"
 tar -xzvf ncbi-igblast-$latest_version-x64-linux.tar.gz
+mv ncbi-igblast-$latest_version /share/ncbi-igblast-$latest_version
 rm ncbi-igblast-$latest_version-x64-linux.tar.gz
-echo "export PATH=/share/ncbi-igblast-$IGBLASTV/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
+echo "export PATH=/share/ncbi-igblast-$latest_version/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
 echo "export IGBLAST_VERSION=$latest_version" | tee -a $SINGULARITY_ENVIRONMENT
