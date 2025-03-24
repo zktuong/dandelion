@@ -19,3 +19,11 @@ chmod +x /share/changeo_clonotypes.py
 mamba create -n sc-dandelion-container
 mamba env update --name sc-dandelion-container -f environment.yml
 mamba activate sc-dandelion-container
+# Get igblast
+URL="https://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/"
+latest_version=$(curl -s $URL | grep -oE 'igblast-[0-9]+\.[0-9]+\.[0-9]+' | head -1 | awk -F'-' '{print $2}')
+curl -L -O "ftp://ftp.ncbi.nih.gov/blast/executables/igblast/release/LATEST/ncbi-igblast-$latest_version-x64-linux.tar.gz"
+tar -xzvf ncbi-igblast-$latest_version-x64-linux.tar.gz
+rm ncbi-igblast-$latest_version-x64-linux.tar.gz
+echo "export PATH=/share/ncbi-igblast-$IGBLASTV/bin:$PATH" | tee -a $SINGULARITY_ENVIRONMENT
+echo "export IGBLAST_VERSION=$latest_version" | tee -a $SINGULARITY_ENVIRONMENT

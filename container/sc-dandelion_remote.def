@@ -28,6 +28,7 @@ From: ubuntu:latest
     export GERMLINE=/share/database/germlines/
     export IGDATA=/share/database/igblast/
     export BLASTDB=/share/database/blast/
+    export PATH=/share/ncbi-igblast-$IGBLAST_VERSION/bin:$PATH
 
 %runscript
     alias dandelion-preprocess='/share/dandelion_preprocess.py'
