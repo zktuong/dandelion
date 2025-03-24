@@ -21,7 +21,7 @@ From: ubuntu:latest
     # Setup and install dependencies
     . /share/setup_mamba.sh
     # Download and setup reference databases
-    python /share/prepare_imgt_database.py --outdir /share/database
+    python /share/prepare_imgt_database.py --outdir /share/database --igblast_dir /share/ncbi-igblast-$IGBLAST_VERSION
     python /share/prepare_ogrdb_database.py --outdir /share/database
 
 %environment
