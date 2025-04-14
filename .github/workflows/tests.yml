@@ -129,7 +129,7 @@ jobs:
         run: |
           pip install -e ".[scirpy]"
           pip install palantir
-          pip install git+https://github.com/emdann/milopy.git
+          pip install pertpy
 
       - name: Test if R dependencies are installed properly
         run: |
