@@ -100,10 +100,11 @@ jobs:
             shazam
             alakazam
             tigger
+            edgeR
 
       - name: Install Dandelion
         run: |
-          pip install git+https://github.com/emdann/milopy.git
+          pip install pertpy
           pip install palantir
           pip install ".[scirpy]"
 

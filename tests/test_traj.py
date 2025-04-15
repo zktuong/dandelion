@@ -13,10 +13,10 @@ FILE = "demo-pseudobulk.h5ad"
 FNAME = "ftp://ftp.sanger.ac.uk/pub/users/kp9/" + FILE
 
 
-@pytest.mark.skipif(
-    sys.platform == "darwin",
-    reason="macos CI stalls.",
-)
+# @pytest.mark.skipif(
+#     sys.platform == "darwin",
+#     reason="macos CI stalls.",
+# )
 @pytest.mark.usefixtures("airr_reannotated", "dummy_adata")
 def test_setup(airr_reannotated, dummy_adata):
     vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
@@ -24,20 +24,21 @@ def test_setup(airr_reannotated, dummy_adata):
     cdata = ddl.tl.setup_vdj_pseudobulk(adata, mode=None)
 
 
-@pytest.mark.skipif(
-    sys.platform == "darwin",
-    reason="macos CI stalls.",
-)
+# @pytest.mark.skipif(
+#     sys.platform == "darwin",
+#     reason="macos CI stalls.",
+# )
 @patch("matplotlib.pyplot.show")
 def test_trajectory(mock_show):
     """test_workflow"""
-    import milopy.core as milo
+    import pertpy as pt  # see issue https://github.com/emdann/milopy/issues/54
     import palantir
 
     urllib.request.urlretrieve(FNAME, FILE)
     adata = sc.read(FILE)
     adata = ddl.tl.setup_vdj_pseudobulk(adata)
     sc.pp.neighbors(adata, use_rep="X_scvi", n_neighbors=50)
+    milo = pt.tl.Milo()
     milo.make_nhoods(adata)
     sc.tl.umap(adata)
     pb_adata = ddl.tl.vdj_pseudobulk(
@@ -76,10 +77,10 @@ def test_trajectory(mock_show):
     )
 
 
-@pytest.mark.skipif(
-    sys.platform == "darwin",
-    reason="macos CI stalls.",
-)
+# @pytest.mark.skipif(
+#     sys.platform == "darwin",
+#     reason="macos CI stalls.",
+# )
 def test_trajectory_setup():
     """test_workflow with differen defaults"""
     adata = sc.read(FILE)
