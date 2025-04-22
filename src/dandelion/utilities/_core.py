@@ -1310,7 +1310,7 @@ class Dandelion:
             if len(vdjlengths) > 0:
                 self.update_metadata(
                     retrieve=vdjlengths,
-                    retrieve_mode="split and sum",
+                    retrieve_mode="split and average",
                     **kwargs,
                 )
             if len(seqinfo) > 0:
@@ -1336,7 +1336,7 @@ class Dandelion:
             if len(vdjlengths) > 0:
                 self.update_metadata(
                     retrieve=vdjlengths,
-                    retrieve_mode="split and sum",
+                    retrieve_mode="split and average",
                     **kwargs,
                 )
         if option == "mutations and cdr3 lengths":
@@ -1352,7 +1352,7 @@ class Dandelion:
             if len(vdjlengths) > 0:
                 self.update_metadata(
                     retrieve=vdjlengths,
-                    retrieve_mode="split and sum",
+                    retrieve_mode="split and average",
                     **kwargs,
                 )
 
