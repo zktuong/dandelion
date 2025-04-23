@@ -21,7 +21,7 @@ def test_generic_check(airr_generic):
     tmp2 = ddl.pp.check_contigs(tmp, productive_only=False, library_type="ig")
     assert tmp2.metadata.shape[0] == 25
     assert tmp2.data.shape[0] != tmp.data.shape[0]
-    assert tmp2.data.shape[0] == 65
+    assert tmp2.data.shape[0] == 58  # 65
 
     tmp2 = ddl.pp.check_contigs(tmp)
     assert tmp2.metadata.shape[0] == 43
@@ -47,7 +47,7 @@ def test_check_keep_extra(airr_generic):
     assert tmp3.metadata.shape[0] == 43
     assert tmp2.data.shape[0] != tmp.data.shape[0]
     assert tmp3.data.shape[0] == tmp.data.shape[0]
-    assert tmp3.data.extra.value_counts()["T"] == 14
+    assert tmp3.data.extra.value_counts()["T"] == 16  # 14
 
 
 @pytest.mark.usefixtures("airr_generic")
@@ -62,5 +62,5 @@ def test_check_remove_ambiguous(airr_generic):
     assert tmp2.data.shape[0] != tmp.data.shape[0]
     assert tmp3.data.shape[0] != tmp2.data.shape[0]
     assert tmp2.data.ambiguous.value_counts()["T"] == 37
-    assert tmp2.data.ambiguous.value_counts()["F"] == 79
+    assert tmp2.data.ambiguous.value_counts()["F"] == 77  # 79
     assert all(tmp3.data.ambiguous == "F")

@@ -5634,7 +5634,9 @@ class MarkAmbiguousContigs:
                 if len(ambiguous_vdj) > 0:
                     for a in ambiguous_vdj:
                         self.ambiguous_contigs.append(a)
-
+            else:
+                data1 = None
+                vdj_p = []
             # VDJ non-productive
             if len(self.Cell[cell]["VDJ"]["NP"]) > 0:
                 data2 = pd.DataFrame(
@@ -5650,20 +5652,40 @@ class MarkAmbiguousContigs:
                     ],
                 )
                 vdj_np = list(data2["sequence_id"])
-                (
-                    data2,
-                    vdj_np,
-                    _,
-                    _,
-                    umi_adjust_vdjnp,
-                    ambi_cont_vdjnp,
-                ) = check_update_same_seq(data2)
-                if len(umi_adjust_vdjnp) > 0:
-                    self.umi_adjustment.update(umi_adjust_vdjnp)
-                if len(ambi_cont_vdjnp) > 0:
-                    for avdj in ambi_cont_vdjnp:
-                        self.ambiguous_contigs.append(avdj)
-
+                if len(vdj_np) > 1:
+                    if "sequence_alignment" in data2:
+                        (
+                            data2,
+                            vdj_np,
+                            _,
+                            _,
+                            umi_adjust_vdjnp,
+                            ambi_cont_vdjnp,
+                        ) = check_update_same_seq(data2)
+                        if len(umi_adjust_vdjnp) > 0:
+                            self.umi_adjustment.update(umi_adjust_vdjnp)
+                        if len(ambi_cont_vdjnp) > 0:
+                            for avdj in ambi_cont_vdjnp:
+                                self.ambiguous_contigs.append(avdj)
+                    if len(vdj_np) > 1:
+                        vdj_ccall_np_count = dict(data2["umi_count"])
+                        vdj_ccall_c_count = dict(data2["consensus_count"])
+                        if len(vdj_ccall_np_count) > 1:
+                            vdj_np, extra_vdjnp, ambiguous_vdjnp = (
+                                check_productive_chain(
+                                    umi_counts=vdj_ccall_np_count,
+                                    consensus_counts=vdj_ccall_c_count,
+                                    umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                    consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                    ntop=ntop_vdj,
+                                )
+                            )
+                            if len(ambiguous_vdjnp) > 0:
+                                for a in ambiguous_vdjnp:
+                                    self.ambiguous_contigs.append(a)
+            else:
+                data2 = None
+                vdj_np = []
             # VJ productive
             if len(self.Cell[cell]["VJ"]["P"]) > 0:
                 data3 = pd.DataFrame(
@@ -5709,7 +5731,9 @@ class MarkAmbiguousContigs:
                 if len(ambiguous_vj) > 0:
                     for a in ambiguous_vj:
                         self.ambiguous_contigs.append(a)
-
+            else:
+                data3 = None
+                vj_p = []
             # VJ non-productive
             if len(self.Cell[cell]["VJ"]["NP"]) > 0:
                 data4 = pd.DataFrame(
@@ -5724,19 +5748,59 @@ class MarkAmbiguousContigs:
                         if isinstance(self.Cell[cell]["VJ"]["NP"][x], dict)
                     ],
                 )
-                (
-                    data4,
-                    vj_np,
-                    _,
-                    _,
-                    umi_adjust_vjnp,
-                    ambi_cont_vjnp,
-                ) = check_update_same_seq(data4)
-                if len(umi_adjust_vjnp) > 0:
-                    self.umi_adjustment.update(umi_adjust_vjnp)
-                if len(ambi_cont_vjnp) > 0:
-                    for avj in ambi_cont_vjnp:
-                        self.ambiguous_contigs.append(avj)
+                vj_np = list(data4["sequence_id"])
+                if len(vj_np) > 1:
+                    if "sequence_alignment" in data4:
+                        (
+                            data4,
+                            vj_np,
+                            _,
+                            _,
+                            umi_adjust_vjnp,
+                            ambi_cont_vjnp,
+                        ) = check_update_same_seq(data4)
+                        if len(umi_adjust_vjnp) > 0:
+                            self.umi_adjustment.update(umi_adjust_vjnp)
+                        if len(ambi_cont_vjnp) > 0:
+                            for avj in ambi_cont_vjnp:
+                                self.ambiguous_contigs.append(avj)
+                    if len(vj_np) > 1:
+                        vj_ccall_np_count = dict(data4["umi_count"])
+                        vj_ccall_c_count = dict(data4["consensus_count"])
+                        if len(vj_ccall_np_count) > 1:
+                            vj_np, extra_vjnp, ambiguous_vjnp = (
+                                check_productive_chain(
+                                    umi_counts=vj_ccall_np_count,
+                                    consensus_counts=vj_ccall_c_count,
+                                    umi_foldchange_cutoff=umi_foldchange_cutoff,
+                                    consensus_foldchange_cutoff=consensus_foldchange_cutoff,
+                                    ntop=ntop_vj,
+                                )
+                            )
+                            if len(ambiguous_vjnp) > 0:
+                                for a in ambiguous_vjnp:
+                                    self.ambiguous_contigs.append(a)
+            else:
+                data4 = None
+                vj_np = []
+            extra_vdj = mark_ntop_contigs(
+                productive_data=data1,
+                nonproductive_data=data2,
+                productive_contig=vdj_p,
+                nonproductive_contig=vdj_np,
+                ntop=ntop_vdj,
+            )
+            for ex in extra_vdj:
+                self.extra_contigs.append(ex)
+            extra_vj = mark_ntop_contigs(
+                productive_data=data3,
+                nonproductive_data=data4,
+                productive_contig=vj_p,
+                nonproductive_contig=vj_np,
+                ntop=ntop_vj,
+            )
+            for ex in extra_vj:
+                self.extra_contigs.append(ex)
 
             if "vdj_p" not in locals():
                 vdj_p = []
@@ -5750,6 +5814,10 @@ class MarkAmbiguousContigs:
                 extra_vdj = []
             if "extra_vj" not in locals():
                 extra_vj = []
+            if "extra_vdjnp" not in locals():
+                extra_vdjnp = []
+            if "extra_vjnp" not in locals():
+                extra_vjnp = []
 
             # check here for bad combinations
             # marking poor bcr quality, defined as those with conflicting assignment of
@@ -5926,8 +5994,74 @@ class MarkAmbiguousContigs:
                         self.ambiguous_contigs.append(evdj)
                     self.extra_contigs.append(evdj)
 
+            if len(extra_vdjnp) > 0:
+                for evdj in extra_vdjnp:
+                    v = v_dict[evdj]
+                    d = d_dict[evdj]
+                    j = j_dict[evdj]
+                    c = c_dict[evdj]
+                    if present(v):
+                        if not re.search("IGH|TR[BD]|TRAV.*/DV", v):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(d):
+                        if not re.search("IGH|TR[BD]", d):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(j):
+                        if not re.search("IGH|TR[BD]", j):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(c):
+                        if not re.search("IGH|TR[BD]", c):
+                            self.ambiguous_contigs.append(evdj)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGH"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(v, j, "TRB"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(v, j, "TRD"):
+                                if not re.search("TRAV.*/DV", v):
+                                    self.ambiguous_contigs.append(evdj)
+                        if present(d):
+                            if not_same_call(d, j, "IGH"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(d, j, "TRB"):
+                                self.ambiguous_contigs.append(evdj)
+                            elif not_same_call(d, j, "TRD"):
+                                self.ambiguous_contigs.append(evdj)
+                    else:
+                        self.ambiguous_contigs.append(evdj)
+                    self.extra_contigs.append(evdj)
+
             if len(extra_vj) > 0:
                 for evj in extra_vj:
+                    v = v_dict[evj]
+                    j = j_dict[evj]
+                    c = c_dict[evj]
+                    if present(v):
+                        if re.search("IGH|TRB", v):
+                            self.ambiguous_contigs.append(evj)
+                    if present(j):
+                        if re.search("IGH|TRB", j):
+                            self.ambiguous_contigs.append(evj)
+                    if present(c):
+                        if re.search("IGH|TRB", c):
+                            self.ambiguous_contigs.append(evj)
+                    if present(j):
+                        if present(v):
+                            if not_same_call(v, j, "IGK"):
+                                self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "IGL"):
+                                self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "TRA"):
+                                if not re.search("TR[AD]", v):
+                                    if not re.search("TRA", j):
+                                        self.ambiguous_contigs.append(evj)
+                            elif not_same_call(v, j, "TRG"):
+                                self.ambiguous_contigs.append(evj)
+                    self.extra_contigs.append(evj)
+
+            if len(extra_vjnp) > 0:
+                for evj in extra_vjnp:
                     v = v_dict[evj]
                     j = j_dict[evj]
                     c = c_dict[evj]
@@ -6496,3 +6630,61 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     df["j_call_" + col] = df[col]
     df = df[["j_call_" + col]]
     airrdata.update(df[["j_call_" + col]])
+
+
+def mark_ntop_contigs(
+    productive_data: pd.DataFrame | None,
+    nonproductive_data: pd.DataFrame | None,
+    productive_contig: list[str],
+    nonproductive_contig: list[str],
+    ntop: int,
+) -> list[str]:
+    """
+    Function to mark the not top contigs based on umi count and productive status.
+
+    Parameters
+    ----------
+    productive_data : pd.DataFrame
+        dataframe containing productive contigs.
+    nonproductive_data : pd.DataFrame
+        dataframe containing nonproductive contigs.
+    productive_contig : list[str]
+        filtered productive contigs.
+    nonproductive_contig : list[str]
+        filtered nonproductive contigs.
+    ntop : int
+        number of top contigs to keep.
+
+    Returns
+    -------
+    list[str]
+        list of additional contigs that are not in the top ntop contigs to mark as extra.
+    """
+    additional_extras = []
+    if productive_data is not None:
+        if nonproductive_data is not None:
+            data_concat = pd.concat([productive_data, nonproductive_data])
+        else:
+            data_concat = productive_data
+    else:
+        if nonproductive_data is not None:
+            data_concat = nonproductive_data
+        else:
+            return additional_extras
+
+    # sort by productive and then by umi count
+    data_concat = data_concat.sort_values(
+        ["productive", "umi_count"], ascending=[False, False]
+    )
+    # keep only the top ntop contigs
+    data_concat = data_concat.head(ntop)
+    # any contigs not found in data_concat are extra
+    if len(productive_contig) > 0:
+        for contig in productive_contig:
+            if contig not in data_concat["sequence_id"]:
+                additional_extras.append(contig)
+    if len(nonproductive_contig) > 0:
+        for contig in nonproductive_contig:
+            if contig not in data_concat["sequence_id"]:
+                additional_extras.append(contig)
+    return additional_extras
