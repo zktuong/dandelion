@@ -27,18 +27,6 @@ from plotnine import (
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import load_data, write_airr, sanitize_data
 
-try:
-    import rpy2
-    from rpy2.robjects.packages import importr
-    from rpy2.rinterface import NULL
-    from rpy2.robjects import pandas2ri, FloatVector
-except:
-    raise (
-        ImportError(
-            "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
-        )
-    )
-
 
 def quantify_mutations(
     data: Dandelion | str,
@@ -83,6 +71,17 @@ def quantify_mutations(
         pandas DataFrame holding mutation information.
     """
     start = logg.info("Quantifying mutations")
+    try:
+        import rpy2
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
 
     sh = importr("shazam")
     base = importr("base")
@@ -397,7 +396,17 @@ def calculate_threshold(
         if automatic thresholding failed.
     """
     start = logg.info("Calculating threshold")
-
+    try:
+        import rpy2
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri, FloatVector
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
     if isinstance(data, Dandelion):
         dat = load_data(data.data)
     elif isinstance(data, pd.DataFrame) or os.path.isfile(str(data)):
