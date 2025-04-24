@@ -136,7 +136,7 @@ Logging
 
 External
 ========
-   
+
 scanpy
 ------
 .. module:: dandelion.external.scanpy
@@ -162,7 +162,7 @@ changeo
    makedb_igblast
    parsedb_heavy
    parsedb_light
-   
+
 tigger
 ~~~~~~
 .. module:: dandelion.external.tigger
@@ -171,7 +171,7 @@ tigger
    :toctree: .
 
    tigger_genotype
-   
+
 
 scoper
 ~~~~~~
