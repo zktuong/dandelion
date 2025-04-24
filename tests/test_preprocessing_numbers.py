@@ -249,7 +249,7 @@ def test_store_germline_references(
         pytest.param(False, "mu_count", int),
     ],
 )
-@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_quantify_mut(
     create_testfolder_number, processed_files, freq, colname, dtype
 ):
@@ -266,7 +266,7 @@ def test_quantify_mut(
     "freq,colname",
     [pytest.param(True, "mu_freq"), pytest.param(False, "mu_count")],
 )
-@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_quantify_mut_2(
     create_testfolder_number, processed_files, freq, colname
 ):

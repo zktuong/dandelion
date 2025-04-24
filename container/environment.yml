@@ -23,6 +23,7 @@ dependencies:
   - r-shazam
   - r-airr
   - r-alakazam
+  - r-scoper
   # - igblast
   - blast
   - pip:
