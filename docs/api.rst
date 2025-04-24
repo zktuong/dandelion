@@ -7,13 +7,11 @@ Preprocessing: `pp`
 
    assign_isotype
    assign_isotypes
-   calculate_threshold
    check_contigs
    create_germlines
    filter_contigs
    format_fasta
    format_fastas
-   quantify_mutations
    reannotate_genes
    reassign_alleles
 
@@ -152,7 +150,7 @@ Wrappers for tools in Immcantation pipeline.
 
 changeo
 ~~~~~~~
-.. module:: dandelion.external.changeo
+.. module:: dandelion.external.immcantation.changeo
 
 .. autosummary::
    :toctree: .
@@ -165,7 +163,7 @@ changeo
 
 tigger
 ~~~~~~
-.. module:: dandelion.external.tigger
+.. module:: dandelion.external.immcantation.tigger
 
 .. autosummary::
    :toctree: .
@@ -173,9 +171,19 @@ tigger
    tigger_genotype
 
 
+shazam
+~~~~~~
+.. module:: dandelion.external.immcantation.shazam
+
+.. autosummary::
+   :toctree: .
+
+   calculate_threshold
+   quantify_mutations
+
 scoper
 ~~~~~~
-.. module:: dandelion.external.scoper
+.. module:: dandelion.external.immcantation.scoper
 
 .. autosummary::
    :toctree: .
