@@ -3,7 +3,7 @@ Preprocessing: `pp`
 .. module:: dandelion.preprocessing
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
 
    assign_isotype
    assign_isotypes
@@ -17,27 +17,12 @@ Preprocessing: `pp`
    reannotate_genes
    reassign_alleles
 
-Preprocessing (external): `pp.external`
-=======================================
-.. module:: dandelion.preprocessing.external
-
-.. autosummary::
-   :toctree: modules
-
-   assigngenes_igblast
-   creategermlines
-   makedb_igblast
-   parsedb_heavy
-   parsedb_light
-   recipe_scanpy_qc
-   tigger_genotype
-
 Tools: `tl`
 ===========
 .. module:: dandelion.tools
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
 
 
    transfer
@@ -67,7 +52,7 @@ Plotting: `pl`
 .. module:: dandelion.plotting
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
 
    barplot
    clone_network
@@ -82,7 +67,7 @@ Utilities: `utl`
 .. module:: dandelion.utilities
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
 
    concat
    load_data
@@ -103,14 +88,24 @@ Dandelion
 .. module:: dandelion
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
+   :recursive:
 
    Dandelion
 
-.. module:: dandelion.Dandelion
+dandelion.Dandelion
+-------------------
+
+.. currentmodule:: dandelion.Dandelion
+
+.. autoclass:: Dandelion
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
+   :recursive:
 
    add_cell_prefix
    add_cell_suffix
@@ -130,11 +125,61 @@ Dandelion
    write_pkl
 
 Logging
-=========
+=======
 .. module:: dandelion.logging
 
 .. autosummary::
-   :toctree: modules
+   :toctree: .
 
    print_header
    print_versions
+
+External
+========
+   
+scanpy
+------
+.. module:: dandelion.external.scanpy
+.. autosummary::
+   :toctree: .
+
+   recipe_scanpy_qc
+
+Immmcantation
+-------------
+
+Wrappers for tools in Immcantation pipeline.
+
+changeo
+~~~~~~~
+.. module:: dandelion.external.changeo
+
+.. autosummary::
+   :toctree: .
+
+   assigngenes_igblast
+   creategermlines
+   makedb_igblast
+   parsedb_heavy
+   parsedb_light
+   
+tigger
+~~~~~~
+.. module:: dandelion.external.tigger
+
+.. autosummary::
+   :toctree: .
+
+   tigger_genotype
+   
+
+scoper
+~~~~~~
+.. module:: dandelion.external.scoper
+
+.. autosummary::
+   :toctree: .
+
+   identical_clones
+   hierarchical_clones
+   spectral_clones

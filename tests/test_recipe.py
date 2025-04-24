@@ -4,10 +4,9 @@ import scanpy as sc
 import requests
 import os
 import pytest
-import sys
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_recipe():
     """test_recipe"""
     try:
@@ -22,19 +21,19 @@ def test_recipe():
         os.system("tar -xzvf filtered_gene_bc_matrices.tar.gz")
         adata = sc.read_10x_mtx("filtered_gene_bc_matrices/hg19")
     _adata = adata.copy()
-    ddl.pp.external.recipe_scanpy_qc(_adata)
+    ddl.pp.recipe_scanpy_qc(_adata)
     assert not _adata.obs["filter_rna"].empty
     _adata = adata.copy()
-    ddl.pp.external.recipe_scanpy_qc(
+    ddl.pp.recipe_scanpy_qc(
         _adata, mito_cutoff=None
     )  # weird segmentation fault in the tests
     assert not _adata.obs["gmm_pct_count_clusters_keep"].empty
     _adata = adata.copy()
-    ddl.pp.external.recipe_scanpy_qc(_adata, min_counts=100, max_counts=20000)
+    ddl.pp.recipe_scanpy_qc(_adata, min_counts=100, max_counts=20000)
     _adata = adata.copy()
-    ddl.pp.external.recipe_scanpy_qc(_adata, min_counts=100)
+    ddl.pp.recipe_scanpy_qc(_adata, min_counts=100)
     _adata = adata.copy()
-    ddl.pp.external.recipe_scanpy_qc(_adata, max_counts=20000)
+    ddl.pp.recipe_scanpy_qc(_adata, max_counts=20000)
 
 
 @pytest.mark.usefixtures("airr_reannotated")

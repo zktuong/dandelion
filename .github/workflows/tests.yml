@@ -124,6 +124,7 @@ jobs:
             shazam
             alakazam
             tigger
+            scoper
             edgeR
 
       - name: Install Dandelion

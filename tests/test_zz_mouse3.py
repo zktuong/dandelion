@@ -97,7 +97,7 @@ def test_checkcontigs(create_testfolder, processed_files, dummy_adata_mouse):
     adata.write_h5ad(f2)
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 @pytest.mark.usefixtures("create_testfolder")
 def test_generate_network_sfdp(create_testfolder):
     """test generate network sfdp"""
