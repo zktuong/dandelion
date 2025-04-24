@@ -27,14 +27,20 @@ def identical_clones(
     summarize_clones: bool = True,
     remove_ambiguous: bool = True,
     remove_extra: bool = True,
-):
+) -> None:
     """
     Clonal assignment using sequence identity partitioning.
+
+    https://scoper.readthedocs.io/en/stable/topics/identicalClones/
 
     This is a wrapper for one of scoper's method to perform clone clustering. From the original description: identicalClones provides a simple sequence identity based partitioning approach for
     inferring clonal relationships in high-throughput Adaptive Immune Receptor Repertoire sequencing (AIRR-seq) data. This approach partitions B or T cell receptor sequences into clonal groups
     based on junction region sequence identity within partitions that share the same V gene, J gene, and junction length, allowing for ambiguous V or J gene annotations.
 
+    see also https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
+
+    Parameters
+    ----------
     vdj_data : Dandelion
         a dandelion object containing the airr data.
     method : Literal["nt", "aa"], optional
@@ -161,14 +167,20 @@ def hierarchical_clones(
     summarize_clones: bool = True,
     remove_ambiguous: bool = True,
     remove_extra: bool = True,
-):
+) -> None:
     """
     Hierarchical clustering approach to clonal assignment.
+
+    https://scoper.readthedocs.io/en/stable/topics/hierarchicalClones/
 
     This is a wrapper for one of scoper's method to perform clone clustering. From the original description: hierarchicalClones provides a hierarchical agglomerative clustering approach
     to infer clonal relationships in high-throughput Adaptive Immune Receptor Repertoire sequencing (AIRR-seq) data. This approach clusters B or T cell receptor sequences based on junction
     region sequence similarity within partitions that share the same V gene, J gene, and junction length, allowing for ambiguous V or J gene annotations.
 
+    see also https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
+
+    Parameters
+    ----------
     vdj_data : Dandelion
         a dandelion object containing the airr data.
     threshold : float
@@ -307,9 +319,11 @@ def spectral_clones(
     summarize_clones: bool = True,
     remove_ambiguous: bool = True,
     remove_extra: bool = True,
-):
+) -> None:
     """
     Spectral clustering method for clonal partitioning.
+
+    https://scoper.readthedocs.io/en/stable/topics/spectralClones/
 
     This is a wrapper for one of scoper's method to perform clone clustering. spectralClones provides an unsupervised spectral clustering approach
     to infer clonal relationships in high-throughput Adaptive Immune Receptor Repertoire sequencing (AIRR-seq) data. This approach clusters B or T
@@ -319,6 +333,10 @@ def spectral_clones(
     As such, we will only implement the default argument were both will be set to `None` (or `NULL` in R). If you want to use this method in its
     full functionality, please run it  separately through R with scoper's tutorial.
 
+    see also https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
+
+    Parameters
+    ----------
     vdj_data : Dandelion
         a dandelion object containing the airr data.
     threshold : float
