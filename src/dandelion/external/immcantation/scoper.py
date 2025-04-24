@@ -1,21 +1,9 @@
 import warnings
 
-try:
-    from rpy2.robjects.packages import importr
-    from rpy2.rinterface import NULL
-    from rpy2.robjects import pandas2ri, r
-except:
-    raise (
-        ImportError(
-            "Unable to initialise R instance. Please run this separately through R with immcantation's tutorials."
-        )
-    )
 from typing import Literal
 
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import load_data
-
-scp = importr("scoper")
 
 
 def identical_clones(
@@ -88,6 +76,17 @@ def identical_clones(
     remove_extra : bool, optional
         if True removes extra contigs flagged by `check_contigs`.
     """
+    try:
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri, r
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with scoper's tutorials."
+            )
+        )
+    scp = importr("scoper")
 
     db = load_data(vdj_data.data)
     pandas2ri.activate()
@@ -217,6 +216,17 @@ def hierarchical_clones(
     remove_extra : bool, optional
         if True removes extra contigs flagged by `check_contigs`.
     """
+    try:
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri, r
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with scoper's tutorials."
+            )
+        )
+    scp = importr("scoper")
 
     db = load_data(vdj_data.data)
     pandas2ri.activate()
@@ -367,6 +377,17 @@ def spectral_clones(
     remove_extra : bool, optional
         if True removes extra contigs flagged by `check_contigs`.
     """
+    try:
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import pandas2ri, r
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with scoper's tutorials."
+            )
+        )
+    scp = importr("scoper")
 
     db = load_data(vdj_data.data)
     pandas2ri.activate()
