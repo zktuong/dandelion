@@ -78,7 +78,7 @@ classifiers = [
 keywords = ["dandelion", "single-cell", "immune", "TCR", "BCR"]
 dependencies = [
   "airr",
-  "setuptools_scm[toml]<8.2.1",
+  "setuptools_scm[toml]<8.3.2",
   "numpy<2.2.5",
   "pandas<2.2.4",
   "changeo<1.3.2",
