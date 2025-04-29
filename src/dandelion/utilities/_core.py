@@ -876,14 +876,7 @@ class Dandelion:
                 else:
                     isotype.append("None")
             tmp_metadata["isotype"] = isotype
-            tmp_metadata["isotype_status"] = [
-                (
-                    "IgM/IgD"
-                    if (i == "IgM|IgD") or (i == "IgD|IgM")
-                    else "Multi" if "|" in i else i
-                )
-                for i in tmp_metadata["isotype"]
-            ]
+            tmp_metadata["isotype_status"] = format_isotype1(tmp_metadata)
 
         vdj_gene_calls = ["v_call", "d_call", "j_call"]
         if collapse_alleles:
@@ -907,11 +900,12 @@ class Dandelion:
                             ]
 
         tmp_metadata["locus_status"] = format_locus(
-            tmp_metadata, productive_only=report_productive_only
+            tmp_metadata, vcall=vcall, productive_only=report_productive_only
         )
         tmp_metadata["chain_status"] = format_chain_status(
             tmp_metadata["locus_status"]
         )
+        tmp_metadata["isotype_status"] = format_isotype2(tmp_metadata)
 
         if "isotype" in tmp_metadata:
             if all(tmp_metadata["isotype"] == "None"):

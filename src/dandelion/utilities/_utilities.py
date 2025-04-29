@@ -878,8 +878,31 @@ def format_call(
     )
 
 
+def format_isotype1(metadata: pd.DataFrame) -> list[str]:
+
+    isotype_status = [
+        (
+            "IgM/IgD"
+            if (i == "IgM|IgD") or (i == "IgD|IgM")
+            else "Multi" if "|" in i else i
+        )
+        for i in metadata["isotype"]
+    ]
+    return isotype_status
+
+
+def format_isotype2(metadata: pd.DataFrame) -> list[str]:
+
+    isotype_status = [
+        x if not re.search("-exception", y) else "Multi"
+        for x, y in zip(metadata["isotype_status"], metadata["chain_status"])
+    ]
+    return isotype_status
+
+
 def format_locus(
     metadata: pd.DataFrame,
+    vcall: str,
     suffix_vdj: str = "_VDJ",
     suffix_vj: str = "_VJ",
     productive_only: bool = True,
@@ -890,6 +913,12 @@ def format_locus(
     constant_1 = dict(metadata["isotype_status"])
     prod_1 = dict(metadata["productive" + suffix_vdj])
     prod_2 = dict(metadata["productive" + suffix_vj])
+
+    # also extract the v/d/j calls
+    v_call_1 = dict(metadata[vcall + suffix_vdj])
+    j_call_1 = dict(metadata["j_call" + suffix_vdj])
+    d_call_1 = dict(metadata["d_call" + suffix_vdj])
+
     locus_dict = {}
     for i in metadata.index:
         if productive_only:
@@ -954,7 +983,44 @@ def format_locus(
             else:
                 if len(loc1x) > 1:
                     if constant_1[i] == "IgM/IgD":
-                        tmp1 = "IgM/IgD"
+                        if len(set(loc1xx)) == 2:
+                            # for BCR e.g. IgM/IgD, also check that the v/d/j calls are the same
+                            v1 = v_call_1[i].split("|")
+                            d1 = d_call_1[i].split("|")
+                            j1 = j_call_1[i].split("|")
+
+                            if productive_only:
+                                v1 = [
+                                    vv
+                                    for vv, pp in zip(v1, prod_1[i].split("|"))
+                                    if pp in TRUES
+                                ]
+                                d1 = [
+                                    dd
+                                    for dd, pp in zip(d1, prod_1[i].split("|"))
+                                    if pp in TRUES
+                                ]
+                                j1 = [
+                                    jj
+                                    for jj, pp in zip(j1, prod_1[i].split("|"))
+                                    if pp in TRUES
+                                ]
+
+                            same_vdj = True
+                            if len(v1) == 2 and len(d1) == 2 and len(j1) == 2:
+                                if not (
+                                    v1[0] == v1[1]
+                                    and d1[0] == d1[1]
+                                    and j1[0] == j1[1]
+                                ):
+                                    same_vdj = False
+                            else:
+                                same_vdj = False
+
+                            if same_vdj:
+                                tmp1 = "Extra VDJ-exception"
+                            else:
+                                tmp1 = "Extra VDJ"
                     elif (all(x in ["TRB", "TRD"] for x in loc1xx)) and (
                         len(list(set(loc1xx))) == 2
                     ):
