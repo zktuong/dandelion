@@ -879,7 +879,7 @@ def format_call(
 
 
 def format_isotype1(metadata: pd.DataFrame) -> list[str]:
-
+    """Quick format isotype."""
     isotype_status = [
         (
             "IgM/IgD"
@@ -892,9 +892,9 @@ def format_isotype1(metadata: pd.DataFrame) -> list[str]:
 
 
 def format_isotype2(metadata: pd.DataFrame) -> list[str]:
-
+    """Format isotype status so that if the chain is called "exception" it is allowed to have the special isotype "IgM/IgD"."""
     isotype_status = [
-        x if not re.search("-exception", y) else "Multi"
+        (x if "exception" in y else ("Multi" if y == "Extra pair" else x))
         for x, y in zip(metadata["isotype_status"], metadata["chain_status"])
     ]
     return isotype_status
@@ -983,44 +983,40 @@ def format_locus(
             else:
                 if len(loc1x) > 1:
                     if constant_1[i] == "IgM/IgD":
-                        if len(set(loc1xx)) == 2:
-                            # for BCR e.g. IgM/IgD, also check that the v/d/j calls are the same
-                            v1 = v_call_1[i].split("|")
-                            d1 = d_call_1[i].split("|")
-                            j1 = j_call_1[i].split("|")
-
-                            if productive_only:
-                                v1 = [
-                                    vv
-                                    for vv, pp in zip(v1, prod_1[i].split("|"))
-                                    if pp in TRUES
-                                ]
-                                d1 = [
-                                    dd
-                                    for dd, pp in zip(d1, prod_1[i].split("|"))
-                                    if pp in TRUES
-                                ]
-                                j1 = [
-                                    jj
-                                    for jj, pp in zip(j1, prod_1[i].split("|"))
-                                    if pp in TRUES
-                                ]
-
-                            same_vdj = True
-                            if len(v1) == 2 and len(d1) == 2 and len(j1) == 2:
-                                if not (
-                                    v1[0] == v1[1]
-                                    and d1[0] == d1[1]
-                                    and j1[0] == j1[1]
-                                ):
-                                    same_vdj = False
-                            else:
+                        # for BCR e.g. IgM/IgD, also check that the v/d/j calls are the same
+                        v1 = v_call_1[i].split("|")
+                        d1 = d_call_1[i].split("|")
+                        j1 = j_call_1[i].split("|")
+                        if productive_only:
+                            v1 = [
+                                vv
+                                for vv, pp in zip(v1, prod_1[i].split("|"))
+                                if pp in TRUES
+                            ]
+                            d1 = [
+                                dd
+                                for dd, pp in zip(d1, prod_1[i].split("|"))
+                                if pp in TRUES
+                            ]
+                            j1 = [
+                                jj
+                                for jj, pp in zip(j1, prod_1[i].split("|"))
+                                if pp in TRUES
+                            ]
+                        same_vdj = True
+                        if len(v1) == 2 and len(d1) == 2 and len(j1) == 2:
+                            if not (
+                                v1[0] == v1[1]
+                                and d1[0] == d1[1]
+                                and j1[0] == j1[1]
+                            ):
                                 same_vdj = False
-
-                            if same_vdj:
-                                tmp1 = "Extra VDJ-exception"
-                            else:
-                                tmp1 = "Extra VDJ"
+                        else:
+                            same_vdj = False
+                        if same_vdj:
+                            tmp1 = "Extra VDJ-exception"
+                        else:
+                            tmp1 = "Extra VDJ"
                     elif (all(x in ["TRB", "TRD"] for x in loc1xx)) and (
                         len(list(set(loc1xx))) == 2
                     ):
@@ -1117,12 +1113,18 @@ def format_chain_status(locus_status):
     for ls in locus_status:
         if ("Orphan" in ls) and (re.search("TRB|IGH|TRD|VDJ", ls)):
             if not re.search("exception", ls):
-                chain_status.append("Orphan VDJ")
+                if re.search("Extra", ls):
+                    chain_status.append("Orphan Extra VDJ")
+                else:
+                    chain_status.append("Orphan VDJ")
             else:
                 chain_status.append("Orphan VDJ-exception")
         elif ("Orphan" in ls) and (re.search("TRA|TRG|IGK|IGL|VJ", ls)):
             if not re.search("exception", ls):
-                chain_status.append("Orphan VJ")
+                if re.search("Extra", ls):
+                    chain_status.append("Orphan Extra VJ")
+                else:
+                    chain_status.append("Orphan VJ")
             else:
                 chain_status.append("Orphan VJ-exception")
         elif re.search("exception|IgM/IgD", ls):
