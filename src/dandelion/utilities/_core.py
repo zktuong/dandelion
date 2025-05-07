@@ -624,9 +624,9 @@ class Dandelion:
 
         meta_ = defaultdict(dict)
         for k, v in init_dict.copy().items():
-            if all_missing(self.data[k]):
-                init_dict.pop(k)
-                continue
+            # if all_missing(self.data[k]):
+            #     init_dict.pop(k)
+            #     continue
             meta_[k] = querier.retrieve(**v)
             if k in [
                 "v_call",
@@ -923,9 +923,9 @@ class Dandelion:
             ref_col="locus_VDJ",
         )
 
-        for tmpm in tmp_metadata:
-            if all_missing2(tmp_metadata[tmpm]):
-                tmp_metadata.drop(tmpm, axis=1, inplace=True)
+        # for tmpm in tmp_metadata:
+        #     if all_missing2(tmp_metadata[tmpm]):
+        #         tmp_metadata.drop(tmpm, axis=1, inplace=True)
 
         tmpxregstat = querier.retrieve(
             query="rearrangement_status", retrieve_mode="split and unique only"
