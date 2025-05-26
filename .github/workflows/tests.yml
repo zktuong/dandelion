@@ -74,11 +74,11 @@ jobs:
         run: |
           brew install cairo pkg-config autoconf automake libtool
 
-      - name: Setup R and Bioconductor
-        uses: grimbough/bioc-actions/setup-bioc@v1
-        id: install-r
-        with:
-          bioc-version: release
+      # - name: Setup R and Bioconductor
+      #   uses: grimbough/bioc-actions/setup-bioc@v1
+      #   id: install-r
+      #   with:
+      #     bioc-version: release
 
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
