@@ -5148,23 +5148,23 @@ class MarkAmbiguousContigs:
             else:
                 data4 = None
                 vj_np = []
-            extra_vdj = mark_ntop_contigs(
+            extra_vdj_ = mark_ntop_contigs(
                 productive_data=data1,
                 nonproductive_data=data2,
                 productive_contig=vdj_p,
                 nonproductive_contig=vdj_np,
                 ntop=ntop_vdj,
             )
-            for ex in extra_vdj:
+            for ex in extra_vdj_:
                 self.extra_contigs.append(ex)
-            extra_vj = mark_ntop_contigs(
+            extra_vj_ = mark_ntop_contigs(
                 productive_data=data3,
                 nonproductive_data=data4,
                 productive_contig=vj_p,
                 nonproductive_contig=vj_np,
                 ntop=ntop_vj,
             )
-            for ex in extra_vj:
+            for ex in extra_vj_:
                 self.extra_contigs.append(ex)
 
             if "vdj_p" not in locals():
