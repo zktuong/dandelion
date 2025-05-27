@@ -74,11 +74,11 @@ jobs:
         run: |
           brew install cairo pkg-config autoconf automake libtool
 
-      - name: Setup R and Bioconductor
-        uses: grimbough/bioc-actions/setup-bioc@v1
-        id: install-r
-        with:
-          bioc-version: release
+      # - name: Setup R and Bioconductor
+      #   uses: grimbough/bioc-actions/setup-bioc@v1
+      #   id: install-r
+      #   with:
+      #     bioc-version: release
 
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
@@ -94,6 +94,13 @@ jobs:
             python=${{ matrix.config.python-version }}
             igblast>=1.17.0
             blast
+            rpy2
+            r-optparse
+            r-shazam
+            r-alakazam
+            r-tigger
+            r-scoper
+            bioconductor-edger
 
       - name: Display Python version
         run: |
@@ -115,17 +122,17 @@ jobs:
         run: |
           igblastn -h
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          cache: true
-          cache-version: ${{ env.cache-version }}
-          packages: |
-            optparse
-            shazam
-            alakazam
-            tigger
-            scoper
-            edgeR
+      # - uses: r-lib/actions/setup-r-dependencies@v2
+      #   with:
+      #     cache: true
+      #     cache-version: ${{ env.cache-version }}
+      #     packages: |
+      #       optparse
+      #       shazam
+      #       alakazam
+      #       tigger
+      #       scoper
+      #       edgeR
 
       - name: Install Dandelion
         run: |

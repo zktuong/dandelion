@@ -4,9 +4,10 @@ import scanpy as sc
 import requests
 import os
 import pytest
+import sys
 
 
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_recipe():
     """test_recipe"""
     try:
