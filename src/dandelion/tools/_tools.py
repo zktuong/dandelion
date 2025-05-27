@@ -186,9 +186,9 @@ def find_clones(
                     verbose=verbose,
                 )
                 # dat_[clone_key].update(pd.Series(dat[clone_key]))
-                for i, row in dat.iterrows():
-                    if i in dat_.index:
-                        dat_.at[i, clone_key] = row[clone_key]
+            for i, row in dat.iterrows():
+                if i in dat_.index:
+                    dat_.at[i, clone_key] = row[clone_key]
 
     # dat_[clone_key].replace('', 'unassigned')
     if os.path.isfile(str(vdj_data)):
