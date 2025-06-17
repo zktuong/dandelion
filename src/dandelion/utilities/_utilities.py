@@ -445,6 +445,9 @@ def sanitize_data_for_saving(
         if col in RearrangementSchema.properties:
             dtype = RearrangementSchema.properties[col]["type"]
             tmp[col] = sanitize_column(tmp[col], dtype)
+        elif col in BOOLEAN_LIKE_COLUMNS:
+            dtype = "boolean"
+            tmp[col] = sanitize_column(tmp[col], dtype)
         else:
             tmp[col] = try_numeric_conversion(tmp[col])
         dtype_dict[col] = get_numpy_dtype(tmp[col])
@@ -468,10 +471,15 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     pd.Series
         The sanitized column with replaced values and appropriate data type.
     """
-    if dtype in ["string", "boolean"]:
+    if dtype == "boolean":
         series = series.apply(lambda x: "" if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
-        return series.astype(str)
+        return series.apply(sanitize_boolean)
+    elif dtype == "string":
+        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        return series.replace(
+            [None, np.nan, "nan", "na", "NaN", ""], ""
+        ).astype(str)
     elif dtype in ["integer", "number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
         return series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
