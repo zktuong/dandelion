@@ -57,6 +57,7 @@ EMPTIES = [
     "",
 ]
 DEFAULT_PREFIX = "all"
+BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
 
 # for compatibility with python>=3.10
 try:
@@ -502,11 +503,38 @@ def try_numeric_conversion(series: pd.Series) -> pd.Series:
         return sanitize_column(series, "string")
 
 
+def sanitize_boolean(value: str | bool) -> str:
+    """
+    Sanitize a boolean-like value to 'T' or 'F'.
+
+    Parameters
+    ----------
+    value : str | bool
+        The value to sanitize.
+
+    Returns
+    -------
+    str
+        'T' for True, 'F' for False, or the original value if not boolean-like.
+    """
+    if isinstance(value, bool):
+        return "T" if value else "F"
+    elif isinstance(value, str):
+        stripped_value = value.strip().lower()
+        if stripped_value in ["true", "t"]:
+            return "T"
+        elif stripped_value in ["false", "f"]:
+            return "F"
+    return value
+
+
 def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
     """Quick sanitize dtypes."""
     data = data.astype("object")
     data = data.infer_objects()
     for d in data:
+        if d in BOOLEAN_LIKE_COLUMNS:
+            data[d] = data[d].apply(sanitize_boolean)
         if d in RearrangementSchema.properties:
             if RearrangementSchema.properties[d]["type"] in [
                 "string",
@@ -517,6 +545,8 @@ def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
                     EMPTIES,
                     "",
                 )
+                if RearrangementSchema.properties[d]["type"] == "boolean":
+                    data[d] = data[d].apply(sanitize_boolean)
                 if RearrangementSchema.properties[d]["type"] == "integer":
                     data[d] = [
                         int(x) if present(x) else ""
