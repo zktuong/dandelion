@@ -105,6 +105,9 @@ def quantify_mutations(
     else:
         dat_ = dat.copy()
 
+    # sanitize before passing to R
+    dat_, _ = sanitize_data_for_saving(dat_)
+
     if sequence_column is None:
         seq_ = "sequence_alignment"
     else:

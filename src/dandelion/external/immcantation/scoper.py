@@ -3,7 +3,11 @@ import warnings
 from typing import Literal
 
 from dandelion.utilities._core import Dandelion
-from dandelion.utilities._utilities import load_data
+from dandelion.utilities._utilities import (
+    load_data,
+    sanitize_data,
+    sanitize_data_for_saving,
+)
 
 
 def identical_clones(
@@ -98,13 +102,16 @@ def identical_clones(
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
+    # sanitize before passing to R
+    db = sanitize_data(db)
     if remove_ambiguous:
         if "ambiguous" in db:
             db = db[db["ambiguous"] == "F"].copy()
     if remove_extra:
         if "extra" in db:
             db = db[db["extra"] == "F"].copy()
-
+    # sanitize before passing to R
+    db, _ = sanitize_data_for_saving(db)
     fields = NULL if fields is None else fields
     cell_id = NULL if cell_id is None else cell_id
     try:
@@ -243,14 +250,15 @@ def hierarchical_clones(
     db = load_data(vdj_data.data)
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
-
+    db = sanitize_data(db)
     if remove_ambiguous:
         if "ambiguous" in db:
             db = db[db["ambiguous"] == "F"].copy()
     if remove_extra:
         if "extra" in db:
             db = db[db["extra"] == "F"].copy()
-
+    # sanitize before passing to R
+    db, _ = sanitize_data_for_saving(db)
     fields = NULL if fields is None else fields
     cell_id = NULL if cell_id is None else cell_id
     try:
@@ -410,14 +418,15 @@ def spectral_clones(
     db = load_data(vdj_data.data)
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
-
+    db = sanitize_data(db)
     if remove_ambiguous:
         if "ambiguous" in db:
             db = db[db["ambiguous"] == "F"].copy()
     if remove_extra:
         if "extra" in db:
             db = db[db["extra"] == "F"].copy()
-
+    # sanitize before passing to R
+    db, _ = sanitize_data_for_saving(db)
     fields = NULL if fields is None else fields
     cell_id = NULL if cell_id is None else cell_id
     threshold = NULL if threshold is None else threshold
