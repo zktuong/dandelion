@@ -25,7 +25,12 @@ from plotnine import (
 )
 
 from dandelion.utilities._core import Dandelion
-from dandelion.utilities._utilities import load_data, write_airr, sanitize_data
+from dandelion.utilities._utilities import (
+    load_data,
+    write_airr,
+    sanitize_data,
+    sanitize_data_for_saving,
+)
 
 
 def quantify_mutations(
@@ -99,6 +104,9 @@ def quantify_mutations(
         dat_ = dat[dat["ambiguous"] == "F"].copy()
     else:
         dat_ = dat.copy()
+
+    # sanitize before passing to R
+    dat_, _ = sanitize_data_for_saving(dat_)
 
     if sequence_column is None:
         seq_ = "sequence_alignment"
@@ -435,7 +443,8 @@ def calculate_threshold(
         subsample_ = NULL
     else:
         subsample_ = subsample
-
+    # sanitize before passing to R
+    dat, _ = sanitize_data_for_saving(dat)
     if mode == "heavy":
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
         try:
@@ -607,30 +616,53 @@ def calculate_threshold(
     if plot:
         options.figure_size = figsize
         if plot_group is None:
-            plot_group = "sample_id"
+            if "sample_id" in dist_ham.columns:
+                plot_group = "sample_id"
+            else:
+                plot_group = None
         else:
             plot_group = plot_group
-
-        p = (
-            ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
-            + theme_bw()
-            + xlab("Grouped Hamming distance")
-            + ylab("Count")
-            + geom_histogram(binwidth=0.01)
-            + geom_vline(
-                xintercept=tr, linetype="dashed", color="blue", size=0.5
+        if plot_group is None:
+            p = (
+                ggplot(dist_ham, aes("dist_nearest"))
+                + theme_bw()
+                + xlab("Grouped Hamming distance")
+                + ylab("Count")
+                + geom_histogram(binwidth=0.01)
+                + geom_vline(
+                    xintercept=tr, linetype="dashed", color="blue", size=0.5
+                )
+                + annotate(
+                    "text",
+                    x=tr + 0.02,
+                    y=10,
+                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                    size=8,
+                    color="Blue",
+                )
+                + theme(legend_position="none")
             )
-            + annotate(
-                "text",
-                x=tr + 0.02,
-                y=10,
-                label="Threshold:\n" + str(np.around(tr, decimals=2)),
-                size=8,
-                color="Blue",
+        else:
+            p = (
+                ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
+                + theme_bw()
+                + xlab("Grouped Hamming distance")
+                + ylab("Count")
+                + geom_histogram(binwidth=0.01)
+                + geom_vline(
+                    xintercept=tr, linetype="dashed", color="blue", size=0.5
+                )
+                + annotate(
+                    "text",
+                    x=tr + 0.02,
+                    y=10,
+                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                    size=8,
+                    color="Blue",
+                )
+                + facet_wrap("~" + str(plot_group), scales="free_y")
+                + theme(legend_position="none")
             )
-            + facet_wrap("~" + str(plot_group), scales="free_y")
-            + theme(legend_position="none")
-        )
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
         p.show()
