@@ -29,6 +29,16 @@ from dandelion.external.anndata._compat import (
     Index,
 )
 
+CHECK_COLS = BOOLEAN_LIKE_COLUMNS + [
+    "rev_comp",
+    "productive",
+    "vj_in_frame",
+    "stop_codon",
+    "complete_vdj",
+    "v_frameshift",
+    "j_frameshift",
+]
+
 
 class Dandelion:
     """`Dandelion` class object."""
@@ -107,6 +117,7 @@ class Dandelion:
             self.n_contigs = self.data.shape[0]
             if metadata is None:
                 if initialize is True:
+                    self._ensure_sanitized_data()
                     self.update_metadata(**kwargs)
                 try:
                     self.n_obs = self.metadata.shape[0]
@@ -235,6 +246,26 @@ class Dandelion:
         """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
+
+    def _ensure_sanitized_data(self):
+        """Ensure that the data is sanitized."""
+        if not self._is_sanitized(self.data):
+            print(
+                "The AIRR data needs to undergo sanitization, apologies for any delays..."
+            )
+            self._data = sanitize_data(self.data)
+
+    def _is_sanitized(self, df):
+        """Check if the data is sanitized."""
+        check = []
+        for col in CHECK_COLS:
+            if col in self.data:
+                # check that in these columns, all values are str 'T' or 'F'
+                if not all(df[col].isin(TRUES + FALSES)):
+                    check.append(False)
+                else:
+                    check.append(True)
+        return True if all(check) else False
 
     def _normalize_indices(self, index: Index) -> tuple[slice, str]:
         """retrieve indices"""
