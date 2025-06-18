@@ -816,6 +816,7 @@ def mask_dj(
 def write_airr(data: pd.DataFrame, save: Path | str) -> None:
     """Save as airr formatted file."""
     data = sanitize_data(data)
+    data, _ = sanitize_data_for_saving(data)
     data.to_csv(save, sep="\t", index=False)
 
 

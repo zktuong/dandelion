@@ -22,11 +22,35 @@ from textwrap import dedent
 from tqdm import tqdm
 from typing import Literal
 
-from dandelion.utilities._utilities import *
+from dandelion.utilities._utilities import (
+    all_missing,
+    all_missing2,
+    BOOLEAN_LIKE_COLUMNS,
+    check_travdv,
+    clear_h5file,
+    cmp_str_emptylast,
+    cmp_to_key,
+    FALSES,
+    format_chain_status,
+    format_isotype1,
+    format_isotype2,
+    format_locus,
+    isBZIP,
+    isGZIP,
+    lib_type,
+    load_data,
+    movecol,
+    present,
+    sanitize_data_for_saving,
+    sanitize_data,
+    Tree,
+    TRUES,
+    write_fasta,
+)
 from dandelion.external.anndata._compat import (
     _normalize_index,
-    unpack_index,
     Index,
+    unpack_index,
 )
 
 CHECK_COLS = BOOLEAN_LIKE_COLUMNS + [
@@ -1758,6 +1782,7 @@ class Dandelion:
             passed to `pandas.DataFrame.to_csv`.
         """
         data = sanitize_data(self.data)
+        data, _ = sanitize_data_for_saving(data)
         data.to_csv(filename, sep="\t", index=False, **kwargs)
 
     def write_h5ddl(

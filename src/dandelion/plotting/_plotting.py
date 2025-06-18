@@ -31,9 +31,8 @@ from tqdm import tqdm
 from typing import Callable, Literal
 
 from dandelion.tools._diversity import rarefun
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._utilities import TRUES
 
 
 def clone_rarefaction(

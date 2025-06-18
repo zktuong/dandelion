@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import re
+import shutil
 import tempfile
 import warnings
 
@@ -44,10 +45,41 @@ from dandelion.external.immcantation.changeo import (
 )
 from dandelion.external.immcantation.tigger import tigger_genotype
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
-from dandelion.tools._tools import transfer
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._io import (
+    change_file_location,
+    fasta_iterator,
+    make_all,
+    move_to_tmp,
+    read_10x_vdj,
+    rename_dandelion,
+)
+from dandelion.utilities._utilities import (
+    all_missing,
+    check_data,
+    check_filepath,
+    DEFAULT_PREFIX,
+    deprecated,
+    FALSES,
+    flatten,
+    HEAVYLONG,
+    lib_type,
+    LIGHTSHORT,
+    load_data,
+    mask_dj,
+    NO_DS,
+    not_same_call,
+    present,
+    sanitize_data,
+    set_blast_env,
+    set_igblast_env,
+    Tree,
+    TRUES,
+    write_airr,
+    write_blastn,
+    write_fasta,
+)
+from dandelion.tools._transfer import transfer
 
 
 def format_fasta(

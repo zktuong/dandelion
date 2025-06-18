@@ -15,7 +15,7 @@ from dandelion.external.immcantation.shazam import (
     quantify_mutations,
 )
 
-from dandelion.external.scanpy import recipe_scanpy_qc
+from dandelion.external.scanpy._recipe import recipe_scanpy_qc
 
 __all__ = [
     "assign_isotype",

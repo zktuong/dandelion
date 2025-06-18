@@ -27,9 +27,9 @@ from plotnine import (
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import (
     load_data,
-    write_airr,
-    sanitize_data,
     sanitize_data_for_saving,
+    sanitize_data,
+    write_airr,
 )
 
 

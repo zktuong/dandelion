@@ -24,8 +24,11 @@ Tools: `tl`
 
 
    transfer
+   to_ak
+   from_ak
+   to_scirpy
+   from_scirpy
    find_clones
-   define_clones
    generate_network
    clone_centrality
    clone_degree
@@ -76,8 +79,6 @@ Utilities: `utl`
    read_10x_vdj
    read_parse_airr
    read_bd_airr
-   to_scirpy
-   from_scirpy
    makeblastdb
 
 
@@ -155,6 +156,7 @@ changeo
 .. autosummary::
    :toctree: .
 
+   define_clones
    assigngenes_igblast
    creategermlines
    makedb_igblast
