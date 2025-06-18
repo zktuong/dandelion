@@ -823,24 +823,6 @@ def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
     data.to_csv(save, sep="\t", index=False)
 
 
-## from skbio==0.5.6
-def _validate_counts_vector(
-    counts: np.array, suppress_cast: bool = False
-) -> np.array:
-    """Validate and convert input to an acceptable counts vector type.
-    Note: may not always return a copy of `counts`!
-    """
-    counts = np.asarray(counts)
-    if not np.all(np.isreal(counts)):
-        raise ValueError("Counts vector must contain real-valued entries.")
-    if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
-    elif (counts < 0).any():
-        raise ValueError("Counts vector cannot contain negative values.")
-
-    return counts
-
-
 def deprecated(
     details: str, deprecated_in: str, removed_in: str
 ) -> Callable[[F], F]:

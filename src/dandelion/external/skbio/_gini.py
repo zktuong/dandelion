@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-"""gini module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency
 
@@ -11,7 +9,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 import numpy as np
-from dandelion.utilities._utilities import _validate_counts_vector
+
+from dandelion.external.skbio._utils import validate_counts_vector
 
 
 def gini_index(data, method="rectangles"):
@@ -61,7 +60,7 @@ def gini_index(data, method="rectangles"):
        E, Salvemini, T). Rome: Libreria Eredi Virgilio Veschi (1955).
     """
     # Suppress cast to int because this method supports ints and floats.
-    data = _validate_counts_vector(data, suppress_cast=True)
+    data = validate_counts_vector(data, suppress_cast=True)
     lorenz_points = _lorenz_curve(data)
     B = _lorenz_curve_integrator(lorenz_points, method)
     return 1 - 2 * B
