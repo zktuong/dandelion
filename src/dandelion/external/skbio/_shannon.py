@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-"""shannon module."""
 # Lifted from skibio==0.5.6
 # because of issue with having skbio as a dependency
 
@@ -11,7 +9,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 import numpy as np
-from dandelion.utilities._utilities import _validate_counts_vector
+
+from dandelion.external.skbio._utils import validate_counts_vector
 
 
 def shannon(counts, base=2):
@@ -40,7 +39,7 @@ def shannon(counts, base=2):
     ----------
     .. [1] http://www.pisces-conservation.com/sdrhelp/index.html
     """
-    counts = _validate_counts_vector(counts)
+    counts = validate_counts_vector(counts)
     freqs = counts / counts.sum()
     nonzero_freqs = freqs[freqs.nonzero()]
     return -(nonzero_freqs * np.log(nonzero_freqs)).sum() / np.log(base)
