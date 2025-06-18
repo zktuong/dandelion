@@ -1883,10 +1883,11 @@ class Dandelion:
 
             if self.threshold is not None:
                 tr = self.threshold
-                hf.create_dataset(
-                    "threshold",
-                    data=tr,
-                )
+                with h5py.File(filename, "a") as hf:
+                    hf.create_dataset(
+                        "threshold",
+                        data=tr,
+                    )
 
     write = write_h5ddl
 
