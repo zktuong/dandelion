@@ -494,6 +494,7 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     pd.Series
         The sanitized column with replaced values and appropriate data type.
     """
+    pd.set_option("future.no_silent_downcasting", True)
     if dtype == "boolean":
         series = series.apply(lambda x: "" if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")

@@ -25,7 +25,12 @@ from plotnine import (
 )
 
 from dandelion.utilities._core import Dandelion
-from dandelion.utilities._utilities import load_data, write_airr, sanitize_data
+from dandelion.utilities._utilities import (
+    load_data,
+    write_airr,
+    sanitize_data,
+    sanitize_data_for_saving,
+)
 
 
 def quantify_mutations(
@@ -435,7 +440,8 @@ def calculate_threshold(
         subsample_ = NULL
     else:
         subsample_ = subsample
-
+    # sanitize before passing to R
+    dat, _ = sanitize_data_for_saving(dat)
     if mode == "heavy":
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
         try:
@@ -613,7 +619,7 @@ def calculate_threshold(
                 plot_group = None
         else:
             plot_group = plot_group
-        if plot_group is not None:
+        if plot_group is None:
             p = (
                 ggplot(dist_ham, aes("dist_nearest"))
                 + theme_bw()
