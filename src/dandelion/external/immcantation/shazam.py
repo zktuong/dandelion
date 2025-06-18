@@ -607,30 +607,53 @@ def calculate_threshold(
     if plot:
         options.figure_size = figsize
         if plot_group is None:
-            plot_group = "sample_id"
+            if "sample_id" in dist_ham.columns:
+                plot_group = "sample_id"
+            else:
+                plot_group = None
         else:
             plot_group = plot_group
-
-        p = (
-            ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
-            + theme_bw()
-            + xlab("Grouped Hamming distance")
-            + ylab("Count")
-            + geom_histogram(binwidth=0.01)
-            + geom_vline(
-                xintercept=tr, linetype="dashed", color="blue", size=0.5
+        if plot_group is not None:
+            p = (
+                ggplot(dist_ham, aes("dist_nearest"))
+                + theme_bw()
+                + xlab("Grouped Hamming distance")
+                + ylab("Count")
+                + geom_histogram(binwidth=0.01)
+                + geom_vline(
+                    xintercept=tr, linetype="dashed", color="blue", size=0.5
+                )
+                + annotate(
+                    "text",
+                    x=tr + 0.02,
+                    y=10,
+                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                    size=8,
+                    color="Blue",
+                )
+                + theme(legend_position="none")
             )
-            + annotate(
-                "text",
-                x=tr + 0.02,
-                y=10,
-                label="Threshold:\n" + str(np.around(tr, decimals=2)),
-                size=8,
-                color="Blue",
+        else:
+            p = (
+                ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
+                + theme_bw()
+                + xlab("Grouped Hamming distance")
+                + ylab("Count")
+                + geom_histogram(binwidth=0.01)
+                + geom_vline(
+                    xintercept=tr, linetype="dashed", color="blue", size=0.5
+                )
+                + annotate(
+                    "text",
+                    x=tr + 0.02,
+                    y=10,
+                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                    size=8,
+                    color="Blue",
+                )
+                + facet_wrap("~" + str(plot_group), scales="free_y")
+                + theme(legend_position="none")
             )
-            + facet_wrap("~" + str(plot_group), scales="free_y")
-            + theme(legend_position="none")
-        )
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
         p.show()
