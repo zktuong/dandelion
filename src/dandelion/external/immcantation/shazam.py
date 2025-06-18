@@ -25,7 +25,12 @@ from plotnine import (
 )
 
 from dandelion.utilities._core import Dandelion
-from dandelion.utilities._utilities import load_data, write_airr, sanitize_data
+from dandelion.utilities._utilities import (
+    load_data,
+    write_airr,
+    sanitize_data,
+    sanitize_data_for_saving,
+)
 
 
 def quantify_mutations(
@@ -89,11 +94,9 @@ def quantify_mutations(
         dat = load_data(data.data)
     else:
         dat = load_data(data)
-
+    dat = sanitize_data(dat)
     pandas2ri.activate()
     warnings.filterwarnings("ignore")
-
-    dat = sanitize_data(dat)
 
     if "ambiguous" in dat:
         dat_ = dat[dat["ambiguous"] == "F"].copy()
@@ -119,6 +122,9 @@ def quantify_mutations(
         mut_d = NULL
     else:
         mut_d = base.get(mutation_definition)
+
+    # sanitize before passing to R
+    dat_, _ = sanitize_data_for_saving(dat_)
 
     if split_locus is False:
         dat_ = dat_.where(dat_.isna(), dat_.astype(str))
@@ -261,7 +267,7 @@ def quantify_mutations(
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             dat[x] = [str(r) for r in res[x]]
-        # dat = sanitize_data(dat)
+        dat = sanitize_data(dat)
         if isinstance(data, pd.DataFrame):
             logg.info(" finished", time=start, deep=("Returning DataFrame\n"))
             return dat
@@ -436,6 +442,9 @@ def calculate_threshold(
     else:
         subsample_ = subsample
 
+    # sanitize before passing to R
+    dat, _ = sanitize_data_for_saving(dat)
+
     if mode == "heavy":
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
         try:
@@ -607,30 +616,54 @@ def calculate_threshold(
     if plot:
         options.figure_size = figsize
         if plot_group is None:
-            plot_group = "sample_id"
+            if "sample_id" in dist_ham.columns:
+                plot_group = "sample_id"
+            else:
+                plot_group = None
         else:
             plot_group = plot_group
 
-        p = (
-            ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
-            + theme_bw()
-            + xlab("Grouped Hamming distance")
-            + ylab("Count")
-            + geom_histogram(binwidth=0.01)
-            + geom_vline(
-                xintercept=tr, linetype="dashed", color="blue", size=0.5
+        if plot_group is not None:
+            p = (
+                ggplot(dist_ham, aes("dist_nearest", fill=str(plot_group)))
+                + theme_bw()
+                + xlab("Grouped Hamming distance")
+                + ylab("Count")
+                + geom_histogram(binwidth=0.01)
+                + geom_vline(
+                    xintercept=tr, linetype="dashed", color="blue", size=0.5
+                )
+                + annotate(
+                    "text",
+                    x=tr + 0.02,
+                    y=10,
+                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                    size=8,
+                    color="Blue",
+                )
+                + facet_wrap("~" + str(plot_group), scales="free_y")
+                + theme(legend_position="none")
             )
-            + annotate(
-                "text",
-                x=tr + 0.02,
-                y=10,
-                label="Threshold:\n" + str(np.around(tr, decimals=2)),
-                size=8,
-                color="Blue",
+        else:
+            p = (
+                ggplot(dist_ham, aes("dist_nearest"))
+                + theme_bw()
+                + xlab("Grouped Hamming distance")
+                + ylab("Count")
+                + geom_histogram(binwidth=0.01)
+                + geom_vline(
+                    xintercept=tr, linetype="dashed", color="blue", size=0.5
+                )
+                + annotate(
+                    "text",
+                    x=tr + 0.02,
+                    y=10,
+                    label="Threshold:\n" + str(np.around(tr, decimals=2)),
+                    size=8,
+                    color="Blue",
+                )
+                + theme(legend_position="none")
             )
-            + facet_wrap("~" + str(plot_group), scales="free_y")
-            + theme(legend_position="none")
-        )
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
         p.show()

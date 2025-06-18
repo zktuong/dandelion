@@ -471,6 +471,7 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     pd.Series
         The sanitized column with replaced values and appropriate data type.
     """
+    pd.set_option("future.no_silent_downcasting", True)
     if dtype == "boolean":
         series = series.apply(lambda x: "" if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
@@ -482,7 +483,9 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
         ).astype(str)
     elif dtype in ["integer", "number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
-        return series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
+        series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
+        # for dtype to be float
+        return series.astype("float64").fillna(np.nan)
     return series
 
 

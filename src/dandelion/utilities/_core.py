@@ -250,6 +250,9 @@ class Dandelion:
     def _ensure_sanitized_data(self):
         """Ensure that the data is sanitized."""
         if not self._is_sanitized(self.data):
+            print(
+                "The AIRR data needs to undergo sanitization, apologies for any delays..."
+            )
             self._data = sanitize_data(self.data)
 
     def _is_sanitized(self, df):
