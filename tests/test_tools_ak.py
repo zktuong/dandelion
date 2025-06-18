@@ -7,7 +7,7 @@ import pandas as pd
 import scanpy as sc
 import scirpy as ir
 
-from dandelion.utilities._io import to_ak, from_ak, to_scirpy, from_scirpy
+from dandelion.tools._transfer import to_ak, from_ak, to_scirpy, from_scirpy
 
 
 @pytest.mark.usefixtures(

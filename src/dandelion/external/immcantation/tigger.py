@@ -3,9 +3,7 @@ from scanpy import logging as logg
 from subprocess import run
 from typing import Literal
 
-from dandelion.utilities._utilities import (
-    set_germline_env,
-)
+from dandelion.utilities._utilities import set_germline_env
 
 
 def tigger_genotype(

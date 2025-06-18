@@ -24,8 +24,8 @@ F = TypeVar("F", bound=Callable)  # Define a TypeVar for any callable type
 MuData = TypeVar("mudata._core.mudata.MuData")
 PResults = TypeVar("palantir.presults.PResults")
 
-TRUES = ["T", "True", "true", "TRUE", True]
-FALSES = ["F", "False", "false", "FALSE", False]
+TRUES = ["T", "t", "True", "true", "TRUE", True, "1"]
+FALSES = ["F", "f", "False", "false", "FALSE", False, "0"]
 HEAVYLONG = ["IGH", "TRB", "TRD"]
 LIGHTSHORT = ["IGK", "IGL", "TRA", "TRG"]
 VCALL = "v_call"
@@ -57,6 +57,7 @@ EMPTIES = [
     "",
 ]
 DEFAULT_PREFIX = "all"
+BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
 
 # for compatibility with python>=3.10
 try:
@@ -444,6 +445,9 @@ def sanitize_data_for_saving(
         if col in RearrangementSchema.properties:
             dtype = RearrangementSchema.properties[col]["type"]
             tmp[col] = sanitize_column(tmp[col], dtype)
+        elif col in BOOLEAN_LIKE_COLUMNS:
+            dtype = "boolean"
+            tmp[col] = sanitize_column(tmp[col], dtype)
         else:
             tmp[col] = try_numeric_conversion(tmp[col])
         dtype_dict[col] = get_numpy_dtype(tmp[col])
@@ -467,13 +471,21 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     pd.Series
         The sanitized column with replaced values and appropriate data type.
     """
-    if dtype in ["string", "boolean"]:
+    pd.set_option("future.no_silent_downcasting", True)
+    if dtype == "boolean":
         series = series.apply(lambda x: "" if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
-        return series.astype(str)
+        return series.apply(sanitize_boolean)
+    elif dtype == "string":
+        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        return series.replace(
+            [None, np.nan, "nan", "na", "NaN", ""], ""
+        ).astype(str)
     elif dtype in ["integer", "number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
-        return series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
+        series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
+        # for dtype to be float
+        return series.astype("float64").fillna(np.nan)
     return series
 
 
@@ -502,11 +514,38 @@ def try_numeric_conversion(series: pd.Series) -> pd.Series:
         return sanitize_column(series, "string")
 
 
+def sanitize_boolean(value: str | bool) -> str:
+    """
+    Sanitize a boolean-like value to 'T' or 'F'.
+
+    Parameters
+    ----------
+    value : str | bool
+        The value to sanitize.
+
+    Returns
+    -------
+    str
+        'T' for True, 'F' for False, or the original value if not boolean-like.
+    """
+    if isinstance(value, bool):
+        return "T" if value else "F"
+    elif isinstance(value, str):
+        stripped_value = value.strip().lower()
+        if stripped_value in ["true", "t"]:
+            return "T"
+        elif stripped_value in ["false", "f"]:
+            return "F"
+    return value
+
+
 def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
     """Quick sanitize dtypes."""
     data = data.astype("object")
     data = data.infer_objects()
     for d in data:
+        if d in BOOLEAN_LIKE_COLUMNS:
+            data[d] = data[d].apply(sanitize_boolean)
         if d in RearrangementSchema.properties:
             if RearrangementSchema.properties[d]["type"] in [
                 "string",
@@ -517,6 +556,8 @@ def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
                     EMPTIES,
                     "",
                 )
+                if RearrangementSchema.properties[d]["type"] == "boolean":
+                    data[d] = data[d].apply(sanitize_boolean)
                 if RearrangementSchema.properties[d]["type"] == "integer":
                     data[d] = [
                         int(x) if present(x) else ""
@@ -775,6 +816,7 @@ def mask_dj(
 def write_airr(data: pd.DataFrame, save: Path | str) -> None:
     """Save as airr formatted file."""
     data = sanitize_data(data)
+    data, _ = sanitize_data_for_saving(data)
     data.to_csv(save, sep="\t", index=False)
 
 
@@ -782,24 +824,6 @@ def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
     """Write blast output."""
     data = sanitize_blastn(data)
     data.to_csv(save, sep="\t", index=False)
-
-
-## from skbio==0.5.6
-def _validate_counts_vector(
-    counts: np.array, suppress_cast: bool = False
-) -> np.array:
-    """Validate and convert input to an acceptable counts vector type.
-    Note: may not always return a copy of `counts`!
-    """
-    counts = np.asarray(counts)
-    if not np.all(np.isreal(counts)):
-        raise ValueError("Counts vector must contain real-valued entries.")
-    if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
-    elif (counts < 0).any():
-        raise ValueError("Counts vector cannot contain negative values.")
-
-    return counts
 
 
 def deprecated(

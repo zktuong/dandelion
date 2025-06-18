@@ -22,12 +22,46 @@ from textwrap import dedent
 from tqdm import tqdm
 from typing import Literal
 
-from dandelion.utilities._utilities import *
+from dandelion.utilities._utilities import (
+    all_missing,
+    all_missing2,
+    BOOLEAN_LIKE_COLUMNS,
+    check_travdv,
+    clear_h5file,
+    cmp_str_emptylast,
+    cmp_to_key,
+    FALSES,
+    format_chain_status,
+    format_isotype1,
+    format_isotype2,
+    format_locus,
+    isBZIP,
+    isGZIP,
+    lib_type,
+    load_data,
+    movecol,
+    present,
+    sanitize_data_for_saving,
+    sanitize_data,
+    Tree,
+    TRUES,
+    write_fasta,
+)
 from dandelion.external.anndata._compat import (
     _normalize_index,
-    unpack_index,
     Index,
+    unpack_index,
 )
+
+CHECK_COLS = BOOLEAN_LIKE_COLUMNS + [
+    "rev_comp",
+    "productive",
+    "vj_in_frame",
+    "stop_codon",
+    "complete_vdj",
+    "v_frameshift",
+    "j_frameshift",
+]
 
 
 class Dandelion:
@@ -107,6 +141,7 @@ class Dandelion:
             self.n_contigs = self.data.shape[0]
             if metadata is None:
                 if initialize is True:
+                    self._ensure_sanitized_data()
                     self.update_metadata(**kwargs)
                 try:
                     self.n_obs = self.metadata.shape[0]
@@ -235,6 +270,26 @@ class Dandelion:
         """metadata names setter"""
         names = self._prep_dim_index(names, "metadata")
         self._set_dim_index(names, "metadata")
+
+    def _ensure_sanitized_data(self):
+        """Ensure that the data is sanitized."""
+        if not self._is_sanitized(self.data):
+            print(
+                "The AIRR data needs to undergo sanitization, apologies for any delays..."
+            )
+            self._data = sanitize_data(self.data)
+
+    def _is_sanitized(self, df):
+        """Check if the data is sanitized."""
+        check = []
+        for col in CHECK_COLS:
+            if col in self.data:
+                # check that in these columns, all values are str 'T' or 'F'
+                if not all(df[col].isin(TRUES + FALSES)):
+                    check.append(False)
+                else:
+                    check.append(True)
+        return True if all(check) else False
 
     def _normalize_indices(self, index: Index) -> tuple[slice, str]:
         """retrieve indices"""
@@ -1727,6 +1782,7 @@ class Dandelion:
             passed to `pandas.DataFrame.to_csv`.
         """
         data = sanitize_data(self.data)
+        data, _ = sanitize_data_for_saving(data)
         data.to_csv(filename, sep="\t", index=False, **kwargs)
 
     def write_h5ddl(
@@ -1883,10 +1939,12 @@ class Dandelion:
 
             if self.threshold is not None:
                 tr = self.threshold
-                hf.create_dataset(
-                    "threshold",
-                    data=tr,
-                )
+                with h5py.File(filename, "a") as hf:
+                    hf.create_dataset(
+                        "threshold",
+                        data=tr,
+                        **save_args,
+                    )
 
     write = write_h5ddl
 

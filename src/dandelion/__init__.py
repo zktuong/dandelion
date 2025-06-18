@@ -3,10 +3,11 @@ from dandelion import preprocessing as pp
 from dandelion import utilities as utl
 from dandelion import tools as tl
 from dandelion import plotting as pl
+from dandelion import external
+
 from dandelion.utilities import (
     concat,
     Dandelion,
-    from_scirpy,
     load_data,
     read_airr,
     read_10x_airr,
@@ -15,8 +16,8 @@ from dandelion.utilities import (
     read_bd_airr,
     read_h5ddl,
     read_pkl,
-    to_scirpy,
 )
+from dandelion.tools import from_scirpy, to_scirpy
 from dandelion.logging import (
     __author__,
     __email__,
@@ -32,6 +33,7 @@ __all__ = [
     "__email__",
     "__version__",
     "concat",
+    "external",
     "Dandelion",
     "from_scirpy",
     "load_data",

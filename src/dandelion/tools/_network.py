@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-import multiprocessing
-
+import re
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -17,9 +15,16 @@ try:
 except:
     from networkx.utils import random_state
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion, Query
+
+from dandelion.utilities._utilities import (
+    flatten,
+    load_data,
+    present,
+    sanitize_data,
+    sum_col,
+    Tree,
+)
 
 
 def generate_network(
