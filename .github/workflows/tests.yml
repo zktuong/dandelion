@@ -97,6 +97,7 @@ jobs:
             r-tigger
             r-scoper
             bioconductor-edger
+            graph-tool
 
       - name: Display Python version
         run: |
