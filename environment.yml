@@ -3,15 +3,14 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - numpy
-  - pandas
-  - pandoc
-  - pyyaml
-  - seaborn
-  - statsmodels
   - pip
-  - tbb
   - pip:
+      - numpy
+      - pandas
+      - pandoc
+      - pyyaml
+      - seaborn
+      - statsmodels
       - numba
       - changeo
       - matplotlib
