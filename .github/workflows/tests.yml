@@ -86,22 +86,17 @@ jobs:
           cache-environment-key: environment-${{ env.cache-version }}-${{ matrix.config.os }}
           cache-downloads-key: downloads-${{ env.cache-version }}-${{ matrix.config.os }}
           post-cleanup: "all"
+          init-shell: bash
           create-args: >-
-            python=${{ matrix.config.python-version }}
             igblast>=1.17.0
             blast
-            rpy2
-            r-optparse
-            r-shazam
-            r-alakazam
-            r-tigger
-            r-scoper
-            bioconductor-edger
 
-      - name: Install graph-tool separately with mamba
-        run: |
-          mamba install -n dandelion -c conda-forge graph-tool
+      - name: Install Python and extra dependencies
         shell: bash -l {0}
+        run: |
+          micromamba activate dandelion
+          micromamba install -n dandelion python=${{ matrix.config.python-version }} -y
+          micromamba install -n dandelion rpy2 r-optparse r-shazam r-alakazam r-tigger r-scoper bioconductor-edger graph-tool
 
       - name: Display Python version
         run: |
