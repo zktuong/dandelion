@@ -88,6 +88,7 @@ jobs:
           post-cleanup: "all"
           init-shell: bash
           create-args: >-
+            python=${{ matrix.config.python-version }}
             igblast>=1.17.0
             blast
             rpy2
@@ -102,7 +103,6 @@ jobs:
         shell: bash -l {0}
         run: |
           micromamba activate dandelion
-          micromamba install -n dandelion python=${{ matrix.config.python-version }} -y
           micromamba install -n dandelion pytest-cov graph-tool -c conda-forge -c bioconda -y
 
       - name: Display Python version
