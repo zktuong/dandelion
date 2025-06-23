@@ -96,7 +96,7 @@ jobs:
         run: |
           micromamba activate dandelion
           micromamba install -n dandelion python=${{ matrix.config.python-version }} -y
-          micromamba install -n dandelion rpy2 r-optparse r-shazam r-alakazam r-tigger r-scoper bioconductor-edger graph-tool -c conda-forge -c bioconda -y
+          micromamba install -n dandelion pytest-cov rpy2 r-optparse r-shazam r-alakazam r-tigger r-scoper bioconductor-edger graph-tool -c conda-forge -c bioconda -y
 
       - name: Display Python version
         run: |
