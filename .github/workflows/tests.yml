@@ -91,7 +91,6 @@ jobs:
             python=${{ matrix.config.python-version }}
             igblast>=1.17.0
             blast
-            rpy2
             r-optparse
             r-shazam
             r-alakazam
