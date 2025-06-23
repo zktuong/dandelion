@@ -121,6 +121,7 @@ jobs:
       - name: Install Dandelion
         run: |
           pip install -e ".[scirpy]"
+          pip install scrublet
           pip install palantir
           pip install pertpy
 
