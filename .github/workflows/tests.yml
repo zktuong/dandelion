@@ -90,13 +90,20 @@ jobs:
           create-args: >-
             igblast>=1.17.0
             blast
+            rpy2
+            r-optparse
+            r-shazam
+            r-alakazam
+            r-tigger
+            r-scoper
+            bioconductor-edger
 
       - name: Install Python and extra dependencies
         shell: bash -l {0}
         run: |
           micromamba activate dandelion
           micromamba install -n dandelion python=${{ matrix.config.python-version }} -y
-          micromamba install -n dandelion pytest-cov rpy2 r-optparse r-shazam r-alakazam r-tigger r-scoper bioconductor-edger graph-tool -c conda-forge -c bioconda -y
+          micromamba install -n dandelion pytest-cov graph-tool -c conda-forge -c bioconda -y
 
       - name: Display Python version
         run: |
