@@ -97,7 +97,11 @@ jobs:
             r-tigger
             r-scoper
             bioconductor-edger
-            graph-tool
+
+      - name: Install graph-tool separately with mamba
+        run: |
+          mamba install -n dandelion -c conda-forge graph-tool
+        shell: bash -l {0}
 
       - name: Display Python version
         run: |
