@@ -53,10 +53,9 @@ jobs:
           - { python-version: "3.11", os: ubuntu-latest }
           - { python-version: "3.12", os: ubuntu-latest }
           - { python-version: "3.13", os: ubuntu-latest }
-          # - { python-version: "3.10", os: macos-13 }
-          # - { python-version: "3.11", os: macos-13 }
-          # - { python-version: "3.12", os: macos-13 }
-          # - { python-version: "3.13", os: macos-13 }
+          - { python-version: "3.11", os: macos-latest }
+          - { python-version: "3.12", os: macos-latest }
+          - { python-version: "3.13", os: macos-latest }
           # disabled until it's fixed.
     runs-on: ${{ matrix.config.os }}
     env:
@@ -71,7 +70,7 @@ jobs:
       - uses: actions/setup-node@v4
 
       - name: Install macOS system dependencies
-        if: matrix.config.os == 'macos-13'
+        if: matrix.config.os == 'macos-latest'
         run: |
           brew install cairo pkg-config autoconf automake libtool openblas
 
@@ -88,7 +87,6 @@ jobs:
           init-shell: bash
           create-args: >-
             python=${{ matrix.config.python-version }}
-            igblast>=1.17.0
             blast
             r-optparse
             r-shazam
@@ -96,6 +94,27 @@ jobs:
             r-tigger
             r-scoper
             bioconductor-edger
+
+      - name: Install igblast manually on macOS
+        if: matrix.config.os == 'macos-latest'
+        shell: bash -l {0}
+        run: |
+          IGVER=$(curl -s https://ftp.ncbi.nlm.nih.gov/blast/executables/igblast/release/ | \
+                  grep -Eo 'href="[0-9]+\.[0-9]+\.[0-9]+/' | \
+                  cut -d'"' -f2 | tr -d '/' | sort -V | tail -n1)
+          echo "Latest igblast version: $IGVER"
+
+          curl -L -O https://ftp.ncbi.nlm.nih.gov/blast/executables/igblast/release/${IGVER}/ncbi-igblast-${IGVER}-mac.tar.gz
+          tar -xzf ncbi-igblast-${IGVER}-mac.tar.gz
+          mv ncbi-igblast-${IGVER} $HOME/igblast
+          echo "$HOME/igblast/bin" >> $GITHUB_PATH
+
+      - name: Install igblast on other platforms
+        if: matrix.config.os != 'macos-latest'
+        shell: bash -l {0}
+        run: |
+          micromamba activate dandelion
+          micromamba install -n dandelion igblast -c bioconda -y
 
       - name: Install Python and extra dependencies
         shell: bash -l {0}
