@@ -53,10 +53,6 @@ jobs:
           - { python-version: "3.11", os: ubuntu-latest }
           - { python-version: "3.12", os: ubuntu-latest }
           - { python-version: "3.13", os: ubuntu-latest }
-          - { python-version: "3.11", os: macos-latest }
-          - { python-version: "3.12", os: macos-latest }
-          - { python-version: "3.13", os: macos-latest }
-          # disabled until it's fixed.
     runs-on: ${{ matrix.config.os }}
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -87,7 +83,9 @@ jobs:
           init-shell: bash
           create-args: >-
             python=${{ matrix.config.python-version }}
+            igblast
             blast
+            pytest-cov
             r-optparse
             r-shazam
             r-alakazam
@@ -95,32 +93,11 @@ jobs:
             r-scoper
             bioconductor-edger
 
-      - name: Install igblast manually on macOS
-        if: matrix.config.os == 'macos-latest'
-        shell: bash -l {0}
-        run: |
-          IGVER=$(curl -s https://ftp.ncbi.nlm.nih.gov/blast/executables/igblast/release/ | \
-                  grep -Eo 'href="[0-9]+\.[0-9]+\.[0-9]+/' | \
-                  cut -d'"' -f2 | tr -d '/' | sort -V | tail -n1)
-          echo "Latest igblast version: $IGVER"
-
-          curl -L -O https://ftp.ncbi.nlm.nih.gov/blast/executables/igblast/release/${IGVER}/ncbi-igblast-${IGVER}-mac.tar.gz
-          tar -xzf ncbi-igblast-${IGVER}-mac.tar.gz
-          mv ncbi-igblast-${IGVER} $HOME/igblast
-          echo "$HOME/igblast/bin" >> $GITHUB_PATH
-
-      - name: Install igblast on other platforms
-        if: matrix.config.os != 'macos-latest'
-        shell: bash -l {0}
-        run: |
-          micromamba activate dandelion
-          micromamba install -n dandelion igblast -c bioconda -y
-
       - name: Install Python and extra dependencies
         shell: bash -l {0}
         run: |
           micromamba activate dandelion
-          micromamba install -n dandelion pytest-cov graph-tool -c conda-forge -c bioconda -y
+          micromamba install -n dandelion graph-tool -c conda-forge -y
 
       - name: Display Python version
         run: |
@@ -137,10 +114,7 @@ jobs:
 
       - name: Install Dandelion
         run: |
-          pip install -e ".[scirpy]"
-          pip install scrublet
-          pip install palantir
-          pip install pertpy
+          pip install -e ".[scirpy,scrublet,palantir]"
 
       - name: Test if R dependencies are installed properly
         run: |
