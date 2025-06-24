@@ -83,8 +83,8 @@ jobs:
           environment-file: environment.yml
           cache-environment: true
           cache-downloads: true
-          cache-environment-key: environment-${{ env.cache-version }}-${{ matrix.config.os }}
-          cache-downloads-key: downloads-${{ env.cache-version }}-${{ matrix.config.os }}
+          cache-environment-key: environment-${{ env.cache-version }}-${{ matrix.config.os }}-python-${{ matrix.config.python-version }}
+          cache-downloads-key: downloads-${{ env.cache-version }}-${{ matrix.config.os }}-python-${{ matrix.config.python-version }}
           post-cleanup: "all"
           create-args: >-
             python=${{ matrix.config.python-version }}
