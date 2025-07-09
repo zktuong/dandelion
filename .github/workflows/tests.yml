@@ -111,10 +111,10 @@ jobs:
         run: |
           IGVER=${{ steps.get_version.outputs.igver }}
 
-          if [[ "${{ runner.os }}" == "Linux" ]]; then
+          if [[ "${{ matrix.config.os }}" == "ubuntu-latest" ]]; then
             OSNAME="linux"
             EXT="tar.gz"
-          elif [[ "${{ runner.os }}" == "macos-13" ]]; then
+          elif [[ "${{ matrix.config.os }}" == "macos-13" ]]; then
             OSNAME="macosx"
             EXT="tar.gz"
           fi
