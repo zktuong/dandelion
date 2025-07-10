@@ -93,7 +93,9 @@ jobs:
             r-airr
             r-optparse
             r-shazam
-            bioconductor-edger
+            bioconductor-biostrings
+            bioconductor-genomicalignments
+            bioconductor-iranges
 
       - name: Get latest IgBlast version
         id: get_version
