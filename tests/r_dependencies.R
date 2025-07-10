@@ -1,7 +1,7 @@
 .libPaths()
 install.packages(c("BiocManager"), repos = "https://cloud.r-project.org")
-BiocManager::install(c("edgeR"))
-install.packages(c("alakazam", "tigger", "scoper"))
+BiocManager::install(c("edgeR", "Biostrings", "GenomicAlignments", "IRanges"))
+install.packages(c("shazam", "alakazam", "tigger", "scoper"))
 
 library(shazam)
 library(alakazam)

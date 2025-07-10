@@ -90,12 +90,7 @@ jobs:
             python=${{ matrix.config.python-version }}
             blast
             rpy2
-            r-airr
             r-optparse
-            r-shazam
-            bioconductor-biostrings
-            bioconductor-genomicalignments
-            bioconductor-iranges
 
       - name: Get latest IgBlast version
         id: get_version
