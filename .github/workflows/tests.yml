@@ -90,12 +90,6 @@ jobs:
             python=${{ matrix.config.python-version }}
             blast
             rpy2
-            r-optparse
-            r-shazam
-            r-alakazam
-            r-tigger
-            r-scoper
-            bioconductor-edger
 
       - name: Get latest IgBlast version
         id: get_version
@@ -141,13 +135,16 @@ jobs:
       - name: Install Dandelion
         run: |
           pip install -e ".[scirpy]"
-          pip install palantir
-          pip install pertpy
 
-      - name: Test if R dependencies are installed properly
+      - name: Install and test if R dependencies are installed properly
         run: |
           Rscript tests/r_dependencies.R
         shell: bash -l {0}
+
+      - name: Install trajectory dependencies
+        run: |
+          pip install palantir
+          pip install pertpy
 
       - name: Test with pytest
         run: |

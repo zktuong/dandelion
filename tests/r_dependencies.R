@@ -1,6 +1,10 @@
 .libPaths()
+install.packages(c("optparse", "shazam", "alakazam", "tigger", "scoper", "BiocManager"))
+BiocManager::install(c("edgeR"))
+
 library(shazam)
 library(alakazam)
 library(tigger)
 library(airr)
 library(optparse)
+library(edgeR)
