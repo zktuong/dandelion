@@ -90,6 +90,10 @@ jobs:
             python=${{ matrix.config.python-version }}
             blast
             rpy2
+            r-airr
+            r-optparse
+            r-shazam
+            bioconductor-edger
 
       - name: Get latest IgBlast version
         id: get_version
