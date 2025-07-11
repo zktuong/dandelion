@@ -91,6 +91,8 @@ jobs:
             blast
             rpy2
             r-optparse
+            zlib
+            xyz
 
       - name: Get latest IgBlast version
         id: get_version
