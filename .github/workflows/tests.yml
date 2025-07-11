@@ -91,6 +91,8 @@ jobs:
             blast
             rpy2
             r-optparse
+            r-matrix
+            r-statmod
             zlib
             xz
 
