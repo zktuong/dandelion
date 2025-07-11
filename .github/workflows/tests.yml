@@ -93,6 +93,7 @@ jobs:
             r-optparse
             r-matrix
             r-statmod
+            r-bh
             zlib
             xz
 
