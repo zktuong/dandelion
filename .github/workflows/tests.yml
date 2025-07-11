@@ -93,7 +93,6 @@ jobs:
             r-optparse
             r-matrix
             r-statmod
-            bioconductor-biocparallel
             zlib
             xz
 
