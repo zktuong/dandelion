@@ -74,7 +74,7 @@ jobs:
       - name: Install macOS system dependencies
         if: matrix.config.os == 'macos-latest'
         run: |
-          brew install cairo pkg-config autoconf automake libtool boost
+          brew install cairo pkg-config autoconf automake libtool boost gcc
 
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
@@ -145,7 +145,19 @@ jobs:
       - name: Set R compiler flags via .Rprofile
         if: matrix.config.os == 'macos-latest'
         run: |
-          echo 'Sys.setenv(CXXFLAGS = "-std=gnu++17")' >> ~/.Rprofile
+          GCC_BIN=$(ls /opt/homebrew/bin/gcc-* | grep -E 'gcc-[0-9]+' | grep -v gcc-ar | sort -V | tail -n1)
+          GCC_VER=$(basename "$GCC_BIN")
+          echo "Found GCC: $GCC_VER"
+          # Set as output so other steps can use it
+          echo "gcc_version=$GCC_VER" >> $GITHUB_OUTPUT
+          mkdir -p ~/.R
+          echo "CC=${GCC_VER}" >> ~/.R/Makevars
+          echo "CXX=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX11=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX14=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX17=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
 
       - name: Install and test if R dependencies are installed properly
         run: |
