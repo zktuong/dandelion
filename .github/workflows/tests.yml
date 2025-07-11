@@ -159,6 +159,10 @@ jobs:
           echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
           echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
 
+      - name: Clean conflicting env vars
+        run: |
+          unset CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
+
       - name: Install and test if R dependencies are installed properly
         run: |
           Rscript tests/r_dependencies.R
