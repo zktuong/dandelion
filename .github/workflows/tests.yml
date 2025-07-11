@@ -92,7 +92,7 @@ jobs:
             rpy2
             r-optparse
             zlib
-            xyz
+            xz
 
       - name: Get latest IgBlast version
         id: get_version
