@@ -142,11 +142,10 @@ jobs:
         run: |
           pip install -e ".[scirpy]"
 
-      - name: Set up Makevars to use C++17
+      - name: Set R compiler flags via .Rprofile
         if: matrix.config.os == 'macos-latest'
         run: |
-          mkdir -p ~/.R
-          echo "CXXFLAGS += -std=gnu++17" >> ~/.R/Makevars
+          echo 'Sys.setenv(CXXFLAGS = "-std=gnu++17")' >> ~/.Rprofile
 
       - name: Install and test if R dependencies are installed properly
         run: |
