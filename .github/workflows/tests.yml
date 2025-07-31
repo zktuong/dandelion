@@ -10,6 +10,7 @@ on:
 
 env:
   cache-version: "cache-v2"
+  R_LIBS_USER: $HOME/R/library
 
 jobs:
   changes:
@@ -76,6 +77,12 @@ jobs:
         run: |
           brew install cairo pkg-config autoconf automake libtool boost gcc
 
+      - name: Install ubuntu system dependencies
+        if: matrix.config.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config
+
       - name: Setup micromamba
         uses: mamba-org/setup-micromamba@v2
         with:
@@ -97,6 +104,14 @@ jobs:
             r-locfit
             zlib
             xz
+
+      - name: Cache R packages installed by Rscript
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: r-packages-${{ runner.os }}-v1
+          restore-keys: |
+            r-packages-${{ runner.os }}-
 
       - name: Get latest IgBlast version
         id: get_version
