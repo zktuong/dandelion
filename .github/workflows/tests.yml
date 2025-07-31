@@ -113,6 +113,32 @@ jobs:
           restore-keys: |
             r-packages-${{ runner.os }}-
 
+      - name: Set R compiler flags via .Rprofile
+        if: matrix.config.os == 'macos-latest'
+        run: |
+          GCC_BIN=$(ls /opt/homebrew/bin/gcc-* | grep -E 'gcc-[0-9]+' | grep -v gcc-ar | sort -V | tail -n1)
+          GCC_VER=$(basename "$GCC_BIN")
+          echo "Found GCC: $GCC_VER"
+          # Set as output so other steps can use it
+          echo "gcc_version=$GCC_VER" >> $GITHUB_OUTPUT
+          mkdir -p ~/.R
+          echo "CC=${GCC_VER}" >> ~/.R/Makevars
+          echo "CXX=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX11=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX14=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX17=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+          echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
+
+      # - name: Clean conflicting env vars
+      #   run: |
+      #     unset CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
+
+      - name: Install and test if R dependencies are installed properly
+        run: |
+          Rscript tests/r_dependencies.R
+        shell: bash -l {0}
+
       - name: Get latest IgBlast version
         id: get_version
         shell: bash
@@ -157,32 +183,6 @@ jobs:
       - name: Install Dandelion
         run: |
           pip install -e ".[scirpy]"
-
-      - name: Set R compiler flags via .Rprofile
-        if: matrix.config.os == 'macos-latest'
-        run: |
-          GCC_BIN=$(ls /opt/homebrew/bin/gcc-* | grep -E 'gcc-[0-9]+' | grep -v gcc-ar | sort -V | tail -n1)
-          GCC_VER=$(basename "$GCC_BIN")
-          echo "Found GCC: $GCC_VER"
-          # Set as output so other steps can use it
-          echo "gcc_version=$GCC_VER" >> $GITHUB_OUTPUT
-          mkdir -p ~/.R
-          echo "CC=${GCC_VER}" >> ~/.R/Makevars
-          echo "CXX=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX11=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX14=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX17=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
-
-      # - name: Clean conflicting env vars
-      #   run: |
-      #     unset CPPFLAGS CFLAGS CXXFLAGS LDFLAGS
-
-      - name: Install and test if R dependencies are installed properly
-        run: |
-          Rscript tests/r_dependencies.R
-        shell: bash -l {0}
 
       - name: Install trajectory dependencies
         run: |
