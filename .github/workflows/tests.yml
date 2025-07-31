@@ -94,6 +94,7 @@ jobs:
             r-matrix
             r-statmod
             r-bh
+            r-locfit
             zlib
             xz
 
