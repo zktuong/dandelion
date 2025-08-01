@@ -129,6 +129,7 @@ jobs:
           echo "CXX17=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
           echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
           echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
+          echo 'CXX11FLAGS=-O2 -Wall -pipe' >> ~/.R/Makevars
 
       # - name: Clean conflicting env vars
       #   run: |
