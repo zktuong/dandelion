@@ -1,14 +1,8 @@
-import rpy2
 import warnings
 
 import pandas as pd
 
 from typing import Literal
-
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, r
-from rpy2.robjects.conversion import localconverter
-from rpy2.robjects.packages import importr
 
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import (
@@ -97,7 +91,7 @@ def identical_clones(
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, r
+        from rpy2.robjects import r
     except:
         raise (
             ImportError(
@@ -241,7 +235,7 @@ def hierarchical_clones(
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, r
+        from rpy2.robjects import r
     except:
         raise (
             ImportError(
@@ -401,6 +395,16 @@ def spectral_clones(
     remove_extra : bool, optional
         if True removes extra contigs flagged by `check_contigs`.
     """
+    try:
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import r
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with scoper's tutorials."
+            )
+        )
     scp = importr("scoper")
 
     db = load_data(vdj_data.data)
@@ -460,6 +464,16 @@ def spectral_clones(
 def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
     """Convert pandas DataFrame to R object safely."""
     try:
+        import rpy2
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
+    try:
         with localconverter(
             rpy2.robjects.default_converter + pandas2ri.converter
         ):
@@ -474,5 +488,15 @@ def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
 
 def safe_rpy2py(r_object) -> pd.DataFrame:
     """Convert R object to pandas DataFrame safely."""
+    try:
+        import rpy2
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
     with localconverter(rpy2.robjects.default_converter + pandas2ri.converter):
         return pandas2ri.rpy2py(r_object)

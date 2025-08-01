@@ -1,16 +1,10 @@
 import os
 import re
-import rpy2
 import functools
 import warnings
 
 import pandas as pd
 import numpy as np
-
-from rpy2.rinterface import NULL
-from rpy2.robjects import pandas2ri, FloatVector
-from rpy2.robjects.conversion import localconverter
-from rpy2.robjects.packages import importr
 
 from scanpy import logging as logg
 from typing import Literal
@@ -82,6 +76,15 @@ def quantify_mutations(
         pandas DataFrame holding mutation information.
     """
     start = logg.info("Quantifying mutations")
+    try:
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
     sh = importr("shazam")
     base = importr("base")
     if isinstance(data, Dandelion):
@@ -360,7 +363,16 @@ def calculate_threshold(
         if automatic thresholding failed.
     """
     start = logg.info("Calculating threshold")
-
+    try:
+        from rpy2.robjects.packages import importr
+        from rpy2.rinterface import NULL
+        from rpy2.robjects import FloatVector
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
     if isinstance(data, Dandelion):
         dat = load_data(data.data)
     elif isinstance(data, pd.DataFrame) or os.path.isfile(str(data)):
@@ -421,10 +433,7 @@ def calculate_threshold(
     dist = np.array(dist_ham["dist_nearest"])
     if manual_threshold is None:
         if threshold_method_ == "density":
-            if edge is None:
-                edge_ = 0.9
-            else:
-                edge_ = edge
+            edge_ = 0.9 if edge is None else edge
             dist_threshold = sh.findThreshold(
                 FloatVector(dist[~np.isnan(dist)]),
                 method=threshold_method_,
@@ -437,7 +446,7 @@ def calculate_threshold(
                     "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
                 )
                 threshold_method_ = "gmm"
-                threshold_method_ = (
+                threshold_model_ = (
                     "gamma-gamma"
                     if threshold_model is None
                     else threshold_model
@@ -446,6 +455,7 @@ def calculate_threshold(
                 cutoff_ = "optimal" if cutoff is None else cutoff
                 sen_ = NULL if sensitivity is None else sensitivity
                 spc_ = NULL if specificity is None else specificity
+
                 dist_threshold = sh.findThreshold(
                     FloatVector(dist[~np.isnan(dist)]),
                     method=threshold_method_,
@@ -459,7 +469,7 @@ def calculate_threshold(
                 dist_threshold = safe_rpy2py(dist_threshold)
                 threshold = np.array(dist_threshold.slots["threshold"])[0]
         else:
-            threshold_method_ = (
+            threshold_model_ = (
                 "gamma-gamma" if threshold_model is None else threshold_model
             )
             cross_ = NULL if cross is None else cross
@@ -567,6 +577,16 @@ def calculate_threshold(
 def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
     """Convert pandas DataFrame to R object safely."""
     try:
+        import rpy2
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
+    try:
         with localconverter(
             rpy2.robjects.default_converter + pandas2ri.converter
         ):
@@ -581,5 +601,15 @@ def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
 
 def safe_rpy2py(r_object) -> pd.DataFrame:
     """Convert R object to pandas DataFrame safely."""
+    try:
+        import rpy2
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
     with localconverter(rpy2.robjects.default_converter + pandas2ri.converter):
         return pandas2ri.rpy2py(r_object)
