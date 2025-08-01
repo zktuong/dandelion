@@ -1,5 +1,5 @@
 .libPaths()
-install.packages(c("BiocManager", "data.table"), repos = "https://cloud.r-project.org")
+install.packages(c("BiocManager"), repos = "https://cloud.r-project.org")
 BiocManager::install(c("edgeR", "Biostrings", "GenomicAlignments", "IRanges"))
 install.packages(c("shazam", "alakazam", "tigger", "scoper"), repos = "https://cloud.r-project.org")
 

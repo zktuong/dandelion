@@ -102,6 +102,7 @@ jobs:
             r-statmod
             r-bh
             r-locfit
+            r-data.table
             zlib
             xz
 
