@@ -499,4 +499,4 @@ def safe_rpy2py(r_object) -> pd.DataFrame:
             )
         )
     with localconverter(rpy2.robjects.default_converter + pandas2ri.converter):
-        return rpy2.robjects.conversion.rpy2py(r_object)
+        return pandas2ri.rpy2py(r_object)
