@@ -1,10 +1,16 @@
 import os
 import re
+import rpy2
 import functools
 import warnings
 
 import pandas as pd
 import numpy as np
+
+from rpy2.rinterface import NULL
+from rpy2.robjects import pandas2ri, FloatVector
+from rpy2.robjects.conversion import localconverter
+from rpy2.robjects.packages import importr
 
 from scanpy import logging as logg
 from typing import Literal
@@ -76,18 +82,6 @@ def quantify_mutations(
         pandas DataFrame holding mutation information.
     """
     start = logg.info("Quantifying mutations")
-    try:
-        import rpy2
-        from rpy2.robjects.packages import importr
-        from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri
-    except:
-        raise (
-            ImportError(
-                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
-            )
-        )
-
     sh = importr("shazam")
     base = importr("base")
     if isinstance(data, Dandelion):
@@ -95,7 +89,6 @@ def quantify_mutations(
     else:
         dat = load_data(data)
 
-    pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
     dat = sanitize_data(dat)
@@ -108,34 +101,20 @@ def quantify_mutations(
     # sanitize before passing to R
     dat_, _ = sanitize_data_for_saving(dat_)
 
-    if sequence_column is None:
-        seq_ = "sequence_alignment"
-    else:
-        seq_ = sequence_column
-
-    if germline_column is None:
-        germline_ = "germline_alignment_d_mask"
-    else:
-        germline_ = germline_column
-
-    if region_definition is None:
-        reg_d = NULL
-    else:
-        reg_d = base.get(region_definition)
-
-    if mutation_definition is None:
-        mut_d = NULL
-    else:
-        mut_d = base.get(mutation_definition)
+    seq_ = "sequence_alignment" if sequence_column is None else sequence_column
+    germline_ = (
+        "germline_alignment_d_mask"
+        if germline_column is None
+        else germline_column
+    )
+    reg_d = NULL if region_definition is None else base.get(region_definition)
+    mut_d = (
+        NULL if mutation_definition is None else base.get(mutation_definition)
+    )
 
     if split_locus is False:
         dat_ = dat_.where(dat_.isna(), dat_.astype(str))
-        try:
-            dat_r = pandas2ri.py2rpy(dat_)
-        except:
-            dat_ = dat_.astype(str)
-            dat_r = pandas2ri.py2rpy(dat_)
-
+        dat_r = safe_py2rpy(dat_)
         results = sh.observedMutations(
             dat_r,
             sequenceColumn=seq_,
@@ -146,33 +125,16 @@ def quantify_mutations(
             combine=combine,
             **kwargs,
         )
-        if rpy2.__version__ >= "3.4.5":
-            from rpy2.robjects.conversion import localconverter
-
-            with localconverter(
-                rpy2.robjects.default_converter + pandas2ri.converter
-            ):
-                pd_df = rpy2.robjects.conversion.rpy2py(results)
-        else:
-            # pd_df = pandas2ri.rpy2py_data frame(results)
-            pd_df = results.copy()
+        pd_df = safe_rpy2py(results)
     else:
-        dat_h = dat_[dat_["locus"] == "IGH"]
-        dat_l = dat_[dat_["locus"].isin(["IGK", "IGL"])]
+        dat_h = dat_[dat_["locus"] == "IGH"].copy()
+        dat_l = dat_[dat_["locus"].isin(["IGK", "IGL"])].copy()
 
         dat_h = dat_h.where(dat_h.isna(), dat_h.astype(str))
-        try:
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-        except:
-            dat_h = dat_h.astype(str)
-            dat_h_r = pandas2ri.py2rpy(dat_h)
+        dat_h_r = safe_py2rpy(dat_h)
 
         dat_l = dat_l.where(dat_l.isna(), dat_l.astype(str))
-        try:
-            dat_l_r = pandas2ri.py2rpy(dat_l)
-        except:
-            dat_l = dat_l.astype(str)
-            dat_l_r = pandas2ri.py2rpy(dat_l)
+        dat_l_r = safe_py2rpy(dat_l)
 
         results_h = sh.observedMutations(
             dat_h_r,
@@ -194,14 +156,8 @@ def quantify_mutations(
             combine=combine,
             **kwargs,
         )
-        if rpy2.__version__ >= "3.4.5":
-            from rpy2.robjects.conversion import localconverter
-
-            with localconverter(
-                rpy2.robjects.default_converter + pandas2ri.converter
-            ):
-                results_h = rpy2.robjects.conversion.rpy2py(results_h)
-                results_l = rpy2.robjects.conversion.rpy2py(results_l)
+        results_h = safe_rpy2py(results_h)
+        results_l = safe_rpy2py(results_l)
         pd_df = pd.concat([results_h, results_l])
 
     pd_df.set_index("sequence_id", inplace=True, drop=False)
@@ -404,17 +360,7 @@ def calculate_threshold(
         if automatic thresholding failed.
     """
     start = logg.info("Calculating threshold")
-    try:
-        import rpy2
-        from rpy2.robjects.packages import importr
-        from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, FloatVector
-    except:
-        raise (
-            ImportError(
-                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
-            )
-        )
+
     if isinstance(data, Dandelion):
         dat = load_data(data.data)
     elif isinstance(data, pd.DataFrame) or os.path.isfile(str(data)):
@@ -422,46 +368,26 @@ def calculate_threshold(
         warnings.filterwarnings("ignore")
 
     sh = importr("shazam")
-    pandas2ri.activate()
-    if "v_call_genotyped" in dat.columns:
-        v_call = "v_call_genotyped"
-    else:
-        v_call = "v_call"
-    if model is None:
-        model_ = "ham"
-    else:
-        model_ = model
-    if normalize_method is None:
-        norm_ = "len"
-    else:
-        norm_ = normalize_method
-    if threshold_method is None:
-        threshold_method_ = "density"
-    else:
-        threshold_method_ = threshold_method
-    if subsample is None:
-        subsample_ = NULL
-    else:
-        subsample_ = subsample
+    v_call = (
+        "v_call_genotyped" if "v_call_genotyped" in dat.columns else "v_call"
+    )
+    model_ = "ham" if model is None else model
+    norm_ = "len" if normalize_method is None else normalize_method
+    threshold_method_ = (
+        "density" if threshold_method is None else threshold_method
+    )
+    subsample_ = NULL if subsample is None else subsample
+
     # sanitize before passing to R
     dat, _ = sanitize_data_for_saving(dat)
     if mode == "heavy":
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
-        try:
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-        except:
-            dat_h = dat_h.astype(str)
-            dat_h_r = pandas2ri.py2rpy(dat_h)
-
+        dat_h_r = safe_py2rpy(dat_h)
         dist_ham = sh.distToNearest(
             dat_h_r, vCallColumn=v_call, model=model_, normalize=norm_, **kwargs
         )
     elif mode == "single-cell":
-        try:
-            dat_r = pandas2ri.py2rpy(dat)
-        except:
-            dat = dat.astype(str)
-            dat_r = pandas2ri.py2rpy(dat)
+        dat_r = safe_py2rpy(dat)
         try:
             dist_ham = sh.distToNearest(
                 dat_r,
@@ -480,11 +406,7 @@ def calculate_threshold(
                 "Rerun this after filtering. For now, switching to heavy mode."
             )
             dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
-            try:
-                dat_h_r = pandas2ri.py2rpy(dat_h)
-            except:
-                dat_h = dat_h.astype(str)
-                dat_h_r = pandas2ri.py2rpy(dat_h)
+            dat_h_r = safe_py2rpy(dat_h)
 
             dist_ham = sh.distToNearest(
                 dat_h_r,
@@ -494,13 +416,7 @@ def calculate_threshold(
                 nproc=ncpu,
                 **kwargs,
             )
-    if rpy2.__version__ >= "3.4.5":
-        from rpy2.robjects.conversion import localconverter
-
-        with localconverter(
-            rpy2.robjects.default_converter + pandas2ri.converter
-        ):
-            dist_ham = rpy2.robjects.conversion.rpy2py(dist_ham)
+    dist_ham = safe_rpy2py(dist_ham)
     # Find threshold using density method
     dist = np.array(dist_ham["dist_nearest"])
     if manual_threshold is None:
@@ -521,26 +437,15 @@ def calculate_threshold(
                     "      Threshold method 'density' did not return with any values. Switching to method = 'gmm'."
                 )
                 threshold_method_ = "gmm"
-                if threshold_model is None:
-                    threshold_model_ = "gamma-gamma"
-                else:
-                    threshold_model_ = threshold_model
-                if cross is None:
-                    cross_ = NULL
-                else:
-                    cross_ = cross
-                if cutoff is None:
-                    cutoff_ = "optimal"
-                else:
-                    cutoff_ = cutoff
-                if sensitivity is None:
-                    sen_ = NULL
-                else:
-                    sen_ = sensitivity
-                if specificity is None:
-                    spc_ = NULL
-                else:
-                    spc_ = specificity
+                threshold_method_ = (
+                    "gamma-gamma"
+                    if threshold_model is None
+                    else threshold_model
+                )
+                cross_ = NULL if cross is None else cross
+                cutoff_ = "optimal" if cutoff is None else cutoff
+                sen_ = NULL if sensitivity is None else sensitivity
+                spc_ = NULL if specificity is None else specificity
                 dist_threshold = sh.findThreshold(
                     FloatVector(dist[~np.isnan(dist)]),
                     method=threshold_method_,
@@ -551,38 +456,16 @@ def calculate_threshold(
                     sen=sen_,
                     spc=spc_,
                 )
-                if rpy2.__version__ >= "3.4.5":
-                    from rpy2.robjects.conversion import localconverter
-
-                    with localconverter(
-                        rpy2.robjects.default_converter + pandas2ri.converter
-                    ):
-                        dist_threshold = rpy2.robjects.conversion.rpy2py(
-                            dist_threshold
-                        )
-
+                dist_threshold = safe_rpy2py(dist_threshold)
                 threshold = np.array(dist_threshold.slots["threshold"])[0]
         else:
-            if threshold_model is None:
-                threshold_model_ = "gamma-gamma"
-            else:
-                threshold_model_ = threshold_model
-            if cross is None:
-                cross_ = NULL
-            else:
-                cross_ = cross
-            if cutoff is None:
-                cutoff_ = "optimal"
-            else:
-                cutoff_ = cutoff
-            if sensitivity is None:
-                sen_ = NULL
-            else:
-                sen_ = sensitivity
-            if specificity is None:
-                spc_ = NULL
-            else:
-                spc_ = specificity
+            threshold_method_ = (
+                "gamma-gamma" if threshold_model is None else threshold_model
+            )
+            cross_ = NULL if cross is None else cross
+            cutoff_ = "optimal" if cutoff is None else cutoff
+            sen_ = NULL if sensitivity is None else sensitivity
+            spc_ = NULL if specificity is None else specificity
             dist_threshold = sh.findThreshold(
                 FloatVector(dist[~np.isnan(dist)]),
                 method=threshold_method_,
@@ -593,15 +476,7 @@ def calculate_threshold(
                 sen=sen_,
                 spc=spc_,
             )
-            if rpy2.__version__ >= "3.4.5":
-                from rpy2.robjects.conversion import localconverter
-
-                with localconverter(
-                    rpy2.robjects.default_converter + pandas2ri.converter
-                ):
-                    dist_threshold = rpy2.robjects.conversion.rpy2py(
-                        dist_threshold
-                    )
+            dist_threshold = safe_rpy2py(dist_threshold)
             threshold = np.array(dist_threshold.slots["threshold"])[0]
         if np.isnan(threshold):
             raise ValueError(
@@ -687,3 +562,24 @@ def calculate_threshold(
         output = Dandelion(dat)
         output.threshold = tr
         return output
+
+
+def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
+    """Convert pandas DataFrame to R object safely."""
+    try:
+        with localconverter(
+            rpy2.robjects.default_converter + pandas2ri.converter
+        ):
+            return pandas2ri.py2rpy(df)
+    except:
+        df = df.astype(str)
+        with localconverter(
+            rpy2.robjects.default_converter + pandas2ri.converter
+        ):
+            return pandas2ri.py2rpy(df)
+
+
+def safe_rpy2py(r_object) -> pd.DataFrame:
+    """Convert R object to pandas DataFrame safely."""
+    with localconverter(rpy2.robjects.default_converter + pandas2ri.converter):
+        return pandas2ri.rpy2py(r_object)
