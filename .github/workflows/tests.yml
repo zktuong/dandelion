@@ -184,12 +184,7 @@ jobs:
 
       - name: Install Dandelion
         run: |
-          pip install -e ".[scirpy]"
-
-      - name: Install trajectory dependencies
-        run: |
-          pip install palantir
-          pip install pertpy
+          pip install -e ".[scirpy,scrublet,palantir]"
 
       - name: Test with pytest
         run: |
