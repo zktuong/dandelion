@@ -1,5 +1,7 @@
 import warnings
 
+import pandas as pd
+
 from typing import Literal
 
 from dandelion.utilities._core import Dandelion
@@ -89,7 +91,7 @@ def identical_clones(
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, r
+        from rpy2.robjects import r
     except:
         raise (
             ImportError(
@@ -99,7 +101,6 @@ def identical_clones(
     scp = importr("scoper")
 
     db = load_data(vdj_data.data)
-    pandas2ri.activate()
     warnings.filterwarnings("ignore")
 
     # sanitize before passing to R
@@ -114,11 +115,7 @@ def identical_clones(
     db, _ = sanitize_data_for_saving(db)
     fields = NULL if fields is None else fields
     cell_id = NULL if cell_id is None else cell_id
-    try:
-        db_r = pandas2ri.py2rpy(db)
-    except:
-        db = db.astype(str)
-        db_r = pandas2ri.py2rpy(db)
+    db_r = safe_py2rpy(db)
     results = scp.identicalClones(
         db=db_r,
         method=method,
@@ -140,7 +137,7 @@ def identical_clones(
         summarize_clones=summarize_clones,
     )
     results_dataframe = r["as.data.frame"](results)
-    df = pandas2ri.rpy2py(results_dataframe)
+    df = safe_rpy2py(results_dataframe)
     vdj_data.data = df.copy()
     vdj_data.update_metadata(
         reinitialize=True,
@@ -238,7 +235,7 @@ def hierarchical_clones(
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, r
+        from rpy2.robjects import r
     except:
         raise (
             ImportError(
@@ -248,7 +245,6 @@ def hierarchical_clones(
     scp = importr("scoper")
 
     db = load_data(vdj_data.data)
-    pandas2ri.activate()
     warnings.filterwarnings("ignore")
     db = sanitize_data(db)
     if remove_ambiguous:
@@ -261,11 +257,7 @@ def hierarchical_clones(
     db, _ = sanitize_data_for_saving(db)
     fields = NULL if fields is None else fields
     cell_id = NULL if cell_id is None else cell_id
-    try:
-        db_r = pandas2ri.py2rpy(db)
-    except:
-        db = db.astype(str)
-        db_r = pandas2ri.py2rpy(db)
+    db_r = safe_py2rpy(db)
     results = scp.hierarchicalClones(
         db=db_r,
         threshold=threshold,
@@ -290,7 +282,7 @@ def hierarchical_clones(
         summarize_clones=summarize_clones,
     )
     results_dataframe = r["as.data.frame"](results)
-    df = pandas2ri.rpy2py(results_dataframe)
+    df = safe_rpy2py(results_dataframe)
     vdj_data.data = df.copy()
     vdj_data.update_metadata(
         reinitialize=True,
@@ -406,7 +398,7 @@ def spectral_clones(
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
-        from rpy2.robjects import pandas2ri, r
+        from rpy2.robjects import r
     except:
         raise (
             ImportError(
@@ -416,7 +408,6 @@ def spectral_clones(
     scp = importr("scoper")
 
     db = load_data(vdj_data.data)
-    pandas2ri.activate()
     warnings.filterwarnings("ignore")
     db = sanitize_data(db)
     if remove_ambiguous:
@@ -430,11 +421,7 @@ def spectral_clones(
     fields = NULL if fields is None else fields
     cell_id = NULL if cell_id is None else cell_id
     threshold = NULL if threshold is None else threshold
-    try:
-        db_r = pandas2ri.py2rpy(db)
-    except:
-        db = db.astype(str)
-        db_r = pandas2ri.py2rpy(db)
+    db_r = safe_py2rpy(db)
     results = scp.spectralClones(
         db=db_r,
         method=method,
@@ -464,7 +451,7 @@ def spectral_clones(
         summarize_clones=summarize_clones,
     )
     results_dataframe = r["as.data.frame"](results)
-    df = pandas2ri.rpy2py(results_dataframe)
+    df = safe_rpy2py(results_dataframe)
     vdj_data.data = df.copy()
     vdj_data.update_metadata(
         reinitialize=True,
@@ -472,3 +459,44 @@ def spectral_clones(
         retrieve=clone_id,
         retrieve_mode="merge and unique only",
     )
+
+
+def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
+    """Convert pandas DataFrame to R object safely."""
+    try:
+        import rpy2
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
+    try:
+        with localconverter(
+            rpy2.robjects.default_converter + pandas2ri.converter
+        ):
+            return pandas2ri.py2rpy(df)
+    except:
+        df = df.astype(str)
+        with localconverter(
+            rpy2.robjects.default_converter + pandas2ri.converter
+        ):
+            return pandas2ri.py2rpy(df)
+
+
+def safe_rpy2py(r_object) -> pd.DataFrame:
+    """Convert R object to pandas DataFrame safely."""
+    try:
+        import rpy2
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects import pandas2ri
+    except:
+        raise (
+            ImportError(
+                "Unable to initialise R instance. Please run this separately through R with shazam's tutorials."
+            )
+        )
+    with localconverter(rpy2.robjects.default_converter + pandas2ri.converter):
+        return pandas2ri.rpy2py(r_object)
