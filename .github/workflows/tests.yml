@@ -103,6 +103,7 @@ jobs:
             r-bh
             r-locfit
             r-data.table
+            r-stringi
             zlib
             xz
 
@@ -110,9 +111,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: r-packages-${{ runner.os }}-v1
+          key: r-packages-${{ matrix.config.os }}-v1
           restore-keys: |
-            r-packages-${{ runner.os }}-
+            r-packages-${{ matrix.config.os }}-v1
 
       - name: Set R compiler flags via .Rprofile
         if: matrix.config.os == 'macos-latest'
