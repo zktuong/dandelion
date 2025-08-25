@@ -16,6 +16,7 @@ on:
 
 env:
   cache-version: "cache-v3"
+  R_LIBS_USER: "/home/runner/micromamba/envs/dandelion/lib/R/library"
 
 jobs:
   tests:
