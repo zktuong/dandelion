@@ -250,6 +250,12 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
         _ = ddl.concat([vdj, vdj], suffixes=["x"])
     with pytest.raises(ValueError):
         _ = ddl.concat([vdj, vdj], prefixes=["y"])
+    with pytest.raises(ValueError):
+        _ = ddl.concat([vdj, vdj], suffixes=["x", "y"], prefixes=["y", "z"])
+    # also test with the different metadata.
+    vdj1 = vdj.copy()
+    vdj1.metadata["new_col"] = "test"
+    _ = ddl.concat([vdj, vdj1])
 
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
