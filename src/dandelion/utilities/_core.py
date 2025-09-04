@@ -2818,6 +2818,7 @@ def concat(
     suffixes: list[str] | None = None,
     prefixes: list[str] | None = None,
     remove_trailing_hyphen_number: bool = False,
+    concat_meta: bool = True,
 ) -> Dandelion:
     """
     Concatenate data frames and return as `Dandelion` object.
@@ -2840,6 +2841,8 @@ def concat(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    concat_meta : bool, optional
+        Whether to also concatenate the existing metadata. If False, create a new Dandelion object instead.
 
     Returns
     -------
@@ -2853,10 +2856,9 @@ def concat(
     """
     arrays = list(arrays)
 
-    try:
-        arrays_ = [x.data.copy() for x in arrays]
-    except:
-        arrays_ = [x.copy() for x in arrays]
+    arrays_ = [
+        x.data.copy() if isinstance(x, Dandelion) else x.copy() for x in arrays
+    ]
 
     if (suffixes is not None) and (prefixes is not None):
         raise ValueError("Please provide only prefixes or suffixes, not both.")
@@ -2874,11 +2876,39 @@ def concat(
             )
 
     vdjs = [Dandelion(array) for array in arrays_]
+
+    # if it's already a Dandelion object, the metadata may have been adjusted
+    # create a way to keep the
+    # check if all instances in the array are Dandelion
+    ddl_check = [True if isinstance(x, Dandelion) else False for x in arrays]
+    if all(ddl_check):
+        # create a metadata array
+        con_metas = [x.metadata.copy() for x in arrays]
+        # concat the meta
+        try:
+            con_metas_ = pd.concat(con_metas, verify_integrity=True)
+        except ValueError:
+            for i in range(0, len(con_metas)):
+                if (suffixes is None) and (prefixes is None):
+                    con_metas[i].index = [
+                        j + sep + str(i) for j in con_metas[i].index
+                    ]
+                elif suffixes is not None:
+                    con_metas[i].index = [
+                        j + sep + str(suffixes[i]) for j in con_metas[i].index
+                    ]
+                elif prefixes is not None:
+                    con_metas[i].index = [
+                        str(prefixes[i]) + sep + j for j in con_metas[i].index
+                    ]
+            con_metas_ = pd.concat(con_metas, verify_integrity=True)
+    else:
+        con_metas_ = None
+
     if check_unique:
         try:
             arrays_ = [vdj.data for vdj in vdjs]
             df = pd.concat(arrays_, verify_integrity=True)
-        except:
             for i in range(0, len(arrays)):
                 if (suffixes is None) and (prefixes is None):
                     vdjs[i].add_sequence_suffix(
@@ -2904,4 +2934,18 @@ def concat(
         arrays_ = [vdj.data for vdj in vdjs]
         df = pd.concat(arrays_)
 
-    return Dandelion(df)
+    out = Dandelion(df)
+
+    if con_metas_ is not None:
+        if concat_meta:
+            for col in con_metas_:
+                if col not in out.metadata:
+                    out.metadata[col] = pd.Series(con_metas_[col])
+
+    # don't sort the indices for both .data and .metadata
+    data_index_order = df.index
+    out.data = out.data.loc[data_index_order]
+    if con_metas_ is not None:
+        metadata_index_order = con_metas_.index
+        out.metadata = out.metadata.loc[metadata_index_order]
+    return out
