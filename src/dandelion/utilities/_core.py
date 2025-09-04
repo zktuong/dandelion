@@ -2909,6 +2909,7 @@ def concat(
         try:
             arrays_ = [vdj.data for vdj in vdjs]
             df = pd.concat(arrays_, verify_integrity=True)
+        except ValueError:
             for i in range(0, len(arrays)):
                 if (suffixes is None) and (prefixes is None):
                     vdjs[i].add_sequence_suffix(
