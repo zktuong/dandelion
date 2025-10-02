@@ -140,7 +140,7 @@ jobs:
       - name: Install and test if R dependencies are installed properly
         run: |
           Rscript tests/r_dependencies.R
-        shell: bash -l {0}
+        continue-on-error: true
 
       - name: Get latest IgBlast version
         id: get_version

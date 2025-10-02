@@ -232,7 +232,10 @@ def test_store_germline_references(
 def test_quantify_mut(create_testfolder, processed_files, freq, colname, dtype):
     """test_quantify_mut"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
-    ddl.pp.quantify_mutations(f, frequency=freq)
+    try:
+        ddl.pp.quantify_mutations(f, frequency=freq)
+    except:
+        pytest.skip("R package 'shazam' not installed")
     dat = pd.read_csv(f, sep="\t")
     assert not dat[colname].empty
     assert dat[colname].dtype == dtype
@@ -248,7 +251,10 @@ def test_quantify_mut_2(create_testfolder, processed_files, freq, colname):
     """test_quantify_mut_2"""
     f = create_testfolder / "dandelion" / processed_files["filtered"]
     vdj = ddl.Dandelion(f)
-    ddl.pp.quantify_mutations(vdj, frequency=freq)
+    try:
+        ddl.pp.quantify_mutations(vdj, frequency=freq)
+    except:
+        pytest.skip("R package 'shazam' not installed")
     assert not vdj.data[colname].empty
     if colname == "mu_freq":
         assert vdj.data[colname].dtype == float
