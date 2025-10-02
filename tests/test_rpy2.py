@@ -6,14 +6,20 @@ import pandas as pd
 import dandelion as ddl
 
 
+def require_r_package(pkg_name):
+    """Skip test if R package is missing."""
+    from rpy2.robjects.packages import importr
+
+    try:
+        return importr(pkg_name)
+    except:
+        pytest.skip(f"R package '{pkg_name}' not installed")
+
+
 # @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_importrpy2():
     """test_importrpy2"""
-
-    from rpy2.robjects.packages import importr
-
-    sh = importr("shazam")
-
+    sh = require_r_package("shazam")
     assert sh.__module__ == "rpy2.robjects.packages"
 
 
@@ -23,11 +29,17 @@ def test_mutation(create_testfolder, airr_reannotated):
     """test_mutation"""
     f = create_testfolder / "test.tsv"
     airr_reannotated.to_csv(f, sep="\t", index=False)
-    ddl.pp.quantify_mutations(f)
+    try:
+        ddl.pp.quantify_mutations(f)
+    except:
+        pytest.skip("R package 'shazam' not installed")
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
     assert not vdj.data.mu_count.empty
-    ddl.pp.quantify_mutations(f, frequency=True)
+    try:
+        ddl.pp.quantify_mutations(f, frequency=True)
+    except:
+        pytest.skip("R package 'shazam' not installed")
     assert not vdj.data.mu_freq.empty
 
 
@@ -81,7 +93,10 @@ def test_scoper_i(create_testfolder):
     assert "clone_id" not in vdj.data
     from dandelion.external.immcantation.scoper import identical_clones
 
-    identical_clones(vdj)
+    try:
+        identical_clones(vdj)
+    except:
+        pytest.skip("R package 'scoper' not installed")
     assert not vdj.data.clone_id.empty
 
 
@@ -94,7 +109,10 @@ def test_scoper_h(create_testfolder):
     assert "clone_id" not in vdj.data
     from dandelion.external.immcantation.scoper import hierarchical_clones
 
-    hierarchical_clones(vdj, threshold=0.15)
+    try:
+        hierarchical_clones(vdj, threshold=0.15)
+    except:
+        pytest.skip("R package 'scoper' not installed")
     assert not vdj.data.clone_id.empty
 
 
@@ -107,15 +125,25 @@ def test_scoper_h(create_testfolder):
     assert "clone_id" not in vdj.data
     from dandelion.external.immcantation.scoper import spectral_clones
 
-    spectral_clones(vdj, method="novj")
+    try:
+        spectral_clones(vdj, method="novj")
+    except:
+        pytest.skip("R package 'scoper' not installed")
     assert not vdj.data.clone_id.empty
 
     vdj = ddl.Dandelion(f)
     assert "clone_id" not in vdj.data
-    spectral_clones(vdj, method="novj", threshold=0.15)
+    try:
+        spectral_clones(vdj, method="novj", threshold=0.15)
+    except:
+        pytest.skip("R package 'scoper' not installed")
     assert not vdj.data.clone_id.empty
 
     vdj = ddl.Dandelion(f)
     assert "clone_id" not in vdj.data
-    spectral_clones(vdj, method="vj", threshold=0.15)
+    try:
+        spectral_clones(vdj, method="vj", threshold=0.15)
+    except:
+        pytest.skip("R package 'scoper' not installed")
+
     assert not vdj.data.clone_id.empty
