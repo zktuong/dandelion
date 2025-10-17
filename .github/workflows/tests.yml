@@ -96,6 +96,13 @@ jobs:
           create-args: >-
             python=${{ matrix.config.python-version }}
 
+      - name: Install R packages (Ubuntu only)
+        if: matrix.config.os == 'ubuntu-latest'
+        shell: bash -l {0}
+        run: |
+          micromamba install -y -n dandelion -c conda-forge r-shazam r-alakazam r-tigger r-scoper r-optparse
+          micromamba clean --all --yes
+
       # - name: Cache R packages installed by Rscript
       #   uses: actions/cache@v4
       #   with:
