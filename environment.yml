@@ -12,6 +12,11 @@ dependencies:
   - pytables>=3.8.0
   - pytest
   - graph-tool
+  - r-shazam
+  - r-alakazam
+  - r-tigger
+  - r-scoper
+  - bioconductor-edger
   - pip
   - tbb
   - pip:
