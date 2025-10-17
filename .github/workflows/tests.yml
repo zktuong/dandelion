@@ -98,11 +98,6 @@ jobs:
             blast
             rpy2
             r-optparse
-            r-tigger
-            r-shazam
-            r-alakazam
-            r-scoper
-            bioconductor-edger
 
       # - name: Cache R packages installed by Rscript
       #   uses: actions/cache@v4
