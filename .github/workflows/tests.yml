@@ -10,7 +10,7 @@ on:
 
 env:
   cache-version: "cache-v2"
-  R_LIBS_USER: "/home/runner/micromamba/envs/dandelion/lib/R/library"
+  # R_LIBS_USER: "/home/runner/micromamba/envs/dandelion/lib/R/library"
 
 jobs:
   changes:
@@ -98,40 +98,37 @@ jobs:
             blast
             rpy2
             r-optparse
-            r-matrix
-            r-statmod
-            r-bh
-            r-locfit
-            r-data.table
-            r-stringi
-            zlib
-            xz
+            r-tigger
+            r-shazam
+            r-alakazam
+            r-scoper
+            bioconductor-edger
 
-      - name: Cache R packages installed by Rscript
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: r-packages-${{ matrix.config.os }}-v1
-          restore-keys: |
-            r-packages-${{ matrix.config.os }}-v1
+      # - name: Cache R packages installed by Rscript
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ env.R_LIBS_USER }}
+      #     key: r-packages-${{ matrix.config.os }}-v1
+      #     restore-keys: |
+      #       r-packages-${{ matrix.config.os }}-v1
 
-      - name: Set R compiler flags via .Rprofile
-        if: matrix.config.os == 'macos-latest'
-        run: |
-          GCC_BIN=$(ls /opt/homebrew/bin/gcc-* | grep -E 'gcc-[0-9]+' | grep -v gcc-ar | sort -V | tail -n1)
-          GCC_VER=$(basename "$GCC_BIN")
-          echo "Found GCC: $GCC_VER"
-          # Set as output so other steps can use it
-          echo "gcc_version=$GCC_VER" >> $GITHUB_OUTPUT
-          mkdir -p ~/.R
-          echo "CC=${GCC_VER}" >> ~/.R/Makevars
-          echo "CXX=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX11=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX14=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX17=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
-          echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
-          echo 'CXX11FLAGS=-O2 -Wall -pipe' >> ~/.R/Makevars
+      # - name: Set R compiler flags via .Rprofile
+      #   if: matrix.config.os == 'macos-latest'
+      #   run: |
+      #     GCC_BIN=$(ls /opt/homebrew/bin/gcc-* | grep -E 'gcc-[0-9]+' | grep -v gcc-ar | sort -V | tail -n1)
+      #     GCC_VER=$(basename "$GCC_BIN")
+      #     echo "Found GCC: $GCC_VER"
+      #     # Set as output so other steps can use it
+      #     echo "gcc_version=$GCC_VER" >> $GITHUB_OUTPUT
+      #     mkdir -p ~/.R
+      #     echo "CC=${GCC_VER}" >> ~/.R/Makevars
+      #     echo "CXX=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+      #     echo "CXX11=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+      #     echo "CXX14=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+      #     echo "CXX17=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+      #     echo "CXX20=${GCC_VER/gcc/g++}" >> ~/.R/Makevars
+      #     echo "CXXFLAGS=-O2 -Wall -pipe" >> ~/.R/Makevars
+      #     echo 'CXX11FLAGS=-O2 -Wall -pipe' >> ~/.R/Makevars
 
       # - name: Clean conflicting env vars
       #   run: |
