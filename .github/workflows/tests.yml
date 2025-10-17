@@ -95,9 +95,6 @@ jobs:
           post-cleanup: "all"
           create-args: >-
             python=${{ matrix.config.python-version }}
-            blast
-            rpy2
-            r-optparse
 
       # - name: Cache R packages installed by Rscript
       #   uses: actions/cache@v4
