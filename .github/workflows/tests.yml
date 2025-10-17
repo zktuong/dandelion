@@ -9,7 +9,7 @@ on:
       - "master"
 
 env:
-  cache-version: "cache-v2"
+  cache-version: "cache-v1"
   # R_LIBS_USER: "/home/runner/micromamba/envs/dandelion/lib/R/library"
 
 jobs:
