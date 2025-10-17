@@ -12,6 +12,9 @@ dependencies:
   - pytables>=3.8.0
   - pytest
   - graph-tool
+  - blast
+  - rpy2
+  - r-optparse
   - r-shazam
   - r-alakazam
   - r-tigger
