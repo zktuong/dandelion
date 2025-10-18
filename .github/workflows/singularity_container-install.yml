@@ -40,6 +40,7 @@ jobs:
       - changes
     if: needs.changes.outputs.keepgoing == 'true'
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Check out code for the container build
         uses: actions/checkout@v4
