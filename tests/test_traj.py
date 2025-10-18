@@ -28,6 +28,11 @@ def test_setup(airr_reannotated, dummy_adata):
     sys.platform == "darwin",
     reason="macos CI stalls.",
 )
+# Only test if python >=3.12
+@pytest.mark.skipif(
+    sys.version_info < (3, 12),
+    reason="pertpy requires python >=3.12",
+)
 @patch("matplotlib.pyplot.show")
 def test_trajectory(mock_show):
     """test_workflow"""
