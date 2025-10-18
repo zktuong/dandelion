@@ -86,6 +86,11 @@ def test_trajectory(mock_show):
     sys.platform == "darwin",
     reason="macos CI stalls.",
 )
+# Only test if python >=3.12
+@pytest.mark.skipif(
+    sys.version_info < (3, 12),
+    reason="pertpy requires python >=3.12 due to step above.",
+)
 def test_trajectory_setup():
     """test_workflow with differen defaults"""
     adata = sc.read(FILE)
