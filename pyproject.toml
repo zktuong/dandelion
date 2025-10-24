@@ -122,7 +122,7 @@ docs = [
 ]
 scirpy = ["scirpy<0.23.0", "awkward<2.8.9", "mudata<0.3.2"]
 scrubet = ["scrublet<0.2.4", "annoy<1.17.0"]
-palantir = ["palantir<1.4.2", "pertpy<1.0.4", "jax<0.6.3"]
+palantir = ["palantir<1.4.2", "jax<0.6.3"]
 
 [tool.setuptools]
 include-package-data = true
