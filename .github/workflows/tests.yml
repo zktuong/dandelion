@@ -150,8 +150,10 @@ jobs:
       - name: Install Dandelion
         run: |
           pip install -e ".[scirpy,scrublet,palantir]"
-          # ensure filelock is installed properly
-          pip install filelock -U
+          # install pertpy from github
+          pip install git+https://www.github.com/scverse/pertpy.git
+          # ensure filelock is installed
+          pip install filelock
 
       - name: Test with pytest
         run: |
