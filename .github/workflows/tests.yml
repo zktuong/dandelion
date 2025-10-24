@@ -154,6 +154,8 @@ jobs:
           pip install git+https://www.github.com/scverse/pertpy.git
           # ensure filelock is installed
           pip install filelock
+          # also ensure rpy2 is installed
+          pip install rpy2
 
       - name: Test with pytest
         run: |
