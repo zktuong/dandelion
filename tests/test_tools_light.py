@@ -28,7 +28,7 @@ def test_find_clones(create_testfolder):
     assert not vdj.data.clone_id.empty
     assert not vdj.metadata.clone_id.empty
     vdj.write_h5ddl(f)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         ddl.tl.find_clones(vdj, key="random_column")
 
 
