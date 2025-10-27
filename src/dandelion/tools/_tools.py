@@ -30,7 +30,7 @@ from dandelion.utilities._utilities import *
 def find_clones(
     vdj_data: Dandelion | pd.DataFrame,
     identity: dict[str, float] | float = 0.85,
-    key: str | None = None,
+    key: dict[str, str] | str | None = None,
     by_alleles: bool = False,
     key_added: str | None = None,
     recalculate_length: bool = True,
@@ -48,8 +48,10 @@ def find_clones(
     identity : dict[str, float] | float, optional
         junction similarity parameter. Default 0.85. If provided as a dictionary, please use the following
         keys:'ig', 'tr-ab', 'tr-gd'.
-    key : str | None, optional
-        column name for performing clone clustering. `None` defaults to 'junction_aa'.
+    key : dict[str, str] | str | None, optional
+        column name for performing clone clustering. `None` defaults to a dictionary where:
+            {'ig': 'junction_aa', 'tr-ab': 'junction', 'tr-gd': 'junction'}
+        If provided as a string, this key will be used for all loci.
     by_alleles : bool, optional
         whether or not to collapse alleles to genes. `None` defaults to False.
     key_added : str | None, optional
@@ -91,12 +93,19 @@ def find_clones(
     locus_dict2 = {"ig": ["IGK", "IGL"], "tr-ab": ["TRA"], "tr-gd": ["TRG"]}
     DEFAULTIDENTITY = {"ig": 0.85, "tr-ab": 1, "tr-gd": 1}
 
-    key_ = key if key is not None else "junction_aa"  # default
+    # key_ = key if key is not None else "junction_aa"  # default
 
-    if key_ not in dat.columns:
-        raise ValueError("key {} not found in input table.".format(key_))
+    # if key_ not in dat.columns:
+    #     raise ValueError("key {} not found in input table.".format(key_))
 
     locuses = ["ig", "tr-ab", "tr-gd"]
+
+    # create a default key with ig="junction_aa", tr-ab="junction", tr-gd="junction"
+    key_ = (
+        {"ig": "junction_aa", "tr-ab": "junction", "tr-gd": "junction"}
+        if key is None
+        else key
+    )
 
     # quick check
     for locus in locuses:
@@ -136,7 +145,9 @@ def find_clones(
             if dat_vdj.shape[0] > 0:
                 vj_len_grp_vdj, seq_grp_vdj = group_sequences(
                     dat_vdj,
-                    junction_key=key_,
+                    junction_key=(
+                        key_[locusx] if isinstance(key_, dict) else key_
+                    ),
                     recalculate_length=recalculate_length,
                     by_alleles=by_alleles,
                     locus=locusx,
@@ -147,6 +158,9 @@ def find_clones(
                     identity=identity_,
                     locus=locus_log[locusx],
                     chain="VDJ",
+                    junction_key=(
+                        key_[locusx] if isinstance(key_, dict) else key_
+                    ),
                     verbose=verbose,
                 )
                 clone_dict_vdj = rename_clonotype_ids(
@@ -162,7 +176,9 @@ def find_clones(
             if dat_vj.shape[0] > 0:
                 vj_len_grp_vj, seq_grp_vj = group_sequences(
                     dat_vj,
-                    junction_key=key_,
+                    junction_key=(
+                        key_[locusx] if isinstance(key_, dict) else key_
+                    ),
                     recalculate_length=recalculate_length,
                     by_alleles=by_alleles,
                     locus=locusx,
@@ -173,6 +189,9 @@ def find_clones(
                     identity=identity_,
                     locus=locus_log[locusx],
                     chain="VJ",
+                    junction_key=(
+                        key_[locusx] if isinstance(key_, dict) else key_
+                    ),
                     verbose=verbose,
                 )
                 clone_dict_vj = rename_clonotype_ids(
@@ -1608,6 +1627,7 @@ def group_pairwise_hamming_distance(
     identity: float,
     locus: str,
     chain: Literal["VDJ", "VJ"],
+    junction_key: str,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -1638,7 +1658,7 @@ def group_pairwise_hamming_distance(
     # for each seq group, calculate the hamming distance matrix
     for g in tqdm(
         clonotype_sequence_group,
-        desc=f"Finding clones based on {locus} cell {chain} chains ".format(),
+        desc=f"Finding clones based on {locus} cell {chain} chains using {junction_key}".format(),
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         disable=not verbose,
     ):
