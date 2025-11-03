@@ -253,7 +253,7 @@ def generate_network(
                 out = vdj_data.copy()
 
             else:  # re-initiate a Dandelion class object
-                out = Dandelion(dat_)
+                out = Dandelion(dat_, verbose=False)
 
             tmp_totaldist = pd.DataFrame(
                 total_dist, index=dat_seq.index, columns=dat_seq.index
@@ -515,6 +515,7 @@ def generate_network(
                     layout=(lyt, lyt_),
                     graph=(g, g_),
                     germline=germline_,
+                    verbose=False,
                 )
             else:
                 out = Dandelion(
@@ -522,6 +523,7 @@ def generate_network(
                     metadata=vdj_data.metadata,
                     graph=(g, g_),
                     germline=germline_,
+                    verbose=False,
                 )
             out.threshold = threshold_
             return out
@@ -534,6 +536,7 @@ def generate_network(
                     graph=(g, g_),
                     germline=germline_,
                     initialize=False,
+                    verbose=False,
                 )
             else:
                 vdj_data.__init__(
@@ -543,6 +546,7 @@ def generate_network(
                     graph=(g, g_),
                     germline=germline_,
                     initialize=False,
+                    verbose=False,
                 )
             vdj_data.threshold = threshold_
     else:
@@ -552,6 +556,7 @@ def generate_network(
                 layout=(lyt, lyt_),
                 graph=(g, g_),
                 clone_key=clone_key,
+                verbose=False,
             )
         else:
             out = Dandelion(
@@ -559,6 +564,7 @@ def generate_network(
                 layout=None,
                 graph=(g, g_),
                 clone_key=clone_key,
+                verbose=False,
             )
         return out
 

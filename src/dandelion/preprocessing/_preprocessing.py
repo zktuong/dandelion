@@ -1899,10 +1899,11 @@ def create_germlines(
             layout=vdj_data.layout,
             graph=vdj_data.graph,
             initialize=True,
+            verbose=False,
         )
         out_vdj = vdj_data.copy()
     else:
-        out_vdj = Dandelion(germpass_outfile)
+        out_vdj = Dandelion(germpass_outfile, verbose=False)
         out_vdj.store_germline_reference(
             corrected=genotyped_fasta, germline=germline, org=org
         )
@@ -2172,7 +2173,7 @@ def filter_contigs(
         failed = list(set(barcode1) ^ set(barcode2))
 
     logg.info("Initializing Dandelion object")
-    out_dat = Dandelion(data=_dat, **kwargs)
+    out_dat = Dandelion(data=_dat, verbose=False, **kwargs)
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
 
@@ -4589,7 +4590,7 @@ def check_contigs(
         dat = dat[dat["ambiguous"] == "F"].copy()
 
     logg.info("Initializing Dandelion object")
-    out_dat = Dandelion(data=dat, **kwargs)
+    out_dat = Dandelion(data=dat, verbose=False, **kwargs)
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
         out_dat.threshold = data.threshold

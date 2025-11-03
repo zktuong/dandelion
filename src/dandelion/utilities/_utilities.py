@@ -2,6 +2,7 @@
 import h5py
 import os
 import re
+import unicodedata
 import warnings
 
 import numpy as np
@@ -432,15 +433,16 @@ def sanitize_data_for_saving(
     Parameters
     ----------
     data : pd.DataFrame
-        input dataframe.
+        Input dataframe.
 
     Returns
     -------
     tuple[pd.DataFrame, dict[str, str]]
-        dataframe and corresponding numpy structured dtype.
+        DataFrame and corresponding NumPy structured dtype.
     """
     tmp = data.copy()
     dtype_dict = {}
+
     for col in tmp:
         if col in RearrangementSchema.properties:
             dtype = RearrangementSchema.properties[col]["type"]
@@ -450,7 +452,13 @@ def sanitize_data_for_saving(
             tmp[col] = sanitize_column(tmp[col], dtype)
         else:
             tmp[col] = try_numeric_conversion(tmp[col])
+
         dtype_dict[col] = get_numpy_dtype(tmp[col])
+
+        # 🔧 Fix: ensure string columns use Unicode dtype, not ASCII bytes
+        if tmp[col].dtype == object or tmp[col].dtype == "string":
+            dtype_dict[col] = h5py.string_dtype(encoding="utf-8")
+
     dtypes = [(key, record) for key, record in dtype_dict.items()]
     return tmp, dtypes
 
@@ -501,15 +509,27 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
         return series.apply(sanitize_boolean)
     elif dtype == "string":
         series = series.apply(lambda x: "" if pd.isna(x) else x)
-        return series.replace(
-            [None, np.nan, "nan", "na", "NaN", ""], ""
-        ).astype(str)
+        return (
+            series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
+            .astype(str)
+            .apply(clean_unicode)
+        )
     elif dtype in ["integer", "number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
         # for dtype to be float
         return series.astype("float64").fillna(np.nan)
     return series
+
+
+def clean_unicode(x: str) -> str:
+    """Normalize and ensure valid UTF-8 text."""
+    if not isinstance(x, str):
+        return ""
+    # Normalize to NFKC form (handles Greek/Unicode nicely)
+    x = unicodedata.normalize("NFKC", x)
+    # Remove invalid or unencodable characters safely
+    return x.encode("utf-8", "ignore").decode("utf-8")
 
 
 def try_numeric_conversion(series: pd.Series) -> pd.Series:
@@ -811,9 +831,11 @@ def mask_dj(
             write_airr(dat, filePath)
 
 
-def write_airr(data: pd.DataFrame, save: Path | str) -> None:
+def write_airr(
+    data: pd.DataFrame, save: Path | str, verbose: bool = False
+) -> None:
     """Save as airr formatted file."""
-    data = sanitize_data(data)
+    data = sanitize_data(data, verbose=verbose)
     data.to_csv(save, sep="\t", index=False)
 
 

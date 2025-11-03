@@ -275,6 +275,7 @@ def calculate_threshold(
     figsize: tuple[float, float] = (4.5, 2.5),
     save_plot: str | None = None,
     ncpu: int = 1,
+    verbose: bool = False,
     **kwargs,
 ) -> Dandelion:
     """
@@ -349,6 +350,8 @@ def calculate_threshold(
         if specified, plot will be save with this path.
     ncpu : int, optional
         number of cpus to run `distToNearest`. defaults to 1.
+    verbose : bool, optional
+        whether or not to print messages with initializing Dandelion object.
     **kwargs
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
 
@@ -569,7 +572,7 @@ def calculate_threshold(
             ),
         )
     else:
-        output = Dandelion(dat)
+        output = Dandelion(dat, verbose=False)
         output.threshold = tr
         return output
 

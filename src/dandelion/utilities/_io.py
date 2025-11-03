@@ -151,6 +151,16 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     return data
 
 
+def decode(df):
+    """Decode byte strings in a DataFrame."""
+    for col in df:
+        if df[col].dtype == object:
+            df[col] = df[col].apply(
+                lambda x: x.decode("utf-8") if isinstance(x, bytes) else x
+            )
+    return df
+
+
 def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     """
     Read in and returns a `Dandelion` class from .h5ddl format.
@@ -170,7 +180,8 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     AttributeError
         if `data` not found in `.h5ddl` file.
     """
-    data = load_data(_read_h5_group(filename, group="data"))
+    data = decode(load_data(_read_h5_group(filename, group="data")))
+    # final decode to ensure all byte strings are converted to str
     metadata = _read_h5_group(filename, group="metadata")
     try:
         metadata_names = _read_h5_group(filename, group="metadata_names")
@@ -219,9 +230,11 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     if "graph" in locals():
         constructor["graph"] = graph
     try:
-        res = Dandelion(**constructor)
+        res = Dandelion(**constructor, verbose=False)
+        # ensure that the metadata is decoded
+        res.metadata = decode(res.metadata)
     except:
-        res = Dandelion(**constructor, initialize=False)
+        res = Dandelion(**constructor, initialize=False, verbose=False)
 
     if "threshold" in locals():
         res.threshold = threshold
@@ -262,7 +275,7 @@ def read_airr(
     Dandelion
         `Dandelion` object from AIRR file.
     """
-    vdj = Dandelion(file)
+    vdj = Dandelion(file, verbose=False)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -307,7 +320,7 @@ def read_bd_airr(
     Dandelion
         `Dandelion` object from BD AIRR file.
     """
-    vdj = Dandelion(file)
+    vdj = Dandelion(file, verbose=False)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -366,7 +379,7 @@ def read_parse_airr(
             "cdr3_aa": "junction_aa",
         }
     )
-    vdj = Dandelion(data)
+    vdj = Dandelion(data, verbose=False)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -445,7 +458,7 @@ def read_10x_airr(
     null_columns = [col for col in dat.columns if all_missing(dat[col])]
     if len(null_columns) > 0:
         dat.drop(null_columns, inplace=True, axis=1)
-    vdj = Dandelion(dat)
+    vdj = Dandelion(dat, verbose=False)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -636,7 +649,7 @@ def read_10x_vdj(
     # quick check if locus is malformed
     if remove_malformed:
         res = res[~res["locus"].str.contains("[|]")]
-    vdj = Dandelion(res)
+    vdj = Dandelion(res, verbose=False)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -1241,7 +1254,7 @@ def from_scirpy(data: AnnData | MuData) -> Dandelion:
     data.obsm["airr"]["cell_id"] = data.obs.index
     data = from_ak(data.obsm["airr"])
 
-    return Dandelion(data)
+    return Dandelion(data, verbose=False)
 
 
 def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:

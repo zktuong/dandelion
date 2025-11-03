@@ -897,7 +897,7 @@ def gini_indices(
         # clone size distribution
         _dat = _metadata[_metadata[groupby] == g]
         __data = _data[_data["cell_id"].isin(list(_dat.index))]
-        ddl_dat = Dandelion(__data, metadata=_dat)
+        ddl_dat = Dandelion(__data, metadata=_dat, verbose=False)
         if resample:
             sizelist = []
             if isinstance(data, Dandelion):
