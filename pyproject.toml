@@ -115,7 +115,7 @@ docs = [
   "yamlordereddictloader",
   "sphinx<8.2",
   "nbsphinx<0.9.8",
-  "sphinx-autodoc-typehints<3.1.1",
+  "sphinx-autodoc-typehints<3.5.3",
   "sphinx_rtd_theme<3.0.3",
   "readthedocs-sphinx-ext<2.2.6",
   "recommonmark<0.7.2",
