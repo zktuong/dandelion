@@ -2882,7 +2882,7 @@ def write_h5ddl_legacy(
 
 
 def concat(
-    arrays: list[pd.DataFrame | Dandelion],
+    arrays: list[pd.DataFrame | Dandelion] | dict[pd.DataFrame | Dandelion],
     check_unique: bool = True,
     sep: str = "_",
     suffixes: list[str] | None = None,
@@ -2897,8 +2897,8 @@ def concat(
 
     Parameters
     ----------
-    arrays : list[pd.DataFrame | Dandelion]
-        List of `Dandelion` class objects or pandas data frames
+    arrays : list[pd.DataFrame | Dandelion] | dict[pd.DataFrame | Dandelion]
+        List or dictionary of `Dandelion` objects or pandas DataFrames to concatenate.
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
@@ -2938,6 +2938,9 @@ def concat(
             raise ValueError(
                 "Please provide the same number of prefixes as the number of objects to concatenate."
             )
+    # first convert dict to list if necessary
+    if isinstance(arrays, dict):
+        arrays = list(arrays.values())
     # first, check if all input are dandelion instances
     ddl_check = [True if isinstance(x, Dandelion) else False for x in arrays]
     if all(ddl_check):
