@@ -2870,6 +2870,7 @@ def write_h5ddl_legacy(
 def concat(
     arrays: list[pd.DataFrame | Dandelion] | dict[pd.DataFrame | Dandelion],
     check_unique: bool = True,
+    collapse_cells: bool = True,
     sep: str = "_",
     suffixes: list[str] | None = None,
     prefixes: list[str] | None = None,
@@ -2888,6 +2889,9 @@ def concat(
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
+    collapse_cells : bool, optional
+        whether or not to collapse multiple contigs per cell into one row in the
+        metadata. By default True.
     sep : str, optional
         the separator to append suffix/prefix.
     suffixes : list[str] | None, optional
@@ -2965,6 +2969,10 @@ def concat(
         tmp_meta_names.extend(list(tmp.metadata_names))
         tmp_data_names.extend(list(tmp.data_names))
 
+    if collapse_cells:
+        # we should preserve the order but remove duplicates
+        tmp_meta_names = list(dict.fromkeys(tmp_meta_names))
+
     if len(tmp_meta_names) != len(set(tmp_meta_names)):
         metadata_index_order = None
     else:
@@ -2979,7 +2987,7 @@ def concat(
 
     # now, if check_unique is True, we will append suffixes/prefixes to both metadata and data indices
     if check_unique:
-        if metadata_index_order is None or data_index_order is None:
+        if metadata_index_order is None and data_index_order is None:
             # store the modified names as well
             metadata_index_order, data_index_order = [], []
             for i in range(0, len(vdjs_)):
@@ -3003,6 +3011,32 @@ def concat(
                         remove_trailing_hyphen_number=remove_trailing_hyphen_number,
                     )
                 metadata_index_order.extend(list(vdjs_[i].metadata_names))
+                data_index_order.extend(list(vdjs_[i].data_names))
+        elif data_index_order is None:
+            data_index_order = []
+            for i in range(0, len(vdjs_)):
+                # this will always sync to the sequence_id in .data
+                if (suffixes is None) and (prefixes is None):
+                    vdjs_[i].add_sequence_suffix(
+                        str(i),
+                        sep=sep,
+                        sync=False,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif suffixes is not None:
+                    vdjs_[i].add_sequence_suffix(
+                        str(suffixes[i]),
+                        sep=sep,
+                        sync=False,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif prefixes is not None:
+                    vdjs_[i].add_sequence_prefix(
+                        str(prefixes[i]),
+                        sep=sep,
+                        sync=False,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
                 data_index_order.extend(list(vdjs_[i].data_names))
     else:
         # don't add suffixes/prefixes, but check if indices are unique
