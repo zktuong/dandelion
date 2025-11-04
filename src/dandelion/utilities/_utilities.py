@@ -1369,3 +1369,33 @@ def write_output(out: str, file: Path | str) -> None:
     fh = open(file, "a")
     fh.write(out)
     fh.close()
+
+
+def get_vcall_key(data: dict, v_call_key: str) -> str:
+    """
+    Determine which V-call key to use based on the provided data and key.
+
+    Parameters
+    ----------
+    data : dict
+        The data dictionary containing possible keys.
+    v_call_key : str
+        The requested key to check (e.g. "v_call" or "v_call_genotyped").
+
+    Returns
+    -------
+    str
+        The best matching V-call key, following this priority:
+        1. "v_call_genotyped" if it exists in data and matches v_call_key
+        2. "v_call" if it exists in data and matches v_call_key
+        3. v_call_key if it exists in data
+        4. "v_call" as a default fallback
+    """
+    if "v_call_genotyped" in data and v_call_key == "v_call_genotyped":
+        return "v_call_genotyped"
+    elif "v_call" in data and v_call_key == "v_call":
+        return "v_call"
+    elif v_call_key in data:
+        return v_call_key
+    else:
+        return "v_call"
