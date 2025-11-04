@@ -683,10 +683,10 @@ class Dandelion:
                     }
                 }
             )
-        self._update_rearrangement_status()
+        self._update_rearrangement_status(v_call_key)
 
         if "ambiguous" in self.data:
-            dataq = self.data[self.data["ambiguous"] == "F"]
+            dataq = self.data[self.data["ambiguous"].isin(FALSES)]
         else:
             dataq = self.data
         if self.querier is None:
@@ -729,18 +729,7 @@ class Dandelion:
         reqcols1 = [
             "locus_VDJ",
         ]
-        vcall = (
-            "v_call_genotyped"
-            if (
-                "v_call_genotyped" in self.data
-                and v_call_key == "v_call_genotyped"
-            )
-            else (
-                "v_call"
-                if ("v_call" in self.data and v_call_key == "v_call")
-                else v_call_key if (v_call_key in self.data) else "v_call"
-            )
-        )
+        vcall = get_vcall_key(self.data, v_call_key)
 
         # remap v_call_genotyped_* to just v_call_* for column names in tmp_metadata if vcall == "v_call_genotyped"
         if vcall == "v_call_genotyped":
@@ -1059,12 +1048,9 @@ class Dandelion:
         else:
             self.metadata = tmp_metadata.copy()
 
-    def _update_rearrangement_status(self) -> None:
+    def _update_rearrangement_status(self, v_call_key: str) -> None:
         """Check rearrangement status."""
-        if "v_call_genotyped" in self.data:
-            vcall = "v_call_genotyped"
-        else:
-            vcall = "v_call"
+        vcall = get_vcall_key(self.data, v_call_key)
         contig_status = []
         for v, j, c in zip(
             self.data[vcall], self.data["j_call"], self.data["c_call"]
