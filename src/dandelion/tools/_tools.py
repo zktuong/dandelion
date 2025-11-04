@@ -460,32 +460,33 @@ def transfer(
         for idx in graph_connectivities:
             graph_connectivities[idx][graph_connectivities[idx].nonzero()] = 1
         cell_indices = {
-            str(i): np.array([name]) for i, name in enumerate(adata.obs_names)
+            str(i): np.array([k])
+            for i, k in zip(range(0, len(adata.obs_names)), adata.obs_names)
         }
         bin_conn = graph_connectivities[main_idx]
     else:
         invalid = ["", "unassigned", "NaN", "NA", "nan", "None", "none", None]
-        if clonekey not in adata.obs.columns:
-            cell_indices = {
-                str(i): np.array([n]) for i, n in enumerate(adata.obs_names)
-            }
-            bin_conn = csr_matrix(np.eye(len(cell_indices), dtype=np.float32))
-        else:
-            cell_indices = Tree()
-            for x, y in adata.obs[clonekey].items():
-                if y not in invalid:
-                    cell_indices[y][x].value = 1
-            cell_indices = {
-                str(x): np.array(list(r))
-                for x, r in zip(
-                    range(0, len(cell_indices)), cell_indices.values()
-                )
-            }
-            bin_conn = np.zeros([len(cell_indices), len(cell_indices)])
-            np.fill_diagonal(bin_conn, 1)
-            bin_conn = csr_matrix(bin_conn)
+        cell_indices = Tree()
+        for x, y in adata.obs[clonekey].items():
+            if y not in invalid:
+                cell_indices[y][x].value = 1
+        cell_indices = {
+            str(x): np.array(list(r))
+            for x, r in zip(range(0, len(cell_indices)), cell_indices.values())
+        }
+        bin_conn = np.zeros([len(cell_indices), len(cell_indices)])
+        np.fill_diagonal(bin_conn, 1)
+        bin_conn = csr_matrix(bin_conn)
 
-    adata.uns[clonekey] = {"distances": bin_conn, "cell_indices": cell_indices}
+    adata.uns[clonekey] = {
+        # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
+        # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
+        "distances": bin_conn,
+        # '0' refers to the row/col index in the `distances` matrix
+        # (numeric index, but needs to be strbecause of h5py)
+        # np.array(["cell1", "cell2"]) points to the rows in `adata.obs`
+        "cell_indices": cell_indices,
+    }
 
     # --- 6) Layouts ---
     if dandelion.layout is not None:

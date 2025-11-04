@@ -2926,7 +2926,7 @@ def concat(
             )
     # first convert dict to list if necessary
     if isinstance(arrays, dict):
-        arrays = list(arrays.values())
+        arrays = [arrays[x].copy() for x in arrays]
     # first, check if all input are dandelion instances
     ddl_check = [True if isinstance(x, Dandelion) else False for x in arrays]
     if all(ddl_check):
@@ -3022,7 +3022,9 @@ def concat(
         if len(genotyped_v_call) != len(vdjs_):
             if verbose:
                 # print a warning
-                print("Using 'v_call_genotyped' to initialize the object.")
+                print(
+                    "For consistency, 'v_call_genotyped' will be used where available. Filling missing values from 'v_call'."
+                )
             for i in range(0, len(vdjs_)):
                 if "v_call_genotyped" not in vdjs_[i].data:
                     vdjs_[i].data["v_call_genotyped"] = vdjs_[i].data["v_call"]
