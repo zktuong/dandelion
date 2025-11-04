@@ -741,14 +741,23 @@ class Dandelion:
                 else v_call_key if (v_call_key in self.data) else "v_call"
             )
         )
+
+        # remap v_call_genotyped_* to just v_call_* for column names in tmp_metadata if vcall == "v_call_genotyped"
+        if vcall == "v_call_genotyped":
+            for col in tmp_metadata.columns:
+                if col.startswith("v_call_genotyped"):
+                    new_col = col.replace("v_call_genotyped", "v_call")
+                    tmp_metadata.rename(columns={col: new_col}, inplace=True)
+        # This way, the function will only initialise as v_call regardless of whether v_call_key is v_call or v_call_genotyped
+
         reqcols2 = [
             "locus_VJ",
             "productive_VDJ",
             "productive_VJ",
-            vcall + "_VDJ",
+            "v_call_VDJ",
             "d_call_VDJ",
             "j_call_VDJ",
-            vcall + "_VJ",
+            "v_call_VJ",
             "j_call_VJ",
             "c_call_VDJ",
             "c_call_VJ",
@@ -756,28 +765,28 @@ class Dandelion:
             "junction_VJ",
             "junction_aa_VDJ",
             "junction_aa_VJ",
-            vcall + "_B_VDJ",
+            "v_call_B_VDJ",
             "d_call_B_VDJ",
             "j_call_B_VDJ",
-            vcall + "_B_VJ",
+            "v_call_B_VJ",
             "j_call_B_VJ",
             "c_call_B_VDJ",
             "c_call_B_VJ",
             "productive_B_VDJ",
             "productive_B_VJ",
-            vcall + "_abT_VDJ",
+            "v_call_abT_VDJ",
             "d_call_abT_VDJ",
             "j_call_abT_VDJ",
-            vcall + "_abT_VJ",
+            "v_call_abT_VJ",
             "j_call_abT_VJ",
             "c_call_abT_VDJ",
             "c_call_abT_VJ",
             "productive_abT_VDJ",
             "productive_abT_VJ",
-            vcall + "_gdT_VDJ",
+            "v_call_gdT_VDJ",
             "d_call_gdT_VDJ",
             "j_call_gdT_VDJ",
-            vcall + "_gdT_VJ",
+            "v_call_gdT_VJ",
             "j_call_gdT_VJ",
             "c_call_gdT_VDJ",
             "c_call_gdT_VJ",
@@ -788,6 +797,7 @@ class Dandelion:
         for rc in reqcols:
             if rc not in tmp_metadata:
                 tmp_metadata[rc] = ""
+
         for dc in [
             "d_call_VJ",
             "d_call_B_VJ",
@@ -797,25 +807,19 @@ class Dandelion:
             if dc in tmp_metadata:
                 tmp_metadata.drop(dc, axis=1, inplace=True)
 
-        vcalldict = {
-            vcall: "v_call",
-            "d_call": "d_call",
-            "j_call": "j_call",
-            "c_call": "c_call",
-        }
-        for _call in [vcall, "d_call", "j_call", "c_call"]:
-            tmp_metadata[vcalldict[_call] + "_VDJ_main"] = [
+        for _call in ["v_call", "d_call", "j_call", "c_call"]:
+            tmp_metadata[_call + "_VDJ_main"] = [
                 return_none_call(x) for x in tmp_metadata[_call + "_VDJ"]
             ]
             if _call != "d_call":
-                tmp_metadata[vcalldict[_call] + "_VJ_main"] = [
+                tmp_metadata[_call + "_VJ_main"] = [
                     return_none_call(x) for x in tmp_metadata[_call + "_VJ"]
                 ]
 
         for mode in ["B", "abT", "gdT"]:
-            tmp_metadata[vcalldict[vcall] + "_" + mode + "_VDJ_main"] = [
+            tmp_metadata[_call + "_" + mode + "_VDJ_main"] = [
                 return_none_call(x)
-                for x in tmp_metadata[vcall + "_" + mode + "_VDJ"]
+                for x in tmp_metadata["v_call_" + mode + "_VDJ"]
             ]
             tmp_metadata["d_call_" + mode + "_VDJ_main"] = [
                 return_none_call(x)
@@ -825,9 +829,9 @@ class Dandelion:
                 return_none_call(x)
                 for x in tmp_metadata["j_call_" + mode + "_VDJ"]
             ]
-            tmp_metadata[vcalldict[vcall] + "_" + mode + "_VJ_main"] = [
+            tmp_metadata["v_call_" + mode + "_VJ_main"] = [
                 return_none_call(x)
-                for x in tmp_metadata[vcall + "_" + mode + "_VJ"]
+                for x in tmp_metadata["v_call_" + mode + "_VJ"]
             ]
             tmp_metadata["j_call_" + mode + "_VJ_main"] = [
                 return_none_call(x)
@@ -836,10 +840,10 @@ class Dandelion:
 
         if "locus_VDJ" in tmp_metadata:
             suffix_vdj = "_VDJ"
-            suffix_vj = "_VJ"
+            # suffix_vj = "_VJ"
         else:
             suffix_vdj = ""
-            suffix_vj = ""
+            # suffix_vj = ""
 
         if clonekey in init_dict:
             tmp_metadata[str(clonekey)] = tmp_metadata[str(clonekey)].replace(
@@ -992,7 +996,7 @@ class Dandelion:
                             ]
 
         tmp_metadata["locus_status"] = format_locus(
-            tmp_metadata, vcall=vcall, productive_only=report_productive_only
+            tmp_metadata, vcall="v_call", productive_only=report_productive_only
         )
         tmp_metadata["chain_status"] = format_chain_status(
             tmp_metadata["locus_status"]
@@ -2884,144 +2888,6 @@ def concat(
     suffixes: list[str] | None = None,
     prefixes: list[str] | None = None,
     remove_trailing_hyphen_number: bool = False,
-) -> Dandelion:
-    """
-    Concatenate data frames and return as `Dandelion` object.
-
-    If both suffixes and prefixes are `None` and check_unique is True, then a sequential number suffix will be appended.
-
-    Parameters
-    ----------
-    arrays : list[pd.DataFrame | Dandelion]
-        List of `Dandelion` class objects or pandas data frames
-    check_unique : bool, optional
-        Check the new index for duplicates. Otherwise defer the check until necessary.
-        Setting to False will improve the performance of this method.
-    sep : str, optional
-        the separator to append suffix/prefix.
-    suffixes : list[str] | None, optional
-        List of suffixes to append to sequence_id and cell_id.
-    prefixes : list[str] | None, optional
-        List of prefixes to append to sequence_id and cell_id.
-    remove_trailing_hyphen_number : bool, optional
-        whether or not to remove the trailing hyphen number e.g. '-1' from the
-        cell/contig barcodes.
-
-    Returns
-    -------
-    Dandelion
-        concatenated `Dandelion` object
-
-    Raises
-    ------
-    ValueError
-        if both prefixes and suffixes are provided.
-    """
-    arrays = list(arrays)
-
-    arrays_ = [
-        x.data.copy() if isinstance(x, Dandelion) else x.copy() for x in arrays
-    ]
-
-    if (suffixes is not None) and (prefixes is not None):
-        raise ValueError("Please provide only prefixes or suffixes, not both.")
-
-    if suffixes is not None:
-        if len(arrays_) != len(suffixes):
-            raise ValueError(
-                "Please provide the same number of suffixes as the number of objects to concatenate."
-            )
-
-    if prefixes is not None:
-        if len(arrays_) != len(prefixes):
-            raise ValueError(
-                "Please provide the same number of prefixes as the number of objects to concatenate."
-            )
-
-    vdjs = [Dandelion(array, verbose=False) for array in arrays_]
-
-    # if it's already a Dandelion object, the metadata may have been adjusted
-    # create a way to keep the
-    # check if all instances in the array are Dandelion
-    ddl_check = [True if isinstance(x, Dandelion) else False for x in arrays]
-    if all(ddl_check):
-        # create a metadata array
-        con_metas = [x.metadata.copy() for x in arrays]
-        # concat the meta
-        try:
-            con_metas_ = pd.concat(con_metas, verify_integrity=True)
-        except ValueError:
-            for i in range(0, len(con_metas)):
-                if (suffixes is None) and (prefixes is None):
-                    con_metas[i].index = [
-                        j + sep + str(i) for j in con_metas[i].index
-                    ]
-                elif suffixes is not None:
-                    con_metas[i].index = [
-                        j + sep + str(suffixes[i]) for j in con_metas[i].index
-                    ]
-                elif prefixes is not None:
-                    con_metas[i].index = [
-                        str(prefixes[i]) + sep + j for j in con_metas[i].index
-                    ]
-            con_metas_ = pd.concat(con_metas, verify_integrity=True)
-    else:
-        con_metas_ = None
-
-    if check_unique:
-        try:
-            arrays_ = [vdj.data for vdj in vdjs]
-            df = pd.concat(arrays_, verify_integrity=True)
-        except ValueError:
-            for i in range(0, len(arrays)):
-                if (suffixes is None) and (prefixes is None):
-                    vdjs[i].add_sequence_suffix(
-                        str(i),
-                        sep=sep,
-                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
-                    )
-                elif suffixes is not None:
-                    vdjs[i].add_sequence_suffix(
-                        str(suffixes[i]),
-                        sep=sep,
-                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
-                    )
-                elif prefixes is not None:
-                    vdjs[i].add_sequence_prefix(
-                        str(prefixes[i]),
-                        sep=sep,
-                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
-                    )
-            arrays_ = [vdj.data for vdj in vdjs]
-            df = pd.concat(arrays_, verify_integrity=True)
-    else:
-        arrays_ = [vdj.data for vdj in vdjs]
-        df = pd.concat(arrays_)
-
-    out = Dandelion(df, verbose=False)
-
-    if con_metas_ is not None:
-        if concat_meta:
-            for col in con_metas_:
-                if col not in out.metadata:
-                    out.metadata[col] = pd.Series(con_metas_[col])
-
-    # don't sort the indices for both .data and .metadata
-    data_index_order = df.index
-    out.data = out.data.loc[data_index_order]
-    if con_metas_ is not None:
-        metadata_index_order = con_metas_.index
-        out.metadata = out.metadata.loc[metadata_index_order]
-    return out
-
-
-def concat2(
-    arrays: list[pd.DataFrame | Dandelion],
-    check_unique: bool = True,
-    sep: str = "_",
-    suffixes: list[str] | None = None,
-    prefixes: list[str] | None = None,
-    remove_trailing_hyphen_number: bool = False,
     verbose: bool = True,
 ) -> Dandelion:
     """
@@ -3162,9 +3028,7 @@ def concat2(
     if len(genotyped_v_call) != len(vdjs_):
         if verbose:
             # print a warning
-            print(
-                "To concatenate, 'v_call_genotyped' column missing in some data frames. Filling missing columns with 'v_call' values."
-            )
+            print("Using 'v_call_genotyped' to initialize the object.")
         for i in range(0, len(vdjs_)):
             if "v_call_genotyped" not in vdjs_[i].data:
                 vdjs_[i].data["v_call_genotyped"] = vdjs_[i].data["v_call"]
@@ -3176,6 +3040,7 @@ def concat2(
     # find out what are the missing columns from all_meta_cols
     missing_meta_cols = all_meta_cols - vdj_meta_cols
     if len(missing_meta_cols) > 0:
+        # print(missing_meta_cols)
         # now, for each missing column, we need to fill in the values from the original vdjs_ using .at to avoid alignment issues
         for col in missing_meta_cols:
             # create an empty series with None first - sanitisation later will take care of the dtypes

@@ -137,15 +137,10 @@ def setup_vdj_pseudobulk(
 
     if extract_cols is None:
         if not any([re.search("_VDJ_main|_VJ_main", i) for i in adata.obs]):
-            v_call = (
-                "v_call_genotyped_"
-                if "v_call_genotyped_VDJ" in adata.obs
-                else "v_call_"
-            )
             if mode is not None:
                 adata.obs["v_call_" + mode + "_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + mode + "_VDJ"]
+                    for x in adata.obs["v_call_" + mode + "_VDJ"]
                 ]
                 adata.obs["d_call_" + mode + "_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -157,7 +152,7 @@ def setup_vdj_pseudobulk(
                 ]
                 adata.obs["v_call_" + mode + "_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + mode + "_VJ"]
+                    for x in adata.obs["v_call_" + mode + "_VJ"]
                 ]
                 adata.obs["j_call_" + mode + "_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -166,7 +161,7 @@ def setup_vdj_pseudobulk(
             else:
                 adata.obs["v_call_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + "VDJ"]
+                    for x in adata.obs["v_call_VDJ"]
                 ]
                 adata.obs["d_call_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -178,7 +173,7 @@ def setup_vdj_pseudobulk(
                 ]
                 adata.obs["v_call_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + "VJ"]
+                    for x in adata.obs["v_call_VJ"]
                 ]
                 adata.obs["j_call_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
