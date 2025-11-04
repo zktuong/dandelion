@@ -3029,13 +3029,14 @@ def concat(
         all_meta_cols.update(set(vdj_.metadata.columns))
 
     genotyped_v_call = [True for vdj in vdjs_ if "v_call_genotyped" in vdj.data]
-    if len(genotyped_v_call) != len(vdjs_):
-        if verbose:
-            # print a warning
-            print("Using 'v_call_genotyped' to initialize the object.")
-        for i in range(0, len(vdjs_)):
-            if "v_call_genotyped" not in vdjs_[i].data:
-                vdjs_[i].data["v_call_genotyped"] = vdjs_[i].data["v_call"]
+    if len(genotyped_v_call) > 0:
+        if len(genotyped_v_call) != len(vdjs_):
+            if verbose:
+                # print a warning
+                print("Using 'v_call_genotyped' to initialize the object.")
+            for i in range(0, len(vdjs_)):
+                if "v_call_genotyped" not in vdjs_[i].data:
+                    vdjs_[i].data["v_call_genotyped"] = vdjs_[i].data["v_call"]
 
     arrays_ = [vdj.data for vdj in vdjs_]
     vdj_concat = Dandelion(pd.concat(arrays_), verbose=False)
