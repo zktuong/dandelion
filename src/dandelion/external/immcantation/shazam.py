@@ -246,7 +246,6 @@ def calculate_threshold(
     mode: Literal["single-cell", "heavy"] = "single-cell",
     manual_threshold: float | None = None,
     VJthenLen: bool = False,
-    onlyHeavy: bool = False,
     model: (
         Literal[
             "ham",
@@ -275,7 +274,6 @@ def calculate_threshold(
     figsize: tuple[float, float] = (4.5, 2.5),
     save_plot: str | None = None,
     ncpu: int = 1,
-    verbose: bool = False,
     **kwargs,
 ) -> Dandelion:
     """
@@ -311,9 +309,6 @@ def calculate_threshold(
         If False, perform partition as a 1-stage process during which V gene, J gene, and junction length
         are used to create partitions simultaneously.
         Defaults to False.
-    onlyHeavy : bool, optional
-        use only the IGH (BCR) or TRB/TRD (TCR) sequences for grouping. Only applicable to single-cell mode.
-        See groupGenes for further details.
     model : Literal["ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat", ] | None, optional
         underlying SHM model, which must be one of "ham","aa","hh_s1f","hh_s5f","mk_rs1nf","hs1f_compat","m1n_compat".
     normalize_method : Literal["len"] | None, optional
@@ -350,8 +345,6 @@ def calculate_threshold(
         if specified, plot will be save with this path.
     ncpu : int, optional
         number of cpus to run `distToNearest`. defaults to 1.
-    verbose : bool, optional
-        whether or not to print messages with initializing Dandelion object.
     **kwargs
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
 
@@ -410,7 +403,6 @@ def calculate_threshold(
                 locusColumn="locus",
                 VJthenLen=VJthenLen,
                 vCallColumn=v_call,
-                onlyHeavy=onlyHeavy,
                 normalize=norm_,
                 model=model_,
                 nproc=ncpu,
@@ -421,6 +413,8 @@ def calculate_threshold(
                 "Rerun this after filtering. For now, switching to heavy mode."
             )
             dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
+            # drop "cell_id" column as it causes issues
+            dat_h = dat_h.drop("cell_id", axis=1)
             dat_h_r = safe_py2rpy(dat_h)
 
             dist_ham = sh.distToNearest(
