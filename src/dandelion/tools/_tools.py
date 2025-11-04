@@ -569,8 +569,9 @@ def _graph_to_matrices(
 
 def swap_view(
     adata: AnnData,
-    connectivities_key: str,
-    distances_key: str,
+    mode: Literal["all", "expanded", "rna"] | None = "expanded",
+    connectivities_key: str | None = None,
+    distances_key: str | None = None,
     embedding_key: str | None = None,
 ):
     """
@@ -580,28 +581,49 @@ def swap_view(
     ----------
     adata : AnnData
         The AnnData object.
-    connectivities_key : str
-        The key in `.obsp` to set as active `.obsp["connectivities"]`.
-    distances_key : str
-        The key in `.obsp` to set as active `.obsp["distances"]`.
-    embedding_key : str | None
-        If specified, set `.obsm["X_vdj"]` to `.obsm[embedding_key]`.
+    mode : Literal["all", "expanded", "rna"] | None, optional
+        If specified, set the active connectivities/distances/embedding to one of the preset modes.
+    connectivities_key : str | None, optional
+        The key in `.obsp` to set as active `.obsp["connectivities"]` if `mode` is None.
+    distances_key : str | None, optional
+        The key in `.obsp` to set as active `.obsp["distances"]` if `mode` is None.
+    embedding_key : str | None, optional
+        If specified, set `.obsm["X_vdj"]` to `.obsm[embedding_key]` if `mode` is None.
     """
-    if connectivities_key in adata.obsp:
-        adata.obsp["connectivities"] = adata.obsp[connectivities_key].copy()
-    else:
-        raise KeyError(f"{connectivities_key} not found in adata.obsp")
-
-    if distances_key in adata.obsp:
-        adata.obsp["distances"] = adata.obsp[distances_key].copy()
-    else:
-        raise KeyError(f"{distances_key} not found in adata.obsp")
-
-    if embedding_key is not None:
-        if embedding_key in adata.obsm:
-            adata.obsm["X_vdj"] = adata.obsm[embedding_key].copy()
+    if mode is None:
+        # use the other key directly
+        if connectivities_key in adata.obsp:
+            adata.obsp["connectivities"] = adata.obsp[connectivities_key].copy()
         else:
-            raise KeyError(f"{embedding_key} not found in adata.obsm")
+            raise KeyError(f"{connectivities_key} not found in adata.obsp")
+
+        if distances_key in adata.obsp:
+            adata.obsp["distances"] = adata.obsp[distances_key].copy()
+        else:
+            raise KeyError(f"{distances_key} not found in adata.obsp")
+
+        if embedding_key is not None:
+            if embedding_key in adata.obsm:
+                adata.obsm["X_vdj"] = adata.obsm[embedding_key].copy()
+            else:
+                raise KeyError(f"{embedding_key} not found in adata.obsm")
+    else:
+        if mode == "all":
+            conn_key = f"vdj_connectivities_all"
+            dist_key = f"vdj_distances_all"
+            emb_key = "X_vdj_all"
+        elif mode == "expanded":
+            conn_key = f"vdj_connectivities_expanded"
+            dist_key = f"vdj_distances_expanded"
+            emb_key = "X_vdj_expanded"
+        elif mode == "rna":
+            conn_key = f"rna_connectivities"
+            dist_key = f"rna_distances"
+            emb_key = None
+        adata.obsp["connectivities"] = adata.obsp[conn_key].copy()
+        adata.obsp["distances"] = adata.obsp[dist_key].copy()
+        if emb_key is not None:
+            adata.obsm["X_vdj"] = adata.obsm[emb_key].copy()
 
 
 def define_clones(

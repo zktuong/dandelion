@@ -6,6 +6,7 @@ from dandelion.tools._tools import (
     define_clones,
     clone_size,
     clone_overlap,
+    swap_view,
     vj_usage_pca,
 )
 from dandelion.tools._network import (
@@ -47,4 +48,5 @@ __all__ = [
     "pseudobulk_gex",
     "bin_expression",
     "chatterjee_corr",
+    "swap_view",
 ]
