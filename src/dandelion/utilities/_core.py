@@ -2941,7 +2941,7 @@ def concat(
     # first, check if all input are dandelion instances
     ddl_check = [True if isinstance(x, Dandelion) else False for x in arrays]
     if all(ddl_check):
-        vdjs_ = arrays.copy()
+        vdjs_ = [vdj.copy() for vdj in arrays]
     else:
         # first check if any of the input arrays are compatible
         ddl_check2 = [
@@ -2954,7 +2954,11 @@ def concat(
         ]
         if all(ddl_check2):
             vdjs_ = [
-                x if isinstance(x, Dandelion) else Dandelion(x, verbose=False)
+                (
+                    x.copy()
+                    if isinstance(x, Dandelion)
+                    else Dandelion(x, verbose=False)
+                )
                 for x in arrays
             ]
         else:
