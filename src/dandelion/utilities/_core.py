@@ -817,7 +817,7 @@ class Dandelion:
                 ]
 
         for mode in ["B", "abT", "gdT"]:
-            tmp_metadata[_call + "_" + mode + "_VDJ_main"] = [
+            tmp_metadata["v_call_" + "_" + mode + "_VDJ_main"] = [
                 return_none_call(x)
                 for x in tmp_metadata["v_call_" + mode + "_VDJ"]
             ]
