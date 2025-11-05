@@ -8,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 
 from anndata import AnnData
+from contextlib import contextmanager
 from itertools import product, cycle
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -260,12 +261,13 @@ def clone_network(
     **kwargs
         passed `sc.pl.embedding`.
     """
-    embedding(
-        adata.mod["airr"] if hasattr(adata, "mod") else adata,
-        basis=basis,
-        edges=edges,
-        **kwargs,
-    )
+    is_mudata = hasattr(adata, "mod")
+    base_adata = adata.mod["airr"] if is_mudata else adata
+
+    with _temporary_obs_columns(
+        base_adata, adata if is_mudata else None, **kwargs
+    ) as kw:
+        embedding(base_adata, basis=basis, edges=edges, **kw)
 
 
 def barplot(
@@ -1157,3 +1159,33 @@ def productive_ratio(
     plt.title(locus)
     # add legend
     plt.legend(handles=legend, **legend_kwargs)
+
+
+@contextmanager
+def _temporary_obs_columns(adata: AnnData, mudata: MuData | None, **kwargs):
+    """Temporarily add columns from submodalities to adata.obs."""
+    added = {}
+    try:
+        for key, value in kwargs.items():
+            if (
+                key in {"color", "size", "shape"}
+                and isinstance(value, str)
+                and ":" in value
+            ):
+                mod, col = value.split(":", 1)
+                if mod not in mudata.mod:
+                    raise KeyError(f"MuData has no modality '{mod}'")
+                sub = mudata.mod[mod]
+                if col not in sub.obs.columns:
+                    raise KeyError(
+                        f"'{col}' not found in mudata.mod['{mod}'].obs"
+                    )
+                temp_col = f"{mod}:{col}"
+                adata.obs[temp_col] = sub.obs[col]
+                kwargs[key] = temp_col  # redirect kwarg to the temp col
+                added[temp_col] = None
+        yield kwargs
+    finally:
+        # cleanup
+        for temp_col in added:
+            adata.obs.drop(columns=temp_col, inplace=True, errors="ignore")
