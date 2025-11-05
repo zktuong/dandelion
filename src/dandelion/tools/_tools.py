@@ -447,7 +447,7 @@ def transfer(
         if G is None:
             continue
         graph_connectivities[idx], graph_distances[idx] = _graph_to_matrices(
-            G, adata
+            G, recipient
         )
 
     # Determine main graph index
@@ -604,7 +604,8 @@ def _graph_to_matrices(
         index=adata.obs_names, columns=adata.obs_names
     )
 
-    connectivities = distances.apply(lambda x: np.maximum(1e-45, 1 / np.exp(x)))
+    connectivities = distances.apply(lambda x: np.exp(-x))
+    connectivities = connectivities.clip(lower=1e-45)
     connectivities = connectivities.reindex(
         index=adata.obs_names, columns=adata.obs_names
     )
