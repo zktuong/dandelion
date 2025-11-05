@@ -3050,47 +3050,62 @@ def clean_clone_list(clone_series: pd.Series) -> pd.Series:
     return clone_series
 
 
-def group_clones_by_receptor(clones: list) -> dict:
-    """Group unique clones by receptor type; return a mapping of clone -> receptor group."""
-    receptor_to_clones = {}
-    other_clones = []
-    for clone in clones:
-        prefix = clone.split("_")[0] if clone != "None" else None
-        if prefix in RECEPTOR_SET:
-            receptor_to_clones.setdefault(prefix, []).append(clone)
-        else:
-            other_clones.append(clone)
-    return receptor_to_clones, other_clones
+def flatten_and_count(tmp_metadata: pd.DataFrame, clonekey: str) -> pd.Series:
+    """Return a Series of clone counts for all unique clones."""
+    tmp = tmp_metadata[clonekey].str.split("|", expand=True).stack()
+    clone_counts = tmp.value_counts()
+    clone_counts = clone_counts.drop("None", errors="ignore")
+    return clone_counts
 
 
-def assign_sequential_numbers(
-    receptor_to_clones: dict, other_clones: list
-) -> dict:
-    """Assign sequential numbering per receptor type and include other clones."""
+def get_receptor_prefix(clone: str) -> str:
+    """Return receptor type prefix if matches RECEPTOR_SET, else None."""
+    prefix = clone.split("_")[0]
+    return prefix if prefix in RECEPTOR_SET else None
+
+
+def assign_clone_numbers(clone_counts: pd.Series) -> dict:
+    """Assign sequential numbers, possibly grouped by receptor type."""
+    # Determine all receptor types present
+    prefixes = set(get_receptor_prefix(clone) for clone in clone_counts.index)
+    prefixes.discard(None)
+
     size_dict = {}
-    for r, clones in receptor_to_clones.items():
-        for i, clone in enumerate(sorted(clones), start=1):
-            size_dict[clone] = f"{r}_{i}"
-    for clone in other_clones:
-        size_dict[clone] = clone if clone != "None" else "None"
+    if len(prefixes) <= 1:
+        # Only 1 receptor type (or none): number sequentially without prefix
+        for i, clone in enumerate(clone_counts.index, start=1):
+            size_dict[clone] = str(i)
+    else:
+        # Multiple receptor types: number sequentially per type
+        receptor_to_clones = {r: [] for r in RECEPTOR_SET}
+        other_clones = []
+        for clone in clone_counts.index:
+            prefix = get_receptor_prefix(clone)
+            if prefix in RECEPTOR_SET:
+                receptor_to_clones[prefix].append(clone)
+            else:
+                other_clones.append(clone)
+        # Sort each receptor group by descending size
+        for r in receptor_to_clones:
+            receptor_to_clones[r].sort(key=lambda c: -clone_counts[c])
+        other_clones.sort(key=lambda c: -clone_counts[c])
+        # Assign numbers
+        for r, clones in receptor_to_clones.items():
+            for i, clone in enumerate(clones, start=1):
+                size_dict[clone] = f"{r}_{i}"
+        for i, clone in enumerate(other_clones, start=1):
+            size_dict[clone] = f"other_{i}" if clone != "None" else "None"
     return size_dict
 
 
 def _add_clone_info(tmp_metadata: pd.DataFrame, clonekey: str) -> pd.DataFrame:
-    """
-    Add `{clonekey}` and `{clonekey}_by_size` column to tmp_metadata with sequential numbering per receptor type.
-    """
+    """Add a `{clonekey}_rank` column to tmp_metadata with sequential numbering per receptor type based on clone size."""
     tmp_metadata[clonekey] = clean_clone_list(tmp_metadata[clonekey])
-
-    # Flatten to unique clones
-    all_clones = (
-        tmp_metadata[clonekey].str.split("|", expand=True).stack().unique()
-    )
-    receptor_to_clones, other_clones = group_clones_by_receptor(all_clones)
-    size_dict = assign_sequential_numbers(receptor_to_clones, other_clones)
+    clone_counts = flatten_and_count(tmp_metadata, clonekey)
+    size_dict = assign_clone_numbers(clone_counts)
 
     # Map multi-clone entries
-    tmp_metadata[clonekey + "_by_size"] = (
+    tmp_metadata[clonekey + "_rank"] = (
         tmp_metadata[clonekey]
         .apply(
             lambda entry: "|".join(
@@ -3102,11 +3117,11 @@ def _add_clone_info(tmp_metadata: pd.DataFrame, clonekey: str) -> pd.DataFrame:
 
     # Reorder columns
     tmp_metadata = tmp_metadata[
-        [clonekey, clonekey + "_by_size"]
+        [clonekey, clonekey + "_rank"]
         + [
             c
             for c in tmp_metadata.columns
-            if c not in [clonekey, clonekey + "_by_size"]
+            if c not in [clonekey, clonekey + "_rank"]
         ]
     ]
 
