@@ -835,70 +835,9 @@ class Dandelion:
             # suffix_vj = ""
 
         if clonekey in init_dict:
-            tmp_metadata[str(clonekey)] = tmp_metadata[str(clonekey)].replace(
-                "", "None"
+            tmp_metadata = _add_clone_info(
+                tmp_metadata=tmp_metadata, clonekey=str(clonekey)
             )
-            clones = tmp_metadata[str(clonekey)].str.split("|", expand=False)
-            tmpclones = []
-            for i in clones:
-                while "None" in i:
-                    i.remove("None")
-                    if len(i) == 1:
-                        break
-                tmpclones.append(i)
-            tmpclones = [
-                "|".join(
-                    sorted(list(set(x)), key=cmp_to_key(cmp_str_emptylast))
-                )
-                for x in tmpclones
-            ]
-            tmpclonesdict = dict(zip(tmp_metadata.index, tmpclones))
-            tmp_metadata[str(clonekey)] = pd.Series(tmpclonesdict)
-            tmp = (
-                tmp_metadata[str(clonekey)].str.split("|", expand=True).stack()
-            )
-            tmp = tmp.reset_index(drop=False)
-            tmp.columns = ["cell_id", "tmp", str(clonekey)]
-            clone_size = tmp[str(clonekey)].value_counts()
-            if "" in clone_size.index:
-                clone_size = clone_size.drop("", axis=0)
-            clonesize_dict = dict(clone_size)
-            size_of_clone = pd.DataFrame.from_dict(
-                clonesize_dict, orient="index"
-            )
-            size_of_clone.reset_index(drop=False, inplace=True)
-            size_of_clone.columns = [str(clonekey), "clone_size"]
-            size_of_clone[str(clonekey) + "_by_size"] = size_of_clone.index + 1
-            size_dict = dict(
-                zip(
-                    size_of_clone[clonekey],
-                    size_of_clone[str(clonekey) + "_by_size"],
-                )
-            )
-            size_dict.update({"": "None"})
-            tmp_metadata[str(clonekey) + "_by_size"] = [
-                (
-                    "|".join(
-                        sorted(
-                            list({str(size_dict[c_]) for c_ in c.split("|")})
-                        )
-                    )
-                    if len(c.split("|")) > 1
-                    else str(size_dict[c])
-                )
-                for c in tmp_metadata[str(clonekey)]
-            ]
-            tmp_metadata[str(clonekey) + "_by_size"] = tmp_metadata[
-                str(clonekey) + "_by_size"
-            ].astype("category")
-            tmp_metadata = tmp_metadata[
-                [str(clonekey), str(clonekey) + "_by_size"]
-                + [
-                    cl
-                    for cl in tmp_metadata
-                    if cl not in [str(clonekey), str(clonekey) + "_by_size"]
-                ]
-            ]
 
         conversion_dict = {
             "IGHA": "IgA",
@@ -3095,3 +3034,80 @@ def concat(
     vdj_concat.metadata = vdj_concat.metadata.loc[metadata_index_order]
 
     return vdj_concat
+
+
+def clean_clone_list(clone_series: pd.Series) -> pd.Series:
+    """Replace empty clones with 'None', remove duplicates, sort consistently."""
+    clone_series = clone_series.replace("", "None")
+    clone_series = clone_series.str.split("|").apply(
+        lambda x: [c for c in x if c != "None"] or ["None"]
+    )
+    clone_series = clone_series.apply(
+        lambda x: "|".join(
+            sorted(set(x), key=cmp_to_key(lambda a, b: (a > b) - (a < b)))
+        )
+    )
+    return clone_series
+
+
+def group_clones_by_receptor(clones: list) -> dict:
+    """Group unique clones by receptor type; return a mapping of clone -> receptor group."""
+    receptor_to_clones = {}
+    other_clones = []
+    for clone in clones:
+        prefix = clone.split("_")[0] if clone != "None" else None
+        if prefix in RECEPTOR_SET:
+            receptor_to_clones.setdefault(prefix, []).append(clone)
+        else:
+            other_clones.append(clone)
+    return receptor_to_clones, other_clones
+
+
+def assign_sequential_numbers(
+    receptor_to_clones: dict, other_clones: list
+) -> dict:
+    """Assign sequential numbering per receptor type and include other clones."""
+    size_dict = {}
+    for r, clones in receptor_to_clones.items():
+        for i, clone in enumerate(sorted(clones), start=1):
+            size_dict[clone] = f"{r}_{i}"
+    for clone in other_clones:
+        size_dict[clone] = clone if clone != "None" else "None"
+    return size_dict
+
+
+def _add_clone_info(tmp_metadata: pd.DataFrame, clonekey: str) -> pd.DataFrame:
+    """
+    Add `{clonekey}` and `{clonekey}_by_size` column to tmp_metadata with sequential numbering per receptor type.
+    """
+    tmp_metadata[clonekey] = clean_clone_list(tmp_metadata[clonekey])
+
+    # Flatten to unique clones
+    all_clones = (
+        tmp_metadata[clonekey].str.split("|", expand=True).stack().unique()
+    )
+    receptor_to_clones, other_clones = group_clones_by_receptor(all_clones)
+    size_dict = assign_sequential_numbers(receptor_to_clones, other_clones)
+
+    # Map multi-clone entries
+    tmp_metadata[clonekey + "_by_size"] = (
+        tmp_metadata[clonekey]
+        .apply(
+            lambda entry: "|".join(
+                size_dict.get(p, p) for p in entry.split("|")
+            )
+        )
+        .astype("category")
+    )
+
+    # Reorder columns
+    tmp_metadata = tmp_metadata[
+        [clonekey, clonekey + "_by_size"]
+        + [
+            c
+            for c in tmp_metadata.columns
+            if c not in [clonekey, clonekey + "_by_size"]
+        ]
+    ]
+
+    return tmp_metadata

@@ -25,6 +25,7 @@ F = TypeVar("F", bound=Callable)  # Define a TypeVar for any callable type
 MuData = TypeVar("mudata._core.mudata.MuData")
 PResults = TypeVar("palantir.presults.PResults")
 
+RECEPTOR_SET = {"B", "abT", "gdT"}
 TRUES = ["T", "t", "True", "true", "TRUE", True, "1"]
 FALSES = ["F", "f", "False", "false", "FALSE", False, "0"]
 HEAVYLONG = ["IGH", "TRB", "TRD"]
