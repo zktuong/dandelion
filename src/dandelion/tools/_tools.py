@@ -165,7 +165,7 @@ def find_clones(
                 )
                 clone_dict_vdj = rename_clonotype_ids(
                     clonotype_groups=cid_vdj,
-                    cell_type=locus_log[locusx] + "_VDJ_",
+                    prefix=locus_log[locusx] + "_VDJ_",
                 )
                 # add it to the original dataframes
                 dat_vdj[clone_key] = pd.Series(clone_dict_vdj)
@@ -196,7 +196,7 @@ def find_clones(
                 )
                 clone_dict_vj = rename_clonotype_ids(
                     clonotype_groups=cid_vj,
-                    cell_type=locus_log[locusx] + "_VJ_",
+                    prefix=locus_log[locusx] + "_VJ_",
                 )
                 refine_clone_assignment(
                     dat=dat,
@@ -1909,8 +1909,6 @@ def group_pairwise_hamming_distance(
 
 def rename_clonotype_ids(
     clonotype_groups: Tree,
-    cell_type: str = "",
-    suffix: str = "",
     prefix: str = "",
 ) -> dict[str, str]:
     """
@@ -1920,12 +1918,8 @@ def rename_clonotype_ids(
     ----------
     clonotype_groups : Tree
         A nested dictionary that containing clonotype groups of contigs.
-    cell_type : str, optional
-        Cell type name to append to front, if necessary.
-    suffix : str, optional
-        Suffix to append to the end of the clonotype ID.
     prefix : str, optional
-        Prefix to append to the beginning of the clonotype ID.
+        Prefix to append to front, if necessary.
     Returns
     -------
     dict[str, str]
@@ -1954,14 +1948,12 @@ def rename_clonotype_ids(
                     if type(v) is int:
                         break
                     clone_dict[v] = (
-                        cell_type
-                        + prefix
+                        prefix
                         + str(first_key_dict[g])
                         + "_"
                         + str(second_key_dict[l])
                         + "_"
                         + str(third_key_dict[key])
-                        + suffix
                     )
 
     return clone_dict
