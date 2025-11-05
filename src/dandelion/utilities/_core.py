@@ -937,7 +937,7 @@ class Dandelion:
                                         ],
                                         p.split("|"),
                                     )
-                                    if pp in TRUES
+                                    if pp in TRUES + EMPTIES_STR
                                 ]
                             )
                         )

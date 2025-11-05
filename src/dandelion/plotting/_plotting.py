@@ -1163,7 +1163,54 @@ def productive_ratio(
 
 @contextmanager
 def _temporary_obs_columns(adata: AnnData, mudata: MuData | None, **kwargs):
-    """Temporarily add columns from submodalities to adata.obs."""
+    """Temporarily add columns from submodalities or shared obs to adata.obs."""
+
+    if mudata is None:
+        # plain AnnData, nothing to do
+        yield kwargs
+        return
+
+    added = {}
+    try:
+        for key, value in kwargs.items():
+            if key in {"color", "size", "shape"} and isinstance(value, str):
+                if ":" in value:
+                    # case: "mod:col"
+                    mod, col = value.split(":", 1)
+                    if mod not in mudata.mod:
+                        raise KeyError(f"MuData has no modality '{mod}'")
+                    sub = mudata.mod[mod]
+                    if col not in sub.obs.columns:
+                        raise KeyError(
+                            f"'{col}' not found in mudata.mod['{mod}'].obs"
+                        )
+                    temp_col = f"{mod}:{col}"
+                    adata.obs[temp_col] = sub.obs[col].reindex(adata.obs.index)
+                    kwargs[key] = temp_col
+                    added[temp_col] = None
+                else:
+                    # case: shared obs in mudata.obs
+                    if value not in mudata.obs:
+                        raise KeyError(f"'{value}' not found in mudata.obs")
+                    adata.obs[value] = mudata.obs[value].reindex(
+                        adata.obs.index
+                    )
+                    kwargs[key] = value
+                    added[value] = None
+
+        yield kwargs
+    finally:
+        # cleanup temporary columns
+        for temp_col in added:
+            adata.obs.drop(columns=temp_col, inplace=True, errors="ignore")
+
+
+@contextmanager
+def _temporary_obs_columns(adata: AnnData, mudata: MuData | None, **kwargs):
+    """
+    Temporarily add columns from mudata.obs or mudata.mod[mod].obs
+    into the base adata.obs so scanpy plotting works.
+    """
     added = {}
     try:
         for key, value in kwargs.items():
@@ -1171,21 +1218,30 @@ def _temporary_obs_columns(adata: AnnData, mudata: MuData | None, **kwargs):
                 key in {"color", "size", "shape"}
                 and isinstance(value, str)
                 and ":" in value
+                and mudata is not None
             ):
                 mod, col = value.split(":", 1)
-                if mod not in mudata.mod:
-                    raise KeyError(f"MuData has no modality '{mod}'")
-                sub = mudata.mod[mod]
-                if col not in sub.obs.columns:
+
+                # decide where to look
+                if mod == "obs":  # special case for mudata.obs
+                    source = mudata.obs
+                elif mod in mudata.mod:
+                    source = mudata.mod[mod].obs
+                else:
                     raise KeyError(
-                        f"'{col}' not found in mudata.mod['{mod}'].obs"
+                        f"'{mod}' not found in mudata.mod or as 'obs' shared metadata."
                     )
+
+                if col not in source.columns:
+                    raise KeyError(f"'{col}' not found in {mod}.obs")
+
                 temp_col = f"{mod}:{col}"
-                adata.obs[temp_col] = sub.obs[col]
-                kwargs[key] = temp_col  # redirect kwarg to the temp col
+                # align indices (important if modalities differ)
+                adata.obs[temp_col] = source[col].reindex(adata.obs.index)
+                kwargs[key] = temp_col
                 added[temp_col] = None
+
         yield kwargs
     finally:
-        # cleanup
         for temp_col in added:
             adata.obs.drop(columns=temp_col, inplace=True, errors="ignore")

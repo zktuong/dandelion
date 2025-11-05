@@ -49,14 +49,20 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
-EMPTIES = [
-    None,
-    np.nan,
-    pd.NA,
+EMPTIES_STR = [
     "nan",
     "NaN",
     "",
+    "None",
+    "none",
 ]
+EMPTIES = EMPTIES_STR + [
+    None,
+    np.nan,
+    pd.NA,
+]
+
+
 DEFAULT_PREFIX = "all"
 BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
 

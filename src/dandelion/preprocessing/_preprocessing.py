@@ -3164,7 +3164,6 @@ class MarkAmbiguousContigs:
     """
     `MarkAmbiguousContigs` class object.
 
-    New main class object to run filter_contigs.
 
     Attributes
     ----------
