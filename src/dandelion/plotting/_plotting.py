@@ -241,18 +241,18 @@ def clone_rarefaction(
 
 
 def clone_network(
-    adata: AnnData, basis: str = "vdj", edges: bool = True, **kwargs
+    adata: AnnData | MuData, basis: str = "vdj", edges: bool = True, **kwargs
 ) -> None:
     """
     Using scanpy's plotting module to plot the network.
 
     Only thing that is changed is the default options:
-    `basis = 'bcr'` and `edges = True`.
+    `basis = 'vdj'` and `edges = True`.
 
     Parameters
     ----------
-    adata : AnnData
-        AnnData object.
+    adata : AnnData | MuData
+        AnnData or scirpy-formatted MuData object.
     basis : str, optional
         key for embedding.
     edges : bool, optional
@@ -260,7 +260,12 @@ def clone_network(
     **kwargs
         passed `sc.pl.embedding`.
     """
-    embedding(adata, basis=basis, edges=edges, **kwargs)
+    embedding(
+        adata.mod["airr"] if hasattr(adata, "mod") else adata,
+        basis=basis,
+        edges=edges,
+        **kwargs,
+    )
 
 
 def barplot(

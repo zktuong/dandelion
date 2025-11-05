@@ -301,6 +301,10 @@ def transfer(
     clone_key: str | None = None,
     collapse_nodes: bool = False,
     overwrite: bool | list[str] | str | None = None,
+    obs: bool = True,
+    obsm: bool = True,
+    uns: bool = True,
+    obsp: bool = True,
 ) -> None:
     """
     Transfer data in `Dandelion` slots to `AnnData`, updating `.obs`, `.uns`, `.obsm`, and `.obsp`.
@@ -313,7 +317,7 @@ def transfer(
     Parameters
     ----------
     adata : AnnData
-        `AnnData` object.
+        `AnnData` object or `MuData` object.
     dandelion : Dandelion
         `Dandelion` object.
     expanded : bool, optional
@@ -335,26 +339,41 @@ def transfer(
     """
     start = logg.info("Transferring network")
 
+    # if the provide adata is an MuData, we need to transfer to mudata.mod['gex']
+    # but we don't want to add mudata as a dependency here, so we do a duck-typing check
+    if hasattr(adata, "mod"):
+        if "airr" in adata.mod:
+            recipient = adata.mod["airr"]
+        else:
+            raise ValueError(
+                "Provided AnnData is a MuData object without 'airr' modality."
+            )
+    # we just associate recipient to adata directly
+    else:
+        recipient = adata
+
     # --- 1) metadata -> adata.obs (preserve original overwrite semantics) ---
-    for x in dandelion.metadata.columns:
-        if x not in adata.obs.columns:
-            adata.obs[x] = pd.Series(dandelion.metadata[x])
-        elif overwrite is True:
-            adata.obs[x] = pd.Series(dandelion.metadata[x])
+    if obs:
+        for x in dandelion.metadata.columns:
+            if x not in recipient.obs.columns:
+                recipient.obs[x] = pd.Series(dandelion.metadata[x])
+            elif overwrite is True:
+                recipient.obs[x] = pd.Series(dandelion.metadata[x])
+            if type_check(dandelion.metadata, x):
+                recipient.obs[x] = recipient.obs[x].replace(np.nan, "No_contig")
+            if recipient.obs[x].dtype == "bool":
+                recipient.obs[x] = recipient.obs[x].astype(str)
 
-        if type_check(dandelion.metadata, x):
-            adata.obs[x] = adata.obs[x].replace(np.nan, "No_contig")
-        if adata.obs[x].dtype == "bool":
-            adata.obs[x] = adata.obs[x].astype(str)
-
-    # explicit overwrite list/string handling (matches original)
-    if (overwrite is not None) and (overwrite is not True):
-        if not isinstance(overwrite, list):
-            overwrite = [overwrite]
-        for ow in overwrite:
-            adata.obs[ow] = pd.Series(dandelion.metadata[ow])
-            if type_check(dandelion.metadata, ow):
-                adata.obs[ow] = adata.obs[ow].replace(np.nan, "No_contig")
+        # explicit overwrite list/string handling (matches original)
+        if (overwrite is not None) and (overwrite is not True):
+            if not isinstance(overwrite, list):
+                overwrite = [overwrite]
+            for ow in overwrite:
+                recipient.obs[ow] = pd.Series(dandelion.metadata[ow])
+                if type_check(dandelion.metadata, ow):
+                    recipient.obs[ow] = recipient.obs[ow].replace(
+                        np.nan, "No_contig"
+                    )
 
     # If there's no graph, we're done with metadata only
     if dandelion.graph is None:
@@ -364,56 +383,58 @@ def transfer(
         return
 
     # --- 2) prepare neighbor keys and stash RNA neighbors/connectivities if present ---
-    if neighbors_key is None:
-        neighbors_key = "neighbors"
-
-    skip_stash = neighbors_key not in adata.uns
-    if skip_stash:
-        # create an empty `neighbors` container (as original did) but mark skip_stash so we don't try to stash from nonexistent data
-        adata.uns[neighbors_key] = {}
-
-    rna_neighbors_key = "rna_" + neighbors_key
-    if rna_neighbors_key not in adata.uns:
-        # copy existing neighbors data to rna-specific slot (original behavior)
-        adata.uns[rna_neighbors_key] = adata.uns[neighbors_key].copy()
-
-    # keys for stashing
-    if rna_key is None:
-        r_connectivities_key = "rna_connectivities"
-        r_distances_key = "rna_distances"
-    else:
-        r_connectivities_key = f"{rna_key}_connectivities"
-        r_distances_key = f"{rna_key}_distances"
-
-    if vdj_key is None:
-        b_connectivities_key = "vdj_connectivities"
-        b_distances_key = "vdj_distances"
-    else:
-        b_connectivities_key = f"{vdj_key}_connectivities"
-        b_distances_key = f"{vdj_key}_distances"
-
-    # Stash RNA connectivities/distances before we overwrite connectivities/distances
-    if r_connectivities_key not in adata.obsp:
-        if not skip_stash:
-            try:
-                # preferred stash from obsp if exist
-                adata.obsp[r_connectivities_key] = adata.obsp[
-                    "connectivities"
+    if uns:
+        if neighbors_key is None:
+            neighbors_key = "neighbors"
+        skip_stash = neighbors_key not in recipient.uns
+        if skip_stash:
+            recipient.uns[neighbors_key] = {}
+        else:
+            rna_neighbors_key = "rna_" + neighbors_key
+            if rna_neighbors_key not in recipient.uns:
+                # copy existing neighbors data to rna-specific slot (original behavior)
+                recipient.uns[rna_neighbors_key] = recipient.uns[
+                    neighbors_key
                 ].copy()
-                adata.obsp[r_distances_key] = adata.obsp["distances"].copy()
-            except Exception:
-                # fallback to storing whatever is inside uns[neighbors_key]
-                try:
-                    adata.obsp[r_connectivities_key] = adata.uns[neighbors_key][
-                        "connectivities"
-                    ]
-                    adata.obsp[r_distances_key] = adata.uns[neighbors_key][
-                        "distances"
-                    ]
-                except Exception:
-                    # nothing to stash (leave absent) - this mirrors the tolerant approach of original code
-                    pass
+    if obsp:
+        # keys for stashing
+        if rna_key is None:
+            r_connectivities_key = "rna_connectivities"
+            r_distances_key = "rna_distances"
+        else:
+            r_connectivities_key = f"{rna_key}_connectivities"
+            r_distances_key = f"{rna_key}_distances"
 
+        if vdj_key is None:
+            b_connectivities_key = "vdj_connectivities"
+            b_distances_key = "vdj_distances"
+        else:
+            b_connectivities_key = f"{vdj_key}_connectivities"
+            b_distances_key = f"{vdj_key}_distances"
+
+        # Stash RNA connectivities/distances before we overwrite connectivities/distances
+        if r_connectivities_key not in recipient.obsp:
+            if not skip_stash:
+                try:
+                    # preferred stash from obsp if exist
+                    recipient.obsp[r_connectivities_key] = recipient.obsp[
+                        "connectivities"
+                    ].copy()
+                    recipient.obsp[r_distances_key] = recipient.obsp[
+                        "distances"
+                    ].copy()
+                except Exception:
+                    # fallback to storing whatever is inside uns[neighbors_key]
+                    try:
+                        recipient.obsp[r_connectivities_key] = recipient.uns[
+                            neighbors_key
+                        ]["connectivities"]
+                        recipient.obsp[r_distances_key] = recipient.uns[
+                            neighbors_key
+                        ]["distances"]
+                    except Exception:
+                        # nothing to stash (leave absent) - this mirrors the tolerant approach of original code
+                        pass
     # --- 3) Convert both graphs ---
     logg.info("Converting Dandelion graphs to adjacency matrices")
 
@@ -434,111 +455,136 @@ def transfer(
     if main_idx not in graph_connectivities:
         main_idx = next(iter(graph_connectivities.keys()))
 
-    # --- 4) Update adata.obsp ---
-    adata.obsp["connectivities"] = graph_connectivities[main_idx].copy()
-    adata.obsp["distances"] = graph_distances[main_idx].copy()
+    if obsp:
+        # --- 4) Update recipient.obsp ---
+        recipient.obsp["connectivities"] = graph_connectivities[main_idx].copy()
+        recipient.obsp["distances"] = graph_distances[main_idx].copy()
 
-    adata.obsp[b_connectivities_key] = adata.obsp["connectivities"].copy()
-    adata.obsp[b_distances_key] = adata.obsp["distances"].copy()
-
-    # store the all (graph[0]) and expanded graph (graph[1]) if available
-    if 0 in graph_connectivities:
-        adata.obsp[f"{b_connectivities_key}_all"] = graph_connectivities[
-            0
+        recipient.obsp[b_connectivities_key] = recipient.obsp[
+            "connectivities"
         ].copy()
-        adata.obsp[f"{b_distances_key}_all"] = graph_distances[0].copy()
-    if 1 in graph_connectivities:
-        adata.obsp[f"{b_connectivities_key}_expanded"] = graph_connectivities[
-            1
-        ].copy()
-        adata.obsp[f"{b_distances_key}_expanded"] = graph_distances[1].copy()
+        recipient.obsp[b_distances_key] = recipient.obsp["distances"].copy()
 
-    # --- 5) Clone-level mapping (scirpy compatible) ---
-    clonekey = clone_key or "clone_id"
+        # store the all (graph[0]) and expanded graph (graph[1]) if available
+        if 0 in graph_connectivities:
+            recipient.obsp[f"{b_connectivities_key}_all"] = (
+                graph_connectivities[0].copy()
+            )
+            recipient.obsp[f"{b_distances_key}_all"] = graph_distances[0].copy()
+        if 1 in graph_connectivities:
+            recipient.obsp[f"{b_connectivities_key}_expanded"] = (
+                graph_connectivities[1].copy()
+            )
+            recipient.obsp[f"{b_distances_key}_expanded"] = graph_distances[
+                1
+            ].copy()
 
-    if not collapse_nodes:
-        for idx in graph_connectivities:
-            graph_connectivities[idx][graph_connectivities[idx].nonzero()] = 1
-        cell_indices = {
-            str(i): np.array([k])
-            for i, k in zip(range(0, len(adata.obs_names)), adata.obs_names)
-        }
-        bin_conn = graph_connectivities[main_idx]
-    else:
-        invalid = [
-            "",
-            "unassigned",
-            "NaN",
-            "NA",
-            "nan",
-            "None",
-            "none",
-            None,
-        ]
-        cell_indices = Tree()
-        for x, y in adata.obs[clonekey].items():
-            if y not in invalid:
-                cell_indices[y][x].value = 1
-        cell_indices = {
-            str(x): np.array(list(r))
-            for x, r in zip(range(0, len(cell_indices)), cell_indices.values())
-        }
-        bin_conn = np.zeros([len(cell_indices), len(cell_indices)])
-        np.fill_diagonal(bin_conn, 1)
-        bin_conn = csr_matrix(bin_conn)
+    if uns:
+        # --- 5) Clone-level mapping (scirpy compatible) ---
+        clonekey = clone_key or "clone_id"
 
-    adata.uns[clonekey] = {
-        # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
-        # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
-        "distances": bin_conn,
-        # '0' refers to the row/col index in the `distances` matrix
-        # (numeric index, but needs to be strbecause of h5py)
-        # np.array(["cell1", "cell2"]) points to the rows in `adata.obs`
-        "cell_indices": cell_indices,
-    }
-
-    # --- 6) Layouts ---
-    if dandelion.layout is not None:
-        stored_embeddings = {}
-        for idx, obsm_name in ((0, "X_vdj_all"), (1, "X_vdj_expanded")):
-            try:
-                layout = dandelion.layout[idx]
-            except Exception:
-                continue
-            if layout is None:
-                continue
-            coord = pd.DataFrame.from_dict(layout, orient="index")
-            coord = coord.reindex(index=adata.obs_names).fillna(0.0)
-            if coord.shape[1] >= 2:
-                embedding = coord.iloc[:, :2].to_numpy(dtype=np.float32)
-            else:
-                col0 = (
-                    coord.iloc[:, 0].to_numpy(dtype=np.float32).reshape(-1, 1)
+        if not collapse_nodes:
+            for idx in graph_connectivities:
+                graph_connectivities[idx][
+                    graph_connectivities[idx].nonzero()
+                ] = 1
+            cell_indices = {
+                str(i): np.array([k])
+                for i, k in zip(
+                    range(0, len(recipient.obs_names)), recipient.obs_names
                 )
-                col1 = np.zeros_like(col0)
-                embedding = np.hstack([col0, col1])
+            }
+            bin_conn = graph_connectivities[main_idx]
+        else:
+            invalid = [
+                "",
+                "unassigned",
+                "NaN",
+                "NA",
+                "nan",
+                "None",
+                "none",
+                None,
+            ]
+            cell_indices = Tree()
+            for x, y in recipient.obs[clonekey].items():
+                if y not in invalid:
+                    cell_indices[y][x].value = 1
+            cell_indices = {
+                str(x): np.array(list(r))
+                for x, r in zip(
+                    range(0, len(cell_indices)), cell_indices.values()
+                )
+            }
+            bin_conn = np.zeros([len(cell_indices), len(cell_indices)])
+            np.fill_diagonal(bin_conn, 1)
+            bin_conn = csr_matrix(bin_conn)
 
-            adata.obsm[obsm_name] = embedding
-            stored_embeddings[idx] = obsm_name
+        recipient.uns[clonekey] = {
+            # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
+            # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
+            "distances": bin_conn,
+            # '0' refers to the row/col index in the `distances` matrix
+            # (numeric index, but needs to be strbecause of h5py)
+            # np.array(["cell1", "cell2"]) points to the rows in `recipient.obs`
+            "cell_indices": cell_indices,
+        }
 
-        # Set the "active" embedding safely
-        main_idx = 1 if expanded else 0
-        active_obsm = stored_embeddings.get(main_idx)
-        if active_obsm is not None:
-            adata.obsm["X_vdj"] = adata.obsm[active_obsm].copy()
+    if obsm:
+        # --- 6) Layouts ---
+        if dandelion.layout is not None:
+            stored_embeddings = {}
+            for idx, obsm_name in ((0, "X_vdj_all"), (1, "X_vdj_expanded")):
+                try:
+                    layout = dandelion.layout[idx]
+                except Exception:
+                    continue
+                if layout is None:
+                    continue
+                coord = pd.DataFrame.from_dict(layout, orient="index")
+                coord = coord.reindex(index=recipient.obs_names).fillna(0.0)
+                if coord.shape[1] >= 2:
+                    embedding = coord.iloc[:, :2].to_numpy(dtype=np.float32)
+                else:
+                    col0 = (
+                        coord.iloc[:, 0]
+                        .to_numpy(dtype=np.float32)
+                        .reshape(-1, 1)
+                    )
+                    col1 = np.zeros_like(col0)
+                    embedding = np.hstack([col0, col1])
+
+                recipient.obsm[obsm_name] = embedding
+                stored_embeddings[idx] = obsm_name
+
+            # Set the "active" embedding safely
+            main_idx = 1 if expanded else 0
+            active_obsm = stored_embeddings.get(main_idx)
+            if active_obsm is not None:
+                recipient.obsm["X_vdj"] = recipient.obsm[active_obsm].copy()
+
+    # break up the message depending on which parts were executed
+    message_parts = []
+    if obs:
+        message_parts += [f"updated `.obs` with `.metadata`\n"]
+    if obsm:
+        message_parts += [
+            f"wrote `.obsm['X_vdj']` and `.obsm['X_vdj_expanded']`\n"
+        ]
+    if obsp:
+        message_parts += [
+            f"wrote adata.obsp['connectivities'] & ['distances'] from graph[{main_idx}]\n",
+            "stored RNA matrices under rna_* keys (stashed)\n",
+            f"stored vdj matrices under '{b_connectivities_key}' (+ '_expanded' if available)\n",
+        ]
+    if uns:
+        message_parts += [f"added `.uns['{clonekey}']` clone-level mapping"]
 
     # --- 7) Done ---
     logg.info(
         " finished",
         time=start,
-        deep=(
-            "updated `.obs` with `.metadata`\n"
-            f"wrote adata.obsp['connectivities'] & ['distances'] from graph[{main_idx}]\n"
-            "stored RNA matrices under rna_* keys (stashed)\n"
-            f"stored vdj matrices under '{b_connectivities_key}' (+ '_expanded' if available)\n"
-            "added `.obsm['X_vdj']` and `.obsm['X_vdj_expanded']`\n"
-            f"added `.uns['{clonekey}']` clone-level mapping"
-        ),
+        deep="".join(message_parts),
     )
 
 

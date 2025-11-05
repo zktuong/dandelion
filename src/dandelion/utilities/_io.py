@@ -7,6 +7,7 @@ import os
 import pickle
 import re
 import shutil
+import warnings
 
 import _pickle as cPickle
 import networkx as nx
@@ -1169,7 +1170,7 @@ def _create_mudata(
 
 
 def to_scirpy(
-    data: Dandelion,
+    vdj: Dandelion,
     transfer: bool = False,
     to_mudata: bool = True,
     gex_adata: AnnData | None = None,
@@ -1181,7 +1182,7 @@ def to_scirpy(
 
     Parameters
     ----------
-    data : Dandelion
+    vdj : Dandelion
         The Dandelion object containing the data to be converted.
     transfer : bool, optional
         Whether to transfer additional information from Dandelion to the converted data. Defaults to False.
@@ -1200,9 +1201,20 @@ def to_scirpy(
     AnnData | MuData
         The converted data in either AnnData or MuData format.
     """
+    # if gex_adata is provided, make sure to only transfer cells that are present in both
+    # we will only filter the vdj data to match gex_adata
+    if gex_adata is not None:
+        vdj = vdj[vdj.metadata_names.isin(gex_adata.obs_names)].copy()
+        tmp_gex = gex_adata.copy()
+        if not to_mudata:
+            tf(
+                tmp_gex, vdj, obs=False, uns=True, obsp=False, obsm=False
+            )  # so that the slots are properly filled
+    else:
+        tmp_gex = None
 
-    if "umi_count" not in data.data and "duplicate_count" in data.data:
-        data.data["umi_count"] = data.data["duplicate_count"]
+    if "umi_count" not in vdj.data and "duplicate_count" in vdj.data:
+        vdj.data["umi_count"] = vdj.data["duplicate_count"]
     for h in [
         "sequence",
         "rev_comp",
@@ -1212,24 +1224,22 @@ def to_scirpy(
         "d_cigar",
         "j_cigar",
     ]:
-        if h not in data.data:
-            data.data[h] = None
+        if h not in vdj.data:
+            vdj.data[h] = None
 
-    airr, obs = to_ak(data.data, **kwargs)
+    airr, obs = to_ak(vdj.data, **kwargs)
     if to_mudata:
-        adata = _create_anndata(
-            airr,
-            obs,
-        )
+        airr_adata = _create_anndata(airr, obs)
+        if tmp_gex is not None:
+            tf(airr_adata, vdj, obs=False, uns=True, obsp=False, obsm=False)
+        mdata = _create_mudata(tmp_gex, airr_adata, key)
         if transfer:
-            tf(adata, data)  # need to make a version that is not so verbose?
-
-        return _create_mudata(gex_adata, adata, key)
+            tf(mdata, vdj)
+        return mdata
     else:
-        adata = _create_anndata(airr, obs, gex_adata)
-
+        adata = _create_anndata(airr, obs, tmp_gex)
         if transfer:
-            tf(adata, data)
+            tf(adata, vdj)
         return adata
 
 
@@ -1247,14 +1257,89 @@ def from_scirpy(data: AnnData | MuData) -> Dandelion:
     Dandelion
         The converted data in Dandelion format.
     """
-
     if not isinstance(data, AnnData):
         data = data.mod["airr"]
     data = data.copy()
     data.obsm["airr"]["cell_id"] = data.obs.index
-    data = from_ak(data.obsm["airr"])
+    df = from_ak(data.obsm["airr"])
+    vdj = Dandelion(df, verbose=False)
+    # Reverse transfer (recover metadata + clone graph)
+    _reverse_transfer(data, vdj)
+    return vdj
 
-    return Dandelion(data, verbose=False)
+
+def _reverse_transfer(
+    data: AnnData | MuData,
+    dandelion: "Dandelion",
+    clone_key: str = "clone_id",
+) -> None:
+    """
+    Reverse-transfer scirpy data (AnnData/MuData) into a Dandelion object.
+
+    Pulls metadata, clone mappings, graphs, and embeddings from scirpy's structure.
+
+    Parameters
+    ----------
+    data : AnnData | MuData
+        Input scirpy object (AnnData or MuData with .mod['airr']).
+    dandelion : Dandelion
+        The Dandelion object to update in place.
+    clone_key : str, optional
+        Key under .uns containing scirpy clone-level mapping (default: 'clone_id').
+    """
+    # --- Handle MuData case ---
+    if hasattr(data, "mod"):
+        if "airr" not in data.mod:
+            raise ValueError(
+                "MuData object must contain an 'airr' modality for scirpy data."
+            )
+        adata = data.mod["airr"]
+    else:
+        adata = data
+
+    # --- Copy metadata ---
+    for col in adata.obs:
+        if col not in dandelion.metadata.columns:
+            dandelion.metadata[col] = adata.obs[col]
+
+    # --- Extract clone-level connection info ---
+    if clone_key in adata.uns:
+        clone_uns = adata.uns[clone_key]
+
+    # Expected structure: {"distances": csr_matrix, "cell_indices": dict}
+    if "distances" not in clone_uns or "cell_indices" not in clone_uns:
+        raise ValueError(
+            f"uns['{clone_key}'] does not contain both 'distances' and 'cell_indices'."
+        )
+
+    distances = clone_uns["distances"]
+    if not isinstance(distances, csr_matrix):
+        raise TypeError(
+            f"uns['{clone_key}']['distances'] must be a csr_matrix."
+        )
+
+    cell_indices = clone_uns["cell_indices"]
+
+    # --- Rebuild graph ---
+    G = nx.from_scipy_sparse_array(distances)
+    # Relabel nodes: scirpy stores numeric keys ("0", "1", ...) mapped to arrays of cell_ids
+    mapping = {}
+    for k, v in cell_indices.items():
+        k_int = int(k)
+        if isinstance(v, (list, np.ndarray)):
+            # If clone node has multiple cells, store them all in node attribute
+            mapping[k_int] = str(v[0]) if len(v) > 0 else str(k)
+            G.nodes[k_int]["cells"] = list(v)
+        else:
+            mapping[k_int] = str(v)
+            G.nodes[k_int]["cells"] = [v]
+    G = nx.relabel_nodes(G, mapping)
+
+    # Store the graph
+    dandelion.graph = [G, None]
+
+    # map the obs back to data as well
+    dandelion.sync_metadata_columns()
 
 
 def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
