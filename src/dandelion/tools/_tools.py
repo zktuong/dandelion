@@ -465,7 +465,16 @@ def transfer(
         }
         bin_conn = graph_connectivities[main_idx]
     else:
-        invalid = ["", "unassigned", "NaN", "NA", "nan", "None", "none", None]
+        invalid = [
+            "",
+            "unassigned",
+            "NaN",
+            "NA",
+            "nan",
+            "None",
+            "none",
+            None,
+        ]
         cell_indices = Tree()
         for x, y in adata.obs[clonekey].items():
             if y not in invalid:
