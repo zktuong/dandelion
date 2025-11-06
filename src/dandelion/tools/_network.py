@@ -321,7 +321,7 @@ def generate_network(
                     graph=(g, g_),
                     germline=germline_,
                     verbose=False,
-                    distances=csr_matrix(total_dist),
+                    distances=csr_matrix(df.values),
                 )
             else:
                 out = Dandelion(
@@ -330,7 +330,7 @@ def generate_network(
                     graph=(g, g_),
                     germline=germline_,
                     verbose=False,
-                    distances=csr_matrix(total_dist),
+                    distances=csr_matrix(df.values),
                 )
             out.threshold = threshold_
             return out
@@ -344,7 +344,7 @@ def generate_network(
                     germline=germline_,
                     initialize=False,
                     verbose=False,
-                    distances=csr_matrix(total_dist),
+                    distances=csr_matrix(df.values),
                 )
             else:
                 vdj_data.__init__(
@@ -355,7 +355,7 @@ def generate_network(
                     germline=germline_,
                     initialize=False,
                     verbose=False,
-                    distances=csr_matrix(total_dist),
+                    distances=csr_matrix(df.values),
                 )
             vdj_data.threshold = threshold_
     else:
@@ -366,7 +366,7 @@ def generate_network(
                 graph=(g, g_),
                 clone_key=clone_key,
                 verbose=False,
-                distances=csr_matrix(total_dist),
+                distances=csr_matrix(df.values),
             )
         else:
             out = Dandelion(
@@ -375,7 +375,7 @@ def generate_network(
                 graph=(g, g_),
                 clone_key=clone_key,
                 verbose=False,
-                distances=csr_matrix(total_dist),
+                distances=csr_matrix(df.values),
             )
         return out
 
