@@ -191,11 +191,18 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
         pass
 
     try:
-        g_0 = _read_h5_csr_matrix(filename, group="graph/graph_0")
-        g_1 = _read_h5_csr_matrix(filename, group="graph/graph_1")
+        g_0 = _read_h5_csr_matrix(filename, group="graph/graph_0", as_df=True)
+        g_1 = _read_h5_csr_matrix(filename, group="graph/graph_1", as_df=True)
         graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
         graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
         graph = (graph0, graph1)
+    except:
+        pass
+
+    try:
+        distances = _read_h5_csr_matrix(
+            filename, group="distances", as_df=False
+        )
     except:
         pass
 
@@ -230,6 +237,8 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
         constructor["layout"] = layout
     if "graph" in locals():
         constructor["graph"] = graph
+    if "distances" in locals():
+        constructor["distances"] = distances
     try:
         res = Dandelion(**constructor, verbose=False)
         # ensure that the metadata is decoded
@@ -1408,7 +1417,9 @@ def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
     return data
 
 
-def _read_h5_csr_matrix(filename: Path | str, group: str) -> pd.DataFrame:
+def _read_h5_csr_matrix(
+    filename: Path | str, group: str, as_df: bool = True
+) -> pd.DataFrame:
     """
     Read a group from an H5 file originally stored as a compressed sparse matrix.
 
@@ -1432,6 +1443,8 @@ def _read_h5_csr_matrix(filename: Path | str, group: str) -> pd.DataFrame:
             shape = tuple(f[f"{group}/shape"][:])
             # Reconstruct CSR matrix
             loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
+            if not as_df:
+                return loaded_matrix
             df = pd.DataFrame(loaded_matrix.toarray())
             df_col = _read_h5_group(filename, f"{group}/column")
             df_index = _read_h5_group(filename, f"{group}/index")
