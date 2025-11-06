@@ -375,6 +375,11 @@ def transfer(
                         np.nan, "No_contig"
                     )
 
+    # also check that all the cells in dandelion are in recipient
+    common_cells = recipient.obs_names.intersection(dandelion.metadata.index)
+    # subset to common cells only
+    dandelion = dandelion[dandelion.metadata.index.isin(common_cells)].copy()
+
     # If there's no graph, we're done with metadata only
     if dandelion.graph is None:
         logg.info(
@@ -436,8 +441,6 @@ def transfer(
                         # nothing to stash (leave absent) - this mirrors the tolerant approach of original code
                         pass
     # --- 3) Convert both graphs ---
-    logg.info("Converting Dandelion graphs to adjacency matrices")
-
     graph_connectivities, graph_distances = {}, {}
     for idx in (0, 1):
         try:
@@ -449,6 +452,10 @@ def transfer(
         graph_connectivities[idx], graph_distances[idx] = _graph_to_matrices(
             G, recipient
         )
+        if dandelion.distances is not None:
+            graph_connectivities[2], graph_distances[2] = _graph_to_matrices(
+                None, recipient, dandelion.distances
+            )
 
     # Determine main graph index
     main_idx = 1 if expanded else 0
@@ -459,11 +466,6 @@ def transfer(
         # --- 4) Update recipient.obsp ---
         recipient.obsp["connectivities"] = graph_connectivities[main_idx].copy()
         recipient.obsp["distances"] = graph_distances[main_idx].copy()
-
-        recipient.obsp[b_connectivities_key] = recipient.obsp[
-            "connectivities"
-        ].copy()
-        recipient.obsp[b_distances_key] = recipient.obsp["distances"].copy()
 
         # store the all (graph[0]) and expanded graph (graph[1]) if available
         if 0 in graph_connectivities:
@@ -477,6 +479,13 @@ def transfer(
             )
             recipient.obsp[f"{b_distances_key}_expanded"] = graph_distances[
                 1
+            ].copy()
+        if 2 in graph_connectivities:
+            recipient.obsp[f"{b_connectivities_key}_full"] = (
+                graph_connectivities[2].copy()
+            )
+            recipient.obsp[f"{b_distances_key}_full"] = graph_distances[
+                2
             ].copy()
 
     if uns:
@@ -534,7 +543,10 @@ def transfer(
         # --- 6) Layouts ---
         if dandelion.layout is not None:
             stored_embeddings = {}
-            for idx, obsm_name in ((0, "X_vdj_all"), (1, "X_vdj_expanded")):
+            for idx, obsm_name in (
+                (0, "X_vdj_all"),
+                (1, "X_vdj_expanded"),
+            ):
                 try:
                     layout = dandelion.layout[idx]
                 except Exception:
@@ -575,7 +587,7 @@ def transfer(
         message_parts += [
             f"wrote adata.obsp['connectivities'] & ['distances'] from graph[{main_idx}]\n",
             "stored RNA matrices under rna_* keys (stashed)\n",
-            f"stored vdj matrices under '{b_connectivities_key}' (+ '_expanded' if available)\n",
+            f"stored vdj matrices under '{b_connectivities_key}' (+ '_expanded' and + '_full' if available)\n",
         ]
     if uns:
         message_parts += [f"added `.uns['{clonekey}']` clone-level mapping"]
@@ -589,21 +601,29 @@ def transfer(
 
 
 def _graph_to_matrices(
-    G: nx.Graph, adata: AnnData
+    G: nx.Graph | None,
+    adata: AnnData,
+    distances: pd.DataFrame | csr_matrix | None = None,
 ) -> tuple[csr_matrix, csr_matrix]:
     """Helper function to build connectivities/distances.
 
     Ensures that if a graph has no edges (all zeros), we add a tiny self-edge
     to the first node to avoid downstream plotting errors.
     """
-    # Convert graph to adjacency matrices
-    distances = nx.to_pandas_adjacency(
-        G, dtype=np.float32, weight="weight", nonedge=np.nan
-    )
-    distances = distances.reindex(
-        index=adata.obs_names, columns=adata.obs_names
-    )
-
+    if distances is None:
+        # Convert graph to adjacency matrices
+        distances = nx.to_pandas_adjacency(
+            G, dtype=np.float32, weight="weight", nonedge=np.nan
+        )
+        distances = distances.reindex(
+            index=adata.obs_names, columns=adata.obs_names
+        )
+    if isinstance(distances, csr_matrix):
+        distances = pd.DataFrame(
+            distances.toarray(),
+            index=adata.obs_names,
+            columns=adata.obs_names,
+        )
     connectivities = distances.apply(lambda x: np.exp(-x))
     connectivities = connectivities.clip(lower=1e-45)
     connectivities = connectivities.reindex(
@@ -626,7 +646,7 @@ def _graph_to_matrices(
 
 def swap_view(
     adata: AnnData,
-    mode: Literal["all", "expanded", "rna"] | None = "expanded",
+    mode: Literal["all", "expanded", "full", "rna"] | None = "expanded",
     connectivities_key: str | None = None,
     distances_key: str | None = None,
     embedding_key: str | None = None,
@@ -638,7 +658,7 @@ def swap_view(
     ----------
     adata : AnnData
         The AnnData object.
-    mode : Literal["all", "expanded", "rna"] | None, optional
+    mode : Literal["all", "expanded", "full", "rna"] | None, optional
         If specified, set the active connectivities/distances/embedding to one of the preset modes.
     connectivities_key : str | None, optional
         The key in `.obsp` to set as active `.obsp["connectivities"]` if `mode` is None.
@@ -665,18 +685,14 @@ def swap_view(
             else:
                 raise KeyError(f"{embedding_key} not found in adata.obsm")
     else:
-        if mode == "all":
-            conn_key = f"vdj_connectivities_all"
-            dist_key = f"vdj_distances_all"
-            emb_key = "X_vdj_all"
-        elif mode == "expanded":
-            conn_key = f"vdj_connectivities_expanded"
-            dist_key = f"vdj_distances_expanded"
-            emb_key = "X_vdj_expanded"
-        elif mode == "rna":
-            conn_key = f"rna_connectivities"
-            dist_key = f"rna_distances"
+        if mode == "rna":
+            conn_key = f"{mode}_connectivities"
+            dist_key = f"{mode}_distances"
             emb_key = None
+        else:
+            conn_key = f"vdj_connectivities_{mode}"
+            dist_key = f"vdj_distances_{mode}"
+            emb_key = f"X_vdj_{mode}" if mode != "full" else None
         adata.obsp["connectivities"] = adata.obsp[conn_key].copy()
         adata.obsp["distances"] = adata.obsp[dist_key].copy()
         if emb_key is not None:

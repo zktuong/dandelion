@@ -51,6 +51,7 @@ class Dandelion:
         germline: dict[str, str] | None = None,
         layout: tuple[dict[str, np.array], dict[str, np.array]] | None = None,
         graph: tuple[nx.Graph, nx.Graph] | None = None,
+        distances: csr_matrix | None = None,
         initialize: bool = True,
         library_type: Literal["tr-ab", "tr-gd", "ig"] | None = None,
         verbose: bool = True,
@@ -71,6 +72,8 @@ class Dandelion:
             node positions for computed graph.
         graph : tuple[nx.Graph, nx.Graph] | None, optional
             networkx graphs for clonotype networks.
+        distances : csr_matrix | None, optional
+            distance matrix for sequences.
         initialize : bool, optional
             whether or not to initialize `.metadata` slot.
         library_type : Literal["tr-ab", "tr-gd", "ig"] | None, optional
@@ -84,6 +87,7 @@ class Dandelion:
         self._metadata = metadata
         self.layout = layout
         self.graph = graph
+        self.distances = distances
         self.threshold = None
         self.germline = {}
         self.querier = None
@@ -154,6 +158,8 @@ class Dandelion:
             descr += f"\n    layout: {', '.join(['layout for '+ str(len(x)) + ' vertices' for x in (self.layout[0], self.layout[1]) if x is not None])}"
         if self.graph is not None:
             descr += f"\n    graph: {', '.join(['networkx graph of '+ str(len(x)) + ' vertices' for x in (self.graph[0], self.graph[1]) if x is not None])} "
+        if self.distances is not None:
+            descr += f"\n    distances: distance matrix of shape {self.distances.shape}"
         return descr
 
     def __repr__(self) -> str:
@@ -184,12 +190,27 @@ class Dandelion:
             selected_cells = self._metadata.iloc[idx].index
             _metadata = self._metadata.loc[selected_cells]
             _data = self._data[self._data["cell_id"].isin(selected_cells)]
+            if self.distances is not None:
+                # also filter distances matrix accordingly. the distance matrix is in the same order as metadata
+                _distances = self.distances[idx, :][:, idx]
+            else:
+                _distances = None
         elif idxtype == "data":
             selected_cells = self._data.iloc[idx]["cell_id"]
             _data = self._data.iloc[idx]
             _metadata = self._metadata.loc[
                 self._metadata.index.intersection(selected_cells)
             ]
+            if self.distances is not None:
+                # get the indices of the selected cells in the metadata before filtering
+                # using np.where to preserve duplicates
+                meta_indices = np.where(
+                    self._metadata.index.isin(selected_cells)
+                )[0]
+                _distances = self.distances[meta_indices, :][:, meta_indices]
+            else:
+                _distances = None
+
         else:
             raise TypeError(f"Unrecognized idxtype: {idxtype}")
 
@@ -227,6 +248,7 @@ class Dandelion:
             metadata=_metadata,
             layout=_layout,
             graph=_graph,
+            distances=_distances,
             verbose=False,
         )
 
@@ -1879,6 +1901,28 @@ class Dandelion:
                             data=G_index_array,
                             **save_args,
                         )
+            if self.distances is not None:
+                with h5py.File(filename, "a") as hf:
+                    hf.create_dataset(
+                        f"distances/data",
+                        data=self.distances.data,
+                        **save_args,
+                    )
+                    hf.create_dataset(
+                        f"distances/indices",
+                        data=self.distances.indices,
+                        **save_args,
+                    )
+                    hf.create_dataset(
+                        f"distances/indptr",
+                        data=self.distances.indptr,
+                        **save_args,
+                    )
+                    hf.create_dataset(
+                        f"distances/shape",
+                        data=self.distances.shape,
+                        **save_args,
+                    )
 
             if self.layout is not None:
                 for i, l in enumerate(self.layout):

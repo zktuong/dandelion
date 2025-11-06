@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from collections import defaultdict, Counter
 from joblib import Parallel, delayed
 from polyleven import levenshtein
 from scanpy import logging as logg
@@ -23,29 +24,31 @@ from dandelion.utilities._utilities import *
 
 
 def generate_network(
-    vdj_data: Dandelion | pd.DataFrame | str,
+    vdj_data: Dandelion,
     key: str | None = None,
     clone_key: str | None = None,
     min_size: int = 2,
-    downsample: int | None = None,
+    resample: int | None = None,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
     num_cores: int = 1,
+    distance_mode: Literal["original", "full"] = "original",
+    n_chunks: int = 100,
+    random_state: int | np.random.RandomState | None = None,
     **kwargs,
 ) -> Dandelion:
     """
-    Generate a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
+    Generate a Levenshtein distance network based on VDJ and VJ sequences.
 
     The distance matrices are then combined into a singular matrix.
 
     Parameters
     ----------
-    vdj_data : Dandelion | pd.DataFrame | str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
-        have been determined.
+    vdj_data : Dandelion
+        `Dandelion` object.
     key : str | None, optional
         column name for distance calculations. None defaults to 'sequence_alignment_aa'.
     clone_key : str | None, optional
@@ -53,9 +56,11 @@ def generate_network(
     min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    downsample : int | None, optional
-        whether or not to downsample the number of cells prior to construction of network. If provided, cells will be
-        randomly sampled to the integer provided. A new Dandelion class will be returned.
+    resample : int | None, optional
+        whether or not to resample the number of cells prior to construction of network. If provided, cells will be
+        randomly sampled to the integer provided. If the integer is larger than the number of cells, sampling with
+        replacement is used and the same cell may appear multiple times with different sequence and cell ids. If None,
+        no resampling is performed. A new Dandelion class will be returned.
     verbose : bool, optional
         whether or not to print the progress bars.
     compute_layout : bool, optional
@@ -69,7 +74,12 @@ def generate_network(
     use_existing_graph : bool, optional
         whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
     num_cores : int, optional
-        if more than 1, parallelise the minimum spanning tree calculation step.
+        number of cores to use for parallelizable steps. -1 uses all available cores.
+    distance_mode : Literal["original", "full"], optional
+        method to compute distance matrix. 'original' refers to the original membership-based distance calculation
+        whereas 'full' computes the full pairwise distance matrix using Dask delayed blocks.
+    n_chunks : int, optional
+        number of chunks to split sequences into for blockwise computation when using `distance_mode='full'`.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -83,11 +93,15 @@ def generate_network(
     ------
     ValueError
         if any errors with dandelion input.
-
     """
+    # normalize num_cores convention (-1 => use all CPUs)
+    if num_cores == -1:
+        num_cores = multiprocessing.cpu_count()
+    num_cores = max(1, int(num_cores))
+
     regenerate = True
     if vdj_data.graph is not None:
-        if (min_size != 2) or (downsample is not None):
+        if (min_size != 2) or (resample is not None):
             pass
         elif use_existing_graph:
             start = logg.info(
@@ -107,55 +121,89 @@ def generate_network(
                     graphs=(vdj_data.graph[0], vdj_data.graph[1]),
                     **kwargs,
                 )
+
     if regenerate:
         start = logg.info("Generating network")
-        if isinstance(vdj_data, Dandelion):
-            dat = load_data(vdj_data.data)
-            if "ambiguous" in vdj_data.data:
-                dat = dat[dat["ambiguous"] == "F"].copy()
-        else:
-            dat = load_data(data)
-
         if key is None:
-            key_ = "sequence_alignment_aa"  # default
+            key_ = "sequence_alignment_aa"
         else:
             key_ = key
 
-        if key_ not in dat:
-            raise ValueError("key {} not found in input table.".format(key_))
+        if key_ not in vdj_data.data:
+            raise ValueError(f"key {key_} not found in data.")
 
         clonekey = clone_key if clone_key is not None else "clone_id"
-        if clonekey not in dat:
+        if clonekey not in vdj_data.data:
             raise ValueError(
                 "Data does not contain clone information. Please run find_clones."
             )
 
-        # calculate distance
-        if downsample is not None:
-            if downsample >= vdj_data.metadata.shape[0]:
-                logg.info(
-                    "Cannot downsample to {} cells. Using all {} cells.".format(
-                        str(downsample), vdj_data.metadata.shape[0]
-                    )
-                )
-                dat_ = sanitize_data(dat, ignore=clonekey)
-            else:
-                logg.info("Downsampling to {} cells.".format(str(downsample)))
-                keep_cells = vdj_data.metadata.sample(downsample)
-                keep_cells = list(keep_cells.index)
-                # dat = load_data(
-                #     dat.set_index("cell_id").loc[keep_cells].reset_index()
-                # )
-                dat = dat[dat["cell_id"].isin(keep_cells)]
-                dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
-                dat_l = dat[
-                    dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])
-                ].copy()
-                dat_ = pd.concat([dat_h, dat_l], ignore_index=True)
-                dat_ = sanitize_data(dat_, ignore=clonekey)
-        else:
-            dat_ = sanitize_data(dat, ignore=clonekey)
+        if resample is not None:
+            replace = True if resample > vdj_data.metadata.shape[0] else False
+            logg.info("Downsampling to {} cells.".format(str(resample)))
+            keep_cells = vdj_data.metadata.sample(
+                resample, replace=replace, random_state=random_state
+            )
+            keep_cells = list(keep_cells.index)
 
+        # get the .data without ambiguous assignments
+        if "ambiguous" in vdj_data.data:
+            dat = vdj_data.data[vdj_data.data["ambiguous"] == "F"].copy()
+        else:
+            dat = vdj_data.data.copy()
+
+        if resample is not None:
+            dat = dat[dat["cell_id"].isin(keep_cells)].copy()
+            if replace:
+                cell_counts = Counter(keep_cells)
+
+                # Only process cells that appear more than once
+                duplicated_cells = {
+                    cell: count
+                    for cell, count in cell_counts.items()
+                    if count > 1
+                }
+
+                if duplicated_cells:
+                    # Separate rows that need duplication
+                    rows_to_duplicate = dat[
+                        dat["cell_id"].isin(duplicated_cells.keys())
+                    ].copy()
+                    rows_to_keep = dat[
+                        ~dat["cell_id"].isin(duplicated_cells.keys())
+                    ].copy()
+
+                    # Create duplicated rows with suffixes
+                    all_duplicated_rows = []
+                    for cell_id, count in duplicated_cells.items():
+                        cell_rows = rows_to_duplicate[
+                            rows_to_duplicate["cell_id"] == cell_id
+                        ].copy()
+                        for i in range(count):
+                            suffix = f"_dup{i}" if i > 0 else ""
+                            temp_rows = cell_rows.copy()
+                            if suffix:
+                                temp_rows["cell_id"] = (
+                                    temp_rows["cell_id"] + suffix
+                                )
+                                temp_rows["sequence_id"] = (
+                                    temp_rows["sequence_id"] + suffix
+                                )
+                            all_duplicated_rows.append(temp_rows)
+
+                    # Combine everything back together
+                    dat = pd.concat(
+                        [rows_to_keep] + all_duplicated_rows, ignore_index=True
+                    )
+            # reinitialise a copy of the resampled dandelion object using dat
+            vdj_data = Dandelion(dat)
+
+        dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
+        dat_l = dat[dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])].copy()
+        dat_ = pd.concat([dat_h, dat_l], ignore_index=True)
+        dat_ = sanitize_data(dat_, ignore=clonekey)
+
+        # retrieve sequence columns and clone info (unchanged)
         querier = Query(dat_, verbose=verbose)
         dat_seq = querier.retrieve(query=key_, retrieve_mode="split")
         dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
@@ -170,311 +218,72 @@ def generate_network(
             for ij in jjj:
                 membership[ij][i].value = 1
         membership = {i: list(j) for i, j in dict(membership).items()}
-        tmp_ = np.zeros((dat_seq.shape[0], dat_seq.shape[0]))
-        df = pd.DataFrame(tmp_)
-        df.index = dat_seq.index
-        df.columns = dat_seq.index
-        dmat = Tree()
-        for t in tqdm(
-            membership,
-            desc="Calculating distances ",
+
+        # compute total_dist using chosen mode (original uses membership)
+        logg.info(f"Calculating distance matrix with mode = '{distance_mode}'")
+        if distance_mode == "original":
+            total_dist = calculate_distance_matrix_original(
+                dat_seq, membership, verbose=verbose
+            )
+        elif distance_mode == "full":
+            total_dist = calculate_distance_matrix_full(
+                dat_seq, n_chunks=n_chunks, num_cores=num_cores, verbose=verbose
+            )
+        else:
+            raise ValueError(f"Unknown distance_mode: {distance_mode}")
+
+        # follow the existing pipeline: make tmp dataframe, extract per-clone submatrices, mst, etc.
+        df = pd.DataFrame(
+            total_dist, index=dat_seq.index, columns=dat_seq.index
+        )
+        # reorder df's index and columns to match vdj_data.metadata index
+        df = df.reindex(
+            index=vdj_data.metadata.index, columns=vdj_data.metadata.index
+        )
+
+        # build cluster_dist as before (only include groups with >1 member)
+        tmp_clusterdist2 = {}
+        tmp_clusterdist2 = {
+            c: membership[c] for c in membership if len(membership[c]) > 1
+        }
+
+        # extract per-clone distance matrices
+        cluster_dist = {}
+        for c_ in tqdm(
+            tmp_clusterdist2,
+            desc="Sorting into clusters ",
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
-            tmp = dat_seq.loc[membership[t]]
-            if tmp.shape[0] > 1:
-                tmp = tmp.replace(
-                    "[.]", "", regex=True
-                )  # replace gaps before calculating distances
-                for x in tmp.columns:
-                    tdarray = np.array(np.array(tmp[x])).reshape(-1, 1)
-                    d_mat_tmp = squareform(
-                        pdist(
-                            tdarray,
-                            lambda x, y: (
-                                levenshtein(x[0], y[0])
-                                if (x[0] == x[0]) and (y[0] == y[0])
-                                else 0
-                            ),
-                        )
-                    )
-                    dmat[x][t] = pd.DataFrame(
-                        d_mat_tmp, index=tmp.index, columns=tmp.index
-                    )
-        if len(dmat) > 0:
-            for x in tqdm(
-                dmat,
-                desc="Aggregating distances ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):
-                dmat[x] = pd.concat(dmat[x])
-                dmat[x] = dmat[x].droplevel(level=0)
-                # give the index a name
-                dmat[x].index.name = "indices"
-                if any(dmat[x].index.duplicated()):
-                    tmp_dmat = dmat[x]
-                    dup_indices = dmat[x].index[dmat[x].index.duplicated()]
-                    tmp_dmatx1 = tmp_dmat.drop(dup_indices)
-                    tmp_dmatx2 = tmp_dmat.loc[dup_indices]
-                    tmp_dmatx2 = tmp_dmatx2.groupby("indices").apply(sum_col)
-                    dmat[x] = pd.concat([tmp_dmatx1, tmp_dmatx2])
-
-                # if any(dmat[x].index.duplicated()):
-                #     tmp_dmat = dmat[x].copy()
-                #     dup_indices = tmp_dmat.index[tmp_dmat.index.duplicated()]
-                #     tmp_dmatx = tmp_dmat.drop(dup_indices)
-                #     for di in list(set(dup_indices)):
-                #         _tmpdmat = tmp_dmat.loc[di]
-                #         _tmpdmat = _tmpdmat.apply(lambda r: sum_col(r), axis=0)
-                #         tmp_dmatx = pd.concat(
-                #             [tmp_dmatx, pd.DataFrame(_tmpdmat, columns=[di]).T]
-                #         )
-                #     dmat[x] = tmp_dmatx.copy()
-
-                dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
-                dmat[x] = dmat[x].values
-
-            dist_mat_list = [
-                dmat[x] for x in dmat if type(dmat[x]) is np.ndarray
-            ]
-
-            total_dist = np.sum(dist_mat_list, axis=0)
-            np.fill_diagonal(total_dist, np.nan)
-
-            # free up memory
-            del dmat
-            del dist_mat_list
-
-            # generate edge list
-            if isinstance(vdj_data, Dandelion):
-                if downsample is not None:
-                    vdj_data = vdj_data[vdj_data.data.cell_id.isin(keep_cells)]
-                out = vdj_data.copy()
-
-            else:  # re-initiate a Dandelion class object
-                out = Dandelion(dat_, verbose=False)
-
-            tmp_totaldist = pd.DataFrame(
-                total_dist, index=dat_seq.index, columns=dat_seq.index
-            )
-            tmp_clusterdist = Tree()
-            overlap = []
-            for i in out.metadata.index:
-                if len(out.metadata.loc[i, str(clonekey)].split("|")) > 1:
-                    overlap.append(
-                        [
-                            c
-                            for c in out.metadata.loc[i, str(clonekey)].split(
-                                "|"
-                            )
-                            if c != "None"
-                        ]
-                    )
-                    for c in out.metadata.loc[i, str(clonekey)].split("|"):
-                        if c != "None":
-                            tmp_clusterdist[c][i].value = 1
-                else:
-                    cx = out.metadata.loc[i, str(clonekey)]
-                    if cx != "None":
-                        tmp_clusterdist[cx][i].value = 1
-            tmp_clusterdist2 = {}
-            for x in tmp_clusterdist:
-                tmp_clusterdist2[x] = list(tmp_clusterdist[x])
-            cluster_dist = {}
-            for c_ in tqdm(
-                tmp_clusterdist2,
-                desc="Sorting into clusters ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):
-                if c_ in list(flatten(overlap)):
-                    for ol in overlap:
-                        if c_ in ol:
-                            idx = list(
-                                set(
-                                    flatten(
-                                        [tmp_clusterdist2[c_x] for c_x in ol]
-                                    )
-                                )
-                            )
-                            if len(list(set(idx))) > 1:
-                                dist_mat_ = tmp_totaldist.loc[idx, idx]
-                                s1, s2 = dist_mat_.shape
-                                if s1 > 1 and s2 > 1:
-                                    cluster_dist["|".join(ol)] = dist_mat_
-                else:
-                    dist_mat_ = tmp_totaldist.loc[
-                        tmp_clusterdist2[c_], tmp_clusterdist2[c_]
-                    ]
-                    s1, s2 = dist_mat_.shape
-                    if s1 > 1 and s2 > 1:
-                        cluster_dist[c_] = dist_mat_
-
-            # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
-            # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
-
-            edge_list = Tree()
-            for c in tqdm(
-                mst_tree,
-                desc="Generating edge list ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):
-                edge_list[c] = nx.to_pandas_edgelist(mst_tree[c])
-                if edge_list[c].shape[0] > 0:
-                    edge_list[c]["weight"] = edge_list[c]["weight"] - 1
-                    edge_list[c].loc[
-                        edge_list[c]["weight"] < 0, "weight"
-                    ] = 0  # just in case
-
-            clone_ref = dict(out.metadata[clonekey])
-            clone_ref = {k: r for k, r in clone_ref.items() if r != "None"}
-            tmp_clone_tree = Tree()
-            for x in out.metadata.index:
-                if x in clone_ref:
-                    if "|" in clone_ref[x]:
-                        for x_ in clone_ref[x].split("|"):
-                            if x_ != "None":
-                                tmp_clone_tree[x_][x].value = 1
-                    else:
-                        tmp_clone_tree[clone_ref[x]][x].value = 1
-            tmp_clone_tree2 = Tree()
-            for x in tmp_clone_tree:
-                tmp_clone_tree2[x] = list(tmp_clone_tree[x])
-
-            tmp_clone_tree3 = Tree()
-            tmp_clone_tree3_overlap = Tree()
-            for x in tqdm(
-                tmp_clone_tree2,
-                desc="Computing overlap ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):
-                # this is to catch all possible cells that may potentially match up with this clone that's joined together
-                if x in list(flatten(overlap)):
-                    for ol in overlap:
-                        if x in ol:
-                            if len(tmp_clone_tree2[x]) > 1:
-                                for x_ in tmp_clone_tree2[x]:
-                                    tmp_clone_tree3_overlap["|".join(ol)][
-                                        "".join(x_)
-                                    ].value = 1
-                            else:
-                                tmp_clone_tree3_overlap["|".join(ol)][
-                                    "".join(tmp_clone_tree2[x])
-                                ].value = 1
-                else:
-                    tmp_ = pd.DataFrame(
-                        index=tmp_clone_tree2[x], columns=tmp_clone_tree2[x]
-                    )
-                    tmp_ = pd.DataFrame(
-                        np.tril(tmp_) + 1,
-                        index=tmp_clone_tree2[x],
-                        columns=tmp_clone_tree2[x],
-                    )
-                    tmp_ = tmp_.astype(float).fillna(0)
-                    tmp_clone_tree3[x] = tmp_
-
-            for x in tqdm(
-                tmp_clone_tree3_overlap,
-                desc="Adjust overlap ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):  # repeat for the overlap clones
-                tmp_ = pd.DataFrame(
-                    index=tmp_clone_tree3_overlap[x],
-                    columns=tmp_clone_tree3_overlap[x],
-                )
-                tmp_ = pd.DataFrame(
-                    np.tril(tmp_) + 1,
-                    index=tmp_clone_tree3_overlap[x],
-                    columns=tmp_clone_tree3_overlap[x],
-                )
-                tmp_ = tmp_.astype(float).fillna(0)
-                tmp_clone_tree3[x] = tmp_
-
-            # free up memory
-            del tmp_clone_tree2
-
-            # this chunk doesn't scale well?
-            # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully
-            # link them up if they were identical but clipped off during the mst step
-
-            # create a data frame to recall the actual distance quickly
-            tmp_totaldiststack = adjacency_to_edge_list(
-                tmp_totaldist, rename_index=True
-            )
-
-            tmp_totaldiststack["keep"] = [
-                False if len(list(set(i.split("|")))) == 1 else True
-                for i in tmp_totaldiststack.index
-            ]
-            tmp_totaldiststack = tmp_totaldiststack[
-                tmp_totaldiststack.keep
-            ].drop("keep", axis=1)
-
-            # convert tmp_totaldist to edge list and rename the index
-            tmp_edge_list = Tree()
-            for c in tqdm(
-                tmp_clone_tree3,
-                desc="Linking edges ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):
-                if len(tmp_clone_tree3[c]) > 1:
-                    G = create_networkx_graph(
-                        tmp_clone_tree3[c],
-                        drop_zero=True,
-                    )
-                    tmp_edge_list[c] = nx.to_pandas_edgelist(G)
-                    set_edge_list_index(tmp_edge_list[c])
-
-                    tmp_edge_list[c].update(
-                        {"weight": tmp_totaldiststack["weight"]}
-                    )
-                    # keep only edges when there is 100% identity, to minimise crowding
-                    tmp_edge_list[c] = tmp_edge_list[c][
-                        tmp_edge_list[c]["weight"] == 0
-                    ]
-                    tmp_edge_list[c].reset_index(inplace=True)
-
-            # try to catch situations where there's no edge (only singletons)
-            try:
-                edge_listx = pd.concat([edge_list[x] for x in edge_list])
-                set_edge_list_index(edge_listx)
-                tmp_edge_listx = pd.concat(
-                    [tmp_edge_list[x] for x in tmp_edge_list]
-                )
-                tmp_edge_listx.drop("index", axis=1, inplace=True)
-                set_edge_list_index(tmp_edge_listx)
-
-                edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                for i, row in tmp_totaldiststack.iterrows():
-                    if i in edge_list_final.index:
-                        edge_list_final.at[i, "weight"] = row["weight"]
-
-                # return the edge list
-                edge_list_final.reset_index(drop=True, inplace=True)
-            except:
-                edge_list_final = None
-
-            # free up memory
-            # del tmp_totaldiststack
-            del tmp_totaldist
-            del tmp_edge_list
-            # remove vertices if the out.metadata.clone_id == "None"
-            vertice_list = list(
-                out.metadata[out.metadata[clonekey] != "None"].index
-            )
-
-        else:
+            idxs = list(tmp_clusterdist2[c_])
+            dist_mat_ = df.loc[idxs, idxs]
+            s1, s2 = dist_mat_.shape
+            if s1 > 1 and s2 > 1:
+                cluster_dist[c_] = dist_mat_
+        # Minimum spanning trees (unchanged)
+        mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
+        # generate edge list
+        edge_list = Tree()
+        for c in tqdm(
+            mst_tree,
+            desc="Generating edge list ",
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
+            edge_list[c] = nx.to_pandas_edgelist(mst_tree[c])
+            if edge_list[c].shape[0] > 0:
+                edge_list[c]["weight"] = edge_list[c]["weight"] - 1
+                edge_list[c].loc[edge_list[c]["weight"] < 0, "weight"] = 0
+        # try to combine edge lists (simple version)
+        try:
+            edge_list_final = pd.concat([edge_list[x] for x in edge_list])
+            set_edge_list_index(edge_list_final)
+        except Exception:
             edge_list_final = None
-            vertice_list = list(df.index)
-        # and finally the vertex list which is super easy
 
-        # and now to actually generate the network
+        vertice_list = list(df.index)
+
+        # final layout + graph creation (unchanged)
         g, g_, lyt, lyt_ = _generate_layout(
             vertices=vertice_list,
             edges=edge_list_final,
@@ -498,16 +307,12 @@ def generate_network(
             "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
         ),
     )
+
+    # Wrap up return logic (unchanged)
     if isinstance(vdj_data, Dandelion):
-        if vdj_data.germline is not None:
-            germline_ = vdj_data.germline
-        else:
-            germline_ = None
-        if vdj_data.threshold is not None:
-            threshold_ = vdj_data.threshold
-        else:
-            threshold_ = None
-        if downsample is not None:
+        germline_ = getattr(vdj_data, "germline", None)
+        threshold_ = getattr(vdj_data, "threshold", None)
+        if resample is not None:
             if (lyt and lyt_) is not None:
                 out = Dandelion(
                     data=dat_,
@@ -516,6 +321,7 @@ def generate_network(
                     graph=(g, g_),
                     germline=germline_,
                     verbose=False,
+                    distances=csr_matrix(total_dist),
                 )
             else:
                 out = Dandelion(
@@ -524,6 +330,7 @@ def generate_network(
                     graph=(g, g_),
                     germline=germline_,
                     verbose=False,
+                    distances=csr_matrix(total_dist),
                 )
             out.threshold = threshold_
             return out
@@ -537,6 +344,7 @@ def generate_network(
                     germline=germline_,
                     initialize=False,
                     verbose=False,
+                    distances=csr_matrix(total_dist),
                 )
             else:
                 vdj_data.__init__(
@@ -547,6 +355,7 @@ def generate_network(
                     germline=germline_,
                     initialize=False,
                     verbose=False,
+                    distances=csr_matrix(total_dist),
                 )
             vdj_data.threshold = threshold_
     else:
@@ -557,6 +366,7 @@ def generate_network(
                 graph=(g, g_),
                 clone_key=clone_key,
                 verbose=False,
+                distances=csr_matrix(total_dist),
             )
         else:
             out = Dandelion(
@@ -565,6 +375,7 @@ def generate_network(
                 graph=(g, g_),
                 clone_key=clone_key,
                 verbose=False,
+                distances=csr_matrix(total_dist),
             )
         return out
 
@@ -614,6 +425,209 @@ def mst(
         for result in results:
             mst_tree[result[0]] = result[1]
     return mst_tree
+
+
+def calculate_distance_matrix_original(
+    dat_seq: pd.DataFrame, membership: dict, verbose: bool = True
+) -> np.ndarray:
+    """
+    Re-implementation of original membership-based distance calculation.
+
+    Parameters
+    ----------
+    dat_seq : pd.DataFrame
+        DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
+    membership : dict
+        Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
+    verbose : bool
+        Whether to show progress.
+
+    Returns
+    -------
+    total_dist : np.ndarray (n x n)
+        Aggregated distance matrix across all columns; diagonal set to NaN by caller.
+    """
+    n = dat_seq.shape[0]
+    index_list = list(dat_seq.index)
+    idx_to_pos = {idx: i for i, idx in enumerate(index_list)}
+
+    # dmat_per_column will collect for each column a list of DataFrames (one per clone) to concat
+    dmat_per_column = defaultdict(list)
+
+    # iterate clones (membership) exactly like original
+    iterator = membership
+    if verbose:
+        iterator = tqdm(
+            membership,
+            desc="Calculating distances (original, by membership)",
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        )
+
+    for t in iterator:
+        tmp = dat_seq.loc[membership[t]]
+        if tmp.shape[0] > 1:
+            tmp = tmp.replace("[.]", "", regex=True)
+            for col in tmp.columns:
+                tdarray = np.array(tmp[col]).reshape(-1, 1)
+                # keep the original NaN-check logic: return 0 when either is NaN
+                d_mat_tmp = squareform(
+                    pdist(
+                        tdarray,
+                        lambda x, y: (
+                            levenshtein(x[0], y[0])
+                            if (x[0] == x[0] and y[0] == y[0])
+                            else 0
+                        ),
+                    )
+                )
+                df_block = pd.DataFrame(
+                    d_mat_tmp, index=tmp.index, columns=tmp.index
+                )
+                dmat_per_column[col].append(df_block)
+
+    # For each column, concat its blocks, resolve duplicates (sum), reindex to full index
+    dist_matrices = []
+    for col, blocks in dmat_per_column.items():
+        if not blocks:
+            continue
+        full = pd.concat(blocks)
+        # If duplicates occur at the index-level, group & sum them (same as original)
+        if any(full.index.duplicated()):
+            dup_indices = full.index[full.index.duplicated()]
+            tmp1 = full.drop(dup_indices)
+            tmp2 = full.loc[dup_indices]
+            tmp2 = tmp2.groupby(level=0).apply(lambda df: df.sum(axis=0))
+            full = pd.concat([tmp1, tmp2])
+        # reindex to full matrix indices (missing rows/cols -> fill with zeros)
+        full = full.reindex(index=index_list, columns=index_list).fillna(0.0)
+        dist_matrices.append(full.values)
+
+    if len(dist_matrices) == 0:
+        total_dist = np.zeros((n, n))
+    else:
+        total_dist = np.sum(dist_matrices, axis=0)
+
+    np.fill_diagonal(total_dist, np.nan)
+    return total_dist
+
+
+def _compute_block(chunk1, chunk2):
+    """Helper used by Dask to compute distances between two 1-D arrays of strings."""
+    return np.array([[levenshtein(a, b) for b in chunk2] for a in chunk1])
+
+
+def calculate_distance_matrix_full(
+    dat_seq: pd.DataFrame,
+    n_chunks: int = 100,
+    num_cores: int = 1,
+    verbose: bool = True,
+) -> np.ndarray:
+    """
+    Compute full pairwise distance matrix using Dask delayed blocks.
+
+    Parameters
+    ----------
+    dat_seq: pd.DataFrame
+        DataFrame of sequences.
+    n_chunks: int, optional
+        number of chunks to split sequences into for blockwise computation.
+    num_cores: int, optional
+        number of cores to use.
+    verbose : bool, optional
+        whether or not to show progress.
+
+    Returns
+    -------
+    np.ndarray
+        Aggregated distance matrix; diagonal set to NaN.
+    """
+    try:
+        import dask
+        from dask.distributed import Client, progress
+        from dask.diagnostics import ProgressBar
+    except ImportError:
+        raise ImportError(
+            "Please install dask[distributed]: pip install 'dask[distributed]'"
+        )
+    if verbose:
+        logg.info(
+            f"Calculating distances (full pairwise, over {n_chunks} blocks)"
+        )
+    n = dat_seq.shape[0]
+    index_list = list(dat_seq.index)
+    idx_to_pos = {idx: i for i, idx in enumerate(index_list)}
+
+    client = None
+    if num_cores > 1:
+        client = Client(
+            n_workers=num_cores, threads_per_worker=1, processes=False
+        )
+
+    total_dist = np.zeros((n, n), dtype=float)
+
+    for col in dat_seq.columns:
+        seq_series = dat_seq[col].replace("[.]", "", regex=True)
+        nonnull = seq_series.dropna()
+        if nonnull.shape[0] <= 1:
+            continue
+
+        seq_indices = list(nonnull.index)
+        seqs = nonnull.to_numpy(dtype=object)
+
+        n_chunks_eff = max(1, min(n_chunks, len(seqs)))
+        chunks = np.array_split(seqs, n_chunks_eff)
+        chunk_sizes = [len(c) for c in chunks]
+        cum = np.cumsum([0] + chunk_sizes)
+
+        delayed_blocks = []
+        block_positions = []
+
+        for i in range(len(chunks)):
+            for j in range(i, len(chunks)):
+                if chunk_sizes[i] == 0 or chunk_sizes[j] == 0:
+                    continue
+                delayed_blocks.append(
+                    dask.delayed(_compute_block)(chunks[i], chunks[j])
+                )
+                block_positions.append((i, j))
+
+        # Compute blocks in parallel and show distributed progress
+        if client is not None:
+            futures = client.compute(delayed_blocks)
+            if verbose:
+                progress(futures)
+            results = client.gather(futures)
+        else:
+            # fallback to single-threaded computation
+            from dask import compute
+
+            if verbose:
+                from dask.diagnostics import ProgressBar
+
+                with ProgressBar():
+                    results = compute(*delayed_blocks, scheduler="threads")
+            else:
+                results = compute(*delayed_blocks, scheduler="threads")
+
+        # Assemble temporary matrix
+        m = len(seqs)
+        tmp_block_mat = np.zeros((m, m), dtype=float)
+        for (i, j), block in zip(block_positions, results):
+            start_i, end_i = cum[i], cum[i + 1]
+            start_j, end_j = cum[j], cum[j + 1]
+            tmp_block_mat[start_i:end_i, start_j:end_j] = block
+            if i != j:
+                tmp_block_mat[start_j:end_j, start_i:end_i] = block.T
+
+        pos_list = [idx_to_pos[idx] for idx in seq_indices]
+        total_dist[np.ix_(pos_list, pos_list)] += tmp_block_mat
+
+    if client is not None:
+        client.close()
+
+    np.fill_diagonal(total_dist, np.nan)
+    return total_dist
 
 
 def process_mst_per_clonotype(
@@ -812,6 +826,8 @@ def _generate_layout(
         whether or not to only compute layout on expanded clones.
     graphs: tuple[nx.Graph, nx.Graph], optional
         tuple of graphs.
+    dist_mat : pd.DataFrame | None, optional
+        distance matrix.
     **kwargs
         passed to fruchterman_reingold_layout.
 
