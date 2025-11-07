@@ -658,7 +658,7 @@ def swap_view(
 
 def define_clones(
     vdj_data: Dandelion | pd.DataFrame | str,
-    dist: float | None = None,
+    dist: float,
     action: Literal["first", "set"] = "set",
     model: Literal[
         "ham",
@@ -689,9 +689,8 @@ def define_clones(
     vdj_data : Dandelion | pd.DataFrame | str
         Dandelion object, pandas DataFrame in changeo/airr format, or file path to changeo/airr file after
         clones have been determined.
-    dist : float | None, optional
-        The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class
-        `.threshold` slot.
+    dist : float
+        The distance threshold for clonal grouping.
     action : Literal["first", "set"], optional
         Specifies how to handle multiple V(D)J assignments for initial grouping. Default is 'set'.
         The “first” action will use only the first gene listed. The “set” action will use all gene assignments and
@@ -728,11 +727,6 @@ def define_clones(
     -------
     Dandelion
         Dandelion object with clone_id annotated in `.data` slot and `.metadata` initialized.
-
-    Raises
-    ------
-    ValueError
-        if .threshold not found in Dandelion.
     """
     start = logg.info("Finding clones")
     if ncpu is None:
@@ -790,20 +784,6 @@ def define_clones(
     v_field = (
         "v_call_genotyped" if "v_call_genotyped" in dat.columns else "v_call"
     )
-    if dist is None:
-        if isinstance(vdj_data, Dandelion):
-            if vdj_data.threshold is not None:
-                dist_ = vdj_data.threshold
-            else:
-                raise ValueError(
-                    "Threshold value in Dandelion object is None. Please run calculate_threshold first"
-                )
-        else:
-            raise ValueError(
-                "Distance value is None. Please provide a distance value (float)"
-            )
-    else:
-        dist_ = dist
 
     cmd = [
         "DefineClones.py",
@@ -818,7 +798,7 @@ def define_clones(
         "--norm",
         norm,
         "--dist",
-        str(dist_),
+        str(dist),
         "--nproc",
         str(nproc),
         "--vf",

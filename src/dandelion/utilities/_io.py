@@ -246,10 +246,6 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     except:
         res = Dandelion(**constructor, initialize=False, verbose=False)
 
-    if "threshold" in locals():
-        res.threshold = threshold
-    else:
-        pass
     return res
 
 
