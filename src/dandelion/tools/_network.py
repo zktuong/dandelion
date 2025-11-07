@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import multiprocessing
 
-import anndata as ad
 import networkx as nx
 import numpy as np
 import pandas as pd
+import scanpy as sc
 
 from anndata import AnnData
 from collections import defaultdict, Counter
@@ -31,7 +31,8 @@ def generate_network(
     key: str | None = None,
     clone_key: str | None = None,
     min_size: int = 2,
-    resample: int | None = None,
+    sample_size: int | None = None,
+    force_replace: bool = False,
     verbose: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
@@ -59,11 +60,12 @@ def generate_network(
     min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    resample : int | None, optional
-        whether or not to resample the number of cells prior to construction of network. If provided, cells will be
-        randomly sampled to the integer provided. If the integer is larger than the number of cells, sampling with
-        replacement is used and the same cell may appear multiple times with different sequence and cell ids. If None,
+    sample_size : int | None, optional
+        If specified, cells will be randomly sampled to the integer provided. If the integer is larger than the number of cells,
+        sampling with replacement is used and the same cell may appear multiple times with different sequence and cell ids. If None,
         no resampling is performed. A new Dandelion class will be returned.
+    force_replace : bool, optional
+        whether or not to sample with replacement when `sample_size` is smaller or equal to than the number of cells.
     verbose : bool, optional
         whether or not to print the progress bars.
     compute_layout : bool, optional
@@ -104,7 +106,7 @@ def generate_network(
 
     regenerate = True
     if vdj_data.graph is not None:
-        if (min_size != 2) or (resample is not None):
+        if (min_size != 2) or (sample_size is not None):
             pass
         elif use_existing_graph:
             start = logg.info(
@@ -141,9 +143,13 @@ def generate_network(
                 "Data does not contain clone information. Please run find_clones."
             )
 
-        if resample is not None:
-            vdj_data, adata = vdj_resample(
-                vdj_data, adata, size=resample, random_state=random_state
+        if sample_size is not None:
+            vdj_data, adata = vdj_sample_size(
+                vdj_data,
+                adata,
+                size=sample_size,
+                force_replace=force_replace,
+                random_state=random_state,
             )
             dat = vdj_data.data.copy()
         else:
@@ -267,7 +273,7 @@ def generate_network(
     # return or re-initialize vdj_data
     germline_ = getattr(vdj_data, "germline", None)
     threshold_ = getattr(vdj_data, "threshold", None)
-    if resample is not None:
+    if sample_size is not None:
         if (lyt and lyt_) is not None:
             out = Dandelion(
                 data=dat_,
@@ -288,7 +294,10 @@ def generate_network(
                 distances=csr_matrix(df.values),
             )
         out.threshold = threshold_
-        return out, adata
+        if adata is None:
+            return out
+        else:
+            return out, adata
     else:
         if (lyt and lyt_) is not None:
             vdj_data.__init__(
@@ -1383,10 +1392,11 @@ def get_prop_type(value, key=None):
     return tname, value, key
 
 
-def vdj_resample(
+def vdj_sample_size(
     vdj_data: Dandelion,
-    adata: AnnData | None,
+    gex_data: AnnData | MuData | None,
     size: int,
+    force_replace: bool = False,
     random_state: int | np.random.RandomState | None = None,
 ) -> tuple[Dandelion, AnnData]:
     """
@@ -1396,10 +1406,12 @@ def vdj_resample(
     ----------
     vdj_data : Dandelion
         Dandelion object containing VDJ data.
-    adata : AnnData | None
-        AnnData object corresponding to the VDJ data.
+    gex_data : AnnData | MuData | None
+        AnnData or MuData object corresponding to the gene expression data.
     size : int
         Desired size for resampling.
+    force_replace : bool, optional
+        Whether to force sampling with replacement, by default False.
     random_state : int | np.random.RandomState | None, optional
         Random state for reproducibility, by default None.
 
@@ -1408,12 +1420,33 @@ def vdj_resample(
     tuple[Dandelion, AnnData]
         Resampled Dandelion and AnnData objects.
     """
-    replace = True if size > vdj_data.metadata.shape[0] else False
     logg.info("Resampling to {} cells.".format(str(size)))
-    keep_cells = vdj_data.metadata.sample(
-        size, replace=replace, random_state=random_state
-    )
-    keep_cells = list(keep_cells.index)
+    if gex_data is None:
+        replace = True if size > vdj_data.metadata.shape[0] else False
+        if force_replace:
+            replace = True
+        keep_cells = vdj_data.metadata.sample(
+            size, replace=replace, random_state=random_state
+        )
+        keep_cells = list(keep_cells.index)
+    else:
+        # check if MuData and extract the gex modality
+        if hasattr(gex_data, "mod"):
+            adata = gex_data.mod["gex"].copy()
+        else:
+            adata = gex_data.copy()
+        # ensure only cells present in both vdj_data and adata are sampled
+        common_cells = list(
+            set(vdj_data.metadata.index).intersection(set(adata.obs_names))
+        )
+        adata = adata[adata.obs_names.isin(common_cells)].copy()
+        vdj_data = vdj_data[vdj_data.metadata_names.isin(common_cells)].copy()
+        replace = True if size > vdj_data.metadata.shape[0] else False
+        if force_replace:
+            replace = True
+        # use scanpy to sample_size
+        sc.pp.sample(adata, n=size, replace=replace, rng=random_state)
+        keep_cells = list(adata.obs_names)
 
     # get the .data without ambiguous assignments
     if "ambiguous" in vdj_data.data:
@@ -1423,19 +1456,8 @@ def vdj_resample(
 
     vdj_dat = vdj_dat[vdj_dat["cell_id"].isin(keep_cells)].copy()
 
-    # Handle AnnData subsetting
-    if adata is None:
-        raise ValueError("AnnData must be provided when resampling.")
-    else:
-        # Subset adata to cells present in keep_cells (without duplicates first)
-        cells_in_adata = [
-            cell for cell in keep_cells if cell in adata.obs_names
-        ]
-        unique_cells_in_adata = list(set(cells_in_adata))
-        adata = adata[unique_cells_in_adata].copy()
-
     if replace:
-        # resample with replacement
+        # sample_size with replacement
         cell_counts = Counter(keep_cells)
 
         # Only process cells that appear more than once
@@ -1452,14 +1474,8 @@ def vdj_resample(
                 ~vdj_dat["cell_id"].isin(duplicated_cells.keys())
             ].copy()
 
-            adata_cells_to_keep = [
-                cell for cell in adata.obs_names if cell not in duplicated_cells
-            ]
-            adata_keep = adata[adata.obs_names.isin(adata_cells_to_keep)].copy()
-
             # Create duplicates for both dat and adata in one loop
-            all_duplicated_dat = []
-            all_duplicated_adata = []
+            all_duplicated_vdj = []
 
             for cell_id, count in duplicated_cells.items():
                 # Duplicate dat rows
@@ -1467,15 +1483,8 @@ def vdj_resample(
                     vdj_dat_to_duplicate["cell_id"] == cell_id
                 ].copy()
 
-                # Duplicate adata if cell exists
-                cell_adata = (
-                    adata[adata.obs_names == cell_id].copy()
-                    if cell_id in adata.obs_names
-                    else None
-                )
-
                 for i in range(count):
-                    suffix = f"_dup{i}" if i > 0 else ""
+                    suffix = f"-{str(i)}" if i > 0 else ""
 
                     # Add dat rows
                     temp_rows = cell_rows.copy()
@@ -1484,28 +1493,21 @@ def vdj_resample(
                         temp_rows["sequence_id"] = (
                             temp_rows["sequence_id"] + suffix
                         )
-                    all_duplicated_dat.append(temp_rows)
-
-                    # Add adata rows
-                    if cell_adata is not None:
-                        temp_adata = cell_adata.copy()
-                        temp_adata.obs.index = [cell_id + suffix]
-                        all_duplicated_adata.append(temp_adata)
+                    all_duplicated_vdj.append(temp_rows)
 
             # Combine everything back together
             vdj_dat = pd.concat(
-                [vdj_dat_to_keep] + all_duplicated_dat, ignore_index=True
+                [vdj_dat_to_keep] + all_duplicated_vdj, ignore_index=True
             )
 
-            if all_duplicated_adata:
-                if adata_keep is not None:
-                    adata = ad.concat(
-                        [adata_keep] + all_duplicated_adata, axis=0
-                    )
-                else:
-                    adata = ad.concat(all_duplicated_adata, axis=0)
-
-    # reinitialise a copy of the resampled dandelion object using vdj_dat
+    # reinitialise a copy of the sample_sized dandelion object using vdj_dat
     vdj_data = Dandelion(vdj_dat)
-
-    return vdj_data, adata
+    if gex_data is not None:
+        adata.obs_names_make_unique()
+        if hasattr(gex_data, "mod"):
+            # if MuData, update the gex modality
+            return vdj_data, to_scirpy(vdj_data, gex_adata=adata)
+        else:
+            return vdj_data, adata
+    else:
+        return vdj_data, None

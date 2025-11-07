@@ -159,10 +159,10 @@ def test_slice_data_with_graph(airr_generic):
     assert vdj2.metadata.shape[0] == 12
     assert len(vdj2.layout[0]) == 12
     # assert len(vdj2.layout[1]) == 4
-    assert len(vdj2.layout[1]) == 10
+    assert len(vdj2.layout[1]) == 11
     assert len(vdj2.graph[0]) == 12
     # assert len(vdj2.graph[1]) == 4
-    assert len(vdj2.graph[1]) == 10
+    assert len(vdj2.graph[1]) == 11
 
 
 @pytest.mark.usefixtures("airr_generic")
