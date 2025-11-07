@@ -77,7 +77,7 @@ def test_generate_network(create_testfolder, resample, expected):
     adata = ddl.to_scirpy(vdj, to_mudata=False)
     if resample is not None:
         vdj, adata = ddl.tl.generate_network(
-            vdj, adata=adata, sample_size=resample, layout_method="mod_fr"
+            vdj, adata=adata, sample=resample, layout_method="mod_fr"
         )
         assert vdj.n_obs == expected
         assert vdj.layout is not None
@@ -124,29 +124,24 @@ def test_transfer(create_testfolder, dummy_adata2):
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "method,diversitykey",
+    "method",
     [
-        pytest.param("chao1", None),
-        pytest.param("chao1", "test_diversity_key"),
-        pytest.param("shannon", None),
-        pytest.param("shannon", "test_diversity_key"),
+        "chao1",
+        "shannon",
+        "gini",
     ],
 )
-def test_diversity_anndata(create_testfolder, method, diversitykey):
+def test_diversity_anndata(create_testfolder, method):
     """test div anndata"""
     f = create_testfolder / "test2.h5ad"
     adata = sc.read_h5ad(f)
-    _ = ddl.tl.clone_diversity(
+    res, _ = ddl.tl.clone_diversity(
         adata,
         groupby="sample_id",
         method=method,
-        diversity_key=diversitykey,
         n_boot=5,
     )
-    if diversitykey is None:
-        assert "diversity" in adata.uns
-    else:
-        assert "test_diversity_key" in adata.uns
+    assert not res.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -248,11 +243,11 @@ def test_diversity_rarefaction(create_testfolder):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
     ddl.tl.clone_rarefaction(adata, groupby="sample_id")
-    assert "diversity" in adata.uns
+    assert "rarefaction" in adata.uns
     ddl.tl.clone_rarefaction(
-        adata, groupby="sample_id", diversity_key="test_diversity_key"
+        adata, groupby="sample_id", rarefaction_key="test_rarefaction_key"
     )
-    assert "test_diversity_key" in adata.uns
+    assert "test_rarefaction_key" in adata.uns
     p = ddl.pl.clone_rarefaction(adata, color="sample_id")
     assert p is not None
 
@@ -263,7 +258,7 @@ def test_diversity_rarefaction2(create_testfolder):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
     ddl.tl.clone_rarefaction(adata, groupby="sample_id", clone_key="clone_id")
-    assert "diversity" in adata.uns
+    assert "rarefaction" in adata.uns
     p = ddl.pl.clone_rarefaction(adata, color="sample_id")
     assert p is not None
     adata = sc.read_h5ad(f)
@@ -285,6 +280,29 @@ def test_diversity_rarefaction3(create_testfolder):
     assert isinstance(df, dict)
     p = ddl.pl.clone_rarefaction(vdj, color="sample_id")
     assert p is not None
+
+
+@pytest.mark.usefixtures("create_testfolder")
+@pytest.mark.parametrize("use_network", [True, False])
+def test_diversity_gini2(create_testfolder, use_network):
+    """test gini more"""
+    f = create_testfolder / "test.h5ddl"
+    vdj = ddl.read_h5ddl(f)
+    vdj.data["sample_id"] = "sample_test"
+    vdj.update_metadata(
+        retrieve=["sample_id"],
+        retrieve_mode=["merge and unique only"],
+    )
+    res, _ = ddl.tl.clone_diversity(
+        vdj,
+        groupby="sample_id",
+        min_size=6,
+        key="sequence",
+        n_boot=5,
+        method="gini",
+        use_network=use_network,
+    )
+    assert not res.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")

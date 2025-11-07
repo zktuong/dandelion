@@ -28,7 +28,7 @@ def clone_rarefaction(
     vdj_data: Dandelion | AnnData,
     groupby: str,
     clone_key: str | None = None,
-    diversity_key: str | None = None,
+    rarefaction_key: str | None = None,
     verbose: bool = False,
 ) -> dict:
     """
@@ -42,7 +42,7 @@ def clone_rarefaction(
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample id, patient etc.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata/obs.
-    diversity_key : str | None, optional
+    rarefaction_key : str | None, optional
         key for 'diversity' results in AnnData's `.uns`.
     verbose : bool, optional
         whether to print progress.
@@ -52,8 +52,6 @@ def clone_rarefaction(
     dict
         Rarefaction predictions for cell numbers vs clone size.
     """
-    start = logg.info("Constructing rarefaction curve")
-
     if isinstance(vdj_data, AnnData):
         _metadata = vdj_data.obs.copy()
     elif isinstance(vdj_data, Dandelion):
@@ -109,20 +107,17 @@ def clone_rarefaction(
         index=res_.index,
     ).T
 
-    diversitykey = diversity_key if diversity_key is not None else "diversity"
+    rarefaction_key = (
+        rarefaction_key if rarefaction_key is not None else "rarefaction"
+    )
 
     if isinstance(vdj_data, AnnData):
-        if diversitykey not in vdj_data.uns:
-            vdj_data.uns[diversitykey] = {}
-        vdj_data.uns[diversitykey] = {
+        if rarefaction_key not in vdj_data.uns:
+            vdj_data.uns[rarefaction_key] = {}
+        vdj_data.uns[rarefaction_key] = {
             "rarefaction_cells_x": pred,
             "rarefaction_clones_y": y,
         }
-    logg.info(
-        " finished",
-        time=start,
-        deep=("updated `.uns` with rarefaction curves.\n"),
-    )
     if isinstance(vdj_data, Dandelion):
         return {"rarefaction_cells_x": pred, "rarefaction_clones_y": y}
 
@@ -133,11 +128,10 @@ def clone_diversity(
     method: Literal["gini", "chao1", "shannon"] = "gini",
     metric: Literal["clone_network", "clone_degree", "clone_centrality"] = None,
     clone_key: str | None = None,
-    diversity_key: str | None = None,
     min_size: int | None = None,
     n_boot: int = 1000,
     normalize: bool = True,
-    reconstruct_network: bool = True,
+    use_network: bool = True,
     expanded_only: bool = False,
     use_contracted: bool = False,
     verbose: bool = False,
@@ -160,8 +154,6 @@ def clone_diversity(
         `None` defaults to 'clone_network'.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata.
-    diversity_key : str | None, optional
-        key for 'diversity' results in `.uns`.
     min_size : int | None, optional
         Minimum cell numbers to keep for diversity calculation. If None, defaults to size of smallest sample.
         Beware that this may lead to very small sample sizes and unreliable estimates if left as None.
@@ -170,9 +162,8 @@ def clone_diversity(
     normalize : bool, optional
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172.
         Default is True.
-    reconstruct_network : bool, optional
-        Whether or not to reconstruct the network for Gini Index based measures.
-        Default is True and will reconstruct for each group specified by groupby option.
+    use_network : bool, optional
+        Whether or not to use network-based Gini index calculation. Default is True.
     expanded_only : bool, optional
         Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.
     use_contracted : bool, optional
@@ -189,16 +180,16 @@ def clone_diversity(
     tuple[pd.DataFrame, dict[list[float]]]
         pandas DataFrame holding summarised diversity estimation and the raw bootstrap results.
     """
-    if method == "gini":
+    # if AnnData, cannot use network-based gini
+    use_network = False if isinstance(vdj_data, AnnData) else use_network
+    if (method == "gini") and use_network:
         return diversity_gini(
             vdj_data,
             groupby=groupby,
             metric=metric,
             clone_key=clone_key,
-            diversity_key=diversity_key,
             min_size=min_size,
             n_boot=n_boot,
-            reconstruct_network=reconstruct_network,
             expanded_only=expanded_only,
             use_contracted=use_contracted,
             verbose=verbose,
@@ -210,7 +201,6 @@ def clone_diversity(
             method=method,
             groupby=groupby,
             clone_key=clone_key,
-            diversity_key=diversity_key,
             normalize=normalize,
             min_size=min_size,
             n_boot=n_boot,
@@ -313,10 +303,8 @@ def diversity_gini(
     groupby: str,
     metric: str | None = None,
     clone_key: str | None = None,
-    diversity_key: str | None = None,
     min_size: int | None = None,
     n_boot: int = 1000,
-    reconstruct_network: bool = True,
     expanded_only: bool = False,
     use_contracted: bool = False,
     verbose: bool = False,
@@ -342,9 +330,6 @@ def diversity_gini(
         Beware that this may lead to very small sample sizes and unreliable estimates if left as None.
     n_boot : int, optional
         Bootstrap iterations for calculations. Default is 1000.
-    reconstruct_network : bool, optional
-        Whether or not to reconstruct the network for Gini Index based measures.
-        Default is True and will reconstruct for each group specified by groupby option.
     expanded_only : bool, optional
         Whether or not to calculate gini indices using expanded clones only. Default is False i.e. use all cells/clones.
     use_contracted : bool, optional
@@ -378,23 +363,13 @@ def diversity_gini(
         metric=metric,
         min_size=min_size,
         n_boot=n_boot,
-        reconstruct_network=reconstruct_network,
         expanded_only=expanded_only,
         contracted=use_contracted,
         verbose=verbose,
         **kwargs,
     )
-    diversity_key = diversity_key if diversity_key is not None else "diversity"
-    vdj_data.div[diversity_key].update(
-        {
-            "gini": {
-                "summary": res,
-                "raw": {"cluster_size": cluster_raw, "vertex_size": vertex_raw},
-            }
-        }
-    )
 
-    return res, cluster_raw, vertex_raw
+    return res, {"cluster_raw": cluster_raw, "vertex_raw": vertex_raw}
 
 
 def chooseln(N, k) -> float:
@@ -535,7 +510,6 @@ def gini_indices(
     clone_key: str | None = None,
     min_size: int | None = None,
     n_boot: int = 1000,
-    reconstruct_network: bool = True,
     expanded_only: bool = False,
     contracted: bool = False,
     verbose: bool = False,
@@ -555,50 +529,6 @@ def gini_indices(
     if isinstance(data, Dandelion):
         data = data[data.metadata[groupby].isin(groups)].copy()
 
-    if met == "clone_network":
-        logg.info(
-            "Computing Gini indices for cluster and vertex size using network."
-        )
-        if not reconstruct_network:
-            n_n, v_s, c_s = clone_networkstats(
-                data,
-                expanded_only=expanded_only,
-                network_clustersize=contracted,
-                verbose=verbose,
-            )
-            g_c_v = defaultdict(dict)
-            g_c_v_res, g_c_c_res = {}, {}
-            for vs in v_s:
-                v_sizes = np.array(v_s[vs])
-                if len(v_sizes) > 1:
-                    v_sizes = np.append(v_sizes, 0)
-                g_c_v[vs] = calculate_gini_index(v_sizes)
-                for cell in n_n:
-                    g_c_v_res.update({cell: g_c_v[n_n[cell]]})
-            c_sizes = np.array(
-                np.array(sorted(list(flatten(c_s.values())), reverse=True))
-            )
-            if len(c_sizes) > 1:
-                c_sizes = np.append(c_sizes, 0)
-            g_c_c = calculate_gini_index(c_sizes)
-            for cell in n_n:
-                g_c_c_res.update({cell: g_c_c})
-            data.metadata["clone_network_vertex_size_gini"] = pd.Series(
-                g_c_v_res
-            )
-            data.metadata["clone_network_cluster_size_gini"] = pd.Series(
-                g_c_c_res
-            )
-    elif met == "clone_centrality":
-        logg.info(
-            "Computing gini indices for clone size using metadata and node closeness centrality using network."
-        )
-        clone_centrality(data)
-    elif met == "clone_degree":
-        logg.info(
-            "Computing gini indices for clone size using metadata and node degree using network."
-        )
-        clone_degree(data)
     res1, res2, cluster_raw, vertex_raw = {}, {}, {}, {}
     for g in groups:
         # clone size distribution
@@ -613,7 +543,7 @@ def gini_indices(
             resample_sized = generate_network(
                 ddl_dat,
                 clone_key=clonekey,
-                sample_size=min_size,
+                sample=min_size,
                 force_replace=True,
                 verbose=verbose,
                 compute_layout=False,
@@ -793,9 +723,8 @@ def min_sample_size(
 def diversity_estimates(
     vdj_data: Dandelion | AnnData,
     groupby: str,
-    method: Literal["chao1", "shannon"] = "chao1",
+    method: Literal["chao1", "shannon", "gini"] = "chao1",
     clone_key: str | None = None,
-    diversity_key: str | None = None,
     normalize: bool = True,
     min_size: int | None = None,
     n_boot: int = 1000,
@@ -810,14 +739,12 @@ def diversity_estimates(
         Dandelionr AnnData object.
     groupby : str
         Column name to calculate the Chao1 estimates on, for e.g. sample id, patient etc.
-    method : Literal["chao1", "shannon"], optional
+    method : Literal["chao1", "shannon", "gini"], optional
         Diversity metric to compute.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata
     normalize : bool, optional
         Whether or not to return normalized Shannon Entropy according to https://math.stackexchange.com/a/945172. Default is True.
-    diversity_key : str | None, optional
-        key for 'diversity' results in `.uns`.
     min_size : int | None, optional
         Minimum cell numbers to keep for diversity calculation. If None, defaults to size of smallest sample.
         Beware that this may lead to very small sample sizes and unreliable estimates if left as None.
@@ -843,19 +770,6 @@ def diversity_estimates(
         verbose=verbose,
     )
 
-    diversity_key = diversity_key if diversity_key is not None else "diversity"
-
-    if isinstance(vdj_data, AnnData):
-        if diversity_key not in vdj_data.uns:
-            vdj_data.uns[diversity_key] = {}
-        vdj_data.uns[diversity_key].update(
-            {method: {"summary": res, "raw": res_raw}}
-        )
-    elif isinstance(vdj_data, dandelion):
-        vdj_data.div[diversity_key].update(
-            {method: {"summary": res, "raw": res_raw}}
-        )
-
     return res, res_raw
 
 
@@ -863,7 +777,7 @@ def estimate_diversity(
     data: Dandelion | AnnData,
     groupby: str,
     clone_key: str | None = None,
-    metric: str = "chao1",  # "chao1" or "shannon"
+    metric: Literal["chao1", "shannon", "gini"] = "chao1",
     normalize: bool = True,  # used only if metric == "shannon"
     min_size: int | None = None,
     n_boot: int = 1000,
@@ -902,10 +816,8 @@ def estimate_diversity(
     # Determine diversity mode label
     if metric.lower() == "shannon":
         diversity_mode = "normalized_shannon" if normalize else "shannon"
-    elif metric.lower() == "chao1":
-        diversity_mode = "chao1"
     else:
-        raise ValueError("metric must be 'chao1' or 'shannon'")
+        diversity_mode = metric.lower()
 
     # --- Prepare data and filter groups
     data, _metadata, groups, min_size = _prepare_diversity_groups(
@@ -941,6 +853,8 @@ def estimate_diversity(
                 val = calculate_chao1(clone_sizes)
             elif metric.lower() == "shannon":
                 val = calculate_shannon_entropy(clone_sizes, normalize)
+            elif metric.lower() == "gini":
+                val = calculate_gini_index(clone_sizes)
             values.append(val)
 
         res_raw[g] = values.copy()

@@ -31,7 +31,7 @@ def generate_network(
     key: str | None = None,
     clone_key: str | None = None,
     min_size: int = 2,
-    sample_size: int | None = None,
+    sample: int | None = None,
     force_replace: bool = False,
     verbose: bool = True,
     compute_layout: bool = True,
@@ -60,12 +60,12 @@ def generate_network(
     min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    sample_size : int | None, optional
+    sample : int | None, optional
         If specified, cells will be randomly sampled to the integer provided. If the integer is larger than the number of cells,
         sampling with replacement is used and the same cell may appear multiple times with different sequence and cell ids. If None,
         no resampling is performed. A new Dandelion class will be returned.
     force_replace : bool, optional
-        whether or not to sample with replacement when `sample_size` is smaller or equal to than the number of cells.
+        whether or not to sample with replacement when `sample` is smaller or equal to than the number of cells.
     verbose : bool, optional
         whether or not to print the progress bars.
     compute_layout : bool, optional
@@ -106,7 +106,7 @@ def generate_network(
 
     regenerate = True
     if vdj_data.graph is not None:
-        if (min_size != 2) or (sample_size is not None):
+        if (min_size != 2) or (sample is not None):
             pass
         elif use_existing_graph:
             start = logg.info(
@@ -143,11 +143,11 @@ def generate_network(
                 "Data does not contain clone information. Please run find_clones."
             )
 
-        if sample_size is not None:
-            vdj_data, adata = vdj_sample_size(
+        if sample is not None:
+            vdj_data, adata = vdj_sample(
                 vdj_data,
                 adata,
-                size=sample_size,
+                size=sample,
                 force_replace=force_replace,
                 random_state=random_state,
             )
@@ -272,8 +272,7 @@ def generate_network(
 
     # return or re-initialize vdj_data
     germline_ = getattr(vdj_data, "germline", None)
-    threshold_ = getattr(vdj_data, "threshold", None)
-    if sample_size is not None:
+    if sample is not None:
         if (lyt and lyt_) is not None:
             out = Dandelion(
                 data=dat_,
@@ -282,7 +281,9 @@ def generate_network(
                 graph=(g, g_),
                 germline=germline_,
                 verbose=False,
-                distances=csr_matrix(df.values),
+                distances=(
+                    csr_matrix(df.values) if regenerate else vdj_data.distances
+                ),
             )
         else:
             out = Dandelion(
@@ -291,9 +292,10 @@ def generate_network(
                 graph=(g, g_),
                 germline=germline_,
                 verbose=False,
-                distances=csr_matrix(df.values),
+                distances=(
+                    csr_matrix(df.values) if regenerate else vdj_data.distances
+                ),
             )
-        out.threshold = threshold_
         if adata is None:
             return out
         else:
@@ -308,7 +310,9 @@ def generate_network(
                 germline=germline_,
                 initialize=False,
                 verbose=False,
-                distances=csr_matrix(df.values),
+                distances=(
+                    csr_matrix(df.values) if regenerate else vdj_data.distances
+                ),
             )
         else:
             vdj_data.__init__(
@@ -319,9 +323,10 @@ def generate_network(
                 germline=germline_,
                 initialize=False,
                 verbose=False,
-                distances=csr_matrix(df.values),
+                distances=(
+                    csr_matrix(df.values) if regenerate else vdj_data.distances
+                ),
             )
-        vdj_data.threshold = threshold_
 
 
 def mst(
@@ -1392,7 +1397,7 @@ def get_prop_type(value, key=None):
     return tname, value, key
 
 
-def vdj_sample_size(
+def vdj_sample(
     vdj_data: Dandelion,
     gex_data: AnnData | MuData | None,
     size: int,
@@ -1444,7 +1449,7 @@ def vdj_sample_size(
         replace = True if size > vdj_data.metadata.shape[0] else False
         if force_replace:
             replace = True
-        # use scanpy to sample_size
+        # use scanpy to sample
         sc.pp.sample(adata, n=size, replace=replace, rng=random_state)
         keep_cells = list(adata.obs_names)
 
@@ -1457,7 +1462,7 @@ def vdj_sample_size(
     vdj_dat = vdj_dat[vdj_dat["cell_id"].isin(keep_cells)].copy()
 
     if replace:
-        # sample_size with replacement
+        # sample with replacement
         cell_counts = Counter(keep_cells)
 
         # Only process cells that appear more than once
@@ -1500,7 +1505,7 @@ def vdj_sample_size(
                 [vdj_dat_to_keep] + all_duplicated_vdj, ignore_index=True
             )
 
-    # reinitialise a copy of the sample_sized dandelion object using vdj_dat
+    # reinitialise a copy of the sampled dandelion object using vdj_dat
     vdj_data = Dandelion(vdj_dat)
     if gex_data is not None:
         adata.obs_names_make_unique()
