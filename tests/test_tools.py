@@ -241,7 +241,17 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
 
 @patch("matplotlib.pyplot.show")
 @pytest.mark.usefixtures("create_testfolder")
-def test_diversity_rarefaction3(mock_show, create_testfolder):
+def test_diversity_rarefaction_ad(mock_show, create_testfolder):
+    """test rarefaction"""
+    f = create_testfolder / "test.h5ad"
+    adata = sc.read_h5ad(f)
+    ddl.pl.clone_rarefaction(adata, color="sample_id")
+    ddl.pl.clone_rarefaction(adata, color="sample_id", return_results=False)
+
+
+@patch("matplotlib.pyplot.show")
+@pytest.mark.usefixtures("create_testfolder")
+def test_diversity_rarefaction_ddl(mock_show, create_testfolder):
     """test rarefaction3"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
@@ -250,9 +260,8 @@ def test_diversity_rarefaction3(mock_show, create_testfolder):
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    p = ddl.tl.clone_rarefaction(vdj, color="sample_id")
-    assert p is not None
-    ddl.tl.clone_rarefaction(vdj, color="sample_id", return_results=False)
+    ddl.pl.clone_rarefaction(vdj, color="sample_id")
+    ddl.pl.clone_rarefaction(vdj, color="sample_id", return_results=False)
 
 
 @pytest.mark.usefixtures("create_testfolder")
