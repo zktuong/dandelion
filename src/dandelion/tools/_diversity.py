@@ -189,36 +189,15 @@ def clone_rarefaction(
                     + geom_line()
                 )
         else:
-            if len(list(set(pred.variable))) <= 20:
-                pal = palettes.default_20
-            elif len(list(set(pred.variable))) <= 28:
-                pal = palettes.default_28
-            elif len(list(set(pred.variable))) <= 102:
-                pal = palettes.default_102
-            else:
-                pal = None
-
-            if pal is not None:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + scale_color_manual(values=(pal))
-                    + geom_line()
-                )
-            else:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + geom_line()
-                )
+            p = (
+                ggplot(pred, aes(x="value", y="yhat", color="variable"))
+                + theme_classic()
+                + xlab("number of cells")
+                + ylab("number of clones")
+                + ggtitle("rarefaction curve")
+                + labs(color=color)
+                + geom_line()
+            )
     else:
         p = (
             ggplot(pred, aes(x="value", y="yhat", color="variable"))
