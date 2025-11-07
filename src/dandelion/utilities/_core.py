@@ -3098,7 +3098,7 @@ def get_receptor_prefix(clone: str) -> str:
 def assign_clone_numbers(clone_counts: pd.Series) -> dict:
     """Assign sequential numbers, possibly grouped by receptor type."""
     # Determine all receptor types present
-    prefixes = set(get_receptor_prefix(clone) for clone in clone_counts.index)
+    prefixes = {get_receptor_prefix(clone) for clone in clone_counts.index}
     prefixes.discard(None)
 
     size_dict = {}
