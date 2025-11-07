@@ -4,13 +4,25 @@ import networkx as nx
 import pandas as pd
 
 from anndata import AnnData
+from plotnine import (
+    aes,
+    geom_line,
+    ggplot,
+    ggtitle,
+    labs,
+    options,
+    scale_color_manual,
+    theme_classic,
+    xlab,
+    ylab,
+    save_as_pdf_pages,
+)
 from time import sleep
 from tqdm import tqdm
 from scanpy import logging as logg
 from scipy.special import gammaln
 from typing import Literal
 
-import dandelion
 from dandelion.external.skbio._chao1 import chao1
 from dandelion.external.skbio._gini import gini_index
 from dandelion.external.skbio._shannon import shannon
@@ -19,62 +31,97 @@ from dandelion.tools._network import (
     clone_degree,
     generate_network,
 )
+
 from dandelion.utilities._core import *
 from dandelion.utilities._io import *
 from dandelion.utilities._utilities import *
 
 
 def clone_rarefaction(
-    vdj_data: Dandelion | AnnData,
-    groupby: str,
+    vdj_data: AnnData | Dandelion,
+    color: str,
     clone_key: str | None = None,
-    rarefaction_key: str | None = None,
-    verbose: bool = False,
-) -> dict:
+    palette: list[str] | None = None,
+    figsize: tuple[float, float] = (5, 3),
+    chain_status_include: list[
+        Literal[
+            "Single pair",
+            "Orphan VDJ",
+            "Orphan VDJ-exception",
+            "Orphan VJ",
+            "Orphan VJ-exception",
+            "Extra pair",
+            "Extra pair-exception",
+        ]
+    ] = [
+        "Single pair",
+        "Orphan VDJ",
+        "Orphan VDJ-exception",
+        "Extra pair",
+        "Extra pair-exception",
+    ],
+    return_results: bool = True,
+    save_fig: str | None = None,
+) -> ggplot:
     """
-    Return rarefaction predictions for cell numbers vs clone size.
+    Plot rarefaction curve for cell numbers vs clone size.
 
     Parameters
     ----------
-    vdj_data : Dandelion | AnnData
-        Dandelion or AnnData object.
-    groupby : str
-        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample id, patient etc.
+    vdj_data : AnnData | Dandelion
+        AnnData or Dandelion object.
+    color : str
+        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : str | None, optional
         Column name specifying the clone_id column in metadata/obs.
-    rarefaction_key : str | None, optional
-        key for 'diversity' results in AnnData's `.uns`.
-    verbose : bool, optional
-        whether to print progress.
+    palette : list[str] | None, optional
+        Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
+    figsize : tuple[float, float], optional
+        Size of plot.
+    chain_status_include : list[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
+        chain statuses to include.
+    return_results : bool, optional
+        Whether to return the calculated rarefaction results instead of the plot.
+    save_fig : str | None, optional
+        File path for saving the figure.
 
     Returns
     -------
-    dict
-        Rarefaction predictions for cell numbers vs clone size.
+    ggplot
+        rarefaction plot.
     """
     if isinstance(vdj_data, AnnData):
-        _metadata = vdj_data.obs.copy()
+        metadata = vdj_data.obs.copy()
     elif isinstance(vdj_data, Dandelion):
-        _metadata = vdj_data.metadata.copy()
+        metadata = vdj_data.metadata.copy()
+    elif hasattr(vdj_data, "mod"):
+        metadata = vdj_data.mod["airr"].copy()
 
-    clonekey = clone_key if clone_key is not None else "clone_id"
+    if clone_key is None:
+        clonekey = "clone_id"
+    else:
+        clonekey = clone_key
 
-    groups = list(set(_metadata[groupby]))
-    if type(_metadata[clonekey]) == "category":
-        _metadata[clonekey] = _metadata[clonekey].cat.remove_unused_categories()
+    groups = list(set(metadata[color]))
+    if "chain_status" in metadata:
+        metadata = metadata[metadata["chain_status"].isin(chain_status_include)]
+
+    if pd.api.types.is_categorical_dtype(metadata[clonekey]):
+        metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
     res = {}
     for g in groups:
-        __metadata = _metadata[_metadata[groupby] == g]
-        res[g] = __metadata[clonekey].value_counts()
+        _metadata = metadata[metadata[color] == g]
+        res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient="index")
 
     # remove those with no counts
-    logg.info(
-        "removing due to zero counts: "
+    print(
+        "removing due to zero counts:",
         ", ".join(
             [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]
         ),
     )
+    sleep(0.5)
     res_ = res_[~(res_.sum(axis=1) == 0)]
 
     # set up for calculating rarefaction
@@ -84,12 +131,10 @@ def clone_rarefaction(
 
     # append the results to a dictionary
     rarecurve = {}
-    sleep(0.5)
     for i in tqdm(
         range(0, nr),
         desc="Calculating rarefaction curve ",
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-        disable=not verbose,
     ):
         n = np.arange(1, tot[i], step=10)
         if n[-1:] != tot[i]:
@@ -107,19 +152,96 @@ def clone_rarefaction(
         index=res_.index,
     ).T
 
-    rarefaction_key = (
-        rarefaction_key if rarefaction_key is not None else "rarefaction"
-    )
+    y = y.melt()
+    pred = pred.melt()
+    pred["yhat"] = y["value"]
 
-    if isinstance(vdj_data, AnnData):
-        if rarefaction_key not in vdj_data.uns:
-            vdj_data.uns[rarefaction_key] = {}
-        vdj_data.uns[rarefaction_key] = {
-            "rarefaction_cells_x": pred,
-            "rarefaction_clones_y": y,
-        }
-    if isinstance(vdj_data, Dandelion):
-        return {"rarefaction_cells_x": pred, "rarefaction_clones_y": y}
+    if return_results:
+        return pred, y
+
+    options.figure_size = figsize
+    if palette is None:
+        if isinstance(vdj_data, AnnData):
+            try:
+                pal = vdj_data.uns[str(color) + "_colors"]
+            except:
+                if len(list(set(pred.variable))) <= 20:
+                    pal = palettes.default_20
+                elif len(list(set(pred.variable))) <= 28:
+                    pal = palettes.default_28
+                elif len(list(set(pred.variable))) <= 102:
+                    pal = palettes.default_102
+                else:
+                    pal = cycle(palettes.default_102)
+
+            if pal is not None:
+                p = (
+                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
+                    + theme_classic()
+                    + xlab("number of cells")
+                    + ylab("number of clones")
+                    + ggtitle("rarefaction curve")
+                    + labs(color=color)
+                    + scale_color_manual(values=(pal))
+                    + geom_line()
+                )
+            else:
+                p = (
+                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
+                    + theme_classic()
+                    + xlab("number of cells")
+                    + ylab("number of clones")
+                    + ggtitle("rarefaction curve")
+                    + labs(color=color)
+                    + geom_line()
+                )
+        else:
+            if len(list(set(pred.variable))) <= 20:
+                pal = palettes.default_20
+            elif len(list(set(pred.variable))) <= 28:
+                pal = palettes.default_28
+            elif len(list(set(pred.variable))) <= 102:
+                pal = palettes.default_102
+            else:
+                pal = None
+
+            if pal is not None:
+                p = (
+                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
+                    + theme_classic()
+                    + xlab("number of cells")
+                    + ylab("number of clones")
+                    + ggtitle("rarefaction curve")
+                    + labs(color=color)
+                    + scale_color_manual(values=(pal))
+                    + geom_line()
+                )
+            else:
+                p = (
+                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
+                    + theme_classic()
+                    + xlab("number of cells")
+                    + ylab("number of clones")
+                    + ggtitle("rarefaction curve")
+                    + labs(color=color)
+                    + geom_line()
+                )
+    else:
+        p = (
+            ggplot(pred, aes(x="value", y="yhat", color="variable"))
+            + theme_classic()
+            + xlab("number of cells")
+            + ylab("number of clones")
+            + ggtitle("rarefaction curve")
+            + labs(color=color)
+            + scale_color_manual(values=palette)
+            + geom_line()
+        )
+    if save_fig is not None:
+        save_as_pdf_pages([p], filename=save_fig, verbose=False)
+    p.show()
+
+    return p
 
 
 def clone_diversity(

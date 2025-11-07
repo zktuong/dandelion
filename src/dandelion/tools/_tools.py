@@ -1295,7 +1295,7 @@ def clone_size(
             vdj_data.obs[f"{col_key}_size_max_{max_size}"] = metadata_[
                 f"{clone_key}_size_max_{max_size}"
             ]
-    elif isinstance(vdj_data, MuData):
+    elif hasattr(vdj_data, "mod"):
         vdj_data.mod["airr"].obs[col_key + suffix] = metadata_[
             f"{clone_key}_size"
         ]
