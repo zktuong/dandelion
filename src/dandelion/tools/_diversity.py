@@ -162,17 +162,10 @@ def clone_rarefaction(
     options.figure_size = figsize
     if palette is None:
         if isinstance(vdj_data, AnnData):
-            try:
+            if str(color) + "_colors" in vdj_data.uns:
                 pal = vdj_data.uns[str(color) + "_colors"]
-            except:
-                if len(list(set(pred.variable))) <= 20:
-                    pal = palettes.default_20
-                elif len(list(set(pred.variable))) <= 28:
-                    pal = palettes.default_28
-                elif len(list(set(pred.variable))) <= 102:
-                    pal = palettes.default_102
-                else:
-                    pal = cycle(palettes.default_102)
+            else:
+                pal = None
 
             if pal is not None:
                 p = (
