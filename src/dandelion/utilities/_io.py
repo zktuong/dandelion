@@ -1314,40 +1314,25 @@ def _reverse_transfer(
     # --- Extract clone-level connection info ---
     if clone_key in adata.uns:
         clone_uns = adata.uns[clone_key]
-    else:
-        clone_uns = {}
+        distances = clone_uns["distances"]
+        cell_indices = clone_uns["cell_indices"]
+        # --- Rebuild graph ---
+        G = nx.from_scipy_sparse_array(distances)
+        # Relabel nodes: scirpy stores numeric keys ("0", "1", ...) mapped to arrays of cell_ids
+        mapping = {}
+        for k, v in cell_indices.items():
+            k_int = int(k)
+            if isinstance(v, (list, np.ndarray)):
+                # If clone node has multiple cells, store them all in node attribute
+                mapping[k_int] = str(v[0]) if len(v) > 0 else str(k)
+                G.nodes[k_int]["cells"] = list(v)
+            else:
+                mapping[k_int] = str(v)
+                G.nodes[k_int]["cells"] = [v]
+        G = nx.relabel_nodes(G, mapping)
 
-    # Expected structure: {"distances": csr_matrix, "cell_indices": dict}
-    if "distances" not in clone_uns or "cell_indices" not in clone_uns:
-        raise ValueError(
-            f"uns['{clone_key}'] does not contain both 'distances' and 'cell_indices'."
-        )
-
-    distances = clone_uns["distances"]
-    if not isinstance(distances, csr_matrix):
-        raise TypeError(
-            f"uns['{clone_key}']['distances'] must be a csr_matrix."
-        )
-
-    cell_indices = clone_uns["cell_indices"]
-
-    # --- Rebuild graph ---
-    G = nx.from_scipy_sparse_array(distances)
-    # Relabel nodes: scirpy stores numeric keys ("0", "1", ...) mapped to arrays of cell_ids
-    mapping = {}
-    for k, v in cell_indices.items():
-        k_int = int(k)
-        if isinstance(v, (list, np.ndarray)):
-            # If clone node has multiple cells, store them all in node attribute
-            mapping[k_int] = str(v[0]) if len(v) > 0 else str(k)
-            G.nodes[k_int]["cells"] = list(v)
-        else:
-            mapping[k_int] = str(v)
-            G.nodes[k_int]["cells"] = [v]
-    G = nx.relabel_nodes(G, mapping)
-
-    # Store the graph
-    dandelion.graph = [G, None]
+        # Store the graph
+        dandelion.graph = [G, None]
 
     # map the obs back to data as well
     dandelion.sync_metadata_columns()
