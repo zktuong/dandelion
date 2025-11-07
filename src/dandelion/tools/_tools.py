@@ -1062,7 +1062,7 @@ def define_clones(
     )
 
 
-def tabuluate_clone_sizes(
+def tabulate_clone_sizes(
     metadata_: pd.DataFrame, clonesize_dict: dict, clonekey: str
 ) -> pd.Series:
     """Tabulate clone sizes."""
@@ -1097,81 +1097,218 @@ def tabuluate_clone_sizes(
 
 
 def clone_size(
-    vdj_data: Dandelion,
+    vdj_data: Dandelion | AnnData | MuData,
+    groupby: str | None = None,
     max_size: int | None = None,
     clone_key: str | None = None,
     key_added: str | None = None,
 ) -> None:
     """
-    Quantify size of clones.
+    Quantify clone sizes, globally or per group.
+
+    If `groupby` is specified, clone sizes and proportions are calculated
+    within each group separately. Each cell is then annotated with the size,
+    proportion, and frequency category based on sizes similar to scRepertoire.
+    If a cell belongs to multiple clones (e.g., multiple chains assigned
+    to different clones), the largest clone is used for annotation.
 
     Parameters
     ----------
-    vdj_data : Dandelion
-        Dandelion object
+    vdj_data : Dandelion | AnnData | MuData
+        VDJ data.
+    groupby : str | None, optional
+        Column in metadata to group by before calculating clone sizes.
+        If None, calculates global clone sizes.
     max_size : int | None, optional
-        The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
+        Clip clone size values at this maximum.
     clone_key : str | None, optional
-        Column name specifying the clone_id column in metadata.
+        Column specifying clone identifiers. Defaults to 'clone_id'.
     key_added : str | None, optional
-        column name where clone size is tabulated into.
+        Prefix for new metadata column names.
     """
-    start = logg.info("Quantifying clone sizes")
+    # --- Select metadata
+    if hasattr(vdj_data, "mod"):
+        metadata_ = vdj_data.mod["airr"].obs.copy()
+    elif isinstance(vdj_data, AnnData):
+        metadata_ = vdj_data.obs.copy()
+    elif isinstance(vdj_data, Dandelion):
+        metadata_ = vdj_data.metadata.copy()
 
-    metadata_ = vdj_data.metadata.copy()
+    clone_key = "clone_id" if clone_key is None else clone_key
+    if clone_key not in metadata_.columns:
+        raise KeyError(f"Column '{clone_key}' not found in metadata.")
 
-    clonekey = "clone_id" if clone_key is None else clone_key
-
-    tmp = metadata_[str(clonekey)].str.split("|", expand=True).stack()
+    # --- Expand multi-clone entries
+    tmp = metadata_[clone_key].astype(str).str.split("|", expand=True).stack()
+    # drop None/No_contig entries
+    tmp = tmp[~tmp.isin(["No_contig", "unassigned"] + EMPTIES)]
     tmp = tmp.reset_index(drop=False)
-    tmp.columns = ["cell_id", "tmp", str(clonekey)]
+    tmp.columns = ["cell_id", "tmp", clone_key]
 
-    clonesize = tmp[str(clonekey)].value_counts()
-    if "None" in clonesize.index:
-        clonesize.drop("None", inplace=True)
-
-    if max_size is not None:
-        clonesize_ = clonesize.astype("object")
-        for i in clonesize.index:
-            if clonesize.loc[i] >= max_size:
-                clonesize_.at[i] = ">= " + str(max_size)
-        clonesize_ = clonesize_.astype("category")
+    # --- Compute clone sizes (global or per group)
+    if groupby is None:
+        clonesize = tmp[clone_key].value_counts()
+        prop = clonesize / metadata_.shape[0]
     else:
-        clonesize_ = clonesize.copy()
+        # Merge with groupby column using cell_id as key
+        # Reset index to make cell_id a regular column for merging
+        metadata_with_index = metadata_.reset_index()
+        metadata_with_index = metadata_with_index.rename(
+            columns={"index": "cell_id"}
+        )
 
-    clonesize_dict = dict(clonesize_)
-    clonesize_dict.update({"None": np.nan})
+        tmp = tmp.merge(
+            metadata_with_index[["cell_id", groupby]], on="cell_id", how="left"
+        )
+        clonesize = tmp.groupby([groupby, clone_key]).size()
+        group_sizes = metadata_[groupby].value_counts()
 
-    col_key, col_key_suffix = "", ""
-    col_key = str(clonekey) if key_added is None else key_added
-    col_key_suffix = (
-        "_size" if max_size is None else "_size_max_" + str(max_size)
-    )
+        # Calculate proportion correctly for each group
+        prop_dict = {}
+        for grp in clonesize.index.get_level_values(0).unique():
+            group_clones = clonesize.loc[grp]
+            group_total = group_sizes[grp]
+            for clone_id, size in group_clones.items():
+                prop_dict[(grp, clone_id)] = size / group_total
 
-    vdj_data.metadata[col_key + col_key_suffix] = tabuluate_clone_sizes(
-        metadata_, clonesize_dict, clonekey
-    )
+        # Create Series with MultiIndex
+        prop = pd.Series(prop_dict)
+        prop.index = pd.MultiIndex.from_tuples(
+            prop.index, names=[groupby, clone_key]
+        )
+
+    # --- Create max_size categories if specified
     if max_size is not None:
-        vdj_data.metadata[col_key + col_key_suffix] = vdj_data.metadata[
-            col_key + col_key_suffix
-        ].astype("category")
+
+        def categorize_size(size):
+            if pd.isna(size):
+                return np.nan
+            if size < max_size:
+                return str(int(size))
+            else:
+                return f">= {max_size}"
+
+        clonesize_cat = clonesize.apply(categorize_size)
+        clonesize_cat_map = clonesize_cat.to_dict()
+
+    # --- Define clone frequency bins
+    bins = [0, 0.0001, 0.001, 0.01, 0.1, 1]
+    labels = ["Rare", "Small", "Medium", "Large", "Hyperexpanded"]
+    if groupby is None:
+        prop_bins = pd.cut(prop, bins=bins, labels=labels, include_lowest=True)
     else:
-        try:
-            vdj_data.metadata[col_key + col_key_suffix] = [
-                float(x) for x in vdj_data.metadata[col_key + col_key_suffix]
+        # Apply pd.cut to the entire Series at once, preserving the MultiIndex
+        prop_bins = pd.cut(prop, bins=bins, labels=labels, include_lowest=True)
+
+    # --- Build lookup maps
+    size_map = clonesize.to_dict()
+    prop_map = prop.to_dict()
+    cat_map = prop_bins.to_dict()
+
+    # --- Assign to each cell
+    cell_sizes = []
+    cell_props = []
+    cell_cats = []
+    cell_size_cats = [] if max_size is not None else None
+
+    for i, row in metadata_.iterrows():
+        clone_ids = str(row[clone_key])
+        # Check for empty/invalid entries
+        if pd.isna(clone_ids) or clone_ids in [
+            "No_contig",
+            "unassigned",
+            "None",
+            "nan",
+        ]:
+            cell_sizes.append(np.nan)
+            cell_props.append(np.nan)
+            cell_cats.append(np.nan)
+            if max_size is not None:
+                cell_size_cats.append(np.nan)
+            continue
+
+        clones = clone_ids.split("|")
+
+        if groupby is None:
+            # look up sizes directly
+            sizes = [size_map.get(c, np.nan) for c in clones]
+            props = [prop_map.get(c, np.nan) for c in clones]
+            cats = [cat_map.get(c, np.nan) for c in clones]
+            if max_size is not None:
+                size_cats = [clonesize_cat_map.get(c, np.nan) for c in clones]
+        else:
+            grp = row[groupby]
+            # Use tuple keys for grouped lookups
+            sizes = [size_map.get((grp, c), np.nan) for c in clones]
+            props = [prop_map.get((grp, c), np.nan) for c in clones]
+            cats = [cat_map.get((grp, c), np.nan) for c in clones]
+            if max_size is not None:
+                size_cats = [
+                    clonesize_cat_map.get((grp, c), np.nan) for c in clones
+                ]
+
+        # take the largest available clone (by numeric size)
+        if len(sizes) == 0 or all(pd.isna(sizes)):
+            cell_sizes.append(np.nan)
+            cell_props.append(np.nan)
+            cell_cats.append(np.nan)
+            if max_size is not None:
+                cell_size_cats.append(np.nan)
+        else:
+            max_idx = np.nanargmax(sizes)
+            cell_sizes.append(sizes[max_idx])
+            cell_props.append(props[max_idx])
+            cell_cats.append(cats[max_idx])
+            if max_size is not None:
+                cell_size_cats.append(size_cats[max_idx])
+
+    metadata_[f"{clone_key}_size"] = cell_sizes
+    metadata_[f"{clone_key}_size_prop"] = cell_props
+    metadata_[f"{clone_key}_size_category"] = cell_cats
+    if max_size is not None:
+        metadata_[f"{clone_key}_size_max_{max_size}"] = cell_size_cats
+
+    # --- Write results back to object
+    col_key = key_added if key_added is not None else clone_key
+
+    if isinstance(vdj_data, Dandelion):
+        vdj_data.metadata[f"{col_key}_size"] = metadata_[f"{clone_key}_size"]
+        vdj_data.metadata[f"{col_key}_size_prop"] = metadata_[
+            f"{clone_key}_size_prop"
+        ]
+        vdj_data.metadata[f"{col_key}_size_category"] = metadata_[
+            f"{clone_key}_size_category"
+        ]
+        if max_size is not None:
+            vdj_data.metadata[f"{col_key}_size_max_{max_size}"] = metadata_[
+                f"{clone_key}_size_max_{max_size}"
             ]
-        except ValueError:
-            # this happens if there are multiple clonotypes associated to the cell
-            pass
-
-    logg.info(
-        " finished",
-        time=start,
-        deep=(
-            "Updated Dandelion object: \n"
-            "   'metadata', cell-indexed clone table"
-        ),
-    )
+    elif isinstance(vdj_data, AnnData):
+        vdj_data.obs[f"{col_key}_size"] = metadata_[f"{clone_key}_size"]
+        vdj_data.obs[f"{col_key}_size_prop"] = metadata_[
+            f"{clone_key}_size_prop"
+        ]
+        vdj_data.obs[f"{col_key}_size_category"] = metadata_[
+            f"{clone_key}_size_category"
+        ]
+        if max_size is not None:
+            vdj_data.obs[f"{col_key}_size_max_{max_size}"] = metadata_[
+                f"{clone_key}_size_max_{max_size}"
+            ]
+    elif isinstance(vdj_data, MuData):
+        vdj_data.mod["airr"].obs[col_key + suffix] = metadata_[
+            f"{clone_key}_size"
+        ]
+        vdj_data.mod["airr"].obs[f"{col_key}_size_prop"] = metadata_[
+            f"{clone_key}_size_prop"
+        ]
+        vdj_data.mod["airr"].obs[f"{col_key}_size_category"] = metadata_[
+            f"{clone_key}_size_category"
+        ]
+        if max_size is not None:
+            vdj_data.mod["airr"].obs[f"{col_key}_size_max_{max_size}"] = (
+                metadata_[f"{clone_key}_size_max_{max_size}"]
+            )
 
 
 def clone_overlap(
@@ -1208,11 +1345,13 @@ def clone_overlap(
     ValueError
         if min_clone_size is 0.
     """
-    start = logg.info("Finding clones")
+    start = logg.info("Calculating clone overlap")
     if isinstance(vdj_data, Dandelion):
         data = vdj_data.metadata.copy()
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
+    elif isinstance(vdj_data, MuData):
+        data = vdj_data.mod["airr"].obs.copy()
 
     if min_clone_size is None:
         min_size = 2
