@@ -1331,7 +1331,7 @@ def _reverse_transfer(
         dandelion.graph = [G, None]
 
     # map the obs back to data as well
-    dandelion.sync_metadata_columns()
+    dandelion.update_data()
 
 
 def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:

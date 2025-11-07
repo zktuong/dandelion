@@ -14,6 +14,7 @@ from dandelion.tools._network import (
     clone_degree,
     clone_centrality,
     generate_network,
+    vdj_sample,
 )
 from dandelion.tools._diversity import clone_diversity, clone_rarefaction
 from dandelion.tools._trajectory import (
@@ -49,4 +50,5 @@ __all__ = [
     "bin_expression",
     "chatterjee_corr",
     "swap_view",
+    "vdj_sample",
 ]

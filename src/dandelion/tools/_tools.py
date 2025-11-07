@@ -252,8 +252,7 @@ def transfer(
     adata: AnnData,
     dandelion: Dandelion,
     expanded: bool = False,
-    neighbors_key: str | None = None,
-    rna_key: str | None = None,
+    gex_key: str | None = None,
     vdj_key: str | None = None,
     clone_key: str | None = None,
     collapse_nodes: bool = False,
@@ -279,9 +278,7 @@ def transfer(
         Dandelion object.
     expanded : bool, optional
         Whether or not to transfer the embedding with all cells with BCR (False) or only for expanded clones (True).
-    neighbors_key : str | None, optional
-        key for 'neighbors' slot in `.uns`.
-    rna_key : str | None, optional
+    gex_key : str | None, optional
         prefix for stashed RNA connectivities and distances.
     vdj_key : str | None, optional
         prefix for stashed VDJ connectivities and distances.
@@ -345,58 +342,26 @@ def transfer(
         return
 
     # --- 2) prepare neighbor keys and stash RNA neighbors/connectivities if present ---
-    if uns:
-        if neighbors_key is None:
-            neighbors_key = "neighbors"
-        skip_stash = neighbors_key not in recipient.uns
-        if skip_stash:
-            recipient.uns[neighbors_key] = {}
-        else:
-            rna_neighbors_key = "rna_" + neighbors_key
-            if rna_neighbors_key not in recipient.uns:
-                # copy existing neighbors data to rna-specific slot (original behavior)
-                recipient.uns[rna_neighbors_key] = recipient.uns[
-                    neighbors_key
-                ].copy()
+    neighbors_key = "neighbors"
+    skip_stash = neighbors_key not in recipient.uns
     if obsp:
-        # keys for stashing
-        if rna_key is None:
-            r_connectivities_key = "rna_connectivities"
-            r_distances_key = "rna_distances"
-        else:
-            r_connectivities_key = f"{rna_key}_connectivities"
-            r_distances_key = f"{rna_key}_distances"
-
-        if vdj_key is None:
-            b_connectivities_key = "vdj_connectivities"
-            b_distances_key = "vdj_distances"
-        else:
-            b_connectivities_key = f"{vdj_key}_connectivities"
-            b_distances_key = f"{vdj_key}_distances"
+        gex_key = "gex" if gex_key is None else gex_key
+        g_connectivities_key = f"{gex_key}_connectivities"
+        g_distances_key = f"{gex_key}_distances"
+        vdj_key = "vdj" if vdj_key is None else vdj_key
+        v_connectivities_key = f"{vdj_key}_connectivities"
+        v_distances_key = f"{vdj_key}_distances"
 
         # Stash RNA connectivities/distances before we overwrite connectivities/distances
-        if r_connectivities_key not in recipient.obsp:
-            if not skip_stash:
-                try:
-                    # preferred stash from obsp if exist
-                    recipient.obsp[r_connectivities_key] = recipient.obsp[
-                        "connectivities"
-                    ].copy()
-                    recipient.obsp[r_distances_key] = recipient.obsp[
-                        "distances"
-                    ].copy()
-                except Exception:
-                    # fallback to storing whatever is inside uns[neighbors_key]
-                    try:
-                        recipient.obsp[r_connectivities_key] = recipient.uns[
-                            neighbors_key
-                        ]["connectivities"]
-                        recipient.obsp[r_distances_key] = recipient.uns[
-                            neighbors_key
-                        ]["distances"]
-                    except Exception:
-                        # nothing to stash (leave absent) - this mirrors the tolerant approach of original code
-                        pass
+        if not skip_stash:
+            # preferred stash from obsp if exist
+            recipient.obsp[g_connectivities_key] = recipient.obsp[
+                "connectivities"
+            ].copy()
+            recipient.obsp[g_distances_key] = recipient.obsp["distances"].copy()
+            g_neighbors_key = f"{gex_key}_{neighbors_key}"
+            recipient.uns[g_neighbors_key] = recipient.uns[neighbors_key].copy()
+
     # --- 3) Convert both graphs ---
     graph_connectivities, graph_distances = {}, {}
     for idx in (0, 1):
@@ -426,28 +391,37 @@ def transfer(
 
         # store the all (graph[0]) and expanded graph (graph[1]) if available
         if 0 in graph_connectivities:
-            recipient.obsp[f"{b_connectivities_key}_all"] = (
+            recipient.obsp[f"{v_connectivities_key}_all"] = (
                 graph_connectivities[0].copy()
             )
-            recipient.obsp[f"{b_distances_key}_all"] = graph_distances[0].copy()
+            recipient.obsp[f"{v_distances_key}_all"] = graph_distances[0].copy()
         if 1 in graph_connectivities:
-            recipient.obsp[f"{b_connectivities_key}_expanded"] = (
+            recipient.obsp[f"{v_connectivities_key}_expanded"] = (
                 graph_connectivities[1].copy()
             )
-            recipient.obsp[f"{b_distances_key}_expanded"] = graph_distances[
+            recipient.obsp[f"{v_distances_key}_expanded"] = graph_distances[
                 1
             ].copy()
         if 2 in graph_connectivities:
-            recipient.obsp[f"{b_connectivities_key}_full"] = (
+            recipient.obsp[f"{v_connectivities_key}_full"] = (
                 graph_connectivities[2].copy()
             )
-            recipient.obsp[f"{b_distances_key}_full"] = graph_distances[
+            recipient.obsp[f"{v_distances_key}_full"] = graph_distances[
                 2
             ].copy()
+        recipient.uns[neighbors_key] = {
+            "connectivities_key": "connectivities",
+            "distances_key": "distances",
+            "params": {
+                "n_neighbors": 1,
+                "method": "custom",
+                "metric": "precomputed",
+            },
+        }
 
     if uns:
         # --- 5) Clone-level mapping (scirpy compatible) ---
-        clonekey = clone_key or "clone_id"
+        clone_key = clone_key if clone_key is not None else "clone_id"
 
         if not collapse_nodes:
             for idx in graph_connectivities:
@@ -473,7 +447,7 @@ def transfer(
                 None,
             ]
             cell_indices = Tree()
-            for x, y in recipient.obs[clonekey].items():
+            for x, y in recipient.obs[clone_key].items():
                 if y not in invalid:
                     cell_indices[y][x].value = 1
             cell_indices = {
@@ -486,7 +460,7 @@ def transfer(
             np.fill_diagonal(bin_conn, 1)
             bin_conn = csr_matrix(bin_conn)
 
-        recipient.uns[clonekey] = {
+        recipient.uns[clone_key] = {
             # this is a symmetrical, pairwise, sparse distance matrix of clonotypes
             # the matrix is offset by 1, i.e. 0 = no connection, 1 = distance 0
             "distances": bin_conn,
@@ -544,10 +518,10 @@ def transfer(
         message_parts += [
             f"wrote adata.obsp['connectivities'] & ['distances'] from graph[{main_idx}]\n",
             "stored RNA matrices under rna_* keys (stashed)\n",
-            f"stored vdj matrices under '{b_connectivities_key}' (+ '_expanded' and + '_full' if available)\n",
+            f"stored vdj matrices under '{v_connectivities_key}' (+ '_expanded' and + '_full' if available)\n",
         ]
     if uns:
-        message_parts += [f"added `.uns['{clonekey}']` clone-level mapping"]
+        message_parts += [f"added `.uns['{clone_key}']` clone-level mapping"]
 
     # --- 7) Done ---
     logg.info(
@@ -603,7 +577,7 @@ def _graph_to_matrices(
 
 def swap_view(
     adata: AnnData,
-    mode: Literal["all", "expanded", "full", "rna"] | None = "expanded",
+    mode: Literal["all", "expanded", "full", "gex"] | None = "expanded",
     connectivities_key: str | None = None,
     distances_key: str | None = None,
     embedding_key: str | None = None,
@@ -615,7 +589,7 @@ def swap_view(
     ----------
     adata : AnnData
         The AnnData object.
-    mode : Literal["all", "expanded", "full", "rna"] | None, optional
+    mode : Literal["all", "expanded", "full", "gex"] | None, optional
         If specified, set the active connectivities/distances/embedding to one of the preset modes.
     connectivities_key : str | None, optional
         The key in `.obsp` to set as active `.obsp["connectivities"]` if `mode` is None.
@@ -642,18 +616,32 @@ def swap_view(
             else:
                 raise KeyError(f"{embedding_key} not found in adata.obsm")
     else:
-        if mode == "rna":
+        if mode == "gex":
             conn_key = f"{mode}_connectivities"
             dist_key = f"{mode}_distances"
+            neighbors_key = f"{mode}_neighbors"
             emb_key = None
         else:
             conn_key = f"vdj_connectivities_{mode}"
             dist_key = f"vdj_distances_{mode}"
+            neighbors_key = None
             emb_key = f"X_vdj_{mode}" if mode != "full" else None
         adata.obsp["connectivities"] = adata.obsp[conn_key].copy()
         adata.obsp["distances"] = adata.obsp[dist_key].copy()
         if emb_key is not None:
             adata.obsm["X_vdj"] = adata.obsm[emb_key].copy()
+        if neighbors_key is not None:
+            adata.uns["neighbors"] = adata.uns[neighbors_key].copy()
+        else:
+            adata.uns["neighbors"] = {
+                "connectivities_key": "connectivities",
+                "distances_key": "distances",
+                "params": {
+                    "n_neighbors": 1,
+                    "method": "custom",
+                    "metric": "precomputed",
+                },
+            }
 
 
 def define_clones(

@@ -159,7 +159,7 @@ def test_diversity_shannon(create_testfolder, normalize):
     vdj.metadata["sample_id"] = [
         f"sample_{i%3}" for i in range(vdj.metadata.shape[0])
     ]
-    vdj.sync_metadata_columns()
+    vdj.update_data()
     res, _ = ddl.tl.clone_diversity(
         vdj,
         groupby="sample_id",
@@ -184,7 +184,7 @@ def test_diversity_min_size_too_small(create_testfolder, method):
     vdj.metadata["sample_id"] = [
         f"sample_{i%3}" for i in range(vdj.metadata.shape[0])
     ]
-    vdj.sync_metadata_columns()
+    vdj.update_data()
     with pytest.raises(ValueError):
         ddl.tl.clone_diversity(
             vdj,
@@ -208,7 +208,7 @@ def test_diversity_min_size_ok(create_testfolder, method):
     vdj.metadata["sample_id"] = [
         f"sample_{i%3}" for i in range(vdj.metadata.shape[0])
     ]
-    vdj.sync_metadata_columns()
+    vdj.update_data()
     res, _ = ddl.tl.clone_diversity(
         vdj,
         groupby="sample_id",
