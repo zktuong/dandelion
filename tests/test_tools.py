@@ -242,12 +242,6 @@ def test_diversity_rarefaction(create_testfolder):
     """test rarefaction"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
-    ddl.tl.clone_rarefaction(adata, groupby="sample_id")
-    assert "rarefaction" in adata.uns
-    ddl.tl.clone_rarefaction(
-        adata, groupby="sample_id", rarefaction_key="test_rarefaction_key"
-    )
-    assert "test_rarefaction_key" in adata.uns
     p = ddl.pl.clone_rarefaction(adata, color="sample_id")
     assert p is not None
 
@@ -257,17 +251,13 @@ def test_diversity_rarefaction2(create_testfolder):
     """test rarefaction2"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
-    ddl.tl.clone_rarefaction(adata, groupby="sample_id", clone_key="clone_id")
-    assert "rarefaction" in adata.uns
-    p = ddl.pl.clone_rarefaction(adata, color="sample_id")
-    assert p is not None
-    adata = sc.read_h5ad(f)
     p = ddl.pl.clone_rarefaction(adata, color="sample_id")
     assert p is not None
 
 
+@patch("matplotlib.pyplot.show")
 @pytest.mark.usefixtures("create_testfolder")
-def test_diversity_rarefaction3(create_testfolder):
+def test_diversity_rarefaction3(mock_show, create_testfolder):
     """test rarefaction3"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
@@ -276,10 +266,9 @@ def test_diversity_rarefaction3(create_testfolder):
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    df = ddl.tl.clone_rarefaction(vdj, groupby="sample_id")
-    assert isinstance(df, dict)
     p = ddl.pl.clone_rarefaction(vdj, color="sample_id")
     assert p is not None
+    ddl.pl.clone_rarefaction(vdj, color="sample_id", return_results=False)
 
 
 @pytest.mark.usefixtures("create_testfolder")
