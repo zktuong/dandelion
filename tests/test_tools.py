@@ -245,8 +245,8 @@ def test_diversity_rarefaction_ad(mock_show, create_testfolder):
     """test rarefaction"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
-    ddl.pl.clone_rarefaction(adata, color="sample_id")
-    ddl.pl.clone_rarefaction(adata, color="sample_id", return_results=False)
+    ddl.tl.clone_rarefaction(adata, color="sample_id")
+    ddl.tl.clone_rarefaction(adata, color="sample_id", return_results=False)
 
 
 @patch("matplotlib.pyplot.show")
@@ -260,8 +260,8 @@ def test_diversity_rarefaction_ddl(mock_show, create_testfolder):
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    ddl.pl.clone_rarefaction(vdj, color="sample_id")
-    ddl.pl.clone_rarefaction(vdj, color="sample_id", return_results=False)
+    ddl.tl.clone_rarefaction(vdj, color="sample_id")
+    ddl.tl.clone_rarefaction(vdj, color="sample_id", return_results=False)
 
 
 @pytest.mark.usefixtures("create_testfolder")
