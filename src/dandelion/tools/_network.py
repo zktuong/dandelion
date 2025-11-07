@@ -4,10 +4,9 @@ import multiprocessing
 import networkx as nx
 import numpy as np
 import pandas as pd
-import scanpy as sc
 
 from anndata import AnnData
-from collections import defaultdict, Counter
+from collections import defaultdict
 from joblib import Parallel, delayed
 from polyleven import levenshtein
 from scanpy import logging as logg
@@ -1399,124 +1398,3 @@ def get_prop_type(value, key=None):
         value = str(value)
 
     return tname, value, key
-
-
-def vdj_sample(
-    vdj_data: Dandelion,
-    gex_data: AnnData | MuData | None,
-    size: int,
-    force_replace: bool = False,
-    random_state: int | np.random.RandomState | None = None,
-) -> tuple[Dandelion, AnnData]:
-    """
-    Resample vdj data and corresponding AnnData to a specified size.
-
-    Parameters
-    ----------
-    vdj_data : Dandelion
-        Dandelion object containing VDJ data.
-    gex_data : AnnData | MuData | None
-        AnnData or MuData object corresponding to the gene expression data.
-    size : int
-        Desired size for resampling.
-    force_replace : bool, optional
-        Whether to force sampling with replacement, by default False.
-    random_state : int | np.random.RandomState | None, optional
-        Random state for reproducibility, by default None.
-
-    Returns
-    -------
-    tuple[Dandelion, AnnData]
-        Resampled Dandelion and AnnData objects.
-    """
-    logg.info("Resampling to {} cells.".format(str(size)))
-    if gex_data is None:
-        replace = True if size > vdj_data.metadata.shape[0] else False
-        if force_replace:
-            replace = True
-        keep_cells = vdj_data.metadata.sample(
-            size, replace=replace, random_state=random_state
-        )
-        keep_cells = list(keep_cells.index)
-    else:
-        # check if MuData and extract the gex modality
-        if hasattr(gex_data, "mod"):
-            adata = gex_data.mod["gex"].copy()
-        else:
-            adata = gex_data.copy()
-        # ensure only cells present in both vdj_data and adata are sampled
-        common_cells = list(
-            set(vdj_data.metadata.index).intersection(set(adata.obs_names))
-        )
-        adata = adata[adata.obs_names.isin(common_cells)].copy()
-        vdj_data = vdj_data[vdj_data.metadata_names.isin(common_cells)].copy()
-        replace = True if size > vdj_data.metadata.shape[0] else False
-        if force_replace:
-            replace = True
-        # use scanpy to sample
-        sc.pp.sample(adata, n=size, replace=replace, rng=random_state)
-        keep_cells = list(adata.obs_names)
-
-    # get the .data without ambiguous assignments
-    if "ambiguous" in vdj_data.data:
-        vdj_dat = vdj_data.data[vdj_data.data["ambiguous"].isin(FALSES)].copy()
-    else:
-        vdj_dat = vdj_data.data.copy()
-
-    vdj_dat = vdj_dat[vdj_dat["cell_id"].isin(keep_cells)].copy()
-
-    if replace:
-        # sample with replacement
-        cell_counts = Counter(keep_cells)
-
-        # Only process cells that appear more than once
-        duplicated_cells = {
-            cell: count for cell, count in cell_counts.items() if count > 1
-        }
-
-        if duplicated_cells:
-            # Separate data for duplication
-            vdj_dat_to_duplicate = vdj_dat[
-                vdj_dat["cell_id"].isin(duplicated_cells.keys())
-            ].copy()
-            vdj_dat_to_keep = vdj_dat[
-                ~vdj_dat["cell_id"].isin(duplicated_cells.keys())
-            ].copy()
-
-            # Create duplicates for both dat and adata in one loop
-            all_duplicated_vdj = []
-
-            for cell_id, count in duplicated_cells.items():
-                # Duplicate dat rows
-                cell_rows = vdj_dat_to_duplicate[
-                    vdj_dat_to_duplicate["cell_id"] == cell_id
-                ].copy()
-
-                for i in range(count):
-                    suffix = f"-{str(i)}" if i > 0 else ""
-
-                    # Add dat rows
-                    temp_rows = cell_rows.copy()
-                    if suffix:
-                        temp_rows["cell_id"] = temp_rows["cell_id"] + suffix
-                        temp_rows["sequence_id"] = (
-                            temp_rows["sequence_id"] + suffix
-                        )
-                    all_duplicated_vdj.append(temp_rows)
-
-            # Combine everything back together
-            vdj_dat = pd.concat(
-                [vdj_dat_to_keep] + all_duplicated_vdj, ignore_index=True
-            )
-
-    # reinitialise a copy of the sampled dandelion object using vdj_dat
-    vdj_data = Dandelion(vdj_dat)
-    if gex_data is not None:
-        adata.obs_names_make_unique()
-        if hasattr(gex_data, "mod"):
-            # if MuData, update the gex modality
-            return vdj_data, to_scirpy(vdj_data, gex_adata=adata)
-        else:
-            return vdj_data, adata
-    else:
-        return vdj_data, None

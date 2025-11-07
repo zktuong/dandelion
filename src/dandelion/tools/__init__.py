@@ -8,13 +8,13 @@ from dandelion.tools._tools import (
     clone_overlap,
     swap_view,
     vj_usage_pca,
+    vdj_sample,
 )
 from dandelion.tools._network import (
     extract_edge_weights,
     clone_degree,
     clone_centrality,
     generate_network,
-    vdj_sample,
 )
 from dandelion.tools._diversity import clone_diversity, clone_rarefaction
 from dandelion.tools._trajectory import (
