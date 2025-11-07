@@ -87,13 +87,23 @@ def main():
 
     # the actual process is easy. the dependencies quite a bit less so
     vdj = ddl.read_h5ddl(args.h5ddl)
-    ddl.pp.calculate_threshold(
-        vdj,
-        manual_threshold=args.manual_threshold,
-        save_plot=args.plot_file,
-    )
+    if args.manual_threshold is not None:
+        logg.info(
+            f"Using manual threshold of {args.manual_threshold} for SHazaM clonotype "
+            + "assignment."
+        )
+        threshold = ddl.pp.calculate_threshold(
+            vdj,
+            manual_threshold=args.manual_threshold,
+            save_plot=args.plot_file,
+        )
+    else:
+        threshold = args.manual_threshold
     ddl.tl.define_clones(
-        vdj, key_added=args.key_added, additional_args=additional_args
+        vdj,
+        dist=float(threshold),
+        key_added=args.key_added,
+        additional_args=additional_args,
     )
     vdj.write_h5ddl(args.h5ddl_out)
 

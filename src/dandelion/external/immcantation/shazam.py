@@ -275,7 +275,7 @@ def calculate_threshold(
     save_plot: str | None = None,
     ncpu: int = 1,
     **kwargs,
-) -> Dandelion:
+) -> float:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam`.
 
@@ -350,15 +350,15 @@ def calculate_threshold(
 
     Returns
     -------
-    Dandelion
-        Dandelion object with `.threshold` slot filled.
+    float
+        threshold value for clonal assignment in DefineClones.
 
     Raises
     ------
     ValueError
         if automatic thresholding failed.
     """
-    start = logg.info("Calculating threshold")
+    logg.info("Calculating threshold")
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
@@ -548,27 +548,8 @@ def calculate_threshold(
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
         p.show()
-    else:
-        logg.info(
-            "Automatic Threshold : "
-            + str(np.around(threshold, decimals=2))
-            + "\n method = "
-            + str(threshold_method_)
-        )
-    if isinstance(data, Dandelion):
-        data.threshold = tr
-        logg.info(
-            " finished",
-            time=start,
-            deep=(
-                "Updated Dandelion object: \n"
-                "   'threshold', threshold value for tuning clonal assignment\n"
-            ),
-        )
-    else:
-        output = Dandelion(dat, verbose=False)
-        output.threshold = tr
-        return output
+
+    return tr
 
 
 def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":

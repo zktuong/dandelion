@@ -2,7 +2,6 @@
 import bz2
 import copy
 import gzip
-from tabnanny import verbose
 import h5py
 import os
 import re
@@ -88,7 +87,6 @@ class Dandelion:
         self.layout = layout
         self.graph = graph
         self.distances = distances
-        self.threshold = None
         self.germline = {}
         self.querier = None
         self.library_type = library_type
@@ -1951,14 +1949,6 @@ class Dandelion:
                         **save_args,
                     )
 
-            if self.threshold is not None:
-                tr = self.threshold
-                with h5py.File(filename, "a") as hf:
-                    hf.create_dataset(
-                        "threshold",
-                        data=tr,
-                    )
-
     write = write_h5ddl
 
     def write_10x(
@@ -2845,9 +2835,6 @@ def write_h5ddl_legacy(
                 pass
             for k in self.germline.keys():
                 hf["germline"].attrs[k] = self.germline[k]
-        if self.threshold is not None:
-            tr = self.threshold
-            hf.create_dataset("threshold", data=tr)
 
 
 def concat(

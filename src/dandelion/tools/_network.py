@@ -104,6 +104,12 @@ def generate_network(
         num_cores = multiprocessing.cpu_count()
     num_cores = max(1, int(num_cores))
 
+    clone_key = clone_key if clone_key is not None else "clone_id"
+    if clone_key not in vdj_data.data:
+        raise ValueError(
+            "Data does not contain clone information. Please run find_clones."
+        )
+
     regenerate = True
     if vdj_data.graph is not None:
         if (min_size != 2) or (sample is not None):
@@ -137,12 +143,6 @@ def generate_network(
         if key_ not in vdj_data.data:
             raise ValueError(f"key {key_} not found in data.")
 
-        clonekey = clone_key if clone_key is not None else "clone_id"
-        if clonekey not in vdj_data.data:
-            raise ValueError(
-                "Data does not contain clone information. Please run find_clones."
-            )
-
         if sample is not None:
             vdj_data, adata = vdj_sample(
                 vdj_data,
@@ -163,17 +163,17 @@ def generate_network(
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
         dat_l = dat[dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])].copy()
         dat_ = pd.concat([dat_h, dat_l], ignore_index=True)
-        dat_ = sanitize_data(dat_, ignore=clonekey)
+        dat_ = sanitize_data(dat_, ignore=clone_key)
 
         # retrieve sequence columns and clone info (unchanged)
         querier = Query(dat_, verbose=verbose)
         dat_seq = querier.retrieve(query=key_, retrieve_mode="split")
         dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
         dat_clone = querier.retrieve(
-            query=clonekey, retrieve_mode="merge and unique only"
+            query=clone_key, retrieve_mode="merge and unique only"
         )
 
-        dat_clone = dat_clone[clonekey].str.split("|", expand=True)
+        dat_clone = dat_clone[clone_key].str.split("|", expand=True)
         membership = Tree()
         for i, j in dat_clone.iterrows():
             jjj = [jj for jj in j if present(jj)]
@@ -277,6 +277,7 @@ def generate_network(
             out = Dandelion(
                 data=dat_,
                 metadata=vdj_data.metadata,
+                clone_key=clone_key,
                 layout=(lyt, lyt_),
                 graph=(g, g_),
                 germline=germline_,
@@ -289,6 +290,7 @@ def generate_network(
             out = Dandelion(
                 data=dat_,
                 metadata=vdj_data.metadata,
+                clone_key=clone_key,
                 graph=(g, g_),
                 germline=germline_,
                 verbose=False,
@@ -305,6 +307,7 @@ def generate_network(
             vdj_data.__init__(
                 data=vdj_data.data,
                 metadata=vdj_data.metadata,
+                clone_key=clone_key,
                 layout=(lyt, lyt_),
                 graph=(g, g_),
                 germline=germline_,
@@ -318,6 +321,7 @@ def generate_network(
             vdj_data.__init__(
                 data=vdj_data.data,
                 metadata=vdj_data.metadata,
+                clone_key=clone_key,
                 layout=None,
                 graph=(g, g_),
                 germline=germline_,

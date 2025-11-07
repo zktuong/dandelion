@@ -1898,7 +1898,6 @@ def create_germlines(
             germline=vdj_data.germline,
             layout=vdj_data.layout,
             graph=vdj_data.graph,
-            initialize=True,
             verbose=False,
         )
         out_vdj = vdj_data.copy()
@@ -3142,7 +3141,6 @@ def check_contigs(
     out_dat = Dandelion(data=dat, verbose=False, **kwargs)
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
-        out_dat.threshold = data.threshold
     if adata_provided:
         transfer(adata_, out_dat, overwrite=True)
         logg.info(

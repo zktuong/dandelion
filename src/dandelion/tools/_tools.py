@@ -224,67 +224,24 @@ def find_clones(
         ),
     )
     if isinstance(vdj_data, Dandelion):
-        if vdj_data.germline is not None:
-            germline_ = vdj_data.germline
-        else:
-            germline_ = None
-        if vdj_data.layout is not None:
-            layout_ = vdj_data.layout
-        else:
-            layout_ = None
-        if vdj_data.graph is not None:
-            graph_ = vdj_data.graph
-        else:
-            graph_ = None
-        if vdj_data.threshold is not None:
-            threshold_ = vdj_data.threshold
-        else:
-            threshold_ = None
-        if ("clone_id" in vdj_data.data.columns) and (key_added is None):
-            # TODO: need to check the following bits if it works properly if only heavy chain tables are provided
-            vdj_data.__init__(
-                data=dat_,
-                germline=germline_,
-                layout=layout_,
-                graph=graph_,
-                verbose=False,
-            )
-            vdj_data.update_metadata(reinitialize=True, **kwargs)
-        elif ("clone_id" in vdj_data.data.columns) and (key_added is not None):
-            vdj_data.__init__(
-                data=dat_,
-                germline=germline_,
-                layout=layout_,
-                graph=graph_,
-                verbose=False,
-            )
-            vdj_data.update_metadata(
-                reinitialize=True,
-                clone_key="clone_id",
-                retrieve=clone_key,
-                retrieve_mode="merge and unique only",
-                **kwargs,
-            )
-        else:
-            vdj_data.__init__(
-                data=dat_,
-                germline=germline_,
-                layout=layout_,
-                graph=graph_,
-                clone_key=clone_key,
-                verbose=False,
-            )
-            vdj_data.update_metadata(
-                reinitialize=True, clone_key=clone_key, **kwargs
-            )
-        vdj_data.threshold = threshold_
-
+        vdj_data.__init__(
+            data=dat_,
+            germline=(
+                vdj_data.germline if vdj_data.germline is not None else None
+            ),
+            layout=vdj_data.layout if vdj_data.layout is not None else None,
+            graph=vdj_data.graph if vdj_data.graph is not None else None,
+            distances=(
+                vdj_data.distances if vdj_data.distances is not None else None
+            ),
+            clone_key=clone_key,
+            verbose=False,
+            **kwargs,
+        )
     else:
         out = Dandelion(
             data=dat_,
             clone_key=clone_key,
-            retrieve=clone_key,
-            retrieve_mode="merge and unique only",
             verbose=False,
             **kwargs,
         )
@@ -783,10 +740,7 @@ def define_clones(
     else:
         nproc = ncpu
 
-    if key_added is None:
-        clone_key = "clone_id"
-    else:
-        clone_key = key_added
+    clone_key = key_added if key_added is not None else "clone_id"
 
     if isinstance(vdj_data, Dandelion):
         dat_ = load_data(vdj_data.data)
@@ -1097,58 +1051,25 @@ def define_clones(
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
     dat_[str(clone_key)] = dat_[str(clone_key)].fillna("")
     if isinstance(vdj_data, Dandelion):
-        germline_ = vdj_data.germline if vdj_data.germline is not None else None
-        layout_ = vdj_data.layout if vdj_data.layout is not None else None
-        graph_ = vdj_data.graph if vdj_data.graph is not None else None
-        threshold_ = (
-            vdj_data.threshold if vdj_data.threshold is not None else None
+        vdj_data.__init__(
+            data=dat_,
+            clone_key=clone_key,
+            germline=(
+                vdj_data.germline if vdj_data.germline is not None else None
+            ),
+            layout=vdj_data.layout if vdj_data.layout is not None else None,
+            graph=vdj_data.graph if vdj_data.graph is not None else None,
+            distances=(
+                vdj_data.distances if vdj_data.distances is not None else None
+            ),
+            verbose=False,
         )
-        if ("clone_id" in vdj_data.data) and (clone_key is not None):
-            vdj_data.__init__(
-                data=dat_,
-                germline=germline_,
-                layout=layout_,
-                graph=graph_,
-                initialize=True,
-                retrieve=clone_key,
-                retrieve_mode="merge and unique only",
-                verbose=False,
-            )
-        elif ("clone_id" not in vdj_data.data) and (clone_key is not None):
-            vdj_data.__init__(
-                data=dat_,
-                germline=germline_,
-                layout=layout_,
-                graph=graph_,
-                initialize=True,
-                clone_key=clone_key,
-                retrieve=clone_key,
-                retrieve_mode="merge and unique only",
-                verbose=False,
-            )
-        else:
-            vdj_data.__init__(
-                data=dat_,
-                germline=germline_,
-                layout=layout_,
-                graph=graph_,
-                initialize=True,
-                clone_key=clone_key,
-                verbose=False,
-            )
-        vdj_data.threshold = threshold_
     else:
-        if ("clone_id" in dat_.columns) and (clone_key is not None):
-            out = Dandelion(
-                data=dat_,
-                retrieve=clone_key,
-                retrieve_mode="merge and unique only",
-                verbose=False,
-            )
-        elif ("clone_id" not in dat_.columns) and (clone_key is not None):
-            out = Dandelion(data=dat_, clone_key=clone_key, verbose=False)
-        else:
-            out = Dandelion(data=dat_, verbose=False)
+        out = Dandelion(
+            data=dat_,
+            clone_key=clone_key,
+            verbose=False,
+        )
         return out
     logg.info(
         " finished",
