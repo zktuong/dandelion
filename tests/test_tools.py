@@ -1,10 +1,12 @@
-#!/usr/bin/env python
-from locale import normalize
 import pytest
 import json
+
 import pandas as pd
-import dandelion as ddl
 import scanpy as sc
+
+from unittest.mock import patch
+
+import dandelion as ddl
 
 
 # convert from airr_Reannotate to airr, replicate this, run scirpy chainqc, test mudata as well
