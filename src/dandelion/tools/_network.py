@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import multiprocessing
 
+import anndata as ad
 import networkx as nx
 import numpy as np
 import pandas as pd
 
+from anndata import AnnData
 from collections import defaultdict, Counter
 from joblib import Parallel, delayed
 from polyleven import levenshtein
@@ -25,6 +27,7 @@ from dandelion.utilities._utilities import *
 
 def generate_network(
     vdj_data: Dandelion,
+    adata: AnnData | None = None,
     key: str | None = None,
     clone_key: str | None = None,
     min_size: int = 2,
@@ -39,7 +42,7 @@ def generate_network(
     n_chunks: int = 100,
     random_state: int | np.random.RandomState | None = None,
     **kwargs,
-) -> Dandelion:
+) -> Dandelion | tuple[Dandelion, AnnData]:
     """
     Generate a Levenshtein distance network based on VDJ and VJ sequences.
 
@@ -48,7 +51,7 @@ def generate_network(
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object.
+        Dandelion object.
     key : str | None, optional
         column name for distance calculations. None defaults to 'sequence_alignment_aa'.
     clone_key : str | None, optional
@@ -72,7 +75,7 @@ def generate_network(
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
-        whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
+        whether or not to just compute the layout using the existing graph if it exists in the Dandelion object.
     num_cores : int, optional
         number of cores to use for parallelizable steps. -1 uses all available cores.
     distance_mode : Literal["original", "full"], optional
@@ -86,8 +89,8 @@ def generate_network(
 
     Returns
     -------
-    Dandelion
-        `Dandelion` object with `.edges`, `.layout`, `.graph` initialized.
+    Dandelion | tuple[Dandelion, AnnData]
+        Dandelionbject with `.edges`, `.layout`, `.graph` initialized.
 
     Raises
     ------
@@ -139,64 +142,17 @@ def generate_network(
             )
 
         if resample is not None:
-            replace = True if resample > vdj_data.metadata.shape[0] else False
-            logg.info("Downsampling to {} cells.".format(str(resample)))
-            keep_cells = vdj_data.metadata.sample(
-                resample, replace=replace, random_state=random_state
+            vdj_data, adata = vdj_resample(
+                vdj_data, adata, size=resample, random_state=random_state
             )
-            keep_cells = list(keep_cells.index)
-
-        # get the .data without ambiguous assignments
-        if "ambiguous" in vdj_data.data:
-            dat = vdj_data.data[vdj_data.data["ambiguous"] == "F"].copy()
-        else:
             dat = vdj_data.data.copy()
-
-        if resample is not None:
-            dat = dat[dat["cell_id"].isin(keep_cells)].copy()
-            if replace:
-                cell_counts = Counter(keep_cells)
-
-                # Only process cells that appear more than once
-                duplicated_cells = {
-                    cell: count
-                    for cell, count in cell_counts.items()
-                    if count > 1
-                }
-
-                if duplicated_cells:
-                    # Separate rows that need duplication
-                    rows_to_duplicate = dat[
-                        dat["cell_id"].isin(duplicated_cells.keys())
-                    ].copy()
-                    rows_to_keep = dat[
-                        ~dat["cell_id"].isin(duplicated_cells.keys())
-                    ].copy()
-
-                    # Create duplicated rows with suffixes
-                    all_duplicated_rows = []
-                    for cell_id, count in duplicated_cells.items():
-                        cell_rows = rows_to_duplicate[
-                            rows_to_duplicate["cell_id"] == cell_id
-                        ].copy()
-                        for i in range(count):
-                            suffix = f"_dup{i}" if i > 0 else ""
-                            temp_rows = cell_rows.copy()
-                            if suffix:
-                                temp_rows["cell_id"] = (
-                                    temp_rows["cell_id"] + suffix
-                                )
-                                temp_rows["sequence_id"] = (
-                                    temp_rows["sequence_id"] + suffix
-                                )
-                            all_duplicated_rows.append(temp_rows)
-
-                    # Combine everything back together
-                    dat = pd.concat(
-                        [rows_to_keep] + all_duplicated_rows, ignore_index=True
-                    )
-            # reinitialise a copy of the resampled dandelion object using dat
-            vdj_data = Dandelion(dat)
+        else:
+            if "ambiguous" in vdj_data.data:
+                dat = vdj_data.data[
+                    vdj_data.data["ambiguous"].isin(FALSES)
+                ].copy()
+            else:
+                dat = vdj_data.data.copy()
 
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
         dat_l = dat[dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])].copy()
@@ -308,76 +264,55 @@ def generate_network(
         ),
     )
 
-    # Wrap up return logic (unchanged)
-    if isinstance(vdj_data, Dandelion):
-        germline_ = getattr(vdj_data, "germline", None)
-        threshold_ = getattr(vdj_data, "threshold", None)
-        if resample is not None:
-            if (lyt and lyt_) is not None:
-                out = Dandelion(
-                    data=dat_,
-                    metadata=vdj_data.metadata,
-                    layout=(lyt, lyt_),
-                    graph=(g, g_),
-                    germline=germline_,
-                    verbose=False,
-                    distances=csr_matrix(df.values),
-                )
-            else:
-                out = Dandelion(
-                    data=dat_,
-                    metadata=vdj_data.metadata,
-                    graph=(g, g_),
-                    germline=germline_,
-                    verbose=False,
-                    distances=csr_matrix(df.values),
-                )
-            out.threshold = threshold_
-            return out
-        else:
-            if (lyt and lyt_) is not None:
-                vdj_data.__init__(
-                    data=vdj_data.data,
-                    metadata=vdj_data.metadata,
-                    layout=(lyt, lyt_),
-                    graph=(g, g_),
-                    germline=germline_,
-                    initialize=False,
-                    verbose=False,
-                    distances=csr_matrix(df.values),
-                )
-            else:
-                vdj_data.__init__(
-                    data=vdj_data.data,
-                    metadata=vdj_data.metadata,
-                    layout=None,
-                    graph=(g, g_),
-                    germline=germline_,
-                    initialize=False,
-                    verbose=False,
-                    distances=csr_matrix(df.values),
-                )
-            vdj_data.threshold = threshold_
-    else:
+    # return or re-initialize vdj_data
+    germline_ = getattr(vdj_data, "germline", None)
+    threshold_ = getattr(vdj_data, "threshold", None)
+    if resample is not None:
         if (lyt and lyt_) is not None:
             out = Dandelion(
                 data=dat_,
+                metadata=vdj_data.metadata,
                 layout=(lyt, lyt_),
                 graph=(g, g_),
-                clone_key=clone_key,
+                germline=germline_,
                 verbose=False,
                 distances=csr_matrix(df.values),
             )
         else:
             out = Dandelion(
                 data=dat_,
-                layout=None,
+                metadata=vdj_data.metadata,
                 graph=(g, g_),
-                clone_key=clone_key,
+                germline=germline_,
                 verbose=False,
                 distances=csr_matrix(df.values),
             )
-        return out
+        out.threshold = threshold_
+        return out, adata
+    else:
+        if (lyt and lyt_) is not None:
+            vdj_data.__init__(
+                data=vdj_data.data,
+                metadata=vdj_data.metadata,
+                layout=(lyt, lyt_),
+                graph=(g, g_),
+                germline=germline_,
+                initialize=False,
+                verbose=False,
+                distances=csr_matrix(df.values),
+            )
+        else:
+            vdj_data.__init__(
+                data=vdj_data.data,
+                metadata=vdj_data.metadata,
+                layout=None,
+                graph=(g, g_),
+                germline=germline_,
+                initialize=False,
+                verbose=False,
+                distances=csr_matrix(df.values),
+            )
+        vdj_data.threshold = threshold_
 
 
 def mst(
@@ -733,7 +668,7 @@ def clone_degree(vdj_data: Dandelion, weight: str | None = None) -> Dandelion:
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object after `tl.generate_network` has been run.
+        Dandelionect after `tl.generate_network` has been run.
     weight : str | None, optional
         Attribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
 
@@ -765,7 +700,7 @@ def clone_centrality(vdj_data: Dandelion):
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object after `tl.generate_network` has been run.
+        Dandelion object after `tl.generate_network` has been run.
 
     Raises
     ------
@@ -1297,7 +1232,7 @@ def extract_edge_weights(
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object after `tl.generate_network` has been run.
+        Dandelion object after `tl.generate_network` has been run.
     expanded_only : bool, optional
         whether to retrieve the edge weights from the expanded only graph or entire graph.
 
@@ -1446,3 +1381,131 @@ def get_prop_type(value, key=None):
         value = str(value)
 
     return tname, value, key
+
+
+def vdj_resample(
+    vdj_data: Dandelion,
+    adata: AnnData | None,
+    size: int,
+    random_state: int | np.random.RandomState | None = None,
+) -> tuple[Dandelion, AnnData]:
+    """
+    Resample vdj data and corresponding AnnData to a specified size.
+
+    Parameters
+    ----------
+    vdj_data : Dandelion
+        Dandelion object containing VDJ data.
+    adata : AnnData | None
+        AnnData object corresponding to the VDJ data.
+    size : int
+        Desired size for resampling.
+    random_state : int | np.random.RandomState | None, optional
+        Random state for reproducibility, by default None.
+
+    Returns
+    -------
+    tuple[Dandelion, AnnData]
+        Resampled Dandelion and AnnData objects.
+    """
+    replace = True if size > vdj_data.metadata.shape[0] else False
+    logg.info("Resampling to {} cells.".format(str(size)))
+    keep_cells = vdj_data.metadata.sample(
+        size, replace=replace, random_state=random_state
+    )
+    keep_cells = list(keep_cells.index)
+
+    # get the .data without ambiguous assignments
+    if "ambiguous" in vdj_data.data:
+        vdj_dat = vdj_data.data[vdj_data.data["ambiguous"].isin(FALSES)].copy()
+    else:
+        vdj_dat = vdj_data.data.copy()
+
+    vdj_dat = vdj_dat[vdj_dat["cell_id"].isin(keep_cells)].copy()
+
+    # Handle AnnData subsetting
+    if adata is None:
+        raise ValueError("AnnData must be provided when resampling.")
+    else:
+        # Subset adata to cells present in keep_cells (without duplicates first)
+        cells_in_adata = [
+            cell for cell in keep_cells if cell in adata.obs_names
+        ]
+        unique_cells_in_adata = list(set(cells_in_adata))
+        adata = adata[unique_cells_in_adata].copy()
+
+    if replace:
+        # resample with replacement
+        cell_counts = Counter(keep_cells)
+
+        # Only process cells that appear more than once
+        duplicated_cells = {
+            cell: count for cell, count in cell_counts.items() if count > 1
+        }
+
+        if duplicated_cells:
+            # Separate data for duplication
+            vdj_dat_to_duplicate = vdj_dat[
+                vdj_dat["cell_id"].isin(duplicated_cells.keys())
+            ].copy()
+            vdj_dat_to_keep = vdj_dat[
+                ~vdj_dat["cell_id"].isin(duplicated_cells.keys())
+            ].copy()
+
+            adata_cells_to_keep = [
+                cell for cell in adata.obs_names if cell not in duplicated_cells
+            ]
+            adata_keep = adata[adata.obs_names.isin(adata_cells_to_keep)].copy()
+
+            # Create duplicates for both dat and adata in one loop
+            all_duplicated_dat = []
+            all_duplicated_adata = []
+
+            for cell_id, count in duplicated_cells.items():
+                # Duplicate dat rows
+                cell_rows = vdj_dat_to_duplicate[
+                    vdj_dat_to_duplicate["cell_id"] == cell_id
+                ].copy()
+
+                # Duplicate adata if cell exists
+                cell_adata = (
+                    adata[adata.obs_names == cell_id].copy()
+                    if cell_id in adata.obs_names
+                    else None
+                )
+
+                for i in range(count):
+                    suffix = f"_dup{i}" if i > 0 else ""
+
+                    # Add dat rows
+                    temp_rows = cell_rows.copy()
+                    if suffix:
+                        temp_rows["cell_id"] = temp_rows["cell_id"] + suffix
+                        temp_rows["sequence_id"] = (
+                            temp_rows["sequence_id"] + suffix
+                        )
+                    all_duplicated_dat.append(temp_rows)
+
+                    # Add adata rows
+                    if cell_adata is not None:
+                        temp_adata = cell_adata.copy()
+                        temp_adata.obs.index = [cell_id + suffix]
+                        all_duplicated_adata.append(temp_adata)
+
+            # Combine everything back together
+            vdj_dat = pd.concat(
+                [vdj_dat_to_keep] + all_duplicated_dat, ignore_index=True
+            )
+
+            if all_duplicated_adata:
+                if adata_keep is not None:
+                    adata = ad.concat(
+                        [adata_keep] + all_duplicated_adata, axis=0
+                    )
+                else:
+                    adata = ad.concat(all_duplicated_adata, axis=0)
+
+    # reinitialise a copy of the resampled dandelion object using vdj_dat
+    vdj_data = Dandelion(vdj_dat)
+
+    return vdj_data, adata

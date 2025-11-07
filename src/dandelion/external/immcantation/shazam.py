@@ -52,7 +52,7 @@ def quantify_mutations(
     Parameters
     ----------
     data : Dandelion | str
-        `Dandelion` object, file path to AIRR file.
+        Dandelion object, file path to AIRR file.
     split_locus : bool, optional
         whether to return the results for heavy chain and light chain separately.
     sequence_column : str | None, optional

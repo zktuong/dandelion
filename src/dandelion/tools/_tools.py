@@ -43,7 +43,7 @@ def find_clones(
     Parameters
     ----------
     vdj_data : Dandelion | pd.DataFrame
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file
+        Dandelion object, pandas DataFrame in changeo/airr format, or file path to changeo/airr file
         after clones have been determined.
     identity : dict[str, float] | float, optional
         junction similarity parameter. Default 0.85. If provided as a dictionary, please use the following
@@ -67,7 +67,7 @@ def find_clones(
     Returns
     -------
     Dandelion
-        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+        Dandelion object with clone_id annotated in `.data` slot and `.metadata` initialized.
 
     Raises
     ------
@@ -307,7 +307,7 @@ def transfer(
     obsp: bool = True,
 ) -> None:
     """
-    Transfer data in `Dandelion` slots to `AnnData`, updating `.obs`, `.uns`, `.obsm`, and `.obsp`.
+    Transfer data in Dandelion slots to AnnData, updating `.obs`, `.uns`, `.obsm`, and `.obsp`.
     Transfers both graphs:
       - graph[0] -> adata.obsm['X_vdj_all']
       - graph[1] -> adata.obsm['X_vdj_expanded']
@@ -317,9 +317,9 @@ def transfer(
     Parameters
     ----------
     adata : AnnData
-        `AnnData` object or `MuData` object.
+        AnnData object or `MuData` object.
     dandelion : Dandelion
-        `Dandelion` object.
+        Dandelion object.
     expanded : bool, optional
         Whether or not to transfer the embedding with all cells with BCR (False) or only for expanded clones (True).
     neighbors_key : str | None, optional
@@ -730,7 +730,7 @@ def define_clones(
     Parameters
     ----------
     vdj_data : Dandelion | pd.DataFrame | str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after
+        Dandelion object, pandas DataFrame in changeo/airr format, or file path to changeo/airr file after
         clones have been determined.
     dist : float | None, optional
         The distance threshold for clonal grouping. If None, the value will be retrieved from the Dandelion class
@@ -770,12 +770,12 @@ def define_clones(
     Returns
     -------
     Dandelion
-        `Dandelion` object with clone_id annotated in `.data` slot and `.metadata` initialized.
+        Dandelion object with clone_id annotated in `.data` slot and `.metadata` initialized.
 
     Raises
     ------
     ValueError
-        if .threshold not found in `Dandelion`.
+        if .threshold not found in Dandelion.
     """
     start = logg.info("Finding clones")
     if ncpu is None:
@@ -1207,7 +1207,7 @@ def clone_size(
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object
+        Dandelion object
     max_size : int | None, optional
         The maximum size before value gets clipped. If None, the value will be returned as a numerical value.
     clone_key : str | None, optional
@@ -1286,7 +1286,7 @@ def clone_overlap(
     Parameters
     ----------
     vdj_data : Dandelion | AnnData
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     groupby : str
         column name in obs/metadata for collapsing to columns in the clone_id x groupby data frame.
     min_clone_size : int | None, optional
@@ -1462,7 +1462,7 @@ def productive_ratio(
     Only the contig with the highest umi count in a cell will be used for this
     tabulation.
 
-    Returns inplace `AnnData` with `.uns['productive_ratio']`.
+    Returns inplace AnnData with `.uns['productive_ratio']`.
 
     Parameters
     ----------

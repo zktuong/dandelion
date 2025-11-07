@@ -42,7 +42,7 @@ CHECK_COLS = BOOLEAN_LIKE_COLUMNS + [
 
 
 class Dandelion:
-    """`Dandelion` class object."""
+    """Dandelion class object."""
 
     def __init__(
         self,
@@ -1036,12 +1036,12 @@ class Dandelion:
 
     def copy(self) -> "Dandelion":
         """
-        Performs a deep copy of all slots in `Dandelion` class.
+        Performs a deep copy of all slots in Dandelion class.
 
         Returns
         -------
         Dandelion
-            a deep copy of `Dandelion` class.
+            a deep copy of Dandelion class.
         """
         return copy.deepcopy(self)
 
@@ -1401,7 +1401,7 @@ class Dandelion:
         db: Literal["imgt", "ogrdb"] = "imgt",
     ) -> None:
         """
-        Update germline reference with corrected sequences and store in `Dandelion` object.
+        Update germline reference with corrected sequences and store in Dandelion object.
 
         Parameters
         ----------
@@ -1534,7 +1534,7 @@ class Dandelion:
         custom_isotype_dict: dict[str, str] | None = None,
     ) -> None:
         """
-        A `Dandelion` initialisation function to update and populate the `.metadata` slot.
+        A Dandelion initialisation function to update and populate the `.metadata` slot.
 
         Parameters
         ----------
@@ -1733,7 +1733,7 @@ class Dandelion:
         self, filename: str = "dandelion_data.pkl.pbz2", **kwargs
     ) -> None:
         """
-        Writes a `Dandelion` class to .pkl format.
+        Writes a Dandelion class to .pkl format.
 
         Parameters
         ----------
@@ -1765,7 +1765,7 @@ class Dandelion:
         self, filename: str = "dandelion_airr.tsv", **kwargs
     ) -> None:
         """
-        Writes a `Dandelion` class to AIRR formatted .tsv format.
+        Writes a Dandelion class to AIRR formatted .tsv format.
 
         Parameters
         ----------
@@ -1793,7 +1793,7 @@ class Dandelion:
         **kwargs,
     ):
         """
-        Writes a `Dandelion` class to .h5ddl format.
+        Writes a Dandelion class to .h5ddl format.
 
         Parameters
         ----------
@@ -1969,7 +1969,7 @@ class Dandelion:
         clone_key: str = "clone_id",
     ) -> None:
         """
-        Writes a `Dandelion` class to 10x formatted files so that it can be ingested for other tools.
+        Writes a Dandelion class to 10x formatted files so that it can be ingested for other tools.
 
         Parameters
         ----------
@@ -2768,12 +2768,12 @@ def write_h5ddl_legacy(
     **kwargs,
 ) -> None:  # pragma: no cover
     """
-    Writes a `Dandelion` class to .h5ddl format for legacy support.
+    Writes a Dandelion class to .h5ddl format for legacy support.
 
     Parameters
     ----------
     self : Dandelion
-        input `Dandelion` object.
+        input Dandelion object.
     filename : Path | str, optional
         path to `.h5ddl` file, by default "dandelion_data.h5ddl".
     **kwargs
@@ -2861,14 +2861,14 @@ def concat(
     verbose: bool = True,
 ) -> Dandelion:
     """
-    Concatenate data frames and return as `Dandelion` object.
+    Concatenate data frames and return as Dandelion object.
 
     If both suffixes and prefixes are `None` and check_unique is True, then a sequential number suffix will be appended.
 
     Parameters
     ----------
     arrays : list[pd.DataFrame | Dandelion] | dict[pd.DataFrame | Dandelion]
-        List or dictionary of `Dandelion` objects or pandas DataFrames to concatenate.
+        List or dictionary of Dandelion objects or pandas DataFrames to concatenate.
     check_unique : bool, optional
         Check the new index for duplicates. Otherwise defer the check until necessary.
         Setting to False will improve the performance of this method.
@@ -2890,7 +2890,7 @@ def concat(
     Returns
     -------
     Dandelion
-        concatenated `Dandelion` object
+        concatenated Dandelion object
 
     Raises
     ------

@@ -128,7 +128,7 @@ def fasta_iterator(fh: str) -> tuple[str, str]:
 
 def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     """
-    Read in and returns a `Dandelion` class saved using pickle format.
+    Read in and returns a Dandelion class saved using pickle format.
 
     Parameters
     ----------
@@ -138,7 +138,7 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     Returns
     -------
     Dandelion
-        saved `Dandelion` object in pickle format.
+        saved Dandelion object in pickle format.
     """
     if isBZIP(str(filename)):
         data = bz2.BZ2File(filename, "rb")
@@ -164,7 +164,7 @@ def decode(df):
 
 def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     """
-    Read in and returns a `Dandelion` class from .h5ddl format.
+    Read in and returns a Dandelion class from .h5ddl format.
 
     Parameters
     ----------
@@ -174,7 +174,7 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     Returns
     -------
     Dandelion
-        `Dandelion` object.
+        Dandelion object.
 
     Raises
     ------
@@ -283,7 +283,7 @@ def read_airr(
     Returns
     -------
     Dandelion
-        `Dandelion` object from AIRR file.
+        Dandelion object from AIRR file.
     """
     vdj = Dandelion(file, verbose=False)
     if suffix is not None:
@@ -328,7 +328,7 @@ def read_bd_airr(
     Returns
     -------
     Dandelion
-        `Dandelion` object from BD AIRR file.
+        Dandelion object from BD AIRR file.
     """
     vdj = Dandelion(file, verbose=False)
     if suffix is not None:
@@ -376,7 +376,7 @@ def read_parse_airr(
     Returns
     -------
     Dandelion
-        `Dandelion` object from Parse AIRR file.
+        Dandelion object from Parse AIRR file.
     """
     data = load_data(file)
     data.drop("cell_id", axis=1, inplace=True)  # it's the wrong cell_id
@@ -413,7 +413,7 @@ def read_10x_airr(
     remove_trailing_hyphen_number: bool = False,
 ) -> Dandelion:
     """
-    Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a `Dandelion` object.
+    Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a Dandelion object.
 
     This is not to be used for any airr rearrangement file, but specifically for the one produced by 10x Genomics.
     For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion` or `ddl.read_airr` directly.
@@ -435,7 +435,7 @@ def read_10x_airr(
     Returns
     -------
     Dandelion
-        `Dandelion` object from 10x AIRR file.
+        Dandelion object from 10x AIRR file.
     """
     dat = load_data(file)
     # get all the v,d,j,c calls
@@ -523,7 +523,7 @@ def read_10x_vdj(
     Returns
     -------
     Dandelion
-        `Dandelion` object holding the parsed data.
+        Dandelion object holding the parsed data.
 
     Raises
     ------
@@ -1314,6 +1314,8 @@ def _reverse_transfer(
     # --- Extract clone-level connection info ---
     if clone_key in adata.uns:
         clone_uns = adata.uns[clone_key]
+    else:
+        clone_uns = {}
 
     # Expected structure: {"distances": csr_matrix, "cell_indices": dict}
     if "distances" not in clone_uns or "cell_indices" not in clone_uns:

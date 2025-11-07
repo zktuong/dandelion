@@ -68,7 +68,7 @@ def clone_rarefaction(
     Parameters
     ----------
     vdj_data : AnnData | Dandelion
-        `AnnData` or `Dandelion` object.
+        AnnData or Dandelion object.
     color : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : str | None, optional
@@ -290,7 +290,7 @@ def barplot(
     Parameters
     ----------
     vdj_data : AnnData | Dandelion
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     color : str
         column name in metadata for plotting in bar plot.
     palette : str, optional
@@ -405,7 +405,7 @@ def stackedbarplot(
     Parameters
     ----------
     vdj_data : AnnData | Dandelion
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     color : str
         column name in metadata for plotting in bar plot.
     groupby : str | None
@@ -639,7 +639,7 @@ def spectratype(
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object.
+        Dandelion object.
     color : str
         column name in metadata for plotting in bar plot.
     groupby : str
@@ -866,7 +866,7 @@ def clone_overlap(
     Parameters
     ----------
     adata : AnnData
-        `AnnData` object.
+        AnnData object.
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
     colorby : str | None, optional
@@ -909,7 +909,7 @@ def clone_overlap(
     KeyError
         if `clone_overlap` not found in `adata.uns`.
     ValueError
-        if input is not `AnnData`.
+        if input is not AnnData.
     """
 
     if clone_key is None:

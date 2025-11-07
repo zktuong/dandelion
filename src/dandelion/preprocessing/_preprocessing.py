@@ -1822,7 +1822,7 @@ def create_germlines(
     Parameters
     ----------
     vdj_data : Dandelion | pd.DataFrame | str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr
+        Dandelion object, pandas DataFrame in changeo/airr format, or file path to changeo/airr
         file after clones have been determined.
     germline : str | None, optional
         path to germline database folder. `None` defaults to  environmental variable.
@@ -2973,13 +2973,13 @@ def check_contigs(
     that the choice of the library type should mean that the primers used would most likely amplify those related
     sequences and if there's any unexpected loci, they likely represent artifacts and shouldn't be analysed.
 
-    If an `adata` object is provided, contigs with no corresponding cell barcode in the `AnnData` object is filtered in
+    If an `adata` object is provided, contigs with no corresponding cell barcode in the AnnData object is filtered in
     the output if filter_missing is True.
 
     Parameters
     ----------
     data : Dandelion | pd.DataFrame | str
-        V(D)J AIRR data to check. Can be `Dandelion`, pandas `DataFrame` and file path to AIRR `.tsv` file.
+        V(D)J AIRR data to check. Can be Dandelion, pandas DataFrame and file path to AIRR `.tsv` file.
     adata : AnnData | None, optional
         AnnData object to filter. If not provided, it will assume to keep all cells in the airr table and just return a
         Dandelion object.
@@ -3004,7 +3004,7 @@ def check_contigs(
     allow_exceptions : bool, optional
         whether or not to allow exceptions for certain loci.
     filter_missing : bool, optional
-        cells in V(D)J data not found in `AnnData` object will removed from the dandelion object.
+        cells in V(D)J data not found in AnnData object will removed from the dandelion object.
     filter_extra : bool, optional
         whether or not to remove contigs that are marked as extra.
     filter_ambiguous : bool, optional
@@ -3020,7 +3020,7 @@ def check_contigs(
     Returns
     -------
     tuple[Dandelion, AnnData]
-        checked dandelion V(D)J object and `AnnData` object.
+        checked dandelion V(D)J object and AnnData object.
 
     Raises
     ------

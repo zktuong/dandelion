@@ -463,7 +463,7 @@ def pseudotime_transfer(
     Returns
     -------
     AnnData
-        transferred `AnnData`.
+        transferred AnnData.
     """
     adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
 

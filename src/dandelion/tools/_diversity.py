@@ -37,7 +37,7 @@ def clone_rarefaction(
     Parameters
     ----------
     vdj_data : Dandelion | AnnData
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     groupby : str
         Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
     clone_key : str | None, optional
@@ -152,7 +152,7 @@ def clone_diversity(
     Parameters
     ----------
     vdj_data : Dandelion | AnnData
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     groupby : str
         Column name to calculate the gini indices on, for e.g. sample, patient etc.
     method : Literal["gini", "chao1", "shannon"], optional
@@ -409,7 +409,7 @@ def diversity_gini(
     Parameters
     ----------
     vdj_data : Dandelion | AnnData
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     groupby : str
         Column name to calculate the Gini indices on, for e.g. sample, patient etc.
     metric : str | None, optional
@@ -506,7 +506,7 @@ def diversity_chao1(
     Parameters
     ----------
     vdj_data : Dandelion | AnnData
-        `Dandelion` or `AnnData` object.
+        Dandelionr AnnData object.
     groupby : str
         Column name to calculate the Chao1 estimates on, for e.g. sample, patient etc.
     clone_key : str | None, optional
@@ -598,7 +598,7 @@ def diversity_shannon(
     Parameters
     ----------
     vdj_data : Dandelion | AnnData
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     groupby : str
         Column name to calculate the Shannon entropy on, for e.g. sample, patient etc.
     clone_key : str | None, optional
@@ -768,7 +768,7 @@ def process_clone_network_stats(
     Parameters
     ----------
     ddl_dat : Any
-        The `Dandelion` object to process.
+        The Dandelion object to process.
     expanded_only : bool
         Whether to consider only expanded clones.
     contracted : bool
