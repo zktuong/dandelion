@@ -15,6 +15,7 @@ import pandas as pd
 from collections import defaultdict, OrderedDict
 from pathlib import Path
 from scanpy import logging as logg
+from scipy.sparse import csr_matrix
 from typing import Literal
 
 from dandelion.utilities._core import Dandelion

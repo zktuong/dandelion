@@ -21,6 +21,7 @@ try:
 except:
     from networkx.utils import random_state
 
+from dandelion.tools._tools import vdj_sample
 from dandelion.utilities._core import Dandelion, Query
 from dandelion.utilities._utilities import present, sanitize_data, Tree, FALSES
 
