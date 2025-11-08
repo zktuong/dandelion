@@ -127,7 +127,7 @@ jobs:
 
       - name: Install Dandelion
         run: |
-          pip install -e ".[scirpy,scrublet,palantir]"
+          pip install -e ".[scirpy,scrublet,palantir,dask]"
           # install pertpy from github
           pip install git+https://www.github.com/scverse/pertpy.git
           # ensure filelock is installed

@@ -520,7 +520,7 @@ def calculate_distance_matrix_full(
         from dask.diagnostics import ProgressBar
     except ImportError:
         raise ImportError(
-            "Please install dask[distributed]: pip install 'dask[distributed]'"
+            "Please install dask distributed: pip install dask distributed"
         )
     n = dat_seq.shape[0]
     if chunk_size is None:
