@@ -271,6 +271,7 @@ def generate_network(
             "   'metadata', cell-indexed observations table\n"
             "   'layout', graph layout\n"
             "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
+            "   'distances', VDJ + VJ distance matrix\n"
         ),
     )
 
