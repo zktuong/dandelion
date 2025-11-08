@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from dandelion.tools._tools import (
+    concat,
     find_clones,
     productive_ratio,
     transfer,
@@ -32,6 +33,7 @@ from dandelion.tools._trajectory import (
 )
 
 __all__ = [
+    "concat",
     "find_clones",
     "transfer",
     "define_clones",

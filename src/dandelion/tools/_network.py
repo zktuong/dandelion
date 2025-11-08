@@ -1,6 +1,7 @@
 import multiprocessing
 import math
 import psutil
+import re
 
 import networkx as nx
 import numpy as np
@@ -12,6 +13,7 @@ from joblib import Parallel, delayed
 from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
+from scipy.sparse import csr_matrix
 from tqdm import tqdm
 from typing import Literal
 
@@ -21,7 +23,7 @@ except:
     from networkx.utils import random_state
 
 from dandelion.utilities._core import Dandelion, Query
-from dandelion.utilities._utilities import present, sanitize_data, Tree
+from dandelion.utilities._utilities import present, sanitize_data, Tree, FALSES
 
 
 def generate_network(

@@ -76,7 +76,7 @@ def test_generate_network(create_testfolder, resample, expected):
     vdj = ddl.read_h5ddl(f)
     vdj2 = ddl.read_h5ddl(f2)
     # create anndata from here
-    adata = ddl.to_scirpy(vdj, to_mudata=False)
+    adata = ddl.tl.to_scirpy(vdj, to_mudata=False)
     if resample is not None:
         vdj, adata = ddl.tl.generate_network(
             vdj, adata=adata, sample=resample, layout_method="mod_fr"

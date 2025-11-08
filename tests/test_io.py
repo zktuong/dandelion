@@ -245,17 +245,17 @@ def test_io_prefix_suffix_combinations(create_testfolder, annotation_10x):
         airr_file, prefix="x", remove_trailing_hyphen_number=True
     )
     vdj = ddl.read_10x_vdj(annot_file, filename_prefix="filtered")
-    _ = ddl.concat([vdj, vdj], prefixes=["x", "y"])
+    _ = ddl.tl.concat([vdj, vdj], prefixes=["x", "y"])
     with pytest.raises(ValueError):
-        _ = ddl.concat([vdj, vdj], suffixes=["x"])
+        _ = ddl.tl.concat([vdj, vdj], suffixes=["x"])
     with pytest.raises(ValueError):
-        _ = ddl.concat([vdj, vdj], prefixes=["y"])
+        _ = ddl.tl.concat([vdj, vdj], prefixes=["y"])
     with pytest.raises(ValueError):
-        _ = ddl.concat([vdj, vdj], suffixes=["x", "y"], prefixes=["y", "z"])
+        _ = ddl.tl.concat([vdj, vdj], suffixes=["x", "y"], prefixes=["y", "z"])
     # also test with the different metadata.
     vdj1 = vdj.copy()
     vdj1.metadata["new_col"] = "test"
-    _ = ddl.concat([vdj, vdj1])
+    _ = ddl.tl.concat([vdj, vdj1])
 
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x", "fasta_10x")
@@ -267,17 +267,17 @@ def test_to_scirpy(create_testfolder, annotation_10x, fasta_10x):
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="filtered")
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
-    adata = ddl.to_scirpy(vdj)
+    adata = ddl.tl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 5
     ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=fasta_file)
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="filtered")
     assert vdj.data.shape[0] == 9
     assert vdj.metadata.shape[0] == 5
     assert not vdj.data.sequence.empty
-    adata = ddl.to_scirpy(vdj)
+    adata = ddl.tl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 5
     os.remove(fasta_file)
-    vdjx = ddl.from_scirpy(adata)
+    vdjx = ddl.tl.from_scirpy(adata)
     assert vdjx.data.shape[0] == 9
 
 
@@ -294,9 +294,9 @@ def test_tofro_scirpy_cr6(create_testfolder, annotation_10x_cr6, json_10x_cr6):
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
-    adata = ddl.to_scirpy(vdj)
+    adata = ddl.tl.to_scirpy(vdj)
     assert adata.obs.shape[0] == 10
-    vdjx = ddl.from_scirpy(adata)
+    vdjx = ddl.tl.from_scirpy(adata)
     assert vdjx.data.shape[0] == 26
 
 
@@ -313,9 +313,9 @@ def test_tofro_scirpy_cr6_transfer(
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_all")
     assert vdj.data.shape[0] == 26
     assert vdj.metadata.shape[0] == 10
-    adata = ddl.to_scirpy(vdj, transfer=True)
+    adata = ddl.tl.to_scirpy(vdj, transfer=True)
     assert adata.obs.shape[0] == 10
-    vdjx = ddl.from_scirpy(adata)
+    vdjx = ddl.tl.from_scirpy(adata)
     assert vdjx.data.shape[0] == 26
 
 
@@ -380,9 +380,9 @@ def test_to_scirpy_v2(create_testfolder, annotation_10x, fasta_10x):
     mdata = ddl.tl.to_scirpy(vdj, to_mudata=True)
     assert mdata.mod["airr"].shape[0] == 15
     os.remove(fasta_file)
-    vdjx = ddl.from_scirpy(adata)
+    vdjx = ddl.tl.from_scirpy(adata)
     assert vdjx.data.shape[0] == 35
-    vdjx = ddl.from_scirpy(mdata)
+    vdjx = ddl.tl.from_scirpy(mdata)
     assert vdjx.data.shape[0] == 35
 
 
