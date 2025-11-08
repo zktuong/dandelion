@@ -518,7 +518,7 @@ def calculate_distance_matrix_full(
             n: int,
             num_cores: int,
             memory_limit_gb: float | None = None,
-            safety_fraction=0.7,
+            safety_fraction=0.5,
         ) -> tuple[int, int]:
             """Compute dynamic chunk size to stay within memory budget per worker."""
             available_mem = psutil.virtual_memory().available / (1024**3)
