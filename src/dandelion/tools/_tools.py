@@ -13,6 +13,7 @@ from changeo.Gene import getGene
 from collections import defaultdict, Counter
 from distance import hamming
 from itertools import product
+from pathlib import Path
 from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform
@@ -21,7 +22,6 @@ from tqdm import tqdm
 from typing import Literal
 
 from dandelion.utilities._core import Dandelion
-from dandelion.utilities._io import to_scirpy
 from dandelion.utilities._utilities import (
     MuData,
     FALSES,
@@ -38,6 +38,7 @@ from dandelion.utilities._utilities import (
     write_airr,
     check_same_celltype,
     Tree,
+    sanitize_column,
 )
 
 
@@ -2243,3 +2244,539 @@ def vdj_sample(
             return vdj_data, adata
     else:
         return vdj_data, None
+
+
+def to_scirpy(
+    vdj: Dandelion,
+    transfer: bool = False,
+    to_mudata: bool = True,
+    gex_adata: AnnData | None = None,
+    key: tuple[str, str] = ("gex", "airr"),
+    **kwargs,
+) -> AnnData | MuData:
+    """
+    Convert Dandelion data to scirpy-compatible format.
+
+    Parameters
+    ----------
+    vdj : Dandelion
+        The Dandelion object containing the data to be converted.
+    transfer : bool, optional
+        Whether to transfer additional information from Dandelion to the converted data. Defaults to False.
+    to_mudata : bool, optional
+        Whether to convert the data to MuData format instead of AnnData. Defaults to True.
+        If converting to AnnData, it will assert that the same cell_ids and .obs_names are present in the `gex_adata` provided.
+    gex_adata : AnnData, optional
+        An existing AnnData object to be used as the base for the converted data if provided.
+    key : tuple[str, str], optional
+        A tuple specifying the keys for the 'gex' and 'airr' fields in the converted data. Defaults to ("gex", "airr").
+    **kwargs
+        Additional keyword arguments passed to `scirpy.io.read_airr`.
+
+    Returns
+    -------
+    AnnData | MuData
+        The converted data in either AnnData or MuData format.
+    """
+    # if gex_adata is provided, make sure to only transfer cells that are present in both
+    # we will only filter the vdj data to match gex_adata
+    if gex_adata is not None:
+        vdj = vdj[vdj.metadata_names.isin(gex_adata.obs_names)].copy()
+        tmp_gex = gex_adata.copy()
+        if not to_mudata:
+            tf(
+                tmp_gex, vdj, obs=False, uns=True, obsp=False, obsm=False
+            )  # so that the slots are properly filled
+    else:
+        tmp_gex = None
+
+    if "umi_count" not in vdj.data and "duplicate_count" in vdj.data:
+        vdj.data["umi_count"] = vdj.data["duplicate_count"]
+    for h in [
+        "sequence",
+        "rev_comp",
+        "sequence_alignment",
+        "germline_alignment",
+        "v_cigar",
+        "d_cigar",
+        "j_cigar",
+    ]:
+        if h not in vdj.data:
+            vdj.data[h] = None
+
+    airr, obs = to_ak(vdj.data, **kwargs)
+    if to_mudata:
+        airr_adata = _create_anndata(airr, obs)
+        if tmp_gex is not None:
+            tf(airr_adata, vdj, obs=False, uns=True, obsp=False, obsm=False)
+        mdata = _create_mudata(tmp_gex, airr_adata, key)
+        if transfer:
+            tf(mdata, vdj)
+        return mdata
+    else:
+        adata = _create_anndata(airr, obs, tmp_gex)
+        if transfer:
+            tf(adata, vdj)
+        return adata
+
+
+def from_scirpy(data: AnnData | MuData) -> Dandelion:
+    """
+    Convert data from scirpy format to Dandelion format.
+
+    Parameters
+    ----------
+    data : AnnData | MuData
+        The input data in scirpy format.
+
+    Returns
+    -------
+    Dandelion
+        The converted data in Dandelion format.
+    """
+    if not isinstance(data, AnnData):
+        data = data.mod["airr"]
+    data = data.copy()
+    data.obsm["airr"]["cell_id"] = data.obs.index
+    df = from_ak(data.obsm["airr"])
+    vdj = Dandelion(df, verbose=False)
+    # Reverse transfer (recover metadata + clone graph)
+    _reverse_transfer(data, vdj)
+    return vdj
+
+
+def _reverse_transfer(
+    data: AnnData | MuData,
+    dandelion: "Dandelion",
+    clone_key: str = "clone_id",
+) -> None:
+    """
+    Reverse-transfer scirpy data (AnnData/MuData) into a Dandelion object.
+
+    Pulls metadata, clone mappings, graphs, and embeddings from scirpy's structure.
+
+    Parameters
+    ----------
+    data : AnnData | MuData
+        Input scirpy object (AnnData or MuData with .mod['airr']).
+    dandelion : Dandelion
+        The Dandelion object to update in place.
+    clone_key : str, optional
+        Key under .uns containing scirpy clone-level mapping (default: 'clone_id').
+    """
+    # --- Handle MuData case ---
+    if hasattr(data, "mod"):
+        if "airr" not in data.mod:
+            raise ValueError(
+                "MuData object must contain an 'airr' modality for scirpy data."
+            )
+        adata = data.mod["airr"]
+    else:
+        adata = data
+
+    # --- Copy metadata ---
+    for col in adata.obs:
+        if col not in dandelion.metadata.columns:
+            dandelion.metadata[col] = adata.obs[col]
+
+    # --- Extract clone-level connection info ---
+    if clone_key in adata.uns:
+        clone_uns = adata.uns[clone_key]
+        distances = clone_uns["distances"]
+        cell_indices = clone_uns["cell_indices"]
+        # --- Rebuild graph ---
+        G = nx.from_scipy_sparse_array(distances)
+        # Relabel nodes: scirpy stores numeric keys ("0", "1", ...) mapped to arrays of cell_ids
+        mapping = {}
+        for k, v in cell_indices.items():
+            k_int = int(k)
+            if isinstance(v, (list, np.ndarray)):
+                # If clone node has multiple cells, store them all in node attribute
+                mapping[k_int] = str(v[0]) if len(v) > 0 else str(k)
+                G.nodes[k_int]["cells"] = list(v)
+            else:
+                mapping[k_int] = str(v)
+                G.nodes[k_int]["cells"] = [v]
+        G = nx.relabel_nodes(G, mapping)
+
+        # Store the graph
+        dandelion.graph = [G, None]
+
+    # map the obs back to data as well
+    dandelion.update_data()
+
+
+def from_ak(airr: "Array") -> pd.DataFrame:
+    """
+    Convert an AIRR-formatted array to a pandas DataFrame.
+
+    Parameters
+    ----------
+    airr : Array
+        The AIRR-formatted array to be converted.
+
+    Returns
+    -------
+    pd.DataFrame
+        The converted pandas DataFrame.
+
+    Raises
+    ------
+    KeyError
+        If `sequence_id` not found in the data.
+    """
+    import awkward as ak
+
+    df = ak.to_dataframe(airr)
+    # check if 'sequence_id' column does not exist or if any value in 'sequence_id' is NaN
+    if "sequence_id" not in df.columns or df["sequence_id"].isnull().any():
+        df_reset = df.reset_index()
+
+        # create a new 'sequence_id' column
+        df_reset["sequence_id"] = df_reset.apply(
+            lambda row: f"{row['cell_id']}_contig_{row['subentry'] + 1}", axis=1
+        )
+
+        # set 'entry' and 'subentry' back as the index
+        df = df_reset.set_index(["entry", "subentry"])
+
+    if "sequence_id" in df.columns:
+        df.set_index("sequence_id", drop=False, inplace=True)
+    if "cell_id" not in df.columns:
+        df["cell_id"] = [c.split("_contig")[0] for c in df["sequence_id"]]
+
+    return df
+
+
+def to_ak(
+    data: pd.DataFrame,
+    **kwargs,
+) -> tuple["Array", pd.DataFrame]:
+    """
+    Convert data from a DataFrame to an AnnData object with AIRR format.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame containing the data.
+    **kwargs
+        Additional keyword arguments passed to `scirpy.io.read_airr`.
+
+    Returns
+    -------
+    tuple[Array, pd.DataFrame]
+        A tuple containing the AIRR-formatted data as an ak.Array and the cell-level attributes as a pd.DataFrame.
+    """
+
+    try:
+        import scirpy as ir
+    except:
+        raise ImportError("Please install scirpy to use this function.")
+
+    adata = ir.io.read_airr(data, **kwargs)
+
+    return adata.obsm["airr"], adata.obs
+
+
+def _create_anndata(
+    airr: "Array",
+    obs: pd.DataFrame,
+    adata: AnnData | None = None,
+) -> AnnData:
+    """
+    Create an AnnData object with the given AIRR array and observation data.
+
+    Parameters
+    ----------
+    airr : Array
+        The AIRR array.
+    obs : pd.DataFrame
+        The observation data.
+    adata : AnnData | None, optional
+        An existing AnnData object to update. If None, a new AnnData object will be created.
+
+    Returns
+    -------
+    AnnData
+        The AnnData object with the AIRR array and observation data.
+    """
+    obsm = {"airr": airr}
+    temp = AnnData(X=None, obs=obs, obsm=obsm)
+
+    if adata is None:
+        adata = temp
+    else:
+        cell_names = adata.obs_names.intersection(temp.obs_names)
+        adata = adata[adata.obs_names.isin(cell_names)].copy()
+        temp = temp[temp.obs_names.isin(cell_names)].copy()
+        adata.obsm = dict() if adata.obsm is None else adata.obsm
+        adata.obsm.update(temp.obsm)
+
+    return adata
+
+
+def _create_mudata(
+    gex: AnnData,
+    adata: AnnData,
+    key: tuple[str, str] = ("gex", "airr"),
+) -> MuData:
+    """
+    Create a MuData object from the given AnnData objects.
+
+    Parameters
+    ----------
+    gex : AnnData
+        The AnnData object containing gene expression data.
+    adata : AnnData
+        The AnnData object containing additional data.
+    key : tuple[str, str], optional
+        The keys to use for the gene expression and additional data in the MuData object. Defaults to ("gex", "airr").
+
+    Returns
+    -------
+    MuData
+        The created MuData object.
+
+    Raises
+    ------
+    ImportError
+        If the mudata package is not installed.
+    """
+
+    try:
+        import mudata
+    except ImportError:
+        raise ImportError("Please install mudata. pip install mudata")
+    if gex is not None:
+        return mudata.MuData({key[0]: gex, key[1]: adata})
+    return mudata.MuData({key[1]: adata})
+
+
+def concat(
+    arrays: list[pd.DataFrame | Dandelion] | dict[pd.DataFrame | Dandelion],
+    check_unique: bool = True,
+    collapse_cells: bool = True,
+    sep: str = "_",
+    suffixes: list[str] | None = None,
+    prefixes: list[str] | None = None,
+    remove_trailing_hyphen_number: bool = False,
+    verbose: bool = True,
+) -> Dandelion:
+    """
+    Concatenate data frames and return as Dandelion object.
+
+    If both suffixes and prefixes are `None` and check_unique is True, then a sequential number suffix will be appended.
+
+    Parameters
+    ----------
+    arrays : list[pd.DataFrame | Dandelion] | dict[pd.DataFrame | Dandelion]
+        List or dictionary of Dandelion objects or pandas DataFrames to concatenate.
+    check_unique : bool, optional
+        Check the new index for duplicates. Otherwise defer the check until necessary.
+        Setting to False will improve the performance of this method.
+    collapse_cells : bool, optional
+        whether or not to collapse multiple contigs per cell into one row in the
+        metadata. By default True.
+    sep : str, optional
+        the separator to append suffix/prefix.
+    suffixes : list[str] | None, optional
+        List of suffixes to append to sequence_id and cell_id.
+    prefixes : list[str] | None, optional
+        List of prefixes to append to sequence_id and cell_id.
+    remove_trailing_hyphen_number : bool, optional
+        whether or not to remove the trailing hyphen number e.g. '-1' from the
+        cell/contig barcodes.
+    verbose : bool, optional
+        Whether to print the messages, by default True.
+
+    Returns
+    -------
+    Dandelion
+        concatenated Dandelion object
+
+    Raises
+    ------
+    ValueError
+        if both prefixes and suffixes are provided.
+    """
+    if (suffixes is not None) and (prefixes is not None):
+        raise ValueError("Please provide only prefixes or suffixes, not both.")
+
+    if suffixes is not None:
+        if len(arrays) != len(suffixes):
+            raise ValueError(
+                "Please provide the same number of suffixes as the number of objects to concatenate."
+            )
+
+    if prefixes is not None:
+        if len(arrays) != len(prefixes):
+            raise ValueError(
+                "Please provide the same number of prefixes as the number of objects to concatenate."
+            )
+    # first convert dict to list if necessary
+    if isinstance(arrays, dict):
+        arrays = [arrays[x].copy() for x in arrays]
+    # first, check if all input are dandelion instances
+    ddl_check = [True if isinstance(x, Dandelion) else False for x in arrays]
+    if all(ddl_check):
+        vdjs_ = [vdj.copy() for vdj in arrays]
+    else:
+        # first check if any of the input arrays are compatible
+        ddl_check2 = [
+            (
+                True
+                if isinstance(x, Dandelion)
+                else True if isinstance(x, pd.DataFrame) else False
+            )
+            for x in arrays
+        ]
+        if all(ddl_check2):
+            vdjs_ = [
+                (
+                    x.copy()
+                    if isinstance(x, Dandelion)
+                    else Dandelion(x, verbose=False)
+                )
+                for x in arrays
+            ]
+        else:
+            raise ValueError(
+                "All input arrays must be either Dandelion instances or pandas DataFrames."
+            )
+
+        # create a check here if v_call_genotyped is only in some of the data
+    # if it's not uniformly present, create "v_call_genotyped" column with values from "v_call" for the missing ones.
+
+    # let's do a check now of all the metadata indices that there are no duplicates
+    # this list will double up as the metadata index order after concatenation
+    tmp_meta_names, tmp_data_names = [], []
+    for tmp in vdjs_:
+        tmp_meta_names.extend(list(tmp.metadata_names))
+        tmp_data_names.extend(list(tmp.data_names))
+
+    if collapse_cells:
+        # we should preserve the order but remove duplicates
+        tmp_meta_names = list(dict.fromkeys(tmp_meta_names))
+
+    if len(tmp_meta_names) != len(set(tmp_meta_names)):
+        metadata_index_order = None
+    else:
+        # we will use this list to reindex the metadata after concatenation
+        metadata_index_order = tmp_meta_names
+
+    if len(tmp_data_names) != len(set(tmp_data_names)):
+        data_index_order = None
+    else:
+        # we will use this list to reindex the data after concatenation
+        data_index_order = tmp_data_names
+
+    # now, if check_unique is True, we will append suffixes/prefixes to both metadata and data indices
+    if check_unique:
+        if metadata_index_order is None and data_index_order is None:
+            # store the modified names as well
+            metadata_index_order, data_index_order = [], []
+            for i in range(0, len(vdjs_)):
+                # this will always sync to the sequence_id in .data
+                if (suffixes is None) and (prefixes is None):
+                    vdjs_[i].add_cell_suffix(
+                        str(i),
+                        sep=sep,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif suffixes is not None:
+                    vdjs_[i].add_cell_suffix(
+                        str(suffixes[i]),
+                        sep=sep,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif prefixes is not None:
+                    vdjs_[i].add_cell_prefix(
+                        str(prefixes[i]),
+                        sep=sep,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                metadata_index_order.extend(list(vdjs_[i].metadata_names))
+                data_index_order.extend(list(vdjs_[i].data_names))
+        elif data_index_order is None:
+            data_index_order = []
+            for i in range(0, len(vdjs_)):
+                # this will always sync to the sequence_id in .data
+                if (suffixes is None) and (prefixes is None):
+                    vdjs_[i].add_sequence_suffix(
+                        str(i),
+                        sep=sep,
+                        sync=False,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif suffixes is not None:
+                    vdjs_[i].add_sequence_suffix(
+                        str(suffixes[i]),
+                        sep=sep,
+                        sync=False,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                elif prefixes is not None:
+                    vdjs_[i].add_sequence_prefix(
+                        str(prefixes[i]),
+                        sep=sep,
+                        sync=False,
+                        remove_trailing_hyphen_number=remove_trailing_hyphen_number,
+                    )
+                data_index_order.extend(list(vdjs_[i].data_names))
+    else:
+        # don't add suffixes/prefixes, but check if indices are unique
+        if metadata_index_order is None or data_index_order is None:
+            raise ValueError(
+                "Cell/contig indices are not unique. Please set check_unique=True to append suffixes/prefixes or ensure unique indices before concatenation."
+            )
+
+    # now, instead of just concatenating the metadata as is, we should use dandelion to reinitialise the metadata from scratch, and then add the missing columns, filling out any missing values appropriately
+    # first, obtain all the metadata column names
+    all_meta_cols = set()
+    for vdj_ in vdjs_:
+        all_meta_cols.update(set(vdj_.metadata.columns))
+
+    genotyped_v_call = [True for vdj in vdjs_ if "v_call_genotyped" in vdj.data]
+    if len(genotyped_v_call) > 0:
+        if len(genotyped_v_call) != len(vdjs_):
+            if verbose:
+                # print a warning
+                print(
+                    "For consistency, 'v_call_genotyped' will be used where available. Filling missing values from 'v_call'."
+                )
+            for i in range(0, len(vdjs_)):
+                if "v_call_genotyped" not in vdjs_[i].data:
+                    vdjs_[i].data["v_call_genotyped"] = vdjs_[i].data["v_call"]
+
+    arrays_ = [vdj.data for vdj in vdjs_]
+    vdj_concat = Dandelion(pd.concat(arrays_), verbose=False)
+    # find out if there are missing metadata in the initialised vdj_concat.metadata
+    vdj_meta_cols = set(vdj_concat.metadata.columns)
+    # find out what are the missing columns from all_meta_cols
+    missing_meta_cols = all_meta_cols - vdj_meta_cols
+    if len(missing_meta_cols) > 0:
+        # print(missing_meta_cols)
+        # now, for each missing column, we need to fill in the values from the original vdjs_ using .at to avoid alignment issues
+        for col in missing_meta_cols:
+            # create an empty series with None first - sanitisation later will take care of the dtypes
+            vdj_concat.metadata[col] = pd.Series(
+                [None] * vdj_concat.metadata.shape[0],
+                index=vdj_concat.metadata.index,
+            )
+            for vdj_ in vdjs_:
+                for idx in vdj_.metadata.index:
+                    if idx in vdj_concat.metadata.index:
+                        if col in vdj_.metadata.columns:
+                            vdj_concat.metadata.at[idx, col] = vdj_.metadata.at[
+                                idx, col
+                            ]
+    # now check the dtype of each of the vdj_concat.metadata columns. if it's object, change pd.null to ""
+    for col in vdj_concat.metadata:
+        if vdj_concat.metadata[col].dtype == object:
+            vdj_concat.metadata[col] = sanitize_column(
+                vdj_concat.metadata[col], "string"
+            )
+    # finally, reorder the metadata and data according to the original order
+    vdj_concat.metadata = vdj_concat.metadata.loc[metadata_index_order]
+
+    return vdj_concat

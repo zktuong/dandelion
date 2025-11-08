@@ -15,10 +15,6 @@ from dandelion.utilities._io import (
     read_parse_airr,
     read_10x_airr,
     read_10x_vdj,
-    to_ak,
-    from_ak,
-    to_scirpy,
-    from_scirpy,
 )
 from dandelion.utilities._core import Dandelion, Query
 
@@ -36,10 +32,6 @@ __all__ = [
     "read_parse_airr",
     "read_10x_airr",
     "read_10x_vdj",
-    "to_ak",
-    "from_ak",
-    "to_scirpy",
-    "from_scirpy",
     "Dandelion",
     "Query",
 ]

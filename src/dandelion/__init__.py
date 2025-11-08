@@ -4,12 +4,8 @@ from dandelion import utilities as utl
 from dandelion import tools as tl
 from dandelion import plotting as pl
 from dandelion.utilities import (
-    concat,
     Dandelion,
-    from_ak,
-    from_scirpy,
     load_data,
-    Query,
     read_10x_airr,
     read_10x_vdj,
     read_airr,
@@ -17,8 +13,6 @@ from dandelion.utilities import (
     read_h5ddl,
     read_parse_airr,
     read_pkl,
-    to_ak,
-    to_scirpy,
     write_airr,
     write_blastn,
     write_fasta,

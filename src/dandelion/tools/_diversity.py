@@ -3,6 +3,7 @@ import networkx as nx
 import pandas as pd
 
 from anndata import AnnData
+from collections import defaultdict
 from plotnine import (
     aes,
     geom_line,
