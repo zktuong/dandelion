@@ -541,8 +541,15 @@ def calculate_distance_matrix_full(
             n, num_cores=num_cores, memory_limit_gb=memory_limit_gb
         )
         if verbose:
-            logg.info(f"Auto chunk size ≈ {chunk_size} sequences per block")
-    n_chunks_eff = max(1, math.ceil(n / chunk_size))
+            logg.info(
+                f"Auto chunk size ≈ {chunk_size} sequences per block across {n_chunks} chunks"
+            )
+    else:
+        n_chunks = max(1, math.ceil(n / chunk_size))
+        if verbose:
+            logg.info(
+                f"Chunk size ≈ {chunk_size} sequences per block across {n_chunks} chunks"
+            )
 
     index_list = list(dat_seq.index)
     idx_to_pos = {idx: i for i, idx in enumerate(index_list)}
@@ -574,8 +581,7 @@ def calculate_distance_matrix_full(
         seq_indices = list(nonnull.index)
         seqs = nonnull.to_numpy(dtype=object)
 
-        n_chunks_eff = max(1, min(n_chunks, len(seqs)))
-        chunks = np.array_split(seqs, n_chunks_eff)
+        chunks = np.array_split(seqs, n_chunks)
         chunk_sizes = [len(c) for c in chunks]
         cum = np.cumsum([0] + chunk_sizes)
 
