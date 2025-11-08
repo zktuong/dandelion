@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -16,13 +15,10 @@ from nxviz import annotate
 
 from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
-from time import sleep
-from tqdm import tqdm
 from typing import Callable, Literal
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._utilities import MuData
 
 
 def clone_network(

@@ -13,16 +13,43 @@ import numpy as np
 import pandas as pd
 
 from changeo.IO import readGermlines
-from collections import defaultdict, Counter
+from collections import defaultdict
 from pandas.api.types import infer_dtype
 from pathlib import Path
-from scanpy import AnnData, logging as logg
+from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from textwrap import dedent
 from tqdm import tqdm
 from typing import Literal
 
-from dandelion.utilities._utilities import *
+from dandelion.utilities._utilities import (
+    RECEPTOR_SET,
+    TRUES,
+    FALSES,
+    EMPTIES_STR,
+    BOOLEAN_LIKE_COLUMNS,
+    isGZIP,
+    isBZIP,
+    cmp_to_key,
+    present,
+    all_missing,
+    all_missing2,
+    sanitize_data_for_saving,
+    sanitize_column,
+    sanitize_data,
+    check_travdv,
+    load_data,
+    format_isotype1,
+    format_isotype2,
+    format_locus,
+    lib_type,
+    movecol,
+    format_chain_status,
+    clear_h5file,
+    write_fasta,
+    get_vcall_key,
+    Tree,
+)
 from dandelion.external.anndata._compat import (
     _normalize_index,
     unpack_index,

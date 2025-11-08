@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import numpy as np
 import networkx as nx
 import pandas as pd
@@ -32,9 +31,8 @@ from dandelion.tools._network import (
     generate_network,
 )
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._utilities import flatten
 
 
 def clone_rarefaction(

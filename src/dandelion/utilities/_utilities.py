@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import h5py
 import os
 import re

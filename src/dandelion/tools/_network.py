@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import multiprocessing
 import math
 import psutil
@@ -21,9 +20,8 @@ try:
 except:
     from networkx.utils import random_state
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion, Query
+from dandelion.utilities._utilities import present, sanitize_data, Tree
 
 
 def generate_network(

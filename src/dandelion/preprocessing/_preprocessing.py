@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import os
 import re
 import tempfile
@@ -44,9 +43,38 @@ from dandelion.external.immcantation.changeo import (
 )
 from dandelion.external.immcantation.tigger import tigger_genotype
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._io import (
+    fasta_iterator,
+    read_10x_vdj,
+    change_file_location,
+    move_to_tmp,
+    make_all,
+    rename_dandelion,
+)
+from dandelion.utilities._utilities import (
+    TRUES,
+    FALSES,
+    HEAVYLONG,
+    LIGHTSHORT,
+    NO_DS,
+    DEFAULT_PREFIX,
+    check_filepath,
+    not_same_call,
+    present,
+    all_missing,
+    sanitize_data,
+    load_data,
+    mask_dj,
+    write_airr,
+    write_blastn,
+    lib_type,
+    set_igblast_env,
+    set_blast_env,
+    check_data,
+    write_fasta,
+    Tree,
+)
 from dandelion.tools._tools import transfer
 
 

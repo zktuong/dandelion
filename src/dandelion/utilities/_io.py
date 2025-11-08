@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import bz2
 import gzip
 import h5py
@@ -7,7 +6,6 @@ import os
 import pickle
 import re
 import shutil
-import warnings
 
 import _pickle as cPickle
 import networkx as nx
@@ -21,8 +19,21 @@ from scanpy import logging as logg
 from typing import Literal
 
 from dandelion.tools._tools import transfer as tf
-from dandelion.utilities._core import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._utilities import (
+    MuData,
+    DEFAULT_PREFIX,
+    isGZIP,
+    isBZIP,
+    check_filepath,
+    present,
+    all_missing,
+    check_travdv,
+    load_data,
+    write_airr,
+    check_data,
+    Contig,
+)
 
 pickle.HIGHEST_PROTOCOL = 4
 

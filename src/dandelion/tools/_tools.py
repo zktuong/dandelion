@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import math
 import os
 import re
@@ -21,10 +20,25 @@ from subprocess import run
 from tqdm import tqdm
 from typing import Literal
 
-from dandelion.tools._network import *
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
+from dandelion.utilities._io import to_scirpy
+from dandelion.utilities._utilities import (
+    MuData,
+    FALSES,
+    VCALL,
+    JCALL,
+    VCALLG,
+    STRIPALLELENUM,
+    EMPTIES,
+    flatten,
+    is_categorical,
+    type_check,
+    present,
+    load_data,
+    write_airr,
+    check_same_celltype,
+    Tree,
+)
 
 
 def find_clones(
