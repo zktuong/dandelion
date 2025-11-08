@@ -524,8 +524,7 @@ def calculate_distance_matrix_full(
             available_mem = psutil.virtual_memory().available / (1024**3)
             if memory_limit_gb is None:
                 memory_limit_gb = available_mem * safety_fraction / num_cores
-            else:
-                mem_per_core = min(memory_limit_gb, available_mem / num_cores)
+            mem_per_core = min(memory_limit_gb, available_mem / num_cores)
             # each element is 8 bytes; solve m^2 * 8 / 1024^3 ≈ mem_per_core
             chunk_size = int(math.sqrt((mem_per_core * (1024**3)) / 8))
             n_chunks = max(1, math.ceil(n / chunk_size))
