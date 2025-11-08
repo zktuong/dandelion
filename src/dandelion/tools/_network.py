@@ -522,10 +522,6 @@ def calculate_distance_matrix_full(
         raise ImportError(
             "Please install dask[distributed]: pip install 'dask[distributed]'"
         )
-    if verbose:
-        logg.info(
-            f"Calculating distances (full pairwise, over {n_chunks} blocks)"
-        )
     n = dat_seq.shape[0]
     if chunk_size is None:
         chunk_size, n_chunks = _auto_chunk_size(
