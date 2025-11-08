@@ -41,6 +41,7 @@ def generate_network(
     num_cores: int = 1,
     distance_mode: Literal["original", "full"] = "original",
     chunk_size: int | None = None,
+    memory_limit_gb: float | None = None,
     random_state: int | np.random.RandomState | None = None,
     **kwargs,
 ) -> Dandelion | tuple[Dandelion, AnnData]:
@@ -86,6 +87,8 @@ def generate_network(
     chunk_size : int | None, optional
         number of sequences to process as chunks for blockwise computation when using `distance_mode='full'`. If None,
         an automatic chunk size will be determined based on available memory and number of cores.
+    memory_limit_gb: float | None, optional
+        memory limit per worker in GB when using `distance_mode='full'`. If None, dask will control this automatically.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -193,6 +196,7 @@ def generate_network(
                 dat_seq,
                 chunk_size=chunk_size,
                 num_cores=num_cores,
+                memory_limit_gb=memory_limit_gb,
                 verbose=verbose,
             )
         else:
@@ -478,7 +482,7 @@ def calculate_distance_matrix_full(
     dat_seq: pd.DataFrame,
     chunk_size: int | None = None,
     num_cores: int = 1,
-    memory_limit_gb: float = 2.0,
+    memory_limit_gb: float | None = None,
     verbose: bool = True,
 ) -> np.ndarray:
     """
@@ -493,6 +497,8 @@ def calculate_distance_matrix_full(
         an automatic chunk size will be determined based on available memory and number of cores.
     num_cores: int, optional
         number of cores to use.
+    memory_limit_gb: float | None, optional
+        memory limit per worker in GB. If None, dask will control this automatically.
     verbose : bool, optional
         whether or not to show progress.
 
@@ -509,11 +515,17 @@ def calculate_distance_matrix_full(
         from dask.diagnostics import ProgressBar
 
         def _auto_chunk_size(
-            n: int, num_cores: int, memory_limit_gb: float = 2
+            n: int,
+            num_cores: int,
+            memory_limit_gb: float | None = None,
+            safety_fraction=0.7,
         ) -> tuple[int, int]:
             """Compute dynamic chunk size to stay within memory budget per worker."""
-            available_mem = psutil.virtual_memory().available / (1024**3)  # GB
-            mem_per_core = min(memory_limit_gb, available_mem / num_cores)
+            available_mem = psutil.virtual_memory().available / (1024**3)
+            if memory_limit_gb is None:
+                memory_limit_gb = available_mem * safety_fraction / num_cores
+            else:
+                mem_per_core = min(memory_limit_gb, available_mem / num_cores)
             # each element is 8 bytes; solve m^2 * 8 / 1024^3 ≈ mem_per_core
             chunk_size = int(math.sqrt((mem_per_core * (1024**3)) / 8))
             n_chunks = max(1, math.ceil(n / chunk_size))
@@ -537,12 +549,19 @@ def calculate_distance_matrix_full(
 
     client = None
     if num_cores > 1:
-        client = Client(
-            n_workers=num_cores,
-            threads_per_worker=1,
-            processes=False,
-            memory_limit=f"{memory_limit_gb}GB",
-        )
+        if memory_limit_gb is None:
+            client = Client(
+                n_workers=num_cores,
+                threads_per_worker=1,
+                processes=False,
+            )
+        else:
+            client = Client(
+                n_workers=num_cores,
+                threads_per_worker=1,
+                processes=False,
+                memory_limit=f"{memory_limit_gb}GB",
+            )
 
     total_dist = np.zeros((n, n), dtype=float)
 
