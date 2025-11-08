@@ -7,6 +7,7 @@ import pandas as pd
 import seaborn as sns
 
 from anndata import AnnData
+from collections import defaultdict
 from contextlib import contextmanager
 from itertools import product, cycle
 from matplotlib.axes import Axes
