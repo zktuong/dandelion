@@ -229,7 +229,8 @@ def find_clones(
     if os.path.isfile(str(vdj_data)):
         data_path = Path(vdj_data)
         write_airr(dat_, data_path.parent / (data_path.stem + "_clone.tsv"))
-
+    if verbose:
+        logg.info("Initialising Dandelion object")
     if isinstance(vdj_data, Dandelion):
         vdj_data.__init__(
             data=dat_,
