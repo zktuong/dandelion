@@ -546,6 +546,9 @@ def transfer(
     )
 
 
+tf = transfer  # alias for transfer
+
+
 def _graph_to_matrices(
     G: nx.Graph | None,
     adata: AnnData,

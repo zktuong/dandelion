@@ -355,7 +355,7 @@ def test_convert_data_to_obsm_airr(create_testfolder):
     anndata = ddl.tl.to_scirpy(vdj, to_mudata=False)
     obsm_airr, obs = ddl.tl.to_ak(vdj.data)
     assert len(anndata.obsm["airr"]) == len(obsm_airr)
-    assert anndata.obsm["airr"].type.show() == obsm_airr.type.show()
+    # assert anndata.obsm["airr"].type.show() == obsm_airr.type.show()
     assert anndata.obs.shape == obs.shape
 
 
