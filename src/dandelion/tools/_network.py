@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import multiprocessing
+import math
+import psutil
 
 import networkx as nx
 import numpy as np
@@ -39,7 +41,7 @@ def generate_network(
     use_existing_graph: bool = True,
     num_cores: int = 1,
     distance_mode: Literal["original", "full"] = "original",
-    n_chunks: int = 100,
+    chunk_size: int | None = None,
     random_state: int | np.random.RandomState | None = None,
     **kwargs,
 ) -> Dandelion | tuple[Dandelion, AnnData]:
@@ -82,8 +84,9 @@ def generate_network(
     distance_mode : Literal["original", "full"], optional
         method to compute distance matrix. 'original' refers to the original membership-based distance calculation
         whereas 'full' computes the full pairwise distance matrix using Dask delayed blocks.
-    n_chunks : int, optional
-        number of chunks to split sequences into for blockwise computation when using `distance_mode='full'`.
+    chunk_size : int | None, optional
+        number of sequences to process as chunks for blockwise computation when using `distance_mode='full'`. If None,
+        an automatic chunk size will be determined based on available memory and number of cores.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -188,7 +191,10 @@ def generate_network(
             )
         elif distance_mode == "full":
             total_dist = calculate_distance_matrix_full(
-                dat_seq, n_chunks=n_chunks, num_cores=num_cores, verbose=verbose
+                dat_seq,
+                chunk_size=chunk_size,
+                num_cores=num_cores,
+                verbose=verbose,
             )
         else:
             raise ValueError(f"Unknown distance_mode: {distance_mode}")
@@ -469,10 +475,23 @@ def _compute_block(chunk1, chunk2):
     return np.array([[levenshtein(a, b) for b in chunk2] for a in chunk1])
 
 
+def _auto_chunk_size(
+    n: int, num_cores: int, memory_limit_gb: float = 2
+) -> tuple[int, int]:
+    """Compute dynamic chunk size to stay within memory budget per worker."""
+    available_mem = psutil.virtual_memory().available / (1024**3)  # GB
+    mem_per_core = min(memory_limit_gb, available_mem / num_cores)
+    # each element is 8 bytes; solve m^2 * 8 / 1024^3 ≈ mem_per_core
+    chunk_size = int(math.sqrt((mem_per_core * (1024**3)) / 8))
+    n_chunks = max(1, math.ceil(n / chunk_size))
+    return chunk_size, n_chunks
+
+
 def calculate_distance_matrix_full(
     dat_seq: pd.DataFrame,
-    n_chunks: int = 100,
+    chunk_size: int | None = None,
     num_cores: int = 1,
+    memory_limit_gb: float = 2.0,
     verbose: bool = True,
 ) -> np.ndarray:
     """
@@ -482,8 +501,9 @@ def calculate_distance_matrix_full(
     ----------
     dat_seq: pd.DataFrame
         DataFrame of sequences.
-    n_chunks: int, optional
-        number of chunks to split sequences into for blockwise computation.
+    chunk_size: int | None, optional
+        number of sequences to process as chunks for blockwise computation when using `distance_mode='full'`. If None,
+        an automatic chunk size will be determined based on available memory and number of cores.
     num_cores: int, optional
         number of cores to use.
     verbose : bool, optional
@@ -507,13 +527,24 @@ def calculate_distance_matrix_full(
             f"Calculating distances (full pairwise, over {n_chunks} blocks)"
         )
     n = dat_seq.shape[0]
+    if chunk_size is None:
+        chunk_size, n_chunks = _auto_chunk_size(
+            n, num_cores=num_cores, memory_limit_gb=memory_limit_gb
+        )
+        if verbose:
+            logg.info(f"Auto chunk size ≈ {chunk_size} sequences per block")
+    n_chunks_eff = max(1, math.ceil(n / chunk_size))
+
     index_list = list(dat_seq.index)
     idx_to_pos = {idx: i for i, idx in enumerate(index_list)}
 
     client = None
     if num_cores > 1:
         client = Client(
-            n_workers=num_cores, threads_per_worker=1, processes=False
+            n_workers=num_cores,
+            threads_per_worker=1,
+            processes=False,
+            memory_limit=f"{memory_limit_gb}GB",
         )
 
     total_dist = np.zeros((n, n), dtype=float)
