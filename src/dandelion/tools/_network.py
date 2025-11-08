@@ -1,6 +1,5 @@
 import multiprocessing
 import math
-import psutil
 import re
 
 import networkx as nx
@@ -475,18 +474,6 @@ def _compute_block(chunk1, chunk2):
     return np.array([[levenshtein(a, b) for b in chunk2] for a in chunk1])
 
 
-def _auto_chunk_size(
-    n: int, num_cores: int, memory_limit_gb: float = 2
-) -> tuple[int, int]:
-    """Compute dynamic chunk size to stay within memory budget per worker."""
-    available_mem = psutil.virtual_memory().available / (1024**3)  # GB
-    mem_per_core = min(memory_limit_gb, available_mem / num_cores)
-    # each element is 8 bytes; solve m^2 * 8 / 1024^3 ≈ mem_per_core
-    chunk_size = int(math.sqrt((mem_per_core * (1024**3)) / 8))
-    n_chunks = max(1, math.ceil(n / chunk_size))
-    return chunk_size, n_chunks
-
-
 def calculate_distance_matrix_full(
     dat_seq: pd.DataFrame,
     chunk_size: int | None = None,
@@ -516,11 +503,25 @@ def calculate_distance_matrix_full(
     """
     try:
         import dask
+        import psutil
+
         from dask.distributed import Client, progress
         from dask.diagnostics import ProgressBar
+
+        def _auto_chunk_size(
+            n: int, num_cores: int, memory_limit_gb: float = 2
+        ) -> tuple[int, int]:
+            """Compute dynamic chunk size to stay within memory budget per worker."""
+            available_mem = psutil.virtual_memory().available / (1024**3)  # GB
+            mem_per_core = min(memory_limit_gb, available_mem / num_cores)
+            # each element is 8 bytes; solve m^2 * 8 / 1024^3 ≈ mem_per_core
+            chunk_size = int(math.sqrt((mem_per_core * (1024**3)) / 8))
+            n_chunks = max(1, math.ceil(n / chunk_size))
+            return chunk_size, n_chunks
+
     except ImportError:
         raise ImportError(
-            "Please install dask distributed: pip install dask distributed"
+            "Please install dask, distributed and psutil: pip install dask[complete]"
         )
     n = dat_seq.shape[0]
     if chunk_size is None:
