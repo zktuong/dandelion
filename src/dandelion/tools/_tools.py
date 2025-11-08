@@ -230,15 +230,6 @@ def find_clones(
         data_path = Path(vdj_data)
         write_airr(dat_, data_path.parent / (data_path.stem + "_clone.tsv"))
 
-    logg.info(
-        " finished",
-        time=start,
-        deep=(
-            "Updated Dandelion object: \n"
-            "   'data', contig-indexed AIRR table\n"
-            "   'metadata', cell-indexed observations table\n"
-        ),
-    )
     if isinstance(vdj_data, Dandelion):
         vdj_data.__init__(
             data=dat_,
@@ -254,12 +245,30 @@ def find_clones(
             verbose=False,
             **kwargs,
         )
+        logg.info(
+            " finished",
+            time=start,
+            deep=(
+                "Updated Dandelion object: \n"
+                "   'data', contig-indexed AIRR table\n"
+                "   'metadata', cell-indexed observations table\n"
+            ),
+        )
     else:
         out = Dandelion(
             data=dat_,
             clone_key=clone_key,
             verbose=False,
             **kwargs,
+        )
+        logg.info(
+            " finished",
+            time=start,
+            deep=(
+                "Returning Dandelion object: \n"
+                "   'data', contig-indexed AIRR table\n"
+                "   'metadata', cell-indexed observations table\n"
+            ),
         )
         return out
 
