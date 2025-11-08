@@ -1,8 +1,13 @@
+import warnings
+
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import nxviz as nxv
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import nxviz as nxv
 import pandas as pd
 import seaborn as sns
 

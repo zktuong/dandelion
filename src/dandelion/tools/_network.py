@@ -1,6 +1,6 @@
 import multiprocessing
-import math
 import re
+import time
 
 import networkx as nx
 import numpy as np
@@ -41,8 +41,7 @@ def generate_network(
     use_existing_graph: bool = True,
     num_cores: int = 1,
     distance_mode: Literal["original", "full"] = "original",
-    chunk_size: int | None = None,
-    memory_limit_gb: float | None = None,
+    dist_func: callable = None,
     random_state: int | np.random.RandomState | None = None,
     **kwargs,
 ) -> Dandelion | tuple[Dandelion, AnnData]:
@@ -85,11 +84,8 @@ def generate_network(
     distance_mode : Literal["original", "full"], optional
         method to compute distance matrix. 'original' refers to the original membership-based distance calculation
         whereas 'full' computes the full pairwise distance matrix using Dask delayed blocks.
-    chunk_size : int | None, optional
-        number of sequences to process as chunks for blockwise computation when using `distance_mode='full'`. If None,
-        an automatic chunk size will be determined based on available memory and number of cores.
-    memory_limit_gb: float | None, optional
-        memory limit per worker in GB when using `distance_mode='full'`. If None, dask will control this automatically.
+    dist_func : callable, optional
+        distance function to use when `distance_mode='full'`. If None, `polyleven.levenshtein` is used.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -195,9 +191,8 @@ def generate_network(
         elif distance_mode == "full":
             total_dist = calculate_distance_matrix_full(
                 dat_seq,
-                chunk_size=chunk_size,
                 num_cores=num_cores,
-                memory_limit_gb=memory_limit_gb,
+                func=levenshtein if dist_func is None else dist_func,
                 verbose=verbose,
             )
         else:
@@ -390,7 +385,10 @@ def mst(
 
 
 def calculate_distance_matrix_original(
-    dat_seq: pd.DataFrame, membership: dict, verbose: bool = True
+    dat_seq: pd.DataFrame,
+    membership: dict,
+    func: callable = levenshtein,
+    verbose: bool = True,
 ) -> np.ndarray:
     """
     Re-implementation of original membership-based distance calculation.
@@ -401,7 +399,9 @@ def calculate_distance_matrix_original(
         DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
     membership : dict
         Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
-    verbose : bool
+    func : callable, optional
+        Distance function to use (default: polyleven.levenshtein).
+    verbose : bool, optional
         Whether to show progress.
 
     Returns
@@ -411,7 +411,6 @@ def calculate_distance_matrix_original(
     """
     n = dat_seq.shape[0]
     index_list = list(dat_seq.index)
-    idx_to_pos = {idx: i for i, idx in enumerate(index_list)}
 
     # dmat_per_column will collect for each column a list of DataFrames (one per clone) to concat
     dmat_per_column = defaultdict(list)
@@ -437,7 +436,7 @@ def calculate_distance_matrix_original(
                     pdist(
                         tdarray,
                         lambda x, y: (
-                            levenshtein(x[0], y[0])
+                            func(x[0], y[0])
                             if (x[0] == x[0] and y[0] == y[0])
                             else 0
                         ),
@@ -474,32 +473,43 @@ def calculate_distance_matrix_original(
     return total_dist
 
 
-def _compute_block(chunk1, chunk2):
-    """Helper used by Dask to compute distances between two 1-D arrays of strings."""
-    return np.array([[levenshtein(a, b) for b in chunk2] for a in chunk1])
+def _compute_distance(
+    i: int, j: int, sequences: np.ndarray, func: callable
+) -> tuple:
+    """Helper to compute distance between two sequences at indices i and j."""
+    return (
+        func(sequences[i], sequences[j])
+        if (pd.notnull(sequences[i]) and pd.notnull(sequences[j]))
+        else 0
+    )
+
+
+def _compute_row(i: int, sequences: np.ndarray, n: int, func: callable) -> list:
+    """Helper to compute a row of the distance matrix."""
+    row_distances = [
+        _compute_distance(i, j, sequences, func) if j > i else 0
+        for j in range(n)
+    ]
+    return row_distances
 
 
 def calculate_distance_matrix_full(
     dat_seq: pd.DataFrame,
-    chunk_size: int | None = None,
+    func: callable = levenshtein,
     num_cores: int = 1,
-    memory_limit_gb: float | None = None,
     verbose: bool = True,
 ) -> np.ndarray:
     """
-    Compute full pairwise distance matrix using Dask delayed blocks.
+    Compute full pairwise distance matrix.
 
     Parameters
     ----------
     dat_seq: pd.DataFrame
         DataFrame of sequences.
-    chunk_size: int | None, optional
-        number of sequences to process as chunks for blockwise computation when using `distance_mode='full'`. If None,
-        an automatic chunk size will be determined based on available memory and number of cores.
+    func : callable, optional
+        Distance function to use (default: polyleven.levenshtein).
     num_cores: int, optional
         number of cores to use.
-    memory_limit_gb: float | None, optional
-        memory limit per worker in GB. If None, dask will control this automatically.
     verbose : bool, optional
         whether or not to show progress.
 
@@ -508,128 +518,47 @@ def calculate_distance_matrix_full(
     np.ndarray
         Aggregated distance matrix; diagonal set to NaN.
     """
-    try:
-        import dask
-        import psutil
-
-        from dask.distributed import Client, progress
-        from dask.diagnostics import ProgressBar
-
-        def _auto_chunk_size(
-            n: int,
-            num_cores: int,
-            memory_limit_gb: float | None = None,
-            safety_fraction=0.5,
-        ) -> tuple[int, int]:
-            """Compute dynamic chunk size to stay within memory budget per worker."""
-            available_mem = psutil.virtual_memory().available / (1024**3)
-            if memory_limit_gb is None:
-                memory_limit_gb = available_mem * safety_fraction / num_cores
-            mem_per_core = min(memory_limit_gb, available_mem / num_cores)
-            # each element is 8 bytes; solve m^2 * 8 / 1024^3 ≈ mem_per_core
-            chunk_size = int(math.sqrt((mem_per_core * (1024**3)) / 8))
-            n_chunks = max(1, math.ceil(n / chunk_size))
-            return chunk_size, n_chunks
-
-    except ImportError:
-        raise ImportError(
-            "Please install dask, distributed and psutil: pip install dask[complete]"
-        )
+    start_time = time.time()
     n = dat_seq.shape[0]
-    if chunk_size is None:
-        chunk_size, n_chunks = _auto_chunk_size(
-            n, num_cores=num_cores, memory_limit_gb=memory_limit_gb
-        )
-        if verbose:
-            logg.info(
-                f"Auto chunk size ≈ {chunk_size} sequences per block across {n_chunks} chunks"
-            )
-    else:
-        n_chunks = max(1, math.ceil(n / chunk_size))
-        if verbose:
-            logg.info(
-                f"Chunk size ≈ {chunk_size} sequences per block across {n_chunks} chunks"
-            )
-
-    index_list = list(dat_seq.index)
-    idx_to_pos = {idx: i for i, idx in enumerate(index_list)}
-
-    client = None
-    if num_cores > 1:
-        if memory_limit_gb is None:
-            client = Client(
-                n_workers=num_cores,
-                threads_per_worker=1,
-                processes=False,
-            )
-        else:
-            client = Client(
-                n_workers=num_cores,
-                threads_per_worker=1,
-                processes=False,
-                memory_limit=f"{memory_limit_gb}GB",
-            )
-
     total_dist = np.zeros((n, n), dtype=float)
-
     for col in dat_seq.columns:
         seq_series = dat_seq[col].replace("[.]", "", regex=True)
         nonnull = seq_series.dropna()
         if nonnull.shape[0] <= 1:
             continue
-
-        seq_indices = list(nonnull.index)
+        # seq_indices = list(nonnull.index)
         seqs = nonnull.to_numpy(dtype=object)
-
-        chunks = np.array_split(seqs, n_chunks)
-        chunk_sizes = [len(c) for c in chunks]
-        cum = np.cumsum([0] + chunk_sizes)
-
-        delayed_blocks = []
-        block_positions = []
-
-        for i in range(len(chunks)):
-            for j in range(i, len(chunks)):
-                if chunk_sizes[i] == 0 or chunk_sizes[j] == 0:
-                    continue
-                delayed_blocks.append(
-                    dask.delayed(_compute_block)(chunks[i], chunks[j])
-                )
-                block_positions.append((i, j))
-
-        # Compute blocks in parallel and show distributed progress
-        if client is not None:
-            futures = client.compute(delayed_blocks)
-            if verbose:
-                progress(futures)
-            results = client.gather(futures)
-        else:
-            # fallback to single-threaded computation
-            from dask import compute
-
-            if verbose:
-                from dask.diagnostics import ProgressBar
-
-                with ProgressBar():
-                    results = compute(*delayed_blocks, scheduler="threads")
-            else:
-                results = compute(*delayed_blocks, scheduler="threads")
-
-        # Assemble temporary matrix
         m = len(seqs)
-        tmp_block_mat = np.zeros((m, m), dtype=float)
-        for (i, j), block in zip(block_positions, results):
-            start_i, end_i = cum[i], cum[i + 1]
-            start_j, end_j = cum[j], cum[j + 1]
-            tmp_block_mat[start_i:end_i, start_j:end_j] = block
-            if i != j:
-                tmp_block_mat[start_j:end_j, start_i:end_i] = block.T
-
-        pos_list = [idx_to_pos[idx] for idx in seq_indices]
-        total_dist[np.ix_(pos_list, pos_list)] += tmp_block_mat
-
-    if client is not None:
-        client.close()
+        if num_cores > 1:
+            results = Parallel(n_jobs=num_cores)(
+                delayed(_compute_row)(i, seqs, m, func)
+                for i in tqdm(
+                    range(n), disable=not verbose, leave=False, position=0
+                )
+            )
+            for i in tqdm(
+                range(n), disable=not verbose, leave=False, position=0
+            ):
+                for j in range(i + 1, n):
+                    total_dist[i][j] += results[i][j]
+                    total_dist[j][i] += results[i][j]
+        else:
+            results = squareform(
+                pdist(
+                    seqs.reshape(-1, 1),
+                    lambda x, y: (
+                        func(x[0], y[0])
+                        if (pd.notnull(x[0]) and pd.notnull(y[0]))
+                        else 0
+                    ),
+                )
+            )
+            total_dist += results
+    if verbose:
+        end_time = time.time()
+        logg.info(
+            f"Distances calculated in {end_time - start_time:.2f} seconds"
+        )
 
     np.fill_diagonal(total_dist, np.nan)
     return total_dist
