@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from dask import compute
+from dask.diagnostics import ProgressBar
 from dask.distributed import Client, progress, Lock
 from pathlib import Path
 from scanpy import logging as logg
@@ -24,6 +25,7 @@ def calculate_distance_matrix_zarr(
     membership: dict | None = None,
     zarr_path: Path | str | None = None,
     chunk_size: int | None = None,
+    max_clones_per_chunk: int | None = None,
     num_cores: int = 1,
     memory_limit_gb: float | None = None,
     memory_safety_fraction: float = 0.3,
@@ -56,6 +58,9 @@ def calculate_distance_matrix_zarr(
         Path to save Zarr array (directory). If None, uses 'distance_matrix.zarr'.
     chunk_size : int | None, optional
         Number of sequences per computation chunk. If None, auto-computed.
+    max_clones_per_chunk : int | None, optional
+        Maximum number of clones per computation chunk. If None, no limit is applied
+        and instead if will be based on memory limits.
     num_cores : int
         Number of cores/workers to use
     memory_limit_gb : float | None, optional
@@ -143,8 +148,7 @@ def calculate_distance_matrix_zarr(
             fill_value=0.0,
         )
 
-    # zarr_lock = Lock("zarr_distance_matrix_lock") if num_cores > 1 else None
-    zarr_lock_name = "zarr_distance_matrix_lock" if num_cores > 1 else None
+    zarr_lock = Lock("zarr_distance_matrix_lock") if num_cores > 1 else None
 
     # Store metadata
     z_array.attrs["n_sequences"] = n
@@ -154,24 +158,24 @@ def calculate_distance_matrix_zarr(
 
     if verbose:
         logg.info(f"\nCreated Zarr array at: {zarr_path}")
-        logg.info(f"Compressor: {comp}")
+        logg.info(f"Compressor: {comp}\n")
 
     # Setup Dask client
     client = _setup_dask_client(num_cores, memory_limit_gb, verbose)
 
     try:
         # Compute distances and write blocks as they complete
-        _ = _compute_multicol_distances_streaming(
+        _compute_multicol_distances_streaming(
             dat_seq=dat_seq,
             func=func,
             pad_to_max=pad_to_max,
-            chunk_size=chunk_size,
             z_array=z_array,
-            lock_name=zarr_lock_name,
+            lock=zarr_lock,
+            chunk_size=chunk_size,
+            chunk_batch_limit=max_clones_per_chunk,
             client=client,
             membership=membership,
             serialise=False if num_cores > 1 else True,
-            verbose=verbose,
         )
 
         # Set diagonal to NaN
@@ -223,13 +227,13 @@ def _compute_multicol_distances_streaming(
     dat_seq: pd.DataFrame,
     func: Callable,
     pad_to_max: bool,
-    chunk_size: int,
     z_array: zarr.Array,
-    lock_name: str | None,
+    lock: Lock | None,
+    chunk_size: int,
+    chunk_batch_limit: int | None = None,
     client: Client | None = None,
     membership: dict | None = None,
     serialise: bool = False,
-    verbose: bool = True,
 ):
     """
     Compute distance matrix using concatenation across all columns,
@@ -253,129 +257,106 @@ def _compute_multicol_distances_streaming(
         return None
 
     delayed_blocks = []
+    start = logg.info(
+        msg="Setting up Dask scheduler and task graph...",
+    )
     if membership is not None:
-        index_list = list(dat_seq_clean.index)
-        index_map = {idx: i for i, idx in enumerate(index_list)}  # fast lookup
-        delayed_blocks = []
         # reduce to only clonotypes with >1 member
         membership = {k: v for k, v in membership.items() if len(v) > 1}
-        if verbose:
-            logg.info(
-                f"Computing distances within {len(membership)} clonotypes with more than 1 member..."
-            )
-        for _, members in membership.items():
-            # # check if len(members) > chunk_size to decide whether to further chunk
-            # if len(members) > chunk_size:
-            #     # split members into even subchunks
-            #     n_subchunks = max(1, math.ceil(len(members) / chunk_size))
-            #     member_chunks = np.array_split(members, n_subchunks)
-            #     chunk_sizes = [len(c) for c in member_chunks]
-            #     # iterate i/j in member_chunks:
-            #     for i, member_chunk_i in enumerate(member_chunks):
-            #         for j, member_chunk_j in enumerate(
-            #             # so that off-diagonal blocks (i<j) are computed only once
-            #             # is_diagonal should take care of transposing it later.
-            #             member_chunks[i:],
-            #             start=i,
-            #         ):
-            #             tmp_i = dat_seq_clean.loc[member_chunk_i]
-            #             tmp_j = dat_seq_clean.loc[member_chunk_j]
-            #             seqs_i = tmp_i.to_numpy(dtype=object)
-            #             seqs_j = tmp_j.to_numpy(dtype=object)
-            #             idxs_i = [index_map[m] for m in member_chunk_i]
-            #             idxs_j = [index_map[m] for m in member_chunk_j]
-            #             is_diagonal = i == j
-            #             if serialise:
-            #                 delayed_blocks.append(
-            #                     _compute_and_write_membership(
-            #                         chunk_i=seqs_i,
-            #                         chunk_j=seqs_j,
-            #                         func=func,
-            #                         pad_to_max=pad_to_max,
-            #                         z_array=z_array,
-            #                         idxs_i=idxs_i,
-            #                         idxs_j=idxs_j,
-            #                         is_diagonal=is_diagonal,
-            #                         lock_name=lock_name,
-            #                     )
-            #                 )
-            #             else:
-            #                 delayed_blocks.append(
-            #                     dask.delayed(_compute_and_write_membership)(
-            #                         chunk_i=seqs_i,
-            #                         chunk_j=seqs_j,
-            #                         func=func,
-            #                         pad_to_max=pad_to_max,
-            #                         z_array=z_array,
-            #                         idxs_i=idxs_i,
-            #                         idxs_j=idxs_j,
-            #                         is_diagonal=is_diagonal,
-            #                         lock_name=lock_name,
-            #                     )
-            #                 )
-            # else:
-            #     tmp = dat_seq_clean.loc[members]
-            #     seqs_tmp = tmp.to_numpy(dtype=object)
-            #     idxs = [index_map[m] for m in members]
-            #     if serialise:
-            #         delayed_blocks.append(
-            #             _compute_and_write_membership(
-            #                 chunk_i=seqs_tmp,
-            #                 chunk_j=seqs_tmp,
-            #                 func=func,
-            #                 pad_to_max=pad_to_max,
-            #                 z_array=z_array,
-            #                 idxs_i=idxs,
-            #                 idxs_j=idxs,
-            #                 is_diagonal=True,  # diagonal (within group)
-            #                 lock_name=lock_name,
-            #             )
-            #         )
-            #     else:
-            #         delayed_blocks.append(
-            #             dask.delayed(_compute_and_write_membership)(
-            #                 chunk_i=seqs_tmp,
-            #                 chunk_j=seqs_tmp,
-            #                 func=func,
-            #                 pad_to_max=pad_to_max,
-            #                 z_array=z_array,
-            #                 idxs_i=idxs,
-            #                 idxs_j=idxs,
-            #                 is_diagonal=True,  # diagonal (within group)
-            #                 lock_name=lock_name,
-            #             )
-            #         )
+        index_list = list(dat_seq_clean.index)
+        index_map = {idx: i for i, idx in enumerate(index_list)}
+        # Build reordering (flatten membership)
+        group_idx_flat = np.array(
+            [index_map[cell] for group in membership.values() for cell in group]
+        )
+        group_lengths = np.fromiter(
+            (len(v) for v in membership.values()), dtype=int
+        )
+        boundaries = np.cumsum(group_lengths[:-1])
+
+        # Reorder seqs contiguously
+        seqs_reordered = seqs[group_idx_flat]
+
+        # Now each membership group is a contiguous slice (a view)
+        seqs_m = np.split(seqs_reordered, boundaries)
+        idx_m = np.split(group_idx_flat, boundaries)
+
+        batched_idx_m = []
+        batched_seqs_m = []
+
+        current_batch_idx = []
+        current_batch_seqs = []
+        current_batch_size = 0  # total number of sequences in current batch
+        current_batch_clones = 0  # total number of clones in current batch
+
+        for idx, seq in zip(idx_m, seqs_m):
+            n = len(idx)
+            # Determine if the current batch should be finalized
+            finalize = False
+            if (
+                chunk_batch_limit is not None
+                and current_batch_clones >= chunk_batch_limit
+            ):
+                finalize = True
+            elif (
+                chunk_batch_limit is None
+                and current_batch_size + n > chunk_size
+                and current_batch_size > 0
+            ):
+                finalize = True
+
+            if finalize:
+                # finalize current batch
+                batched_idx_m.append(current_batch_idx)
+                batched_seqs_m.append(current_batch_seqs)
+                current_batch_idx, current_batch_seqs = [], []
+                current_batch_size, current_batch_clones = 0, 0
+
+            # Add current clonotype to batch
+            current_batch_idx.append(idx)
+            current_batch_seqs.append(seq)
+            current_batch_size += n
+            current_batch_clones += 1
+
+        # Add the last batch
+        if current_batch_idx:
+            batched_idx_m.append(current_batch_idx)
+            batched_seqs_m.append(current_batch_seqs)
+
+        # average number of clonotypes per batch
+        avg_clonotypes_per_batch = sum(len(b) for b in batched_seqs_m) / len(
+            batched_idx_m
+        )
+
+        logg.info(
+            msg=f"Created {len(batched_seqs_m)} chunks distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
+        )
+        for idx, seq in zip(batched_idx_m, batched_seqs_m):
             if serialise:
                 delayed_blocks.append(
-                    _compute_and_write_membership(
-                        members=members,
+                    _process_batch(
+                        batch_seqs_m=seq,
+                        batch_idx_m=idx,
                         chunk_size=chunk_size,
-                        seqs_df=dat_seq_clean.loc[members],
-                        index_map=index_map,
                         func=func,
                         pad_to_max=pad_to_max,
                         z_array=z_array,
-                        lock_name=lock_name,
+                        lock=lock,
                     )
                 )
             else:
                 delayed_blocks.append(
-                    dask.delayed(_compute_and_write_membership)(
-                        members=members,
+                    dask.delayed(_process_batch)(
+                        batch_seqs_m=seq,
+                        batch_idx_m=idx,
                         chunk_size=chunk_size,
-                        seqs_df=dat_seq_clean.loc[members],
-                        index_map=index_map,
                         func=func,
                         pad_to_max=pad_to_max,
                         z_array=z_array,
-                        lock_name=lock_name,
+                        lock=lock,
                     )
                 )
     else:
-        if verbose:
-            logg.info(
-                f"Processing {m} sequences across {dat_seq_clean.shape[1]} columns..."
-            )
         # Determine number of chunks
         n_chunks = max(1, math.ceil(m / chunk_size))
         chunks_list = np.array_split(seqs, n_chunks)
@@ -401,7 +382,7 @@ def _compute_multicol_distances_streaming(
                             start_j=start_j,
                             end_j=end_j,
                             is_diagonal=is_diagonal,
-                            lock_name=lock_name,
+                            lock=lock,
                         )
                     )
                 else:
@@ -417,25 +398,20 @@ def _compute_multicol_distances_streaming(
                             start_j=start_j,
                             end_j=end_j,
                             is_diagonal=is_diagonal,
-                            lock_name=lock_name,
+                            lock=lock,
                         )
                     )
 
-    if verbose:
-        logg.info(f"Computing and writing {len(delayed_blocks)} blocks...")
+    logg.info(
+        deep=f"Starting computation of {len(delayed_blocks)} chunks...",
+    )
     # Compute blocks - they write to Zarr as they complete
     if client is not None:
         futures = client.compute(delayed_blocks)
-        if verbose:
-            progress(futures)
+        progress(futures)
         client.gather(futures)
     else:
-        if verbose:
-            from dask.diagnostics import ProgressBar
-
-            with ProgressBar():
-                compute(*delayed_blocks, scheduler="threads")
-        else:
+        with ProgressBar():
             compute(*delayed_blocks, scheduler="threads")
 
     return True
@@ -482,113 +458,68 @@ def _compute_and_write_block(
     start_j: int,
     end_j: int,
     is_diagonal: bool,
-    lock_name: str | None,
+    lock: Lock | None,
 ):
     """
     Compute a single block and write it directly to Zarr.
     """
-    lock = Lock(lock_name) if lock_name is not None else None
     block = _compute_block_multicol(chunk_i, chunk_j, func, pad_to_max)
 
     if lock is not None:
         with lock:
             # Write to Zarr immediately
-            z_array[start_i:end_i, start_j:end_j] += block
+            z_array[start_i:end_i, start_j:end_j] = block
 
             # If not diagonal block, write transpose too
             if not is_diagonal:
-                z_array[start_j:end_j, start_i:end_i] += block.T
+                z_array[start_j:end_j, start_i:end_i] = block.T
     else:
         # Write to Zarr immediately
-        z_array[start_i:end_i, start_j:end_j] += block
+        z_array[start_i:end_i, start_j:end_j] = block
 
         # If not diagonal block, write transpose too
         if not is_diagonal:
-            z_array[start_j:end_j, start_i:end_i] += block.T
+            z_array[start_j:end_j, start_i:end_i] = block.T
 
     return True  # Just return success flag
 
 
-# def _compute_and_write_membership(
-#     chunk_i: np.ndarray,
-#     chunk_j: np.ndarray,
-#     func: Callable,
-#     pad_to_max: bool,
-#     z_array: zarr.Array,
-#     idxs_i: list[int],
-#     idxs_j: list[int],
-#     is_diagonal: bool,
-#     lock: Lock | None,
-# ):
-#     """
-#     Compute a block for specific row/column indices (e.g., membership subsets)
-#     and write it directly to Zarr.
-#     """
-#     # Compute the block using the distance function
-#     block = _compute_block_multicol(chunk_i, chunk_j, func, pad_to_max)
-#     if lock is not None:
-#         with lock:
-#             # Use np.ix_ to assign to the correct indices in the zarr array
-#             z_array[np.ix_(idxs_i, idxs_j)] = block
-
-#             # If not diagonal, write transpose to the symmetric location
-#             if not is_diagonal:
-#                 z_array[np.ix_(idxs_j, idxs_i)] = block.T
-#     else:
-#         z_array[np.ix_(idxs_i, idxs_j)] = block
-#         if not is_diagonal:
-#             z_array[np.ix_(idxs_j, idxs_i)] = block.T
-
-#     return True
-
-
-def _compute_and_write_membership(
-    members: list,
+def _process_batch(
+    batch_seqs_m: list[np.ndarray],
+    batch_idx_m: list[list[int]],
     chunk_size: int,
-    seq_df: pd.DataFrame,
-    index_map: dict,
     func: Callable,
     pad_to_max: bool,
     z_array: zarr.Array,
-    lock_name: str | None,
+    lock: Lock | None,
 ):
     """
-    Extract sequences for members and delegate to computation function
-    that handles chunking internally.
+    Process a batch of membership groups.
     """
-    # Extract sequences and indices for all members
-    # tmp = dat_seq_clean.loc[members]
-
-    seqs = seq_df.to_numpy(dtype=object)
-    idxs = [index_map[m] for m in members]
-
-    # Delegate to computation function that handles chunking
-    _compute_and_write_with_chunking(
-        seqs=seqs,
-        idxs=idxs,
-        chunk_size=chunk_size,
-        func=func,
-        pad_to_max=pad_to_max,
-        z_array=z_array,
-        lock_name=lock_name,
-    )
-
-    return True
+    for idx, seq in zip(batch_idx_m, batch_seqs_m):
+        _compute_and_write_membership(
+            seqs=seq,
+            idxs=idx,
+            chunk_size=chunk_size,
+            func=func,
+            pad_to_max=pad_to_max,
+            z_array=z_array,
+            lock=lock,
+        )
 
 
-def _compute_and_write_with_chunking(
+def _compute_and_write_membership(
     seqs: np.ndarray,
     idxs: list[int],
     chunk_size: int,
     func: Callable,
     pad_to_max: bool,
     z_array: zarr.Array,
-    lock_name: str | None,
+    lock: Lock | None,
 ):
     """
     Compute blocks with internal chunking if needed and write to Zarr.
     """
-    lock = Lock(lock_name) if lock_name is not None else None
     # Check if chunking is needed
     if len(seqs) > chunk_size:
         # Split into subchunks
@@ -629,43 +560,6 @@ def _compute_and_write_with_chunking(
                 z_array[np.ix_(idxs, idxs)] = block
         else:
             z_array[np.ix_(idxs, idxs)] = block
-
-
-# def _process_chunk_pair(
-#     member_chunk_i: np.ndarray,
-#     member_chunk_j: np.ndarray,
-#     dat_seq_clean: pd.DataFrame,
-#     index_map: dict,
-#     func: Callable,
-#     pad_to_max: bool,
-#     z_array: zarr.Array,
-#     is_diagonal: bool,
-#     lock: Lock | None,
-# ):
-#     """
-#     Process a single pair of member chunks and write to Zarr.
-#     """
-#     # Extract sequences and indices
-#     tmp_i = dat_seq_clean.loc[member_chunk_i]
-#     tmp_j = dat_seq_clean.loc[member_chunk_j]
-#     seqs_i = tmp_i.to_numpy(dtype=object)
-#     seqs_j = tmp_j.to_numpy(dtype=object)
-#     idxs_i = [index_map[m] for m in member_chunk_i]
-#     idxs_j = [index_map[m] for m in member_chunk_j]
-
-#     # Compute the block
-#     block = _compute_block_multicol(seqs_i, seqs_j, func, pad_to_max)
-
-#     # Write to Zarr
-#     if lock is not None:
-#         with lock:
-#             z_array[np.ix_(idxs_i, idxs_j)] = block
-#             if not is_diagonal:
-#                 z_array[np.ix_(idxs_j, idxs_i)] = block.T
-#     else:
-#         z_array[np.ix_(idxs_i, idxs_j)] = block
-#         if not is_diagonal:
-#             z_array[np.ix_(idxs_j, idxs_i)] = block.T
 
 
 def _auto_chunk_size(

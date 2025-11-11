@@ -3172,18 +3172,8 @@ def check_contigs(
         out_dat.germline = data.germline
     if adata_provided:
         transfer(adata_, out_dat, overwrite=True)
-        logg.info(
-            " finished",
-            time=start,
-            deep=("Returning Dandelion and AnnData objects: \n"),
-        )
         return (out_dat, adata_)
     else:
-        logg.info(
-            " finished",
-            time=start,
-            deep=("Returning Dandelion object: \n"),
-        )
         return out_dat
 
 

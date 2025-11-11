@@ -43,7 +43,7 @@ def generate_network(
     sample: int | None = None,
     force_replace: bool = False,
     verbose: bool = True,
-    return_graph: bool = True,
+    compute_graph: bool = True,
     compute_layout: bool = True,
     layout_method: Literal["mod_fr", "sfdp"] = "sfdp",
     expanded_only: bool = False,
@@ -56,6 +56,7 @@ def generate_network(
     lazy: bool = False,
     zarr_path: Path | str | None = None,
     chunk_size: int | None = None,
+    chunk_clone_limit: int | None = None,
     memory_limit_gb: float | None = None,
     memory_safety_fraction: float = 0.3,
     compress: bool = True,
@@ -86,6 +87,8 @@ def generate_network(
         whether or not to sample with replacement when `sample` is smaller or equal to than the number of cells.
     verbose : bool, optional
         whether or not to print the progress bars.
+    compute_graph : bool, optional
+        whether or not to generate the graph after distance matrix calculation.
     compute_layout : bool, optional
         whether or not to generate the layout. May be time consuming if too many cells.
     layout_method : Literal["sfdp", "mod_fr"], optional
@@ -95,7 +98,7 @@ def generate_network(
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
-        whether or not to just compute the layout using the existing graph if it exists in the Dandelion object.
+        whether or not to just compute the layout using the existing graph if it exists in the object.
     num_cores : int, optional
         number of cores to use for parallelizable steps. -1 uses all available cores.
     sequential_chain : bool, optional
@@ -123,6 +126,9 @@ def generate_network(
         Chunk size for distance matrix computation when using lazy mode. If None, chunk size is automatically computed
         based on available memory and number of cores. The automatic chunk size can be further adjusted using
         `memory_limit_gb` and `memory_safety_fraction` parameters.
+    chunk_clone_limit: int | None, optional
+        Maximum number of clones to process per chunk when using lazy mode and distance method = "clone". If None, chunk sizes will be
+        automatically determined based on available memory and number of cores.
     memory_limit_gb: float | None, optional
         Memory limit per worker in GB for Dask. None defaults to all available memory/cores.
     memory_safety_fraction: float, optional
@@ -150,11 +156,14 @@ def generate_network(
 
     clone_key = clone_key if clone_key is not None else "clone_id"
     dist_func = levenshtein if dist_func is None else dist_func
-    if clone_key not in vdj_data.data:
-        raise ValueError(
-            "Data does not contain clone information. Please run find_clones."
-        )
+    if not compute_graph:
+        compute_layout = False
 
+    if distance_mode == "clone" or compute_graph or compute_layout:
+        if clone_key not in vdj_data.data:
+            raise ValueError(
+                "Data does not contain clone information. Please run ddl.tl.find_clones."
+            )
     regenerate = True
     if vdj_data.graph is not None:
         if (min_size != 2) or (sample is not None):
@@ -217,21 +226,22 @@ def generate_network(
         # ensure that dat_seq matches order of vdj_data.metadata
         dat_seq = dat_seq.reindex(vdj_data.metadata.index)
         dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
-        dat_clone = querier.retrieve(
-            query=clone_key, retrieve_mode="merge and unique only"
-        )
+        if distance_mode == "clone":
+            dat_clone = querier.retrieve(
+                query=clone_key, retrieve_mode="merge and unique only"
+            )
 
-        dat_clone = dat_clone[clone_key].str.split("|", expand=True)
-        membership = Tree()
-        for i, j in dat_clone.iterrows():
-            jjj = [jj for jj in j if present(jj)]
-            for ij in jjj:
-                membership[ij][i].value = 1
-        membership = {i: list(j) for i, j in dict(membership).items()}
+            dat_clone = dat_clone[clone_key].str.split("|", expand=True)
+            membership = Tree()
+            for i, j in dat_clone.iterrows():
+                jjj = [jj for jj in j if present(jj)]
+                for ij in jjj:
+                    membership[ij][i].value = 1
+            membership = {i: list(j) for i, j in dict(membership).items()}
 
         # compute total_dist using chosen mode (original uses membership)
         logg.info(
-            f"Calculating distance matrix {'lazily' if lazy else ''} with mode = '{distance_mode}'"
+            f"Calculating distance matrix {'lazily' if lazy else ''} with mode = '{distance_mode}'\n"
         )
         if distance_mode == "clone":
             if lazy:
@@ -246,6 +256,7 @@ def generate_network(
                     membership=membership,
                     zarr_path=zarr_path,
                     chunk_size=chunk_size,
+                    max_clones_per_chunk=chunk_clone_limit,
                     num_cores=num_cores,
                     memory_limit_gb=memory_limit_gb,
                     memory_safety_fraction=memory_safety_fraction,
@@ -309,7 +320,8 @@ def generate_network(
                         num_cores=num_cores,
                         verbose=verbose,
                     )
-        if return_graph:
+        if compute_graph:
+
             # build cluster_dist as before (only include groups with >1 member)
             tmp_clusterdist2 = {
                 c: membership[c] for c in membership if len(membership[c]) > 1
@@ -397,8 +409,8 @@ def generate_network(
         distances = total_dist if lazy else csr_matrix(total_dist)
     else:
         distances = vdj_data.distances
-    graph = (g, g_) if return_graph else None
-    layout = (lyt, lyt_) if return_graph and compute_layout else None
+    graph = (g, g_) if compute_graph else None
+    layout = (lyt, lyt_) if compute_graph and compute_layout else None
     if sample is not None:
         out = Dandelion(
             data=dat_,
