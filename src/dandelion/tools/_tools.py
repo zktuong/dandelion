@@ -2365,7 +2365,7 @@ def from_scirpy(data: AnnData | MuData) -> Dandelion:
 
 def _reverse_transfer(
     data: AnnData | MuData,
-    dandelion: "Dandelion",
+    dandelion: Dandelion,
     clone_key: str = "clone_id",
 ) -> None:
     """
