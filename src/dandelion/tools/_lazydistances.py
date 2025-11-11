@@ -403,7 +403,7 @@ def _compute_multicol_distances_streaming(
                     )
 
     logg.info(
-        deep=f"Starting computation of {len(delayed_blocks)} chunks...",
+        f"Starting computation of {len(delayed_blocks)} chunks...",
     )
     # Compute blocks - they write to Zarr as they complete
     if client is not None:
