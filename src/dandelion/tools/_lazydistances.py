@@ -1,5 +1,6 @@
 from __future__ import annotations
 import math
+import sys
 import zarr
 import zarr.storage
 
@@ -647,9 +648,12 @@ def _setup_dask_client(
 
     client_kwargs = {
         "n_workers": num_cores,
-        "threads_per_worker": 1,
         "processes": True,  # Critical for memory isolation
     }
+
+    # Only set threads_per_worker if not Python 3.14
+    if sys.version_info.major == 3 and sys.version_info.minor < 14:
+        client_kwargs["threads_per_worker"] = 1
 
     if memory_limit_gb is not None:
         client_kwargs["memory_limit"] = f"{memory_limit_gb}GB"

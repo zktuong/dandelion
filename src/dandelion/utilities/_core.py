@@ -216,7 +216,7 @@ class Dandelion:
             _data = self._data[self._data["cell_id"].isin(selected_cells)]
             if self.distances is not None:
                 # also filter distances matrix accordingly. the distance matrix is in the same order as metadata
-                _distances = self.distances[np.ix_(idx, idx)]
+                _distances = self.distances[idx, :][:, idx]
             else:
                 _distances = None
         elif idxtype == "data":
@@ -231,7 +231,7 @@ class Dandelion:
                 meta_indices = np.where(
                     self._metadata.index.isin(selected_cells)
                 )[0]
-                _distances = self.distances[np.ix_(meta_indices, meta_indices)]
+                _distances = self.distances[meta_indices, :][:, meta_indices]
             else:
                 _distances = None
 
@@ -1061,7 +1061,7 @@ class Dandelion:
     def compute(self):
         """Convert self.distances from a lazy array to a concrete numpy array."""
         if not isinstance(self.distances, np.ndarray):
-            self.distances = self.distances.compute()
+            self.distances = csr_matrix(self.distances.compute())
 
     def copy(self) -> "Dandelion":
         """
