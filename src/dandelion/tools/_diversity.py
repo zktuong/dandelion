@@ -114,8 +114,8 @@ def clone_rarefaction(
     res_ = pd.DataFrame.from_dict(res, orient="index")
 
     # remove those with no counts
-    print(
-        "removing due to zero counts:",
+    logg.info(
+        "removing due to zero counts: "
         ", ".join(
             [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]
         ),

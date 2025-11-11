@@ -35,7 +35,6 @@ from dandelion.utilities._utilities import (
     all_missing,
     all_missing2,
     sanitize_data_for_saving,
-    sanitize_column,
     sanitize_data,
     check_travdv,
     load_data,
@@ -175,7 +174,7 @@ class Dandelion:
         for attr in ["data", "metadata"]:
             try:
                 keys = getattr(self, attr).keys()
-            except:
+            except AttributeError:
                 keys = []
             if len(keys) > 0:
                 descr += f"\n    {attr}: {str(list(keys))[1:-1]}"
@@ -324,7 +323,7 @@ class Dandelion:
         """Ensure that the data is sanitized."""
         if not self._is_sanitized(self.data):
             if verbose:
-                print(
+                logg.info(
                     "The AIRR data needs to undergo sanitization, apologies for any delays..."
                 )
             self._data = sanitize_data(self.data)
@@ -1450,14 +1449,14 @@ class Dandelion:
         if germline is None:
             try:
                 gml = Path(env["GERMLINE"])
-            except:
+            except KeyError:
                 raise KeyError(
                     "Environmental variable GERMLINE must be set. Otherwise, "
                     + "please provide path to folder containing germline IGHV, IGHD, and IGHJ fasta files."
                 )
             gml = gml / db / org / "vdj"
         else:
-            if type(germline) is list:
+            if isinstance(germline, list):
                 if len(germline) < 3:
                     raise TypeError(
                         "Input for germline is incorrect. Please provide path to folder containing germline IGHV, IGHD, "

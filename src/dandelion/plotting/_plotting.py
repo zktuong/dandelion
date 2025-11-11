@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import warnings
 
 import matplotlib.patches as mpatches
@@ -21,10 +23,13 @@ from nxviz import annotate
 
 from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
-from typing import Callable, Literal
+from typing import Callable, Literal, TYPE_CHECKING
 
 from dandelion.utilities._core import Dandelion
-from dandelion.utilities._utilities import MuData
+
+if TYPE_CHECKING:
+    from anndata import AnnData
+    from mudata import MuData
 
 
 def clone_network(

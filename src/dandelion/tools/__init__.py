@@ -16,11 +16,11 @@ from dandelion.tools._tools import (
     from_scirpy,
 )
 from dandelion.tools._network import (
-    extract_edge_weights,
     clone_degree,
     clone_centrality,
     generate_network,
 )
+from dandelion.tools._layout import extract_edge_weights
 from dandelion.tools._diversity import clone_diversity, clone_rarefaction
 from dandelion.tools._trajectory import (
     setup_vdj_pseudobulk,

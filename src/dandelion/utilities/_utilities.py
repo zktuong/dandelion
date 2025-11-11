@@ -9,6 +9,7 @@ import pandas as pd
 
 from airr import RearrangementSchema
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 from subprocess import run
 from typing import (
@@ -21,8 +22,6 @@ from typing import (
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
 
 F = TypeVar("F", bound=Callable)  # Define a TypeVar for any callable type
-MuData = TypeVar("mudata._core.mudata.MuData")
-PResults = TypeVar("palantir.presults.PResults")
 
 RECEPTOR_SET = {"B", "abT", "gdT"}
 TRUES = ["T", "t", "True", "true", "TRUE", True, "1"]
@@ -65,12 +64,6 @@ EMPTIES = EMPTIES_STR + [
 
 DEFAULT_PREFIX = "all"
 BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
-
-# for compatibility with python>=3.10
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections.abc import Iterable
 
 
 class Tree(defaultdict):
@@ -742,15 +735,12 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
     """
     if obj is not None:
         if os.path.isfile(str(obj)):
-            try:
-                obj_ = pd.read_csv(obj, sep="\t")
-            except FileNotFoundError as e:
-                print(e)
+            obj_ = pd.read_csv(obj, sep="\t")
         elif isinstance(obj, pd.DataFrame):
             obj_ = obj.copy()
         else:
-            raise FileNotFoundError(
-                "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
+            raise ValueError(
+                "Either input is not of pandas DataFrame or AIRR file does not exist."
             )
 
         if "sequence_id" in obj_.columns:
@@ -759,7 +749,8 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
             obj_.set_index("sequence_id", drop=False, inplace=True)
             if "cell_id" not in obj_.columns:
                 obj_["cell_id"] = [
-                    c.split("_contig")[0] for c in obj_["sequence_id"]
+                    c.split("_contig")[0] if "_contig" in c else c
+                    for c in obj_["sequence_id"]
                 ]
             # assert that cell_id is string
             obj_["cell_id"] = obj_["cell_id"].astype(str)
@@ -1405,3 +1396,35 @@ def get_vcall_key(data: dict, v_call_key: str) -> str:
         return v_call_key
     else:
         return "v_call"
+
+
+def dist_func_long_sep(
+    x: list[str],
+    y: list[str],
+    func: Callable,
+    pad_to_max: bool = False,
+    sep: str = "#",
+) -> float:
+    """
+    Concatenate two sequences column-wise with a separator that is
+    guaranteed to be longer than any individual column.
+    """
+    # Dynamically choose separator length: longer than the max column
+    if pad_to_max:
+        # for each index position in x/y, calculate the max length
+        # and the difference to pad with sep for the shorter one
+        max_len = [max(len(a), len(b)) for a, b in zip(x, y)]
+        s1_list, s2_list = [], []
+        for s1, s2, le in zip(x, y, max_len):
+            s1_list.append(s1.ljust(le + 1, sep))
+            s2_list.append(s2.ljust(le + 1, sep))
+        s1 = "".join(s1_list)
+        s2 = "".join(s2_list)
+    else:
+        max_len = max(max(len(s) for s in x), max(len(s) for s in y))
+        long_sep = sep * (max_len + 1)
+
+        s1 = long_sep.join(x)
+        s2 = long_sep.join(y)
+    # print(s1, s2)
+    return func(s1, s2)

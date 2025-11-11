@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 import os
 import re
@@ -20,11 +21,14 @@ from scipy.sparse import csr_matrix
 from scipy.spatial.distance import pdist, squareform
 from subprocess import run
 from tqdm import tqdm
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mudata import MuData
+    from awkward import Array
 
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import (
-    MuData,
     FALSES,
     VCALL,
     JCALL,
@@ -1762,7 +1766,7 @@ def vj_usage_pca(
 
     df2 = pd.DataFrame(index=vdj_df.index, columns=["cell_type"])
     df2["cell_type"] = list(vdj_df.index)
-    vdj_df_adata = sc.AnnData(
+    vdj_df_adata = AnnData(
         X=vdj_df.values, obs=df2, var=pd.DataFrame(index=vdj_df.columns)
     )
     vdj_df_adata.obs["cell_count"] = pd.Series(
@@ -2420,7 +2424,7 @@ def _reverse_transfer(
     dandelion.update_data()
 
 
-def from_ak(airr: "Array") -> pd.DataFrame:
+def from_ak(airr: Array) -> pd.DataFrame:
     """
     Convert an AIRR-formatted array to a pandas DataFrame.
 
@@ -2465,7 +2469,7 @@ def from_ak(airr: "Array") -> pd.DataFrame:
 def to_ak(
     data: pd.DataFrame,
     **kwargs,
-) -> tuple["Array", pd.DataFrame]:
+) -> tuple[Array, pd.DataFrame]:
     """
     Convert data from a DataFrame to an AnnData object with AIRR format.
 
@@ -2493,7 +2497,7 @@ def to_ak(
 
 
 def _create_anndata(
-    airr: "Array",
+    airr: Array,
     obs: pd.DataFrame,
     adata: AnnData | None = None,
 ) -> AnnData:
@@ -2755,7 +2759,7 @@ def concat(
         if len(genotyped_v_call) != len(vdjs_):
             if verbose:
                 # print a warning
-                print(
+                logg.info(
                     "For consistency, 'v_call_genotyped' will be used where available. Filling missing values from 'v_call'."
                 )
             for i in range(0, len(vdjs_)):

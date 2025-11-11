@@ -21,9 +21,9 @@ def test_loaddata(create_testfolder):
     file2 = create_testfolder / "test_airr_rearrangements2.tsv"
     dat = ddl.utl.load_data(file1)
     assert isinstance(dat, pd.DataFrame)
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         dat2 = ddl.utl.load_data(file2)
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         dat2 = ddl.utl.load_data("something.tsv")
     dat2 = pd.read_csv(file1, sep="\t")
     dat2.drop("sequence_id", inplace=True, axis=1)
