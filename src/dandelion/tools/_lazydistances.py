@@ -329,7 +329,7 @@ def _compute_multicol_distances_streaming(
         )
 
         logg.info(
-            msg=f"Created {len(batched_seqs_m)} chunks distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
+            msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
         for idx, seq in zip(batched_idx_m, batched_seqs_m):
             if serialise:
