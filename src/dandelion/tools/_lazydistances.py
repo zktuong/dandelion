@@ -175,7 +175,7 @@ def calculate_distance_matrix_zarr(
         logg.info(f"Compressor: {comp}\n")
 
     # Setup Dask client
-    client = _setup_dask_client(num_cores, memory_limit_gb, verbose)
+    client = _setup_dask_client(num_cores, memory_limit_gb)
 
     try:
         # Compute distances and write blocks as they complete
@@ -646,9 +646,7 @@ def _auto_chunk_size(
 
 
 def _setup_dask_client(
-    num_cores: int,
-    memory_limit_gb: float | None = None,
-    verbose: bool = True,
+    num_cores: int, memory_limit_gb: float | None = None
 ) -> Client | None:
     """
     Setup Dask distributed client.
@@ -659,8 +657,6 @@ def _setup_dask_client(
         Number of workers
     memory_limit_gb : float, optional
         Memory limit per worker
-    verbose : bool, optional
-        Whether to logg.info client dashboard link.
 
     Returns
     -------
@@ -690,7 +686,6 @@ def _setup_dask_client(
 
     client = Client(**client_kwargs)
 
-    if verbose:
-        logg.info(f"Dask client started: {client.dashboard_link}")
+    logg.info(f"Dask client started: {client.dashboard_link}")
 
     return client
