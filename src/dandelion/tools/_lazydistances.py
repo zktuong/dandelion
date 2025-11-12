@@ -173,6 +173,7 @@ def calculate_distance_matrix_zarr(
             z_array=z_array,
             lock=zarr_lock,
             chunk_size=chunk_size,
+            num_cores=num_cores,
             chunk_batch_limit=max_clones_per_chunk,
             client=client,
             membership=membership,
@@ -231,6 +232,7 @@ def _compute_multicol_distances_streaming(
     z_array: zarr.Array,
     lock: Lock | None,
     chunk_size: int,
+    num_cores: int,
     chunk_batch_limit: int | None = None,
     client: Client | None = None,
     membership: dict | None = None,
@@ -290,6 +292,16 @@ def _compute_multicol_distances_streaming(
         current_batch_size = 0  # total number of sequences in current batch
         current_batch_clones = 0  # total number of clones in current batch
 
+        # Calculate soft batch limit if not provided
+        if chunk_batch_limit is None and num_cores > 1:
+            total_clonotypes = len(membership)
+            # Target: distribute clonotypes across cores with some overhead for load balancing
+            # Use 2x cores to allow for better parallelization
+            target_batches = num_cores * 2
+            soft_chunk_batch_limit = max(1, total_clonotypes // target_batches)
+        else:
+            soft_chunk_batch_limit = None
+
         for idx, seq in zip(idx_m, seqs_m):
             n = len(idx)
             # Determine if the current batch should be finalized
@@ -298,6 +310,12 @@ def _compute_multicol_distances_streaming(
                 chunk_batch_limit is not None
                 and current_batch_clones >= chunk_batch_limit
             ):
+                finalize = True
+            elif (
+                soft_chunk_batch_limit is not None
+                and current_batch_clones >= soft_chunk_batch_limit
+            ):
+                # Use soft limit if no hard limit and batch is getting large
                 finalize = True
             elif (
                 chunk_batch_limit is None
