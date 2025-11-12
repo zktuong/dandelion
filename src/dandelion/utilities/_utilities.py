@@ -1409,21 +1409,36 @@ def dist_func_long_sep(
     Concatenate two sequences column-wise with a separator that is
     guaranteed to be longer than any individual column.
     """
-    # Dynamically choose separator length: longer than the max column
     if pad_to_max:
-        # for each index position in x/y, calculate the max length
-        # and the difference to pad with sep for the shorter one
         max_len = [max(len(a), len(b)) for a, b in zip(x, y)]
-        s1_list, s2_list = [], []
+        s1_parts, s2_parts = [], []
+
         for s1, s2, le in zip(x, y, max_len):
-            s1_list.append(s1.ljust(le + 1, sep))
-            s2_list.append(s2.ljust(le + 1, sep))
-        s1 = "".join(s1_list)
-        s2 = "".join(s2_list)
+            # Pad each element
+            s1_parts.append(s1.ljust(le + 1, sep))
+            s2_parts.append(s2.ljust(le + 1, sep))
+
+        # Join with per-column separators
+        # Each separator is longer than its corresponding column's padded length
+        s1_result, s2_result = [], []
+        for i, (s1_part, s2_part, le) in enumerate(
+            zip(s1_parts, s2_parts, max_len)
+        ):
+            s1_result.append(s1_part)
+            s2_result.append(s2_part)
+
+            # Add separator between columns (but not after the last one)
+            if i < len(max_len) - 1:
+                col_sep = sep * (le + 2)  # Longer than padded length (le + 1)
+                s1_result.append(col_sep)
+                s2_result.append(col_sep)
+
+        s1 = "".join(s1_result)
+        s2 = "".join(s2_result)
     else:
+        # Dynamically choose separator length: longer than the max column
         max_len = max(max(len(s) for s in x), max(len(s) for s in y))
         long_sep = sep * (max_len + 1)
-
         s1 = long_sep.join(x)
         s2 = long_sep.join(y)
     # print(s1, s2)
