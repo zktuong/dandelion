@@ -85,6 +85,19 @@ def calculate_distance_matrix_zarr(
     np.ndarray | da.Array
         Distance matrix in requested format
     """
+    # reduce to only clonotypes with >1 member
+    if membership is not None:
+        membership = {k: v for k, v in membership.items() if len(v) > 1}
+        if len(membership) < 1:
+            # there's nothing to compute. so just return
+            logg.info(
+                msg=(
+                    "No clonotypes with more than one member found. "
+                    "Try using distance_mode = 'full' instead.\n"
+                    "Skipping distance computation.\n"
+                )
+            )
+            return
     # Try import the dask dependencies otherwise raise error and tell user to install dask[complete]
     try:
         import dask.array as da
@@ -260,12 +273,11 @@ def _compute_multicol_distances_streaming(
         return None
 
     delayed_blocks = []
-    start = logg.info(
+    logg.info(
         msg="Setting up Dask scheduler and task graph...",
     )
     if membership is not None:
-        # reduce to only clonotypes with >1 member
-        membership = {k: v for k, v in membership.items() if len(v) > 1}
+        # Build index map
         index_list = list(dat_seq_clean.index)
         index_map = {idx: i for i, idx in enumerate(index_list)}
         # Build reordering (flatten membership)

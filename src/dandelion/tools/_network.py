@@ -241,7 +241,7 @@ def generate_network(
 
         # compute total_dist using chosen mode (original uses membership)
         logg.info(
-            f"Calculating distance matrix {'lazily' if lazy else ''} with mode = '{distance_mode}'\n"
+            f"Calculating distance matrix {'lazily' if lazy else ''} with distance_mode = '{distance_mode}'\n"
         )
         if distance_mode == "clone":
             if lazy:
