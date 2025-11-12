@@ -1602,6 +1602,10 @@ def vj_usage_pca(
     groupby: str,
     min_size: int = 20,
     mode: Literal["B", "abT", "gdT"] = "abT",
+    use_vdj_v: bool = True,
+    use_vdj_j: bool = True,
+    use_vj_v: bool = True,
+    use_vj_j: bool = True,
     transfer_mapping=None,
     n_comps: int = 30,
     groups: list[str] | None = None,
@@ -1627,6 +1631,14 @@ def vj_usage_pca(
         Minimum cell size numbers to keep for computing the final matrix. Defaults to 20.
     mode : Literal["B", "abT", "gdT"], optional
         Mode for extract the V/J genes.
+    use_vdj_v : bool, optional
+        Whether to use V gene from VDJ contigs for tabulation. Defaults to True.
+    use_vdj_j : bool, optional
+        Whether to use J gene from VDJ contigs for tabulation. Defaults to True.
+    use_vj_v : bool, optional
+        Whether to use V genes from VJ contigs for tabulation. Defaults to True.
+    use_vj_j : bool, optional
+        Whether to use J genes from VJ contigs for tabulation. Defaults to True.
     transfer_mapping : None, optional
         If provided, the columns will be mapped to the output AnnData from the original AnnData.
     n_comps : int, optional
@@ -1653,21 +1665,10 @@ def vj_usage_pca(
         ].copy()
 
     if groups is not None:
-        adata_ = adata_[adata_.obs[group].isin(groups)].copy()
+        adata_ = adata_[adata_.obs[groupby].isin(groups)].copy()
 
-    # prep data
-    adata_.obs["v_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata_.obs["v_call_" + mode + "_VJ"]
-    ]
-    adata_.obs["j_call_" + mode + "_VJ_main"] = [
-        x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VJ"]
-    ]
-    adata_.obs["v_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata_.obs["v_call_" + mode + "_VDJ"]
-    ]
-    adata_.obs["j_call_" + mode + "_VDJ_main"] = [
-        x.split("|")[0] for x in adata_.obs["j_call_" + mode + "_VDJ"]
-    ]
+    if not use_vj_v and not use_vj_j and not use_vdj_v and not use_vdj_j:
+        raise ValueError("At least one of the use_vj/vdj_v/j must be True.")
 
     df1 = pd.DataFrame(
         {
@@ -1677,26 +1678,38 @@ def vj_usage_pca(
     )
     new_list = df1.loc[df1["cellcount"] >= min_size, groupby]
 
-    vj_v_list = [
-        x
-        for x in list(set(adata_.obs["v_call_" + mode + "_VJ_main"]))
-        if x not in ["None", "No_contig"]
-    ]
-    vj_j_list = [
-        x
-        for x in list(set(adata_.obs["j_call_" + mode + "_VJ_main"]))
-        if x not in ["None", "No_contig"]
-    ]
-    vdj_v_list = [
-        x
-        for x in list(set(adata_.obs["v_call_" + mode + "_VDJ_main"]))
-        if x not in ["None", "No_contig"]
-    ]
-    vdj_j_list = [
-        x
-        for x in list(set(adata_.obs["j_call_" + mode + "_VDJ_main"]))
-        if x not in ["None", "No_contig"]
-    ]
+    if use_vj_v:
+        vj_v_list = [
+            x
+            for x in list(set(adata_.obs["v_call_" + mode + "_VJ_main"]))
+            if x not in ["None", "No_contig"]
+        ]
+    else:
+        vj_v_list = []
+    if use_vj_j:
+        vj_j_list = [
+            x
+            for x in list(set(adata_.obs["j_call_" + mode + "_VJ_main"]))
+            if x not in ["None", "No_contig"]
+        ]
+    else:
+        vj_j_list = []
+    if use_vdj_v:
+        vdj_v_list = [
+            x
+            for x in list(set(adata_.obs["v_call_" + mode + "_VDJ_main"]))
+            if x not in ["None", "No_contig"]
+        ]
+    else:
+        vdj_v_list = []
+    if use_vdj_j:
+        vdj_j_list = [
+            x
+            for x in list(set(adata_.obs["j_call_" + mode + "_VDJ_main"]))
+            if x not in ["None", "No_contig"]
+        ]
+    else:
+        vdj_j_list = []
 
     new_list = df1.loc[
         df1["cellcount"] > min_size, groupby
@@ -1712,57 +1725,63 @@ def vj_usage_pca(
         disable=not verbose,
     ):
         cell = vdj_df.index[i]
-        counter1 = Counter(
-            adata_.obs.loc[
-                adata_.obs[groupby] == cell, "v_call_" + mode + "_VJ"
-            ]
-        )
-        for vj_v in vj_v_list:
-            vdj_df.loc[cell, vj_v] = counter1[vj_v]
-
-        counter2 = Counter(
-            adata_.obs.loc[
-                adata_.obs[groupby] == cell, "j_call_" + mode + "_VJ"
-            ]
-        )
-        for vj_j in vj_j_list:
-            vdj_df.loc[cell, vj_j] = counter2[vj_j]
-
-        counter3 = Counter(
-            adata_.obs.loc[
-                adata_.obs[groupby] == cell, "v_call_" + mode + "_VDJ"
-            ]
-        )
-        for vdj_v in vdj_v_list:
-            vdj_df.loc[cell, vdj_v] = counter3[vdj_v]
-        counter5 = Counter(
-            adata_.obs.loc[
-                adata_.obs[groupby] == cell, "j_call_" + mode + "_VDJ"
-            ]
-        )
-        for vdj_j in vdj_j_list:
-            vdj_df.loc[cell, vdj_j] = counter5[vdj_j]
+        if use_vj_v:
+            counter1 = Counter(
+                adata_.obs.loc[
+                    adata_.obs[groupby] == cell, "v_call_" + mode + "_VJ"
+                ]
+            )
+            for vj_v in vj_v_list:
+                vdj_df.loc[cell, vj_v] = counter1[vj_v]
+        if use_vj_j:
+            counter2 = Counter(
+                adata_.obs.loc[
+                    adata_.obs[groupby] == cell, "j_call_" + mode + "_VJ"
+                ]
+            )
+            for vj_j in vj_j_list:
+                vdj_df.loc[cell, vj_j] = counter2[vj_j]
+        if use_vdj_v:
+            counter3 = Counter(
+                adata_.obs.loc[
+                    adata_.obs[groupby] == cell, "v_call_" + mode + "_VDJ"
+                ]
+            )
+            for vdj_v in vdj_v_list:
+                vdj_df.loc[cell, vdj_v] = counter3[vdj_v]
+        if use_vdj_j:
+            counter5 = Counter(
+                adata_.obs.loc[
+                    adata_.obs[groupby] == cell, "j_call_" + mode + "_VDJ"
+                ]
+            )
+            for vdj_j in vdj_j_list:
+                vdj_df.loc[cell, vdj_j] = counter5[vdj_j]
         # normalise
-        vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)] = (
-            vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)]
-            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)])
-            * 100
-        )
-        vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)] = (
-            vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)]
-            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)])
-            * 100
-        )
-        vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)] = (
-            vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)]
-            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)])
-            * 100
-        )
-        vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)] = (
-            vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)]
-            / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)])
-            * 100
-        )
+        if use_vdj_v:
+            vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)] = (
+                vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)]
+                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)])
+                * 100
+            )
+        if use_vdj_j:
+            vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)] = (
+                vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)]
+                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)])
+                * 100
+            )
+        if use_vj_v:
+            vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)] = (
+                vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)]
+                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)])
+                * 100
+            )
+        if use_vj_j:
+            vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)] = (
+                vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)]
+                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)])
+                * 100
+            )
 
     df2 = pd.DataFrame(index=vdj_df.index, columns=["cell_type"])
     df2["cell_type"] = list(vdj_df.index)
