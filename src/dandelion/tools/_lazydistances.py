@@ -390,6 +390,8 @@ def _compute_multicol_distances_streaming(
     else:
         # Determine number of chunks
         n_chunks = max(1, math.ceil(m / chunk_size))
+        if n_chunks < num_cores:
+            n_chunks = num_cores
         chunks_list = np.array_split(seqs, n_chunks)
         chunk_sizes = [len(c) for c in chunks_list]
         cum_sizes = np.cumsum([0] + chunk_sizes)
